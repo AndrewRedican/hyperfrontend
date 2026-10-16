@@ -18,21 +18,18 @@ describe('analyzeCommand', () => {
 
   it('returns JSON output when format is json', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'json' })
-    expect(result.output).toBeDefined()
-    const parsed = JSON.parse(result.output as string)
-    expect(parsed).toHaveProperty('name')
-    expect(parsed).toHaveProperty('projectType')
+    expect(JSON.parse(result.output as string)).toEqual(
+      expect.objectContaining({ name: expect.any(String), projectType: expect.any(String) })
+    )
   })
 
   it('returns YAML output when format is yaml', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.output).toContain('name:')
-    expect(result.output).toContain('projectType:')
+    expect(result.output).toMatch(/^name: [^\n]+\nroot: [^\n]+\nprojectType: [^\n]+\n/)
   })
 
   it('uses current directory when no path specified', () => {
     const result = analyzeCommand({})
-    expect(result).toHaveProperty('exitCode')
     expect([0, 1]).toContain(result.exitCode)
   })
 
@@ -44,17 +41,23 @@ describe('analyzeCommand', () => {
 
 describe('analyzeCommandDef', () => {
   it('has correct name and description', () => {
-    expect(analyzeCommandDef.name).toBe('analyze')
-    expect(analyzeCommandDef.description).toContain('Analyze')
+    expect(analyzeCommandDef).toEqual(expect.objectContaining({ name: 'analyze', description: expect.stringContaining('Analyze') }))
   })
 
-  it('provides help text', () => {
-    const help = analyzeCommandDef.getHelp()
-    expect(help).toContain('project-scope analyze')
-    expect(help).toContain('--format')
-    expect(help).toContain('--depth')
-    expect(help).toContain('--include')
-    expect(help).toContain('--exclude')
+  it('opens the help text with the usage line', () => {
+    expect(analyzeCommandDef.getHelp()).toMatch(/^project-scope analyze \[path\] \[options\]\n/)
+  })
+
+  it('lists every option in the help text', () => {
+    expect(analyzeCommandDef.getHelp()).toContain(
+      [
+        'Options:',
+        '  --format, -f      Output format: text, json, yaml (default: text)',
+        '  --depth, -d       Analysis depth: basic, full, deep (default: full)',
+        '  --include, -i     Include specific analyses (comma-separated)',
+        '  --exclude, -e     Exclude specific analyses (comma-separated)',
+      ].join('\n')
+    )
   })
 
   it('executes with parsed args', () => {
@@ -95,24 +98,37 @@ describe('analyzeCommandDef', () => {
 })
 
 describe('analyzeCommand with include/exclude filters', () => {
-  it('filters with comma-separated include patterns', () => {
+  it('exits successfully with comma-separated include patterns', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, include: ['frameworks', 'buildTools'] })
     expect(result.exitCode).toBe(0)
+  })
+
+  it('leaves the analyses outside the include list empty', () => {
     const parsed = JSON.parse(
       analyzeCommand({ path: MINIMAL_PROJECT, include: ['frameworks', 'buildTools'], format: 'json' }).output as string
     )
-    expect(parsed.entryPoints).toEqual([])
-    expect(parsed.configFiles).toEqual([])
+    expect(parsed).toEqual(
+      expect.objectContaining({
+        testingFrameworks: [],
+        entryPoints: [],
+        configFiles: [],
+        dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 },
+      })
+    )
   })
 
-  it('filters with comma-separated exclude patterns', () => {
+  it('exits successfully with comma-separated exclude patterns', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, exclude: ['dependencies', 'entryPoints'] })
     expect(result.exitCode).toBe(0)
+  })
+
+  it('empties the excluded analyses', () => {
     const parsed = JSON.parse(
       analyzeCommand({ path: MINIMAL_PROJECT, exclude: ['dependencies', 'entryPoints'], format: 'json' }).output as string
     )
-    expect(parsed.dependencies.total).toBe(0)
-    expect(parsed.entryPoints).toEqual([])
+    expect(parsed).toEqual(
+      expect.objectContaining({ dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 }, entryPoints: [] })
+    )
   })
 
   it('combines include and exclude filters', () => {
@@ -134,73 +150,69 @@ describe('analyzeCommand output formatting', () => {
 
   it('shows framework meta-frameworks when present', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('shows build tools section when build tools are detected', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('truncates entry points list with more indicator', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('truncates config files list with more indicator', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('shows dependencies summary', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.output).toContain('Dependencies:')
-    expect(result.output).toContain('Production:')
-    expect(result.output).toContain('Development:')
+    expect(result.output).toContain('Dependencies:\n  Production:    1\n  Development:   2\n  Peer:          1\n  Total:         4')
   })
 
   it('formats YAML output correctly', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('name:')
-    expect(result.output).toContain('projectType:')
-    expect(result.output).toContain('workspaceType:')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringMatching(/^name: [^\n]+\nroot: [^\n]+\nprojectType: [^\n]+\nworkspaceType: [^\n]+\n/),
+    })
   })
 
   it('handles empty analysis results in YAML', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml', include: ['frameworks'] })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('formats nested objects in YAML mode', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('dependencies:')
-    expect(result.output).toContain('metadata:')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        'dependencies:\n  production: 1\n  development: 2\n  peer: 1\n  optional: 0\n  total: 4\nmetadata:\n'
+      ),
+    })
   })
 
   it('formats empty arrays correctly in YAML', () => {
     const emptyDir = resolve(FIXTURES_DIR, 'empty')
     const result = analyzeCommand({ path: emptyDir, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('[]')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining('frameworks: []\nbuildTools: []\ntestingFrameworks: []\nentryPoints: []\nconfigFiles: []\n'),
+    })
   })
 
   it('formats dates in YAML output', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toMatch(/\d{4}-\d{2}-\d{2}/)
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/) })
   })
 
   it('escapes special characters in YAML strings', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 })
 
@@ -225,23 +237,24 @@ describe('analyzeCommand meta-frameworks and build tools', () => {
   const NEXTJS_APP = resolve(FIXTURES_DIR, 'nextjs-app')
   const NEXTJS_APP_ROUTER = resolve(FIXTURES_DIR, 'nextjs-app-router')
 
-  it('displays meta-frameworks for React with Next.js', () => {
+  it('lists a frameworks section for a Next.js app', () => {
     const result = analyzeCommand({ path: NEXTJS_APP })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Frameworks')
-    expect(result.output).toMatch(/next|Next/i)
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('Frameworks:\n') })
+  })
+
+  it('lists Next.js as a meta-framework under React', () => {
+    const result = analyzeCommand({ path: NEXTJS_APP })
+    expect(result.output).toMatch(/\n {2}\* React [^\n]*\n {4}- nextjs\n/)
   })
 
   it('displays meta-frameworks in text output with indentation', () => {
     const result = analyzeCommand({ path: NEXTJS_APP_ROUTER })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('displays build tools when present', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 })
 
@@ -251,48 +264,42 @@ describe('analyzeCommand entry points and config files truncation', () => {
 
   it('shows entry points section when entry points exist', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('handles projects with many config files', () => {
     const result = analyzeCommand({ path: CONFIG_FILES })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Configurations')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('Configurations:\n') })
   })
 
   it('truncates config files list when more than 8', () => {
     const result = analyzeCommand({ path: LARGE_CONFIG })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 })
 
 describe('analyzeCommand YAML output branches', () => {
   it('formats nested objects correctly in YAML', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('dependencies:')
-    expect(result.output).toMatch(/\s+production:/)
-    expect(result.output).toMatch(/\s+development:/)
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining('dependencies:\n  production: 1\n  development: 2\n'),
+    })
   })
 
   it('formats arrays correctly in YAML', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('handles special characters in YAML strings', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('formats non-empty arrays with dash prefix', () => {
     const NEXTJS_APP = resolve(FIXTURES_DIR, 'nextjs-app')
     const result = analyzeCommand({ path: NEXTJS_APP, format: 'yaml' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toMatch(/-\s/)
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\n {2}- id: /) })
   })
 })

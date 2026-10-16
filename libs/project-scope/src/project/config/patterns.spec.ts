@@ -4,26 +4,24 @@ import { CONFIG_PATTERNS, getConfigPatternsByType } from './patterns'
 
 describe('CONFIG_PATTERNS', () => {
   it('contains package.json pattern', () => {
-    expect(CONFIG_PATTERNS['package.json']).toBeDefined()
     expect(CONFIG_PATTERNS['package.json'].patterns).toContain('package.json')
   })
 
   it('contains tsconfig pattern with wildcard', () => {
-    expect(CONFIG_PATTERNS.tsconfig).toBeDefined()
-    expect(CONFIG_PATTERNS.tsconfig.patterns).toContain('tsconfig.json')
-    expect(CONFIG_PATTERNS.tsconfig.patterns).toContain('tsconfig.*.json')
+    expect(CONFIG_PATTERNS.tsconfig.patterns).toEqual(expect.arrayContaining(['tsconfig.json', 'tsconfig.*.json']))
   })
 
   it('categorizes configs by format', () => {
-    expect(CONFIG_PATTERNS['package.json'].format).toBe('json')
-    expect(CONFIG_PATTERNS.tsconfig.format).toBe('jsonc')
-    expect(CONFIG_PATTERNS.webpack.format).toBe('js')
-    expect(CONFIG_PATTERNS['pnpm-lock.yaml'].format).toBe('yaml')
+    expect({
+      packageJson: CONFIG_PATTERNS['package.json'].format,
+      tsconfig: CONFIG_PATTERNS.tsconfig.format,
+      webpack: CONFIG_PATTERNS.webpack.format,
+      pnpmLock: CONFIG_PATTERNS['pnpm-lock.yaml'].format,
+    }).toEqual({ packageJson: 'json', tsconfig: 'jsonc', webpack: 'js', pnpmLock: 'yaml' })
   })
 
   it('marks sensitive configs', () => {
-    expect(CONFIG_PATTERNS['.npmrc'].sensitive).toBe(true)
-    expect(CONFIG_PATTERNS.env.sensitive).toBe(true)
+    expect({ npmrc: CONFIG_PATTERNS['.npmrc'].sensitive, env: CONFIG_PATTERNS.env.sensitive }).toEqual({ npmrc: true, env: true })
   })
 
   it('marks extendable configs', () => {
@@ -41,9 +39,7 @@ describe('getConfigPatternsByType', () => {
   it('returns patterns for multiple types', () => {
     const patterns = getConfigPatternsByType(['package.json', 'tsconfig'])
 
-    expect(patterns).toContain('package.json')
-    expect(patterns).toContain('tsconfig.json')
-    expect(patterns).toContain('tsconfig.*.json')
+    expect(patterns).toEqual(expect.arrayContaining(['package.json', 'tsconfig.json', 'tsconfig.*.json']))
   })
 
   it('returns empty array for unknown type', () => {

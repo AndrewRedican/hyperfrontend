@@ -7,8 +7,7 @@ describe('isValidLogger', () => {
     expect(isValidLogger(logger)).toBe(true)
   })
 
-  it('returns false for an invalid loggeer', () => {
-    expect(isValidLogger({})).toBe(false)
-    expect(isValidLogger({ error: () => void 0 })).toBe(false)
+  it.each([{}, { error: () => void 0 }])('returns false for the invalid logger %p', (candidate: object) => {
+    expect(isValidLogger(candidate)).toBe(false)
   })
 })

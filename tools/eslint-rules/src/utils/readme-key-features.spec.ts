@@ -146,18 +146,16 @@ describe('readme-key-features', () => {
 
     it('reports a lead-in paragraph above the list', () => {
       const body = ['This package offers:', '', validBullet(1), validBullet(2), validBullet(3)].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeaturesNotAList'])
-      expect(problems[0]).toMatchObject({ line: 3, data: { line: 'This package offers:' } })
+      expect(analyzeBody(body)).toEqual([{ messageId: 'keyFeaturesNotAList', line: 3, data: { line: 'This package offers:' } }])
     })
 
     it('reports a nested bullet', () => {
       const body = [validBullet(1), '  - a detail hanging off the first feature', validBullet(2), validBullet(3)].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeaturesNotAList'])
-      expect(problems[0]).toMatchObject({ line: 4, data: { line: '- a detail hanging off the first feature' } })
+      expect(analyzeBody(body)).toEqual([
+        { messageId: 'keyFeaturesNotAList', line: 4, data: { line: '- a detail hanging off the first feature' } },
+      ])
     })
 
     it('reports every row of a table standing in for the list', () => {
@@ -168,10 +166,8 @@ describe('readme-key-features', () => {
 
     it('reports a fenced block once rather than once per line inside it', () => {
       const body = [validBullet(1), validBullet(2), validBullet(3), '```typescript', 'const a = 1', 'const b = 2', '```'].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeaturesNotAList'])
-      expect(problems[0]).toMatchObject({ line: 6, data: { line: '```typescript' } })
+      expect(analyzeBody(body)).toEqual([{ messageId: 'keyFeaturesNotAList', line: 6, data: { line: '```typescript' } }])
     })
 
     it('stops at the end of the section when a fence never closes', () => {
@@ -190,33 +186,35 @@ describe('readme-key-features', () => {
       const body = `${'A lead-in sentence that runs well past the length a message can quote. '.repeat(2)}\n\n${[validBullet(1), validBullet(2), validBullet(3)].join('\n')}`
       const quoted = analyzeBody(body)[0]?.data['line'] ?? ''
 
-      expect(quoted.endsWith('...')).toBe(true)
-      expect(quoted.length).toBeLessThanOrEqual(63)
+      // why: the quote keeps at most sixty of the line's characters and marks the cut with an ellipsis
+      expect(quoted).toMatch(/^.{0,60}\.\.\.$/)
     })
 
     it('reports a bullet with no bold label', () => {
       const body = [validBullet(1), validBullet(2), '- runs everywhere the platform runs'].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeatureMissingLabel'])
-      expect(problems[0]).toMatchObject({ line: 5, data: { feature: 'runs everywhere the platform runs' } })
+      expect(analyzeBody(body)).toEqual([
+        { messageId: 'keyFeatureMissingLabel', line: 5, data: { feature: 'runs everywhere the platform runs' } },
+      ])
     })
 
     it('reports a bullet that is a bare label', () => {
       const body = [validBullet(1), validBullet(2), '- **Tree shakeable**'].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeatureMissingDescription'])
-      expect(problems[0]).toMatchObject({ line: 5, data: { feature: 'Tree shakeable' } })
+      expect(analyzeBody(body)).toEqual([{ messageId: 'keyFeatureMissingDescription', line: 5, data: { feature: 'Tree shakeable' } }])
     })
 
     it('reports a label that has grown into a sentence', () => {
       const label = 'Everything this package does for you and then some more'
       const body = [validBullet(1), validBullet(2), `- **${label}** - and here is the explanation of it`].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeatureLabelTooLong'])
-      expect(problems[0]?.data).toMatchObject({ characters: `${label.length}`, maximum: `${MAX_FEATURE_LABEL_CHARACTERS}` })
+      expect(analyzeBody(body)).toEqual([
+        {
+          messageId: 'keyFeatureLabelTooLong',
+          line: 5,
+          data: { feature: label, characters: `${label.length}`, maximum: `${MAX_FEATURE_LABEL_CHARACTERS}` },
+        },
+      ])
     })
 
     it('measures a linked label by its visible text rather than by its URL', () => {
@@ -229,29 +227,36 @@ describe('readme-key-features', () => {
     it('measures a linked label that has still grown into a sentence', () => {
       const label = '[Everything this package does for you and then some more](https://www.hyperfrontend.dev/docs/)'
       const body = [validBullet(1), validBullet(2), `- **${label}** - and here is the explanation of it`].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeatureLabelTooLong'])
-      expect(problems[0]?.data).toMatchObject({ feature: 'Everything this package does for you and then some more', characters: '55' })
+      expect(analyzeBody(body)).toEqual([
+        {
+          messageId: 'keyFeatureLabelTooLong',
+          line: 5,
+          data: {
+            feature: 'Everything this package does for you and then some more',
+            characters: '55',
+            maximum: `${MAX_FEATURE_LABEL_CHARACTERS}`,
+          },
+        },
+      ])
     })
 
     it('reports an explanation that only restates the label', () => {
       const body = [validBullet(1), validBullet(2), '- **Fast** - it is fast'].join('\n')
-      const problems = analyzeBody(body)
 
-      expect(messageIds(problems)).toEqual(['keyFeatureDescriptionTooShort'])
-      expect(problems[0]?.data).toMatchObject({
-        feature: 'Fast',
-        characters: '10',
-        minimum: `${MIN_FEATURE_DESCRIPTION_CHARACTERS}`,
-      })
+      expect(analyzeBody(body)).toEqual([
+        {
+          messageId: 'keyFeatureDescriptionTooShort',
+          line: 5,
+          data: { feature: 'Fast', characters: '10', minimum: `${MIN_FEATURE_DESCRIPTION_CHARACTERS}` },
+        },
+      ])
     })
 
     it('reports a list with fewer features than a package needs', () => {
-      const problems = analyzeBody([validBullet(1), validBullet(2)].join('\n'))
+      const body = [validBullet(1), validBullet(2)].join('\n')
 
-      expect(messageIds(problems)).toEqual(['keyFeaturesTooFew'])
-      expect(problems[0]).toMatchObject({ line: 1, data: { count: '2', minimum: `${MIN_KEY_FEATURES}` } })
+      expect(analyzeBody(body)).toEqual([{ messageId: 'keyFeaturesTooFew', line: 1, data: { count: '2', minimum: `${MIN_KEY_FEATURES}` } }])
     })
 
     it('reports a list with more features than a reader takes in', () => {
@@ -259,10 +264,10 @@ describe('readme-key-features', () => {
       for (let index = 1; index <= MAX_KEY_FEATURES + 1; index++) {
         bullets.push(validBullet(index))
       }
-      const problems = analyzeBody(bullets.join('\n'))
 
-      expect(messageIds(problems)).toEqual(['keyFeaturesTooMany'])
-      expect(problems[0]).toMatchObject({ line: 1, data: { count: `${MAX_KEY_FEATURES + 1}`, maximum: `${MAX_KEY_FEATURES}` } })
+      expect(analyzeBody(bullets.join('\n'))).toEqual([
+        { messageId: 'keyFeaturesTooMany', line: 1, data: { count: `${MAX_KEY_FEATURES + 1}`, maximum: `${MAX_KEY_FEATURES}` } },
+      ])
     })
 
     it('leaves the feature count alone when the section holds no bullets at all', () => {

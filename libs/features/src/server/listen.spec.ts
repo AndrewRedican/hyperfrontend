@@ -68,8 +68,8 @@ describe('listen', () => {
 describe('closeServer', () => {
   it('resolves once the close callback fires', async () => {
     const fake = fakeServer(1)
-    await expect(closeServer(fake.server)).resolves.toBeUndefined()
-    expect(fake.closed).toBe(true)
+    const resolved = await closeServer(fake.server)
+    expect({ resolved, closed: fake.closed }).toEqual({ resolved: undefined, closed: true })
   })
 })
 

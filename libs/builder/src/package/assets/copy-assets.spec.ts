@@ -1,5 +1,5 @@
 import type { AssetSpec, PackageJson } from '../../models'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
@@ -36,8 +36,10 @@ describe('copyAssets', () => {
     writeFileSync(join(from, 'README.md'), 'r')
     writeFileSync(join(from, 'CHANGELOG.md'), 'c')
     copyAssets([{ from, files: ['README.md', 'CHANGELOG.md'] }], outputPath, PKG)
-    expect(readFileSync(join(outputPath, 'README.md'), 'utf-8')).toBe('r')
-    expect(readFileSync(join(outputPath, 'CHANGELOG.md'), 'utf-8')).toBe('c')
+    expect([readFileSync(join(outputPath, 'README.md'), 'utf-8'), readFileSync(join(outputPath, 'CHANGELOG.md'), 'utf-8')]).toEqual([
+      'r',
+      'c',
+    ])
   })
 
   it('honors an explicit `to` subdirectory', () => {
@@ -55,8 +57,7 @@ describe('copyAssets', () => {
   it('silently skips entries from the explicit list that are missing on disk', () => {
     writeFileSync(join(from, 'README.md'), 'r')
     copyAssets([{ from, files: ['README.md', 'MISSING.md'] }], outputPath, PKG)
-    expect(existsSync(join(outputPath, 'README.md'))).toBe(true)
-    expect(existsSync(join(outputPath, 'MISSING.md'))).toBe(false)
+    expect(readdirSync(outputPath)).toEqual(['README.md'])
   })
 
   it('copies files matching a glob pattern under the source root', () => {
@@ -64,9 +65,7 @@ describe('copyAssets', () => {
     writeFileSync(join(from, 'b.md'), 'b')
     writeFileSync(join(from, 'c.txt'), 'c')
     copyAssets([{ from, glob: '*.md' }], outputPath, PKG)
-    expect(existsSync(join(outputPath, 'a.md'))).toBe(true)
-    expect(existsSync(join(outputPath, 'b.md'))).toBe(true)
-    expect(existsSync(join(outputPath, 'c.txt'))).toBe(false)
+    expect(readdirSync(outputPath).sort()).toEqual(['a.md', 'b.md'])
   })
 
   it('preserves nested directory structure when copying glob matches', () => {
@@ -112,8 +111,7 @@ describe('copyAssets', () => {
       outputPath,
       PKG
     )
-    expect(existsSync(join(outputPath, 'a.md'))).toBe(true)
-    expect(existsSync(join(outputPath, 'b.md'))).toBe(true)
+    expect(readdirSync(outputPath).sort()).toEqual(['a.md', 'b.md'])
   })
 
   it('skips entries from the explicit list that resolve to a directory rather than a file', () => {
@@ -121,7 +119,6 @@ describe('copyAssets', () => {
     writeFileSync(join(from, 'README.md'), 'r')
     const spec: AssetSpec = { from, files: ['README.md', 'docs'] }
     copyAssets([spec], outputPath, PKG)
-    expect(existsSync(join(outputPath, 'README.md'))).toBe(true)
-    expect(existsSync(join(outputPath, 'docs'))).toBe(false)
+    expect(readdirSync(outputPath)).toEqual(['README.md'])
   })
 })

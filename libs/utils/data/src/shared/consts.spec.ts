@@ -6,18 +6,24 @@ import { getConfig, setConfig, registeredIterableClasses } from './consts'
 describe('getConfig / setConfig', () => {
   it('can toggle wheather or not order of properties matter for equality checks', () => {
     setConfig({ samePositionOfOwnProperties: true })
-    expect(getConfig().samePositionOfOwnProperties).toBe(true)
+    const afterEnabling = getConfig().samePositionOfOwnProperties
 
     setConfig({ samePositionOfOwnProperties: false })
-    expect(getConfig().samePositionOfOwnProperties).toBe(false)
+    expect({ afterEnabling, afterDisabling: getConfig().samePositionOfOwnProperties }).toEqual({
+      afterEnabling: true,
+      afterDisabling: false,
+    })
   })
 
   it('can toggle whether or not will detect circular references', () => {
     setConfig({ detectCircularReferences: true })
-    expect(getConfig().detectCircularReferences).toBe(true)
+    const afterEnabling = getConfig().detectCircularReferences
 
     setConfig({ detectCircularReferences: false })
-    expect(getConfig().detectCircularReferences).toBe(false)
+    expect({ afterEnabling, afterDisabling: getConfig().detectCircularReferences }).toEqual({
+      afterEnabling: true,
+      afterDisabling: false,
+    })
   })
 
   it('does not change flag that has not been explicitly set', () => {

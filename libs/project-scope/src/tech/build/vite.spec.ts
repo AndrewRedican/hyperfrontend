@@ -14,10 +14,15 @@ describe('viteDetector', () => {
     }
     const result = viteDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('vite')
-    expect(result?.name).toBe('Vite')
-    expect(result?.version).toBe('5.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'vite', name: 'Vite', version: '5.0.0' }))
+  })
+
+  it('scores a vite dependency at least 60', () => {
+    const pkg: PackageJson = {
+      devDependencies: { vite: '^5.0.0' },
+    }
+    const result = viteDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 

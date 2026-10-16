@@ -22,8 +22,18 @@ describe('Events', () => {
     events.on(event.InProgress, inProgressHandler)
 
     events.dispatch(start())
-    expect(notStartedHandler).not.toHaveBeenCalled()
     expect(inProgressHandler).toHaveBeenCalled()
+  })
+
+  it('does not trigger the handler of an inactive event while another event activates', () => {
+    const notStartedHandler = jest.fn()
+    const inProgressHandler = jest.fn()
+
+    events.on(event.NotStarted, notStartedHandler)
+    events.on(event.InProgress, inProgressHandler)
+
+    events.dispatch(start())
+    expect(notStartedHandler).not.toHaveBeenCalled()
   })
 
   it('does not trigger event handler when event is not activated', () => {
@@ -34,8 +44,7 @@ describe('Events', () => {
     events.on(event.Done, doneHandler)
 
     events.dispatch(start())
-    expect(notStartedHandler).not.toHaveBeenCalled()
-    expect(doneHandler).not.toHaveBeenCalled()
+    expect({ notStarted: notStartedHandler.mock.calls, done: doneHandler.mock.calls }).toEqual({ notStarted: [], done: [] })
   })
 
   it('does not trigger event handler if it is not registered', () => {
@@ -46,15 +55,29 @@ describe('Events', () => {
 
     events.dispatch(start())
     expect(notStartedHandler).not.toHaveBeenCalled()
+  })
+
+  it('does not trigger the registered handler of an event the dispatch leaves inactive', () => {
+    const doneHandler = jest.fn()
+
+    events.on(event.Done, doneHandler)
+
+    events.dispatch(start())
     expect(doneHandler).not.toHaveBeenCalled()
+  })
+
+  it('does not call an event handler when it is registered', () => {
+    const inProgressHandler = jest.fn()
+
+    events.on(event.InProgress, inProgressHandler)
+
+    expect(inProgressHandler).not.toHaveBeenCalled()
   })
 
   it('passes correct previous and current derived states to event handler', () => {
     const inProgressHandler = jest.fn()
 
     events.on(event.InProgress, inProgressHandler)
-
-    expect(inProgressHandler).not.toHaveBeenCalled()
 
     events.dispatch(start())
 

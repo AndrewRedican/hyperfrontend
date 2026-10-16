@@ -207,8 +207,8 @@ describe('createScreen', () => {
 
     screen.render({ lines: ['one', 'two', 'three', 'four', 'five'] })
 
-    expect(stub.getWrites()).toContain('three\nfour\nfive')
-    expect(stub.getWrites()).not.toContain('one')
+    // why: the first paint writes only the three rows that fit, then parks the cursor at the end of the last one
+    expect(stub.getWrites()).toBe('three\nfour\nfive\r\x1B[4C')
   })
 
   it('parks the cursor at the top-left when its row was clipped by the viewport', () => {
@@ -218,9 +218,7 @@ describe('createScreen', () => {
     screen.render({ lines: ['one', 'two', 'three'], cursor: { line: 0, col: 2 } })
 
     // why: the clipped frame keeps two rows, so travel goes to their first row with no column offset
-    expect(stub.getWrites()).toContain('two\nthree')
-    expect(stub.getWrites()).toContain('\r\x1B[1A')
-    expect(stub.getWrites()).not.toContain('\x1B[2C')
+    expect(stub.getWrites()).toBe('two\nthree\r\x1B[1A')
   })
 
   it('caps upward erase travel at the viewport height after narrowing', () => {
@@ -232,8 +230,7 @@ describe('createScreen', () => {
 
     screen.render({ lines: ['abcdefghijkl', 'x', 'y', 'z'], cursor: { line: 3, col: 1 } })
 
-    // why: the reflow estimate says eight rows up, but the viewport is only four rows tall
-    expect(stub.getWrites()).toContain('\x1B[3A\x1B[J')
-    expect(stub.getWrites()).not.toContain('\x1B[8A')
+    // why: the reflow estimate says eight rows up, but the viewport is only four rows tall, so the erase climbs three before the clipped repaint
+    expect(stub.getWrites()).toBe('\r\x1B[3A\x1B[Jkl\nx\ny\nz\r\x1B[1C')
   })
 })

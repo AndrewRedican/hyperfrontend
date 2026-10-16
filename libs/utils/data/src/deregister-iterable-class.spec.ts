@@ -26,25 +26,21 @@ describe('deregisterIterableClass', () => {
 
   it('removes all registered iterable classes except built-in support for Object and Array', () => {
     deregisterIterableClass()
-    expect(registeredIterableClasses.length).toBe(2)
-    const registeredIterableClassRefs = registeredIterableClasses.map((entry) => entry.classRef)
-    expect(registeredIterableClassRefs).toContain(Array)
-    expect(registeredIterableClassRefs).toContain(Object)
+    expect(registeredIterableClasses.map((entry) => entry.classRef)).toEqual([Array, Object])
   })
 
   it('remove specific registered iterable classes', () => {
     deregisterIterableClass(Map)
-    expect(registeredIterableClasses.length).toBe(3)
-    const registeredIterableClassRefs = registeredIterableClasses.map((entry) => entry.classRef)
-    expect(registeredIterableClassRefs).not.toContain(Map)
-    expect(registeredIterableClassRefs).toContain(Set)
-    expect(registeredIterableClassRefs).toContain(Array)
-    expect(registeredIterableClassRefs).toContain(Object)
+    expect(registeredIterableClasses.map((entry) => entry.classRef)).toEqual([Set, Array, Object])
   })
 
-  it('removes iterable classes from registered classes', () => {
+  it('removes a deregistered iterable class from registered classes', () => {
     deregisterIterableClass(Set)
     expect(registeredClasses).not.toContain(Set)
+  })
+
+  it('removes a second deregistered iterable class from registered classes', () => {
+    deregisterIterableClass(Set)
     deregisterIterableClass(Map)
     expect(registeredClasses).not.toContain(Map)
   })

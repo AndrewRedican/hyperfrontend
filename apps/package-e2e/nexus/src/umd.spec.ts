@@ -44,9 +44,12 @@ describe('@hyperfrontend/nexus UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.createBroker).toBe('function')
-    expect(typeof exports.createChannel).toBe('function')
-    expect(typeof exports.mergeContracts).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        createBroker: expect.any(Function),
+        createChannel: expect.any(Function),
+        mergeContracts: expect.any(Function),
+      })
+    )
   })
 })

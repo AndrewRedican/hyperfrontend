@@ -93,17 +93,15 @@ describe('handleCloseAcknowledged', () => {
   it('completes the close for a channel awaiting acknowledgement', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = startPoliteClose(channel, mockWindow)
+    const before = { active: channel.isActive(), closing: channel.isClosing() }
 
-    expect(channel.isActive()).toBe(true)
-    expect(channel.isClosing()).toBe(true)
+    handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
 
-    expect(() => {
-      handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
-    }).not.toThrow()
-
-    expect(channel.isActive()).toBe(false)
-    expect(channel.isClosing()).toBe(false)
-    expect(processManager.get(processId)).toBeUndefined()
+    const after = { active: channel.isActive(), closing: channel.isClosing(), process: processManager.get(processId) }
+    expect({ before, after }).toEqual({
+      before: { active: true, closing: true },
+      after: { active: false, closing: false, process: undefined },
+    })
   })
 
   it('fires a single close event on the initiator once acknowledged', () => {
@@ -116,8 +114,10 @@ describe('handleCloseAcknowledged', () => {
 
     handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
 
-    expect(events.filter(([event]) => event === 'closing')).toEqual([['closing', { initiatedLocally: true }]])
-    expect(events.filter(([event]) => event === 'close')).toEqual([['close', { notify: true }]])
+    expect(events.filter(([event]) => event === 'closing' || event === 'close')).toEqual([
+      ['closing', { initiatedLocally: true }],
+      ['close', { notify: true }],
+    ])
   })
 
   it('ignore if channel not found', () => {
@@ -133,8 +133,7 @@ describe('handleCloseAcknowledged', () => {
 
     handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
 
-    expect(channel.isActive()).toBe(true)
-    expect(processManager.get(processId)).toBe(channel)
+    expect({ active: channel.isActive(), process: processManager.get(processId) }).toEqual({ active: true, process: channel })
   })
 
   it('handles multiple close acknowledgements for different channels', () => {
@@ -151,9 +150,12 @@ describe('handleCloseAcknowledged', () => {
     handleCloseAcknowledged(routingContext, acknowledgement(processId1, mockWindow, 'remote-1'))
     handleCloseAcknowledged(routingContext, acknowledgement(processId2, window2, 'remote-2'))
 
-    expect(processManager.get(processId1)).toBeUndefined()
-    expect(processManager.get(processId2)).toBeUndefined()
-    expect(channel1.isActive()).toBe(false)
-    expect(channel2.isActive()).toBe(false)
+    expect({
+      first: { process: processManager.get(processId1), active: channel1.isActive() },
+      second: { process: processManager.get(processId2), active: channel2.isActive() },
+    }).toEqual({
+      first: { process: undefined, active: false },
+      second: { process: undefined, active: false },
+    })
   })
 })

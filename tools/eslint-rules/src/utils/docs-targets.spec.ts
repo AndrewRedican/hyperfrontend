@@ -130,6 +130,19 @@ const BUNDLED_PROJECT = {
 /** A moment well past any file the tests write, so a rewrite is seen as newer than the read that preceded it. */
 const LATER = 4102444800
 
+/**
+ * Rewrites the sub entry and its module so the entry exports one more symbol, stamped later than the read that preceded it.
+ *
+ * @param workspace - The workspace whose sub entry gains the export.
+ */
+function addSubExport(workspace: TempWorkspace): void {
+  const entry = join(workspace.root, 'libs/alpha/src/sub/index.ts')
+  writeFileSync(entry, "export { open } from '../lib/widget'\nexport { sub, added } from './sub'\n")
+  writeFileSync(join(workspace.root, 'libs/alpha/src/sub/sub.ts'), 'export function sub(): void {}\nexport function added(): void {}\n')
+  // why: a rewrite within the same millisecond keeps the mtime the fingerprint reads, so the file is stamped as plainly newer
+  utimesSync(entry, LATER, LATER)
+}
+
 describe('docs-targets', () => {
   describe('packageRoute', () => {
     it('routes a top-level package under the libraries index', () => {
@@ -148,6 +161,13 @@ describe('docs-targets', () => {
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
       expect([...index.packages.keys()].sort()).toEqual(['@acme/alpha', '@acme/beta-utils'])
+    })
+
+    it('records the route of a package nested under the utils umbrella', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(index.packages.get('@acme/beta-utils')?.route).toBe('/docs/libraries/utils/beta/')
     })
 
@@ -157,6 +177,13 @@ describe('docs-targets', () => {
       const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
 
       expect([...(alpha?.entries.keys() ?? [])]).toEqual(['', 'sub'])
+    })
+
+    it('routes a secondary entry under the package page', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
+
       expect(alpha?.entries.get('sub')?.route).toBe('/docs/libraries/alpha/sub/')
     })
 
@@ -176,38 +203,41 @@ describe('docs-targets', () => {
         'extra',
         'open',
       ])
-      expect(root?.symbols.get('external')).toEqual({ name: 'external', kind: 'unknown', members: [], properties: [], methods: [] })
     })
 
-    it('records the kind, members and anchored properties of each declaration', () => {
+    it('records a name re-exported from outside the package with an unknown kind', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const root = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')?.entries.get('')
 
-      expect(root?.symbols.get('Options')).toEqual({
-        name: 'Options',
-        kind: 'interface',
-        members: ['label', 'onDrop', 'send'],
-        properties: ['label', 'onDrop'],
-        methods: [],
-      })
-      expect(root?.symbols.get('Mode')).toEqual({ name: 'Mode', kind: 'type', members: ['v3', 'v4', 'none'], properties: [], methods: [] })
-      expect(root?.symbols.get('Handle')).toEqual({ name: 'Handle', kind: 'type', members: ['close'], properties: [], methods: [] })
-      expect(root?.symbols.get('Widget')).toEqual({
-        name: 'Widget',
-        kind: 'class',
-        members: ['size', 'draw', 'paint', 'render'],
-        properties: ['size', 'paint'],
-        methods: ['draw', 'render'],
-      })
-      expect(root?.symbols.get('Level')).toEqual({
-        name: 'Level',
-        kind: 'enum',
-        members: ['Low', 'low', 'High', 'high'],
-        properties: [],
-        methods: [],
-      })
-      expect(root?.symbols.get('open')).toEqual({ name: 'open', kind: 'function', members: [], properties: [], methods: [] })
+      expect(root?.symbols.get('external')).toEqual({ name: 'external', kind: 'unknown', members: [], properties: [], methods: [] })
+    })
+
+    it.each([
+      [
+        'Options',
+        { name: 'Options', kind: 'interface', members: ['label', 'onDrop', 'send'], properties: ['label', 'onDrop'], methods: [] },
+      ],
+      ['Mode', { name: 'Mode', kind: 'type', members: ['v3', 'v4', 'none'], properties: [], methods: [] }],
+      ['Handle', { name: 'Handle', kind: 'type', members: ['close'], properties: [], methods: [] }],
+      [
+        'Widget',
+        {
+          name: 'Widget',
+          kind: 'class',
+          members: ['size', 'draw', 'paint', 'render'],
+          properties: ['size', 'paint'],
+          methods: ['draw', 'render'],
+        },
+      ],
+      ['Level', { name: 'Level', kind: 'enum', members: ['Low', 'low', 'High', 'high'], properties: [], methods: [] }],
+      ['open', { name: 'open', kind: 'function', members: [], properties: [], methods: [] }],
+    ])('records the kind, members and anchored properties of the %s declaration', (name: string, symbol: object) => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const root = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')?.entries.get('')
+
+      expect(root?.symbols.get(name)).toEqual(symbol)
     })
 
     it('reads a frozen code map by its keys and its string values', () => {
@@ -224,23 +254,51 @@ describe('docs-targets', () => {
       })
     })
 
-    it('maps every symbol and member name to the entries carrying it', () => {
+    it('maps a symbol name to every entry exporting it', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
       expect(index.symbols.get('open')?.map((hit) => hit.entry.subpath)).toEqual(['', 'sub'])
+    })
+
+    it('maps a member name to the declaration carrying it', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(index.members.get('onDrop')?.map((hit) => `${hit.parent.name}.${hit.member}`)).toEqual(['Options.onDrop'])
     })
 
-    it('indexes declared functions, classes, interfaces, types and enums but not variables or tests', () => {
+    it('indexes a declared function by its source file', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
 
       expect(alpha?.declarations.get('helper')).toEqual([join(workspace.root, 'libs/alpha/src/lib/widget.ts')])
+    })
+
+    it('indexes a declared interface by its source file', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
+
       expect(alpha?.declarations.get('Internal')).toEqual([join(workspace.root, 'libs/alpha/src/lib/widget.ts')])
+    })
+
+    it('leaves a variable out of the declaration index', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
+
       expect(alpha?.declarations.get('CONSTANT')).toBeUndefined()
+    })
+
+    it('leaves a declaration in a spec file out of the declaration index', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
+
       expect(alpha?.declarations.get('specOnly')).toBeUndefined()
     })
 
@@ -256,94 +314,152 @@ describe('docs-targets', () => {
       ])
     })
 
-    it('rebuilds when a source it read changes, and not otherwise', () => {
+    it('returns the same index while nothing it read has changed', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const siteRoot = join(workspace.root, 'apps/docs-site')
       const first = getDocsTargetIndex(workspace.root, siteRoot)
 
       expect(getDocsTargetIndex(workspace.root, siteRoot)).toBe(first)
+    })
 
-      const entry = join(workspace.root, 'libs/alpha/src/sub/index.ts')
-      writeFileSync(entry, "export { open } from '../lib/widget'\nexport { sub, added } from './sub'\n")
-      writeFileSync(join(workspace.root, 'libs/alpha/src/sub/sub.ts'), 'export function sub(): void {}\nexport function added(): void {}\n')
-      // why: a rewrite within the same millisecond keeps the mtime the fingerprint reads, so the file is stamped as plainly newer
-      utimesSync(entry, LATER, LATER)
+    it('rebuilds when a source it read changes', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const siteRoot = join(workspace.root, 'apps/docs-site')
+      const first = getDocsTargetIndex(workspace.root, siteRoot)
+      addSubExport(workspace)
 
-      const second = getDocsTargetIndex(workspace.root, siteRoot)
-      expect(second).not.toBe(first)
-      expect(second.packages.get('@acme/alpha')?.entries.get('sub')?.symbols.has('added')).toBe(true)
+      expect(getDocsTargetIndex(workspace.root, siteRoot)).not.toBe(first)
+    })
+
+    it('indexes the symbol a changed source adds', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const siteRoot = join(workspace.root, 'apps/docs-site')
+      getDocsTargetIndex(workspace.root, siteRoot)
+      addSubExport(workspace)
+
+      expect(getDocsTargetIndex(workspace.root, siteRoot).packages.get('@acme/alpha')?.entries.get('sub')?.symbols.has('added')).toBe(true)
     })
   })
 
   describe('packageOfFile', () => {
-    it('finds the package a file sits under and null for a file outside every package', () => {
+    it('finds the package a file sits under', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
       expect(packageOfFile(index, join(workspace.root, 'libs/alpha/src/sub/README.md'))?.name).toBe('@acme/alpha')
+    })
+
+    it('returns null for a file outside every package', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(packageOfFile(index, join(workspace.root, 'libs/private/README.md'))).toBeNull()
     })
   })
 
   describe('entryOfFile', () => {
-    it('names the entry whose directory holds the file and null for a package-level document', () => {
+    it('names the entry whose directory holds the file', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
 
       expect(alpha && entryOfFile(alpha, join(workspace.root, 'libs/alpha/src/sub/README.md'))?.subpath).toBe('sub')
+    })
+
+    it('returns null for a package-level document', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const alpha = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site')).packages.get('@acme/alpha')
+
       expect(alpha && entryOfFile(alpha, join(workspace.root, 'libs/alpha/README.md'))).toBeNull()
     })
   })
 
   describe('routeExists', () => {
-    it('accepts the root, static pages, guides and articles with content, and nothing else', () => {
+    it.each([
+      '/',
+      '/docs/libraries/alpha/',
+      '/docs/libraries/alpha/sub',
+      '/docs/core-concepts/',
+      '/docs/guides/first-steps/',
+      '/articles/why/',
+    ])('accepts the route %s', (route: string) => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
-      expect(routeExists(index, '/')).toBe(true)
-      expect(routeExists(index, '/docs/libraries/alpha/')).toBe(true)
-      expect(routeExists(index, '/docs/libraries/alpha/sub')).toBe(true)
-      expect(routeExists(index, '/docs/core-concepts/')).toBe(true)
-      expect(routeExists(index, '/docs/guides/first-steps/')).toBe(true)
-      expect(routeExists(index, '/docs/guides/missing/')).toBe(false)
-      expect(routeExists(index, '/articles/why/')).toBe(true)
-      expect(routeExists(index, '/articles/missing/')).toBe(false)
-      expect(routeExists(index, '/docs/libraries/gamma/')).toBe(false)
+      expect(routeExists(index, route)).toBe(true)
+    })
+
+    it.each(['/docs/guides/missing/', '/articles/missing/', '/docs/libraries/gamma/'])('rejects the route %s', (route: string) => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
+      expect(routeExists(index, route)).toBe(false)
     })
   })
 
   describe('markdownOfRoute', () => {
-    it('maps package, architecture, entry, guide, article and root document routes to their markdown', () => {
+    it.each([
+      ['/docs/libraries/alpha/', 'libs/alpha/README.md'],
+      ['/docs/libraries/alpha/architecture/', 'libs/alpha/ARCHITECTURE.md'],
+      ['/docs/libraries/alpha/sub/', 'libs/alpha/src/sub/README.md'],
+      ['/docs/guides/first-steps/', 'apps/docs-site/content/guides/first-steps/guide.md'],
+      ['/articles/why', 'apps/docs-site/content/articles/why.md'],
+      ['/architecture', 'ARCHITECTURE.md'],
+    ])('maps the route %s to %s', (route: string, markdown: string) => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
-      expect(markdownOfRoute(index, '/docs/libraries/alpha/')).toBe(join(workspace.root, 'libs/alpha/README.md'))
-      expect(markdownOfRoute(index, '/docs/libraries/alpha/architecture/')).toBe(join(workspace.root, 'libs/alpha/ARCHITECTURE.md'))
-      expect(markdownOfRoute(index, '/docs/libraries/alpha/sub/')).toBe(join(workspace.root, 'libs/alpha/src/sub/README.md'))
-      expect(markdownOfRoute(index, '/docs/guides/first-steps/')).toBe(
-        join(workspace.root, 'apps/docs-site/content/guides/first-steps/guide.md')
-      )
-      expect(markdownOfRoute(index, '/articles/why')).toBe(join(workspace.root, 'apps/docs-site/content/articles/why.md'))
-      expect(markdownOfRoute(index, '/architecture')).toBe(join(workspace.root, 'ARCHITECTURE.md'))
-      expect(markdownOfRoute(index, '/docs/core-concepts/')).toBeNull()
-      expect(markdownOfRoute(index, '/docs/libraries/alpha/nowhere/')).toBeNull()
+      expect(markdownOfRoute(index, route)).toBe(join(workspace.root, markdown))
+    })
+
+    it.each(['/docs/core-concepts/', '/docs/libraries/alpha/nowhere/'])('maps the route %s to no markdown', (route: string) => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
+      expect(markdownOfRoute(index, route)).toBeNull()
     })
   })
 
   describe('entryOfRoute', () => {
-    it('resolves a landing page to its package and an entry page to its entry', () => {
+    it('resolves a landing page to its package with no entry', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
 
       expect(entryOfRoute(index, '/docs/libraries/alpha/')?.entry).toBeNull()
+    })
+
+    it('resolves an entry page to its entry', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(entryOfRoute(index, '/docs/libraries/alpha/sub/')?.entry?.subpath).toBe('sub')
+    })
+
+    it('resolves an architecture page to its package with no entry', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(entryOfRoute(index, '/docs/libraries/alpha/architecture/')?.entry).toBeNull()
+    })
+
+    it('returns null for a page outside every package', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+      const index = getDocsTargetIndex(workspace.root, join(workspace.root, 'apps/docs-site'))
+
       expect(entryOfRoute(index, '/docs/core-concepts/')).toBeNull()
     })
   })
@@ -355,13 +471,21 @@ describe('docs-targets', () => {
       expect(readRepositoryUrl(workspace.root)).toBe('https://github.com/acme/repo')
     })
 
-    it('reads a string repository field and returns null for a manifest without one', () => {
+    it('reads a string repository field', () => {
       const workspace = manager.create({ files: { 'package.json': stringify({ repository: 'https://github.com/acme/other/' }) } })
-      const bare = manager.create({ files: { 'package.json': stringify({ name: 'bare' }) } })
-      const none = manager.create({})
 
       expect(readRepositoryUrl(workspace.root)).toBe('https://github.com/acme/other')
+    })
+
+    it('returns null for a manifest without a repository field', () => {
+      const bare = manager.create({ files: { 'package.json': stringify({ name: 'bare' }) } })
+
       expect(readRepositoryUrl(bare.root)).toBeNull()
+    })
+
+    it('returns null for a workspace without a manifest', () => {
+      const none = manager.create({})
+
       expect(readRepositoryUrl(none.root)).toBeNull()
     })
   })

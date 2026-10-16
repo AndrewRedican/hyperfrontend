@@ -32,20 +32,24 @@ describe('Channel State Management', () => {
 
       const state = createInitialState(name, target, defaultSettings)
 
-      expect(state.id).toBe('test-id-1')
-      expect(state.name).toBe(name)
-      expect(state.target).toBe(target)
-      expect(state.origin).toBeNull()
-      expect(state.active).toBe(false)
-      expect(state.connectTimestamp).toBeNull()
-      expect(state.contract).toBeNull()
-      expect(state.acceptedActions).toEqual([])
-      expect(state.queuedMessages).toEqual([])
-      expect(state.eventSubscriptions).toEqual([])
-      expect(state.messageSubscriptions).toEqual([])
-      expect(state.scheduledActivation).toBeNull()
-      expect(state.queueMessages).toBe(true)
-      expect(state.readyToConnect).toBe(false)
+      expect(state).toEqual(
+        expect.objectContaining({
+          id: 'test-id-1',
+          name,
+          target,
+          origin: null,
+          active: false,
+          connectTimestamp: null,
+          contract: null,
+          acceptedActions: [],
+          queuedMessages: [],
+          eventSubscriptions: [],
+          messageSubscriptions: [],
+          scheduledActivation: null,
+          queueMessages: true,
+          readyToConnect: false,
+        })
+      )
     })
 
     it('uses default values when settings are empty', () => {
@@ -58,9 +62,7 @@ describe('Channel State Management', () => {
       const state1 = createInitialState('channel-1', window, defaultSettings)
       const state2 = createInitialState('channel-2', window, defaultSettings)
 
-      expect(state1.id).toBe('test-id-1')
-      expect(state2.id).toBe('test-id-2')
-      expect(state1.id).not.toBe(state2.id)
+      expect([state1.id, state2.id]).toEqual(['test-id-1', 'test-id-2'])
     })
   })
 
@@ -122,18 +124,18 @@ describe('Channel State Management', () => {
 
       const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
 
-      expect(initialState.active).toBe(false)
-      expect(initialState.origin).toBeNull()
-      expect(newState).not.toBe(initialState)
+      expect({ active: initialState.active, origin: initialState.origin, sameReference: newState === initialState }).toEqual({
+        active: false,
+        origin: null,
+        sameReference: false,
+      })
     })
   })
 
   describe('deactivate', () => {
     it('marks channel as inactive', () => {
-      const initialState = createInitialState('test', window, {
-        ...defaultSettings,
-        contract: { emitted: [], accepted: [{ type: 'action1' }] },
-      })
+      const ownContract: IChannelContract = { emitted: [], accepted: [{ type: 'action1' }] }
+      const initialState = createInitialState('test', window, { ...defaultSettings, contract: ownContract })
       const activeState = activate(
         initialState,
         'https://example.com',
@@ -146,9 +148,7 @@ describe('Channel State Management', () => {
 
       const inactiveState = deactivate(activeState)
 
-      expect(inactiveState.active).toBe(false)
-      expect(inactiveState.origin).toBe('https://example.com')
-      expect(inactiveState.contract).toBeTruthy()
+      expect(inactiveState).toEqual(expect.objectContaining({ active: false, origin: 'https://example.com', contract: ownContract }))
     })
 
     it('does not mutate original state', () => {
@@ -156,8 +156,7 @@ describe('Channel State Management', () => {
 
       const inactiveState = deactivate(activeState)
 
-      expect(activeState.active).toBe(true)
-      expect(inactiveState).not.toBe(activeState)
+      expect({ active: activeState.active, sameReference: inactiveState === activeState }).toEqual({ active: true, sameReference: false })
     })
   })
 
@@ -177,8 +176,7 @@ describe('Channel State Management', () => {
 
       const newState = setOrigin(initialState, origin)
 
-      expect(initialState.origin).toBeNull()
-      expect(newState).not.toBe(initialState)
+      expect({ origin: initialState.origin, sameReference: newState === initialState }).toEqual({ origin: null, sameReference: false })
     })
   })
 
@@ -188,9 +186,9 @@ describe('Channel State Management', () => {
       const message: IMessage = { type: 'test-message', data: { foo: 'bar' } }
 
       const newState = queueMessage(initialState, message)
+      const queued = newState.queuedMessages
 
-      expect(newState.queuedMessages).toHaveLength(1)
-      expect(newState.queuedMessages[0]).toBe(message)
+      expect({ count: queued.length, sameMessage: queued[0] === message }).toEqual({ count: 1, sameMessage: true })
     })
 
     it('appends messages to existing queue', () => {
@@ -200,10 +198,10 @@ describe('Channel State Management', () => {
 
       const state1 = queueMessage(initialState, message1)
       const state2 = queueMessage(state1, message2)
+      const queued = state2.queuedMessages
+      const copiedOrMisplaced = [message1, message2].filter((message, index) => queued[index] !== message)
 
-      expect(state2.queuedMessages).toHaveLength(2)
-      expect(state2.queuedMessages[0]).toBe(message1)
-      expect(state2.queuedMessages[1]).toBe(message2)
+      expect({ count: queued.length, copiedOrMisplaced }).toEqual({ count: 2, copiedOrMisplaced: [] })
     })
 
     it('does not mutate original state or queue', () => {
@@ -212,8 +210,10 @@ describe('Channel State Management', () => {
 
       const newState = queueMessage(initialState, message)
 
-      expect(initialState.queuedMessages).toHaveLength(0)
-      expect(newState.queuedMessages).not.toBe(initialState.queuedMessages)
+      expect({ originalQueue: initialState.queuedMessages, sameQueue: newState.queuedMessages === initialState.queuedMessages }).toEqual({
+        originalQueue: [],
+        sameQueue: false,
+      })
     })
   })
 
@@ -236,8 +236,10 @@ describe('Channel State Management', () => {
 
       const clearedState = clearQueue(stateWithMessages)
 
-      expect(stateWithMessages.queuedMessages).toHaveLength(1)
-      expect(clearedState.queuedMessages).not.toBe(stateWithMessages.queuedMessages)
+      expect({
+        originalQueue: stateWithMessages.queuedMessages,
+        sameQueue: clearedState.queuedMessages === stateWithMessages.queuedMessages,
+      }).toEqual({ originalQueue: [message], sameQueue: false })
     })
 
     it('works on already empty queue', () => {

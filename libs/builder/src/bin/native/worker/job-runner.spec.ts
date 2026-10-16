@@ -46,37 +46,50 @@ describe('runInjectWorkerJob', () => {
     expect(statSync(job.outputBinary).size).toBe(statSync(job.hostBinary).size)
   })
 
-  it('reads the blob from disk and forwards it to postject.inject as a Buffer', async () => {
+  it('reads the blob from disk and forwards it to postject.inject as a Buffer in a single call', async () => {
     const job = baseJob()
     await runInjectWorkerJob(job)
-    expect(mockInject).toHaveBeenCalledTimes(1)
-    const [filename, resourceName, resourceData, options] = mockInject.mock.calls[0]
-    expect(filename).toBe(job.outputBinary)
-    expect(resourceName).toBe('NODE_SEA_BLOB')
-    expect(Buffer.isBuffer(resourceData)).toBe(true)
-    expect(resourceData.toString()).toBe('blob-bytes')
-    expect(options).toEqual({ machoSegmentName: 'NODE_SEA', sentinelFuse: 'NODE_SEA_FUSE_xxxxx' })
+    expect(mockInject.mock.calls).toEqual([
+      [job.outputBinary, 'NODE_SEA_BLOB', Buffer.from('blob-bytes'), { machoSegmentName: 'NODE_SEA', sentinelFuse: 'NODE_SEA_FUSE_xxxxx' }],
+    ])
   })
 
-  it('creates the parent directories for outputBinary and reportPath when missing', async () => {
-    const job = baseJob({
-      outputBinary: join(root, 'nested', 'deep', 'out', 'cli'),
-      reportPath: join(root, 'nested', 'deep', 'reports', 'report.json'),
-    })
+  it('creates the missing parent directories of outputBinary', async () => {
+    const job = baseJob({ outputBinary: join(root, 'nested', 'deep', 'out', 'cli') })
     await runInjectWorkerJob(job)
     expect(statSync(job.outputBinary).isFile()).toBe(true)
+  })
+
+  it('creates the missing parent directories of reportPath', async () => {
+    const job = baseJob({ reportPath: join(root, 'nested', 'deep', 'reports', 'report.json') })
+    await runInjectWorkerJob(job)
     expect(statSync(job.reportPath).isFile()).toBe(true)
   })
 
-  it('writes the report JSON to job.reportPath and returns the same shape', async () => {
+  it('reports a positive output size', async () => {
+    const report = await runInjectWorkerJob(baseJob())
+    expect(report.outputSize).toBeGreaterThan(0)
+  })
+
+  it('reports a positive end heap measurement', async () => {
+    const report = await runInjectWorkerJob(baseJob())
+    expect(report.endHeapMB).toBeGreaterThan(0)
+  })
+
+  it('reports a positive end rss measurement', async () => {
+    const report = await runInjectWorkerJob(baseJob())
+    expect(report.endRssMB).toBeGreaterThan(0)
+  })
+
+  it('reports a non-negative duration', async () => {
+    const report = await runInjectWorkerJob(baseJob())
+    expect(report.durationMs).toBeGreaterThanOrEqual(0)
+  })
+
+  it('persists the returned report as JSON at job.reportPath', async () => {
     const job = baseJob()
     const report = await runInjectWorkerJob(job)
-    expect(report.outputSize).toBeGreaterThan(0)
-    expect(report.endHeapMB).toBeGreaterThan(0)
-    expect(report.endRssMB).toBeGreaterThan(0)
-    expect(report.durationMs).toBeGreaterThanOrEqual(0)
-    const persisted = JSON.parse(readFileSync(job.reportPath, 'utf8'))
-    expect(persisted).toEqual(report)
+    expect(JSON.parse(readFileSync(job.reportPath, 'utf8'))).toEqual(report)
   })
 
   it('propagates rejections from postject.inject', async () => {
@@ -93,7 +106,9 @@ describe('runInjectWorkerJob', () => {
       })
     )
     const [, resourceName, , options] = mockInject.mock.calls[0]
-    expect(resourceName).toBe('CUSTOM_RES')
-    expect(options).toEqual({ machoSegmentName: '__CUSTOM_SEG', sentinelFuse: 'CUSTOM_FUSE' })
+    expect({ resourceName, options }).toEqual({
+      resourceName: 'CUSTOM_RES',
+      options: { machoSegmentName: '__CUSTOM_SEG', sentinelFuse: 'CUSTOM_FUSE' },
+    })
   })
 })

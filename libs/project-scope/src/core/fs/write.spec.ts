@@ -19,24 +19,24 @@ describe('core/fs/write', () => {
   describe('ensureDir', () => {
     it('creates directory if not exists', () => {
       const dirPath = join(TEST_DIR, 'new-dir')
-      expect(existsSync(dirPath)).toBe(false)
+      const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: false, after: true })
     })
 
     it('creates nested directories', () => {
       const dirPath = join(TEST_DIR, 'a', 'b', 'c')
-      expect(existsSync(dirPath)).toBe(false)
+      const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: false, after: true })
     })
 
     it('does nothing if directory exists', () => {
       const dirPath = join(TEST_DIR, 'existing-dir')
       mkdirSync(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: true, after: true })
     })
   })
 
@@ -50,10 +50,9 @@ describe('core/fs/write', () => {
 
     it('creates parent directories', () => {
       const filePath = join(TEST_DIR, 'nested', 'dir', 'test.txt')
-      expect(existsSync(join(TEST_DIR, 'nested'))).toBe(false)
+      const parentExistedBefore = existsSync(join(TEST_DIR, 'nested'))
       writeFileContent(filePath, 'Hello!')
-      expect(existsSync(filePath)).toBe(true)
-      expect(readFileSync(filePath, 'utf-8')).toBe('Hello!')
+      expect({ parentExistedBefore, content: readFileSync(filePath, 'utf-8') }).toEqual({ parentExistedBefore: false, content: 'Hello!' })
     })
 
     it('overwrites existing file', () => {
@@ -106,11 +105,8 @@ describe('core/fs/write', () => {
   describe('writeJsonFile', () => {
     it('writes formatted JSON', () => {
       const filePath = join(TEST_DIR, 'config.json')
-      const data = { name: 'test', version: '1.0.0' }
-      writeJsonFile(filePath, data)
-      const content = readFileSync(filePath, 'utf-8')
-      expect(JSON.parse(content)).toEqual(data)
-      expect(content).toContain('\n')
+      writeJsonFile(filePath, { name: 'test', version: '1.0.0' })
+      expect(readFileSync(filePath, 'utf-8')).toBe('{\n  "name": "test",\n  "version": "1.0.0"\n}\n')
     })
 
     it('respects indent option', () => {

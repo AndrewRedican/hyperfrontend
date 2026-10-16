@@ -14,10 +14,15 @@ describe('webpackDetector', () => {
     }
     const result = webpackDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('webpack')
-    expect(result?.name).toBe('Webpack')
-    expect(result?.version).toBe('5.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'webpack', name: 'Webpack', version: '5.0.0' }))
+  })
+
+  it('scores a webpack dependency at least 50', () => {
+    const pkg: PackageJson = {
+      devDependencies: { webpack: '^5.0.0' },
+    }
+    const result = webpackDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(50)
   })
 

@@ -8,10 +8,10 @@ const run = (source: string, isSafe: (target: string) => boolean = () => true): 
 
 describe('destructureRequires', () => {
   it('collapses a single-member require to a destructure and rewrites the access', () => {
-    const result = run("const m = require('./math/index.cjs');\nm.abs(x);")
-    expect(result).not.toBeNull()
-    expect(result?.rewrittenBindings).toBe(1)
-    expect(result?.code).toBe("const { abs } = require('./math/index.cjs');\nabs(x);")
+    expect(run("const m = require('./math/index.cjs');\nm.abs(x);")).toEqual({
+      code: "const { abs } = require('./math/index.cjs');\nabs(x);",
+      rewrittenBindings: 1,
+    })
   })
 
   it('collects members from property and string-element access, sorted', () => {
@@ -25,9 +25,10 @@ describe('destructureRequires', () => {
   })
 
   it('aliases a member shared by two requires so the bound locals stay distinct', () => {
-    const result = run("const a = require('./a.cjs');\nconst b = require('./b.cjs');\nuse(a.foo, b.foo);")
-    expect(result?.rewrittenBindings).toBe(2)
-    expect(result?.code).toBe("const { foo } = require('./a.cjs');\nconst { foo: foo$1 } = require('./b.cjs');\nuse(foo, foo$1);")
+    expect(run("const a = require('./a.cjs');\nconst b = require('./b.cjs');\nuse(a.foo, b.foo);")).toEqual({
+      code: "const { foo } = require('./a.cjs');\nconst { foo: foo$1 } = require('./b.cjs');\nuse(foo, foo$1);",
+      rewrittenBindings: 2,
+    })
   })
 
   it('unions repeated reads of the same member into one bound local', () => {

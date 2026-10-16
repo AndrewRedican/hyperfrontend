@@ -51,15 +51,26 @@ describe('createVault (node)', () => {
     expect(result).toBeNull()
   })
 
-  it('throws an error if trying to access the vault after it is closed', async () => {
+  it('rejects a write after the vault is closed', async () => {
     vault.close()
     await expect(vault.write('label', 'value')).rejects.toThrow('Vault is closed.')
+  })
+
+  it('rejects a read after the vault is closed', async () => {
+    vault.close()
     await expect(vault.read('label', password)).rejects.toThrow('Vault is closed.')
+  })
+
+  it('throws on a password request after the vault is closed', () => {
+    vault.close()
     expect(() => vault.getPassword()).toThrow('Vault is closed.')
   })
 
-  it('retrieves the password only once', () => {
+  it('returns the password on the first request', () => {
     expect(password).toBeTruthy()
+  })
+
+  it('returns null on a second password request', () => {
     expect(vault.getPassword()).toBeNull()
   })
 
@@ -70,10 +81,15 @@ describe('createVault (node)', () => {
       singleUseVault = createVault(true)
     })
 
-    it('allows reading a value only once', async () => {
+    it('returns the stored value on the first read', async () => {
       await singleUseVault.write(label, value)
       const firstRead = await singleUseVault.read(label, password)
       expect(firstRead).toBe(value)
+    })
+
+    it('closes the vault after the first read', async () => {
+      await singleUseVault.write(label, value)
+      await singleUseVault.read(label, password)
       await expect(singleUseVault.read(label, password)).rejects.toThrow('Vault is closed.')
     })
   })

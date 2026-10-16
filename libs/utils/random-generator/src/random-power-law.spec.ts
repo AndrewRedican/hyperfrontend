@@ -26,8 +26,7 @@ describe('randomPowerLaw', () => {
 
     const calculatedMean = sum / sampleSize
 
-    expect(calculatedMean).toBeGreaterThan(min)
-    expect(calculatedMean).toBeLessThan(max)
+    expect([calculatedMean].filter((mean) => !(mean > min && mean < max))).toStrictEqual([])
   })
 
   it('treats alpha as the standard Pareto exponent, concentrating mass near min', () => {
@@ -35,37 +34,48 @@ describe('randomPowerLaw', () => {
   })
 
   it('keeps every draw within the requested bounds', () => {
+    const outOfBounds: Array<{ alpha: number; value: number }> = []
     for (const alpha of [0.5, 1, 2, 3]) {
       for (let i = 0; i < 1000; i++) {
         const value = randomPowerLaw(alpha, 5, 500)
-        expect(value).toBeGreaterThanOrEqual(5)
-        expect(value).toBeLessThanOrEqual(500)
+        if (!(value >= 5 && value <= 500)) {
+          outOfBounds.push({ alpha, value })
+        }
       }
     }
+    expect(outOfBounds).toStrictEqual([])
+  })
+
+  it('draws a number rather than NaN at alpha of exactly 1', () => {
+    const median = medianOf(1, 1, 1000000)
+
+    expect(Number.isNaN(median)).toBe(false)
   })
 
   it('falls back to a log-uniform draw at alpha of exactly 1', () => {
     const median = medianOf(1, 1, 1000000)
 
-    expect(Number.isNaN(median)).toBe(false)
     // why: the log-uniform median is the geometric mean of the bounds, sqrt(1 * 1000000) = 1000.
-    expect(median).toBeGreaterThan(700)
-    expect(median).toBeLessThan(1400)
+    expect([median].filter((value) => !(value > 700 && value < 1400))).toStrictEqual([])
   })
 
   it('degenerates to a uniform draw at alpha of 0', () => {
     const median = medianOf(0, 1, 1000000)
 
-    expect(median).toBeGreaterThan(450000)
-    expect(median).toBeLessThan(550000)
+    expect([median].filter((value) => !(value > 450000 && value < 550000))).toStrictEqual([])
   })
 
-  it('shifts mass towards min as alpha increases', () => {
+  it('shifts mass towards min as alpha increases from 0.5 to 1.5', () => {
     const low = medianOf(0.5, 1, 1000000)
+    const mid = medianOf(1.5, 1, 1000000)
+
+    expect(mid).toBeLessThan(low)
+  })
+
+  it('shifts mass towards min as alpha increases from 1.5 to 2.5', () => {
     const mid = medianOf(1.5, 1, 1000000)
     const high = medianOf(2.5, 1, 1000000)
 
-    expect(mid).toBeLessThan(low)
     expect(high).toBeLessThan(mid)
   })
 

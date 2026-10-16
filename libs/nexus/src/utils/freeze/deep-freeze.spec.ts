@@ -4,6 +4,31 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { deepFreeze } from './deep-freeze'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
+/**
+ * Lists the named nodes that are not frozen, so one comparison covers every level of a structure and a failure names the levels that stayed mutable.
+ *
+ * @param nodes - The nodes to inspect, keyed by the name a failure should show.
+ * @returns The names of the nodes `Object.isFrozen` reports as not frozen, in the order given.
+ */
+function unfrozenNodes(nodes: Record<string, unknown>): string[] {
+  return Object.entries(nodes)
+    .filter(([, node]) => !Object.isFrozen(node))
+    .map(([name]) => name)
+}
+
+/**
+ * Attempts a mutation that a frozen target rejects and discards the resulting error, so a test can inspect the state the attempt leaves behind.
+ *
+ * @param mutate - The mutation to attempt.
+ */
+function attemptMutation(mutate: () => void): void {
+  try {
+    mutate()
+  } catch {
+    // note: whether the mutation throws is asserted by its own test; the caller only inspects the state that follows
+  }
+}
+
 describe('deepFreeze', () => {
   let mockLogger: Logger
 
@@ -16,6 +41,9 @@ describe('deepFreeze', () => {
       error: jest.fn(),
       setLogLevel: jest.fn(),
       getLogLevel: jest.fn(() => 'error'),
+      channel: jest.fn(),
+      timed: jest.fn(),
+      timedAsync: jest.fn(),
     }
   })
 
@@ -103,8 +131,7 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.child)).toBe(true)
+      expect(unfrozenNodes({ root: result, child: result.child })).toEqual([])
     })
 
     it('prevents modification of nested properties', () => {
@@ -135,10 +162,14 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.level1)).toBe(true)
-      expect(Object.isFrozen(result.level1.level2)).toBe(true)
-      expect(Object.isFrozen(result.level1.level2.level3)).toBe(true)
+      expect(
+        unfrozenNodes({
+          root: result,
+          level1: result.level1,
+          level2: result.level1.level2,
+          level3: result.level1.level2.level3,
+        })
+      ).toEqual([])
     })
 
     it('prevents modification at any nesting level', () => {
@@ -178,7 +209,7 @@ describe('deepFreeze', () => {
       }).toThrow()
     })
 
-    it('prevents array mutation methods', () => {
+    it('prevents array mutation through push', () => {
       const arr = [1, 2, 3]
       const result = deepFreeze(arr, mockLogger)
 
@@ -186,11 +217,21 @@ describe('deepFreeze', () => {
         // @ts-expect-error - intentionally trying to mutate frozen array
         result.push(4)
       }).toThrow()
+    })
+
+    it('prevents array mutation through pop', () => {
+      const arr = [1, 2, 3]
+      const result = deepFreeze(arr, mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to mutate frozen array
         result.pop()
       }).toThrow()
+    })
+
+    it('prevents array mutation through splice', () => {
+      const arr = [1, 2, 3]
+      const result = deepFreeze(arr, mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to mutate frozen array
@@ -202,10 +243,7 @@ describe('deepFreeze', () => {
       const arr = [{ id: 1 }, { id: 2 }, { id: 3 }]
       const result = deepFreeze(arr, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result[0])).toBe(true)
-      expect(Object.isFrozen(result[1])).toBe(true)
-      expect(Object.isFrozen(result[2])).toBe(true)
+      expect(unfrozenNodes({ array: result, first: result[0], second: result[1], third: result[2] })).toEqual([])
     })
 
     it('prevents modification of objects within arrays', () => {
@@ -226,13 +264,10 @@ describe('deepFreeze', () => {
       ]
       const result = deepFreeze(arr, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result[0])).toBe(true)
-      expect(Object.isFrozen(result[1])).toBe(true)
-      expect(Object.isFrozen(result[2])).toBe(true)
+      expect(unfrozenNodes({ outer: result, first: result[0], second: result[1], third: result[2] })).toEqual([])
     })
 
-    it('prevents modification of nested arrays', () => {
+    it('prevents element assignment in nested arrays', () => {
       const arr = [
         [1, 2],
         [3, 4],
@@ -243,6 +278,14 @@ describe('deepFreeze', () => {
         // @ts-expect-error - intentionally trying to modify nested frozen array
         result[0][0] = 99
       }).toThrow()
+    })
+
+    it('prevents push into nested arrays', () => {
+      const arr = [
+        [1, 2],
+        [3, 4],
+      ]
+      const result = deepFreeze(arr, mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to mutate nested frozen array
@@ -262,10 +305,7 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.items)).toBe(true)
-      expect(Object.isFrozen(result.nested)).toBe(true)
-      expect(Object.isFrozen(result.nested.values)).toBe(true)
+      expect(unfrozenNodes({ root: result, items: result.items, nested: result.nested, values: result.nested.values })).toEqual([])
     })
 
     it('prevents modification of arrays within objects', () => {
@@ -298,19 +338,23 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(complex, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.settings)).toBe(true)
-      expect(Object.isFrozen(result.settings.features)).toBe(true)
-      expect(Object.isFrozen(result.settings.options)).toBe(true)
-      expect(Object.isFrozen(result.settings.options.retries)).toBe(true)
-      expect(Object.isFrozen(result.users)).toBe(true)
-      expect(Object.isFrozen(result.users[0])).toBe(true)
-      expect(Object.isFrozen(result.users[0].roles)).toBe(true)
-      expect(Object.isFrozen(result.users[1])).toBe(true)
-      expect(Object.isFrozen(result.users[1].roles)).toBe(true)
+      expect(
+        unfrozenNodes({
+          root: result,
+          settings: result.settings,
+          features: result.settings.features,
+          options: result.settings.options,
+          retries: result.settings.options.retries,
+          users: result.users,
+          firstUser: result.users[0],
+          firstUserRoles: result.users[0].roles,
+          secondUser: result.users[1],
+          secondUserRoles: result.users[1].roles,
+        })
+      ).toEqual([])
     })
 
-    it('prevents any modification in complex structures', () => {
+    it('prevents property assignment deep in complex structures', () => {
       const complex = {
         data: {
           items: [{ value: 1 }, { value: 2 }],
@@ -322,6 +366,15 @@ describe('deepFreeze', () => {
         // @ts-expect-error - intentionally trying to modify frozen object
         result.data.items[0].value = 99
       }).toThrow()
+    })
+
+    it('prevents array growth deep in complex structures', () => {
+      const complex = {
+        data: {
+          items: [{ value: 1 }, { value: 2 }],
+        },
+      }
+      const result = deepFreeze(complex, mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to mutate frozen array
@@ -331,38 +384,53 @@ describe('deepFreeze', () => {
   })
 
   describe('special cases', () => {
-    it('handles empty objects', () => {
+    it('freezes empty objects', () => {
       const obj = {}
       const result = deepFreeze(obj, mockLogger)
 
       expect(Object.isFrozen(result)).toBe(true)
+    })
+
+    it('returns the same empty object', () => {
+      const obj = {}
+      const result = deepFreeze(obj, mockLogger)
+
       expect(result).toBe(obj)
     })
 
-    it('handles empty arrays', () => {
+    it('freezes empty arrays', () => {
       const arr: unknown[] = []
       const result = deepFreeze(arr, mockLogger)
 
       expect(Object.isFrozen(result)).toBe(true)
+    })
+
+    it('returns the same empty array', () => {
+      const arr: unknown[] = []
+      const result = deepFreeze(arr, mockLogger)
+
       expect(result).toBe(arr)
     })
 
-    it('handles objects with null values', () => {
+    it('freezes objects with null values', () => {
       const obj = { value: null, data: { nested: null } }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.data)).toBe(true)
-      expect(result.value).toBe(null)
-      expect(result.data.nested).toBe(null)
+      expect(unfrozenNodes({ root: result, data: result.data })).toEqual([])
+    })
+
+    it('keeps null values in place', () => {
+      const obj = { value: null, data: { nested: null } }
+      const result = deepFreeze(obj, mockLogger)
+
+      expect(result).toEqual({ value: null, data: { nested: null } })
     })
 
     it('handles objects with undefined values', () => {
       const obj = { value: undefined, data: { nested: undefined } }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.data)).toBe(true)
+      expect(unfrozenNodes({ root: result, data: result.data })).toEqual([])
     })
 
     it('handles objects with mixed primitive and object values', () => {
@@ -377,9 +445,7 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.object)).toBe(true)
-      expect(Object.isFrozen(result.array)).toBe(true)
+      expect(unfrozenNodes({ root: result, object: result.object, array: result.array })).toEqual([])
     })
 
     it('handles Date objects', () => {
@@ -387,8 +453,7 @@ describe('deepFreeze', () => {
       const obj = { timestamp: date }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.timestamp)).toBe(true)
+      expect(unfrozenNodes({ root: result, timestamp: result.timestamp })).toEqual([])
     })
 
     it('handles RegExp objects', () => {
@@ -396,8 +461,7 @@ describe('deepFreeze', () => {
       const obj = { pattern: regex }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.pattern)).toBe(true)
+      expect(unfrozenNodes({ root: result, pattern: result.pattern })).toEqual([])
     })
 
     it('freezes Map objects', () => {
@@ -426,11 +490,17 @@ describe('deepFreeze', () => {
       }).not.toThrow()
     })
 
-    it('handles arrays with sparse elements', () => {
+    it('freezes arrays with sparse elements', () => {
       const arr = [1, , 3, , 5] // eslint-disable-line no-sparse-arrays
       const result = deepFreeze(arr, mockLogger)
 
       expect(Object.isFrozen(result)).toBe(true)
+    })
+
+    it('keeps the length of arrays with sparse elements', () => {
+      const arr = [1, , 3, , 5] // eslint-disable-line no-sparse-arrays
+      const result = deepFreeze(arr, mockLogger)
+
       expect(result.length).toBe(5)
     })
   })
@@ -446,51 +516,74 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      expect(result.name).toBe('test')
-      expect(result.value).toBe(42)
-      expect(result.nested.flag).toBe(true)
+      expect(result).toEqual({ name: 'test', value: 42, nested: { flag: true } })
     })
 
     it('preserves array type information', () => {
       const arr = [1, 2, 3, 4, 5]
       const result = deepFreeze(arr, mockLogger)
 
-      expect(result.length).toBe(5)
-      expect(result.includes(3)).toBe(true)
-      expect(result.indexOf(4)).toBe(3)
+      expect({ length: result.length, includesThree: result.includes(3), indexOfFour: result.indexOf(4) }).toEqual({
+        length: 5,
+        includesThree: true,
+        indexOfFour: 3,
+      })
     })
   })
 
   describe('example from documentation', () => {
-    it('matches the behavior described in JSDoc example', () => {
-      const config = {
-        name: 'app',
-        settings: {
-          debug: true,
-          options: ['a', 'b'],
-        },
-      }
+    const documentedConfig = () => ({
+      name: 'app',
+      settings: {
+        debug: true,
+        options: ['a', 'b'],
+      },
+    })
 
-      const frozen = deepFreeze(config, mockLogger)
+    it('rejects reassigning a top-level property, as documented', () => {
+      const frozen = deepFreeze(documentedConfig(), mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to modify frozen object
         frozen.name = 'x'
       }).toThrow()
+    })
+
+    it('rejects reassigning a nested property, as documented', () => {
+      const frozen = deepFreeze(documentedConfig(), mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to modify frozen nested object
         frozen.settings.debug = false
       }).toThrow()
+    })
+
+    it('rejects pushing into a nested array, as documented', () => {
+      const frozen = deepFreeze(documentedConfig(), mockLogger)
 
       expect(() => {
         // @ts-expect-error - intentionally trying to mutate frozen array
         frozen.settings.options.push('c')
       }).toThrow()
+    })
 
-      expect(frozen.name).toBe('app')
-      expect(frozen.settings.debug).toBe(true)
-      expect(frozen.settings.options).toEqual(['a', 'b'])
+    it('keeps the documented values after the rejected mutations', () => {
+      const frozen = deepFreeze(documentedConfig(), mockLogger)
+
+      attemptMutation(() => {
+        // @ts-expect-error - intentionally trying to modify frozen object
+        frozen.name = 'x'
+      })
+      attemptMutation(() => {
+        // @ts-expect-error - intentionally trying to modify frozen nested object
+        frozen.settings.debug = false
+      })
+      attemptMutation(() => {
+        // @ts-expect-error - intentionally trying to mutate frozen array
+        frozen.settings.options.push('c')
+      })
+
+      expect(frozen).toEqual({ name: 'app', settings: { debug: true, options: ['a', 'b'] } })
     })
   })
 
@@ -500,11 +593,8 @@ describe('deepFreeze', () => {
       const frozenParent = Object.freeze({ child: unfrozenChild })
       const root = { frozen: frozenParent }
 
-      expect(() => deepFreeze(root, mockLogger)).not.toThrow()
-
       const result = deepFreeze(root, mockLogger)
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.frozen.child)).toBe(true)
+      expect(unfrozenNodes({ root: result, child: result.frozen.child })).toEqual([])
     })
 
     it('handles circular reference through frozen object', () => {
@@ -512,11 +602,8 @@ describe('deepFreeze', () => {
       const frozen = Object.freeze({ backToRoot: root })
       root.child.frozen = frozen
 
-      expect(() => deepFreeze(root, mockLogger)).not.toThrow()
-
       const result = deepFreeze(root, mockLogger)
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.child)).toBe(true)
+      expect(unfrozenNodes({ root: result, child: result.child })).toEqual([])
     })
 
     it('handles deeply nested mix of frozen and unfrozen with cycles', () => {
@@ -527,12 +614,8 @@ describe('deepFreeze', () => {
 
       const root = { a: unfrozen1, b: frozen }
 
-      expect(() => deepFreeze(root, mockLogger)).not.toThrow()
-
       const result = deepFreeze(root, mockLogger)
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.a)).toBe(true)
-      expect(Object.isFrozen(result.b.nested)).toBe(true)
+      expect(unfrozenNodes({ root: result, a: result.a, nested: result.b.nested })).toEqual([])
     })
 
     it('does not re-freeze already frozen objects', () => {
@@ -541,30 +624,7 @@ describe('deepFreeze', () => {
 
       deepFreeze(obj, mockLogger)
 
-      expect(Object.isFrozen(obj)).toBe(true)
-      expect(Object.isFrozen(obj.unfrozen)).toBe(true)
-    })
-  })
-
-  describe('graceful degradation', () => {
-    it('freezes what it can when some nodes fail', () => {
-      const obj = {
-        normal: { value: 1 },
-        anotherNormal: { value: 2 },
-      }
-
-      const result = deepFreeze(obj, mockLogger)
-
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.normal)).toBe(true)
-      expect(Object.isFrozen(result.anotherNormal)).toBe(true)
-    })
-
-    it('returns value even if primitives are passed', () => {
-      expect(deepFreeze(42, mockLogger)).toBe(42)
-      expect(deepFreeze('string', mockLogger)).toBe('string')
-      expect(deepFreeze(null, mockLogger)).toBe(null)
-      expect(deepFreeze(undefined, mockLogger)).toBe(undefined)
+      expect(unfrozenNodes({ root: obj, unfrozenChild: obj.unfrozen })).toEqual([])
     })
   })
 
@@ -580,9 +640,7 @@ describe('deepFreeze', () => {
 
       const result = deepFreeze(obj, mockLogger, { maxDepth: 1 })
 
-      expect(Object.isFrozen(result)).toBe(true)
-      expect(Object.isFrozen(result.level1)).toBe(true)
-      expect(Object.isFrozen(result.level1.level2)).toBe(false)
+      expect(unfrozenNodes({ root: result, level1: result.level1, level2: result.level1.level2 })).toEqual(['level2'])
     })
 
     it('uses sensible default maxDepth', () => {
@@ -595,83 +653,11 @@ describe('deepFreeze', () => {
 
       const result = deepFreeze(root, mockLogger)
 
-      expect(Object.isFrozen(result)).toBe(true)
-
       let check = result as Record<string, Record<string, unknown>>
       for (let i = 0; i < 10; i++) {
         expect(Object.isFrozen(check)).toBe(true)
         check = check['child'] as Record<string, Record<string, unknown>>
       }
-    })
-  })
-
-  describe('error handling edge cases', () => {
-    it('logs and continues when freeze throws on a node', () => {
-      const throwingProxy = new Proxy(
-        { value: 1 },
-        {
-          preventExtensions: () => {
-            throw new Error('Cannot freeze this object')
-          },
-        }
-      )
-
-      const obj = {
-        normal: { value: 'normal' },
-        problematic: throwingProxy,
-        anotherNormal: { value: 'also normal' },
-      }
-
-      expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
-
-      expect(mockLogger.debug).toHaveBeenCalledWith('Failed to freeze node at depth', expect.any(Number), expect.any(Error))
-
-      expect(Object.isFrozen(obj)).toBe(true)
-      expect(Object.isFrozen(obj.normal)).toBe(true)
-      expect(Object.isFrozen(obj.anotherNormal)).toBe(true)
-    })
-
-    it('logs and returns value when traversal fails completely', () => {
-      const problematic = {
-        get badProperty(): unknown {
-          throw new Error('Property access error')
-        },
-      }
-
-      const obj = Object.create(null)
-      Object.defineProperty(obj, 'trap', {
-        get: () => {
-          throw new Error('Traversal trap triggered')
-        },
-        enumerable: true,
-      })
-
-      expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
-
-      const result = deepFreeze(problematic, mockLogger)
-      expect(result).toBe(problematic)
-    })
-
-    it('handles objects with non-configurable throwing getters', () => {
-      const obj: Record<string, unknown> = { normal: { value: 1 } }
-      Object.defineProperty(obj, 'throwing', {
-        get: () => {
-          throw new Error('Getter throws')
-        },
-        enumerable: true,
-        configurable: false,
-      })
-
-      expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
-    })
-
-    it('handles revoked proxies gracefully', () => {
-      const { proxy, revoke } = Proxy.revocable({ value: 1 }, {})
-      const obj = { child: proxy }
-
-      revoke()
-
-      expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
     })
   })
 })

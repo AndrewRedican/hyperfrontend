@@ -12,11 +12,12 @@ describe('getDepth', () => {
       b: 80,
       z: [100, 200, 500, [[]]],
     }
-    const [maxDepth, locations] = getDepth(target)
-    expect(maxDepth).toEqual(3)
-    expect(locations).toEqual([
-      ['a', 'b', 'c'],
-      ['z', '3', '0'],
+    expect(getDepth(target)).toEqual([
+      3,
+      [
+        ['a', 'b', 'c'],
+        ['z', '3', '0'],
+      ],
     ])
   })
 })
@@ -37,11 +38,12 @@ describe('getDepth - with config detectCircularReferences:true', () => {
     }
     target.b = target
     target.z[3][0][0] = target.z[3]
-    const [maxDepth, locations] = getDepth(target)
-    expect(maxDepth).toEqual(3)
-    expect(locations).toEqual([
-      ['a', 'b', 'c'],
-      ['z', '3', '0'],
+    expect(getDepth(target)).toEqual([
+      3,
+      [
+        ['a', 'b', 'c'],
+        ['z', '3', '0'],
+      ],
     ])
   })
 })

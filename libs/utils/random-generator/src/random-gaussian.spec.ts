@@ -19,8 +19,7 @@ describe('randomGaussian', () => {
     const min = 10
     const max = 20
     const value = randomGaussian(min, max)
-    expect(value).toBeGreaterThanOrEqual(min)
-    expect(value).toBeLessThanOrEqual(max)
+    expect([value].filter((draw) => !(draw >= min && draw <= max))).toStrictEqual([])
   })
 
   it('generates values with a normal distribution', () => {
@@ -35,11 +34,10 @@ describe('randomGaussian', () => {
 
     const mean = values.reduce((sum, val) => sum + val, 0) / n
     const mu = (min + max) / 2
-    expect(mean).toBeCloseTo(mu, 1)
 
     const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n
     const sigma = (max - min) / 6
-    expect(Math.sqrt(variance)).toBeCloseTo(sigma, 1)
+    expect({ mean, deviation: Math.sqrt(variance) }).toEqual({ mean: expect.closeTo(mu, 1), deviation: expect.closeTo(sigma, 1) })
   })
 
   it('throws an error if min is greater than max', () => {

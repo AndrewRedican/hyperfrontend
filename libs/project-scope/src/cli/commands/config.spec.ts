@@ -28,12 +28,12 @@ describe('configCommand', () => {
 
   it('returns JSON output when format is json', () => {
     const result = configCommand({ path: MINIMAL_PROJECT, format: 'json' })
-    expect(result.output).toBeDefined()
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
-    expect(parsed.length).toBeGreaterThan(0)
-    expect(parsed[0]).toHaveProperty('type')
-    expect(parsed[0]).toHaveProperty('path')
+    expect(JSON.parse(result.output as string)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'package.json', path: 'package.json' }),
+        expect.objectContaining({ type: 'tsconfig', path: 'tsconfig.json' }),
+      ])
+    )
   })
 
   it('filters by type when specified', () => {
@@ -51,29 +51,31 @@ describe('configCommand', () => {
 
   it('uses current directory when no path specified', () => {
     const result = configCommand({})
-    expect(result).toHaveProperty('exitCode')
     expect([0, 1]).toContain(result.exitCode)
   })
 
   it('handles missing path gracefully', () => {
     const result = configCommand({ path: '/nonexistent/path/xyz' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('No configuration files found')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: 'Configuration Files\n===================\n\nNo configuration files found.',
+    })
   })
 })
 
 describe('configCommandDef', () => {
   it('has correct name and description', () => {
-    expect(configCommandDef.name).toBe('config')
-    expect(configCommandDef.description).toContain('configuration')
+    expect(configCommandDef).toEqual(expect.objectContaining({ name: 'config', description: expect.stringContaining('configuration') }))
   })
 
-  it('provides help text', () => {
-    const help = configCommandDef.getHelp()
-    expect(help).toContain('project-scope config')
-    expect(help).toContain('--type')
-    expect(help).toContain('--show-contents')
-    expect(help).toContain('--format')
+  it('opens the help text with the usage line', () => {
+    expect(configCommandDef.getHelp()).toMatch(/^project-scope config \[path\] \[options\]\n/)
+  })
+
+  it('lists every option in the help text', () => {
+    expect(configCommandDef.getHelp()).toMatch(
+      /--type, -t +Filter by config type \([^)]*\)\n +--show-contents +Show file contents\n +--format, -f +Output format: text, json \(default: text\)/
+    )
   })
 
   it('executes with parsed args', () => {
@@ -89,45 +91,40 @@ describe('configCommandDef', () => {
 
   it('parses --type argument', () => {
     const result = configCommandDef.execute([MINIMAL_PROJECT, '--type', 'tsconfig'], {})
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('tsconfig')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('  * tsconfig.json\n') })
   })
 
   it('parses --show-contents argument', () => {
     const result = configCommandDef.execute([MINIMAL_PROJECT, '--show-contents'], {})
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Contents')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('    Contents:\n') })
   })
 
   it('parses -f shorthand for format', () => {
     const result = configCommandDef.execute([MINIMAL_PROJECT, '-f', 'json'], {})
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.any(Array),
+    })
   })
 
   it('parses -t shorthand for type', () => {
     const result = configCommandDef.execute([MINIMAL_PROJECT, '-t', 'package.json'], {})
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('package.json')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('  * package.json\n') })
   })
 })
 
 describe('configCommand with showContents', () => {
   it('shows parsed contents for JSON configs in text format', () => {
     const result = configCommand({ path: MINIMAL_PROJECT, showContents: true })
-    expect(result.output).toBeDefined()
-    expect(result.exitCode).toBe(0)
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('shows contents in JSON format', () => {
     const result = configCommand({ path: MINIMAL_PROJECT, showContents: true, format: 'json' })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
-
-    const withContents = parsed.find((c: Record<string, unknown>) => c['contents'] !== undefined)
-    expect(withContents === undefined || withContents['contents'] !== undefined).toBe(true)
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ contents: expect.any(Object) })]),
+    })
   })
 
   it('handles config files that cannot be parsed', () => {
@@ -140,8 +137,7 @@ describe('configCommand with showContents', () => {
     const parsed = JSON.parse(result.output as string)
 
     for (const config of parsed) {
-      expect(config).toHaveProperty('type')
-      expect(config).toHaveProperty('path')
+      expect(config).toEqual(expect.objectContaining({ type: expect.any(String), path: expect.any(String) }))
     }
   })
 
@@ -154,44 +150,41 @@ describe('configCommand with showContents', () => {
   it('shows contents for env files', () => {
     const largeConfigDir = resolve(FIXTURES_DIR, 'large-config')
     const result = configCommand({ path: largeConfigDir, showContents: true, type: 'env' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
-    expect(result.output).toContain('Contents')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining('  * .env\n    Environment variables\n    Contents:\n'),
+    })
   })
 
   it('shows contents in JSON format for env files', () => {
     const largeConfigDir = resolve(FIXTURES_DIR, 'large-config')
     const result = configCommand({ path: largeConfigDir, showContents: true, format: 'json', type: 'env' })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
-    const envConfig = parsed.find((c: Record<string, unknown>) => c['type'] === 'env')
-    expect(envConfig).toBeDefined()
-    expect(envConfig['rawContents'] !== undefined || envConfig['contents'] !== undefined).toBe(true)
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ type: 'env', contents: expect.any(Object) })]),
+    })
   })
 
   it('includes extends field when present in JSON format for tsconfig with extends', () => {
     const tsconfigExtendsDir = resolve(FIXTURES_DIR, 'tsconfig-extends')
     const result = configCommand({ path: tsconfigExtendsDir, showContents: true, format: 'json', type: 'tsconfig' })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-
-    const tsconfigWithExtends = parsed.find((c: Record<string, unknown>) => c['type'] === 'tsconfig' && c['path'] === 'tsconfig.json')
-    expect(tsconfigWithExtends).toBeDefined()
-    expect(tsconfigWithExtends.extends).toBeDefined()
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([
+        expect.objectContaining({ type: 'tsconfig', path: 'tsconfig.json', extends: ['./tsconfig.base.json'] }),
+      ]),
+    })
   })
 
   it('shows config description in text output', () => {
     const result = configCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('handles unable to read contents gracefully', () => {
     const invalidDir = resolve(FIXTURES_DIR, 'invalid-tsconfig')
     const result = configCommand({ path: invalidDir, showContents: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('    [Unable to read contents]\n') })
   })
 })
 
@@ -203,40 +196,41 @@ describe('configCommand edge cases', () => {
 
   it('groups configs by category correctly', () => {
     const result = configCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Package:')
-    expect(result.output).toContain('TypeScript:')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        'TypeScript:\n  * tsconfig.json\n    TypeScript configuration\n\nPackage:\n  * package.json\n    NPM package manifest\n'
+      ),
+    })
   })
 
   it('shows total count in summary', () => {
     const result = configCommand({ path: MINIMAL_PROJECT })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toMatch(/Total: \d+ configuration file\(s\) found/)
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringMatching(/Total: \d+ configuration file\(s\) found/),
+    })
   })
 
   it('shows raw contents preview for JS/TS config files', () => {
     const sveltekitDir = resolve(FIXTURES_DIR, 'sveltekit-app')
     const result = configCommand({ path: sveltekitDir, showContents: true, type: 'svelte' })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Contents')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('    Contents (preview):\n') })
   })
 
   it('shows raw contents in JSON format for JS config files', () => {
     const sveltekitDir = resolve(FIXTURES_DIR, 'sveltekit-app')
     const result = configCommand({ path: sveltekitDir, showContents: true, format: 'json', type: 'svelte' })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
-    const svelteConfig = parsed.find((c: Record<string, unknown>) => c['type'] === 'svelte')
-    expect(svelteConfig).toBeDefined()
-    expect(svelteConfig['rawContents'] !== undefined || svelteConfig['contents'] !== undefined).toBe(true)
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ type: 'svelte', rawContents: expect.any(String) })]),
+    })
   })
 
   it('shows truncation indicator for very long raw content', () => {
     const configFilesDir = resolve(FIXTURES_DIR, 'config-files')
     const result = configCommand({ path: configFilesDir, showContents: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 })
 
@@ -249,16 +243,19 @@ describe('configCommand error handling', () => {
   it('handles configs with unreadable contents in JSON format gracefully', () => {
     const invalidDir = resolve(FIXTURES_DIR, 'invalid-tsconfig')
     const result = configCommand({ path: invalidDir, showContents: true, format: 'json' })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(Array.isArray(parsed)).toBe(true)
-    expect(parsed.length).toBeGreaterThan(0)
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })]),
+    })
   })
 
   it('handles configCommand with path that causes detectConfigs to throw', () => {
     const result = configCommand({ path: '/\x00invalid\x00path' })
-    expect([0, 1]).toContain(result.exitCode)
-    expect(result.exitCode === 1 ? result.error : 'Config inspection failed').toContain('Config inspection failed')
+    expect(result).toEqual(
+      result.exitCode === 1
+        ? { exitCode: 1, error: expect.stringContaining('Config inspection failed') }
+        : { exitCode: 0, output: expect.any(String) }
+    )
   })
 
   it('returns error message when configCommand catches an exception', () => {

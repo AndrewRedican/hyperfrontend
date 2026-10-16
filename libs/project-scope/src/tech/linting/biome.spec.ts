@@ -18,32 +18,49 @@ describe('biomeDetector', () => {
       devDependencies: { '@biomejs/biome': '^1.5.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('biome')
-    expect(result?.name).toBe('Biome')
-    expect(result?.version).toBe('1.5.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'biome',
+        name: 'Biome',
+        version: '1.5.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.@biomejs/biome' }]),
+      })
+    )
+  })
+
+  it('scores a @biomejs/biome dependency above zero', () => {
+    const result = biomeDetector('/some/path', {
+      name: 'test-project',
+      devDependencies: { '@biomejs/biome': '^1.5.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.@biomejs/biome' }]))
   })
 
   it('detects biome.json config file', () => {
     const result = biomeDetector(BIOME_PROJECT)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('biome')
-    expect(result?.configPath).toBe('biome.json')
-    expect(result?.confidence).toBe(100)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'config-file', path: 'biome.json' }]))
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'biome',
+        configPath: 'biome.json',
+        confidence: 100,
+        detectedFrom: expect.arrayContaining([{ type: 'config-file', path: 'biome.json' }]),
+      })
+    )
   })
 
   it('detects biome.jsonc config file when biome.json not present', () => {
     const result = biomeDetector(BIOME_JSONC_PROJECT)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('biome')
-    expect(result?.configPath).toBe('biome.jsonc')
-    expect(result?.confidence).toBe(30)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'config-file', path: 'biome.jsonc' }]))
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'biome',
+        configPath: 'biome.jsonc',
+        confidence: 30,
+        detectedFrom: expect.arrayContaining([{ type: 'config-file', path: 'biome.jsonc' }]),
+      })
+    )
   })
 
   it('prefers biome.json over biome.jsonc', () => {
@@ -58,17 +75,13 @@ describe('biomeDetector', () => {
       dependencies: { '@biomejs/biome': '1.5.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('biome')
-    expect(result?.version).toBe('1.5.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'biome', version: '1.5.0' }))
   })
 
   it('adds config file source when biome.json exists', () => {
     const result = biomeDetector(BIOME_PROJECT)
 
-    expect(result).not.toBeNull()
-    expect(result?.confidence).toBeLessThanOrEqual(100)
-    expect(result?.detectedFrom.length).toBeGreaterThan(0)
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'config-file', path: 'biome.json' }]))
   })
 
   it('returns null for empty package.json', () => {

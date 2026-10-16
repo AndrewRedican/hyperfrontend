@@ -51,9 +51,12 @@ describe('@hyperfrontend/json-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.validate).toBe('function')
-    expect(typeof exports.createValidator).toBe('function')
-    expect(typeof exports.toJsonSchema).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        validate: expect.any(Function),
+        createValidator: expect.any(Function),
+        toJsonSchema: expect.any(Function),
+      })
+    )
   })
 })

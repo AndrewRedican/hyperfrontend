@@ -114,8 +114,10 @@ describe('resolveSpecifier', () => {
 
 describe('toModuleUrl and the module generation', () => {
   it('returns a plain URL at generation zero', () => {
-    assert.equal(currentGeneration(), 0)
-    assert.equal(toModuleUrl(join(HOOKS_DIR, 'paths.ts')), pathToFileURL(join(HOOKS_DIR, 'paths.ts')).href)
+    assert.deepEqual(
+      { generation: currentGeneration(), url: toModuleUrl(join(HOOKS_DIR, 'paths.ts')) },
+      { generation: 0, url: pathToFileURL(join(HOOKS_DIR, 'paths.ts')).href }
+    )
   })
 
   it('appends the generation once it advances', () => {

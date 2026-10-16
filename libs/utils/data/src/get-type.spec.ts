@@ -139,11 +139,13 @@ describe('getType', () => {
     expect(getType(new Array(5))).toBe('array')
   })
 
-  it('returns "object" for a reference set to a plain object', () => {
-    expect(getType({})).toBe('object')
-    expect(getType({ a: 1, b: 2 })).toBe('object')
-    expect(getType(new Object())).toBe('object')
-    expect(getType(Object.create(null))).toBe('object')
+  it.each([
+    ['an empty object literal', {}],
+    ['an object literal with properties', { a: 1, b: 2 }],
+    ['new Object()', new Object()],
+    ['an object without a prototype', Object.create(null)],
+  ])('returns "object" for a reference set to a plain object: %s', (_label: string, value: unknown) => {
+    expect(getType(value)).toBe('object')
   })
 
   it('returns "object" for a reference to instance of any unregistered class', () => {
@@ -190,8 +192,8 @@ describe('getType', () => {
     class RegisteredClassA {}
     class RegisteredClassB {}
     registerClassTypes(RegisteredClassA, RegisteredClassB)
-    expect(getType(new RegisteredClassA())).toBe('RegisteredClassA')
-    expect(getType(new RegisteredClassB())).toBe('RegisteredClassB')
+    const instances = [new RegisteredClassA(), new RegisteredClassB()]
+    expect(instances.map((instance) => getType(instance))).toEqual(['RegisteredClassA', 'RegisteredClassB'])
     deregisterClassTypes(RegisteredClassA, RegisteredClassB)
   })
 })

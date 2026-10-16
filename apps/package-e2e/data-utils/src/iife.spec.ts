@@ -33,16 +33,18 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
     expect(typeof global.getType).toBe('function')
   })
 
-  it('correctly detects types from IIFE bundle', () => {
+  it.each([
+    ['hello', 'string'],
+    [123, 'number'],
+    [[], 'array'],
+    [{}, 'object'],
+  ])('detects the type of %p as %s from IIFE bundle', (input, expected) => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       getType: (value: unknown) => string
     }
 
-    expect(global.getType('hello')).toBe('string')
-    expect(global.getType(123)).toBe('number')
-    expect(global.getType([])).toBe('array')
-    expect(global.getType({})).toBe('object')
+    expect(global.getType(input)).toBe(expected)
   })
 
   it('exports isIdentical on the global', () => {
@@ -52,6 +54,14 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
     }
 
     expect(typeof global.isIdentical).toBe('function')
+  })
+
+  it('detects structurally equal objects as identical from IIFE bundle', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
+      isIdentical: (a: unknown, b: unknown) => boolean
+    }
+
     expect(global.isIdentical({ a: 1 }, { a: 1 })).toBe(true)
   })
 
@@ -62,6 +72,13 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
     }
 
     expect(typeof global.hasCircularReference).toBe('function')
+  })
+
+  it('reports no circular reference in an acyclic object from IIFE bundle', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
+      hasCircularReference: (value: unknown) => boolean
+    }
 
     const obj: Record<string, unknown> = { a: 1 }
     expect(global.hasCircularReference(obj)).toBe(false)

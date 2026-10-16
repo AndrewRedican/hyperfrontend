@@ -2,8 +2,10 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { noop } from './noop-function'
 
 describe('noop', () => {
-  it('does not throw an error regardless of the arguments', () => {
-    expect(() => noop()).not.toThrow()
-    expect(() => noop(1, 'a', true, {}, [], () => void 0)).not.toThrow()
+  it.each([
+    ['no arguments', []],
+    ['mixed arguments', [1, 'a', true, {}, [], () => void 0]],
+  ])('does not throw an error for %s', (_label: string, args: unknown[]) => {
+    expect(() => noop(...args)).not.toThrow()
   })
 })

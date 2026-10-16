@@ -243,10 +243,14 @@ describe('refreshDownloads', () => {
     await refreshDownloads({ dir, packages: [FEATURES], client: fixtureNpm('2026-09-10'), now: NOW })
     const before = readdirSync(dir).map((file) => [file, readFileSync(join(dir, file), 'utf8')])
     const failing = fixtureNpm('2026-09-12', 0, new NpmStatsError('truncated-range', 'moved start'))
-    await expect(refreshDownloads({ dir, packages: [FEATURES, NEXUS], client: failing, now: NOW + 2 * 86_400_000 })).rejects.toThrow(
-      'moved start'
+    const failure = await refreshDownloads({ dir, packages: [FEATURES, NEXUS], client: failing, now: NOW + 2 * 86_400_000 }).then(
+      () => null,
+      (error: Error) => error.message
     )
-    expect(readdirSync(dir).map((file) => [file, readFileSync(join(dir, file), 'utf8')])).toEqual(before)
+    expect({ failure, files: readdirSync(dir).map((file) => [file, readFileSync(join(dir, file), 'utf8')]) }).toEqual({
+      failure: expect.stringContaining('moved start'),
+      files: before,
+    })
   })
 
   it('refuses to run with no packages', async () => {

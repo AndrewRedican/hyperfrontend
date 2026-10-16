@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import type { Mock } from '@hyperfrontend/testing'
+import type { DepthConfig } from './models'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setConfig } from './shared/consts'
@@ -32,22 +33,32 @@ describe('createTraversal', () => {
 })
 
 describe('traverse', () => {
-  it('throw error when incorrect arguments passed', () => {
+  it('throw error when incorrect arguments passed: a callback that is not a function', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, {})).toThrow('Expected callback to be a function.')
+  })
 
+  it('throw error when incorrect arguments passed: options that are not an object', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, () => {}, [])).toThrow('Expected options to be an object.')
+  })
 
+  it('throw error when incorrect arguments passed: a depth that is not an array', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, () => {}, { depth: {} })).toThrow('Expected options.depth to be an array.')
+  })
 
+  it('throw error when incorrect arguments passed: a start depth that is not a number', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, () => {}, { depth: ['0'] })).toThrow('Expected options.depth.0 to be a number.')
+  })
 
+  it('throw error when incorrect arguments passed: a max depth that is neither a number nor a string', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, () => {}, { depth: [3, {}] })).toThrow('Expected options.depth.1 to be a number or a string.')
+  })
 
+  it("throw error when incorrect arguments passed: a max depth string other than '*'", () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => traverse({}, () => {}, { depth: [3, 'x'] })).toThrow("Only valid string value in options.depth.1 is '*'.")
   })
@@ -65,62 +76,40 @@ describe('traverse - with config detectCircularReferences:false', () => {
 
   it('will invoke callback function for each data point', () => {
     traverse(target, callback)
-    expect(callback).toHaveBeenCalledTimes(17)
-    expect(callback).toHaveBeenCalledWith('', mockedTarget, [], {}, void 0)
-    expect(callback).toHaveBeenCalledWith('A', mockedTarget.A, ['A'], {}, mockedTarget)
-    expect(callback).toHaveBeenCalledWith('alpha', mockedTarget.A.alpha, ['A', 'alpha'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('0', mockedTarget.A.alpha[0], ['A', 'alpha', '0'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('1', mockedTarget.A.alpha[1], ['A', 'alpha', '1'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('2', mockedTarget.A.alpha[2], ['A', 'alpha', '2'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('beta', mockedTarget.A.beta, ['A', 'beta'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('a', mockedTarget.A.beta.a, ['A', 'beta', 'a'], {}, mockedTarget.A.beta)
-    expect(callback).toHaveBeenCalledWith('b', mockedTarget.A.beta.b, ['A', 'beta', 'b'], {}, mockedTarget.A.beta)
-    expect(callback).toHaveBeenCalledWith('gamma', mockedTarget.A.gamma, ['A', 'gamma'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('valid', mockedTarget.A.gamma.valid, ['A', 'gamma', 'valid'], {}, mockedTarget.A.gamma)
-    expect(callback).toHaveBeenCalledWith('delta', mockedTarget.A.delta, ['A', 'delta'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('valid', mockedTarget.A.delta.valid, ['A', 'delta', 'valid'], {}, mockedTarget.A.delta)
-    expect(callback).toHaveBeenCalledWith('B', mockedTarget.B, ['B'], {}, mockedTarget)
-    expect(callback).toHaveBeenCalledWith('epsilon', mockedTarget.B.epsilon, ['B', 'epsilon'], {}, mockedTarget.B)
-    expect(callback).toHaveBeenCalledWith('zeta', mockedTarget.B.zeta, ['B', 'zeta'], {}, mockedTarget.B)
-    expect(callback).toHaveBeenCalledWith('C', mockedTarget.C, ['C'], {}, mockedTarget)
+    expect(callback.mock.calls).toEqual([
+      ['', mockedTarget, [], {}, void 0],
+      ['A', mockedTarget.A, ['A'], {}, mockedTarget],
+      ['alpha', mockedTarget.A.alpha, ['A', 'alpha'], {}, mockedTarget.A],
+      ['0', mockedTarget.A.alpha[0], ['A', 'alpha', '0'], {}, mockedTarget.A.alpha],
+      ['1', mockedTarget.A.alpha[1], ['A', 'alpha', '1'], {}, mockedTarget.A.alpha],
+      ['2', mockedTarget.A.alpha[2], ['A', 'alpha', '2'], {}, mockedTarget.A.alpha],
+      ['beta', mockedTarget.A.beta, ['A', 'beta'], {}, mockedTarget.A],
+      ['a', mockedTarget.A.beta.a, ['A', 'beta', 'a'], {}, mockedTarget.A.beta],
+      ['b', mockedTarget.A.beta.b, ['A', 'beta', 'b'], {}, mockedTarget.A.beta],
+      ['gamma', mockedTarget.A.gamma, ['A', 'gamma'], {}, mockedTarget.A],
+      ['valid', mockedTarget.A.gamma.valid, ['A', 'gamma', 'valid'], {}, mockedTarget.A.gamma],
+      ['delta', mockedTarget.A.delta, ['A', 'delta'], {}, mockedTarget.A],
+      ['valid', mockedTarget.A.delta.valid, ['A', 'delta', 'valid'], {}, mockedTarget.A.delta],
+      ['B', mockedTarget.B, ['B'], {}, mockedTarget],
+      ['epsilon', mockedTarget.B.epsilon, ['B', 'epsilon'], {}, mockedTarget.B],
+      ['zeta', mockedTarget.B.zeta, ['B', 'zeta'], {}, mockedTarget.B],
+      ['C', mockedTarget.C, ['C'], {}, mockedTarget],
+    ])
   })
 
-  it('will visit data points within a specific depth range', () => {
-    setupCallbackSpy()
-    traverse(target, callback)
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0, '*'] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0, 0] })
-    expect(callback).toHaveBeenCalledTimes(1)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [1, 1] })
-    expect(callback).toHaveBeenCalledTimes(3)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [2, 2] })
-    expect(callback).toHaveBeenCalledTimes(6)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [2, 3] })
-    expect(callback).toHaveBeenCalledTimes(13)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [4, 4] })
-    expect(callback).toHaveBeenCalledTimes(0)
+  it.each([
+    [undefined, 17],
+    [{ depth: [] }, 17],
+    [{ depth: [0] }, 17],
+    [{ depth: [0, '*'] }, 17],
+    [{ depth: [0, 0] }, 1],
+    [{ depth: [1, 1] }, 3],
+    [{ depth: [2, 2] }, 6],
+    [{ depth: [2, 3] }, 13],
+    [{ depth: [4, 4] }, 0],
+  ])('will visit data points within a specific depth range given the options %p', (options: DepthConfig | undefined, expected: number) => {
+    traverse(target, callback, options)
+    expect(callback).toHaveBeenCalledTimes(expected)
   })
 
   it('accepts an initial state value that persists on every iteration and returns said state', () => {
@@ -143,62 +132,40 @@ describe('traverse - with config detectCircularReferences:true', () => {
 
   it('will invoke callback function for each data point', () => {
     traverse(target, callback)
-    expect(callback).toHaveBeenCalledTimes(17)
-    expect(callback).toHaveBeenCalledWith('', mockedTarget, [], {}, void 0)
-    expect(callback).toHaveBeenCalledWith('A', mockedTarget.A, ['A'], {}, mockedTarget)
-    expect(callback).toHaveBeenCalledWith('alpha', mockedTarget.A.alpha, ['A', 'alpha'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('0', mockedTarget.A.alpha[0], ['A', 'alpha', '0'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('1', mockedTarget.A.alpha[1], ['A', 'alpha', '1'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('2', mockedTarget.A.alpha[2], ['A', 'alpha', '2'], {}, mockedTarget.A.alpha)
-    expect(callback).toHaveBeenCalledWith('beta', mockedTarget.A.beta, ['A', 'beta'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('a', mockedTarget.A.beta.a, ['A', 'beta', 'a'], {}, mockedTarget.A.beta)
-    expect(callback).toHaveBeenCalledWith('b', mockedTarget.A.beta.b, ['A', 'beta', 'b'], {}, mockedTarget.A.beta)
-    expect(callback).toHaveBeenCalledWith('gamma', mockedTarget.A.gamma, ['A', 'gamma'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('valid', mockedTarget.A.gamma.valid, ['A', 'gamma', 'valid'], {}, mockedTarget.A.gamma)
-    expect(callback).toHaveBeenCalledWith('delta', mockedTarget.A.delta, ['A', 'delta'], {}, mockedTarget.A)
-    expect(callback).toHaveBeenCalledWith('valid', mockedTarget.A.delta.valid, ['A', 'delta', 'valid'], {}, mockedTarget.A.delta)
-    expect(callback).toHaveBeenCalledWith('B', mockedTarget.B, ['B'], {}, mockedTarget)
-    expect(callback).toHaveBeenCalledWith('epsilon', mockedTarget.B.epsilon, ['B', 'epsilon'], {}, mockedTarget.B)
-    expect(callback).toHaveBeenCalledWith('zeta', mockedTarget.B.zeta, ['B', 'zeta'], {}, mockedTarget.B)
-    expect(callback).toHaveBeenCalledWith('C', mockedTarget.C, ['C'], {}, mockedTarget)
+    expect(callback.mock.calls).toEqual([
+      ['', mockedTarget, [], {}, void 0],
+      ['A', mockedTarget.A, ['A'], {}, mockedTarget],
+      ['alpha', mockedTarget.A.alpha, ['A', 'alpha'], {}, mockedTarget.A],
+      ['0', mockedTarget.A.alpha[0], ['A', 'alpha', '0'], {}, mockedTarget.A.alpha],
+      ['1', mockedTarget.A.alpha[1], ['A', 'alpha', '1'], {}, mockedTarget.A.alpha],
+      ['2', mockedTarget.A.alpha[2], ['A', 'alpha', '2'], {}, mockedTarget.A.alpha],
+      ['beta', mockedTarget.A.beta, ['A', 'beta'], {}, mockedTarget.A],
+      ['a', mockedTarget.A.beta.a, ['A', 'beta', 'a'], {}, mockedTarget.A.beta],
+      ['b', mockedTarget.A.beta.b, ['A', 'beta', 'b'], {}, mockedTarget.A.beta],
+      ['gamma', mockedTarget.A.gamma, ['A', 'gamma'], {}, mockedTarget.A],
+      ['valid', mockedTarget.A.gamma.valid, ['A', 'gamma', 'valid'], {}, mockedTarget.A.gamma],
+      ['delta', mockedTarget.A.delta, ['A', 'delta'], {}, mockedTarget.A],
+      ['valid', mockedTarget.A.delta.valid, ['A', 'delta', 'valid'], {}, mockedTarget.A.delta],
+      ['B', mockedTarget.B, ['B'], {}, mockedTarget],
+      ['epsilon', mockedTarget.B.epsilon, ['B', 'epsilon'], {}, mockedTarget.B],
+      ['zeta', mockedTarget.B.zeta, ['B', 'zeta'], {}, mockedTarget.B],
+      ['C', mockedTarget.C, ['C'], {}, mockedTarget],
+    ])
   })
 
-  it('will visit data points within a specific depth range', () => {
-    setupCallbackSpy()
-    traverse(target, callback)
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0, '*'] })
-    expect(callback).toHaveBeenCalledTimes(17)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [0, 0] })
-    expect(callback).toHaveBeenCalledTimes(1)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [1, 1] })
-    expect(callback).toHaveBeenCalledTimes(3)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [2, 2] })
-    expect(callback).toHaveBeenCalledTimes(6)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [2, 3] })
-    expect(callback).toHaveBeenCalledTimes(13)
-
-    setupCallbackSpy()
-    traverse(target, callback, { depth: [4, 4] })
-    expect(callback).toHaveBeenCalledTimes(0)
+  it.each([
+    [undefined, 17],
+    [{ depth: [] }, 17],
+    [{ depth: [0] }, 17],
+    [{ depth: [0, '*'] }, 17],
+    [{ depth: [0, 0] }, 1],
+    [{ depth: [1, 1] }, 3],
+    [{ depth: [2, 2] }, 6],
+    [{ depth: [2, 3] }, 13],
+    [{ depth: [4, 4] }, 0],
+  ])('will visit data points within a specific depth range given the options %p', (options: DepthConfig | undefined, expected: number) => {
+    traverse(target, callback, options)
+    expect(callback).toHaveBeenCalledTimes(expected)
   })
 
   it('correctly skips over circular references', () => {

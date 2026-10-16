@@ -19,9 +19,7 @@ function expectedWarning(remediation: string): string {
 
 describe('resolveSdkManifest', () => {
   it('ascends from the running module to the SDK manifest by default', () => {
-    const manifest = resolveSdkManifest()
-    expect(manifest['name']).toBe('@hyperfrontend/features')
-    expect(typeof manifest['version']).toBe('string')
+    expect(resolveSdkManifest()).toEqual(expect.objectContaining({ name: '@hyperfrontend/features', version: expect.any(String) }))
   })
 
   it('returns the manifest immediately when the start directory holds it', () => {
@@ -34,6 +32,30 @@ describe('resolveSdkManifest', () => {
     )
   })
 })
+
+/**
+ * Warns against a manifest whose two platform candidates share a prefix, the shorter one being the real binding.
+ *
+ * @returns The binding resolver and the stderr writer the warning went through.
+ */
+function warnWithPrefixArchCandidates(): { resolveBinding: Mock; write: Mock } {
+  const stderr = { write: jest.fn() }
+  const resolveBinding = jest.fn(() => {
+    throw new Error('not installed')
+  })
+  warnIfRollupBindingMissing('/ws', {
+    loadManifest: () => ({
+      optionalDependencies: {
+        [`@rollup/rollup${PLATFORM_MARKER}zzz-test`]: '9.9.9',
+        [`@rollup/rollup${PLATFORM_MARKER}`]: '8.8.8',
+      },
+    }),
+    resolveBinding,
+    stderr: stderr as unknown as NodeJS.WritableStream,
+    pathExists: () => false,
+  })
+  return { resolveBinding, write: stderr.write }
+}
 
 describe('warnIfRollupBindingMissing', () => {
   let stderrSpy: Mock
@@ -82,24 +104,15 @@ describe('warnIfRollupBindingMissing', () => {
   })
 
   it('matches candidates only on a token boundary so a prefix arch never claims a longer one', () => {
-    const stderr = { write: jest.fn() }
-    const resolveBinding = jest.fn(() => {
-      throw new Error('not installed')
-    })
-    warnIfRollupBindingMissing('/ws', {
-      loadManifest: () => ({
-        optionalDependencies: {
-          [`@rollup/rollup${PLATFORM_MARKER}zzz-test`]: '9.9.9',
-          [`@rollup/rollup${PLATFORM_MARKER}`]: '8.8.8',
-        },
-      }),
-      resolveBinding,
-      stderr: stderr as unknown as NodeJS.WritableStream,
-      pathExists: () => false,
-    })
-    expect(resolveBinding).toHaveBeenCalledTimes(1)
-    expect(stderr.write).toHaveBeenCalledWith(expect.stringContaining(`@rollup/rollup${PLATFORM_MARKER}@8.8.8`))
-    expect(stderr.write).toHaveBeenCalledWith(expect.not.stringContaining('zzz'))
+    expect(warnWithPrefixArchCandidates().resolveBinding).toHaveBeenCalledTimes(1)
+  })
+
+  it('names the token-boundary candidate in the warning', () => {
+    expect(warnWithPrefixArchCandidates().write).toHaveBeenCalledWith(expect.stringContaining(`@rollup/rollup${PLATFORM_MARKER}@8.8.8`))
+  })
+
+  it('leaves the longer-arch candidate out of the warning', () => {
+    expect(warnWithPrefixArchCandidates().write).toHaveBeenCalledWith(expect.not.stringContaining('zzz'))
   })
 
   it('stays silent when any candidate resolves from the workspace root', () => {
@@ -116,6 +129,20 @@ describe('warnIfRollupBindingMissing', () => {
       stderr: stderr as unknown as NodeJS.WritableStream,
     })
     expect(stderr.write).not.toHaveBeenCalled()
+  })
+
+  it('tries the next candidate when one fails to resolve', () => {
+    const resolveBinding = jest.fn((packageName: string) => {
+      if (packageName === CANDIDATE) {
+        throw new Error('not installed')
+      }
+      return '/ws/node_modules/binding.node'
+    })
+    warnIfRollupBindingMissing('/ws', {
+      loadManifest: () => ({ optionalDependencies: { [CANDIDATE]: '9.9.9', [`${CANDIDATE}-musl`]: '9.9.9' } }),
+      resolveBinding,
+      stderr: { write: jest.fn() } as unknown as NodeJS.WritableStream,
+    })
     expect(resolveBinding).toHaveBeenCalledTimes(2)
   })
 
@@ -134,8 +161,7 @@ describe('warnIfRollupBindingMissing', () => {
       stderr: stderr as unknown as NodeJS.WritableStream,
       pathExists: (relativePath) => lockfiles.includes(relativePath),
     })
-    expect(stderr.write).toHaveBeenCalledTimes(1)
-    expect(stderr.write).toHaveBeenCalledWith(expectedWarning(remediation))
+    expect(stderr.write.mock.calls).toEqual([[expectedWarning(remediation)]])
   })
 
   it('defaults to process.stderr and on-disk lockfile detection', () => {
@@ -145,7 +171,6 @@ describe('warnIfRollupBindingMissing', () => {
         throw new Error('not installed')
       },
     })
-    expect(stderrSpy).toHaveBeenCalledTimes(1)
-    expect(stderrSpy).toHaveBeenCalledWith(expectedWarning('npm install --include=optional'))
+    expect(stderrSpy.mock.calls).toEqual([[expectedWarning('npm install --include=optional')]])
   })
 })

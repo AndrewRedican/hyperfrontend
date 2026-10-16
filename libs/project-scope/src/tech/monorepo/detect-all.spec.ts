@@ -13,7 +13,6 @@ jest.mock('../../project/package', () => ({
 
 describe('monorepoDetectors', () => {
   it('contains all monorepo tool detectors', () => {
-    expect(monorepoDetectors).toHaveLength(7)
     expect(monorepoDetectors.map((d) => d.id)).toEqual([
       'nx',
       'turborepo',
@@ -41,9 +40,7 @@ describe('detectMonorepoTools', () => {
       },
     })
 
-    expect(result.length).toBe(2)
-    expect(result.map((r) => r.id)).toContain('nx')
-    expect(result.map((r) => r.id)).toContain('lerna')
+    expect(result.map((r) => r.id).sort()).toEqual(['lerna', 'nx'])
   })
 
   it('sorts results by confidence (descending)', () => {

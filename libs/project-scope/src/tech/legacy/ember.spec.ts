@@ -19,11 +19,15 @@ describe('emberDetector', () => {
       devDependencies: { 'ember-source': '^5.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('ember')
-    expect(result?.name).toBe('Ember.js')
-    expect(result?.category).toBe('legacy-frontend')
-    expect(result?.version).toBe('5.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'ember', name: 'Ember.js', category: 'legacy-frontend', version: '5.0.0' }))
+  })
+
+  it('scores an ember-source dependency above zero', () => {
+    const result = emberDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { 'ember-source': '^5.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -39,7 +43,15 @@ describe('emberDetector', () => {
     })
 
     expect(withCli?.confidence).toBeGreaterThan(withoutCli?.confidence ?? 0)
-    expect(withCli?.detectedFrom.some((s) => s.field === 'devDependencies.ember-cli')).toBe(true)
+  })
+
+  it('records ember-cli as a detection source', () => {
+    const result = emberDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { 'ember-source': '^5.0.0', 'ember-cli': '^5.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'devDependencies.ember-cli' })]))
   })
 
   it('increases confidence with ember-data', () => {
@@ -55,7 +67,16 @@ describe('emberDetector', () => {
     })
 
     expect(withData?.confidence).toBeGreaterThan(withoutData?.confidence ?? 0)
-    expect(withData?.detectedFrom.some((s) => s.field === 'dependencies.ember-data')).toBe(true)
+  })
+
+  it('records ember-data as a detection source', () => {
+    const result = emberDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { 'ember-source': '^5.0.0' },
+      dependencies: { 'ember-data': '^5.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.ember-data' })]))
   })
 
   it('caps confidence at 100', () => {

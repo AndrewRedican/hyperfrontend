@@ -16,10 +16,12 @@ describe('createCache', () => {
   it('expires values after TTL', async () => {
     const cache = createCache(10)
     cache.set('key', 'value')
-    expect(cache.get('key')).toBe('value')
+    const beforeExpiry = cache.get('key')
 
     await new Promise((r) => setTimeout(r, 20))
-    expect(cache.get('key')).toBeUndefined()
+    const afterExpiry = cache.get('key')
+
+    expect({ beforeExpiry, afterExpiry }).toEqual({ beforeExpiry: 'value', afterExpiry: undefined })
   })
 
   it('deletes values', () => {
@@ -37,9 +39,13 @@ describe('createCache', () => {
     expect(cache.size()).toBe(0)
   })
 
-  it('reports size', () => {
+  it('reports zero size for an empty cache', () => {
     const cache = createCache()
     expect(cache.size()).toBe(0)
+  })
+
+  it('reports the number of stored entries as its size', () => {
+    const cache = createCache()
     cache.set('a', 1)
     cache.set('b', 2)
     expect(cache.size()).toBe(2)

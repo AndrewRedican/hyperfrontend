@@ -11,6 +11,16 @@ describe('onElementResize', () => {
     mock = setupResizeObserverMock()
   })
 
+  it('observes the given element', () => {
+    const element = document.createElement('div')
+    const callback = jest.fn()
+
+    const unsubscribeResize = onElementResize(element, callback)
+
+    expect(mock.observe).toHaveBeenCalledWith(element)
+    unsubscribeResize()
+  })
+
   it('triggers the callback with the correct arguments when the element is resized', () => {
     const element = document.createElement('div')
     const callback = jest.fn()
@@ -33,11 +43,21 @@ describe('onElementResize', () => {
     mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).toHaveBeenCalledWith(contentRect)
-    expect(mock.observe).toHaveBeenCalledWith(element)
     unsubscribeResize()
   })
 
   it('stops observing the element when the unsubscribe function is called', () => {
+    const element = document.createElement('div')
+    const callback = jest.fn()
+
+    const unsubscribeResize = onElementResize(element, callback)
+
+    unsubscribeResize()
+
+    expect(mock.unobserve).toHaveBeenCalledWith(element)
+  })
+
+  it('ignores resize notifications after the unsubscribe function is called', () => {
     const element = document.createElement('div')
     const callback = jest.fn()
 
@@ -61,6 +81,5 @@ describe('onElementResize', () => {
     mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).not.toHaveBeenCalled()
-    expect(mock.unobserve).toHaveBeenCalledWith(element)
   })
 })

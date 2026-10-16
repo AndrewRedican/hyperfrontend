@@ -45,7 +45,6 @@ describe('createRunOnceFunction', () => {
     const runOnceFn = createRunOnceFunction(func)
     const firstCallResult = runOnceFn()
     const secondCallResult = runOnceFn()
-    expect(firstCallResult).toBe(secondCallResult)
-    expect(secondCallResult).toBe(returnVal)
+    expect({ firstCallResult, secondCallResult }).toEqual({ firstCallResult: returnVal, secondCallResult: returnVal })
   })
 })

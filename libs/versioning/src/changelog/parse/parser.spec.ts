@@ -5,8 +5,7 @@ describe('parseChangelog', () => {
   describe('basic parsing', () => {
     it('parses an empty changelog', () => {
       const changelog = parseChangelog('')
-      expect(changelog.header.title).toBe('# Changelog')
-      expect(changelog.entries).toHaveLength(0)
+      expect(changelog).toMatchObject({ header: { title: '# Changelog' }, entries: [] })
     })
 
     it('parses a minimal changelog', () => {
@@ -21,13 +20,10 @@ describe('parseChangelog', () => {
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.header.title).toBe('# Changelog')
-      expect(changelog.entries).toHaveLength(1)
-      expect(changelog.entries[0]?.version).toBe('1.0.0')
-      expect(changelog.entries[0]?.date).toBe('2024-01-01')
-      expect(changelog.entries[0]?.sections).toHaveLength(1)
-      expect(changelog.entries[0]?.sections[0]?.type).toBe('features')
-      expect(changelog.entries[0]?.sections[0]?.items).toHaveLength(1)
+      expect(changelog).toMatchObject({
+        header: { title: '# Changelog' },
+        entries: [{ version: '1.0.0', date: '2024-01-01', sections: [{ type: 'features', items: [{ description: 'Initial release' }] }] }],
+      })
     })
   })
 
@@ -44,8 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.header.description.length).toBeGreaterThan(0)
-      expect(changelog.header.description.some((d) => d.includes('notable changes'))).toBe(true)
+      expect(changelog.header.description).toEqual(expect.arrayContaining([expect.stringContaining('notable changes')]))
     })
 
     it('extracts links from header', () => {
@@ -58,11 +53,7 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.header.links).toHaveLength(1)
-      expect(changelog.header.links[0]).toMatchObject({
-        label: 'Keep a Changelog',
-        url: 'https://keepachangelog.com',
-      })
+      expect(changelog.header.links).toEqual([{ label: 'Keep a Changelog', url: 'https://keepachangelog.com' }])
     })
   })
 
@@ -79,9 +70,7 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 
     it('parses unreleased section', () => {
       const changelog = parseChangelog('## [Unreleased]\n- Upcoming feature')
-      expect(changelog.entries[0]?.version).toBe('Unreleased')
-      expect(changelog.entries[0]?.unreleased).toBe(true)
-      expect(changelog.entries[0]?.date).toBeNull()
+      expect(changelog.entries[0]).toEqual(expect.objectContaining({ version: 'Unreleased', unreleased: true, date: null }))
     })
 
     it('parses prerelease versions', () => {
@@ -105,9 +94,7 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.entries).toHaveLength(2)
-      expect(changelog.entries[0]?.version).toBe('2.0.0')
-      expect(changelog.entries[1]?.version).toBe('1.0.0')
+      expect(changelog.entries.map((entry) => entry.version)).toEqual(['2.0.0', '1.0.0'])
     })
   })
 
@@ -132,13 +119,14 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0]?.sections
 
-      expect(sections?.find((s) => s.type === 'breaking')).toBeDefined()
-      expect(sections?.find((s) => s.type === 'features')).toBeDefined()
-      expect(sections?.find((s) => s.type === 'fixes')).toBeDefined()
-      expect(sections?.find((s) => s.type === 'performance')).toBeDefined()
-      expect(sections?.find((s) => s.type === 'documentation')).toBeDefined()
+      expect(changelog.entries[0]?.sections.map((section) => section.type)).toEqual([
+        'breaking',
+        'features',
+        'fixes',
+        'performance',
+        'documentation',
+      ])
     })
 
     it('normalizes section headings', () => {
@@ -152,10 +140,8 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0]?.sections
 
-      expect(sections?.[0]?.type).toBe('features')
-      expect(sections?.[1]?.type).toBe('fixes')
+      expect(changelog.entries[0]?.sections.map((section) => section.type)).toEqual(['features', 'fixes'])
     })
   })
 
@@ -170,12 +156,8 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items).toHaveLength(3)
-      expect(items?.[0]?.description).toBe('First item')
-      expect(items?.[1]?.description).toBe('Second item')
-      expect(items?.[2]?.description).toBe('Third item')
+      expect(changelog.entries[0]?.sections[0]?.items.map((item) => item.description)).toEqual(['First item', 'Second item', 'Third item'])
     })
 
     it('detects breaking change items', () => {
@@ -187,10 +169,8 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items?.[0]?.breaking).toBe(true)
-      expect(items?.[1]?.breaking).toBe(false)
+      expect(changelog.entries[0]?.sections[0]?.items).toMatchObject([{ breaking: true }, { breaking: false }])
     })
 
     it('reads the serialized breaking marker back off an item', () => {
@@ -255,10 +235,8 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items?.[0]?.scope).toBe('api')
-      expect(items?.[1]?.scope).toBe('cli')
+      expect(changelog.entries[0]?.sections[0]?.items.map((item) => item.scope)).toEqual(['api', 'cli'])
     })
 
     it('creates other section for items without heading', () => {
@@ -269,12 +247,12 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0]?.sections
 
-      expect(sections).toHaveLength(1)
-      expect(sections?.[0]?.type).toBe('other')
-      expect(sections?.[0]?.heading).toBe('Changes')
-      expect(sections?.[0]?.items).toHaveLength(2)
+      expect(changelog.entries[0]).toMatchObject({
+        sections: [
+          { type: 'other', heading: 'Changes', items: [{ description: 'Item without section heading' }, { description: 'Another item' }] },
+        ],
+      })
     })
   })
 
@@ -367,23 +345,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.header.title).toContain('Changelog')
-      expect(changelog.header.description.length).toBeGreaterThan(0)
-      expect(changelog.header.links.length).toBeGreaterThan(0)
-
-      expect(changelog.entries).toHaveLength(3)
-
-      expect(changelog.entries[0]?.unreleased).toBe(true)
-      expect(changelog.entries[0]?.sections).toHaveLength(1)
-
-      expect(changelog.entries[1]?.version).toBe('1.1.0')
-      expect(changelog.entries[1]?.date).toBe('2024-02-01')
-      expect(changelog.entries[1]?.sections).toHaveLength(3)
-
-      expect(changelog.entries[2]?.version).toBe('1.0.0')
-      expect(changelog.entries[2]?.date).toBe('2024-01-01')
-
-      expect(changelog.metadata.format).toBe('keep-a-changelog')
+      expect(changelog).toMatchObject({
+        header: {
+          title: expect.stringContaining('Changelog'),
+          description: expect.arrayContaining([expect.any(String)]),
+          links: expect.arrayContaining([expect.any(Object)]),
+        },
+        entries: [
+          { unreleased: true, sections: [{ type: 'features' }] },
+          { version: '1.1.0', date: '2024-02-01', sections: [{ type: 'features' }, { type: 'fixes' }, { type: 'other' }] },
+          { version: '1.0.0', date: '2024-01-01' },
+        ],
+        metadata: { format: 'keep-a-changelog' },
+      })
     })
   })
 
@@ -427,9 +401,9 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0]?.sections).toHaveLength(1)
-      expect(changelog.entries[0]?.sections[0]?.type).toBe('other')
-      expect(changelog.entries[0]?.sections[0]?.items).toHaveLength(2)
+      expect(changelog.entries[0]).toMatchObject({
+        sections: [{ type: 'other', items: [{ description: 'Item without a section heading' }, { description: 'Another orphan item' }] }],
+      })
     })
   })
 
@@ -510,8 +484,10 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries).toHaveLength(2)
-      expect(changelog.entries[0]?.sections).toHaveLength(0)
+      expect(changelog.entries).toEqual([
+        expect.objectContaining({ version: '1.0.0', sections: [] }),
+        expect.objectContaining({ version: '0.9.0' }),
+      ])
     })
 
     it('handles entry with only blank lines', () => {

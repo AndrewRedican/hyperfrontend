@@ -68,14 +68,20 @@ describe('@hyperfrontend/cryptography CJS', () => {
       expect(typeof isSHA256Hash).toBe('function')
     })
 
-    it('isSHA256Hash validates hash format', () => {
+    it('isSHA256Hash accepts a well-formed SHA256 hash', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
 
       // Valid SHA256 hashes are 64 hex characters
       const validHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-      const invalidHash = 'not-a-hash'
 
       expect(isSHA256Hash(validHash)).toBe(true)
+    })
+
+    it('isSHA256Hash rejects a string that is not a SHA256 hash', () => {
+      const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
+
+      const invalidHash = 'not-a-hash'
+
       expect(isSHA256Hash(invalidHash)).toBe(false)
     })
   })

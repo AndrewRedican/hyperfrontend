@@ -37,12 +37,23 @@ describe('prettierDetector', () => {
       devDependencies: { prettier: '^3.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('prettier')
-    expect(result?.name).toBe('Prettier')
-    expect(result?.version).toBe('3.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'prettier',
+        name: 'Prettier',
+        version: '3.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.prettier' }]),
+      })
+    )
+  })
+
+  it('scores a prettier dependency above zero', () => {
+    const result = prettierDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { prettier: '^3.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.prettier' }]))
   })
 
   it('detects prettier field in package.json', () => {
@@ -52,8 +63,17 @@ describe('prettierDetector', () => {
       prettier: { singleQuote: true },
     } as Parameters<typeof prettierDetector>[1])
 
-    expect(result?.confidence).toBeGreaterThanOrEqual(80)
     expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'prettier' }]))
+  })
+
+  it('scores a prettier field in package.json at least 80', () => {
+    const result = prettierDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { prettier: '^3.0.0' },
+      prettier: { singleQuote: true },
+    } as Parameters<typeof prettierDetector>[1])
+
+    expect(result?.confidence).toBeGreaterThanOrEqual(80)
   })
 
   it('detects prettier from format script', () => {
@@ -76,8 +96,20 @@ describe('prettierDetector', () => {
       devDependencies: { prettier: '^3.0.0' },
     })
 
-    expect(result?.confidence).toBeGreaterThanOrEqual(90)
     expect(result?.configPath).toBe('.prettierrc')
+  })
+
+  it('scores a prettier config file at least 90', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('.prettierrc')
+    })
+
+    const result = prettierDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { prettier: '^3.0.0' },
+    })
+
+    expect(result?.confidence).toBeGreaterThanOrEqual(90)
   })
 
   it('detects .prettierignore file', () => {
@@ -90,8 +122,20 @@ describe('prettierDetector', () => {
       devDependencies: { prettier: '^3.0.0' },
     })
 
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: '.prettierignore' })]))
+  })
+
+  it('scores a .prettierignore file at least 60', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('.prettierignore')
+    })
+
+    const result = prettierDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { prettier: '^3.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
-    expect(result?.detectedFrom.some((s) => s.path === '.prettierignore')).toBe(true)
   })
 
   it('detects prettier plugins', () => {
@@ -103,8 +147,19 @@ describe('prettierDetector', () => {
       },
     })
 
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies (prettier plugins)' })]))
+  })
+
+  it('scores prettier plugins at least 55', () => {
+    const result = prettierDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: {
+        prettier: '^3.0.0',
+        'prettier-plugin-tailwindcss': '^0.5.0',
+      },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(55)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies (prettier plugins)')).toBe(true)
   })
 
   it('detects from prettier named script', () => {

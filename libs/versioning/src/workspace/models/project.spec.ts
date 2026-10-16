@@ -28,15 +28,18 @@ describe('createProject', () => {
       packageJson: basePackageJson,
     })
 
-    expect(project.name).toBe('test-package')
-    expect(project.version).toBe('1.0.0')
-    expect(project.path).toBe('/workspace/packages/test')
-    expect(project.packageJsonPath).toBe('/workspace/packages/test/package.json')
-    expect(project.changelogPath).toBeNull()
-    expect(project.internalDependencies).toEqual([])
-    expect(project.internalDependents).toEqual([])
-    expect(project.publishable).toBe(true)
-    expect(project.private).toBe(false)
+    expect(project).toEqual({
+      name: 'test-package',
+      version: '1.0.0',
+      path: '/workspace/packages/test',
+      packageJsonPath: '/workspace/packages/test/package.json',
+      packageJson: basePackageJson,
+      changelogPath: null,
+      internalDependencies: [],
+      internalDependents: [],
+      publishable: true,
+      private: false,
+    })
   })
 
   it('creates a private project', () => {
@@ -48,8 +51,7 @@ describe('createProject', () => {
       packageJson: { ...basePackageJson, private: true },
     })
 
-    expect(project.private).toBe(true)
-    expect(project.publishable).toBe(false)
+    expect(project).toEqual(expect.objectContaining({ private: true, publishable: false }))
   })
 
   it('creates a project with changelog', () => {
@@ -303,8 +305,20 @@ describe('withDependents', () => {
 
     const updated = withDependents(project, ['app-a', 'app-b'])
 
-    expect(updated.internalDependents).toEqual(['app-a', 'app-b'])
-    expect(updated.name).toBe('test-package')
+    expect(updated).toEqual(expect.objectContaining({ internalDependents: ['app-a', 'app-b'], name: 'test-package' }))
+  })
+
+  it('leaves the original project dependents unchanged', () => {
+    const project = createProject({
+      name: 'test-package',
+      version: '1.0.0',
+      path: '/workspace/packages/test',
+      packageJsonPath: '/workspace/packages/test/package.json',
+      packageJson: { name: 'test-package', version: '1.0.0' },
+    })
+
+    withDependents(project, ['app-a', 'app-b'])
+
     expect(project.internalDependents).toEqual([])
   })
 
@@ -337,7 +351,35 @@ describe('addDependent', () => {
     const updated = addDependent(project, 'app-a')
 
     expect(updated.internalDependents).toEqual(['app-a'])
+  })
+
+  it('leaves the original project dependents unchanged when adding a dependent', () => {
+    const project = createProject({
+      name: 'test-package',
+      version: '1.0.0',
+      path: '/workspace/packages/test',
+      packageJsonPath: '/workspace/packages/test/package.json',
+      packageJson: { name: 'test-package', version: '1.0.0' },
+    })
+
+    addDependent(project, 'app-a')
+
     expect(project.internalDependents).toEqual([])
+  })
+
+  it('returns the same project when the dependent already exists', () => {
+    const project = createProject({
+      name: 'test-package',
+      version: '1.0.0',
+      path: '/workspace/packages/test',
+      packageJsonPath: '/workspace/packages/test/package.json',
+      packageJson: { name: 'test-package', version: '1.0.0' },
+      internalDependents: ['app-a'],
+    })
+
+    const updated = addDependent(project, 'app-a')
+
+    expect(updated).toBe(project)
   })
 
   it('does not duplicate existing dependent', () => {
@@ -352,7 +394,6 @@ describe('addDependent', () => {
 
     const updated = addDependent(project, 'app-a')
 
-    expect(updated).toBe(project)
     expect(updated.internalDependents).toEqual(['app-a'])
   })
 

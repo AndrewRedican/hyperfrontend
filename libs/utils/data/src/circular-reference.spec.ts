@@ -11,10 +11,13 @@ describe('CircularReference', () => {
     expect(circularRef).toBeInstanceOf(CircularReference)
   })
 
-  it('throws error when incorrect location is provided', () => {
+  it('throws error when the location is an empty list', () => {
     expect(() => new CircularReference([] as unknown as [string], ['a', 'b'])).toThrow(
       'Expected location to be a list with at list one string value.'
     )
+  })
+
+  it('throws error when the location is not a list', () => {
     expect(() => new CircularReference(null, ['a', 'b'])).toThrow('Expected location to be a list with at list one string value.')
   })
 

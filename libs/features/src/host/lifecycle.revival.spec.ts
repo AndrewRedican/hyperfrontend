@@ -124,6 +124,13 @@ describe('createShellHandle unresponsive verdict', () => {
     ctx.connect()
     ctx.silence()
     expect(ctx.errors).toEqual([{ reason: 'unresponsive', missedBeats: 3, lastBeatAt: 100, displayMode: 'embedded', frame: 'present' }])
+  })
+
+  it('keeps the silent session by default', () => {
+    const ctx = setup({ policy: undefined })
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
     expect(ctx.latest().channel.destroy).not.toHaveBeenCalled()
   })
 })
@@ -132,15 +139,38 @@ describe('createShellHandle reopen policy', () => {
   beforeEach(() => jest.useFakeTimers())
   afterEach(() => jest.useRealTimers())
 
-  it('emits the verdict with the frame still present, then reopens once the grace runs out', () => {
+  it('emits the verdict with the frame still present before the grace runs out', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.connect()
     ctx.silence()
     expect(ctx.errors).toEqual([{ reason: 'unresponsive', missedBeats: 3, lastBeatAt: 100, displayMode: 'embedded', frame: 'present' }])
+  })
+
+  it('announces the reopen once the grace runs out', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
     jest.advanceTimersByTime(1000)
     expect(ctx.reopens).toEqual([{ attempt: 1, attempts: 2, displayMode: 'embedded' }])
+  })
+
+  it('destroys the silent session once the grace runs out', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
     expect(ctx.channels[0].channel.destroy).toHaveBeenCalledTimes(1)
+  })
+
+  it('mounts the feature again once the grace runs out', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
     expect(ctx.mount).toHaveBeenCalledTimes(2)
   })
 
@@ -150,12 +180,12 @@ describe('createShellHandle reopen policy', () => {
     ctx.connect()
     ctx.silence()
     jest.advanceTimersByTime(3999)
-    expect(ctx.reopens).toEqual([])
+    const reopensBeforeGraceEnds = [...ctx.reopens]
     jest.advanceTimersByTime(1)
-    expect(ctx.reopens).toHaveLength(1)
+    expect({ reopensBeforeGraceEnds, reopensAtGraceEnd: ctx.reopens.length }).toEqual({ reopensBeforeGraceEnds: [], reopensAtGraceEnd: 1 })
   })
 
-  it('keeps a session whose frame beat again during the grace', () => {
+  it('announces no reopen for a frame that beat again during the grace', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.connect()
@@ -163,28 +193,61 @@ describe('createShellHandle reopen policy', () => {
     ctx.recover()
     jest.advanceTimersByTime(1000)
     expect(ctx.reopens).toEqual([])
+  })
+
+  it('keeps the mount of a frame that beat again during the grace', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    ctx.recover()
+    jest.advanceTimersByTime(1000)
     expect(ctx.mount).toHaveBeenCalledTimes(1)
   })
 
-  it('tears a gone frame down instead of reviving it', () => {
+  it('reports a gone frame in the verdict under the reopen policy', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.connect()
     ctx.frame.gone = true
     ctx.silence()
     expect(ctx.errors).toEqual([expect.objectContaining({ reason: 'unresponsive', frame: 'gone' })])
+  })
+
+  it('tears a gone frame down', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.frame.gone = true
+    ctx.silence()
     expect(ctx.latest().channel.destroy).toHaveBeenCalledTimes(1)
+  })
+
+  it('never revives a gone frame', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.frame.gone = true
+    ctx.silence()
     jest.advanceTimersByTime(10_000)
     expect(ctx.reopens).toEqual([])
   })
 
-  it('reports a gone frame to an emit policy without acting on it', () => {
+  it('reports a gone frame to an emit policy', () => {
     const ctx = setup({ policy: 'emit' })
     ctx.handle.open()
     ctx.connect()
     ctx.frame.gone = true
     ctx.silence()
     expect(ctx.errors).toEqual([expect.objectContaining({ frame: 'gone' })])
+  })
+
+  it('leaves a gone frame alone under an emit policy', () => {
+    const ctx = setup({ policy: 'emit' })
+    ctx.handle.open()
+    ctx.connect()
+    ctx.frame.gone = true
+    ctx.silence()
     expect(ctx.latest().channel.destroy).not.toHaveBeenCalled()
   })
 
@@ -198,7 +261,7 @@ describe('createShellHandle reopen policy', () => {
     expect(onUnresponsive).toHaveBeenCalledWith(expect.objectContaining({ frame: 'gone' }))
   })
 
-  it('tears the feature down and reports the spent budget when the last reopen dies too', () => {
+  it('spends the whole budget when every reopen dies', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.connect()
@@ -211,7 +274,35 @@ describe('createShellHandle reopen policy', () => {
     ctx.silence()
     jest.advanceTimersByTime(4000)
     expect(ctx.reopens).toHaveLength(2)
+  })
+
+  it('tears the feature down when the last reopen dies too', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(2000)
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(4000)
     expect(ctx.latest().channel.destroy).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports the spent budget when the last reopen dies too', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(2000)
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(4000)
     expect(ctx.errors[ctx.errors.length - 1]).toEqual({ reason: 'reopen-exhausted', attempts: 2, displayMode: 'embedded' })
   })
 
@@ -222,10 +313,20 @@ describe('createShellHandle reopen policy', () => {
     ctx.silence()
     ctx.setHidden(true)
     jest.advanceTimersByTime(10_000)
-    expect(ctx.reopens).toEqual([])
+    const reopensWhileHidden = [...ctx.reopens]
     ctx.setHidden(false)
     jest.advanceTimersByTime(1000)
-    expect(ctx.reopens).toHaveLength(1)
+    expect({ reopensWhileHidden, reopensAfterReturn: ctx.reopens.length }).toEqual({ reopensWhileHidden: [], reopensAfterReturn: 1 })
+  })
+
+  it('surfaces the open timeout of a reopened session', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
+    ctx.latest().trigger('connect-timeout', { elapsedMs: 10_000 })
+    expect(ctx.errors[ctx.errors.length - 1]).toEqual({ reason: 'open-timeout', elapsedMs: 10_000, displayMode: 'embedded' })
   })
 
   it('counts a reopened session that never connected as the next death', () => {
@@ -235,7 +336,6 @@ describe('createShellHandle reopen policy', () => {
     ctx.silence()
     jest.advanceTimersByTime(1000)
     ctx.latest().trigger('connect-timeout', { elapsedMs: 10_000 })
-    expect(ctx.errors[ctx.errors.length - 1]).toEqual({ reason: 'open-timeout', elapsedMs: 10_000, displayMode: 'embedded' })
     jest.advanceTimersByTime(2000)
     expect(ctx.reopens).toEqual([
       { attempt: 1, attempts: 2, displayMode: 'embedded' },
@@ -251,7 +351,7 @@ describe('createShellHandle reopen policy', () => {
     expect(ctx.reopens).toEqual([])
   })
 
-  it('stands down when a reopen is refused a window', () => {
+  it('reports a reopen refused a window as an open failure', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.connect()
@@ -259,6 +359,15 @@ describe('createShellHandle reopen policy', () => {
     ctx.frame.blocked = true
     jest.advanceTimersByTime(1000)
     expect(ctx.errors[ctx.errors.length - 1]).toEqual({ reason: 'open-failed', displayMode: 'embedded' })
+  })
+
+  it('stands down when a reopen is refused a window', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    ctx.frame.blocked = true
+    jest.advanceTimersByTime(1000)
     jest.advanceTimersByTime(10_000)
     expect(ctx.reopens).toHaveLength(1)
   })
@@ -272,6 +381,15 @@ describe('createShellHandle reopen policy', () => {
     jest.advanceTimersByTime(1000)
     const last = ctx.errors[ctx.errors.length - 1] as Error
     expect(last.message).toBe('Shell container not found for selector "#shell".')
+  })
+
+  it('stands down when a reopen mount throws', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    ctx.frame.throws = true
+    jest.advanceTimersByTime(1000)
     jest.advanceTimersByTime(10_000)
     expect(ctx.reopens).toHaveLength(1)
   })
@@ -339,13 +457,35 @@ describe('createShellHandle reopen policy', () => {
     ctx.silence()
     jest.advanceTimersByTime(10_000)
     expect(ctx.reopens).toEqual([])
+  })
+
+  it('keeps the silent session under a per-open emit policy', () => {
+    const ctx = setup()
+    ctx.handle.open({ onUnresponsive: 'emit' })
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(10_000)
     expect(ctx.latest().channel.destroy).not.toHaveBeenCalled()
+  })
+
+  it('rejects an out-of-range tuning', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    expect(() => ctx.handle.open({ onUnresponsive: { reopen: { attempts: 0 } } })).toThrow('"attempts" must be a positive integer')
   })
 
   it('rejects an out-of-range tuning before touching the running session', () => {
     const ctx = setup()
     ctx.handle.open()
-    expect(() => ctx.handle.open({ onUnresponsive: { reopen: { attempts: 0 } } })).toThrow('"attempts" must be a positive integer')
-    expect(ctx.latest().channel.destroy).not.toHaveBeenCalled()
+    let rejected = false
+    try {
+      ctx.handle.open({ onUnresponsive: { reopen: { attempts: 0 } } })
+    } catch {
+      rejected = true
+    }
+    expect({ rejected, destroyCalls: jest.mocked(ctx.latest().channel.destroy).mock.calls.length }).toEqual({
+      rejected: true,
+      destroyCalls: 0,
+    })
   })
 })

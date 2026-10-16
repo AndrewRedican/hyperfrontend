@@ -17,9 +17,17 @@ describe('createApplyStyle', () => {
     const style = { color: 'red' }
     const applyStyle = createApplyStyle(selector, style)
     const [styleElement, removeStyle] = applyStyle()
-    expect(styleElement.textContent).toContain(selector)
-    expect(styleElement.textContent).toContain('color: red')
+    expect(styleElement.textContent).toContain('.test-class{color: red;}')
     cleanupFunctions.push(removeStyle)
+  })
+
+  it('keeps the style rule in the first stylesheet when the same style is applied twice for the same selector', () => {
+    const selector = '.test-class'
+    const style = { color: 'blue' }
+    const [styleElement1, removeStyle1] = createApplyStyle(selector, style)()
+    const [, removeStyle2] = createApplyStyle(selector, style)()
+    expect(styleElement1.textContent).toContain('.test-class{color: blue;}')
+    cleanupFunctions.push(removeStyle1, removeStyle2)
   })
 
   it('returns a function that applies the same style only once for the same selector', () => {
@@ -27,8 +35,6 @@ describe('createApplyStyle', () => {
     const style = { color: 'blue' }
     const [styleElement1, removeStyle1] = createApplyStyle(selector, style)()
     const [styleElement2, removeStyle2] = createApplyStyle(selector, style)()
-    expect(styleElement1.textContent).toContain(selector)
-    expect(styleElement1.textContent).toContain('color: blue')
     expect(styleElement1).toEqual(styleElement2)
     cleanupFunctions.push(removeStyle1, removeStyle2)
   })

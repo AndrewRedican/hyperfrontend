@@ -6,10 +6,9 @@ const WORKSPACE_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 
 describe('loadDevkit', () => {
   it('resolves the repository-installed @nx/devkit with callable members', () => {
-    const devkit = loadDevkit(WORKSPACE_ROOT)
-    expect(devkit).not.toBeNull()
-    expect(typeof devkit?.formatFiles).toBe('function')
-    expect(typeof devkit?.installPackagesTask).toBe('function')
+    expect(loadDevkit(WORKSPACE_ROOT)).toEqual(
+      expect.objectContaining({ formatFiles: expect.any(Function), installPackagesTask: expect.any(Function) })
+    )
   })
 
   it('returns null when no anchor resolves', () => {
@@ -17,6 +16,13 @@ describe('loadDevkit', () => {
       throw new Error('not found')
     })
     expect(loadDevkit('/ws', resolver)).toBeNull()
+  })
+
+  it('tries both anchors before giving up on resolution', () => {
+    const resolver = jest.fn((): unknown => {
+      throw new Error('not found')
+    })
+    loadDevkit('/ws', resolver)
     expect(resolver).toHaveBeenCalledTimes(2)
   })
 
@@ -38,6 +44,14 @@ describe('loadDevkit', () => {
     })
     const devkit = loadDevkit('/consumer', resolver)
     expect(devkit?.formatFiles).toBe(formatFiles)
+  })
+
+  it('consults both anchors when the consumer root fails', () => {
+    const resolver = jest.fn((): unknown => ({ formatFiles: async (): Promise<void> => undefined }))
+    resolver.mockImplementationOnce(() => {
+      throw new Error('not found at consumer root')
+    })
+    loadDevkit('/consumer', resolver)
     expect(resolver).toHaveBeenCalledTimes(2)
   })
 
@@ -47,12 +61,23 @@ describe('loadDevkit', () => {
     resolver.mockImplementationOnce(() => 'not a module')
     const devkit = loadDevkit('/consumer', resolver)
     expect(devkit?.installPackagesTask).toBe(installPackagesTask)
+  })
+
+  it('consults both anchors when the first resolves to a non-module', () => {
+    const resolver = jest.fn((): unknown => ({ installPackagesTask: (): void => undefined }))
+    resolver.mockImplementationOnce(() => 'not a module')
+    loadDevkit('/consumer', resolver)
     expect(resolver).toHaveBeenCalledTimes(2)
   })
 
   it('returns null when every anchor resolves to a non-object', () => {
     const resolver = jest.fn((): unknown => null)
     expect(loadDevkit('/consumer', resolver)).toBeNull()
+  })
+
+  it('consults both anchors when every anchor resolves to a non-object', () => {
+    const resolver = jest.fn((): unknown => null)
+    loadDevkit('/consumer', resolver)
     expect(resolver).toHaveBeenCalledTimes(2)
   })
 

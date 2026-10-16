@@ -170,9 +170,11 @@ describe('Create Tag Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createTagStep()
 
-      expect(step.id).toBe(CREATE_TAG_STEP_ID)
-      expect(step.id).toBe('create-tag')
-      expect(step.name).toBe('Create Git Tag')
+      expect(step).toEqual(expect.objectContaining({ id: CREATE_TAG_STEP_ID, name: 'Create Git Tag' }))
+    })
+
+    it('exposes create-tag as the step ID constant', () => {
+      expect(CREATE_TAG_STEP_ID).toBe('create-tag')
     })
 
     it('depends on create-commit step', () => {
@@ -189,8 +191,7 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('Git operations disabled')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Git operations disabled') }))
     })
 
     it('skips when skipTag is enabled', async () => {
@@ -199,8 +200,7 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('Tag creation disabled')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Tag creation disabled') }))
     })
 
     it('skips when no bump needed (no nextVersion)', async () => {
@@ -209,8 +209,7 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('No version bump')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('No version bump') }))
     })
 
     it('skips when bumpType is none', async () => {
@@ -224,7 +223,16 @@ describe('Create Tag Step', () => {
   })
 
   describe('execute - dry run', () => {
-    it('returns success without creating tag in dry run', async () => {
+    it('returns success with a dry run message in dry run', async () => {
+      const step = createTagStep()
+      const ctx = createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }, { dryRun: true })
+
+      const result = await step.execute(ctx)
+
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('[DRY RUN] Would create tag') }))
+    })
+
+    it('does not create a tag in dry run', async () => {
       const step = createTagStep()
       const git = createMockGitClient()
       const ctx: FlowContext = {
@@ -232,11 +240,8 @@ describe('Create Tag Step', () => {
         git,
       }
 
-      const result = await step.execute(ctx)
+      await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('[DRY RUN]')
-      expect(result.message).toContain('Would create tag')
       expect(git.createTag).not.toHaveBeenCalled()
     })
 
@@ -346,9 +351,13 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.tagName).toBeDefined()
-      expect(result.message).toContain('Created tag')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ tagName: 'lib-test@1.0.0' }),
+          message: 'Created tag: lib-test@1.0.0',
+        })
+      )
     })
 
     it('logs tag creation', async () => {
@@ -376,9 +385,9 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeDefined()
-      expect(result.message).toContain('Failed to create tag')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'failed', error: expect.any(Error), message: expect.stringContaining('Failed to create tag') })
+      )
     })
 
     it('wraps non-Error throws in Error objects', async () => {
@@ -396,8 +405,7 @@ describe('Create Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeInstanceOf(Error)
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', error: expect.any(Error) }))
     })
   })
 })
@@ -407,8 +415,7 @@ describe('Push Tag Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createPushTagStep()
 
-      expect(step.id).toBe('push-tag')
-      expect(step.name).toBe('Push Git Tag')
+      expect(step).toEqual(expect.objectContaining({ id: 'push-tag', name: 'Push Git Tag' }))
     })
 
     it('depends on create-tag step', () => {
@@ -431,8 +438,9 @@ describe('Push Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('Git/tag operations disabled')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Git/tag operations disabled') })
+      )
     })
 
     it('skips when skipTag is enabled', async () => {
@@ -450,13 +458,21 @@ describe('Push Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('No tag to push')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('No tag to push') }))
     })
   })
 
   describe('execute - dry run', () => {
-    it('returns success without pushing in dry run', async () => {
+    it('returns success with a dry run message in dry run', async () => {
+      const step = createPushTagStep()
+      const ctx = createMockContext({ tagName: 'v1.0.0' }, { dryRun: true })
+
+      const result = await step.execute(ctx)
+
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('[DRY RUN] Would push tag') }))
+    })
+
+    it('does not push the tag in dry run', async () => {
       const step = createPushTagStep()
       const git = createMockGitClient()
       const ctx: FlowContext = {
@@ -464,11 +480,8 @@ describe('Push Tag Step', () => {
         git,
       }
 
-      const result = await step.execute(ctx)
+      await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('[DRY RUN]')
-      expect(result.message).toContain('Would push tag')
       expect(git.pushTag).not.toHaveBeenCalled()
     })
   })
@@ -476,17 +489,24 @@ describe('Push Tag Step', () => {
   describe('execute - success', () => {
     it('pushes tag successfully', async () => {
       const step = createPushTagStep()
+      const ctx = createMockContext({ tagName: 'v1.0.0' })
+
+      const result = await step.execute(ctx)
+
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('Pushed tag') }))
+    })
+
+    it('pushes the tag named in state', async () => {
+      const step = createPushTagStep()
       const git = createMockGitClient()
       const ctx: FlowContext = {
         ...createMockContext({ tagName: 'v1.0.0' }),
         git,
       }
 
-      const result = await step.execute(ctx)
+      await step.execute(ctx)
 
-      expect(result.status).toBe('success')
       expect(git.pushTag).toHaveBeenCalledWith('v1.0.0')
-      expect(result.message).toContain('Pushed tag')
     })
 
     it('logs push success', async () => {
@@ -514,9 +534,9 @@ describe('Push Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeDefined()
-      expect(result.message).toContain('Failed to push tag')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'failed', error: expect.any(Error), message: expect.stringContaining('Failed to push tag') })
+      )
     })
 
     it('wraps non-Error throws in Error objects', async () => {
@@ -534,8 +554,7 @@ describe('Push Tag Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeInstanceOf(Error)
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', error: expect.any(Error) }))
     })
   })
 })

@@ -13,10 +13,8 @@ describe('getJsonType', () => {
   })
 
   describe('string detection', () => {
-    it('returns string for string values', () => {
-      expect(getJsonType('')).toBe('string')
-      expect(getJsonType('hello')).toBe('string')
-      expect(getJsonType('123')).toBe('string')
+    it.each(['', 'hello', '123'])('returns string for the string value %p', (value: string) => {
+      expect(getJsonType(value)).toBe('string')
     })
   })
 
@@ -31,21 +29,16 @@ describe('getJsonType', () => {
   })
 
   describe('number detection', () => {
-    it('returns integer for whole numbers', () => {
-      expect(getJsonType(0)).toBe('integer')
-      expect(getJsonType(42)).toBe('integer')
-      expect(getJsonType(-100)).toBe('integer')
+    it.each([0, 42, -100])('returns integer for the whole number %p', (value: number) => {
+      expect(getJsonType(value)).toBe('integer')
     })
 
-    it('returns number for floating point values', () => {
-      expect(getJsonType(3.14)).toBe('number')
-      expect(getJsonType(-0.5)).toBe('number')
-      expect(getJsonType(1.0001)).toBe('number')
+    it.each([3.14, -0.5, 1.0001])('returns number for the floating point value %p', (value: number) => {
+      expect(getJsonType(value)).toBe('number')
     })
 
-    it('returns integer for whole floating point values', () => {
-      expect(getJsonType(1.0)).toBe('integer')
-      expect(getJsonType(100.0)).toBe('integer')
+    it.each([1.0, 100.0])('returns integer for the whole floating point value %p', (value: number) => {
+      expect(getJsonType(value)).toBe('integer')
     })
   })
 
@@ -54,10 +47,12 @@ describe('getJsonType', () => {
       expect(getJsonType([])).toBe('array')
     })
 
-    it('returns array for populated arrays', () => {
-      expect(getJsonType([1, 2, 3])).toBe('array')
-      expect(getJsonType(['a', 'b'])).toBe('array')
-      expect(getJsonType([{ x: 1 }])).toBe('array')
+    it.each([
+      ['numbers', [1, 2, 3]],
+      ['strings', ['a', 'b']],
+      ['objects', [{ x: 1 }]],
+    ])('returns array for a populated array of %s', (_label: string, value: unknown[]) => {
+      expect(getJsonType(value)).toBe('array')
     })
   })
 
@@ -66,9 +61,8 @@ describe('getJsonType', () => {
       expect(getJsonType({})).toBe('object')
     })
 
-    it('returns object for populated objects', () => {
-      expect(getJsonType({ a: 1 })).toBe('object')
-      expect(getJsonType({ nested: { value: true } })).toBe('object')
+    it.each([{ a: 1 }, { nested: { value: true } }])('returns object for the populated object %p', (value: object) => {
+      expect(getJsonType(value)).toBe('object')
     })
 
     it('does not return object for arrays', () => {

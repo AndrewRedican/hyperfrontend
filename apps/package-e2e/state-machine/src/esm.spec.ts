@@ -16,22 +16,27 @@ describe('@hyperfrontend/state-machine ESM', () => {
 
     it('exports action creators', async () => {
       const { start, cancel, pause, success, fail } = await import('@hyperfrontend/state-machine/actions')
-      expect(typeof start).toBe('function')
-      expect(typeof cancel).toBe('function')
-      expect(typeof pause).toBe('function')
-      expect(typeof success).toBe('function')
-      expect(typeof fail).toBe('function')
+      expect({ start, cancel, pause, success, fail }).toEqual({
+        start: expect.any(Function),
+        cancel: expect.any(Function),
+        pause: expect.any(Function),
+        success: expect.any(Function),
+        fail: expect.any(Function),
+      })
     })
 
-    it('creates valid action objects', async () => {
-      const { start, success } = await import('@hyperfrontend/state-machine/actions')
+    it('creates a start action with a type', async () => {
+      const { start } = await import('@hyperfrontend/state-machine/actions')
 
       const startAction = start()
       expect(startAction).toHaveProperty('type')
+    })
+
+    it('creates a success action with a type and a payload', async () => {
+      const { success } = await import('@hyperfrontend/state-machine/actions')
 
       const successAction = success({ data: 'test' })
-      expect(successAction).toHaveProperty('type')
-      expect(successAction).toHaveProperty('payload')
+      expect(successAction).toEqual(expect.objectContaining({ type: expect.anything(), payload: expect.anything() }))
     })
   })
 

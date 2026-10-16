@@ -34,8 +34,7 @@ describe('mergeSchemas', () => {
         { type: 'number', minimum: 0 },
       ]
       const result = mergeSchemas(schemas)
-      expect(result.anyOf).toBeDefined()
-      expect(result.anyOf).toHaveLength(2)
+      expect(result).toEqual({ anyOf: schemas })
     })
   })
 
@@ -47,10 +46,7 @@ describe('mergeSchemas', () => {
       ]
       const result = mergeSchemas(schemas)
 
-      expect(result.type).toBe('object')
-      expect(result.properties).toBeDefined()
-      expect(result.properties['name']).toEqual({ type: 'string' })
-      expect(result.properties['age']).toEqual({ type: 'number' })
+      expect(result).toEqual({ type: 'object', properties: { name: { type: 'string' }, age: { type: 'number' } } })
     })
 
     it('merges conflicting property types recursively', () => {
@@ -60,8 +56,7 @@ describe('mergeSchemas', () => {
       ]
       const result = mergeSchemas(schemas)
 
-      expect(result.type).toBe('object')
-      expect(result.properties['value']).toBeDefined()
+      expect(result).toEqual({ type: 'object', properties: { value: { type: ['string', 'number'] } } })
     })
 
     it('includes required only for properties required in all schemas', () => {
@@ -74,7 +69,7 @@ describe('mergeSchemas', () => {
       expect(result.required).toEqual(['a'])
     })
 
-    it('skips a parsed __proto__ property instead of rewriting the merged prototype', () => {
+    it('skips a parsed __proto__ property when merging properties', () => {
       const schemas: Schema[] = [
         parse('{"type":"object","properties":{"__proto__":{"type":"string"},"a":{"type":"string"}}}') as Schema,
         { type: 'object', properties: { a: { type: 'string' } } },
@@ -82,6 +77,15 @@ describe('mergeSchemas', () => {
       const result = mergeSchemas(schemas)
 
       expect(result).toEqual({ type: 'object', properties: { a: { type: 'string' } } })
+    })
+
+    it('leaves the prototype of the merged properties untouched by a parsed __proto__ property', () => {
+      const schemas: Schema[] = [
+        parse('{"type":"object","properties":{"__proto__":{"type":"string"},"a":{"type":"string"}}}') as Schema,
+        { type: 'object', properties: { a: { type: 'string' } } },
+      ]
+      const result = mergeSchemas(schemas)
+
       expect(getPrototypeOf(result.properties)).toBe(getPrototypeOf({}))
     })
   })
@@ -94,8 +98,7 @@ describe('mergeSchemas', () => {
       ]
       const result = mergeSchemas(schemas)
 
-      expect(result.type).toBe('array')
-      expect(result.items).toEqual({ type: 'string' })
+      expect(result).toEqual({ type: 'array', items: { type: 'string' } })
     })
 
     it('merges different array item types', () => {
@@ -105,8 +108,7 @@ describe('mergeSchemas', () => {
       ]
       const result = mergeSchemas(schemas)
 
-      expect(result.type).toBe('array')
-      expect(result.items).toBeDefined()
+      expect(result).toEqual({ type: 'array', items: { type: ['string', 'number'] } })
     })
 
     it('handles empty array schemas', () => {
@@ -145,16 +147,17 @@ describe('mergeSchemas', () => {
         { type: 'array', items: [{ type: 'string' }] },
       ]
       const result = mergeSchemas(schemas)
-      expect(result.type).toBe('array')
-      expect(result.items).toBeDefined()
+      expect(result).toEqual({ type: 'array', items: { type: ['string', 'number'] } })
+    })
+
+    it('exposes mergeSchemas as a function', () => {
+      expect(typeof mergeSchemas).toBe('function')
     })
 
     it('returns {type: "array"} if no items in array schemas', () => {
       const schemas: Schema[] = [{ type: 'array' }, { type: 'array', items: undefined }]
-      expect(typeof mergeSchemas).toBe('function')
       const result = mergeSchemas(schemas)
-      expect(result.type).toBe('array')
-      expect(result.items).toBeUndefined()
+      expect(result).toEqual({ type: 'array' })
     })
 
     it('returns type array for allSimpleTypes with multiple types', () => {

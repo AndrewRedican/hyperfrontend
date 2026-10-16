@@ -57,8 +57,7 @@ describe('core/fs/read', () => {
   describe('readFileBuffer', () => {
     it('reads file content as buffer', () => {
       const buffer = readFileBuffer(join(TEST_DIR, 'text.txt'))
-      expect(Buffer.isBuffer(buffer)).toBe(true)
-      expect(buffer.toString()).toBe('Hello, World!')
+      expect(buffer).toEqual(Buffer.from('Hello, World!'))
     })
 
     it('throws for missing file', () => {

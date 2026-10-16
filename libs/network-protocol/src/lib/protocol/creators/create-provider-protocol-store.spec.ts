@@ -25,7 +25,8 @@ describe('createProtocolProviderStore', () => {
     it('adds a provider with valid name', () => {
       const store = createProtocolProviderStore()
 
-      expect(() => store.add('provider1', mockProvider1)).not.toThrow()
+      store.add('provider1', mockProvider1)
+
       expect(store.existsByName('provider1')).toBe(true)
     })
 
@@ -148,9 +149,11 @@ describe('createProtocolProviderStore', () => {
 
       store.removeByName('provider1', 'provider3')
 
-      expect(store.existsByName('provider1')).toBe(false)
-      expect(store.existsByName('provider2')).toBe(true)
-      expect(store.existsByName('provider3')).toBe(false)
+      expect({
+        provider1: store.existsByName('provider1'),
+        provider2: store.existsByName('provider2'),
+        provider3: store.existsByName('provider3'),
+      }).toEqual({ provider1: false, provider2: true, provider3: false })
     })
 
     it('throws error when removing non-existing provider by name', () => {
@@ -182,9 +185,11 @@ describe('createProtocolProviderStore', () => {
 
       store.removeById(id1, id3)
 
-      expect(store.existsById(id1)).toBe(false)
-      expect(store.existsById(id2)).toBe(true)
-      expect(store.existsById(id3)).toBe(false)
+      expect({ id1: store.existsById(id1), id2: store.existsById(id2), id3: store.existsById(id3) }).toEqual({
+        id1: false,
+        id2: true,
+        id3: false,
+      })
     })
 
     it('throws error when removing non-existing provider by id', () => {
@@ -209,7 +214,8 @@ describe('createProtocolProviderStore', () => {
     it('works on empty store', () => {
       const store = createProtocolProviderStore()
 
-      expect(() => store.clear()).not.toThrow()
+      store.clear()
+
       expect(store.list.length).toBe(0)
     })
   })
@@ -232,6 +238,15 @@ describe('createProtocolProviderStore', () => {
       const list2 = store.list
 
       expect(list1).not.toBe(list2)
+    })
+
+    it('returns equal entries on every read', () => {
+      const store = createProtocolProviderStore()
+      store.add('provider1', mockProvider1)
+
+      const list1 = store.list
+      const list2 = store.list
+
       expect(list1).toEqual(list2)
     })
 
@@ -241,12 +256,16 @@ describe('createProtocolProviderStore', () => {
 
       const entry = store.list[0]
 
-      expect(entry).toHaveProperty('id')
-      expect(entry).toHaveProperty('name')
-      expect(entry).toHaveProperty('provider')
-      expect(entry.name).toBe('provider1')
+      expect(entry).toEqual({ id: expect.any(String), name: 'provider1', provider: mockProvider1 })
+    })
+
+    it('returns entries holding the registered provider instance itself', () => {
+      const store = createProtocolProviderStore()
+      store.add('provider1', mockProvider1)
+
+      const entry = store.list[0]
+
       expect(entry.provider).toBe(mockProvider1)
-      expect(typeof entry.id).toBe('string')
     })
 
     it('entries are frozen', () => {

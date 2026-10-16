@@ -35,8 +35,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.branch).toBe('main')
-      expect(status.detached).toBe(false)
+      expect(status).toMatchObject({ branch: 'main', detached: false })
     })
 
     it('detects detached HEAD state', () => {
@@ -44,8 +43,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.branch).toBe(null)
-      expect(status.detached).toBe(true)
+      expect(status).toMatchObject({ branch: null, detached: true })
     })
 
     it('parses upstream branch', () => {
@@ -53,8 +51,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.branch).toBe('main')
-      expect(status.upstream).toBe('origin/main')
+      expect(status).toMatchObject({ branch: 'main', upstream: 'origin/main' })
     })
 
     it('parses ahead/behind counts', () => {
@@ -62,8 +59,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.ahead).toBe(5)
-      expect(status.behind).toBe(3)
+      expect(status).toMatchObject({ ahead: 5, behind: 3 })
     })
 
     it('handles ahead only', () => {
@@ -71,8 +67,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.ahead).toBe(2)
-      expect(status.behind).toBe(0)
+      expect(status).toMatchObject({ ahead: 2, behind: 0 })
     })
 
     it('handles behind only', () => {
@@ -80,8 +75,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.ahead).toBe(0)
-      expect(status.behind).toBe(7)
+      expect(status).toMatchObject({ ahead: 0, behind: 7 })
     })
   })
 
@@ -91,9 +85,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('src/index.ts')
-      expect(status.staged[0].indexStatus).toBe('modified')
+      expect(status.staged).toMatchObject([{ path: 'src/index.ts', indexStatus: 'modified' }])
     })
 
     it('parses added files in staging area', () => {
@@ -101,9 +93,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('new-file.ts')
-      expect(status.staged[0].indexStatus).toBe('added')
+      expect(status.staged).toMatchObject([{ path: 'new-file.ts', indexStatus: 'added' }])
     })
 
     it('parses deleted files in staging area', () => {
@@ -111,9 +101,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('deleted.ts')
-      expect(status.staged[0].indexStatus).toBe('deleted')
+      expect(status.staged).toMatchObject([{ path: 'deleted.ts', indexStatus: 'deleted' }])
     })
 
     it('parses modified files in working tree', () => {
@@ -121,9 +109,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.modified).toHaveLength(1)
-      expect(status.modified[0].path).toBe('changed.ts')
-      expect(status.modified[0].workTreeStatus).toBe('modified')
+      expect(status.modified).toMatchObject([{ path: 'changed.ts', workTreeStatus: 'modified' }])
     })
 
     it('parses files with both index and worktree changes', () => {
@@ -131,10 +117,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.modified).toHaveLength(1)
-      expect(status.staged[0].path).toBe('both.ts')
-      expect(status.modified[0].path).toBe('both.ts')
+      expect(status).toMatchObject({ staged: [{ path: 'both.ts' }], modified: [{ path: 'both.ts' }] })
     })
 
     it('handles type change status', () => {
@@ -142,8 +125,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].indexStatus).toBe('modified')
+      expect(status.staged).toMatchObject([{ indexStatus: 'modified' }])
     })
 
     it('ignores entries with no status', () => {
@@ -151,8 +133,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(0)
-      expect(status.modified).toHaveLength(0)
+      expect(status).toMatchObject({ staged: [], modified: [] })
     })
   })
 
@@ -162,10 +143,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('new-name.ts')
-      expect(status.staged[0].origPath).toBe('old-name.ts')
-      expect(status.staged[0].indexStatus).toBe('renamed')
+      expect(status.staged).toMatchObject([{ path: 'new-name.ts', origPath: 'old-name.ts', indexStatus: 'renamed' }])
     })
 
     it('parses renamed files without tab separator (no origPath)', () => {
@@ -173,10 +151,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('renamed-only.ts')
-      expect(status.staged[0].origPath).toBeUndefined()
-      expect(status.staged[0].indexStatus).toBe('renamed')
+      expect(status.staged).toMatchObject([{ path: 'renamed-only.ts', origPath: undefined, indexStatus: 'renamed' }])
     })
 
     it('parses copied files', () => {
@@ -184,8 +159,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].indexStatus).toBe('copied')
+      expect(status.staged).toMatchObject([{ indexStatus: 'copied' }])
     })
 
     it('parses renamed files with working tree changes', () => {
@@ -193,8 +167,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.staged).toHaveLength(1)
-      expect(status.modified).toHaveLength(1)
+      expect(status).toMatchObject({ staged: [{ path: 'renamed.ts' }], modified: [{ path: 'renamed.ts' }] })
     })
   })
 
@@ -204,11 +177,10 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.hasConflicts).toBe(true)
-      expect(status.staged).toHaveLength(1)
-      expect(status.staged[0].path).toBe('conflict.ts')
-      expect(status.staged[0].indexStatus).toBe('unmerged')
-      expect(status.staged[0].workTreeStatus).toBe('unmerged')
+      expect(status).toMatchObject({
+        hasConflicts: true,
+        staged: [{ path: 'conflict.ts', indexStatus: 'unmerged', workTreeStatus: 'unmerged' }],
+      })
     })
   })
 
@@ -218,8 +190,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.untracked).toHaveLength(1)
-      expect(status.untracked[0]).toBe('new-file.txt')
+      expect(status.untracked).toEqual(['new-file.txt'])
     })
 
     it('parses multiple untracked files', () => {
@@ -227,10 +198,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.untracked).toHaveLength(3)
-      expect(status.untracked).toContain('file1.txt')
-      expect(status.untracked).toContain('file2.txt')
-      expect(status.untracked).toContain('dir/file3.ts')
+      expect(status.untracked).toEqual(['file1.txt', 'file2.txt', 'dir/file3.ts'])
     })
   })
 
@@ -320,8 +288,7 @@ describe('getStatus', () => {
 
       const status = getStatus()
 
-      expect(status.branch).toBe(null)
-      expect(status.clean).toBe(true)
+      expect(status).toMatchObject({ branch: null, clean: true })
     })
 
     it('handles files with spaces in path', () => {
@@ -584,9 +551,7 @@ describe('getStagedFiles', () => {
 
     const files = getStagedFiles()
 
-    expect(files).toHaveLength(2)
-    expect(files).toContain('file1.ts')
-    expect(files).toContain('file2.ts')
+    expect(files).toEqual(['file1.ts', 'file2.ts'])
   })
 
   it('returns empty array when no staged files', () => {
@@ -606,8 +571,7 @@ describe('getModifiedFiles', () => {
 
     const files = getModifiedFiles()
 
-    expect(files).toHaveLength(1)
-    expect(files).toContain('modified.ts')
+    expect(files).toEqual(['modified.ts'])
   })
 
   it('returns empty array when no modified files', () => {
@@ -627,9 +591,7 @@ describe('getUntrackedFiles', () => {
 
     const files = getUntrackedFiles()
 
-    expect(files).toHaveLength(2)
-    expect(files).toContain('new1.txt')
-    expect(files).toContain('new2.txt')
+    expect(files).toEqual(['new1.txt', 'new2.txt'])
   })
 
   it('returns empty array when no untracked files', () => {

@@ -20,16 +20,23 @@ describe('validateType', () => {
     expect(validateType('abc', schema, ctx)).toBe(false)
   })
 
-  it('passes for type array', () => {
+  it.each(['abc', 123])('passes for type array when %p has one of the listed types', (value: unknown) => {
     const schema: Schema = { type: ['string', 'number'] }
-    expect(validateType('abc', schema, ctx)).toBe(true)
-    expect(validateType(123, schema, ctx)).toBe(true)
+    expect(validateType(value, schema, ctx)).toBe(true)
+  })
+
+  it('fails for type array when the value has none of the listed types', () => {
+    const schema: Schema = { type: ['string', 'number'] }
     expect(validateType(true, schema, ctx)).toBe(false)
   })
 
   it('passes integer for number', () => {
     const schema: Schema = { type: 'number' }
     expect(validateType(5, schema, ctx)).toBe(true)
+  })
+
+  it('passes a fractional value for number', () => {
+    const schema: Schema = { type: 'number' }
     expect(validateType(5.5, schema, ctx)).toBe(true)
   })
 })

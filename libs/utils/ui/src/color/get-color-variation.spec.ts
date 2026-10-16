@@ -17,11 +17,15 @@ describe('getColorVariation', () => {
     expect(getColorVariation(baseColor, intensity)).toBe(expected)
   })
 
-  it('throws an error for an invalid base color', () => {
+  it('throws an input type error for a base color that is not a string', () => {
     const intensity = 128
     expect(() => getColorVariation(null as any, intensity)).toThrow(
       'Invalid input types. Base color must be a string and intensity must be a number.'
     )
+  })
+
+  it('throws an invalid hex error for a base color that is not a hex code', () => {
+    const intensity = 128
     expect(() => getColorVariation('INVALID_COLOR', intensity)).toThrow('Invalid hex input')
   })
 

@@ -18,7 +18,7 @@ describe('commit', () => {
     jest.clearAllMocks()
   })
 
-  it('creates a simple commit', () => {
+  it('returns the commit retrieved after a simple commit', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123def456789012345678901234567890abcd',
@@ -39,11 +39,32 @@ describe('commit', () => {
     const result = commit('feat: add new feature')
 
     expect(result.subject).toBe('feat: add new feature')
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['commit']), expect.any(Object))
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
-  it('creates commit with body', () => {
+  it('runs git commit with the message flag for a simple commit', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'abc123def456789012345678901234567890abcd',
+      shortHash: 'abc123d',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: add new feature',
+      body: '',
+      message: 'feat: add new feature',
+      parents: [],
+      refs: [],
+    })
+
+    commit('feat: add new feature')
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['commit', '-m', 'feat: add new feature'], expect.any(Object))
+  })
+
+  it('returns the commit retrieved after a commit with body', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
@@ -63,8 +84,30 @@ describe('commit', () => {
 
     const result = commit('feat: add feature', { body: 'Detailed description' })
 
-    expect(result).toBeDefined()
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
+    expect(result.body).toBe('Detailed description')
+  })
+
+  it('joins the body to the subject in the message flag', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'abc123',
+      shortHash: 'abc123d',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: add feature',
+      body: 'Detailed description',
+      message: 'feat: add feature\n\nDetailed description',
+      parents: [],
+      refs: [],
+    })
+
+    commit('feat: add feature', { body: 'Detailed description' })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['commit', '-m', 'feat: add feature\n\nDetailed description'], expect.any(Object))
   })
 
   it('creates commit with allowEmpty option', () => {
@@ -284,7 +327,7 @@ describe('amendCommit', () => {
     jest.clearAllMocks()
   })
 
-  it('amends the last commit', () => {
+  it('returns the amended commit', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
@@ -305,7 +348,29 @@ describe('amendCommit', () => {
     const result = amendCommit('feat: improved message')
 
     expect(result.subject).toBe('feat: improved message')
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
+  })
+
+  it('runs git commit with the new message and --amend', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'abc123',
+      shortHash: 'abc123d',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: improved message',
+      body: '',
+      message: 'feat: improved message',
+      parents: [],
+      refs: [],
+    })
+
+    amendCommit('feat: improved message')
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['commit', '-m', 'feat: improved message', '--amend'], expect.any(Object))
   })
 })
 
@@ -314,7 +379,7 @@ describe('amendCommitNoEdit', () => {
     jest.clearAllMocks()
   })
 
-  it('amends the last commit without changing the message', () => {
+  it('returns the commit retrieved after a no-edit amend', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'def456',
@@ -335,9 +400,29 @@ describe('amendCommitNoEdit', () => {
     const result = amendCommitNoEdit()
 
     expect(result.hash).toBe('def456')
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-edit']), expect.any(Object))
-    expect(mockExecFileSync).not.toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
+  })
+
+  it('runs git commit with --amend --no-edit and no message flag', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'def456',
+      shortHash: 'def456a',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: original message',
+      body: '',
+      message: 'feat: original message',
+      parents: [],
+      refs: [],
+    })
+
+    amendCommitNoEdit()
+
+    expect(mockExecFileSync.mock.calls).toEqual([['git', ['commit', '--amend', '--no-edit'], expect.any(Object)]])
   })
 
   it('uses custom cwd option', () => {
@@ -369,7 +454,7 @@ describe('commit with noEdit option', () => {
     jest.clearAllMocks()
   })
 
-  it('allows empty message when noEdit and amend are both true', () => {
+  it('returns the existing commit when noEdit and amend are both true', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'ghi789',
@@ -390,8 +475,29 @@ describe('commit with noEdit option', () => {
     const result = commit('', { amend: true, noEdit: true })
 
     expect(result.hash).toBe('ghi789')
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-edit']), expect.any(Object))
+  })
+
+  it('runs git commit with --amend --no-edit for an empty message when noEdit and amend are both true', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'ghi789',
+      shortHash: 'ghi789b',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: existing message',
+      body: '',
+      message: 'feat: existing message',
+      parents: [],
+      refs: [],
+    })
+
+    commit('', { amend: true, noEdit: true })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['commit', '--amend', '--no-edit'], expect.any(Object))
   })
 
   it('throws when noEdit is true but amend is false', () => {
@@ -404,7 +510,7 @@ describe('createEmptyCommit', () => {
     jest.clearAllMocks()
   })
 
-  it('creates an empty commit', () => {
+  it('returns the created empty commit', () => {
     mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
@@ -425,6 +531,28 @@ describe('createEmptyCommit', () => {
     const result = createEmptyCommit('chore: trigger CI')
 
     expect(result.subject).toBe('chore: trigger CI')
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--allow-empty']), expect.any(Object))
+  })
+
+  it('runs git commit with --allow-empty', () => {
+    mockExecFileSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'abc123',
+      shortHash: 'abc123d',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'chore: trigger CI',
+      body: '',
+      message: 'chore: trigger CI',
+      parents: [],
+      refs: [],
+    })
+
+    createEmptyCommit('chore: trigger CI')
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['commit', '-m', 'chore: trigger CI', '--allow-empty'], expect.any(Object))
   })
 })

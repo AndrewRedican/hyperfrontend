@@ -7,12 +7,7 @@ describe('isValidTopic', () => {
     expect(isValidTopic(topic)).toBe(true)
   })
 
-  it('returns false for anything other than a topic', () => {
-    expect(isValidTopic(void 0)).toBe(false)
-    expect(isValidTopic(null)).toBe(false)
-    expect(isValidTopic(45)).toBe(false)
-    expect(isValidTopic({})).toBe(false)
-    expect(isValidTopic({ name: 'name' })).toBe(false)
-    expect(isValidTopic({ id: 'id' })).toBe(false)
+  it.each([void 0, null, 45, {}, { name: 'name' }, { id: 'id' }])('returns false for %p, which is not a topic', (value) => {
+    expect(isValidTopic(value)).toBe(false)
   })
 })

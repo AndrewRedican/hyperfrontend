@@ -95,18 +95,38 @@ describe('createHeartbeatMonitor', () => {
     expect(onUnresponsive).not.toHaveBeenCalled()
   })
 
-  it('reports unobservable while hidden and grants a fresh budget on return', () => {
-    const states: string[] = []
+  it('grants a fresh miss budget when watching resumes', () => {
     const onUnresponsive = jest.fn()
-    const monitor = createHeartbeatMonitor(onUnresponsive, (status) => states.push(status.state))
+    const monitor = createHeartbeatMonitor(onUnresponsive)
     monitor.start()
     jest.advanceTimersByTime(2000)
     monitor.setObservable(false)
     monitor.setObservable(true)
     jest.advanceTimersByTime(2000)
     expect(onUnresponsive).not.toHaveBeenCalled()
+  })
+
+  it('fires unresponsive once the fresh budget granted on return runs out', () => {
+    const onUnresponsive = jest.fn()
+    const monitor = createHeartbeatMonitor(onUnresponsive)
+    monitor.start()
+    jest.advanceTimersByTime(2000)
+    monitor.setObservable(false)
+    monitor.setObservable(true)
+    jest.advanceTimersByTime(2000)
     jest.advanceTimersByTime(1000)
     expect(onUnresponsive).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports unobservable while hidden and suspect once the fresh budget runs out', () => {
+    const states: string[] = []
+    const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
+    monitor.start()
+    jest.advanceTimersByTime(2000)
+    monitor.setObservable(false)
+    monitor.setObservable(true)
+    jest.advanceTimersByTime(2000)
+    jest.advanceTimersByTime(1000)
     expect(states).toEqual(['healthy', 'unobservable', 'suspect'])
   })
 
@@ -117,9 +137,12 @@ describe('createHeartbeatMonitor', () => {
     monitor.setObservable(false)
     monitor.setObservable(true)
     jest.advanceTimersByTime(2000)
-    expect(states).toEqual(['healthy', 'unobservable'])
+    const beforeBeat = [...states]
     monitor.beat()
-    expect(states).toEqual(['healthy', 'unobservable', 'healthy'])
+    expect({ beforeBeat, afterBeat: states }).toEqual({
+      beforeBeat: ['healthy', 'unobservable'],
+      afterBeat: ['healthy', 'unobservable', 'healthy'],
+    })
   })
 
   it('never calls a hidden feature healthy on a beat, because silence there is not evidence either', () => {
@@ -133,8 +156,7 @@ describe('createHeartbeatMonitor', () => {
 
   it('declares a feature that went quiet while hidden suspect rather than healthy on return', () => {
     const states: string[] = []
-    const onUnresponsive = jest.fn()
-    const monitor = createHeartbeatMonitor(onUnresponsive, (status) => states.push(status.state))
+    const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
     monitor.start()
     monitor.beat()
     monitor.setObservable(false)
@@ -142,6 +164,17 @@ describe('createHeartbeatMonitor', () => {
     monitor.setObservable(true)
     jest.advanceTimersByTime(3000)
     expect(states).toEqual(['healthy', 'unobservable', 'suspect'])
+  })
+
+  it('fires unresponsive once for a feature that went quiet while hidden', () => {
+    const onUnresponsive = jest.fn()
+    const monitor = createHeartbeatMonitor(onUnresponsive)
+    monitor.start()
+    monitor.beat()
+    monitor.setObservable(false)
+    jest.advanceTimersByTime(60_000)
+    monitor.setObservable(true)
+    jest.advanceTimersByTime(3000)
     expect(onUnresponsive).toHaveBeenCalledTimes(1)
   })
 
@@ -153,17 +186,35 @@ describe('createHeartbeatMonitor', () => {
     expect(states).toEqual(['unobservable'])
   })
 
-  it('recovers to healthy when a beat ends a suspect episode and re-arms the callback', () => {
-    const states: string[] = []
-    const onUnresponsive = jest.fn()
-    const monitor = createHeartbeatMonitor(onUnresponsive, (status) => states.push(status.state))
+  it('recovers to healthy when a beat ends a suspect episode', () => {
+    const monitor = createHeartbeatMonitor(jest.fn())
     monitor.start()
     jest.advanceTimersByTime(3000)
-    expect(onUnresponsive).toHaveBeenCalledTimes(1)
     monitor.beat()
     expect(monitor.getStatus().state).toBe('healthy')
+  })
+
+  it('re-arms the callback when a beat ends a suspect episode', () => {
+    const onUnresponsive = jest.fn()
+    const monitor = createHeartbeatMonitor(onUnresponsive)
+    monitor.start()
     jest.advanceTimersByTime(3000)
-    expect(onUnresponsive).toHaveBeenCalledTimes(2)
+    const callsAfterFirstEpisode = onUnresponsive.mock.calls.length
+    monitor.beat()
+    jest.advanceTimersByTime(3000)
+    expect({ callsAfterFirstEpisode, callsAfterSecondEpisode: onUnresponsive.mock.calls.length }).toEqual({
+      callsAfterFirstEpisode: 1,
+      callsAfterSecondEpisode: 2,
+    })
+  })
+
+  it('reports each suspect episode and the recovery between them', () => {
+    const states: string[] = []
+    const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
+    monitor.start()
+    jest.advanceTimersByTime(3000)
+    monitor.beat()
+    jest.advanceTimersByTime(3000)
     expect(states).toEqual(['healthy', 'suspect', 'healthy', 'suspect'])
   })
 
@@ -191,8 +242,7 @@ describe('createHeartbeatMonitor', () => {
     const states: string[] = []
     const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
     monitor.beat()
-    expect(states).toEqual([])
-    expect(monitor.getStatus().lastBeatAt).toEqual(expect.any(Number))
+    expect({ states, lastBeatAt: monitor.getStatus().lastBeatAt }).toEqual({ states: [], lastBeatAt: expect.any(Number) })
   })
 
   it('exposes the miss count and last beat in the status snapshot', () => {
@@ -200,8 +250,6 @@ describe('createHeartbeatMonitor', () => {
     monitor.start()
     monitor.beat()
     jest.advanceTimersByTime(2000)
-    const status = monitor.getStatus()
-    expect(status.missedBeats).toBe(2)
-    expect(status.lastBeatAt).toEqual(expect.any(Number))
+    expect(monitor.getStatus()).toEqual(expect.objectContaining({ missedBeats: 2, lastBeatAt: expect.any(Number) }))
   })
 })

@@ -29,10 +29,15 @@ describe('lernaDetector', () => {
       devDependencies: { lerna: '^7.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('lerna')
-    expect(result?.name).toBe('Lerna')
-    expect(result?.version).toBe('7.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'lerna', name: 'Lerna', version: '7.0.0' }))
+  })
+
+  it('scores a lerna dependency above zero', () => {
+    const result = lernaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { lerna: '^7.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -46,8 +51,24 @@ describe('lernaDetector', () => {
       devDependencies: { lerna: '^7.0.0' },
     })
 
-    expect(result?.configPath).toBe('lerna.json')
-    expect(result?.detectedFrom.some((s) => s.path === 'lerna.json')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: 'lerna.json',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ path: 'lerna.json' })]),
+      })
+    )
+  })
+
+  it('scores a lerna.json config file at least 80', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('lerna.json')
+    })
+
+    const result = lernaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { lerna: '^7.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
   })
 
@@ -61,7 +82,19 @@ describe('lernaDetector', () => {
       devDependencies: { lerna: '^7.0.0' },
     })
 
-    expect(result?.detectedFrom.some((s) => s.path === 'packages/')).toBe(true)
     expect(result?.confidence).toBeGreaterThan(80)
+  })
+
+  it('records the packages directory as a detection source', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('lerna.json') || path.includes('packages')
+    })
+
+    const result = lernaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { lerna: '^7.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'packages/' })]))
   })
 })

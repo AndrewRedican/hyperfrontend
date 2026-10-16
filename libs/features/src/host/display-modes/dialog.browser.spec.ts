@@ -92,9 +92,7 @@ describe('mountDialog', () => {
   })
 
   it('announces the window inner size as the pane viewport by default', () => {
-    const { result } = mount({})
-    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport() })
-    expect(result.present).not.toHaveProperty('dialog')
+    expect(mount({}).result.present).toStrictEqual({ mode: 'dialog', viewport: paneViewport() })
   })
 
   it('announces agreed inner dialog box dimensions', () => {
@@ -106,15 +104,11 @@ describe('mountDialog', () => {
   })
 
   it('announces a width-only dialog box agreement', () => {
-    const { result } = mount({ dialogWidth: 800 })
-    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { width: 800 } })
-    expect(result.present.dialog).not.toHaveProperty('height')
+    expect(mount({ dialogWidth: 800 }).result.present).toStrictEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { width: 800 } })
   })
 
   it('announces a height-only dialog box agreement', () => {
-    const { result } = mount({ dialogHeight: 600 })
-    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { height: 600 } })
-    expect(result.present.dialog).not.toHaveProperty('width')
+    expect(mount({ dialogHeight: 600 }).result.present).toStrictEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { height: 600 } })
   })
 
   it('announces a position-only dialog box agreement', () => {
@@ -160,9 +154,9 @@ describe('mountDialog', () => {
 
   it('reports the pane gone once it leaves the page', () => {
     const { result } = mount({})
-    expect(result.isGone?.()).toBe(false)
+    const beforeCleanup = result.isGone?.()
     result.cleanup()
-    expect(result.isGone?.()).toBe(true)
+    expect({ beforeCleanup, afterCleanup: result.isGone?.() }).toEqual({ beforeCleanup: false, afterCleanup: true })
   })
 
   it('removes the pane iframe on cleanup', () => {

@@ -45,9 +45,12 @@ describe('@hyperfrontend/ui-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.hexToRgb).toBe('function')
-    expect(typeof exports.rgbToHex).toBe('function')
-    expect(typeof exports.select).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        hexToRgb: expect.any(Function),
+        rgbToHex: expect.any(Function),
+        select: expect.any(Function),
+      })
+    )
   })
 })

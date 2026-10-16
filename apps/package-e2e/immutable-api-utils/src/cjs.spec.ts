@@ -35,7 +35,7 @@ describe('@hyperfrontend/immutable-api-utils CJS', () => {
     expect(typeof lockedProps).toBe('function')
   })
 
-  it('locks properties on an object', () => {
+  it('locks properties on an object with the given values', () => {
     const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
 
     const obj: Record<string, unknown> = {}
@@ -44,8 +44,17 @@ describe('@hyperfrontend/immutable-api-utils CJS', () => {
       ['num', 42],
     ])
 
-    expect(obj.foo).toBe('bar')
-    expect(obj.num).toBe(42)
+    expect({ foo: obj.foo, num: obj.num }).toEqual({ foo: 'bar', num: 42 })
+  })
+
+  it('locks properties on an object against reassignment', () => {
+    const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
+
+    const obj: Record<string, unknown> = {}
+    lockedProps(obj, [
+      ['foo', 'bar'],
+      ['num', 42],
+    ])
 
     // Should not be writable
     expect(() => {

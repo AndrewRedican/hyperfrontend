@@ -19,6 +19,13 @@ describe('getHead', () => {
     const result = getHead()
 
     expect(result).toBe('abc123def456789012345678901234567890abcd')
+  })
+
+  it('runs git rev-parse HEAD', () => {
+    mockExecFileSync.mockReturnValue('abc123def456789012345678901234567890abcd\n')
+
+    getHead()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['rev-parse', 'HEAD'], expect.any(Object))
   })
 
@@ -52,6 +59,13 @@ describe('getCurrentBranch', () => {
     const result = getCurrentBranch()
 
     expect(result).toBe('main')
+  })
+
+  it('runs git symbolic-ref --short HEAD', () => {
+    mockExecFileSync.mockReturnValue('main\n')
+
+    getCurrentBranch()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['symbolic-ref', '--short', 'HEAD'], expect.any(Object))
   })
 
@@ -101,6 +115,13 @@ describe('hasUntrackedFiles', () => {
     const result = hasUntrackedFiles()
 
     expect(result).toBe(true)
+  })
+
+  it('runs git ls-files --others --exclude-standard', () => {
+    mockExecFileSync.mockReturnValue('new-file.txt\nanother-file.ts\n')
+
+    hasUntrackedFiles()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['ls-files', '--others', '--exclude-standard'], expect.any(Object))
   })
 

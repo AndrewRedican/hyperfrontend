@@ -203,7 +203,7 @@ describe('docs-links', () => {
   })
 
   describe('resolveCodeMention', () => {
-    it('resolves a package and its entry points to their pages', () => {
+    it('resolves a package name to its landing page', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, '@acme/alpha', readme)).toEqual({
@@ -211,19 +211,38 @@ describe('docs-links', () => {
         target: 'package',
         url: `https://docs.example${SITE}/alpha/`,
       })
+    })
+
+    it('resolves a package subpath to its entry page', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, '@acme/alpha/host', readme)).toEqual({
         kind: 'resolved',
         target: 'entry',
         url: `https://docs.example${SITE}/alpha/host/`,
       })
+    })
+
+    it('resolves a bare subpath against the package of the mentioning document', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, '/host', readme)).toEqual({
         kind: 'resolved',
         target: 'entry',
         url: `https://docs.example${SITE}/alpha/host/`,
       })
+    })
+
+    it('reports a subpath the package does not export as unknown', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, '@acme/alpha/nowhere', readme)).toEqual({ kind: 'unknown' })
-      expect(resolveCodeMention(index, ORIGINS, '@acme/gamma', readme)).toEqual({ kind: 'exempt', reason: 'external-package' })
-      expect(resolveCodeMention(index, ORIGINS, '@nx/devkit', readme)).toEqual({ kind: 'exempt', reason: 'external-package' })
+    })
+
+    it.each(['@acme/gamma', '@nx/devkit'])('exempts %s as a package the workspace does not publish', (mention: string) => {
+      const { index, readme } = setUp()
+
+      expect(resolveCodeMention(index, ORIGINS, mention, readme)).toEqual({ kind: 'exempt', reason: 'external-package' })
     })
 
     it('resolves a subpath the site publishes a page for even when nothing exports it', () => {
@@ -237,9 +256,14 @@ describe('docs-links', () => {
     })
 
     it('treats a leading slash that names neither an entry nor a page as a path', () => {
-      const { index, readme, workspace } = setUp()
+      const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, '/api/apps', readme)).toEqual({ kind: 'exempt', reason: 'path' })
+    })
+
+    it('treats a leading slash mentioned outside every package as a path', () => {
+      const { index, workspace } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, '/host', join(workspace.root, 'README.md'))).toEqual({ kind: 'exempt', reason: 'path' })
     })
 
@@ -251,6 +275,11 @@ describe('docs-links', () => {
         target: 'symbol',
         url: `https://docs.example${SITE}/alpha/host/#api-createShell`,
       })
+    })
+
+    it('anchors a symbol on the root entry when only that entry of the package exports it', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'validate', readme)).toEqual({
         kind: 'resolved',
         target: 'symbol',
@@ -258,7 +287,7 @@ describe('docs-links', () => {
       })
     })
 
-    it('anchors a symbol two entries export at the same depth on the landing page, and one re-exported from a deeper entry there', () => {
+    it('anchors a symbol two entries export at the same depth on the landing page', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'createChannel', readme)).toEqual({
@@ -266,6 +295,11 @@ describe('docs-links', () => {
         target: 'symbol',
         url: `https://docs.example${SITE}/alpha/#api-createChannel`,
       })
+    })
+
+    it('anchors a symbol the root re-exports from a deeper entry on that deeper entry', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'nested', readme)).toEqual({
         kind: 'resolved',
         target: 'symbol',
@@ -273,7 +307,7 @@ describe('docs-links', () => {
       })
     })
 
-    it('anchors a property on its own line and any other member on its parent', () => {
+    it('anchors an interface property on its own line', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'onDrop', readme)).toEqual({
@@ -282,12 +316,22 @@ describe('docs-links', () => {
         url: `https://docs.example${SITE}/alpha/#api-Options-prop-onDrop`,
         via: 'Options',
       })
+    })
+
+    it('anchors an interface method signature on its parent', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'send', readme)).toEqual({
         kind: 'resolved',
         target: 'member',
         url: `https://docs.example${SITE}/alpha/#api-Options`,
         via: 'Options',
       })
+    })
+
+    it('anchors a union member on its parent type', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'v4', readme)).toEqual({
         kind: 'resolved',
         target: 'member',
@@ -296,7 +340,7 @@ describe('docs-links', () => {
       })
     })
 
-    it('anchors a class method on its own line, a function-valued property among them', () => {
+    it('anchors a class method on its own line', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'dispatch', readme)).toEqual({
@@ -305,12 +349,22 @@ describe('docs-links', () => {
         url: `https://docs.example${SITE}/alpha/#api-Store-method-dispatch`,
         via: 'Store',
       })
+    })
+
+    it('anchors a function-valued class property among the methods', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'subscribe', readme)).toEqual({
         kind: 'resolved',
         target: 'member',
         url: `https://docs.example${SITE}/alpha/#api-Store-method-subscribe`,
         via: 'Store',
       })
+    })
+
+    it('anchors a plain class property on its own line', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'state', readme)).toEqual({
         kind: 'resolved',
         target: 'member',
@@ -330,16 +384,26 @@ describe('docs-links', () => {
       })
     })
 
-    it('resolves a dotted mention by its head symbol, by the type its variable is named after, or by its member', () => {
+    it('resolves a dotted mention by its head symbol', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'Options.onDrop', readme)).toMatchObject({ kind: 'resolved', target: 'symbol' })
+    })
+
+    it('resolves a dotted mention by the type its variable is named after', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'channel.outbound', readme)).toEqual({
         kind: 'resolved',
         target: 'member',
         url: `https://docs.example${SITE}/alpha/#api-Channel-prop-outbound`,
         via: 'Channel',
       })
+    })
+
+    it('resolves a dotted mention by its member', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'shell.status', readme)).toMatchObject({ kind: 'resolved', via: 'Options' })
     })
 
@@ -353,25 +417,45 @@ describe('docs-links', () => {
       })
     })
 
-    it("offers a sibling entry's lowercase word rather than applying it, but trusts a multi-word identifier", () => {
+    it("offers a sibling entry's lowercase word rather than applying it", () => {
       const { index, hostReadme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'status', hostReadme)).toEqual({
         kind: 'elsewhere',
         candidates: [`Options (@acme/alpha): https://docs.example${SITE}/alpha/#api-Options`],
       })
+    })
+
+    it('trusts a multi-word member identifier a sibling entry declares', () => {
+      const { index, hostReadme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'onDrop', hostReadme)).toMatchObject({ kind: 'resolved', via: 'Options' })
+    })
+
+    it('trusts a multi-word symbol identifier a sibling entry exports', () => {
+      const { index, hostReadme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'createChannel', hostReadme)).toMatchObject({ kind: 'resolved', target: 'symbol' })
+    })
+
+    it('resolves a symbol the mentioning entry exports itself', () => {
+      const { index, hostReadme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'createShell', hostReadme)).toMatchObject({ kind: 'resolved', target: 'symbol' })
     })
 
-    it('offers what another package documents and never applies it', () => {
+    it('offers a symbol another package exports without applying it', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'logger', readme)).toEqual({
         kind: 'elsewhere',
         candidates: [`@acme/beta: https://docs.example${SITE}/beta/#api-logger`],
       })
+    })
+
+    it('offers a member another package declares without applying it', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'channel', readme)).toEqual({
         kind: 'elsewhere',
         candidates: [`Logger (@acme/beta): https://docs.example${SITE}/beta/#api-Logger`],
@@ -414,13 +498,18 @@ describe('docs-links', () => {
     })
 
     it('falls back to the declaring source file for a name the package declares but does not export', () => {
-      const { index, readme, workspace } = setUp()
+      const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'handleRequest', readme)).toEqual({
         kind: 'resolved',
         target: 'declaration',
         url: 'https://github.com/acme/repo/blob/main/libs/alpha/src/host/create-shell.ts',
       })
+    })
+
+    it('reports a name declared in several source files as ambiguous between them', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'twice', readme)).toEqual({
         kind: 'ambiguous',
         candidates: [
@@ -428,24 +517,41 @@ describe('docs-links', () => {
           'https://github.com/acme/repo/blob/main/libs/alpha/src/lib/server/twice.ts',
         ],
       })
+    })
+
+    it('reports a declared-only name as unknown when no repository URL is configured', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, { ...ORIGINS, repoUrl: '' }, 'handleRequest', readme)).toEqual({ kind: 'unknown' })
+    })
+
+    it('reports a declared-only name as unknown when mentioned outside every package', () => {
+      const { index, workspace } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'handleRequest', join(workspace.root, 'README.md'))).toEqual({ kind: 'unknown' })
     })
 
-    it('returns exempt for values and unknown for a name nothing declares', () => {
+    it('exempts a keyword value', () => {
       const { index, readme } = setUp()
 
       expect(resolveCodeMention(index, ORIGINS, 'true', readme)).toEqual({ kind: 'exempt', reason: 'keyword' })
+    })
+
+    it('reports a name nothing declares as unknown', () => {
+      const { index, readme } = setUp()
+
       expect(resolveCodeMention(index, ORIGINS, 'nothingHere', readme)).toEqual({ kind: 'unknown' })
     })
   })
 
   describe('headingSlug', () => {
-    it('slugs the way the site does, inline markdown and tags stripped', () => {
-      expect(headingSlug('Quick Start')).toBe('quick-start')
-      expect(headingSlug('1. `build` orchestrates; phases compose')).toBe('1-build-orchestrates-phases-compose')
-      expect(headingSlug('The <em>tag</em> and [a link](https://x) **bold** *em* ![img](x.png)')).toBe('the-tag-and-a-link-bold-em-img')
-      expect(headingSlug('---')).toBe('')
+    it.each([
+      ['Quick Start', 'quick-start'],
+      ['1. `build` orchestrates; phases compose', '1-build-orchestrates-phases-compose'],
+      ['The <em>tag</em> and [a link](https://x) **bold** *em* ![img](x.png)', 'the-tag-and-a-link-bold-em-img'],
+      ['---', ''],
+    ])('slugs %p the way the site does, as %p', (heading: string, slug: string) => {
+      expect(headingSlug(heading)).toBe(slug)
     })
   })
 
@@ -458,133 +564,222 @@ describe('docs-links', () => {
   })
 
   describe('validateLink', () => {
-    it('accepts site pages and rejects routes the site does not publish', () => {
+    it.each([
+      'https://docs.example/docs/libraries/alpha/host/',
+      'https://www.docs.example/docs/libraries/alpha/host/',
+      'https://docs.example/docs/guides/first-steps/#install-it',
+    ])('accepts the site page %s', (link: string) => {
       const { index, readme } = setUp()
 
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/host/', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://www.docs.example/docs/libraries/alpha/host/', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/guides/first-steps/#install-it', readme)).toEqual({ ok: true })
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({ ok: true })
+    })
+
+    it('rejects a route the site does not publish', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/gamma/', readme)).toEqual({
         ok: false,
         reason: 'the site has no page at /docs/libraries/gamma/',
       })
     })
 
-    it('checks api anchors against the entries a page lists', () => {
+    it.each([
+      'https://docs.example/docs/libraries/alpha/host/#api-createShell',
+      'https://docs.example/docs/libraries/alpha/#api-createShell',
+      'https://docs.example/docs/libraries/alpha/#api-reference',
+      'https://docs.example/docs/libraries/alpha/#api-Options-prop-onDrop',
+      'https://docs.example/docs/libraries/alpha/#api-Store-method-subscribe',
+    ])('accepts the api anchor %s, which the page lists', (link: string) => {
       const { index, readme } = setUp()
 
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/host/#api-createShell', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-createShell', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-reference', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Options-prop-onDrop', readme)).toEqual({
-        ok: true,
-      })
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({ ok: true })
+    })
+
+    it('rejects a property anchor for a method signature, which has no anchor of its own', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Options-prop-send', readme)).toEqual({
         ok: false,
         reason: "Options has no property 'send' with an anchor of its own",
       })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-method-subscribe', readme)).toEqual({
-        ok: true,
-      })
+    })
+
+    it('rejects a property anchor for a function-valued class property', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-prop-subscribe', readme)).toEqual({
         ok: false,
         reason: "Store has no property 'subscribe' with an anchor of its own",
       })
+    })
+
+    it('rejects a method anchor for a plain class property', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-method-state', readme)).toEqual({
         ok: false,
         reason: "Store has no method 'state' with an anchor of its own",
       })
+    })
+
+    it('rejects a symbol anchor on an entry that does not export it, naming the entry that does', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/host/#api-validate', readme)).toEqual({
         ok: false,
         reason: "@acme/alpha does not export 'validate' from /docs/libraries/alpha/host/; it is exported by /docs/libraries/alpha/",
       })
+    })
+
+    it('rejects a symbol anchor for a name the package does not export', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-nothing', readme)).toEqual({
         ok: false,
         reason: "@acme/alpha does not export 'nothing' from /docs/libraries/alpha/",
       })
+    })
+
+    it('rejects an api anchor on a page that is not a package page', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/core-concepts/#api-x', readme)).toEqual({
         ok: false,
         reason: '/docs/core-concepts/ is not a package page, so it has no api-* anchors',
       })
     })
 
-    it('checks other anchors against the headings of the document a page renders', () => {
+    it.each([
+      'https://docs.example/docs/libraries/alpha/#quick-start-1',
+      'https://docs.example/docs/libraries/alpha/architecture/#data-flow',
+    ])('accepts the anchor %s, a heading of the document the page renders', (link: string) => {
       const { index, readme } = setUp()
 
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#quick-start-1', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/architecture/#data-flow', readme)).toEqual({
-        ok: true,
-      })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/architecture/#nope', readme)).toEqual({
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({ ok: true })
+    })
+
+    it.each([
+      ['https://docs.example/docs/libraries/alpha/architecture/#nope', 'libs/alpha/ARCHITECTURE.md', 'nope'],
+      ['https://docs.example/docs/libraries/beta/#missing', 'libs/beta/README.md', 'missing'],
+    ])('rejects the anchor %s because %s has no heading for it', (link: string, document: string, anchor: string) => {
+      const { index, readme } = setUp()
+
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({
         ok: false,
-        reason: "libs/alpha/ARCHITECTURE.md has no heading with the anchor 'nope'",
-      })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/core-concepts/#anything', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/beta/#missing', readme)).toEqual({
-        ok: false,
-        reason: "libs/beta/README.md has no heading with the anchor 'missing'",
+        reason: `${document} has no heading with the anchor '${anchor}'`,
       })
     })
 
-    it('accepts any anchor on a page that renders no markdown, and reports a page whose document is gone', () => {
+    it('accepts any anchor on a static page that renders no markdown', () => {
+      const { index, readme } = setUp()
+
+      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/core-concepts/#anything', readme)).toEqual({ ok: true })
+    })
+
+    it('accepts any anchor on a package page that renders no markdown', () => {
       const { index, readme, workspace } = setUp()
       workspace.writeFile('apps/docs-site/src/app/docs/libraries/alpha/ghost/page.tsx', '')
-      rmSync(join(workspace.root, 'libs/alpha/ARCHITECTURE.md'))
 
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/ghost/#top', readme)).toEqual({ ok: true })
+    })
+
+    it('reports a page whose document is gone', () => {
+      const { index, readme, workspace } = setUp()
+      rmSync(join(workspace.root, 'libs/alpha/ARCHITECTURE.md'))
+
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/architecture/#data-flow', readme)).toEqual({
         ok: false,
         reason: '/docs/libraries/alpha/architecture/ renders libs/alpha/ARCHITECTURE.md, which does not exist',
       })
     })
 
-    it('checks repository links against the workspace', () => {
+    it.each([
+      'https://github.com/acme/repo/blob/main/libs/alpha/src/host/create-shell.ts#L3',
+      'https://github.com/acme/repo/tree/main/libs/alpha/src',
+      'https://github.com/acme/repo/issues/1',
+      'https://github.com/acme/repo/blob/main',
+      'https://github.com/other/repo/blob/main/x',
+    ])('accepts the repository link %s', (link: string) => {
       const { index, readme } = setUp()
 
-      expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/blob/main/libs/alpha/src/host/create-shell.ts#L3', readme)).toEqual(
-        { ok: true }
-      )
-      expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/tree/main/libs/alpha/src', readme)).toEqual({ ok: true })
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({ ok: true })
+    })
+
+    it('rejects a blob link to a directory', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/blob/main/libs/alpha/src', readme)).toEqual({
         ok: false,
         reason: 'libs/alpha/src is a directory; link it with /tree/ rather than /blob/',
       })
+    })
+
+    it('rejects a blob link to a file the repository does not have', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/blob/main/libs/alpha/src/missing.ts', readme)).toEqual({
         ok: false,
         reason: 'the repository has no file at libs/alpha/src/missing.ts',
       })
-      expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/issues/1', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://github.com/acme/repo/blob/main', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'https://github.com/other/repo/blob/main/x', readme)).toEqual({ ok: true })
+    })
+
+    it('trusts a repository link when no repository URL is configured', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, { ...ORIGINS, repoUrl: '' }, 'https://github.com/acme/repo/blob/main/nope', readme)).toEqual({ ok: true })
     })
 
-    it('resolves relative links and bare anchors against the document', () => {
-      const { index, hostReadme, readme } = setUp()
+    it.each(['../../README.md', '../../README.md#quick-start', '../../src#x'])(
+      'accepts the relative link %s against the document',
+      (link: string) => {
+        const { index, hostReadme } = setUp()
 
-      expect(validateLink(index, ORIGINS, '../../README.md', hostReadme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, '../../README.md#quick-start', hostReadme)).toEqual({ ok: true })
+        expect(validateLink(index, ORIGINS, link, hostReadme)).toEqual({ ok: true })
+      }
+    )
+
+    it('rejects a relative link whose anchor no heading of the target carries', () => {
+      const { index, hostReadme } = setUp()
+
       expect(validateLink(index, ORIGINS, '../../README.md#nope', hostReadme)).toEqual({
         ok: false,
         reason: "libs/alpha/README.md has no heading with the anchor 'nope'",
       })
-      expect(validateLink(index, ORIGINS, '../../src#x', hostReadme)).toEqual({ ok: true })
+    })
+
+    it('rejects a relative link to a file that does not exist', () => {
+      const { index, hostReadme } = setUp()
+
       expect(validateLink(index, ORIGINS, './missing.md', hostReadme)).toEqual({
         ok: false,
         reason: 'libs/alpha/src/host/missing.md does not exist',
       })
+    })
+
+    it('accepts a bare anchor of a heading in the document', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, '#quick-start', readme)).toEqual({ ok: true })
+    })
+
+    it('rejects a bare anchor no heading in the document carries', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, '#nope', readme)).toEqual({
         ok: false,
         reason: "this document has no heading with the anchor 'nope'",
       })
     })
 
-    it('trusts other external links and rejects a malformed URL', () => {
+    it.each(['https://developer.mozilla.org/x', 'mailto:someone@example.com'])('trusts the external link %s', (link: string) => {
       const { index, readme } = setUp()
 
-      expect(validateLink(index, ORIGINS, 'https://developer.mozilla.org/x', readme)).toEqual({ ok: true })
-      expect(validateLink(index, ORIGINS, 'mailto:someone@example.com', readme)).toEqual({ ok: true })
+      expect(validateLink(index, ORIGINS, link, readme)).toEqual({ ok: true })
+    })
+
+    it('rejects a malformed URL', () => {
+      const { index, readme } = setUp()
+
       expect(validateLink(index, ORIGINS, 'https://', readme)).toEqual({ ok: false, reason: "'https://' is not a valid URL" })
     })
   })

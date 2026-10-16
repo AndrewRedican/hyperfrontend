@@ -15,9 +15,16 @@ describe('fastifyDetector', () => {
       dependencies: { fastify: '^4.0.0' },
     }
     const result = fastifyDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('fastify')
-    expect(result?.version).toBe('4.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'fastify', version: '4.0.0' }))
+  })
+
+  it('scores a fastify dependency at least 60', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { fastify: '^4.0.0' },
+    }
+    const result = fastifyDetector('/some/path', pkg)
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 

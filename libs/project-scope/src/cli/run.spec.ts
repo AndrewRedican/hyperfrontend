@@ -48,10 +48,9 @@ describe('run', () => {
   })
 
   describe('with unknown command', () => {
-    it('returns error exit code', () => {
+    it('returns an error result naming the unknown command', () => {
       const result = run(['unknown-command'])
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toContain('Unknown command')
+      expect(result).toEqual({ exitCode: 1, error: 'Unknown command: unknown-command' })
     })
   })
 
@@ -106,8 +105,7 @@ describe('run', () => {
   describe('global options', () => {
     it('passes --json to command', () => {
       const result = run(['analyze', MINIMAL_PROJECT, '--json'])
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toBeDefined()
+      expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
     })
 
     it('enables verbose mode with --verbose flag', () => {
@@ -134,14 +132,12 @@ describe('run', () => {
   describe('error handling', () => {
     it('outputs error message to console.error for unknown command', () => {
       const result = run(['nonexistent-command'])
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toBeDefined()
+      expect(result).toEqual({ exitCode: 1, error: 'Unknown command: nonexistent-command' })
     })
 
     it('handles command execution error gracefully', () => {
       const result = run(['deps', '/nonexistent/path/xyz'])
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toBeDefined()
+      expect(result).toEqual({ exitCode: 1, error: expect.stringContaining('Dependency analysis failed') })
     })
   })
 })

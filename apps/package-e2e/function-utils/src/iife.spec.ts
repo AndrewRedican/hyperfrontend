@@ -33,7 +33,21 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
     expect(typeof global.createRunOnceFunction).toBe('function')
   })
 
-  it('creates a working run-once function from IIFE bundle', () => {
+  it('creates a run-once function from IIFE bundle that returns the result on every call', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
+      createRunOnceFunction: <T>(fn: () => T) => () => T
+    }
+
+    const fn = global.createRunOnceFunction(() => 'result')
+
+    const firstCall = fn()
+    const secondCall = fn()
+
+    expect({ firstCall, secondCall }).toEqual({ firstCall: 'result', secondCall: 'result' })
+  })
+
+  it('creates a run-once function from IIFE bundle that executes only once', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
       createRunOnceFunction: <T>(fn: () => T) => () => T
@@ -45,8 +59,9 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
       return 'result'
     })
 
-    expect(fn()).toBe('result')
-    expect(fn()).toBe('result')
+    fn()
+    fn()
+
     expect(callCount).toBe(1)
   })
 
@@ -57,6 +72,14 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
     }
 
     expect(typeof global.noop).toBe('function')
+  })
+
+  it('returns undefined from noop on the global', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
+      noop: () => void
+    }
+
     expect(global.noop()).toBeUndefined()
   })
 })

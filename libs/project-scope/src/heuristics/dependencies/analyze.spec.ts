@@ -19,25 +19,13 @@ const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 describe('buildDependencyGraph', () => {
   describe('with non-existent path', () => {
     it('returns empty graph', () => {
-      const graph = buildDependencyGraph('/non/existent/path')
-
-      expect(graph).toHaveProperty('nodes')
-      expect(graph).toHaveProperty('roots')
-      expect(graph).toHaveProperty('leaves')
-      expect(graph.nodes.size).toBe(0)
-      expect(graph.roots).toEqual([])
-      expect(graph.leaves).toEqual([])
+      expect(buildDependencyGraph('/non/existent/path')).toEqual({ nodes: new Map(), roots: [], leaves: [] })
     })
   })
 
   describe('with minimal-project fixture', () => {
     it('builds graph from source files', () => {
-      const graph = buildDependencyGraph(MINIMAL_PROJECT)
-
-      expect(graph).toHaveProperty('nodes')
-      expect(graph).toHaveProperty('roots')
-      expect(graph).toHaveProperty('leaves')
-      expect(graph.nodes.size).toBeGreaterThanOrEqual(0)
+      expect(buildDependencyGraph(MINIMAL_PROJECT)).toEqual({ nodes: expect.any(Map), roots: expect.any(Array), leaves: expect.any(Array) })
     })
 
     it('identifies root nodes', () => {
@@ -58,11 +46,7 @@ describe('buildDependencyGraph', () => {
       const graph = buildDependencyGraph(MINIMAL_PROJECT)
 
       for (const [path, node] of graph.nodes) {
-        expect(typeof node.id).toBe('string')
-        expect(typeof node.path).toBe('string')
-        expect(node.id).toBe(path)
-        expect(Array.isArray(node.dependencies)).toBe(true)
-        expect(Array.isArray(node.dependents)).toBe(true)
+        expect(node).toEqual({ id: path, path: expect.any(String), dependencies: expect.any(Array), dependents: expect.any(Array) })
       }
     })
   })
@@ -79,16 +63,14 @@ describe('buildDependencyGraph', () => {
       const tsOnly = buildDependencyGraph(MINIMAL_PROJECT, { extensions: ['.ts'] })
       const jsOnly = buildDependencyGraph(MINIMAL_PROJECT, { extensions: ['.js'] })
 
-      expect(tsOnly.nodes.size).toBeGreaterThanOrEqual(0)
-      expect(jsOnly.nodes.size).toBeGreaterThanOrEqual(0)
+      expect([tsOnly.nodes.size, jsOnly.nodes.size]).toEqual([3, 0])
     })
 
     it('respects includeExternal option', () => {
       const withExternal = buildDependencyGraph(MINIMAL_PROJECT, { includeExternal: true })
       const withoutExternal = buildDependencyGraph(MINIMAL_PROJECT, { includeExternal: false })
 
-      expect(withExternal.nodes.size).toBeGreaterThanOrEqual(0)
-      expect(withoutExternal.nodes.size).toBeGreaterThanOrEqual(0)
+      expect([withExternal.nodes.size, withoutExternal.nodes.size]).toEqual([3, 3])
     })
   })
 })
@@ -108,13 +90,20 @@ describe('findCircularDependencies', () => {
     expect(Array.isArray(cycles)).toBe(true)
   })
 
-  it('returns correct structure for detected cycles', () => {
+  it('returns a cycle record for each detected cycle', () => {
     const graph = buildDependencyGraph(MINIMAL_PROJECT)
     const cycles = findCircularDependencies(graph)
 
     for (const cycle of cycles) {
-      expect(Array.isArray(cycle.cycle)).toBe(true)
-      expect(typeof cycle.length).toBe('number')
+      expect(cycle).toEqual({ cycle: expect.any(Array), length: expect.any(Number) })
+    }
+  })
+
+  it('returns a positive length for each detected cycle', () => {
+    const graph = buildDependencyGraph(MINIMAL_PROJECT)
+    const cycles = findCircularDependencies(graph)
+
+    for (const cycle of cycles) {
       expect(cycle.length).toBeGreaterThan(0)
     }
   })
@@ -123,28 +112,19 @@ describe('findCircularDependencies', () => {
 describe('getProjectDependencies', () => {
   describe('with non-existent path', () => {
     it('returns empty dependencies', () => {
-      const deps = getProjectDependencies('/non/existent/path')
-
-      expect(deps).toHaveProperty('runtime')
-      expect(deps).toHaveProperty('development')
-      expect(deps).toHaveProperty('peer')
-      expect(deps).toHaveProperty('optional')
-      expect(deps).toHaveProperty('total')
-      expect(deps.total).toBe(0)
-      expect(deps.runtime).toEqual([])
-      expect(deps.development).toEqual([])
+      expect(getProjectDependencies('/non/existent/path')).toEqual({ runtime: [], development: [], peer: [], optional: [], total: 0 })
     })
   })
 
   describe('with minimal-project fixture', () => {
     it('extracts dependencies from package.json', () => {
-      const deps = getProjectDependencies(MINIMAL_PROJECT)
-
-      expect(Array.isArray(deps.runtime)).toBe(true)
-      expect(Array.isArray(deps.development)).toBe(true)
-      expect(Array.isArray(deps.peer)).toBe(true)
-      expect(Array.isArray(deps.optional)).toBe(true)
-      expect(typeof deps.total).toBe('number')
+      expect(getProjectDependencies(MINIMAL_PROJECT)).toEqual({
+        runtime: ['lodash'],
+        development: ['typescript', 'jest'],
+        peer: ['react'],
+        optional: [],
+        total: 4,
+      })
     })
 
     it('calculates total correctly', () => {
@@ -157,10 +137,7 @@ describe('getProjectDependencies', () => {
 
   describe('with monorepo fixture', () => {
     it('extracts root dependencies', () => {
-      const deps = getProjectDependencies(MONOREPO)
-
-      expect(deps).toBeDefined()
-      expect(typeof deps.total).toBe('number')
+      expect(getProjectDependencies(MONOREPO)).toEqual({ runtime: [], development: ['typescript'], peer: [], optional: [], total: 1 })
     })
   })
 })
@@ -190,10 +167,7 @@ describe('buildDependencyGraph advanced', () => {
     const jsOnly = buildDependencyGraph(MINIMAL_PROJECT, { extensions: ['.js'] })
     const all = buildDependencyGraph(MINIMAL_PROJECT, { extensions: ['.ts', '.tsx', '.js', '.jsx'] })
 
-    expect(tsOnly.nodes).toBeDefined()
-    expect(tsxOnly.nodes).toBeDefined()
-    expect(jsOnly.nodes).toBeDefined()
-    expect(all.nodes).toBeDefined()
+    expect([tsOnly, tsxOnly, jsOnly, all].map((graph) => graph.nodes.size)).toEqual([3, 0, 0, 3])
   })
 
   it('calculates dependents correctly', () => {
@@ -262,11 +236,7 @@ describe('buildDependencyGraph with circular dependencies', () => {
   it('builds graph for project with circular imports', () => {
     const graph = buildDependencyGraph(CIRCULAR_DEPS)
 
-    expect(graph.nodes.size).toBeGreaterThanOrEqual(3)
-    const nodeIds = [...graph.nodes.keys()]
-    expect(nodeIds.some((id) => id.includes('a.ts'))).toBe(true)
-    expect(nodeIds.some((id) => id.includes('b.ts'))).toBe(true)
-    expect(nodeIds.some((id) => id.includes('c.ts'))).toBe(true)
+    expect([...graph.nodes.keys()].sort()).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts'])
   })
 
   it('tracks dependencies in circular graph', () => {
@@ -286,16 +256,39 @@ describe('findCircularDependencies with actual cycles', () => {
     expect(cycles.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('reports cycle with correct structure', () => {
+  it('reports each cycle as a record of its path and length', () => {
     const graph = buildDependencyGraph(CIRCULAR_DEPS)
     const cycles = findCircularDependencies(graph)
 
     for (const cycle of cycles) {
-      expect(Array.isArray(cycle.cycle)).toBe(true)
+      expect(cycle).toEqual({ cycle: expect.any(Array), length: expect.any(Number) })
+    }
+  })
+
+  it('reports each cycle with at least two entries', () => {
+    const graph = buildDependencyGraph(CIRCULAR_DEPS)
+    const cycles = findCircularDependencies(graph)
+
+    for (const cycle of cycles) {
       expect(cycle.cycle.length).toBeGreaterThan(1)
-      expect(typeof cycle.length).toBe('number')
+    }
+  })
+
+  it('reports each cycle as a path that returns to its first file', () => {
+    const graph = buildDependencyGraph(CIRCULAR_DEPS)
+    const cycles = findCircularDependencies(graph)
+
+    for (const cycle of cycles) {
+      expect(cycle.cycle[cycle.cycle.length - 1]).toBe(cycle.cycle[0])
+    }
+  })
+
+  it('reports each cycle with a positive length', () => {
+    const graph = buildDependencyGraph(CIRCULAR_DEPS)
+    const cycles = findCircularDependencies(graph)
+
+    for (const cycle of cycles) {
       expect(cycle.length).toBeGreaterThan(0)
-      expect(cycle.cycle[0]).toBe(cycle.cycle[cycle.cycle.length - 1])
     }
   })
 })
@@ -305,7 +298,6 @@ describe('buildDependencyGraph with dynamic imports', () => {
     const graph = buildDependencyGraph(DYNAMIC_IMPORTS)
 
     const indexNode = [...graph.nodes.values()].find((n) => n.path.includes('index.ts'))
-    expect(indexNode).toBeDefined()
     expect(indexNode?.dependencies.some((d) => d.includes('helper'))).toBe(true)
   })
 
@@ -336,12 +328,10 @@ describe('buildDependencyGraph with directory imports', () => {
     const graph = buildDependencyGraph(DIRECTORY_IMPORTS)
 
     const indexNode = [...graph.nodes.values()].find((n) => n.path === 'src/index.ts')
-    expect(indexNode).toBeDefined()
 
-    const hasUtilsDep = indexNode?.dependencies.some((d) => d.includes('utils/index.ts'))
-    const hasHelpersDep = indexNode?.dependencies.some((d) => d.includes('helpers/index.ts'))
-
-    expect(hasUtilsDep || hasHelpersDep).toBe(true)
+    expect(indexNode?.dependencies).toEqual(
+      expect.arrayContaining([expect.stringContaining('utils/index.ts'), expect.stringContaining('helpers/index.ts')])
+    )
   })
 })
 
@@ -351,10 +341,7 @@ describe('buildDependencyGraph without src directory', () => {
   it('collects source files from project root when no src dir', () => {
     const graph = buildDependencyGraph(NO_SRC_PROJECT)
 
-    expect(graph.nodes.size).toBeGreaterThanOrEqual(2)
-    const nodeIds = [...graph.nodes.keys()]
-    expect(nodeIds.some((id) => id.includes('index.ts'))).toBe(true)
-    expect(nodeIds.some((id) => id.includes('app.ts'))).toBe(true)
+    expect([...graph.nodes.keys()].sort()).toEqual(['app.ts', 'index.ts'])
   })
 
   it('builds dependency graph from root-level files', () => {
@@ -446,12 +433,8 @@ describe('buildDependencyGraph roots calculation', () => {
   it('identifies files that are not imported by anything as roots', () => {
     const graph = buildDependencyGraph(NO_SRC_PROJECT)
 
-    expect(graph.roots.length).toBeGreaterThanOrEqual(0)
-    for (const root of graph.roots) {
-      const node = graph.nodes.get(root)
-      expect(node).toBeDefined()
-      expect(node?.dependents.length).toBe(0)
-    }
+    const roots = graph.roots.map((root) => ({ root, dependents: graph.nodes.get(root)?.dependents }))
+    expect(roots).toEqual([{ root: 'app.ts', dependents: [] }])
   })
 })
 

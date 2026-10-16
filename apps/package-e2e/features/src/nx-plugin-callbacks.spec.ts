@@ -29,6 +29,9 @@ import {
   writeManifest,
 } from './support/nx-workspace'
 
+// note: The two files the feature generator scaffolds into the seeded demo app, relative to the scenario workspace root.
+const SCAFFOLDED_FILES = [join('demo', 'feature.config.json'), join('demo', 'src', 'hyperfrontend.feature.ts')]
+
 describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
   let workspace: ConsumerWorkspace
 
@@ -67,8 +70,11 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and stages the manifest update', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('stages the manifest update', () => {
       expect(result.output).toContain('UPDATE package.json')
     })
 
@@ -78,8 +84,10 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
 
     it('runs the package manager install after the flush', () => {
       // why: nx flushes only tree-staged files and the generator never stages package-lock.json, so a rewritten lock whose root entry lists the plugin proves a real package-manager child reconciled the flushed manifest (npm's human-readable output and file mtimes both vary across versions and filesystems).
-      expect(lockAfter).not.toBe(lockBefore)
-      expect(lockDepsAfter[PLUGIN_NAME]).toBe(`^${workspace.packedVersion}`)
+      expect({ lockRewritten: lockAfter !== lockBefore, lockedDeclaration: lockDepsAfter[PLUGIN_NAME] }).toEqual({
+        lockRewritten: true,
+        lockedDeclaration: `^${workspace.packedVersion}`,
+      })
       // note: The install child reconciles an unchanged package tree, so the only write through the shared node_modules symlink is npm's hidden lockfile, which no other scenario reads.
     })
   })
@@ -104,8 +112,11 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 without staging a manifest change', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('stages no manifest change', () => {
       expect(result.output).not.toContain('UPDATE package.json')
     })
 
@@ -115,8 +126,10 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
 
     it('runs no install', () => {
       // why: A spurious npm run here would rewrite the lock to identical bytes, so byte-equality alone cannot detect it; the absence of npm's install summary in the inherited stdio is the direct no-install evidence, with lock equality guarding content-level drift.
-      expect(result.output).not.toMatch(INSTALL_OUTPUT_PATTERN)
-      expect(lockAfter).toBe(lockBefore)
+      expect({ output: result.output, lockUnchanged: lockAfter === lockBefore }).toEqual({
+        output: expect.not.stringMatching(INSTALL_OUTPUT_PATTERN),
+        lockUnchanged: true,
+      })
     })
   })
 
@@ -143,8 +156,11 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and previews the staged update', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('previews the staged update', () => {
       expect(result.output).toContain('UPDATE package.json')
     })
 
@@ -154,8 +170,10 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
 
     it('skips the install callback', () => {
       // why: nx awaits generator callbacks only after flushChanges and skips both under --dry-run; an install here would have reconciled the on-disk manifest (which still lacks the declaration) and rewritten the lock, so lock equality plus chatter absence pins the skip.
-      expect(result.output).not.toMatch(INSTALL_OUTPUT_PATTERN)
-      expect(lockAfter).toBe(lockBefore)
+      expect({ output: result.output, lockUnchanged: lockAfter === lockBefore }).toEqual({
+        output: expect.not.stringMatching(INSTALL_OUTPUT_PATTERN),
+        lockUnchanged: true,
+      })
     })
   })
 
@@ -187,8 +205,7 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     })
 
     it('still scaffolds the feature files', () => {
-      expect(existsSync(join(scenarioDir, 'demo', 'feature.config.json'))).toBe(true)
-      expect(existsSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'))).toBe(true)
+      expect(SCAFFOLDED_FILES.filter((file) => !existsSync(join(scenarioDir, file)))).toEqual([])
     })
   })
 
@@ -210,20 +227,22 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and previews the staged scaffold', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('previews the staged scaffold', () => {
       // note: nx prints the staged change list on dry runs, which is the observable that the scaffold now stages through the Nx tree instead of writing straight to disk.
       expect(result.output).toMatch(/CREATE\s+demo\/feature\.config\.json/)
     })
 
     it('creates no files on disk', () => {
-      expect(existsSync(join(scenarioDir, 'demo', 'feature.config.json'))).toBe(false)
-      expect(existsSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'))).toBe(false)
+      expect(SCAFFOLDED_FILES.filter((file) => existsSync(join(scenarioDir, file)))).toEqual([])
     })
 
     it('leaves the entry file and manifest untouched', () => {
-      expect(readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')).toBe(entryBefore)
-      expect(readManifestText(scenarioDir)).toBe(manifestBefore)
+      const onDisk = { entry: readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8'), manifest: readManifestText(scenarioDir) }
+      expect(onDisk).toEqual({ entry: entryBefore, manifest: manifestBefore })
     })
   })
 
@@ -256,24 +275,25 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     )
 
     it('exits 0 on both runs', () => {
-      expect(firstRun.status).toBe(0)
-      expect(secondRun.status).toBe(0)
+      expect({ first: firstRun.status, second: secondRun.status }).toEqual({ first: 0, second: 0 })
     })
 
     it('does not duplicate the marker block in the entry file', () => {
       // note: The closing marker is `</hf:feature>`, which never matches the opening token, so one match means exactly one managed block.
-      expect((entryAfterSecond.match(/<hf:feature>/g) ?? []).length).toBe(1)
-      expect(entryAfterSecond).toBe(entryAfterFirst)
+      const markerBlocks = (entryAfterSecond.match(/<hf:feature>/g) ?? []).length
+      expect({ markerBlocks, entry: entryAfterSecond }).toEqual({ markerBlocks: 1, entry: entryAfterFirst })
     })
 
     it('keeps the config and glue module byte-identical across runs', () => {
-      expect(configAfterSecond).toBe(configAfterFirst)
-      expect(glueAfterSecond).toBe(glueAfterFirst)
+      expect({ config: configAfterSecond, glue: glueAfterSecond }).toEqual({ config: configAfterFirst, glue: glueAfterFirst })
     })
 
-    it('reports the skips truthfully in the summary', () => {
+    it('stops claiming fresh creations in the re-run summary', () => {
       // note: The exact summary wording is not pinned; the contract is that a re-run stops claiming fresh creations and names what it preserved.
       expect(secondRun.output).not.toContain('created 2')
+    })
+
+    it('names what the re-run preserved in its summary', () => {
       expect(secondRun.output).toMatch(/kept|skipped|up to date/i)
     })
   })
@@ -303,8 +323,11 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and recreates the deleted config file', () => {
+    it('exits 0 when re-run after the delete', () => {
       expect(secondRun.status).toBe(0)
+    })
+
+    it('recreates the deleted config file', () => {
       // note: toMatchObject keeps the pin additive-safe in case the config gains persisted keys later; these four are the scaffold's contract.
       expect(configJson).toMatchObject({
         $schema: 'https://hyperfrontend.dev/schemas/feature.config.json',
@@ -315,8 +338,11 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     })
 
     it('leaves the glue module and entry wiring untouched', () => {
-      expect(readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')).toBe(glueBefore)
-      expect(readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')).toBe(entryBefore)
+      const onDisk = {
+        glue: readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8'),
+        entry: readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8'),
+      }
+      expect(onDisk).toEqual({ glue: glueBefore, entry: entryBefore })
     })
   })
 })

@@ -160,8 +160,7 @@ describe('lib-inline-code-links', () => {
     })
 
     it('is a fixable problem', () => {
-      expect(rule.meta?.type).toBe('problem')
-      expect(rule.meta?.fixable).toBe('code')
+      expect(rule.meta).toEqual(expect.objectContaining({ type: 'problem', fixable: 'code' }))
     })
 
     it('has documentation url', () => {
@@ -184,8 +183,11 @@ describe('lib-inline-code-links', () => {
       }
     })
 
-    it('publishes under the site by default and reads the site from apps/docs-site', () => {
+    it('publishes under the hyperfrontend site by default', () => {
       expect(DEFAULT_SITE_URL).toBe('https://www.hyperfrontend.dev')
+    })
+
+    it('reads the site project from apps/docs-site by default', () => {
       expect(DEFAULT_DOCS_SITE_ROOT).toBe('apps/docs-site')
     })
   })
@@ -201,14 +203,16 @@ describe('lib-inline-code-links', () => {
   })
 
   describe('scope', () => {
-    it('ignores files that are not markdown, the changelog, and markdown outside a publishable package', () => {
+    it.each([
+      ['a file that is not markdown', 'libs/alpha/README.txt'],
+      ['the changelog', 'libs/alpha/CHANGELOG.md'],
+      ['markdown outside a publishable package', 'libs/private/README.md'],
+      ['markdown at the workspace root', 'README.md'],
+    ])('ignores %s', (_what: string, path: string) => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
 
-      expect(lintMarkdown('`createShell`', join(workspace.root, 'libs/alpha/README.txt'))).toEqual([])
-      expect(lintMarkdown('`createShell`', join(workspace.root, 'libs/alpha/CHANGELOG.md'))).toEqual([])
-      expect(lintMarkdown('`createShell`', join(workspace.root, 'libs/private/README.md'))).toEqual([])
-      expect(lintMarkdown('`createShell`', join(workspace.root, 'README.md'))).toEqual([])
+      expect(lintMarkdown('`createShell`', join(workspace.root, path))).toEqual([])
     })
 
     it('ignores markdown that sits under no workspace at all', () => {
@@ -228,17 +232,28 @@ describe('lib-inline-code-links', () => {
   })
 
   describe('unlinked mentions', () => {
-    it('reports a resolvable name with the destination and a fix that links it', () => {
+    it('reports a resolvable name with its destination', () => {
+      const workspace = createWorkspace()
+      resetDocsTargetIndex()
+
+      expect(lintMarkdown('Hand `createShell` a URL.\n', join(workspace.root, 'libs/alpha/README.md'))).toMatchObject([
+        {
+          messageId: 'unlinkedResolved',
+          data: {
+            code: 'createShell',
+            what: 'the symbol',
+            url: 'https://www.hyperfrontend.dev/docs/libraries/alpha/host/#api-createShell',
+          },
+        },
+      ])
+    })
+
+    it('offers a fix that links a resolvable name to its destination', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const text = 'Hand `createShell` a URL.\n'
       const reports = lintMarkdown(text, join(workspace.root, 'libs/alpha/README.md'))
 
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({
-        messageId: 'unlinkedResolved',
-        data: { code: 'createShell', what: 'the symbol', url: 'https://www.hyperfrontend.dev/docs/libraries/alpha/host/#api-createShell' },
-      })
       expect(fixed(reports[0] as CapturedReport, text)).toBe(
         '`createShell` -> [`createShell`](https://www.hyperfrontend.dev/docs/libraries/alpha/host/#api-createShell)'
       )
@@ -281,10 +296,16 @@ describe('lib-inline-code-links', () => {
       resetDocsTargetIndex()
       const reports = lintMarkdown('The `status`.\n', join(workspace.root, 'libs/alpha/README.md'))
 
-      expect(reports[0]).toMatchObject({ messageId: 'unlinkedAmbiguous', data: { code: 'status' } })
-      expect(reports[0]?.data?.['candidates']).toContain('\n    Options: https://www.hyperfrontend.dev/docs/libraries/alpha/#api-Options')
-      expect(reports[0]?.data?.['candidates']).toContain('\n    Other: https://www.hyperfrontend.dev/docs/libraries/alpha/#api-Other')
-      expect(reports[0]?.fix).toBeUndefined()
+      // why: an exact descriptor is what proves the report carries no fix
+      expect(reports[0]).toEqual({
+        node: expect.anything(),
+        messageId: 'unlinkedAmbiguous',
+        data: {
+          code: 'status',
+          candidates:
+            '\n    Options: https://www.hyperfrontend.dev/docs/libraries/alpha/#api-Options\n    Other: https://www.hyperfrontend.dev/docs/libraries/alpha/#api-Other',
+        },
+      })
     })
 
     it("offers another package's documentation without applying it", () => {
@@ -292,11 +313,12 @@ describe('lib-inline-code-links', () => {
       resetDocsTargetIndex()
       const reports = lintMarkdown('Use `logger`.\n', join(workspace.root, 'libs/alpha/README.md'))
 
-      expect(reports[0]).toMatchObject({
+      // why: an exact descriptor is what proves the report carries no fix
+      expect(reports[0]).toEqual({
+        node: expect.anything(),
         messageId: 'unlinkedElsewhere',
         data: { code: 'logger', candidates: '\n    @acme/beta: https://www.hyperfrontend.dev/docs/libraries/beta/#api-logger' },
       })
-      expect(reports[0]?.fix).toBeUndefined()
     })
 
     it('links a declared but unexported name to its source file', () => {

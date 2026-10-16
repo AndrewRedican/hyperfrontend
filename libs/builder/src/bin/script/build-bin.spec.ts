@@ -70,22 +70,26 @@ describe('buildJsBin', () => {
 
   it('dispatches one worker per format with the correct descriptor shape', async () => {
     await buildJsBin({ name: 'hf-build', format: ['cjs', 'esm'] } as BinConfig, makeContext())
-    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const cjs = dispatchedDescriptor(0)
-    const esm = dispatchedDescriptor(1)
-    expect(cjs.format).toBe('cjs')
-    expect(cjs.inputFile).toBe(normalizeToNative('/abs/libs/foo/src/bin/hf-build.ts'))
-    expect(cjs.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/hf-build.cjs'))
-    expect(cjs.bin?.banner).toBe('#!/usr/bin/env node')
-    expect(cjs.bin?.chmod).toBe(0o755)
-    expect(esm.format).toBe('esm')
-    expect(esm.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/hf-build.mjs'))
+    expect((dispatchRollupWorker as Mock).mock.calls.map(([descriptor]) => descriptor)).toEqual([
+      expect.objectContaining({
+        format: 'cjs',
+        inputFile: normalizeToNative('/abs/libs/foo/src/bin/hf-build.ts'),
+        bin: expect.objectContaining({
+          outputFile: normalizeToNative('/abs/dist/libs/foo/bin/hf-build.cjs'),
+          banner: '#!/usr/bin/env node',
+          chmod: 0o755,
+        }),
+      }),
+      expect.objectContaining({
+        format: 'esm',
+        bin: expect.objectContaining({ outputFile: normalizeToNative('/abs/dist/libs/foo/bin/hf-build.mjs') }),
+      }),
+    ])
   })
 
   it('labels the dispatch invocation with `bin:<name>:<format>` for traceability', async () => {
     await buildJsBin({ name: 'cz', format: ['cjs', 'esm'] } as BinConfig, makeContext())
-    expect(dispatchRollupWorker).toHaveBeenNthCalledWith(1, expect.any(Object), expect.objectContaining({ label: 'bin:cz:cjs' }))
-    expect(dispatchRollupWorker).toHaveBeenNthCalledWith(2, expect.any(Object), expect.objectContaining({ label: 'bin:cz:esm' }))
+    expect((dispatchRollupWorker as Mock).mock.calls.map(([, options]) => options.label)).toEqual(['bin:cz:cjs', 'bin:cz:esm'])
   })
 
   it('threads the resolved worker path + execArgv into the dispatch options', async () => {

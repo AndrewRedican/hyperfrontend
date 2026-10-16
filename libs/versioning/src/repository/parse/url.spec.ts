@@ -240,9 +240,8 @@ describe('parseRepositoryUrl', () => {
       expect(parseRepositoryUrl('   ')).toBeNull()
     })
 
-    it('returns null for null/undefined', () => {
-      expect(parseRepositoryUrl(null as never)).toBeNull()
-      expect(parseRepositoryUrl(undefined as never)).toBeNull()
+    it.each([null, undefined])('returns null for %p', (input) => {
+      expect(parseRepositoryUrl(input as never)).toBeNull()
     })
 
     it('returns null for invalid URL', () => {
@@ -333,9 +332,8 @@ describe('createRepositoryConfigFromUrl', () => {
     expect(config).toBeNull()
   })
 
-  it('returns null for invalid URLs', () => {
-    expect(createRepositoryConfigFromUrl('not-a-url')).toBeNull()
-    expect(createRepositoryConfigFromUrl('')).toBeNull()
+  it.each(['not-a-url', ''])('returns null for the invalid URL %p', (url) => {
+    expect(createRepositoryConfigFromUrl(url)).toBeNull()
   })
 
   it('creates config for self-hosted instances', () => {

@@ -46,11 +46,14 @@ describe('syncElementDimensions', () => {
     jest.advanceTimersByTime(0)
     jest.runAllTimers()
 
-    expect(targetElement.style.width).toBe('200px')
-    expect(targetElement.style.height).toBe('100px')
-    expect(targetElement.style.top).toBe('10px')
-    expect(targetElement.style.left).toBe('20px')
-    expect(targetElement.style.position).toBe('absolute')
+    const { width, height, top, left, position } = targetElement.style
+    expect({ width, height, top, left, position }).toEqual({
+      width: '200px',
+      height: '100px',
+      top: '10px',
+      left: '20px',
+      position: 'absolute',
+    })
 
     cleanup()
   })
@@ -62,9 +65,10 @@ describe('syncElementDimensions', () => {
 
     jest.runAllTimers()
 
-    expect(onSuccess).toHaveBeenCalledTimes(1)
-    expect(onSuccess).toHaveBeenCalledWith(targetElement)
-    expect(targetElement.style.width).toBe('200px')
+    expect({ onSuccessCalls: onSuccess.mock.calls, width: targetElement.style.width }).toEqual({
+      onSuccessCalls: [[targetElement]],
+      width: '200px',
+    })
 
     cleanup()
   })
@@ -115,10 +119,8 @@ describe('syncElementDimensions', () => {
       {} as ResizeObserver
     )
 
-    expect(targetElement.style.width).toBe('300px')
-    expect(targetElement.style.height).toBe('150px')
-    expect(targetElement.style.top).toBe('15px')
-    expect(targetElement.style.left).toBe('25px')
+    const { width, height, top, left } = targetElement.style
+    expect({ width, height, top, left }).toEqual({ width: '300px', height: '150px', top: '15px', left: '25px' })
 
     cleanup()
   })
@@ -131,8 +133,8 @@ describe('syncElementDimensions', () => {
 
     jest.runAllTimers()
 
-    expect(targetElement.style.width).toBe('200px')
-    expect(targetElement.style.height).toBe('100px')
+    const { width, height } = targetElement.style
+    expect({ width, height }).toEqual({ width: '200px', height: '100px' })
 
     cleanup()
   })

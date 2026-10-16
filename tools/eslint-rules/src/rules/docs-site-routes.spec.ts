@@ -112,11 +112,9 @@ describe('docs-site-routes', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingRoute')
-      expect(messageIds).toContain('missingNavigation')
-      expect(messageIds).toContain('missingGenerateDocs')
-      expect(messageIds).toContain('missingLibrarySlug')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(
+        expect.arrayContaining(['missingRoute', 'missingNavigation', 'missingGenerateDocs', 'missingLibrarySlug'])
+      )
     })
   })
 

@@ -20,7 +20,7 @@ describe('normalizeSubject', () => {
 })
 
 describe('subjectStep', () => {
-  it('writes the normalized subject into the draft on submit', async () => {
+  it('completes the step on submit', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
     ctx.draft = { type: 'feat' }
@@ -30,6 +30,18 @@ describe('subjectStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('writes the normalized subject into the draft on submit', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueueKeys(['h', 'i', '.', TestKey.Enter])
+    await pending
+
     expect(ctx.draft.subject).toBe('hi')
     term.destroy()
   })
@@ -58,7 +70,7 @@ describe('subjectStep', () => {
     term.destroy()
   })
 
-  it('accepts a subject pasted as a single multi-character chunk', async () => {
+  it('completes the step for a subject pasted as a single chunk', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
     ctx.draft = { type: 'feat' }
@@ -69,7 +81,34 @@ describe('subjectStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('accepts a subject pasted as a single multi-character chunk', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    // why: one chunk with many printable characters is a paste, not keystrokes
+    term.input.enqueueKeys(['add resize support', TestKey.Enter])
+    await pending
+
     expect(ctx.draft.subject).toBe('add resize support')
+    term.destroy()
+  })
+
+  it('completes the step after a bracketed paste and Enter', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'fix' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueuePaste('handle wide\nterminals')
+    term.input.enqueueKeys([TestKey.Enter])
+    const result = await pending
+
+    expect(result).toEqual({ status: StepStatus.Done })
     term.destroy()
   })
 
@@ -81,9 +120,8 @@ describe('subjectStep', () => {
     const pending = subjectStep.run(ctx)
     term.input.enqueuePaste('handle wide\nterminals')
     term.input.enqueueKeys([TestKey.Enter])
-    const result = await pending
+    await pending
 
-    expect(result).toEqual({ status: StepStatus.Done })
     expect(ctx.draft.subject).toBe('handle wide terminals')
     term.destroy()
   })
@@ -106,9 +144,46 @@ describe('subjectStep', () => {
     expect(term.output.getWrittenData().slice(before)).toContain('Subject')
 
     term.input.enqueueKeys(['i', TestKey.Enter])
+    await pending
+    term.destroy()
+  })
+
+  it('completes the step after a mid-prompt resize', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueueKeys(['h'])
+    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise((resolve) => setImmediate(resolve))
+
+    term.output.resize(40)
+    await new Promise((resolve) => setImmediate(resolve))
+
+    term.input.enqueueKeys(['i', TestKey.Enter])
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('preserves the typed value across a mid-prompt resize', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueueKeys(['h'])
+    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise((resolve) => setImmediate(resolve))
+
+    term.output.resize(40)
+    await new Promise((resolve) => setImmediate(resolve))
+
+    term.input.enqueueKeys(['i', TestKey.Enter])
+    await pending
+
     expect(ctx.draft.subject).toBe('hi')
     term.destroy()
   })

@@ -7,8 +7,10 @@ describe('withoutValidErrorMessage', () => {
     expect(result).toBe('Cannot create a packet without a valid origin value')
   })
 
-  it('returns error message for different labels', () => {
-    expect(withoutValidErrorMessage('target')).toBe('Cannot create a packet without a valid target value')
-    expect(withoutValidErrorMessage('data')).toBe('Cannot create a packet without a valid data value')
+  it.each([
+    ['target', 'Cannot create a packet without a valid target value'],
+    ['data', 'Cannot create a packet without a valid data value'],
+  ])('returns the error message for the %s label', (label, message) => {
+    expect(withoutValidErrorMessage(label)).toBe(message)
   })
 })

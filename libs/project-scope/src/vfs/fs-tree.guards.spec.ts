@@ -29,7 +29,13 @@ describe('vfs/FsTree - path guards', () => {
     it('buffers no change for a rejected write', () => {
       const tree = createFsTree(TEST_DIR)
 
-      expect(() => tree.write(POISONED, 'payload')).toThrow()
+      // why: the rejection itself is pinned by the test above; swallowing it here leaves only the buffer to inspect.
+      try {
+        tree.write(POISONED, 'payload')
+      } catch {
+        // why: a write that did not throw would show up in the buffer below.
+      }
+
       expect(tree.listChanges()).toEqual([])
     })
 

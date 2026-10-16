@@ -231,8 +231,7 @@ describe('sortEntries', () => {
     })
 
     const result = sortEntries(changelog)
-    expect(result.entries[0]?.unreleased).toBe(true)
-    expect(result.entries.slice(1).map((e) => e.version)).toEqual(['2.0.0', '1.0.0'])
+    expect(result.entries.map((e) => e.version)).toEqual(['Unreleased', '2.0.0', '1.0.0'])
   })
 
   it('handles prerelease versions', () => {
@@ -384,9 +383,7 @@ describe('normalizeSectionHeadings', () => {
     })
 
     const result = normalizeSectionHeadings(changelog)
-    const headings = result.entries.flatMap((e) => e.sections.map((s) => s.heading))
-    expect(headings).toHaveLength(2)
-    expect(headings[0]).toBe(headings[1])
+    expect(result.entries.flatMap((e) => e.sections.map((s) => s.heading))).toEqual(['Features', 'Features'])
   })
 })
 
@@ -407,9 +404,7 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
-    expect(result).toMatchObject({ entries: [{ sections: expect.any(Array) }] })
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0]?.sections).toHaveLength(1)
+    expect(result).toMatchObject({ entries: [{ version: '2.0.0', sections: [{ type: 'features' }] }] })
   })
 
   it('preserves non-empty content', () => {
@@ -427,9 +422,7 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
-    expect(result).toMatchObject({ entries: [{ sections: expect.any(Array) }] })
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0]?.sections).toHaveLength(2)
+    expect(result).toEqual(changelog)
   })
 
   it('keeps empty unreleased entry by default', () => {
@@ -440,7 +433,6 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
-    expect(result.entries).toHaveLength(1)
     expect(result).toMatchObject({ entries: [{ unreleased: true }] })
   })
 
@@ -455,7 +447,6 @@ describe('compact', () => {
     })
 
     const result = compact(changelog, false)
-    expect(result.entries).toHaveLength(1)
     expect(result).toMatchObject({ entries: [{ version: '1.0.0' }] })
   })
 
@@ -470,42 +461,78 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
-    expect(result.entries).toHaveLength(1)
     expect(result).toMatchObject({ entries: [{ version: '1.0.0', rawContent: 'Some raw content' }] })
   })
 })
 
 describe('cloneChangelog', () => {
-  it('creates a deep copy', () => {
-    const original = createChangelog({
-      header: { title: '#', description: [], links: [] },
-      entries: [
-        createChangelogEntry('1.0.0', {
-          sections: [createChangelogSection('features', 'Features', [createChangelogItem('Feature')])],
-        }),
-      ],
-      metadata: { format: 'unknown', isConventional: false, warnings: [] },
-    })
-
-    const clone = cloneChangelog(original)
-    expect(clone).toEqual(original)
-    expect(clone).not.toBe(original)
-    expect(clone.entries).not.toBe(original.entries)
-    expect(clone.entries[0]).not.toBe(original.entries[0])
-    expect(clone.entries[0]?.sections[0]).not.toBe(original.entries[0]?.sections[0])
+  const original = createChangelog({
+    header: { title: '#', description: [], links: [] },
+    entries: [
+      createChangelogEntry('1.0.0', {
+        sections: [createChangelogSection('features', 'Features', [createChangelogItem('Feature')])],
+      }),
+    ],
+    metadata: { format: 'unknown', isConventional: false, warnings: [] },
   })
 
-  it('modifications to clone do not affect original', () => {
-    const original = createChangelog({
+  it('creates a structurally equal copy', () => {
+    const clone = cloneChangelog(original)
+    expect(clone).toEqual(original)
+  })
+
+  it('shares no object with the original at any nesting level', () => {
+    const clone = cloneChangelog(original)
+    const cloneSection = clone.entries[0]?.sections[0]
+    const originalSection = original.entries[0]?.sections[0]
+    const cloneItem = cloneSection?.items[0]
+    const originalItem = originalSection?.items[0]
+    expect({
+      changelog: clone === original,
+      header: clone.header === original.header,
+      headerDescription: clone.header.description === original.header.description,
+      headerLinks: clone.header.links === original.header.links,
+      entries: clone.entries === original.entries,
+      entry: clone.entries[0] === original.entries[0],
+      sections: clone.entries[0]?.sections === original.entries[0]?.sections,
+      section: cloneSection === originalSection,
+      items: cloneSection?.items === originalSection?.items,
+      item: cloneItem === originalItem,
+      itemCommits: cloneItem?.commits === originalItem?.commits,
+      itemReferences: cloneItem?.references === originalItem?.references,
+      metadata: clone.metadata === original.metadata,
+      metadataWarnings: clone.metadata.warnings === original.metadata.warnings,
+    }).toEqual({
+      changelog: false,
+      header: false,
+      headerDescription: false,
+      headerLinks: false,
+      entries: false,
+      entry: false,
+      sections: false,
+      section: false,
+      items: false,
+      item: false,
+      itemCommits: false,
+      itemReferences: false,
+      metadata: false,
+      metadataWarnings: false,
+    })
+  })
+
+  it('gives the clone its own header and entries objects', () => {
+    const source = createChangelog({
       header: { title: '#', description: [], links: [] },
       entries: [createChangelogEntry('1.0.0', { sections: [] })],
       metadata: { format: 'unknown', isConventional: false, warnings: [] },
     })
 
-    const clone = cloneChangelog(original)
-    expect(clone).not.toBe(original)
-    expect(clone.entries).not.toBe(original.entries)
-    expect(clone.header).not.toBe(original.header)
+    const clone = cloneChangelog(source)
+    expect({
+      changelog: clone === source,
+      entries: clone.entries === source.entries,
+      header: clone.header === source.header,
+    }).toEqual({ changelog: false, entries: false, header: false })
   })
 })
 
@@ -628,8 +655,7 @@ describe('deduplicateItems', () => {
     })
 
     const result = deduplicateItems(changelog)
-    expect(result.entries[0]?.sections[0]?.items).toHaveLength(1)
-    expect(result.entries[1]?.sections[0]?.items).toHaveLength(1)
+    expect(result.entries.map((e) => e.sections[0]?.items.map((item) => item.description))).toEqual([['Feature'], ['Feature']])
   })
 })
 
@@ -648,12 +674,10 @@ describe('stripMetadata', () => {
     })
 
     const result = stripMetadata(changelog)
-    expect(result.metadata.format).toBe('keep-a-changelog')
-    expect(result.metadata.isConventional).toBe(true)
-    expect(result.metadata.repositoryUrl).toBeUndefined()
-    expect(result.metadata.packageName).toBeUndefined()
-    expect(result.metadata.warnings).toEqual([])
-    expect(result.source).toBeUndefined()
+    expect({ source: result.source, metadata: result.metadata }).toEqual({
+      source: undefined,
+      metadata: { format: 'keep-a-changelog', isConventional: true, warnings: [] },
+    })
   })
 
   it('preserves entries and header', () => {
@@ -668,8 +692,6 @@ describe('stripMetadata', () => {
     })
 
     const result = stripMetadata(changelog)
-    expect(result.header.title).toBe('# Changelog')
-    expect(result.entries).toHaveLength(1)
-    expect(result).toMatchObject({ entries: [{ sections: [{ items: [{ description: 'Feature' }] }] }] })
+    expect(result).toEqual(expect.objectContaining({ header: changelog.header, entries: changelog.entries }))
   })
 })

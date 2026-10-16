@@ -276,43 +276,62 @@ it('should return the correct value', ...)
 it('returns the correct value', ...)
 ```
 
-### Assertions — one per test, use Jest APIs, consolidate with asymmetric matchers
+### Assertions — one per test body, enforced by `workspace/one-assertion-per-test`
 
-**One assertion per test.** Each `it` block should express a single observable fact. Multiple `expect` calls are only acceptable when asserting over a collection or validating tightly coupled state that cannot be expressed as a single matcher.
+**One assertion per test body.** A unit test describes one behaviour, so its body reaches at most one assertion call: one `expect(...)`, or one call into `node:assert`. The lint rule counts lexically, nested callbacks and same-file helpers included, so a helper that asserts twice, or is called twice, still counts. It never requires an assertion, and it never fixes anything, because which remedy fits is a judgement about the behaviour under test. Decide case by case:
 
-Use built-in Jest matchers (`expect`, `toBe`, `toEqual`, `toThrow`, `toHaveBeenCalledWith`, etc.). Do **not** introduce raw assertion libraries or custom matchers unless they already exist in the file.
+- **Split** when a body checks independent behaviours. Each new test gets a title naming the single behaviour it asserts, and keeps the setup, teardown, async handling and ordering the original relied on.
+- **Fold** when several checks jointly express one indivisible behaviour (one result's shape, one call's arguments, one event's payload). Describe the whole shape with a composite or asymmetric matcher: `toEqual`, `toStrictEqual`, `toMatchObject`, `toHaveBeenCalledWith`, `expect.objectContaining`, `expect.arrayContaining`, `expect.stringContaining`, `expect.any`.
+- **Iterate** when the behaviour is a property of every element: one `expect` inside a loop or `forEach` is one assertion over a collection.
 
-Consolidate multiple property checks into a single `toEqual` with asymmetric matchers:
+Never satisfy the rule by weakening a check, deleting one, skipping the test, moving assertions into a helper in another module, or adding a lint suppression. Do not combine unrelated checks into one matcher just to pass; that trades one vague test for one vague assertion.
+
+A fold must still say what failed. Positional booleans do not: `expect([isLetter('a'), isLetter('z')]).toEqual([true, true])` fails as `[true, false]` and names nothing.
+
+- Several inputs through one predicate: `it.each` with one assertion per row, or keep the inputs in the diff with `expect(inputs.filter((input) => !isLetter(input))).toEqual([])`. Filter the inputs, not derived values: `toEqual` ignores `undefined` array items, so `expect([undefined]).toEqual([])` passes; use `toStrictEqual([])` when a filtered value could be `undefined`.
+- Several observations of one scenario: key them, `expect({ before, after }).toEqual({ before: false, after: true })`.
+- An undefined field inside a fold: `expect.objectContaining({ key: undefined })` demands the key exist; compare a constructed object instead, `expect({ id: r.id, mode: r.mode }).toEqual({ id: 'ts', mode: undefined })`.
+- Dropping a check is allowed only for a pure existence check (`toBeDefined`, `not.toBeNull`) on the same value a stronger assertion already reads. An exit code, status or count beside a parsed output is its own fact: fold it, `expect({ exitCode: r.exitCode, entries: JSON.parse(r.output) }).toEqual({ exitCode: 0, entries: [...] })`, or split it.
+
+Use the matchers of `@hyperfrontend/testing` (`expect`, `toBe`, `toEqual`, `toThrow`, `toHaveBeenCalledWith` and the rest). Do **not** introduce raw assertion libraries or custom matchers; `libs/testing`'s own specs use `node:assert/strict` because they test `expect` itself.
 
 ```typescript
-// ❌
+// ❌ two behaviours in one body: a count and a name
 expect(result.projects).toHaveLength(1)
 expect(result.projects[0].name).toBe('lib-a')
-// ✅
+// ✅ one shape
 expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
 
-// ❌
-expect(workspace.projectList[0].name).toBe('a-project')
-expect(workspace.projectList[1].name).toBe('m-project')
+// ❌ two checks that are really one call's contract
+expect(spy).toHaveBeenCalledTimes(1)
+expect(spy.mock.calls[0][0]).toBe('ready')
 // ✅
-expect(workspace.projectList).toEqual(
-  expect.arrayContaining([expect.objectContaining({ name: 'a-project' }), expect.objectContaining({ name: 'm-project' })])
-)
+expect(spy.mock.calls).toEqual([['ready']])
 
-// ❌
-expect(result).toHaveLength(2)
-expect(result[0].relativePath).toBe('libs/lib-a/CHANGELOG.md')
-expect(result[0].path).toBe('/workspace/libs/lib-a/CHANGELOG.md')
-// ✅
-expect(result).toEqual(
-  expect.arrayContaining([
-    expect.objectContaining({
-      relativePath: 'libs/lib-a/CHANGELOG.md',
-      path: '/workspace/libs/lib-a/CHANGELOG.md',
-    }),
-  ])
-)
+// ❌ two independent behaviours: the exit code and the printed warning
+it('runs the command', () => {
+  const result = run(['--dry'])
+  expect(result.exitCode).toBe(0)
+  expect(result.output).toContain('dry run')
+})
+// ✅ split, each titled for its behaviour
+it('exits cleanly on a dry run', () => {
+  expect(run(['--dry']).exitCode).toBe(0)
+})
+it('announces a dry run in its output', () => {
+  expect(run(['--dry']).output).toContain('dry run')
+})
+
+// ❌ a helper that hides two assertions
+function expectValid(result: Result) {
+  expect(result.ok).toBe(true)
+  expect(result.errors).toEqual([])
+}
+// ✅ one assertion against the whole result
+expect(validate(manifest)).toEqual({ ok: true, errors: [] })
 ```
+
+Splitting grows spec files. Respect the project's `max-file-lines` limit by moving cohesive groups of tests into sibling spec files named for what they cover; never raise the limit for a migration.
 
 ### Branching — no unnecessary or unreachable code
 
@@ -357,7 +376,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] File ≤400 lines (≤700 for tests) when multi-function; split if needed, colocate helpers
 - [ ] Reused logic extracted only when it deduplicates existing code immediately
 - [ ] Test names assertive (no "should")
-- [ ] One assertion per test; multiple `expect` calls only for collections or tightly coupled state
-- [ ] Spec assertions use Jest asymmetric matchers (`objectContaining`, `arrayContaining`, etc.) — no redundant property-by-property checks
+- [ ] One assertion per test body (`workspace/one-assertion-per-test`): split independent behaviours into titled tests, fold one indivisible behaviour into one composite or asymmetric matcher; never weaken, delete, skip, suppress or hide assertions in helpers
+- [ ] Spec assertions describe whole shapes with asymmetric matchers (`objectContaining`, `arrayContaining`, etc.) — no property-by-property checks
 - [ ] No unreachable or unexercised branches
 - [ ] Validated: `test` → `lint --fix` → `typecheck` → `format:write` (targeted)

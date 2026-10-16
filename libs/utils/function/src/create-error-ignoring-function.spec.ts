@@ -10,6 +10,15 @@ describe('createErrorIgnoringFunction', () => {
 
     const safeFunc = createErrorIgnoringFunction(errorFunc)
     expect(() => safeFunc()).not.toThrow()
+  })
+
+  it('calls the function whose errors it ignores', () => {
+    const errorFunc = jest.fn(() => {
+      throw new Error('Test error')
+    })
+
+    const safeFunc = createErrorIgnoringFunction(errorFunc)
+    safeFunc()
     expect(errorFunc).toHaveBeenCalled()
   })
 

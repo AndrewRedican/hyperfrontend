@@ -37,10 +37,13 @@ describe('@hyperfrontend/time-utils ESM', () => {
 
     const timer = createTimer(() => {}, 1000)
 
-    expect(timer).toBeDefined()
-    expect(typeof timer.pause).toBe('function')
-    expect(typeof timer.resume).toBe('function')
-    expect(typeof timer.reset).toBe('function')
+    expect(timer).toEqual(
+      expect.objectContaining({
+        pause: expect.any(Function),
+        resume: expect.any(Function),
+        reset: expect.any(Function),
+      })
+    )
 
     // Clean up
     timer.pause()

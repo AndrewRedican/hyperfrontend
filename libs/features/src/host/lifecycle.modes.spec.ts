@@ -68,6 +68,21 @@ function setup() {
   return { handle, mock, cleanup, mount }
 }
 
+/**
+ * Asks the running shell for a display mode it was not composed with.
+ *
+ * @param ctx - The running shell built by {@link setup}.
+ * @returns Whether the open was rejected with a throw.
+ */
+function rejectsUncomposedMode(ctx: ReturnType<typeof setup>): boolean {
+  try {
+    ctx.handle.open({ displayMode: 'popup' })
+    return false
+  } catch {
+    return true
+  }
+}
+
 describe('createShellHandle display-mode selection', () => {
   it('throws when opened in a mode the shell was not composed with', () => {
     expect(() => setup().handle.open({ displayMode: 'popup' })).toThrow('does not support the "popup" display mode')
@@ -75,19 +90,19 @@ describe('createShellHandle display-mode selection', () => {
 
   it('keeps the running session open when the mode is rejected', () => {
     const ctx = setup()
-    expect(() => ctx.handle.open({ displayMode: 'popup' })).toThrow()
-    expect(ctx.handle.isOpen).toBe(true)
+    const rejected = rejectsUncomposedMode(ctx)
+    expect({ rejected, isOpen: ctx.handle.isOpen }).toEqual({ rejected: true, isOpen: true })
   })
 
   it('leaves the channel of the running session alive when the mode is rejected', () => {
     const ctx = setup()
-    expect(() => ctx.handle.open({ displayMode: 'popup' })).toThrow()
-    expect(ctx.mock.destroy).not.toHaveBeenCalled()
+    const rejected = rejectsUncomposedMode(ctx)
+    expect({ rejected, destroyCalls: ctx.mock.destroy.mock.calls.length }).toEqual({ rejected: true, destroyCalls: 0 })
   })
 
   it('leaves the mount of the running session in place when the mode is rejected', () => {
     const ctx = setup()
-    expect(() => ctx.handle.open({ displayMode: 'popup' })).toThrow()
-    expect(ctx.cleanup).not.toHaveBeenCalled()
+    const rejected = rejectsUncomposedMode(ctx)
+    expect({ rejected, cleanupCalls: ctx.cleanup.mock.calls.length }).toEqual({ rejected: true, cleanupCalls: 0 })
   })
 })

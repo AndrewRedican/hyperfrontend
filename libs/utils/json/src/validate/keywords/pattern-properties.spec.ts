@@ -10,11 +10,17 @@ describe('validatePatternProperties', () => {
     expect(validatePatternProperties({}, {}, ctx)).toBe(true)
   })
 
-  it('validates matching pattern', () => {
+  it('passes when properties matching a pattern satisfy its schema', () => {
     // @ts-expect-error readonly context
     ctx.validate = (v: unknown) => typeof v === 'number'
     const schema: Schema = { patternProperties: { '^a': { type: 'number' } } }
     expect(validatePatternProperties({ a1: 1, b: 'x' }, schema, ctx)).toBe(true)
+  })
+
+  it('fails when a property matching a pattern violates its schema', () => {
+    // @ts-expect-error readonly context
+    ctx.validate = (v: unknown) => typeof v === 'number'
+    const schema: Schema = { patternProperties: { '^a': { type: 'number' } } }
     expect(validatePatternProperties({ a1: 'x' }, schema, ctx)).toBe(false)
   })
 
@@ -24,7 +30,7 @@ describe('validatePatternProperties', () => {
   })
 
   describe('strictPatterns mode', () => {
-    it('reports error for invalid regex when strictPatterns is true', () => {
+    it('fails for invalid regex when strictPatterns is true', () => {
       const strictCtx = {
         errors: [],
         validate: () => true,
@@ -35,12 +41,24 @@ describe('validatePatternProperties', () => {
       const result = validatePatternProperties({ foo: 1 }, schema, strictCtx)
 
       expect(result).toBe(false)
-      expect(strictCtx.errors.length).toBe(1)
-      expect(strictCtx.errors[0].code).toBe('patternProperties')
-      expect(strictCtx.errors[0].message).toContain('Invalid regex pattern')
     })
 
-    it('does not report error for invalid regex when strictPatterns is false', () => {
+    it('reports error for invalid regex when strictPatterns is true', () => {
+      const strictCtx = {
+        errors: [],
+        validate: () => true,
+        strictPatterns: true,
+        collectAllErrors: true,
+      } as unknown as ValidationContext
+      const schema: Schema = { patternProperties: { '[invalid': { type: 'number' } } }
+      validatePatternProperties({ foo: 1 }, schema, strictCtx)
+
+      expect(strictCtx.errors).toEqual([
+        expect.objectContaining({ code: 'patternProperties', message: expect.stringContaining('Invalid regex pattern') }),
+      ])
+    })
+
+    it('passes for invalid regex when strictPatterns is false', () => {
       const nonStrictCtx = {
         errors: [],
         validate: () => true,
@@ -51,6 +69,18 @@ describe('validatePatternProperties', () => {
       const result = validatePatternProperties({ foo: 1 }, schema, nonStrictCtx)
 
       expect(result).toBe(true)
+    })
+
+    it('does not report error for invalid regex when strictPatterns is false', () => {
+      const nonStrictCtx = {
+        errors: [],
+        validate: () => true,
+        strictPatterns: false,
+        collectAllErrors: true,
+      } as unknown as ValidationContext
+      const schema: Schema = { patternProperties: { '[invalid': { type: 'number' } } }
+      validatePatternProperties({ foo: 1 }, schema, nonStrictCtx)
+
       expect(nonStrictCtx.errors.length).toBe(0)
     })
   })

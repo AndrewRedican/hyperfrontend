@@ -13,17 +13,18 @@ jest.mock('../../project/package', () => ({
 
 describe('testingDetectors', () => {
   it('contains all testing framework detectors', () => {
-    expect(testingDetectors).toHaveLength(5)
     expect(testingDetectors.map((d) => d.id)).toEqual(['jest', 'vitest', 'mocha', 'cypress', 'playwright'])
   })
 
   it('has correct testType for each detector', () => {
     const types = testingDetectors.map((d) => ({ id: d.id, testType: d.testType }))
-    expect(types).toContainEqual({ id: 'jest', testType: 'unit' })
-    expect(types).toContainEqual({ id: 'vitest', testType: 'unit' })
-    expect(types).toContainEqual({ id: 'mocha', testType: 'unit' })
-    expect(types).toContainEqual({ id: 'cypress', testType: 'e2e' })
-    expect(types).toContainEqual({ id: 'playwright', testType: 'e2e' })
+    expect(types).toEqual([
+      { id: 'jest', testType: 'unit' },
+      { id: 'vitest', testType: 'unit' },
+      { id: 'mocha', testType: 'unit' },
+      { id: 'cypress', testType: 'e2e' },
+      { id: 'playwright', testType: 'e2e' },
+    ])
   })
 })
 
@@ -42,9 +43,20 @@ describe('detectTestingFrameworks', () => {
       },
     })
 
-    expect(result.length).toBe(2)
-    expect(result.map((r) => r.id)).toContain('jest')
-    expect(result.map((r) => r.id)).toContain('cypress')
+    expect(result.map((r) => r.id).sort()).toEqual(['cypress', 'jest'])
+  })
+
+  it('detects jest, vitest and playwright together', () => {
+    const result = detectTestingFrameworks(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: {
+        jest: '^29.0.0',
+        vitest: '^1.0.0',
+        '@playwright/test': '^1.40.0',
+      },
+    })
+
+    expect(result.map((r) => r.id).sort()).toEqual(['jest', 'playwright', 'vitest'])
   })
 
   it('sorts results by confidence (descending)', () => {
@@ -57,7 +69,6 @@ describe('detectTestingFrameworks', () => {
       },
     })
 
-    expect(result.length).toBe(3)
     for (let i = 0; i < result.length - 1; i++) {
       expect(result[i]?.confidence).toBeGreaterThanOrEqual(result[i + 1]?.confidence ?? 0)
     }
@@ -75,9 +86,9 @@ describe('detectTestingFrameworks', () => {
     const unitFrameworks = result.filter((r) => r.type === 'unit')
     const e2eFrameworks = result.filter((r) => r.type === 'e2e')
 
-    expect(unitFrameworks.length).toBe(1)
-    expect(e2eFrameworks.length).toBe(1)
-    expect(unitFrameworks[0]?.id).toBe('vitest')
-    expect(e2eFrameworks[0]?.id).toBe('playwright')
+    expect({ unit: unitFrameworks.map((r) => r.id), e2e: e2eFrameworks.map((r) => r.id) }).toEqual({
+      unit: ['vitest'],
+      e2e: ['playwright'],
+    })
   })
 })

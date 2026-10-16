@@ -52,8 +52,7 @@ describe('@hyperfrontend/features CJS', () => {
 
     it.each(DEFAULT_EXPORT_SUBPATHS)('requires %s without a window and yields a callable default aliased as %s', (specifier, symbol) => {
       const mod = require(specifier) as Record<string, unknown>
-      expect(typeof mod['default']).toBe('function')
-      expect(mod[symbol]).toBe(mod['default'])
+      expect(mod).toEqual(expect.objectContaining({ default: expect.any(Function), [symbol]: mod['default'] }))
     })
   })
 })

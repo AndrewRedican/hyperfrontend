@@ -34,10 +34,15 @@ describe('rushDetector', () => {
       devDependencies: { '@microsoft/rush': '^5.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('rush')
-    expect(result?.name).toBe('Rush')
-    expect(result?.version).toBe('5.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'rush', name: 'Rush', version: '5.0.0' }))
+  })
+
+  it('scores a @microsoft/rush dependency above zero', () => {
+    const result = rushDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { '@microsoft/rush': '^5.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -48,11 +53,23 @@ describe('rushDetector', () => {
 
     const result = rushDetector(mockProjectPath, { name: 'test-project' })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('rush')
-    expect(result?.configPath).toBe('rush.json')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'rush',
+        configPath: 'rush.json',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ path: 'rush.json' })]),
+      })
+    )
+  })
+
+  it('scores a rush.json config file at least 90', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('rush.json')
+    })
+
+    const result = rushDetector(mockProjectPath, { name: 'test-project' })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.path === 'rush.json')).toBe(true)
   })
 
   it('increases confidence with common/config/rush directory', () => {
@@ -63,7 +80,16 @@ describe('rushDetector', () => {
     const result = rushDetector(mockProjectPath, { name: 'test-project' })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
-    expect(result?.detectedFrom.some((s) => s.path === 'common/config/rush/')).toBe(true)
+  })
+
+  it('records the common/config/rush directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('rush.json') || path.includes(join('common', 'config', 'rush'))
+    })
+
+    const result = rushDetector(mockProjectPath, { name: 'test-project' })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'common/config/rush/' })]))
   })
 
   it('combines rush.json and @microsoft/rush package detection', () => {
@@ -76,8 +102,6 @@ describe('rushDetector', () => {
       devDependencies: { '@microsoft/rush': '^5.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.confidence).toBe(100)
-    expect(result?.version).toBe('5.0.0')
+    expect(result).toEqual(expect.objectContaining({ confidence: 100, version: '5.0.0' }))
   })
 })

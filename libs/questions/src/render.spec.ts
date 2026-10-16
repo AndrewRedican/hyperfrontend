@@ -147,16 +147,14 @@ describe('renderMessage', () => {
   it('renders message with cyan question mark and bold text', () => {
     const result = renderMessage('Enter name')
 
-    expect(result).toContain(style.cyan(Symbol.Question))
-    expect(result).toContain(style.bold('Enter name'))
-    expect(result.endsWith(' ')).toBe(true)
+    // why: a space separates the mark from the message, and a trailing space separates the message from typed input
+    expect(result).toBe(`${style.cyan(Symbol.Question)} ${style.bold('Enter name')} `)
   })
 
   it('handles empty message', () => {
     const result = renderMessage('')
 
-    expect(result).toContain(style.cyan(Symbol.Question))
-    expect(result).toContain(style.bold(''))
+    expect(result).toBe(`${style.cyan(Symbol.Question)} ${style.bold('')} `)
   })
 
   it('preserves message content', () => {

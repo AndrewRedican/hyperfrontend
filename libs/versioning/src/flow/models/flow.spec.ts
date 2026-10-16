@@ -34,18 +34,19 @@ describe('Flow Model', () => {
       const steps = [createMockStep('step-1'), createMockStep('step-2')]
       const flow = createFlow('my-flow', 'My Flow', steps)
 
-      expect(flow.id).toBe('my-flow')
-      expect(flow.name).toBe('My Flow')
-      expect(flow.steps).toHaveLength(2)
-      expect(flow.steps[0]?.id).toBe('step-1')
-      expect(flow.steps[1]?.id).toBe('step-2')
+      expect(flow).toEqual(
+        expect.objectContaining({
+          id: 'my-flow',
+          name: 'My Flow',
+          steps: [expect.objectContaining({ id: 'step-1' }), expect.objectContaining({ id: 'step-2' })],
+        })
+      )
     })
 
     it('creates a flow with empty steps', () => {
       const flow = createFlow('empty', 'Empty Flow', [])
 
-      expect(flow.id).toBe('empty')
-      expect(flow.steps).toHaveLength(0)
+      expect(flow).toEqual(expect.objectContaining({ id: 'empty', steps: [] }))
     })
 
     it('creates a flow with description', () => {
@@ -64,15 +65,12 @@ describe('Flow Model', () => {
       }
       const flow = createFlow('my-flow', 'My Flow', [], { config })
 
-      expect(flow.config.dryRun).toBe(true)
-      expect(flow.config.skipGit).toBe(true)
-      expect(flow.config.tagFormat).toBe('v${version}')
+      expect(flow.config).toEqual({ dryRun: true, skipGit: true, tagFormat: 'v${version}' })
     })
 
     it('creates a flow with default empty config', () => {
       const flow = createFlow('my-flow', 'My Flow', [])
 
-      expect(flow.config).toBeDefined()
       expect(flow.config).toEqual({})
     })
 
@@ -86,9 +84,12 @@ describe('Flow Model', () => {
       }
       const flow = createFlow('full', 'Full Options Flow', [createMockStep('s1')], options)
 
-      expect(flow.description).toBe('Full options test')
-      expect(flow.config.preset).toBe('conventional')
-      expect(flow.config.skipChangelog).toBe(true)
+      expect(flow).toEqual(
+        expect.objectContaining({
+          description: 'Full options test',
+          config: { preset: 'conventional', skipChangelog: true },
+        })
+      )
     })
   })
 
@@ -98,18 +99,26 @@ describe('Flow Model', () => {
       const newStep = createMockStep('step-3')
       const modified = addStep(flow, newStep)
 
-      expect(modified.steps).toHaveLength(3)
-      expect(modified.steps[2]?.id).toBe('step-3')
+      expect(modified.steps.map((s) => s.id)).toEqual(['step-1', 'step-2', 'step-3'])
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow(['step-1'])
       const newStep = createMockStep('step-2')
       const modified = addStep(flow, newStep)
 
       expect(modified).not.toBe(flow)
-      expect(flow.steps).toHaveLength(1)
-      expect(modified.steps).toHaveLength(2)
+    })
+
+    it('leaves the original steps untouched while the new flow carries the addition', () => {
+      const flow = createTestFlow(['step-1'])
+      const newStep = createMockStep('step-2')
+      const modified = addStep(flow, newStep)
+
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['step-1'],
+        returned: ['step-1', 'step-2'],
+      })
     })
 
     it('preserves other flow properties', () => {
@@ -119,10 +128,7 @@ describe('Flow Model', () => {
       })
       const modified = addStep(flow, createMockStep('s2'))
 
-      expect(modified.id).toBe('my-flow')
-      expect(modified.name).toBe('My Flow')
-      expect(modified.description).toBe('Test')
-      expect(modified.config.dryRun).toBe(true)
+      expect(modified).toEqual(expect.objectContaining({ id: 'my-flow', name: 'My Flow', description: 'Test', config: { dryRun: true } }))
     })
 
     it('allows adding multiple steps sequentially', () => {
@@ -131,7 +137,6 @@ describe('Flow Model', () => {
       flow = addStep(flow, createMockStep('b'))
       flow = addStep(flow, createMockStep('c'))
 
-      expect(flow.steps).toHaveLength(3)
       expect(flow.steps.map((s) => s.id)).toEqual(['a', 'b', 'c'])
     })
   })
@@ -141,24 +146,30 @@ describe('Flow Model', () => {
       const flow = createTestFlow(['step-1', 'step-2', 'step-3'])
       const modified = removeStep(flow, 'step-2')
 
-      expect(modified.steps).toHaveLength(2)
       expect(modified.steps.map((s) => s.id)).toEqual(['step-1', 'step-3'])
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow(['step-1', 'step-2'])
       const modified = removeStep(flow, 'step-1')
 
       expect(modified).not.toBe(flow)
-      expect(flow.steps).toHaveLength(2)
-      expect(modified.steps).toHaveLength(1)
+    })
+
+    it('leaves the original steps untouched while the new flow drops the step', () => {
+      const flow = createTestFlow(['step-1', 'step-2'])
+      const modified = removeStep(flow, 'step-1')
+
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['step-1', 'step-2'],
+        returned: ['step-2'],
+      })
     })
 
     it('returns same content if step not found', () => {
       const flow = createTestFlow(['step-1', 'step-2'])
       const modified = removeStep(flow, 'nonexistent')
 
-      expect(modified.steps).toHaveLength(2)
       expect(modified.steps.map((s) => s.id)).toEqual(['step-1', 'step-2'])
     })
 
@@ -199,13 +210,21 @@ describe('Flow Model', () => {
       expect(modified.steps.map((s) => s.id)).toEqual(['a', 'b', 'c'])
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow(['a', 'b'])
       const modified = insertStep(flow, createMockStep('c'), 1)
 
       expect(modified).not.toBe(flow)
-      expect(flow.steps).toHaveLength(2)
-      expect(modified.steps).toHaveLength(3)
+    })
+
+    it('leaves the original steps untouched while the new flow carries the insertion', () => {
+      const flow = createTestFlow(['a', 'b'])
+      const modified = insertStep(flow, createMockStep('c'), 1)
+
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['a', 'b'],
+        returned: ['a', 'c', 'b'],
+      })
     })
 
     it('handles inserting past the end', () => {
@@ -238,12 +257,18 @@ describe('Flow Model', () => {
       expect(modified.steps.map((s) => s.id)).toEqual(['a', 'b', 'c'])
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow(['a', 'b'])
       const modified = insertStepAfter(flow, createMockStep('c'), 'a')
 
       expect(modified).not.toBe(flow)
-      expect(flow.steps).toHaveLength(2)
+    })
+
+    it('leaves the original steps untouched', () => {
+      const flow = createTestFlow(['a', 'b'])
+      insertStepAfter(flow, createMockStep('c'), 'a')
+
+      expect(flow.steps.map((s) => s.id)).toEqual(['a', 'b'])
     })
 
     it('inserts after first step', () => {
@@ -276,12 +301,18 @@ describe('Flow Model', () => {
       expect(modified.steps.map((s) => s.id)).toEqual(['a', 'b', 'c'])
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow(['a', 'b'])
       const modified = insertStepBefore(flow, createMockStep('x'), 'a')
 
       expect(modified).not.toBe(flow)
-      expect(flow.steps).toHaveLength(2)
+    })
+
+    it('leaves the original steps untouched', () => {
+      const flow = createTestFlow(['a', 'b'])
+      insertStepBefore(flow, createMockStep('x'), 'a')
+
+      expect(flow.steps.map((s) => s.id)).toEqual(['a', 'b'])
     })
 
     it('inserts before last step', () => {
@@ -297,8 +328,11 @@ describe('Flow Model', () => {
       const flow = createTestFlow(['a', 'old', 'c'])
       const modified = replaceStep(flow, 'old', createMockStep('new', 'New Step'))
 
-      expect(modified.steps.map((s) => s.id)).toEqual(['a', 'new', 'c'])
-      expect(modified.steps[1]?.name).toBe('New Step')
+      expect(modified.steps).toEqual([
+        expect.objectContaining({ id: 'a' }),
+        expect.objectContaining({ id: 'new', name: 'New Step' }),
+        expect.objectContaining({ id: 'c' }),
+      ])
     })
 
     it('returns unchanged flow if step not found', () => {
@@ -335,8 +369,7 @@ describe('Flow Model', () => {
       const flow = createFlow('test', 'Test', [], { config: { preset: 'conventional' } })
       const modified = withConfig(flow, { dryRun: true })
 
-      expect(modified.config.preset).toBe('conventional')
-      expect(modified.config.dryRun).toBe(true)
+      expect(modified.config).toEqual({ preset: 'conventional', dryRun: true })
     })
 
     it('overrides existing config values', () => {
@@ -346,12 +379,18 @@ describe('Flow Model', () => {
       expect(modified.config.dryRun).toBe(true)
     })
 
-    it('returns a new flow (immutable)', () => {
+    it('returns a new flow object', () => {
       const flow = createTestFlow()
       const modified = withConfig(flow, { skipGit: true })
 
       expect(modified).not.toBe(flow)
-      expect(flow.config.skipGit).toBeUndefined()
+    })
+
+    it('leaves the original config untouched', () => {
+      const flow = createTestFlow()
+      withConfig(flow, { skipGit: true })
+
+      expect(flow.config).toEqual({})
     })
 
     it('applies multiple config updates', () => {
@@ -360,9 +399,7 @@ describe('Flow Model', () => {
       flow = withConfig(flow, { skipTag: true })
       flow = withConfig(flow, { skipChangelog: true })
 
-      expect(flow.config.dryRun).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
-      expect(flow.config.skipChangelog).toBe(true)
+      expect(flow.config).toEqual({ dryRun: true, skipTag: true, skipChangelog: true })
     })
 
     it('preserves existing config when adding new values', () => {
@@ -371,9 +408,7 @@ describe('Flow Model', () => {
       })
       const modified = withConfig(flow, { dryRun: true })
 
-      expect(modified.config.preset).toBe('independent')
-      expect(modified.config.tagFormat).toBe('${name}@v${version}')
-      expect(modified.config.dryRun).toBe(true)
+      expect(modified.config).toEqual({ preset: 'independent', tagFormat: '${name}@v${version}', dryRun: true })
     })
   })
 
@@ -382,7 +417,6 @@ describe('Flow Model', () => {
       const flow = createTestFlow(['step-1', 'step-2', 'step-3'])
       const step = getStep(flow, 'step-2')
 
-      expect(step).toBeDefined()
       expect(step?.id).toBe('step-2')
     })
 
@@ -419,16 +453,13 @@ describe('Flow Model', () => {
     it('returns true if step exists', () => {
       const flow = createTestFlow(['a', 'b', 'c'])
 
-      expect(hasStep(flow, 'a')).toBe(true)
-      expect(hasStep(flow, 'b')).toBe(true)
-      expect(hasStep(flow, 'c')).toBe(true)
+      expect(['a', 'b', 'c'].filter((id) => !hasStep(flow, id))).toEqual([])
     })
 
     it('returns false if step does not exist', () => {
       const flow = createTestFlow(['a', 'b', 'c'])
 
-      expect(hasStep(flow, 'x')).toBe(false)
-      expect(hasStep(flow, 'nonexistent')).toBe(false)
+      expect(['x', 'nonexistent'].filter((id) => hasStep(flow, id))).toEqual([])
     })
 
     it('returns false for empty flow', () => {
@@ -440,9 +471,11 @@ describe('Flow Model', () => {
     it('is case sensitive', () => {
       const flow = createTestFlow(['Step-A'])
 
-      expect(hasStep(flow, 'Step-A')).toBe(true)
-      expect(hasStep(flow, 'step-a')).toBe(false)
-      expect(hasStep(flow, 'STEP-A')).toBe(false)
+      expect(['Step-A', 'step-a', 'STEP-A'].map((id) => [id, hasStep(flow, id)])).toEqual([
+        ['Step-A', true],
+        ['step-a', false],
+        ['STEP-A', false],
+      ])
     })
   })
 
@@ -456,8 +489,12 @@ describe('Flow Model', () => {
       flow = insertStepAfter(flow, createMockStep('validate'), 'analyze')
       flow = withConfig(flow, { dryRun: true })
 
-      expect(flow.steps.map((s) => s.id)).toEqual(['fetch', 'analyze', 'validate', 'bump'])
-      expect(flow.config.dryRun).toBe(true)
+      expect(flow).toEqual(
+        expect.objectContaining({
+          steps: ['fetch', 'analyze', 'validate', 'bump'].map((id) => expect.objectContaining({ id })),
+          config: { dryRun: true },
+        })
+      )
     })
 
     it('supports removing and re-adding steps', () => {
@@ -465,8 +502,11 @@ describe('Flow Model', () => {
       flow = removeStep(flow, 'b')
       flow = insertStep(flow, createMockStep('b-new', 'B New'), 1)
 
-      expect(flow.steps.map((s) => s.id)).toEqual(['a', 'b-new', 'c'])
-      expect(flow.steps[1]?.name).toBe('B New')
+      expect(flow.steps).toEqual([
+        expect.objectContaining({ id: 'a' }),
+        expect.objectContaining({ id: 'b-new', name: 'B New' }),
+        expect.objectContaining({ id: 'c' }),
+      ])
     })
 
     it('supports replacing and configuring', () => {
@@ -476,9 +516,12 @@ describe('Flow Model', () => {
       flow = replaceStep(flow, 'old', createMockStep('new'))
       flow = withConfig(flow, { skipGit: true })
 
-      expect(flow.steps[0]?.id).toBe('new')
-      expect(flow.config.preset).toBe('conventional')
-      expect(flow.config.skipGit).toBe(true)
+      expect(flow).toEqual(
+        expect.objectContaining({
+          steps: [expect.objectContaining({ id: 'new' })],
+          config: { preset: 'conventional', skipGit: true },
+        })
+      )
     })
   })
 })

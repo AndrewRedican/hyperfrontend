@@ -189,8 +189,11 @@ describe('handleClose', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(mockWindow.postMessage).toHaveBeenCalled()
-    expect(window2.postMessage).toHaveBeenCalled()
+    const postedTypes = (target: Window): string[] => (target.postMessage as Mock).mock.calls.map(([action]) => (action as IAction).type)
+    expect({ first: postedTypes(mockWindow), second: postedTypes(window2) }).toEqual({
+      first: ['[nexus] connection-closed-acknowledged'],
+      second: ['[nexus] connection-closed-acknowledged'],
+    })
   })
 
   it('includes correct broker ID in acknowledgement', () => {
@@ -251,9 +254,7 @@ describe('handleClose', () => {
       source: mockWindow,
     } as MessageEvent<IAction>
 
-    expect(() => {
-      handleClose(routingContext, message)
-    }).not.toThrow()
+    handleClose(routingContext, message)
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()
   })

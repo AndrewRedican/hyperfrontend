@@ -8,13 +8,21 @@ describe('callStack', () => {
     expect(stack.size).toBe(0)
   })
 
-  it('adds callbacks and returns unsubscribe function', () => {
+  it('adds every callback it is given', () => {
+    const stack = callStack()
+    const cb1 = jest.fn()
+    const cb2 = jest.fn()
+
+    stack.add(cb1, cb2)
+    expect(stack.size).toBe(2)
+  })
+
+  it('returns an unsubscribe function that removes the added callbacks', () => {
     const stack = callStack()
     const cb1 = jest.fn()
     const cb2 = jest.fn()
 
     const unsubscribe = stack.add(cb1, cb2)
-    expect(stack.size).toBe(2)
 
     unsubscribe()
     expect(stack.size).toBe(0)
@@ -33,8 +41,10 @@ describe('callStack', () => {
     stack.add(cb1, cb2)
     stack.call(false, 1, 'two', { three: 3 })
 
-    expect(cb1).toHaveBeenCalledWith(1, 'two', { three: 3 })
-    expect(cb2).toHaveBeenCalledWith(1, 'two', { three: 3 })
+    expect({ cb1: cb1.mock.calls, cb2: cb2.mock.calls }).toEqual({
+      cb1: [[1, 'two', { three: 3 }]],
+      cb2: [[1, 'two', { three: 3 }]],
+    })
   })
 
   it('removes callbacks after calling them if remove is true', () => {

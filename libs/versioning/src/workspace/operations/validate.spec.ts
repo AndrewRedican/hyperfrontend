@@ -67,8 +67,7 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(report.valid).toBe(true)
-    expect(report.errorCount).toBe(0)
+    expect(report).toEqual(expect.objectContaining({ valid: true, errorCount: 0 }))
   })
 
   it('detects invalid version', () => {
@@ -82,9 +81,7 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(report.valid).toBe(false)
-    expect(report.errorCount).toBeGreaterThan(0)
-    expect(report.invalidPackages).toContain('lib-invalid')
+    expect(report).toEqual(expect.objectContaining({ valid: false, errorCount: 1, invalidPackages: ['lib-invalid'] }))
   })
 
   it('detects missing package name', () => {
@@ -101,9 +98,14 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(report.valid).toBe(false)
-    const nameCheck = report.results.find((r) => r.checkId === 'valid-name' && !r.result.valid)
-    expect(nameCheck).toBeDefined()
+    expect(report).toEqual(
+      expect.objectContaining({
+        valid: false,
+        results: expect.arrayContaining([
+          expect.objectContaining({ checkId: 'valid-name', result: expect.objectContaining({ valid: false }) }),
+        ]),
+      })
+    )
   })
 
   it('detects circular dependencies', () => {
@@ -125,11 +127,10 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     const circularCheck = report.results.find((r) => r.checkId === 'no-circular-dependencies')
-    expect(circularCheck).toBeDefined()
     expect(circularCheck?.result.valid).toBe(false)
   })
 
-  it('validates all projects', () => {
+  it('validates every project and flags only the invalid one', () => {
     const validProject = createTestProject('lib-valid', '1.0.0')
     const invalidProject = createTestProject('lib-invalid', 'bad-version')
 
@@ -147,10 +148,7 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(report.valid).toBe(false)
-    expect(report.errorCount).toBeGreaterThan(0)
-    expect(report.invalidPackages).toContain('lib-invalid')
-    expect(report.invalidPackages).not.toContain('lib-valid')
+    expect(report).toEqual(expect.objectContaining({ valid: false, errorCount: 1, invalidPackages: ['lib-invalid'] }))
   })
 
   it('provides issue counts', () => {
@@ -163,12 +161,10 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(typeof report.errorCount).toBe('number')
-    expect(typeof report.warningCount).toBe('number')
-    expect(report.errorCount).toBe(0)
+    expect(report).toEqual(expect.objectContaining({ errorCount: 0, warningCount: expect.any(Number) }))
   })
 
-  it('includes check details', () => {
+  it('reports at least one check result', () => {
     const libA = createTestProject('lib-a', '1.0.0')
     const workspace = createTestWorkspace(
       [libA],
@@ -179,11 +175,26 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     expect(report.results.length).toBeGreaterThan(0)
+  })
+
+  it('includes the id, name and boolean outcome of every check', () => {
+    const libA = createTestProject('lib-a', '1.0.0')
+    const workspace = createTestWorkspace(
+      [libA],
+      createMap([['lib-a', [] as readonly string[]]]),
+      createMap([['lib-a', [] as readonly string[]]])
+    )
+
+    const report = validateWorkspace(workspace)
+
     for (const result of report.results) {
-      expect(result.checkId).toBeDefined()
-      expect(result.checkName).toBeDefined()
-      expect(result.result).toBeDefined()
-      expect(typeof result.result.valid).toBe('boolean')
+      expect(result).toEqual(
+        expect.objectContaining({
+          checkId: expect.any(String),
+          checkName: expect.any(String),
+          result: expect.objectContaining({ valid: expect.any(Boolean) }),
+        })
+      )
     }
   })
 
@@ -198,8 +209,7 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     const packageChecks = report.results.filter((r) => r.packageName !== null)
-    expect(packageChecks.length).toBeGreaterThan(0)
-    expect(packageChecks.some((r) => r.packageName === 'lib-a')).toBe(true)
+    expect(packageChecks).toEqual(expect.arrayContaining([expect.objectContaining({ packageName: 'lib-a' })]))
   })
 
   it('includes workspace-level checks', () => {
@@ -222,7 +232,6 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     const projectCheck = report.results.find((r) => r.checkId === 'workspace-has-projects')
-    expect(projectCheck).toBeDefined()
     expect(projectCheck?.result.valid).toBe(false)
   })
 
@@ -237,8 +246,7 @@ describe('validateWorkspace', () => {
 
     const report = validateWorkspace(workspace)
 
-    expect(Array.isArray(report.invalidPackages)).toBe(true)
-    expect(report.invalidPackages).toContain('lib-bad')
+    expect(report.invalidPackages).toEqual(['lib-bad'])
   })
 
   it('validates dependency versions', () => {
@@ -326,8 +334,7 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     const depCheck = report.results.find((r) => r.checkId === 'dependency-versions' && r.packageName === 'lib-a')
-    expect(depCheck?.result.valid).toBe(true)
-    expect(depCheck?.result.warning).toBeUndefined()
+    expect(depCheck?.result).toEqual({ valid: true })
   })
 
   it('skips star version ranges', () => {
@@ -460,8 +467,7 @@ describe('validateWorkspace', () => {
     const report = validateWorkspace(workspace)
 
     const nameCheck = report.results.find((r) => r.checkId === 'valid-name' && r.packageName === longName)
-    expect(nameCheck?.result.valid).toBe(false)
-    expect(nameCheck?.result.error).toContain('214')
+    expect(nameCheck?.result).toEqual({ valid: false, error: expect.stringContaining('214') })
   })
 
   it('detects scoped package with empty scope', () => {
@@ -629,8 +635,7 @@ describe('validateProject', () => {
   it('returns error for invalid version', () => {
     const project = createTestProject('my-package', 'bad-version')
     const result = validateProject(project)
-    expect(result.valid).toBe(false)
-    expect(result.error).toContain('semver')
+    expect(result).toEqual({ valid: false, error: expect.stringContaining('semver') })
   })
 
   it('returns error for invalid name', () => {
@@ -643,8 +648,7 @@ describe('validateProject', () => {
       internalDependencies: [],
     })
     const result = validateProject(project)
-    expect(result.valid).toBe(false)
-    expect(result.error).toContain('required')
+    expect(result).toEqual({ valid: false, error: expect.stringContaining('required') })
   })
 })
 
@@ -674,9 +678,16 @@ describe('summarizeValidation', () => {
     const report = validateWorkspace(workspace)
     const summary = summarizeValidation(report)
 
-    expect(summary).toContain('failed')
-    expect(summary).toContain('error')
-    expect(summary).toContain('lib-bad')
+    expect(summary).toBe(
+      [
+        'Workspace validation failed',
+        '  1 error(s)',
+        '  0 warning(s)',
+        '',
+        'Errors:',
+        '  [lib-bad] Valid semver version: Invalid semver version: invalid',
+      ].join('\n')
+    )
   })
 
   it('summarizes workspace with warnings', () => {
@@ -720,8 +731,7 @@ describe('summarizeValidation', () => {
     const report = validateWorkspace(workspace)
     const summary = summarizeValidation(report)
 
-    expect(summary).toContain('passed')
-    expect(summary).toContain('warning')
+    expect(summary).toBe(['Workspace validation passed', '  1 warning(s)'].join('\n'))
   })
 })
 

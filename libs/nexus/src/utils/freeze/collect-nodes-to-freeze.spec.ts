@@ -1,5 +1,18 @@
+import type { FreezeNode } from './model'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectNodesToFreeze } from './collect-nodes-to-freeze'
+
+/**
+ * Names the objects the collected nodes reference, matching by identity rather than by shape, so one comparison pins exactly which objects were collected.
+ *
+ * @param nodes - The nodes collectNodesToFreeze returned.
+ * @param named - The objects a failure message can name, keyed by that name.
+ * @returns One name per node, 'unnamed' for an object outside `named`, sorted so traversal order does not matter.
+ */
+function collectedNames(nodes: FreezeNode[], named: Record<string, object>): string[] {
+  const names = new Map<object, string>(Object.entries(named).map(([name, value]) => [value, name]))
+  return nodes.map(({ value }) => names.get(value) ?? 'unnamed').sort()
+}
 
 describe('collectNodesToFreeze', () => {
   describe('simple objects', () => {
@@ -7,18 +20,14 @@ describe('collectNodesToFreeze', () => {
       const obj = { name: 'test' }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(obj)
-      expect(result[0].depth).toBe(0)
+      expect({ nodes: collectedNames(result, { obj }), depth: result[0]?.depth }).toEqual({ nodes: ['obj'], depth: 0 })
     })
 
     it('collects root and nested object', () => {
       const obj = { child: { name: 'nested' } }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(obj.child)
+      expect(collectedNames(result, { obj, child: obj.child })).toEqual(['child', 'obj'])
     })
 
     it('assigns correct depth to nested object', () => {
@@ -28,8 +37,7 @@ describe('collectNodesToFreeze', () => {
       const rootNode = result.find((n) => n.value === obj)
       const childNode = result.find((n) => n.value === obj.child)
 
-      expect(rootNode?.depth).toBe(0)
-      expect(childNode?.depth).toBe(1)
+      expect({ root: rootNode?.depth, child: childNode?.depth }).toEqual({ root: 0, child: 1 })
     })
 
     it('collects multiple nested objects', () => {
@@ -39,10 +47,7 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(3)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(obj.a)
-      expect(result.map((n) => n.value)).toContain(obj.b)
+      expect(collectedNames(result, { obj, a: obj.a, b: obj.b })).toEqual(['a', 'b', 'obj'])
     })
   })
 
@@ -56,8 +61,6 @@ describe('collectNodesToFreeze', () => {
         },
       }
       const result = collectNodesToFreeze(obj)
-
-      expect(result).toHaveLength(4)
 
       const depths = result.map((n) => n.depth).sort((a, b) => a - b)
       expect(depths).toEqual([0, 1, 2, 3])
@@ -75,9 +78,11 @@ describe('collectNodesToFreeze', () => {
       const childNode = result.find((n) => n.value === obj.child)
       const grandchildNode = result.find((n) => n.value === obj.child.grandchild)
 
-      expect(rootNode?.depth).toBe(0)
-      expect(childNode?.depth).toBe(1)
-      expect(grandchildNode?.depth).toBe(2)
+      expect({ root: rootNode?.depth, child: childNode?.depth, grandchild: grandchildNode?.depth }).toEqual({
+        root: 0,
+        child: 1,
+        grandchild: 2,
+      })
     })
   })
 
@@ -86,9 +91,7 @@ describe('collectNodesToFreeze', () => {
       const obj = { items: [1, 2, 3] }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(obj.items)
+      expect(collectedNames(result, { obj, items: obj.items })).toEqual(['items', 'obj'])
     })
 
     it('collects root and nested arrays within arrays', () => {
@@ -98,20 +101,14 @@ describe('collectNodesToFreeze', () => {
       ]
       const result = collectNodesToFreeze(arr)
 
-      expect(result).toHaveLength(3)
-      expect(result.map((n) => n.value)).toContain(arr)
-      expect(result.map((n) => n.value)).toContain(arr[0])
-      expect(result.map((n) => n.value)).toContain(arr[1])
+      expect(collectedNames(result, { arr, first: arr[0], second: arr[1] })).toEqual(['arr', 'first', 'second'])
     })
 
     it('collects root array and objects within arrays', () => {
       const arr = [{ a: 1 }, { b: 2 }]
       const result = collectNodesToFreeze(arr)
 
-      expect(result).toHaveLength(3)
-      expect(result.map((n) => n.value)).toContain(arr)
-      expect(result.map((n) => n.value)).toContain(arr[0])
-      expect(result.map((n) => n.value)).toContain(arr[1])
+      expect(collectedNames(result, { arr, first: arr[0], second: arr[1] })).toEqual(['arr', 'first', 'second'])
     })
   })
 
@@ -134,8 +131,6 @@ describe('collectNodesToFreeze', () => {
         },
       }
       const result = collectNodesToFreeze(obj)
-
-      expect(result).toHaveLength(5)
 
       const depths = result.map((n) => n.depth).sort((a, b) => a - b)
       expect(depths).toEqual([0, 1, 2, 3, 4])
@@ -173,27 +168,21 @@ describe('collectNodesToFreeze', () => {
       const obj = {}
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(obj)
-      expect(result[0].depth).toBe(0)
+      expect({ nodes: collectedNames(result, { obj }), depth: result[0]?.depth }).toEqual({ nodes: ['obj'], depth: 0 })
     })
 
     it('handles empty array (returns root only)', () => {
       const arr: unknown[] = []
       const result = collectNodesToFreeze(arr)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(arr)
-      expect(result[0].depth).toBe(0)
+      expect({ nodes: collectedNames(result, { arr }), depth: result[0]?.depth }).toEqual({ nodes: ['arr'], depth: 0 })
     })
 
     it('handles object with null values', () => {
       const obj = { a: null, b: { c: null } }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(obj.b)
+      expect(collectedNames(result, { obj, b: obj.b })).toEqual(['b', 'obj'])
     })
 
     it('handles sparse arrays', () => {
@@ -201,9 +190,7 @@ describe('collectNodesToFreeze', () => {
       const wrapper = { arr }
       const result = collectNodesToFreeze(wrapper)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(wrapper)
-      expect(result.map((n) => n.value)).toContain(arr)
+      expect(collectedNames(result, { wrapper, arr })).toEqual(['arr', 'wrapper'])
     })
   })
 
@@ -212,11 +199,10 @@ describe('collectNodesToFreeze', () => {
       const obj = { child: { name: 'test' } }
       const result = collectNodesToFreeze(obj)
 
-      expect(result.length).toBeGreaterThanOrEqual(1)
-      result.forEach((node) => {
-        expect(node).toHaveProperty('value')
-        expect(node).toHaveProperty('depth')
-      })
+      expect(result).toEqual([
+        { value: expect.any(Object), depth: expect.any(Number) },
+        { value: expect.any(Object), depth: expect.any(Number) },
+      ])
     })
 
     it('value property references the actual objects', () => {
@@ -224,18 +210,14 @@ describe('collectNodesToFreeze', () => {
       const obj = { child }
       const result = collectNodesToFreeze(obj)
 
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(child)
+      expect(collectedNames(result, { obj, child })).toEqual(['child', 'obj'])
     })
 
     it('depth is a non-negative integer', () => {
       const obj = { a: { b: { c: {} } } }
       const result = collectNodesToFreeze(obj)
 
-      result.forEach((node) => {
-        expect(Number.isInteger(node.depth)).toBe(true)
-        expect(node.depth).toBeGreaterThanOrEqual(0)
-      })
+      expect(result.filter((node) => !Number.isInteger(node.depth) || node.depth < 0)).toStrictEqual([])
     })
   })
 
@@ -246,8 +228,7 @@ describe('collectNodesToFreeze', () => {
 
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(obj)
+      expect(collectedNames(result, { obj })).toEqual(['obj'])
     })
 
     it('handles mutual circular references', () => {
@@ -259,10 +240,7 @@ describe('collectNodesToFreeze', () => {
       const root = { a, b }
       const result = collectNodesToFreeze(root)
 
-      expect(result).toHaveLength(3)
-      expect(result.map((n) => n.value)).toContain(root)
-      expect(result.map((n) => n.value)).toContain(a)
-      expect(result.map((n) => n.value)).toContain(b)
+      expect(collectedNames(result, { root, a, b })).toEqual(['a', 'b', 'root'])
     })
 
     it('handles deeply nested circular reference', () => {
@@ -284,8 +262,7 @@ describe('collectNodesToFreeze', () => {
 
       const result = collectNodesToFreeze(arr)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(arr)
+      expect(collectedNames(result, { arr })).toEqual(['arr'])
     })
   })
 
@@ -295,8 +272,7 @@ describe('collectNodesToFreeze', () => {
       const obj = { child: frozen }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(obj)
+      expect(collectedNames(result, { obj, frozen })).toEqual(['obj'])
     })
 
     it('skips already frozen root object', () => {
@@ -312,10 +288,7 @@ describe('collectNodesToFreeze', () => {
       const obj = { frozen, unfrozen }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(unfrozen)
-      expect(result.map((n) => n.value)).not.toContain(frozen)
+      expect(collectedNames(result, { obj, frozen, unfrozen })).toEqual(['obj', 'unfrozen'])
     })
 
     it('traverses into frozen objects to find unfrozen descendants', () => {
@@ -324,9 +297,7 @@ describe('collectNodesToFreeze', () => {
       const obj = { frozen }
       const result = collectNodesToFreeze(obj)
 
-      expect(result).toHaveLength(2)
-      expect(result.map((n) => n.value)).toContain(obj)
-      expect(result.map((n) => n.value)).toContain(unfrozenDeep)
+      expect(collectedNames(result, { obj, frozen, unfrozenDeep })).toEqual(['obj', 'unfrozenDeep'])
     })
   })
 
@@ -335,8 +306,6 @@ describe('collectNodesToFreeze', () => {
       const root: { child: { frozen?: object } } = { child: {} }
       const frozen = Object.freeze({ backToRoot: root })
       root.child.frozen = frozen
-
-      expect(() => collectNodesToFreeze(root)).not.toThrow()
 
       const result = collectNodesToFreeze(root)
       expect(result.length).toBeGreaterThanOrEqual(2)
@@ -350,12 +319,8 @@ describe('collectNodesToFreeze', () => {
 
       const root = { a: unfrozen1, b: frozen }
 
-      expect(() => collectNodesToFreeze(root)).not.toThrow()
-
       const result = collectNodesToFreeze(root)
-      expect(result.map((n) => n.value)).toContain(root)
-      expect(result.map((n) => n.value)).toContain(unfrozen1)
-      expect(result.map((n) => n.value)).toContain(unfrozen2)
+      expect(collectedNames(result, { root, frozen, unfrozen1, unfrozen2 })).toEqual(['root', 'unfrozen1', 'unfrozen2'])
     })
   })
 
@@ -372,9 +337,8 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj, { maxDepth: 2 })
 
-      expect(result).toHaveLength(3)
-      const depths = result.map((n) => n.depth)
-      expect(Math.max(...depths)).toBeLessThanOrEqual(2)
+      const depths = result.map((n) => n.depth).sort((a, b) => a - b)
+      expect(depths).toEqual([0, 1, 2])
     })
 
     it('uses default maxDepth when not specified', () => {
@@ -394,9 +358,7 @@ describe('collectNodesToFreeze', () => {
       const obj = { child: { grandchild: {} } }
       const result = collectNodesToFreeze(obj, { maxDepth: 0 })
 
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(obj)
-      expect(result[0].depth).toBe(0)
+      expect({ nodes: collectedNames(result, { obj }), depth: result[0]?.depth }).toEqual({ nodes: ['obj'], depth: 0 })
     })
   })
 
@@ -405,17 +367,12 @@ describe('collectNodesToFreeze', () => {
       const unfrozen = { value: 'mutable' }
       const frozen = Object.freeze({ child: unfrozen })
 
-      expect(() => collectNodesToFreeze(frozen)).not.toThrow()
-
       const result = collectNodesToFreeze(frozen)
-      expect(result).toHaveLength(1)
-      expect(result[0].value).toBe(unfrozen)
+      expect(collectedNames(result, { frozen, unfrozen })).toEqual(['unfrozen'])
     })
 
     it('handles Object.seal objects', () => {
       const sealed = Object.seal({ child: { value: 'nested' } })
-
-      expect(() => collectNodesToFreeze(sealed)).not.toThrow()
 
       const result = collectNodesToFreeze(sealed)
       expect(result).toHaveLength(2)
@@ -423,8 +380,6 @@ describe('collectNodesToFreeze', () => {
 
     it('handles Object.preventExtensions objects', () => {
       const nonExtensible = Object.preventExtensions({ child: { value: 'nested' } })
-
-      expect(() => collectNodesToFreeze(nonExtensible)).not.toThrow()
 
       const result = collectNodesToFreeze(nonExtensible)
       expect(result).toHaveLength(2)

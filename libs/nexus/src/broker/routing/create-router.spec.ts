@@ -15,8 +15,7 @@ describe('createRouter', () => {
   it('creates empty router map when no handlers provided', () => {
     const router = createRouter({})
 
-    expect(router).toBeInstanceOf(Map)
-    expect(router.size).toBe(0)
+    expect(router).toStrictEqual(new Map())
   })
 
   it('creates router map with single handler', () => {
@@ -26,8 +25,7 @@ describe('createRouter', () => {
 
     const router = createRouter(handlers)
 
-    expect(router.size).toBe(1)
-    expect(router.get('test-action')).toBe(mockHandler)
+    expect(router).toStrictEqual(new Map([['test-action', mockHandler]]))
   })
 
   it('creates router map with multiple handlers', () => {
@@ -38,9 +36,12 @@ describe('createRouter', () => {
 
     const router = createRouter(handlers)
 
-    expect(router.size).toBe(2)
-    expect(router.get('action-1')).toBe(mockHandler)
-    expect(router.get('action-2')).toBe(mockHandler2)
+    expect(router).toStrictEqual(
+      new Map([
+        ['action-1', mockHandler],
+        ['action-2', mockHandler2],
+      ])
+    )
   })
 
   it('handles all standard Nexus protocol action types', () => {
@@ -57,15 +58,18 @@ describe('createRouter', () => {
 
     const router = createRouter(handlers)
 
-    expect(router.size).toBe(8)
-    expect(router.get('[nexus] connection-request')).toBe(mockHandler)
-    expect(router.get('[nexus] connection-request-accepted')).toBe(mockHandler)
-    expect(router.get('[nexus] connection-request-denied')).toBe(mockHandler)
-    expect(router.get('[nexus] connection-request-cancelled')).toBe(mockHandler)
-    expect(router.get('[nexus] connection-opened')).toBe(mockHandler)
-    expect(router.get('[nexus] connection-closed')).toBe(mockHandler)
-    expect(router.get('[nexus] channel-destroyed')).toBe(mockHandler)
-    expect(router.get('[nexus] new-message')).toBe(mockHandler)
+    expect(router).toStrictEqual(
+      new Map([
+        ['[nexus] connection-request', mockHandler],
+        ['[nexus] connection-request-accepted', mockHandler],
+        ['[nexus] connection-request-denied', mockHandler],
+        ['[nexus] connection-request-cancelled', mockHandler],
+        ['[nexus] connection-opened', mockHandler],
+        ['[nexus] connection-closed', mockHandler],
+        ['[nexus] channel-destroyed', mockHandler],
+        ['[nexus] new-message', mockHandler],
+      ])
+    )
   })
 
   it('return undefined for unregistered action types', () => {
@@ -90,8 +94,7 @@ describe('createRouter', () => {
     const router1 = createRouter(handlers1)
     const router2 = createRouter(handlers2)
 
-    expect(router1.get('test-action')).toBe(mockHandler)
-    expect(router2.get('test-action')).toBe(mockHandler2)
+    expect({ first: router1.get('test-action'), second: router2.get('test-action') }).toEqual({ first: mockHandler, second: mockHandler2 })
   })
 
   it('be immutable after creation', () => {
@@ -115,7 +118,11 @@ describe('createRouter', () => {
 
     const router = createRouter(handlers)
 
-    expect(router.get('[special] action/type:with-chars')).toBe(mockHandler)
-    expect(router.get('action@with#symbols')).toBe(mockHandler2)
+    expect(router).toStrictEqual(
+      new Map([
+        ['[special] action/type:with-chars', mockHandler],
+        ['action@with#symbols', mockHandler2],
+      ])
+    )
   })
 })

@@ -5,14 +5,12 @@ describe('parseRange', () => {
   describe('simple ranges', () => {
     it('parses wildcard', () => {
       const result = parseRange('*')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets).toHaveLength(0)
+      expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
     })
 
     it('parses exact version', () => {
       const result = parseRange('1.0.0')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets).toHaveLength(1)
+      expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [expect.any(Object)] }) }))
     })
 
     it('parses >= range', () => {
@@ -113,8 +111,9 @@ describe('parseRange', () => {
   describe('OR ranges', () => {
     it('parses 1.0.0 || 2.0.0', () => {
       const result = parseRange('1.0.0 || 2.0.0')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets).toHaveLength(2)
+      expect(result).toEqual(
+        expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [expect.any(Object), expect.any(Object)] }) })
+      )
     })
   })
 
@@ -177,8 +176,7 @@ describe('parseRange - error conditions', () => {
   it('rejects range exceeding max length', () => {
     const longRange = '>=1.0.0'.repeat(200)
     const result = parseRange(longRange)
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('maximum length')
+    expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('maximum length') }))
   })
 
   it('parses extra dots leniently', () => {
@@ -285,20 +283,24 @@ describe('parseRange - tilde edge cases', () => {
 describe('parseRange - complex combinations', () => {
   it('parses multiple OR ranges', () => {
     const result = parseRange('1.0.0 || 2.0.0 || 3.0.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets.length).toBe(3)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({ sets: [expect.any(Object), expect.any(Object), expect.any(Object)] }),
+      })
+    )
   })
 
   it('parses AND with OR', () => {
     const result = parseRange('>=1.0.0 <2.0.0 || >=3.0.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [expect.any(Object), expect.any(Object)] }) })
+    )
   })
 
   it('parses empty comparator set as matching any', () => {
     const result = parseRange('')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('required')
+    expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('required') }))
   })
 
   it('handles multiple spaces between comparators', () => {
@@ -327,14 +329,12 @@ describe('parseRange - complex combinations', () => {
 
   it('parses sole wildcard star', () => {
     const result = parseRange('*')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets.length).toBe(0)
+    expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
   })
 
   it('parses sole wildcard X', () => {
     const result = parseRange('X')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets.length).toBe(0)
+    expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
   })
 
   it('parses 1.x as >=1.0.0 <2.0.0', () => {
@@ -476,16 +476,16 @@ describe('parseRange - operator', () => {
 
   it('parses multiple operators in OR groups', () => {
     const result = parseRange('>1.0.0 || <0.5.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [expect.any(Object), expect.any(Object)] }) })
+    )
   })
 })
 
 describe('parseRange - x-range invalid number handling', () => {
   it('rejects x-range with non-numeric major part', () => {
     const result = parseRange('abc.x')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Invalid')
+    expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('Invalid') }))
   })
 
   it('rejects x-range with invalid number in first segment', () => {
@@ -495,14 +495,12 @@ describe('parseRange - x-range invalid number handling', () => {
 
   it('handles x-range starting with wildcard character', () => {
     const result = parseRange('*.x')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets).toHaveLength(0)
+    expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
   })
 
   it('handles x-range with only x parts', () => {
     const result = parseRange('x.x.x')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets).toHaveLength(0)
+    expect(result).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
   })
 })
 
@@ -550,14 +548,12 @@ describe('parseRangeStrict - error fallback', () => {
 describe('parseRange - hyphen range error messages', () => {
   it('returns specific error for invalid left side', () => {
     const result = parseRange('invalid - 2.0.0')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('left side')
+    expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('left side') }))
   })
 
   it('returns specific error for invalid right side', () => {
     const result = parseRange('1.0.0 - invalid')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('right side')
+    expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('right side') }))
   })
 })
 

@@ -11,6 +11,14 @@ describe('channel/subscription/messages', () => {
     ['undefined', undefined],
     ['a string', 'not a function'],
   ]
+  const thrownBy = (attempt: () => void): unknown => {
+    try {
+      attempt()
+    } catch (error) {
+      return error
+    }
+    return undefined
+  }
 
   let state: ChannelState
   let channel: ChannelInternals
@@ -108,7 +116,8 @@ describe('channel/subscription/messages', () => {
   })
 
   it('registers nothing when the handler is invalid', () => {
-    expect(() => subscribeToMessages(channel, null as unknown as MessageHandler)).toThrow()
-    expect(state.messageSubscriptions).toEqual([])
+    const error = thrownBy(() => subscribeToMessages(channel, null as unknown as MessageHandler))
+
+    expect({ error, subscriptions: state.messageSubscriptions }).toEqual({ error: expect.any(Error), subscriptions: [] })
   })
 })

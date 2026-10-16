@@ -27,10 +27,13 @@ function library(packageName: string, keywords: string[] = []): EcosystemLibrary
 const PLACED_PACKAGES = ECOSYSTEM_TIERS.flatMap((tier) => tier.packages)
 
 describe('ECOSYSTEM_TIERS', () => {
-  it('places every documented library exactly once', () => {
+  it('places no package more than once', () => {
     const placed = createSet(PLACED_PACKAGES)
 
     expect(PLACED_PACKAGES.length).toBe(placed.size)
+  })
+
+  it('places every documented library', () => {
     for (const lib of LIBRARIES) {
       expect(PLACED_PACKAGES).toContain(lib.packageName)
     }
@@ -46,6 +49,9 @@ describe('ECOSYSTEM_TIERS', () => {
 
   it('opens on the flagship SDK alone', () => {
     expect(ECOSYSTEM_TIERS[0].packages).toEqual(['@hyperfrontend/features'])
+  })
+
+  it('draws the opening level with the apex emphasis', () => {
     expect(ECOSYSTEM_TIERS[0].emphasis).toBe('apex')
   })
 
@@ -152,16 +158,20 @@ describe('buildEcosystem', () => {
     const keywords = ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf']
     const levels = buildEcosystem([library('@hyperfrontend/features', keywords), library('@hyperfrontend/logging', keywords)])
 
-    expect(levels[0].cards[0].topics).toHaveLength(ECOSYSTEM_TIERS[0].topicLimit)
-    expect(levels[1].cards[0].topics).toHaveLength(ECOSYSTEM_TIERS[4].topicLimit)
+    expect({ features: levels[0].cards[0].topics.length, logging: levels[1].cards[0].topics.length }).toEqual({
+      features: ECOSYSTEM_TIERS[0].topicLimit,
+      logging: ECOSYSTEM_TIERS[4].topicLimit,
+    })
   })
 
   it('carries the library fields the cards render', () => {
     const card = buildEcosystem([library('@hyperfrontend/features')])[0].cards[0]
 
-    expect(card.description).toBe('@hyperfrontend/features description')
-    expect(card.href).toBe('/docs/libraries/features')
-    expect(card.version).toBe('1.0.0')
+    expect(card).toMatchObject({
+      description: '@hyperfrontend/features description',
+      href: '/docs/libraries/features',
+      version: '1.0.0',
+    })
   })
 
   it('places nothing when there is nothing to place', () => {

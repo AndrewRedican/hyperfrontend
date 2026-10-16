@@ -11,9 +11,7 @@ describe('sort', () => {
       createSemVer({ major: 3, minor: 0, patch: 0 }),
     ]
     const sorted = sort(versions)
-    expect((sorted[0] as SemVer).major).toBe(1)
-    expect((sorted[1] as SemVer).major).toBe(2)
-    expect((sorted[2] as SemVer).major).toBe(3)
+    expect(sorted.map((version) => version.major)).toEqual([1, 2, 3])
   })
 
   it('does not mutate original array', () => {
@@ -31,9 +29,7 @@ describe('sortDescending', () => {
       createSemVer({ major: 2, minor: 0, patch: 0 }),
     ]
     const sorted = sortDescending(versions)
-    expect((sorted[0] as SemVer).major).toBe(3)
-    expect((sorted[1] as SemVer).major).toBe(2)
-    expect((sorted[2] as SemVer).major).toBe(1)
+    expect(sorted.map((version) => version.major)).toEqual([3, 2, 1])
   })
 })
 

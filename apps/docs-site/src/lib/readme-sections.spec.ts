@@ -47,6 +47,11 @@ describe('findSections', () => {
     const [compatibility] = findSections(README).filter((section) => section.slug === 'compatibility')
     const lines = README.split('\n').slice(compatibility.headingLine, compatibility.endLine)
     expect(lines).toContain('### CDN Usage')
+  })
+
+  it('ends a section before the next heading of its own level', () => {
+    const [compatibility] = findSections(README).filter((section) => section.slug === 'compatibility')
+    const lines = README.split('\n').slice(compatibility.headingLine, compatibility.endLine)
     expect(lines).not.toContain('## Part of hyperfrontend')
   })
 
@@ -58,8 +63,7 @@ describe('findSections', () => {
 describe('splitTitle', () => {
   it('lifts the leading heading out of the body', () => {
     const { title, body } = splitTitle(README)
-    expect(title).toBe('@hyperfrontend/example')
-    expect(body.startsWith('One line about the package.')).toBe(true)
+    expect({ title, body }).toEqual({ title: '@hyperfrontend/example', body: expect.stringMatching(/^One line about the package\./) })
   })
 
   it('leaves a document with no leading heading untouched', () => {
@@ -84,10 +88,13 @@ describe('readSectionLink', () => {
 })
 
 describe('dropSections', () => {
-  it('removes a section and keeps everything around it', () => {
+  it('removes the sections it is given', () => {
     const result = dropSections(README, ['license', 'part-of-hyperfrontend'])
-    expect(result).not.toContain('## License')
-    expect(result).not.toContain('## Part of hyperfrontend')
+    expect(['## License', '## Part of hyperfrontend'].filter((heading) => result.includes(heading))).toStrictEqual([])
+  })
+
+  it('keeps everything around the sections it removes', () => {
+    const result = dropSections(README, ['license', 'part-of-hyperfrontend'])
     expect(result).toContain('## Compatibility')
   })
 })
@@ -96,6 +103,10 @@ describe('enhanceSection', () => {
   it('replaces the section lead with the placeholder and keeps the heading', () => {
     const result = enhanceSection(README, 'compatibility', '<div data-readme-slot="capabilities"></div>', ['output-formats'])
     expect(result).toContain('## Compatibility\n\n<div data-readme-slot="capabilities"></div>')
+  })
+
+  it('drops the subsections it is asked to drop', () => {
+    const result = enhanceSection(README, 'compatibility', '<div data-readme-slot="capabilities"></div>', ['output-formats'])
     expect(result).not.toContain('### Output Formats')
   })
 

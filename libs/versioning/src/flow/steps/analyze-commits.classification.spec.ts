@@ -21,8 +21,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: hybrid')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: hybrid') }))
         })
 
         it('respects scope-only strategy from config', async () => {
@@ -43,9 +42,28 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: scope-only')
-          expect(result.stateUpdates?.commits).toHaveLength(1)
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: scope-only') }))
+        })
+
+        it('keeps only the scoped commit under the scope-only strategy', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(lib-test): scoped feature', hash: 'commit1' },
+              { message: 'feat: unscoped feature', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'scope-only' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.stateUpdates?.commits).toEqual([expect.objectContaining({ subject: 'scoped feature' })])
         })
 
         it('respects file-only strategy from config', async () => {
@@ -66,8 +84,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: file-only')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: file-only') }))
         })
 
         it('infers scope-only strategy when >70% commits have scopes', async () => {
@@ -95,8 +112,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: scope-only')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: scope-only') }))
         })
 
         it('infers file-only strategy when <30% commits have scopes', async () => {
@@ -124,8 +140,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: file-only')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: file-only') }))
         })
 
         it('infers hybrid strategy when scope ratio is between 30-70%', async () => {
@@ -153,8 +168,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: hybrid')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: hybrid') }))
         })
 
         it('infers file-only strategy when no commits exist (ratio is 0)', async () => {
@@ -170,8 +184,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('strategy: file-only')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('strategy: file-only') }))
         })
       })
 
@@ -191,10 +204,14 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.classificationResult).toBeDefined()
-          expect(result.stateUpdates?.classificationResult?.summary).toBeDefined()
-          expect(result.stateUpdates?.classificationResult?.summary.bySource).toBeDefined()
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                classificationResult: expect.objectContaining({ summary: expect.objectContaining({ bySource: expect.anything() }) }),
+              }),
+            })
+          )
         })
 
         it('provides classification summary breakdown', async () => {
@@ -237,9 +254,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          const commits = result.stateUpdates?.commits ?? []
-          expect(commits.every((c) => !c.scope.includes('deps'))).toBe(true)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ subject: 'included' })] }),
+            })
+          )
         })
 
         it('applies includeScopes from config', async () => {
@@ -263,8 +283,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(1)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ subject: 'custom scoped' })] }),
+            })
+          )
         })
 
         it('logs project scopes derivation', async () => {
@@ -424,6 +448,30 @@ describe('analyze-commits step', () => {
           await step.execute(context)
 
           expect(customMatcher).toHaveBeenCalled()
+        })
+
+        it('logs the infrastructure matcher outcome for a custom infrastructureMatcher', async () => {
+          const commits = [
+            { message: 'feat(tooling): add tool', hash: 'tooling-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const git = createMockGitClient({ commits })
+          const logger = createMockLogger()
+          const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('tooling'))
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructureMatcher: customMatcher,
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Infrastructure matcher'))
         })
 
@@ -458,7 +506,7 @@ describe('analyze-commits step', () => {
       })
 
       describe('infrastructure returns undefined when not configured', () => {
-        it('returns undefined for infrastructureCommitHashes when no infrastructure config', async () => {
+        it('succeeds when no infrastructure config is set', async () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: feature', hash: 'commit1' }],
           })
@@ -471,15 +519,29 @@ describe('analyze-commits step', () => {
           const result = await step.execute(context)
 
           expect(result.status).toBe('success')
+        })
+
+        it('logs nothing about infrastructure when no infrastructure config is set', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
           const logger = context.logger as Mocked<Logger>
           const debugCalls = logger.debug.mock.calls.map((call) => call[0])
           const infraLogs = debugCalls.filter((msg: string) => msg.includes('infrastructure') || msg.includes('Infrastructure'))
-          expect(infraLogs).toHaveLength(0)
+          expect(infraLogs).toEqual([])
         })
       })
 
       describe('infrastructure path detection with existing release', () => {
-        it('uses getCommitsSince for infrastructure paths when publishedCommit exists', async () => {
+        async function runInfrastructurePathsAfterPublish() {
           const baseCommits = [
             { message: 'feat(ci): update ci', hash: 'ci-commit' },
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
@@ -517,10 +579,21 @@ describe('analyze-commits step', () => {
 
           await step.execute(context)
 
+          return { getCommitsSinceMock, logger }
+        }
+
+        it('uses getCommitsSince for infrastructure paths when publishedCommit exists', async () => {
+          const { getCommitsSinceMock } = await runInfrastructurePathsAfterPublish()
+
           type CommitsSinceCall = [commit: string, opts?: { path?: string }]
           const calls = getCommitsSinceMock.mock.calls as unknown as CommitsSinceCall[]
           const infraPathCalls = calls.filter((call) => call[1]?.path === 'tools/')
           expect(infraPathCalls.length).toBeGreaterThan(0)
+        })
+
+        it('logs the infrastructure path commits when publishedCommit exists', async () => {
+          const { logger } = await runInfrastructurePathsAfterPublish()
+
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('infrastructure paths'))
         })
       })

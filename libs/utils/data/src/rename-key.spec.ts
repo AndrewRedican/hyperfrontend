@@ -40,22 +40,27 @@ describe('renameKey', () => {
     expect(() => renameKey(target, '', null)).toThrow('Expected name to be a string.')
   })
 
-  it('returns locations where key name matches exactly', () => {
-    prepareTarget()
-    expect(renameKey(target, 'ip', 'ip2')).toEqual([])
+  it.each([
+    ['ip', 'ip2', []],
+    ['166.211.210.117', 'xxx.xxx.xxx.xxx', []],
+    [
+      'ip_address',
+      'ipAddress',
+      [
+        ['0', 'ipAddress'],
+        ['1', 'ipAddress'],
+      ],
+    ],
+  ])('returns locations where key name matches %p exactly', (pattern: string, name: string, expected: string[][]) => {
+    expect(renameKey(target, pattern, name)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(renameKey(target, '166.211.210.117', 'xxx.xxx.xxx.xxx')).toEqual([])
-
-    prepareTarget()
-    expect(renameKey(target, 'ip_address', 'ipAddress')).toEqual([
-      ['0', 'ipAddress'],
-      ['1', 'ipAddress'],
+  it('renames the keys whose name matches exactly', () => {
+    renameKey(target, 'ip_address', 'ipAddress')
+    expect(target.map((item: object) => ({ ipAddress: 'ipAddress' in item, ip_address: 'ip_address' in item }))).toEqual([
+      { ipAddress: true, ip_address: false },
+      { ipAddress: true, ip_address: false },
     ])
-    expect('ipAddress' in target[0]).toBe(true)
-    expect('ip_address' in target[0]).toBe(false)
-    expect('ipAddress' in target[1]).toBe(true)
-    expect('ip_address' in target[1]).toBe(false)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -69,14 +74,21 @@ describe('renameKey', () => {
       ['1', 'firstName'],
       ['1', 'lastName'],
     ])
-    expect('firstName' in target[0]).toBe(true)
-    expect('firstName' in target[1]).toBe(true)
-    expect('lastName' in target[0]).toBe(true)
-    expect('lastName' in target[1]).toBe(true)
-    expect('first_name' in target[0]).toBe(false)
-    expect('first_name' in target[1]).toBe(false)
-    expect('last_name' in target[0]).toBe(false)
-    expect('last_name' in target[1]).toBe(false)
+  })
+
+  it('renames the keys whose name matches a pattern', () => {
+    renameKey(target, /_name/i, 'Name')
+    expect(
+      target.map((item: object) => ({
+        firstName: 'firstName' in item,
+        lastName: 'lastName' in item,
+        first_name: 'first_name' in item,
+        last_name: 'last_name' in item,
+      }))
+    ).toEqual([
+      { firstName: true, lastName: true, first_name: false, last_name: false },
+      { firstName: true, lastName: true, first_name: false, last_name: false },
+    ])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {
@@ -127,22 +139,27 @@ describe('renameKey - with config detectCircularReferences:true', () => {
     expect(() => renameKey(target, '', null)).toThrow('Expected name to be a string.')
   })
 
-  it('returns locations where key name matches exactly', () => {
-    prepareTarget()
-    expect(renameKey(target, 'ip', 'ip2')).toEqual([])
+  it.each([
+    ['ip', 'ip2', []],
+    ['166.211.210.117', 'xxx.xxx.xxx.xxx', []],
+    [
+      'ip_address',
+      'ipAddress',
+      [
+        ['0', 'ipAddress'],
+        ['1', 'ipAddress'],
+      ],
+    ],
+  ])('returns locations where key name matches %p exactly', (pattern: string, name: string, expected: string[][]) => {
+    expect(renameKey(target, pattern, name)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(renameKey(target, '166.211.210.117', 'xxx.xxx.xxx.xxx')).toEqual([])
-
-    prepareTarget()
-    expect(renameKey(target, 'ip_address', 'ipAddress')).toEqual([
-      ['0', 'ipAddress'],
-      ['1', 'ipAddress'],
+  it('renames the keys whose name matches exactly', () => {
+    renameKey(target, 'ip_address', 'ipAddress')
+    expect(target.map((item: object) => ({ ipAddress: 'ipAddress' in item, ip_address: 'ip_address' in item }))).toEqual([
+      { ipAddress: true, ip_address: false },
+      { ipAddress: true, ip_address: false },
     ])
-    expect('ipAddress' in target[0]).toBe(true)
-    expect('ip_address' in target[0]).toBe(false)
-    expect('ipAddress' in target[1]).toBe(true)
-    expect('ip_address' in target[1]).toBe(false)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -156,14 +173,21 @@ describe('renameKey - with config detectCircularReferences:true', () => {
       ['1', 'firstName'],
       ['1', 'lastName'],
     ])
-    expect('firstName' in target[0]).toBe(true)
-    expect('firstName' in target[1]).toBe(true)
-    expect('lastName' in target[0]).toBe(true)
-    expect('lastName' in target[1]).toBe(true)
-    expect('first_name' in target[0]).toBe(false)
-    expect('first_name' in target[1]).toBe(false)
-    expect('last_name' in target[0]).toBe(false)
-    expect('last_name' in target[1]).toBe(false)
+  })
+
+  it('renames the keys whose name matches a pattern', () => {
+    renameKey(target, /_name/i, 'Name')
+    expect(
+      target.map((item: object) => ({
+        firstName: 'firstName' in item,
+        lastName: 'lastName' in item,
+        first_name: 'first_name' in item,
+        last_name: 'last_name' in item,
+      }))
+    ).toEqual([
+      { firstName: true, lastName: true, first_name: false, last_name: false },
+      { firstName: true, lastName: true, first_name: false, last_name: false },
+    ])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {

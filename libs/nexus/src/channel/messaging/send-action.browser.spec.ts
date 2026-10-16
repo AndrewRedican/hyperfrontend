@@ -35,6 +35,14 @@ describe('channel/messaging/send-action', () => {
     ['an action without a type', {}],
     ['an action whose type is not a string', { type: 123 }],
   ]
+  const thrownBy = (attempt: () => void): unknown => {
+    try {
+      attempt()
+    } catch (error) {
+      return error
+    }
+    return undefined
+  }
 
   let postMessage: Mock
   let state: ChannelState
@@ -79,9 +87,10 @@ describe('channel/messaging/send-action', () => {
       expect(() => sendAction(channel, action as IAction)).toThrow("Action must contain a 'type' property that is a non-empty string.")
     })
 
-    it('posts nothing for an invalid action', () => {
-      expect(() => sendAction(channel, {} as IAction)).toThrow()
-      expect(postMessage).not.toHaveBeenCalled()
+    it('rejects an invalid action without posting anything', () => {
+      const error = thrownBy(() => sendAction(channel, {} as IAction))
+
+      expect({ error, posted: postMessage.mock.calls }).toEqual({ error: expect.any(Error), posted: [] })
     })
   })
 
@@ -185,8 +194,9 @@ describe('channel/messaging/send-action', () => {
     })
 
     it('validates the action before consulting the transport', () => {
-      expect(() => sendAction(channel, { type: 123 } as unknown as IAction)).toThrow()
-      expect(transport.send).not.toHaveBeenCalled()
+      const error = thrownBy(() => sendAction(channel, { type: 123 } as unknown as IAction))
+
+      expect({ error, sent: (transport.send as Mock).mock.calls }).toEqual({ error: expect.any(Error), sent: [] })
     })
   })
 })

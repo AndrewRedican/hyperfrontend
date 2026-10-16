@@ -18,7 +18,7 @@ describe('@hyperfrontend/list-utils CJS', () => {
     expect(typeof createFifoList).toBe('function')
   })
 
-  it('creates a FIFO list that works correctly', () => {
+  it('creates a FIFO list that counts every pushed item', () => {
     const { createFifoList } = require('@hyperfrontend/list-utils')
 
     const list = createFifoList()
@@ -29,7 +29,32 @@ describe('@hyperfrontend/list-utils CJS', () => {
     list.push(item2)
 
     expect(list.size()).toBe(2)
+  })
+
+  it('creates a FIFO list that pulls the first pushed item first', () => {
+    const { createFifoList } = require('@hyperfrontend/list-utils')
+
+    const list = createFifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+
     expect(list.pull()).toBe(item1) // First in, first out
+  })
+
+  it('creates a FIFO list that no longer counts a pulled item', () => {
+    const { createFifoList } = require('@hyperfrontend/list-utils')
+
+    const list = createFifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+    list.pull()
+
     expect(list.size()).toBe(1)
   })
 
@@ -38,7 +63,7 @@ describe('@hyperfrontend/list-utils CJS', () => {
     expect(typeof createLifoList).toBe('function')
   })
 
-  it('creates a LIFO list that works correctly', () => {
+  it('creates a LIFO list that counts every pushed item', () => {
     const { createLifoList } = require('@hyperfrontend/list-utils')
 
     const list = createLifoList()
@@ -49,7 +74,32 @@ describe('@hyperfrontend/list-utils CJS', () => {
     list.push(item2)
 
     expect(list.size()).toBe(2)
+  })
+
+  it('creates a LIFO list that pulls the last pushed item first', () => {
+    const { createLifoList } = require('@hyperfrontend/list-utils')
+
+    const list = createLifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+
     expect(list.pull()).toBe(item2) // Last in, first out
+  })
+
+  it('creates a LIFO list that no longer counts a pulled item', () => {
+    const { createLifoList } = require('@hyperfrontend/list-utils')
+
+    const list = createLifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+    list.pull()
+
     expect(list.size()).toBe(1)
   })
 

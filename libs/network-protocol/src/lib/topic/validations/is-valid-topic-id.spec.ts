@@ -7,12 +7,7 @@ describe('isValidTopicId', () => {
     expect(isValidTopicId(topicId)).toBe(true)
   })
 
-  it('returns false for invalid topicId', () => {
-    expect(isValidTopicId(null)).toBe(false)
-    expect(isValidTopicId(void 0)).toBe(false)
-    expect(isValidTopicId(5)).toBe(false)
-    expect(isValidTopicId({})).toBe(false)
-    expect(isValidTopicId('')).toBe(false)
-    expect(isValidTopicId('not-a-guid')).toBe(false)
+  it.each([null, void 0, 5, {}, '', 'not-a-guid'])('returns false for the invalid topicId %p', (value) => {
+    expect(isValidTopicId(value)).toBe(false)
   })
 })

@@ -13,16 +13,13 @@ describe('registerClassTypes', () => {
     class A {}
     class B {}
     registerClassTypes(A, B)
-    expect(registeredClasses.length).toBe(2)
-    expect(registeredClasses).toContain(A)
-    expect(registeredClasses).toContain(B)
+    expect(registeredClasses).toEqual([A, B])
   })
 
   it('ignores subsequent registrations of the same class type', () => {
     class A {}
     registerClassTypes(A)
     registerClassTypes(A)
-    expect(registeredClasses.length).toBe(1)
-    expect(registeredClasses).toContain(A)
+    expect(registeredClasses).toEqual([A])
   })
 })

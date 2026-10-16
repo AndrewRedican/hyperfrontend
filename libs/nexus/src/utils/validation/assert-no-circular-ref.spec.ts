@@ -3,13 +3,8 @@ import { assertNoCircularRef } from './assert-no-circular-ref'
 
 describe('assertNoCircularRef', () => {
   describe('non-circular values', () => {
-    it('accepts primitive values', () => {
-      expect(() => assertNoCircularRef(null, 'value')).not.toThrow()
-      expect(() => assertNoCircularRef(undefined, 'value')).not.toThrow()
-      expect(() => assertNoCircularRef(42, 'value')).not.toThrow()
-      expect(() => assertNoCircularRef('string', 'value')).not.toThrow()
-      expect(() => assertNoCircularRef(true, 'value')).not.toThrow()
-      expect(() => assertNoCircularRef(Symbol(), 'value')).not.toThrow()
+    it.each([[null], [undefined], [42], ['string'], [true], [Symbol()]])('accepts the primitive value %p', (value: unknown) => {
+      expect(() => assertNoCircularRef(value, 'value')).not.toThrow()
     })
 
     it('accepts empty objects', () => {

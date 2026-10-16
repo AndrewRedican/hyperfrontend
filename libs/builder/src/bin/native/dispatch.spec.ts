@@ -66,12 +66,22 @@ beforeEach(() => {
 })
 
 describe('dispatchInjectWorker', () => {
-  it('forks the worker, reads the JSON report, and resolves with the parsed value', async () => {
+  it('forks exactly one worker for the job', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1200 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    await promise
     expect(records).toHaveLength(1)
+  })
+
+  it('resolves with the JSON report the worker wrote', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
+    await tick()
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1200 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     const result = await promise
@@ -83,7 +93,6 @@ describe('dispatchInjectWorker', () => {
     captureSpawn(records)
     const promise = dispatchInjectWorker(baseJob({ reportPath: '/abs/orig.json' }), { workerPath: '/abs/worker.cjs' })
     await tick()
-    expect((records[0] as SpawnRecord).job.reportPath).not.toBe('/abs/orig.json')
     expect((records[0] as SpawnRecord).job.reportPath).toContain('hf-builder-inject-')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
@@ -127,8 +136,10 @@ describe('dispatchInjectWorker', () => {
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
-    expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
-    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs'])
+    expect({ execPath: (records[0] as SpawnRecord).execPath, leadingArgs: (records[0] as SpawnRecord).args.slice(0, 3) }).toEqual({
+      execPath: '/usr/bin/custom-node',
+      leadingArgs: ['--require', '@swc-node/register', '/abs/worker.cjs'],
+    })
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
@@ -176,7 +187,7 @@ describe('dispatchInjectWorker', () => {
     await tick()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
-    await expect(promise).rejects.toThrow()
+    await promise.catch(() => undefined)
     expect(existsSync(reportDir)).toBe(false)
   })
 

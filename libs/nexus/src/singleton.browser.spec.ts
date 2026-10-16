@@ -4,9 +4,7 @@ import { broker, DEFAULT_CONTRACT } from './singleton'
 describe('singleton', () => {
   describe('broker', () => {
     it('exports a broker instance', () => {
-      expect(broker).toBeDefined()
-      expect(broker.name).toBe('default-broker')
-      expect(broker.id).toBeDefined()
+      expect(broker).toEqual(expect.objectContaining({ name: 'default-broker', id: expect.anything() }))
     })
 
     it('has sensible default settings', () => {
@@ -34,10 +32,7 @@ describe('singleton', () => {
     })
 
     it('has default contract with expected action types', () => {
-      expect(broker.acceptedActionTypes).toContain('MESSAGE')
-      expect(broker.acceptedActionTypes).toContain('DATA')
-      expect(broker.acceptedActionTypes).toContain('EVENT')
-      expect(broker.acceptedActionTypes).toContain('ACK')
+      expect(broker.acceptedActionTypes).toEqual(expect.arrayContaining(['MESSAGE', 'DATA', 'EVENT', 'ACK']))
     })
   })
 
@@ -47,18 +42,11 @@ describe('singleton', () => {
     })
 
     it('has emitted action types', () => {
-      expect(DEFAULT_CONTRACT.emitted).toHaveLength(3)
-      expect(DEFAULT_CONTRACT.emitted[0].type).toBe('MESSAGE')
-      expect(DEFAULT_CONTRACT.emitted[1].type).toBe('DATA')
-      expect(DEFAULT_CONTRACT.emitted[2].type).toBe('EVENT')
+      expect(DEFAULT_CONTRACT.emitted.map((action) => action.type)).toEqual(['MESSAGE', 'DATA', 'EVENT'])
     })
 
     it('has accepted action types', () => {
-      expect(DEFAULT_CONTRACT.accepted).toHaveLength(4)
-      expect(DEFAULT_CONTRACT.accepted[0].type).toBe('MESSAGE')
-      expect(DEFAULT_CONTRACT.accepted[1].type).toBe('DATA')
-      expect(DEFAULT_CONTRACT.accepted[2].type).toBe('EVENT')
-      expect(DEFAULT_CONTRACT.accepted[3].type).toBe('ACK')
+      expect(DEFAULT_CONTRACT.accepted.map((action) => action.type)).toEqual(['MESSAGE', 'DATA', 'EVENT', 'ACK'])
     })
   })
 })

@@ -311,8 +311,10 @@ describe('handleMessage', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(notify2Spy).toHaveBeenCalledWith({ type: 'test-message', data: 'for channel 2' })
-    expect(notify1Spy).not.toHaveBeenCalled()
+    expect({ first: notify1Spy.mock.calls, second: notify2Spy.mock.calls }).toEqual({
+      first: [],
+      second: [[{ type: 'test-message', data: 'for channel 2' }]],
+    })
   })
 
   it('returns early when action does not have data property', () => {

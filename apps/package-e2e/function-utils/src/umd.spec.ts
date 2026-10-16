@@ -33,7 +33,21 @@ describe('@hyperfrontend/function-utils UMD bundle', () => {
     expect(typeof global.createRunOnceFunction).toBe('function')
   })
 
-  it('creates a working run-once function from UMD bundle', () => {
+  it('creates a run-once function from UMD bundle that returns the result on every call', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
+      createRunOnceFunction: <T>(fn: () => T) => () => T
+    }
+
+    const fn = global.createRunOnceFunction(() => 'result')
+
+    const firstCall = fn()
+    const secondCall = fn()
+
+    expect({ firstCall, secondCall }).toEqual({ firstCall: 'result', secondCall: 'result' })
+  })
+
+  it('creates a run-once function from UMD bundle that executes only once', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
       createRunOnceFunction: <T>(fn: () => T) => () => T
@@ -45,8 +59,9 @@ describe('@hyperfrontend/function-utils UMD bundle', () => {
       return 'result'
     })
 
-    expect(fn()).toBe('result')
-    expect(fn()).toBe('result')
+    fn()
+    fn()
+
     expect(callCount).toBe(1)
   })
 
@@ -54,8 +69,11 @@ describe('@hyperfrontend/function-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.createRunOnceFunction).toBe('function')
-    expect(typeof exports.noop).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        createRunOnceFunction: expect.any(Function),
+        noop: expect.any(Function),
+      })
+    )
   })
 })

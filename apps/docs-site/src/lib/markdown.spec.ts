@@ -6,11 +6,20 @@ const RENDER_TIMEOUT_MS = 30_000
 
 describe('markdownToHtml', () => {
   it(
-    'drops authoring comments from the rendered page',
+    'drops the text of an authoring comment from the rendered page',
     async () => {
       const html = await markdownToHtml(['Prose.', '', '<!-- TODO(asset): capture the pond loading -->', '', 'More prose.'].join('\n'))
 
       expect(html).not.toContain('TODO(asset)')
+    },
+    RENDER_TIMEOUT_MS
+  )
+
+  it(
+    'drops the markers of an authoring comment from the rendered page',
+    async () => {
+      const html = await markdownToHtml(['Prose.', '', '<!-- TODO(asset): capture the pond loading -->', '', 'More prose.'].join('\n'))
+
       expect(html).not.toContain('<!--')
     },
     RENDER_TIMEOUT_MS
@@ -31,8 +40,8 @@ describe('markdownToHtml', () => {
     async () => {
       const html = await markdownToHtml(['```html', '<!-- unpkg -->', '<script src="https://unpkg.com/pkg"></script>', '```'].join('\n'))
 
-      expect(html).toContain('unpkg')
-      expect(html).toContain('--')
+      // note: the highlighter escapes the opening angle bracket, so the comment is matched from its exclamation mark to its closing dashes
+      expect(html).toContain('!-- unpkg --')
     },
     RENDER_TIMEOUT_MS
   )

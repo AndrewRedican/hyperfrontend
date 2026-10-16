@@ -79,8 +79,13 @@ describe('createShellHandle payload validation', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.mock.send.mockClear()
-    expect(() => ctx.handle.send('setTimezone', {})).toThrow()
-    expect(ctx.mock.send).not.toHaveBeenCalled()
+    let rejected = false
+    try {
+      ctx.handle.send('setTimezone', {})
+    } catch {
+      rejected = true
+    }
+    expect({ rejected, sends: ctx.mock.send.mock.calls.length }).toEqual({ rejected: true, sends: 0 })
   })
 
   it('sends a schema-valid payload through the channel', () => {

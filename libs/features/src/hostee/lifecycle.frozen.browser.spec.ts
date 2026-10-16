@@ -17,9 +17,12 @@ describe('the frozen feature handle', () => {
 
   it('keeps hosted unchanged when assignment is attempted', () => {
     const handle = createUnhostedHandle()
-    expect(() => {
+    let rejection: unknown
+    try {
       ;(handle as unknown as { hosted: boolean }).hosted = true
-    }).toThrow(TypeError)
-    expect(handle.hosted).toBe(false)
+    } catch (error) {
+      rejection = error
+    }
+    expect({ rejection, hosted: handle.hosted }).toEqual({ rejection: expect.any(TypeError), hosted: false })
   })
 })

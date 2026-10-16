@@ -145,8 +145,7 @@ describe('analyzeChunk pure-freeze recognition', () => {
 
   it('does not add an alias bound to a call to the pure set', () => {
     const source = 'const f = mk();\nconst Y = f({ a: 1 });'
-    expect(freeOf(source, 'f')).toBe(false)
-    expect(freeOf(source, 'Y')).toBe(false)
+    expect(['f', 'Y'].filter((name) => freeOf(source, name))).toEqual([])
   })
 
   it('drops the direct Object.freeze seed when Object is shadowed by a top-level binding', () => {
@@ -259,10 +258,7 @@ describe('computeKeepClosure', () => {
     const sourceFile = parseChunk(errorChunk)
     const model = analyzeChunk(sourceFile, 'esm')
     const closure = computeKeepClosure(sourceFile, model, createSet(['createError']))
-    expect(closure.has('createError')).toBe(true)
-    expect(closure.has('_TypeError')).toBe(true)
-    expect(closure.has('Error')).toBe(false)
-    expect(closure.has('createRangeError')).toBe(false)
-    expect(closure.has('_RangeError')).toBe(false)
+    const names = ['createError', '_TypeError', 'Error', 'createRangeError', '_RangeError']
+    expect(names.filter((name) => closure.has(name))).toEqual(['createError', '_TypeError'])
   })
 })

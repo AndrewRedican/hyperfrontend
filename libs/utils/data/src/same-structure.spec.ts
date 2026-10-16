@@ -21,19 +21,31 @@ describe('sameStructure', () => {
     deregisterIterableClass(Set)
   })
 
-  it('returns false for mismatched primitive types', () => {
-    expect(sameStructure(42, 'hello')).toBe(false)
-    expect(sameStructure(true, null)).toBe(false)
+  it.each([
+    [42, 'hello'],
+    [true, null],
+  ])('returns false for mismatched primitive types: %p and %p', (left: unknown, right: unknown) => {
+    expect(sameStructure(left, right)).toBe(false)
   })
 
-  it('returns false for lists that differ in length', () => {
-    expect(sameStructure([1, 2, 3], [1, 2])).toBe(false)
-    expect(sameStructure(new Set([1, 2]), new Set([1, 2, 3]))).toBe(false)
+  it.each([
+    [
+      [1, 2, 3],
+      [1, 2],
+    ],
+    [new Set([1, 2]), new Set([1, 2, 3])],
+  ])('returns false for lists that differ in length: %p and %p', (left: unknown, right: unknown) => {
+    expect(sameStructure(left, right)).toBe(false)
   })
 
-  it('returns false for objects with different keys', () => {
-    expect(sameStructure({ a: 1, b: 2 }, { a: 1, c: 3 })).toBe(false)
-    expect(sameStructure({ a: 1 }, { a: 1, b: 2 })).toBe(false)
+  it.each([
+    [
+      { a: 1, b: 2 },
+      { a: 1, c: 3 },
+    ],
+    [{ a: 1 }, { a: 1, b: 2 }],
+  ])('returns false for objects with different keys: %p and %p', (left: unknown, right: unknown) => {
+    expect(sameStructure(left, right)).toBe(false)
   })
 
   it('returns matching data type for empty arrays', () => {
@@ -52,9 +64,13 @@ describe('sameStructure', () => {
     expect(sameStructure({ x: 10, y: 20 }, { x: 'ten', y: 'twenty' })).toBe('object')
   })
 
-  it('respects key order when configured to do so', () => {
+  it('respects key order when configured to do so, returning false for keys in a different order', () => {
     setConfig({ samePositionOfOwnProperties: true })
     expect(sameStructure({ a: 1, b: 2 }, { b: 3, a: 4 })).toBe(false)
+  })
+
+  it('respects key order when configured to do so, returning matching data type for keys in the same order', () => {
+    setConfig({ samePositionOfOwnProperties: true })
     expect(sameStructure({ a: 1, b: 2 }, { a: 3, b: 4 })).toBe('object')
   })
 })

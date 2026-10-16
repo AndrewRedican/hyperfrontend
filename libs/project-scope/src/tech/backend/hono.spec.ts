@@ -15,9 +15,16 @@ describe('honoDetector', () => {
       dependencies: { hono: '^3.0.0' },
     }
     const result = honoDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('hono')
-    expect(result?.version).toBe('3.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'hono', version: '3.0.0' }))
+  })
+
+  it('scores a hono dependency at least 60', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { hono: '^3.0.0' },
+    }
+    const result = honoDetector('/some/path', pkg)
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 })

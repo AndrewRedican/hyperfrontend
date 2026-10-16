@@ -28,8 +28,15 @@ describe('gatsbyDetector', () => {
     }
     const result = gatsbyDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('gatsby')
+    expect(result).toEqual(expect.objectContaining({ id: 'gatsby' }))
+  })
+
+  it('scores a gatsby dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { gatsby: '^5.0.0' },
+    }
+    const result = gatsbyDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -44,7 +51,19 @@ describe('gatsbyDetector', () => {
     const result = gatsbyDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
-    expect(result?.detectedFrom.some((s) => s.path === 'gatsby-config.*')).toBe(true)
+  })
+
+  it('records gatsby-config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('gatsby-config.js')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { gatsby: '^5.0.0' },
+    }
+    const result = gatsbyDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'gatsby-config.*' })]))
   })
 
   it('increases confidence with gatsby-config.ts', () => {
@@ -71,7 +90,19 @@ describe('gatsbyDetector', () => {
     const result = gatsbyDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies (gatsby plugins)')).toBe(true)
+  })
+
+  it('records gatsby plugins as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        gatsby: '^5.0.0',
+        'gatsby-plugin-image': '^3.0.0',
+        'gatsby-source-filesystem': '^5.0.0',
+      },
+    }
+    const result = gatsbyDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies (gatsby plugins)' })]))
   })
 
   it('has maximum confidence with all indicators', () => {

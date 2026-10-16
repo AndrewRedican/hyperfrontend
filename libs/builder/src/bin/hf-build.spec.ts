@@ -67,8 +67,11 @@ describe('parseHfBuildArgs', () => {
     expect(parseHfBuildArgs(['--verbose'])).toEqual({ verbose: true, help: false })
   })
 
-  it('captures --help and -h interchangeably', () => {
+  it('captures --help as a boolean flag', () => {
     expect(parseHfBuildArgs(['--help'])).toEqual({ verbose: false, help: true })
+  })
+
+  it('captures -h as the short form of --help', () => {
     expect(parseHfBuildArgs(['-h'])).toEqual({ verbose: false, help: true })
   })
 
@@ -96,9 +99,13 @@ describe('parseHfBuildArgs', () => {
 
 describe('runHfBuild', () => {
   it('returns 0 when the build resolves', async () => {
-    const stderr = new PassThrough()
-    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
+    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
     expect(code).toBe(HF_BUILD_EXIT_OK)
+  })
+
+  it('writes nothing to stderr when the build resolves', async () => {
+    const stderr = new PassThrough()
+    await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('')
   })
 
@@ -143,42 +150,96 @@ describe('runHfBuild', () => {
     expect(build).toHaveBeenCalledWith(config)
   })
 
-  it('prints --help to stdout and returns 0 without invoking build', async () => {
-    const stderr = new PassThrough()
-    const stdout = new PassThrough()
-    const code = await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr, stdout })
+  it('returns 0 for --help', async () => {
+    const code = await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr: new PassThrough(), stdout: new PassThrough() })
     expect(code).toBe(HF_BUILD_EXIT_OK)
+  })
+
+  it('prints the usage text to stdout for --help', async () => {
+    const stdout = new PassThrough()
+    await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr: new PassThrough(), stdout })
     expect(drain(stdout)).toContain('Usage: hf-build')
+  })
+
+  it('writes nothing to stderr for --help when stdout is supplied', async () => {
+    const stderr = new PassThrough()
+    await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr, stdout: new PassThrough() })
     expect(drain(stderr)).toBe('')
+  })
+
+  it('reads no config file for --help', async () => {
+    await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr: new PassThrough(), stdout: new PassThrough() })
     expect(readJsonFile).not.toHaveBeenCalled()
+  })
+
+  it('invokes no build for --help', async () => {
+    await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr: new PassThrough(), stdout: new PassThrough() })
     expect(build).not.toHaveBeenCalled()
   })
 
-  it('falls back to stderr when no stdout is supplied for --help', async () => {
-    const stderr = new PassThrough()
-    const code = await runHfBuild({ argv: ['-h'], cwd: '/repo', stderr })
+  it('returns 0 for -h when no stdout is supplied', async () => {
+    const code = await runHfBuild({ argv: ['-h'], cwd: '/repo', stderr: new PassThrough() })
     expect(code).toBe(HF_BUILD_EXIT_OK)
+  })
+
+  it('falls back to stderr for the usage text when no stdout is supplied', async () => {
+    const stderr = new PassThrough()
+    await runHfBuild({ argv: ['-h'], cwd: '/repo', stderr })
     expect(drain(stderr)).toContain('Usage: hf-build')
   })
 
-  it('returns 1 and echoes the message when argv parsing fails', async () => {
-    const stderr = new PassThrough()
-    const code = await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr })
+  it('returns 1 when argv parsing fails', async () => {
+    const code = await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr: new PassThrough() })
     expect(code).toBe(HF_BUILD_EXIT_ERROR)
+  })
+
+  it('echoes the parse error to stderr when argv parsing fails', async () => {
+    const stderr = new PassThrough()
+    await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('Unknown argument: --bogus\n')
+  })
+
+  it('reads no config file when argv parsing fails', async () => {
+    await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr: new PassThrough() })
     expect(readJsonFile).not.toHaveBeenCalled()
+  })
+
+  it('invokes no build when argv parsing fails', async () => {
+    await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr: new PassThrough() })
     expect(build).not.toHaveBeenCalled()
   })
 
-  it('returns 1 and echoes the message when config loading throws an Error', async () => {
+  it('returns 1 when config loading throws an Error', async () => {
+    ;(readJsonFile as Mock).mockImplementationOnce(() => {
+      throw new Error('Config file not found: /repo/builder.config.json')
+    })
+    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
+    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+  })
+
+  it('echoes the message to stderr when config loading throws an Error', async () => {
     const stderr = new PassThrough()
     ;(readJsonFile as Mock).mockImplementationOnce(() => {
       throw new Error('Config file not found: /repo/builder.config.json')
     })
-    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+    await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('Config file not found: /repo/builder.config.json\n')
+  })
+
+  it('invokes no build when config loading throws', async () => {
+    ;(readJsonFile as Mock).mockImplementationOnce(() => {
+      throw new Error('Config file not found: /repo/builder.config.json')
+    })
+    await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
     expect(build).not.toHaveBeenCalled()
+  })
+
+  it('returns 1 when config loading throws a non-Error', async () => {
+    ;(readJsonFile as Mock).mockImplementationOnce(() => {
+      throw 'plain string failure'
+    })
+    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
+    expect(code).toBe(HF_BUILD_EXIT_ERROR)
   })
 
   it('stringifies non-Error throws from config loading before writing them', async () => {
@@ -186,43 +247,66 @@ describe('runHfBuild', () => {
     ;(readJsonFile as Mock).mockImplementationOnce(() => {
       throw 'plain string failure'
     })
-    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+    await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('plain string failure\n')
   })
 
-  it('returns 1 and echoes the message when build() rejects with an Error', async () => {
+  it('returns 1 when build() rejects with an Error', async () => {
+    ;(build as Mock).mockRejectedValueOnce(new Error('rollup blew up'))
+    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
+    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+  })
+
+  it('echoes the message to stderr when build() rejects with an Error', async () => {
     const stderr = new PassThrough()
     ;(build as Mock).mockRejectedValueOnce(new Error('rollup blew up'))
-    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+    await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('rollup blew up\n')
+  })
+
+  it('returns 1 when build() rejects with a non-Error', async () => {
+    ;(build as Mock).mockRejectedValueOnce('opaque failure')
+    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr: new PassThrough() })
+    expect(code).toBe(HF_BUILD_EXIT_ERROR)
   })
 
   it('stringifies non-Error rejections from build() before writing them', async () => {
     const stderr = new PassThrough()
     ;(build as Mock).mockRejectedValueOnce('opaque failure')
-    const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(code).toBe(HF_BUILD_EXIT_ERROR)
+    await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(drain(stderr)).toBe('opaque failure\n')
   })
 
-  it('uses injected readConfig and runBuild when provided', async () => {
-    const stderr = new PassThrough()
+  const runWithInjected = async (): Promise<{ code: number; readConfig: Mock; runBuild: Mock; injectedConfig: BuildConfig }> => {
     const injectedConfig = baseConfig()
     const readConfig = jest.fn().mockReturnValue(injectedConfig)
     const runBuild = jest.fn().mockResolvedValue(EMPTY_RESULT)
-    const code = await runHfBuild({
-      argv: ['--config', '/abs/x.json'],
-      cwd: '/repo',
-      stderr,
-      readConfig,
-      runBuild,
-    })
+    const code = await runHfBuild({ argv: ['--config', '/abs/x.json'], cwd: '/repo', stderr: new PassThrough(), readConfig, runBuild })
+    return { code, readConfig, runBuild, injectedConfig }
+  }
+
+  it('returns 0 when the injected readConfig and runBuild succeed', async () => {
+    const { code } = await runWithInjected()
     expect(code).toBe(HF_BUILD_EXIT_OK)
+  })
+
+  it('reads the config through the injected readConfig', async () => {
+    const { readConfig } = await runWithInjected()
     expect(readConfig).toHaveBeenCalledWith('/abs/x.json')
+  })
+
+  it('builds through the injected runBuild with the config it read', async () => {
+    const { runBuild, injectedConfig } = await runWithInjected()
     expect(runBuild).toHaveBeenCalledWith(injectedConfig)
+  })
+
+  it('bypasses the default config reader when readConfig is injected', async () => {
+    await runWithInjected()
     expect(readJsonFile).not.toHaveBeenCalled()
+  })
+
+  it('bypasses the default build when runBuild is injected', async () => {
+    await runWithInjected()
     expect(build).not.toHaveBeenCalled()
   })
 

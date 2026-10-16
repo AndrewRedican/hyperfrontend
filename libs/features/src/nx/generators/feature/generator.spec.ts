@@ -40,6 +40,50 @@ function createTree(files: Record<string, string> = {}): TreeFake {
   }
 }
 
+/** What the scaffold tree handed to runInit showed and returned, beside the Nx tree it staged into. */
+interface ScaffoldRun {
+  /** The Nx tree the generator staged into. */
+  tree: TreeFake
+  /** The scaffold tree's root as runInit saw it. */
+  root: string | undefined
+  /** Whether each scaffold path existed before runInit wrote anything. */
+  existedBefore: Record<string, boolean>
+  /** What committing the scaffold returned. */
+  committed: unknown
+}
+
+/**
+ * Runs the generator with a runInit that scaffolds the clock feature through the staged tree.
+ *
+ * @returns What the scaffold observed and the Nx tree it staged into.
+ */
+async function runClockScaffold(): Promise<ScaffoldRun> {
+  const tree = createTree({ 'apps/clock/feature.config.json': 'existing config', 'apps/clock/src/main.ts': 'entry' })
+  const run: ScaffoldRun = { tree, root: undefined, existedBefore: {}, committed: undefined }
+  runInitMock.mockImplementation(async (options) => {
+    const createTreeFn = options.createTreeFn
+    const commit = options.commit
+    if (createTreeFn === undefined || commit === undefined) {
+      return 1
+    }
+    const scaffold = createTreeFn(options.cwd)
+    run.root = scaffold.root
+    run.existedBefore = {
+      'feature.config.json': scaffold.exists('feature.config.json'),
+      'src/hyperfrontend.feature.ts': scaffold.exists('src/hyperfrontend.feature.ts'),
+    }
+    scaffold.write('src/hyperfrontend.feature.ts', 'glue', { mode: Mode.SkipIfExists })
+    scaffold.write('feature.config.json', 'clobbering config', { mode: Mode.SkipIfExists })
+    const entry = scaffold.read('src/main.ts', 'utf-8')
+    scaffold.write('src/main.ts', `wired ${entry}`)
+    scaffold.write('bin.dat', Buffer.from('bytes'))
+    run.committed = commit(scaffold, { dryRun: false })
+    return 0
+  })
+  await featureGenerator(tree, { ...baseOptions, directory: 'apps/clock' })
+  return run
+}
+
 describe('featureGenerator', () => {
   beforeEach(() => {
     runInitMock.mockReset()
@@ -51,10 +95,14 @@ describe('featureGenerator', () => {
     installPackagesMock.mockReset()
   })
 
-  it('declares the SDK dependency before delegating to runInit', async () => {
+  it('declares the SDK dependency while keeping existing versions', async () => {
     const tree = createTree()
     await featureGenerator(tree, baseOptions)
     expect(ensureSdkDependencyMock).toHaveBeenCalledWith(tree, { keepExistingVersions: true })
+  })
+
+  it('declares the SDK dependency before delegating to runInit', async () => {
+    await featureGenerator(createTree(), baseOptions)
     const ensureOrder = ensureSdkDependencyMock.mock.invocationCallOrder[0]
     const runOrder = runInitMock.mock.invocationCallOrder[0]
     expect(ensureOrder).toBeLessThan(runOrder as number)
@@ -75,31 +123,30 @@ describe('featureGenerator', () => {
     expect(runInitMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: normalizeToNative('/ws') }))
   })
 
-  it('stages scaffold writes into the Nx tree and honors skip-if-exists', async () => {
-    const tree = createTree({ 'apps/clock/feature.config.json': 'existing config', 'apps/clock/src/main.ts': 'entry' })
-    runInitMock.mockImplementation(async (options) => {
-      const createTreeFn = options.createTreeFn
-      const commit = options.commit
-      if (createTreeFn === undefined || commit === undefined) {
-        return 1
-      }
-      const scaffold = createTreeFn(options.cwd)
-      expect(scaffold.root).toBe(normalizeToNative('/ws/apps/clock'))
-      expect(scaffold.exists('feature.config.json')).toBe(true)
-      expect(scaffold.exists('src/hyperfrontend.feature.ts')).toBe(false)
-      scaffold.write('src/hyperfrontend.feature.ts', 'glue', { mode: Mode.SkipIfExists })
-      scaffold.write('feature.config.json', 'clobbering config', { mode: Mode.SkipIfExists })
-      const entry = scaffold.read('src/main.ts', 'utf-8')
-      scaffold.write('src/main.ts', `wired ${entry}`)
-      scaffold.write('bin.dat', Buffer.from('bytes'))
-      expect(commit(scaffold, { dryRun: false })).toEqual({ created: 2, updated: 1, deleted: 0, changes: [], dryRun: false })
-      return 0
-    })
-    await featureGenerator(tree, { ...baseOptions, directory: 'apps/clock' })
-    expect(tree.files['apps/clock/src/hyperfrontend.feature.ts']).toBe('glue')
-    expect(tree.files['apps/clock/feature.config.json']).toBe('existing config')
-    expect(tree.files['apps/clock/src/main.ts']).toBe('wired entry')
-    expect(tree.files['apps/clock/bin.dat']).toBe('bytes')
+  it('roots the scaffold tree at the feature directory', async () => {
+    expect((await runClockScaffold()).root).toBe(normalizeToNative('/ws/apps/clock'))
+  })
+
+  it('shows the scaffold the files the Nx tree already holds', async () => {
+    expect((await runClockScaffold()).existedBefore).toEqual({ 'feature.config.json': true, 'src/hyperfrontend.feature.ts': false })
+  })
+
+  it('counts the staged scaffold changes when committing', async () => {
+    expect((await runClockScaffold()).committed).toEqual({ created: 2, updated: 1, deleted: 0, changes: [], dryRun: false })
+  })
+
+  it('stages scaffold writes into the Nx tree', async () => {
+    expect((await runClockScaffold()).tree.files).toEqual(
+      expect.objectContaining({
+        'apps/clock/src/hyperfrontend.feature.ts': 'glue',
+        'apps/clock/src/main.ts': 'wired entry',
+        'apps/clock/bin.dat': 'bytes',
+      })
+    )
+  })
+
+  it('honors skip-if-exists for a file the Nx tree already holds', async () => {
+    expect((await runClockScaffold()).tree.files['apps/clock/feature.config.json']).toBe('existing config')
   })
 
   it('translates absolute SDK paths into workspace-relative staged writes', async () => {
@@ -144,15 +191,29 @@ describe('featureGenerator', () => {
     expect(formatFiles).toHaveBeenCalledWith(tree)
   })
 
+  it('defers the devkit install until the returned callback runs', async () => {
+    ensureSdkDependencyMock.mockReturnValue(true)
+    const installPackagesTask = jest.fn()
+    loadDevkitMock.mockReturnValue({ installPackagesTask })
+    await featureGenerator(createTree(), baseOptions)
+    expect(installPackagesTask).not.toHaveBeenCalled()
+  })
+
   it('returns a callback that installs through devkit when the dependency was declared', async () => {
     ensureSdkDependencyMock.mockReturnValue(true)
     const installPackagesTask = jest.fn()
     loadDevkitMock.mockReturnValue({ installPackagesTask })
     const tree = createTree()
     const callback = await featureGenerator(tree, baseOptions)
-    expect(installPackagesTask).not.toHaveBeenCalled()
     await callback()
     expect(installPackagesTask).toHaveBeenCalledWith(tree)
+  })
+
+  it('skips the built-in installer when devkit installs', async () => {
+    ensureSdkDependencyMock.mockReturnValue(true)
+    loadDevkitMock.mockReturnValue({ installPackagesTask: jest.fn() })
+    const callback = await featureGenerator(createTree(), baseOptions)
+    await callback()
     expect(installPackagesMock).not.toHaveBeenCalled()
   })
 
@@ -169,7 +230,9 @@ describe('featureGenerator', () => {
     loadDevkitMock.mockReturnValue({ installPackagesTask })
     const callback = await featureGenerator(createTree(), baseOptions)
     await callback()
-    expect(installPackagesTask).not.toHaveBeenCalled()
-    expect(installPackagesMock).not.toHaveBeenCalled()
+    expect({ devkitInstalls: installPackagesTask.mock.calls, builtInInstalls: installPackagesMock.mock.calls }).toEqual({
+      devkitInstalls: [],
+      builtInInstalls: [],
+    })
   })
 })

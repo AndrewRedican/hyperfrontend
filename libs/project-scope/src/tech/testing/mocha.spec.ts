@@ -37,13 +37,24 @@ describe('mochaDetector', () => {
       devDependencies: { mocha: '^10.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('mocha')
-    expect(result?.name).toBe('Mocha')
-    expect(result?.type).toBe('unit')
-    expect(result?.version).toBe('10.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'mocha',
+        name: 'Mocha',
+        type: 'unit',
+        version: '10.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.mocha' }]),
+      })
+    )
+  })
+
+  it('scores a mocha dependency above zero', () => {
+    const result = mochaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { mocha: '^10.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.mocha' }]))
   })
 
   it('increases confidence with chai', () => {
@@ -58,7 +69,15 @@ describe('mochaDetector', () => {
     })
 
     expect(withChai?.confidence).toBeGreaterThan(withoutChai?.confidence ?? 0)
-    expect(withChai?.detectedFrom.some((s) => s.field === 'dependencies.chai')).toBe(true)
+  })
+
+  it('records chai as a detection source', () => {
+    const result = mochaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { mocha: '^10.0.0', chai: '^4.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.chai' })]))
   })
 
   it('increases confidence with @types/mocha', () => {
@@ -68,7 +87,15 @@ describe('mochaDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.@types/mocha')).toBe(true)
+  })
+
+  it('records @types/mocha as a detection source', () => {
+    const result = mochaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { mocha: '^10.0.0', '@types/mocha': '^10.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.@types/mocha' })]))
   })
 
   it('increases confidence with config file', () => {
@@ -82,6 +109,18 @@ describe('mochaDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
+  })
+
+  it('records .mocharc.json as the config path', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('.mocharc.json')
+    })
+
+    const result = mochaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { mocha: '^10.0.0' },
+    })
+
     expect(result?.configPath).toBe('.mocharc.json')
   })
 
@@ -93,7 +132,16 @@ describe('mochaDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.field === 'scripts.test')).toBe(true)
+  })
+
+  it('records the mocha test script as a detection source', () => {
+    const result = mochaDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { mocha: '^10.0.0' },
+      scripts: { test: 'mocha' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'scripts.test' })]))
   })
 
   it('has maximum confidence with all indicators', () => {

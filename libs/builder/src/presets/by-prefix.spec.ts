@@ -24,15 +24,11 @@ describe('byPrefix', () => {
 
   it('matches every name when supplied an empty scope', () => {
     const predicate = byPrefix('')
-    expect(predicate('anything')).toBe(true)
-    expect(predicate('')).toBe(true)
+    expect(['anything', ''].filter((name) => !predicate(name))).toEqual([])
   })
 
   it('returns a stable closure that does not retain mutable state', () => {
     const predicate = byPrefix('@scope/')
-    const first = predicate('@scope/a')
-    const second = predicate('@scope/b')
-    expect(first).toBe(true)
-    expect(second).toBe(true)
+    expect(['@scope/a', '@scope/b'].filter((name) => !predicate(name))).toEqual([])
   })
 })

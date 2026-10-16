@@ -44,6 +44,8 @@ describe('Connection Flow Integration', () => {
 
   const postedTypes = (target: MockWindow) => target.postMessage.mock.calls.map((call) => (call[0] as { type: string }).type)
 
+  const activity = (a: { isActive(): boolean }, b: { isActive(): boolean }) => ({ a: a.isActive(), b: b.isActive() })
+
   describe('Three-Way Handshake', () => {
     it('exchanges REQUEST, ACCEPT, and OPEN frames over the wire', () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
@@ -77,14 +79,10 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelB.connect()
 
-      expect(openA).toHaveBeenCalledWith(
-        expect.objectContaining({ origin: 'http://host-b.com', contract: contractB }),
-        expect.objectContaining({ active: true })
-      )
-      expect(openB).toHaveBeenCalledWith(
-        expect.objectContaining({ origin: 'http://host-a.com', contract: contractA }),
-        expect.objectContaining({ active: true })
-      )
+      expect({ openA: openA.mock.calls, openB: openB.mock.calls }).toEqual({
+        openA: [[expect.objectContaining({ origin: 'http://host-b.com', contract: contractB }), expect.objectContaining({ active: true })]],
+        openB: [[expect.objectContaining({ origin: 'http://host-a.com', contract: contractA }), expect.objectContaining({ active: true })]],
+      })
     })
 
     it('activates symmetrically regardless of which side initiates', () => {
@@ -142,13 +140,15 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       channelB.connect()
-
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([false, false])
+      const beforeLink = activity(channelA, channelB)
 
       linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
       jest.advanceTimersByTime(1000)
 
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
+      expect({ beforeLink, afterLink: activity(channelA, channelB) }).toEqual({
+        beforeLink: { a: false, b: false },
+        afterLink: { a: true, b: true },
+      })
     })
 
     it('fires exactly one open event per side after glare resolution', () => {
@@ -242,13 +242,16 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       jest.advanceTimersByTime(10_000)
-      expect(channelA.isActive()).toBe(false)
+      const activeAfterTimeout = channelA.isActive()
 
       linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
       channelB.connect()
       channelA.connect()
 
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
+      expect({ activeAfterTimeout, afterReconnect: activity(channelA, channelB) }).toEqual({
+        activeAfterTimeout: false,
+        afterReconnect: { a: true, b: true },
+      })
     })
 
     it('retains queued messages across a timeout and delivers them once connected', () => {
@@ -288,15 +291,15 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
 
       const requestFrame = plaintextFramesTo(windowA)[0]
-      expect(requestFrame.type).toBe(ACTION_TYPES.REQUEST_CONNECTION)
 
       windowA.postMessage.mockClear()
       simulateMessage(windowA, requestFrame, 'http://host-b.com', windowB)
 
-      expect({ replayed: postedTypes(windowB).includes(ACTION_TYPES.ACCEPT_CONNECTION), opens: openB.mock.calls.length }).toEqual({
-        replayed: true,
-        opens: 1,
-      })
+      expect({
+        duplicated: requestFrame.type,
+        replayed: postedTypes(windowB).includes(ACTION_TYPES.ACCEPT_CONNECTION),
+        opens: openB.mock.calls.length,
+      }).toEqual({ duplicated: ACTION_TYPES.REQUEST_CONNECTION, replayed: true, opens: 1 })
     })
 
     it('replays OPEN for a duplicate ACCEPT without firing open again', () => {
@@ -310,15 +313,15 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
 
       const acceptFrame = plaintextFramesTo(windowB).find((frame) => frame.type === ACTION_TYPES.ACCEPT_CONNECTION)
-      expect(acceptFrame).toBeDefined()
 
       windowB.postMessage.mockClear()
       simulateMessage(windowB, acceptFrame as IAction, 'http://host-a.com', windowA)
 
-      expect({ replayed: postedTypes(windowA).includes(ACTION_TYPES.OPEN_CONNECTION), opens: openA.mock.calls.length }).toEqual({
-        replayed: true,
-        opens: 1,
-      })
+      expect({
+        duplicated: acceptFrame?.type,
+        replayed: postedTypes(windowA).includes(ACTION_TYPES.OPEN_CONNECTION),
+        opens: openA.mock.calls.length,
+      }).toEqual({ duplicated: ACTION_TYPES.ACCEPT_CONNECTION, replayed: true, opens: 1 })
     })
 
     it('ignores a duplicate OPEN once the process completed', () => {
@@ -332,11 +335,13 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
 
       const openFrame = plaintextFramesTo(windowA).find((frame) => frame.type === ACTION_TYPES.OPEN_CONNECTION)
-      expect(openFrame).toBeDefined()
 
       simulateMessage(windowA, openFrame as IAction, 'http://host-b.com', windowB)
 
-      expect(openB).toHaveBeenCalledTimes(1)
+      expect({ duplicated: openFrame?.type, opens: openB.mock.calls.length }).toEqual({
+        duplicated: ACTION_TYPES.OPEN_CONNECTION,
+        opens: 1,
+      })
     })
   })
 
@@ -506,8 +511,10 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelA.cancel()
 
-      expect(channelA.isActive()).toBe(false)
-      expect(cancelHandler.mock.calls.length + closeHandler.mock.calls.length).toBeGreaterThan(0)
+      expect({ active: channelA.isActive(), notified: cancelHandler.mock.calls.length + closeHandler.mock.calls.length > 0 }).toEqual({
+        active: false,
+        notified: true,
+      })
     })
 
     it('keeps the channel registered after cancellation', () => {
@@ -547,13 +554,15 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       channelB.connect()
-
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
+      const beforeClose = activity(channelA, channelB)
 
       channelA.disconnect()
 
-      expect(channelA.isActive()).toBe(false)
-      expect(closeHandlerA).toHaveBeenCalled()
+      expect({ beforeClose, activeAfterClose: channelA.isActive(), closeFired: closeHandlerA.mock.calls.length > 0 }).toEqual({
+        beforeClose: { a: true, b: true },
+        activeAfterClose: false,
+        closeFired: true,
+      })
     })
 
     it('allows reconnection after close', () => {
@@ -562,14 +571,19 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       channelB.connect()
-      expect(channelA.isActive()).toBe(true)
+      const afterConnect = channelA.isActive()
 
       channelA.disconnect()
-      expect(channelA.isActive()).toBe(false)
+      const afterDisconnect = channelA.isActive()
 
       channelB.connect()
       channelA.connect()
-      expect(channelA.isActive()).toBe(true)
+
+      expect({ afterConnect, afterDisconnect, afterReconnect: channelA.isActive() }).toEqual({
+        afterConnect: true,
+        afterDisconnect: false,
+        afterReconnect: true,
+      })
     })
   })
 
@@ -579,12 +593,14 @@ describe('Connection Flow Integration', () => {
       const { channelA, channelB } = setupPair(contractA, contractB)
 
       channelA.connect()
-
-      expect(channelA.isActive()).toBe(false)
+      const initiatorActiveAlone = channelA.isActive()
 
       channelB.connect()
 
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
+      expect({ initiatorActiveAlone, afterResponderConnects: activity(channelA, channelB) }).toEqual({
+        initiatorActiveAlone: false,
+        afterResponderConnects: { a: true, b: true },
+      })
     })
 
     it('handshakes immediately when the responder is already connected', () => {
@@ -605,14 +621,17 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       channelB.connect()
-      expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
+      const beforeReload = activity(channelA, channelB)
 
       // how: A reloaded page re-creates its broker in the same window, so the counterpart sees a REQUEST from a new sender id.
       const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA as unknown as Window })
       const channelA2 = brokerA2.addChannel('to-b', windowB as unknown as Window)
       channelA2.connect()
 
-      expect([channelA2.isActive(), channelB.isActive()]).toEqual([true, true])
+      expect({ beforeReload, afterReload: activity(channelA2, channelB) }).toEqual({
+        beforeReload: { a: true, b: true },
+        afterReload: { a: true, b: true },
+      })
     })
 
     it('ends the session with a reload reason, then opens again for the fresh instance', () => {

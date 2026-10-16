@@ -13,8 +13,11 @@ describe('the DOM environment', () => {
     assert.equal(document.createElement('div') instanceof HTMLElement, true)
   })
 
-  it('is the global object, the way a window is in a browser', () => {
+  it('serves the global object as window, the way a browser does', () => {
     assert.equal(window, globalThis)
+  })
+
+  it('serves the global object as self, the way a browser does', () => {
     assert.equal(self, globalThis)
   })
 
@@ -34,6 +37,9 @@ describe('the DOM environment', () => {
 
   it('keeps the intrinsics of this realm rather than the window own', () => {
     assert.equal([].constructor, Array)
+  })
+
+  it('builds a div from its own element class rather than the HTMLElement base', () => {
     assert.equal(document.createElement('div').constructor === HTMLElement, false)
   })
 
@@ -49,8 +55,11 @@ describe('the DOM environment', () => {
     assert.equal(new URL('file:///a/b').protocol, 'file:')
   })
 
-  it('keeps the base64 helpers, whose jsdom versions would call the copy of themselves', () => {
+  it('keeps the btoa base64 helper, whose jsdom version would call the copy of itself', () => {
     assert.equal(btoa('Hello, World!'), 'SGVsbG8sIFdvcmxkIQ==')
+  })
+
+  it('keeps the atob base64 helper, whose jsdom version would call the copy of itself', () => {
     assert.equal(atob('SGVsbG8sIFdvcmxkIQ=='), 'Hello, World!')
   })
 

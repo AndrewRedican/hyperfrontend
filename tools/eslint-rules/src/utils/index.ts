@@ -43,6 +43,14 @@ export {
   visibleLabel,
 } from './readme-key-features'
 export {
+  SUITE_FUNCTION_NAMES,
+  SUITE_MODIFIER_NAMES,
+  TEST_FUNCTION_NAMES,
+  TEST_MODIFIER_NAMES,
+  isSuiteFunctionCallee,
+  isTestFunctionCallee,
+} from './test-declarations'
+export {
   findNxWorkspaceRoot,
   findProjectRoot,
   findRootDirectory,

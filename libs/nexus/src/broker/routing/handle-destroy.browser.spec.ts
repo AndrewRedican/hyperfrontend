@@ -195,11 +195,10 @@ describe('handleDestroy', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(destroy1Spy).toHaveBeenCalledWith(false)
-    expect(destroy2Spy).toHaveBeenCalledWith(false)
+    expect({ first: destroy1Spy.mock.calls, second: destroy2Spy.mock.calls }).toEqual({ first: [[false]], second: [[false]] })
   })
 
-  it('passs notify=false to destroy method', () => {
+  it('passes notify=false to the destroy method', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -216,8 +215,7 @@ describe('handleDestroy', () => {
 
     handleDestroy(routingContext, message)
 
-    expect(destroySpy).toHaveBeenCalledWith(false)
-    expect(destroySpy).not.toHaveBeenCalledWith(true)
+    expect(destroySpy.mock.calls).toEqual([[false]])
   })
 
   it('ignores a destroy from an instance other than the connected counterpart', () => {

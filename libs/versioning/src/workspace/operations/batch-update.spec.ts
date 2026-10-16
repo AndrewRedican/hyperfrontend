@@ -121,7 +121,7 @@ describe('applyBumps', () => {
     triggeredBy: [],
   })
 
-  it('updates package version in tree', () => {
+  it('reports the updated package version in the result', () => {
     const libA = createTestProject('lib-a', '1.0.0')
     const workspace = createTestWorkspace(
       [libA],
@@ -148,6 +148,22 @@ describe('applyBumps', () => {
         ],
       })
     )
+  })
+
+  it('updates package version in tree', () => {
+    const libA = createTestProject('lib-a', '1.0.0')
+    const workspace = createTestWorkspace(
+      [libA],
+      createMap([['lib-a', [] as readonly string[]]]),
+      createMap([['lib-a', [] as readonly string[]]])
+    )
+
+    const tree = createMockTree({
+      '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
+    })
+
+    const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
+    applyBumps(tree, workspace, bumps)
 
     const written = tree._getWrittenFiles()
     expect(written['/workspace/packages/lib-a/package.json']).toContain('"version": "1.1.0"')
@@ -185,9 +201,17 @@ describe('applyBumps', () => {
     ]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.updated).toHaveLength(3)
-    expect(result.total).toBe(3)
-    expect(result.success).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        updated: [
+          expect.objectContaining({ name: 'lib-a' }),
+          expect.objectContaining({ name: 'lib-b' }),
+          expect.objectContaining({ name: 'lib-c' }),
+        ],
+        total: 3,
+        success: true,
+      })
+    )
   })
 
   it('tracks non-existent packages as failed', () => {
@@ -226,9 +250,7 @@ describe('applyBumps', () => {
 
     const result = applyBumps(tree, workspace, [])
 
-    expect(result.updated).toHaveLength(0)
-    expect(result.total).toBe(0)
-    expect(result.success).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ updated: [], total: 0, success: true }))
   })
 
   it('provides total count', () => {
@@ -326,8 +348,9 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0'), createPlannedBump('missing-pkg', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.success).toBe(false)
-    expect(result.failed.length).toBeGreaterThan(0)
+    expect(result).toEqual(
+      expect.objectContaining({ success: false, failed: expect.arrayContaining([expect.objectContaining({ name: 'missing-pkg' })]) })
+    )
   })
 
   it('writes version update to tree', () => {
@@ -343,12 +366,28 @@ describe('applyBumps', () => {
     })
 
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
-    const result = applyBumps(tree, workspace, bumps)
+    applyBumps(tree, workspace, bumps)
 
     const written = tree._getWrittenFiles()
     expect(written['/workspace/packages/lib-a/package.json']).toBeDefined()
-    expect(result.success).toBe(true)
-    expect(result.updated).toHaveLength(1)
+  })
+
+  it('reports one successful update after writing the version to the tree', () => {
+    const libA = createTestProject('lib-a', '1.0.0')
+    const workspace = createTestWorkspace(
+      [libA],
+      createMap([['lib-a', [] as readonly string[]]]),
+      createMap([['lib-a', [] as readonly string[]]])
+    )
+
+    const tree = createMockTree({
+      '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
+    })
+
+    const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
+    const result = applyBumps(tree, workspace, bumps)
+
+    expect(result).toEqual(expect.objectContaining({ success: true, updated: [expect.objectContaining({ name: 'lib-a' })] }))
   })
 
   it('handles file read errors gracefully', () => {
@@ -372,7 +411,7 @@ describe('applyBumps', () => {
     )
   })
 
-  it('updates dependency references when updateDependencyReferences is true', () => {
+  it('succeeds when updateDependencyReferences is true', () => {
     const libCore = createTestProject('lib-core', '1.0.0')
     const libApp = createTestProject('lib-app', '2.0.0', { 'lib-core': '^1.0.0' })
     const workspace = createTestWorkspace(
@@ -396,6 +435,31 @@ describe('applyBumps', () => {
     const result = applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     expect(result.success).toBe(true)
+  })
+
+  it('updates dependency references when updateDependencyReferences is true', () => {
+    const libCore = createTestProject('lib-core', '1.0.0')
+    const libApp = createTestProject('lib-app', '2.0.0', { 'lib-core': '^1.0.0' })
+    const workspace = createTestWorkspace(
+      [libCore, libApp],
+      createMap([
+        ['lib-core', [] as readonly string[]],
+        ['lib-app', ['lib-core'] as readonly string[]],
+      ]),
+      createMap([
+        ['lib-core', ['lib-app'] as readonly string[]],
+        ['lib-app', [] as readonly string[]],
+      ])
+    )
+
+    const tree = createMockTree({
+      '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
+      '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
+    })
+
+    const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
+    applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
+
     const written = tree._getWrittenFiles()
     expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
@@ -424,8 +488,10 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: false })
 
     const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-core/package.json']).toContain('"version": "1.1.0"')
-    expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
+    expect({
+      corePackageJson: written['/workspace/packages/lib-core/package.json'],
+      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+    }).toEqual({ corePackageJson: expect.stringContaining('"version": "1.1.0"'), appPackageJson: undefined })
   })
 
   it('handles dependency reference update errors gracefully', () => {
@@ -775,8 +841,10 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-core/package.json']).toBeDefined()
-    expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
+    expect({
+      corePackageJson: written['/workspace/packages/lib-core/package.json'],
+      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+    }).toEqual({ corePackageJson: expect.anything(), appPackageJson: undefined })
   })
 
   it('handles package with no dependency sections at all', () => {
@@ -803,8 +871,10 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-core/package.json']).toBeDefined()
-    expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
+    expect({
+      corePackageJson: written['/workspace/packages/lib-core/package.json'],
+      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+    }).toEqual({ corePackageJson: expect.anything(), appPackageJson: undefined })
   })
 
   it('updates deps in multiple dependency sections', () => {
@@ -832,8 +902,7 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": ">=1.1.0"')
+    expect(written['/workspace/packages/lib-app/package.json']).toMatch(/"lib-core": "\^1\.1\.0"[\s\S]*"lib-core": ">=1\.1\.0"/)
   })
 })
 
@@ -847,7 +916,6 @@ describe('updatePackageVersionInTree', () => {
 
     const written = tree._getWrittenFiles()
     const raw = written['packages/lib-a/package.json']
-    expect(raw).toBeDefined()
     const content = JSON.parse(raw as string)
     expect(content.version).toBe('2.0.0')
   })
@@ -861,7 +929,6 @@ describe('updatePackageVersionInTree', () => {
 
     const written = tree._getWrittenFiles()
     const raw = written['packages/lib-a/package.json']
-    expect(raw).toBeDefined()
     const content = JSON.parse(raw as string)
     expect(content).toEqual(
       expect.objectContaining({
@@ -898,8 +965,7 @@ describe('updatePackageVersionInTree', () => {
 
     const written = tree._getWrittenFiles()
     const content = written['packages/lib-a/package.json']
-    expect(content).toMatch(/^\{\n {2}"name"/)
-    expect(content).toMatch(/\n$/)
+    expect(content).toBe('{\n  "name": "lib-a",\n  "version": "2.0.0"\n}\n')
   })
 })
 
@@ -948,8 +1014,7 @@ describe('updateDependencyReferencesInTree', () => {
     updateDependencyReferencesInTree(tree, 'packages/lib-app/package.json', versionUpdates)
 
     const written = tree._getWrittenFiles()
-    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
-    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "~1.1.0"')
+    expect(written['packages/lib-app/package.json']).toMatch(/"lib-core": "\^1\.1\.0"[\s\S]*"lib-core": "~1\.1\.0"/)
   })
 })
 
@@ -967,9 +1032,9 @@ describe('summarizeBatchUpdate', () => {
 
     const summary = summarizeBatchUpdate(result)
 
-    expect(summary).toContain('Successfully updated 2 package(s)')
-    expect(summary).toContain('lib-a: 1.0.0 -> 1.1.0')
-    expect(summary).toContain('lib-b: 2.0.0 -> 2.1.0')
+    expect(summary).toBe(
+      ['Successfully updated 2 package(s)', '', 'Updated packages:', '  lib-a: 1.0.0 -> 1.1.0', '  lib-b: 2.0.0 -> 2.1.0'].join('\n')
+    )
   })
 
   it('shows failure information when some updates fail', () => {
@@ -982,10 +1047,18 @@ describe('summarizeBatchUpdate', () => {
 
     const summary = summarizeBatchUpdate(result)
 
-    expect(summary).toContain('Updated 1/2 package(s)')
-    expect(summary).toContain('Failed: 1 package(s)')
-    expect(summary).toContain('lib-a: 1.0.0 -> 1.1.0')
-    expect(summary).toContain('lib-b: File not found')
+    expect(summary).toBe(
+      [
+        'Updated 1/2 package(s)',
+        'Failed: 1 package(s)',
+        '',
+        'Updated packages:',
+        '  lib-a: 1.0.0 -> 1.1.0',
+        '',
+        'Failed packages:',
+        '  lib-b: File not found',
+      ].join('\n')
+    )
   })
 
   it('handles empty results', () => {
@@ -998,9 +1071,7 @@ describe('summarizeBatchUpdate', () => {
 
     const summary = summarizeBatchUpdate(result)
 
-    expect(summary).toContain('Successfully updated 0 package(s)')
-    expect(summary).not.toContain('Updated packages:')
-    expect(summary).not.toContain('Failed packages:')
+    expect(summary).toBe('Successfully updated 0 package(s)')
   })
 
   it('handles all failed results', () => {
@@ -1016,10 +1087,8 @@ describe('summarizeBatchUpdate', () => {
 
     const summary = summarizeBatchUpdate(result)
 
-    expect(summary).toContain('Updated 0/2 package(s)')
-    expect(summary).toContain('Failed: 2 package(s)')
-    expect(summary).toContain('lib-a: Error 1')
-    expect(summary).toContain('lib-b: Error 2')
-    expect(summary).not.toContain('Updated packages:')
+    expect(summary).toBe(
+      ['Updated 0/2 package(s)', 'Failed: 2 package(s)', '', 'Failed packages:', '  lib-a: Error 1', '  lib-b: Error 2'].join('\n')
+    )
   })
 })

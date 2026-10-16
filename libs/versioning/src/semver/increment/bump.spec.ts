@@ -7,10 +7,7 @@ describe('increment', () => {
     it('increments major and resets minor/patch', () => {
       const v = createSemVer({ major: 1, minor: 2, patch: 3 })
       const result = increment(v, 'major')
-      expect(result.major).toBe(2)
-      expect(result.minor).toBe(0)
-      expect(result.patch).toBe(0)
-      expect(result.prerelease).toEqual([])
+      expect(result).toEqual({ major: 2, minor: 0, patch: 0, prerelease: [], build: [] })
     })
   })
 
@@ -18,9 +15,7 @@ describe('increment', () => {
     it('increments minor and resets patch', () => {
       const v = createSemVer({ major: 1, minor: 2, patch: 3 })
       const result = increment(v, 'minor')
-      expect(result.major).toBe(1)
-      expect(result.minor).toBe(3)
-      expect(result.patch).toBe(0)
+      expect(result).toEqual({ major: 1, minor: 3, patch: 0, prerelease: [], build: [] })
     })
   })
 
@@ -28,16 +23,13 @@ describe('increment', () => {
     it('increments patch', () => {
       const v = createSemVer({ major: 1, minor: 2, patch: 3 })
       const result = increment(v, 'patch')
-      expect(result.major).toBe(1)
-      expect(result.minor).toBe(2)
-      expect(result.patch).toBe(4)
+      expect(result).toEqual({ major: 1, minor: 2, patch: 4, prerelease: [], build: [] })
     })
 
     it('strips prerelease on patch bump', () => {
       const v = createSemVer({ major: 1, minor: 2, patch: 3, prerelease: ['alpha'] })
       const result = increment(v, 'patch')
-      expect(result.patch).toBe(3)
-      expect(result.prerelease).toEqual([])
+      expect(result).toEqual({ major: 1, minor: 2, patch: 3, prerelease: [], build: [] })
     })
   })
 
@@ -45,9 +37,7 @@ describe('increment', () => {
     it('bumps major and adds prerelease', () => {
       const v = createSemVer({ major: 1, minor: 0, patch: 0 })
       const result = increment(v, 'premajor')
-      expect(result.major).toBe(2)
-      expect(result.prerelease[0]).toBe('alpha')
-      expect(result.prerelease[1]).toBe('0')
+      expect(result).toEqual({ major: 2, minor: 0, patch: 0, prerelease: ['alpha', '0'], build: [] })
     })
 
     it('uses custom prerelease id', () => {
@@ -61,8 +51,7 @@ describe('increment', () => {
     it('bumps minor and adds prerelease', () => {
       const v = createSemVer({ major: 1, minor: 0, patch: 0 })
       const result = increment(v, 'preminor')
-      expect(result.minor).toBe(1)
-      expect(result.prerelease).toHaveLength(2)
+      expect(result).toEqual({ major: 1, minor: 1, patch: 0, prerelease: ['alpha', '0'], build: [] })
     })
   })
 
@@ -70,8 +59,7 @@ describe('increment', () => {
     it('bumps patch and adds prerelease', () => {
       const v = createSemVer({ major: 1, minor: 0, patch: 0 })
       const result = increment(v, 'prepatch')
-      expect(result.patch).toBe(1)
-      expect(result.prerelease).toHaveLength(2)
+      expect(result).toEqual({ major: 1, minor: 0, patch: 1, prerelease: ['alpha', '0'], build: [] })
     })
   })
 
@@ -85,8 +73,7 @@ describe('increment', () => {
     it('adds prerelease to release version', () => {
       const v = createSemVer({ major: 1, minor: 0, patch: 0 })
       const result = increment(v, 'prerelease')
-      expect(result.patch).toBe(1)
-      expect(result.prerelease[0]).toBe('alpha')
+      expect(result).toEqual({ major: 1, minor: 0, patch: 1, prerelease: ['alpha', '0'], build: [] })
     })
   })
 

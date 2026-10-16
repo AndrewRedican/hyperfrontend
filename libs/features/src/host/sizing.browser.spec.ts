@@ -112,11 +112,16 @@ describe('createObserverReporter', () => {
     expect(report).not.toHaveBeenCalled()
   })
 
-  it('tracks a change arriving before start and reports it once on start', () => {
-    const report = jest.fn()
+  it('tracks a change arriving before start', () => {
     const reporter = createObserverReporter(element, { width: 640, height: 480 })
     observers.resize(element, { width: 800, height: 600 })
     expect(reporter.current()).toEqual({ width: 800, height: 600 })
+  })
+
+  it('reports a change arriving before start once on start', () => {
+    const report = jest.fn()
+    const reporter = createObserverReporter(element, { width: 640, height: 480 })
+    observers.resize(element, { width: 800, height: 600 })
     reporter.start(report)
     expect(report.mock.calls).toEqual([[{ width: 800, height: 600 }]])
   })
@@ -202,8 +207,10 @@ describe('createContainerReporter', () => {
 
   it('applies a fallback height to the frame when the seeded height is zero', () => {
     const reporter = create({ width: 400, height: 0 })
-    expect(frame.style.height).toBe('320px')
-    expect(reporter.current()).toEqual({ width: 400, height: 320 })
+    expect({ frameHeight: frame.style.height, current: reporter.current() }).toEqual({
+      frameHeight: '320px',
+      current: { width: 400, height: 320 },
+    })
   })
 
   it('leaves the frame width alone when only the height was missing', () => {
@@ -213,54 +220,65 @@ describe('createContainerReporter', () => {
 
   it('applies a fallback to both axes when both seeded axes are zero', () => {
     const reporter = create({ width: 0, height: 0 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '1000px', height: '720px' })
-    expect(reporter.current()).toEqual({ width: 1000, height: 720 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, current: reporter.current() }).toEqual({
+      frame: { width: '1000px', height: '720px' },
+      current: { width: 1000, height: 720 },
+    })
   })
 
   it('keeps a real seeded height while the width falls back', () => {
     const reporter = create({ width: 0, height: 250 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '1000px', height: '' })
-    expect(reporter.current()).toEqual({ width: 1000, height: 250 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, current: reporter.current() }).toEqual({
+      frame: { width: '1000px', height: '' },
+      current: { width: 1000, height: 250 },
+    })
   })
 
   it('re-applies the fallback when a later measurement loses an axis', () => {
     const report = jest.fn()
     create({ width: 300, height: 200 }).start(report)
     observers.resize(container, { width: 400, height: 0 })
-    expect(frame.style.height).toBe('320px')
-    expect(report).toHaveBeenCalledWith({ width: 400, height: 320 })
+    expect({ frameHeight: frame.style.height, reports: report.mock.calls }).toEqual({
+      frameHeight: '320px',
+      reports: expect.arrayContaining([[{ width: 400, height: 320 }]]),
+    })
   })
 
   it('keeps the fallback while measurements merely echo it', () => {
     const report = jest.fn()
     create({ width: 400, height: 0 }).start(report)
     observers.resize(container, { width: 400, height: 320 })
-    expect(frame.style.height).toBe('320px')
-    expect(report).not.toHaveBeenCalled()
+    expect({ frameHeight: frame.style.height, reports: report.mock.calls }).toEqual({ frameHeight: '320px', reports: [] })
   })
 
   it('keeps a both-axes fallback while measurements echo both axes', () => {
     const report = jest.fn()
     create({ width: 0, height: 0 }).start(report)
     observers.resize(container, { width: 1000, height: 720 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '1000px', height: '720px' })
-    expect(report).not.toHaveBeenCalled()
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, reports: report.mock.calls }).toEqual({
+      frame: { width: '1000px', height: '720px' },
+      reports: [],
+    })
   })
 
   it('retires only the height fallback when a diverging height arrives', () => {
     const report = jest.fn()
     create({ width: 400, height: 0 }).start(report)
     observers.resize(container, { width: 400, height: 500 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '', height: '100%' })
-    expect(report).toHaveBeenLastCalledWith({ width: 400, height: 500 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, lastReport: report.mock.lastCall }).toEqual({
+      frame: { width: '', height: '100%' },
+      lastReport: [{ width: 400, height: 500 }],
+    })
   })
 
   it('retires the width fallback while the height fallback stays applied', () => {
     const report = jest.fn()
     create({ width: 0, height: 0 }).start(report)
     observers.resize(container, { width: 600, height: 720 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '100%', height: '720px' })
-    expect(report).toHaveBeenLastCalledWith({ width: 600, height: 720 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, lastReport: report.mock.lastCall }).toEqual({
+      frame: { width: '100%', height: '720px' },
+      lastReport: [{ width: 600, height: 720 }],
+    })
   })
 
   it('retires the remaining height fallback once its own axis diverges', () => {
@@ -268,16 +286,20 @@ describe('createContainerReporter', () => {
     create({ width: 0, height: 0 }).start(report)
     observers.resize(container, { width: 600, height: 720 })
     observers.resize(container, { width: 600, height: 500 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '100%', height: '100%' })
-    expect(report).toHaveBeenLastCalledWith({ width: 600, height: 500 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, lastReport: report.mock.lastCall }).toEqual({
+      frame: { width: '100%', height: '100%' },
+      lastReport: [{ width: 600, height: 500 }],
+    })
   })
 
   it('retires a width-only fallback without touching the never-applied height', () => {
     const report = jest.fn()
     create({ width: 0, height: 250 }).start(report)
     observers.resize(container, { width: 600, height: 250 })
-    expect({ width: frame.style.width, height: frame.style.height }).toEqual({ width: '100%', height: '' })
-    expect(report).toHaveBeenLastCalledWith({ width: 600, height: 250 })
+    expect({ frame: { width: frame.style.width, height: frame.style.height }, lastReport: report.mock.lastCall }).toEqual({
+      frame: { width: '100%', height: '' },
+      lastReport: [{ width: 600, height: 250 }],
+    })
   })
 
   it('stops forwarding and observing after stop', () => {

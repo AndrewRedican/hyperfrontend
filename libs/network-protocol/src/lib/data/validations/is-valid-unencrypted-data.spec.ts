@@ -36,11 +36,8 @@ describe('isValidUnencryptedData', () => {
     expect(isValidUnencryptedData(validData)).toBe(true)
   })
 
-  it('returns false for non-object types', () => {
-    expect(isValidUnencryptedData('not an object')).toBe(false)
-    expect(isValidUnencryptedData(123)).toBe(false)
-    expect(isValidUnencryptedData(null)).toBe(false)
-    expect(isValidUnencryptedData(void 0)).toBe(false)
+  it.each(['not an object', 123, null, void 0])('returns false for the non-object type %p', (value) => {
+    expect(isValidUnencryptedData(value)).toBe(false)
   })
 
   it('returns false for objects missing required properties', () => {

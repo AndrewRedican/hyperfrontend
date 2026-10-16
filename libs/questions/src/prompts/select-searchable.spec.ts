@@ -110,8 +110,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('banana')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'banana' })
     })
 
     it('is case-insensitive', async () => {
@@ -122,8 +121,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('cherry')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'cherry' })
     })
 
     it('clears filter with backspace and re-filters', async () => {
@@ -135,8 +133,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('backspace does nothing on empty filter', async () => {
@@ -147,8 +144,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('handles alternate backspace character', async () => {
@@ -159,8 +155,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('resets cursor when filter changes', async () => {
@@ -172,8 +167,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('cherry')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'cherry' })
     })
 
     it('shows no matches message', async () => {
@@ -217,8 +211,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('Enter is a no-op when filter excludes all choices', async () => {
@@ -230,8 +223,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('handles alternate backspace on empty query', async () => {
@@ -242,8 +234,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
   })
 
@@ -262,8 +253,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('opt11')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt11' })
     })
 
     it('renders scroll indicators when filtered list overflows visible window', async () => {
@@ -291,8 +281,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('avocado')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'avocado' })
     })
 
     it('skips disabled items within filtered results when navigating up', async () => {
@@ -309,8 +298,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('apple')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'apple' })
     })
 
     it('ignores navigation when filter yields no matches', async () => {
@@ -335,9 +323,8 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
       // why: after down*4 then up*4 cursor is back on first match (Option 1)
-      expect(result.value).toBe('opt1')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt1' })
     })
   })
 
@@ -350,8 +337,7 @@ describe('select searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('banana')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'banana' })
     })
 
     it('appends a non-bracketed pasted run to the filter', async () => {

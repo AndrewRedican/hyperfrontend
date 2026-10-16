@@ -38,18 +38,28 @@ describe('preparePackageReadme', () => {
     expect(preparePackageReadme(README).title).toBe('@hyperfrontend/example')
   })
 
-  it('leaves the page only what it renders itself', () => {
+  it('leaves out the sections the page renders itself', () => {
     const { body } = preparePackageReadme(README)
-    expect(body).not.toContain('## License')
-    expect(body).not.toContain('## Part of hyperfrontend')
+    expect(['## License', '## Part of hyperfrontend'].filter((heading) => body.includes(heading))).toStrictEqual([])
+  })
+
+  it('keeps the opening paragraph in the body', () => {
+    const { body } = preparePackageReadme(README)
     expect(body).toContain('One line about the package.')
   })
 
-  it('draws the compatibility tables itself and leaves the subsections it does not model', () => {
+  it('draws the compatibility tables itself, under the section heading', () => {
     const { body } = preparePackageReadme(README)
-    expect(body).toContain(CAPABILITIES_PLACEHOLDER)
+    expect(body).toContain(`## Compatibility\n\n${CAPABILITIES_PLACEHOLDER}`)
+  })
+
+  it('drops the subsection the compatibility tables replace', () => {
+    const { body } = preparePackageReadme(README)
     expect(body).not.toContain('### Output Formats')
-    expect(body).toContain('## Compatibility')
+  })
+
+  it('leaves the subsections it does not model', () => {
+    const { body } = preparePackageReadme(README)
     expect(body).toContain('### CDN Usage')
   })
 })

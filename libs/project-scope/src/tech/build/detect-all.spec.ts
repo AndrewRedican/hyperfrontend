@@ -21,9 +21,7 @@ describe('detectBuildTools', () => {
     }
     const result = detectBuildTools('/some/path', pkg)
 
-    expect(result.length).toBeGreaterThanOrEqual(2)
-    expect(result.some((r) => r.id === 'webpack')).toBe(true)
-    expect(result.some((r) => r.id === 'babel')).toBe(true)
+    expect(result.map((tool) => tool.id)).toEqual(expect.arrayContaining(['webpack', 'babel']))
   })
 
   it('sorts results by confidence', () => {
@@ -52,15 +50,12 @@ describe('detectBuildTools', () => {
 
 describe('buildToolDetectors', () => {
   it('exports array of all detectors', () => {
-    expect(buildToolDetectors).toBeInstanceOf(Array)
-    expect(buildToolDetectors.length).toBe(7)
+    expect(buildToolDetectors.map((detector) => detector.id)).toEqual(['webpack', 'vite', 'rollup', 'esbuild', 'babel', 'swc', 'parcel'])
   })
 
   it('each detector has required properties', () => {
     for (const detector of buildToolDetectors) {
-      expect(detector.id).toBeDefined()
-      expect(detector.name).toBeDefined()
-      expect(typeof detector.detect).toBe('function')
+      expect(detector).toEqual(expect.objectContaining({ id: expect.any(String), name: expect.any(String), detect: expect.any(Function) }))
     }
   })
 })

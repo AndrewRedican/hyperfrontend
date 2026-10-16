@@ -35,20 +35,23 @@ describe('removeKey', () => {
     expect(() => removeKey(target, null)).toThrow('Expected pattern to be either a string of a regular expression.')
   })
 
-  it('returns locations where key name matches exactly', () => {
-    prepareTarget()
-    expect(removeKey(target, 'ip')).toEqual([])
+  it.each([
+    ['ip', []],
+    ['166.211.210.117', []],
+    [
+      'ip_address',
+      [
+        ['0', 'ip_address'],
+        ['1', 'ip_address'],
+      ],
+    ],
+  ])('returns locations where key name matches %p exactly', (name: string, expected: string[][]) => {
+    expect(removeKey(target, name)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(removeKey(target, '166.211.210.117')).toEqual([])
-
-    prepareTarget()
-    expect(removeKey(target, 'ip_address')).toEqual([
-      ['0', 'ip_address'],
-      ['1', 'ip_address'],
-    ])
-    expect('ip_address' in target[0]).toBe(false)
-    expect('ip_address' in target[1]).toBe(false)
+  it('removes the keys whose name matches exactly', () => {
+    removeKey(target, 'ip_address')
+    expect(target.filter((item: object) => 'ip_address' in item)).toEqual([])
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -57,8 +60,11 @@ describe('removeKey', () => {
 
   it('returns locations where key name matches a pattern', () => {
     expect(removeKey(target, /_name|0/i)).toEqual([['0'], ['0', 'first_name'], ['0', 'last_name']])
-    expect('first_name' in target[0]).toBe(false)
-    expect('last_name' in target[0]).toBe(false)
+  })
+
+  it('removes the keys whose name matches a pattern', () => {
+    removeKey(target, /_name|0/i)
+    expect(['first_name', 'last_name'].filter((key) => key in target[0])).toEqual([])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {
@@ -122,20 +128,23 @@ describe('removeKey - with config detectCircularReferences:true', () => {
     expect(() => removeKey(target, null)).toThrow('Expected pattern to be either a string of a regular expression.')
   })
 
-  it('returns locations where key name matches exactly', () => {
-    prepareTarget()
-    expect(removeKey(target, 'ip')).toEqual([])
+  it.each([
+    ['ip', []],
+    ['166.211.210.117', []],
+    [
+      'ip_address',
+      [
+        ['0', 'ip_address'],
+        ['1', 'ip_address'],
+      ],
+    ],
+  ])('returns locations where key name matches %p exactly', (name: string, expected: string[][]) => {
+    expect(removeKey(target, name)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(removeKey(target, '166.211.210.117')).toEqual([])
-
-    prepareTarget()
-    expect(removeKey(target, 'ip_address')).toEqual([
-      ['0', 'ip_address'],
-      ['1', 'ip_address'],
-    ])
-    expect('ip_address' in target[0]).toBe(false)
-    expect('ip_address' in target[1]).toBe(false)
+  it('removes the keys whose name matches exactly', () => {
+    removeKey(target, 'ip_address')
+    expect(target.filter((item: object) => 'ip_address' in item)).toEqual([])
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -144,8 +153,11 @@ describe('removeKey - with config detectCircularReferences:true', () => {
 
   it('returns locations where key name matches a pattern', () => {
     expect(removeKey(target, /_name|0/i)).toEqual([['0'], ['0', 'first_name'], ['0', 'last_name']])
-    expect('first_name' in target[0]).toBe(false)
-    expect('last_name' in target[0]).toBe(false)
+  })
+
+  it('removes the keys whose name matches a pattern', () => {
+    removeKey(target, /_name|0/i)
+    expect(['first_name', 'last_name'].filter((key) => key in target[0])).toEqual([])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {

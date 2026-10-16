@@ -10,24 +10,29 @@ describe('getIterableOperators', () => {
 
   afterAll(() => deregisterIterableClass())
 
-  it('returns operators of a registered class', () => {
-    class A {}
-    const getKeys: RegisteredIterableClassEntry['getKeys'] = (target) => Object.keys(target)
-    const read: RegisteredIterableClassEntry['read'] = (target, key) => (target as Record<string, unknown>)[key as string]
-    const write: RegisteredIterableClassEntry['write'] = (target, value, key) =>
-      ((target as Record<string, unknown>)[key as string] = value)
-    const remove: RegisteredIterableClassEntry['remove'] = (target, key) => delete (target as Record<string, unknown>)[key as string]
-    const instantiate: RegisteredIterableClassEntry['instantiate'] = () => new A()
+  class A {}
+  const getKeys: RegisteredIterableClassEntry['getKeys'] = (target) => Object.keys(target)
+  const read: RegisteredIterableClassEntry['read'] = (target, key) => (target as Record<string, unknown>)[key as string]
+  const write: RegisteredIterableClassEntry['write'] = (target, value, key) => ((target as Record<string, unknown>)[key as string] = value)
+  const remove: RegisteredIterableClassEntry['remove'] = (target, key) => delete (target as Record<string, unknown>)[key as string]
+  const instantiate: RegisteredIterableClassEntry['instantiate'] = () => new A()
 
+  it('returns operators of a registered class', () => {
     registerIterableClass(A, getKeys, read, write, remove, instantiate)
 
-    const operators = getIterableOperators(A.name)
+    expect(getIterableOperators(A.name)).toEqual({ getKeys: expect.any(Function), read, write, remove, instantiate })
+  })
 
-    expect(typeof operators.getKeys).toBe('function')
-    expect(operators.getKeys).not.toBe(getKeys)
-    expect(operators.read).toBe(read)
-    expect(operators.write).toBe(write)
-    expect(operators.remove).toBe(remove)
-    expect(operators.instantiate).toBe(instantiate)
+  it('returns a getKeys operator other than the function the class was registered with', () => {
+    registerIterableClass(A, getKeys, read, write, remove, instantiate)
+
+    expect(getIterableOperators(A.name).getKeys).not.toBe(getKeys)
+  })
+
+  it('returns a getKeys operator that delegates to the one the class was registered with', () => {
+    const taggedKeys: RegisteredIterableClassEntry['getKeys'] = (target) => Object.keys(target).map((key) => `registered:${key}`)
+    registerIterableClass(A, taggedKeys, read, write, remove, instantiate)
+
+    expect(getIterableOperators(A.name).getKeys(Object.assign(new A(), { k: 1 }))).toEqual(['registered:k'])
   })
 })

@@ -33,8 +33,7 @@ describe('Message Filters', () => {
       const message: IMessage = { type: 'test', data: 'payload' }
 
       filteredHandler(message, mockChannel)
-      expect(handler).toHaveBeenCalledWith(message, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler.mock.calls).toEqual([[message, mockChannel]])
     })
 
     it('does not call handler when predicate returns false', () => {
@@ -56,16 +55,23 @@ describe('Message Filters', () => {
       const filteredHandler = create(predicate)(handler)
 
       filteredHandler({ type: 'user-login', data: { id: 1 } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterUserLogin = handler.mock.calls.length
 
       filteredHandler({ type: 'admin-login', data: { id: 1 } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterAdminLogin = handler.mock.calls.length
 
       filteredHandler({ type: 'user-logout', data: 'string' }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterUserLogoutWithStringData = handler.mock.calls.length
 
       filteredHandler({ type: 'user-update', data: { name: 'test' } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(2)
+      const afterUserUpdate = handler.mock.calls.length
+
+      expect({ afterUserLogin, afterAdminLogin, afterUserLogoutWithStringData, afterUserUpdate }).toEqual({
+        afterUserLogin: 1,
+        afterAdminLogin: 1,
+        afterUserLogoutWithStringData: 1,
+        afterUserUpdate: 2,
+      })
     })
   })
 
@@ -114,13 +120,19 @@ describe('Message Filters', () => {
       const composedHandler = compose(adminFilter, userFilter)(handler)
 
       composedHandler({ type: 'user', data: { admin: true } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterAdminUser = handler.mock.calls.length
 
       composedHandler({ type: 'guest', data: { admin: true } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterAdminGuest = handler.mock.calls.length
 
       composedHandler({ type: 'user', data: { admin: false } }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterNonAdminUser = handler.mock.calls.length
+
+      expect({ afterAdminUser, afterAdminGuest, afterNonAdminUser }).toEqual({
+        afterAdminUser: 1,
+        afterAdminGuest: 1,
+        afterNonAdminUser: 1,
+      })
     })
 
     it('applies filters right-to-left', () => {
@@ -165,10 +177,12 @@ describe('Message Filters', () => {
       const composedHandler = compose(singleFilter)(handler)
 
       composedHandler({ type: 'test' }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterMatchingType = handler.mock.calls.length
 
       composedHandler({ type: 'other' }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterOtherType = handler.mock.calls.length
+
+      expect({ afterMatchingType, afterOtherType }).toEqual({ afterMatchingType: 1, afterOtherType: 1 })
     })
 
     it('handless complex composition', () => {
@@ -188,10 +202,10 @@ describe('Message Filters', () => {
         },
         mockChannel
       )
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterHighPriorityUpdate = handler.mock.calls.length
 
       composedHandler({ type: 'data-update' }, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterUpdateWithoutData = handler.mock.calls.length
 
       composedHandler(
         {
@@ -200,7 +214,7 @@ describe('Message Filters', () => {
         },
         mockChannel
       )
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterLowPriorityUpdate = handler.mock.calls.length
 
       composedHandler(
         {
@@ -209,7 +223,14 @@ describe('Message Filters', () => {
         },
         mockChannel
       )
-      expect(handler).toHaveBeenCalledTimes(1)
+      const afterHighPriorityOtherType = handler.mock.calls.length
+
+      expect({ afterHighPriorityUpdate, afterUpdateWithoutData, afterLowPriorityUpdate, afterHighPriorityOtherType }).toEqual({
+        afterHighPriorityUpdate: 1,
+        afterUpdateWithoutData: 1,
+        afterLowPriorityUpdate: 1,
+        afterHighPriorityOtherType: 1,
+      })
     })
   })
 
@@ -236,8 +257,10 @@ describe('Message Filters', () => {
         filteredLogout(msg, mockChannel)
       })
 
-      expect(loginHandler).toHaveBeenCalledTimes(2)
-      expect(logoutHandler).toHaveBeenCalledTimes(1)
+      expect({ loginCalls: loginHandler.mock.calls.length, logoutCalls: logoutHandler.mock.calls.length }).toEqual({
+        loginCalls: 2,
+        logoutCalls: 1,
+      })
     })
 
     it('handless role-based message routing', () => {
@@ -264,8 +287,10 @@ describe('Message Filters', () => {
         filteredUser(msg, mockChannel)
       })
 
-      expect(adminHandler).toHaveBeenCalledTimes(2)
-      expect(userHandler).toHaveBeenCalledTimes(1)
+      expect({ adminCalls: adminHandler.mock.calls.length, userCalls: userHandler.mock.calls.length }).toEqual({
+        adminCalls: 2,
+        userCalls: 1,
+      })
     })
   })
 })

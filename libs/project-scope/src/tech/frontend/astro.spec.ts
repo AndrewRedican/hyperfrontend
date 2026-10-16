@@ -29,8 +29,15 @@ describe('astroDetector', () => {
     }
     const result = astroDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('astro')
+    expect(result).toEqual(expect.objectContaining({ id: 'astro' }))
+  })
+
+  it('scores an astro dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { astro: '^4.0.0' },
+    }
+    const result = astroDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -45,7 +52,19 @@ describe('astroDetector', () => {
     const result = astroDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
-    expect(result?.detectedFrom.some((s) => s.path === 'astro.config.*')).toBe(true)
+  })
+
+  it('records astro.config.mjs as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('astro.config.mjs')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { astro: '^4.0.0' },
+    }
+    const result = astroDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'astro.config.*' })]))
   })
 
   it('increases confidence with astro.config.ts', () => {
@@ -72,6 +91,18 @@ describe('astroDetector', () => {
     const result = astroDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'src/pages/')).toBe(true)
+  })
+
+  it('records the src/pages directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes(join('src', 'pages')) || path.endsWith('pages')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { astro: '^4.0.0' },
+    }
+    const result = astroDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'src/pages/' })]))
   })
 })

@@ -39,12 +39,15 @@ describe('generateShell', () => {
     )
   })
 
-  it('imports only the declared mode mounts', () => {
-    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain("import { createShell, mountEmbedded } from '@hyperfrontend/features/host'")
-    expect(entry).not.toContain('mountDialog')
-    expect(entry).not.toContain('mountPopup')
-    expect(entry).not.toContain('mountStandalone')
+  it('imports the declared mode mount beside createShell', () => {
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toContain(
+      "import { createShell, mountEmbedded } from '@hyperfrontend/features/host'"
+    )
+  })
+
+  it('leaves the undeclared mode mounts out of the entry', () => {
+    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8') ?? ''
+    expect(['mountDialog', 'mountPopup', 'mountStandalone'].filter((mount) => entry.includes(mount))).toEqual([])
   })
 
   it('composes exactly the declared modes in declaration order', () => {
@@ -64,9 +67,9 @@ describe('generateShell', () => {
   })
 
   it('widens the unresponsive policy where it crosses into the SDK', () => {
-    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain('const { onUnresponsive, ...rest } = options')
-    expect(entry).toContain('onUnresponsive: <UnresponsivePolicy | undefined>onUnresponsive')
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toContain(
+      'const { onUnresponsive, ...rest } = options\n  return <FeatureShellHandle>createShell({ ...defaults, ...rest, onUnresponsive: <UnresponsivePolicy | undefined>onUnresponsive'
+    )
   })
 
   it('imports the widened policy as a type-only import so the emitted runtime stays unchanged', () => {
@@ -75,10 +78,16 @@ describe('generateShell', () => {
     )
   })
 
-  it('keeps the unresponsive info narrowed to the declared modes', () => {
-    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain("export type FeatureDisplayMode = 'embedded'")
-    expect(entry).toContain('displayMode: FeatureDisplayMode')
+  it('narrows the display-mode union to a single declared mode', () => {
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toContain(
+      "export type FeatureDisplayMode = 'embedded'\n"
+    )
+  })
+
+  it('keeps the unresponsive info typed by the narrowed display-mode union', () => {
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toMatch(
+      /export interface FeatureUnresponsiveInfo \{[^}]*\n {2}displayMode: FeatureDisplayMode\n/
+    )
   })
 
   it('narrows the generated display-mode union to the declared modes', () => {
@@ -108,25 +117,31 @@ describe('generateShell', () => {
   })
 
   it('flattens the fixed embedded size into the embed defaults', () => {
-    const entry = stage({ display: { modes: ['embedded'], embedded: { width: 320, height: 240 } } }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain('embedWidth: 320')
-    expect(entry).toContain('embedHeight: 240')
+    expect(stage({ display: { modes: ['embedded'], embedded: { width: 320, height: 240 } } }).read('src/index.ts', 'utf-8')).toContain(
+      '  embedWidth: 320,\n  embedHeight: 240,\n'
+    )
   })
 
-  it('bakes the dialog box and escape defaults', () => {
-    const entry = stage({
-      display: { modes: ['dialog'], dialog: { width: 480, height: 360, backdrop: 'none' }, closeOnEscape: false },
-    }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain('dialogWidth: 480')
-    expect(entry).toContain('dialogHeight: 360')
-    expect(entry).toContain("dialogBackdrop: 'none'")
-    expect(entry).toContain('closeOnEscape: false')
+  it('bakes the dialog box defaults', () => {
+    expect(
+      stage({
+        display: { modes: ['dialog'], dialog: { width: 480, height: 360, backdrop: 'none' }, closeOnEscape: false },
+      }).read('src/index.ts', 'utf-8')
+    ).toContain("  dialogWidth: 480,\n  dialogHeight: 360,\n  dialogBackdrop: 'none',\n")
+  })
+
+  it('bakes the escape default', () => {
+    expect(
+      stage({
+        display: { modes: ['dialog'], dialog: { width: 480, height: 360, backdrop: 'none' }, closeOnEscape: false },
+      }).read('src/index.ts', 'utf-8')
+    ).toContain('closeOnEscape: false')
   })
 
   it('bakes the popup window defaults', () => {
-    const entry = stage({ display: { modes: ['popup'], popup: { width: 500, height: 400 } } }).read('src/index.ts', 'utf-8')
-    expect(entry).toContain('popupWidth: 500')
-    expect(entry).toContain('popupHeight: 400')
+    expect(stage({ display: { modes: ['popup'], popup: { width: 500, height: 400 } } }).read('src/index.ts', 'utf-8')).toContain(
+      '  popupWidth: 500,\n  popupHeight: 400,\n'
+    )
   })
 
   it('bakes the configured dialog position into the defaults', () => {
@@ -142,12 +157,9 @@ describe('generateShell', () => {
   })
 
   it('leaves the position defaults out when the config declares none', () => {
-    const entry = stage({ display: { modes: ['dialog', 'popup'], dialog: { width: 480 }, popup: { width: 500 } } }).read(
-      'src/index.ts',
-      'utf-8'
-    )
-    expect(entry).not.toContain('dialogPosition:')
-    expect(entry).not.toContain('popupPosition:')
+    const entry =
+      stage({ display: { modes: ['dialog', 'popup'], dialog: { width: 480 }, popup: { width: 500 } } }).read('src/index.ts', 'utf-8') ?? ''
+    expect(['dialogPosition:', 'popupPosition:'].filter((key) => entry.includes(key))).toEqual([])
   })
 
   it('bakes the declared permissions into the entry defaults', () => {
@@ -239,9 +251,9 @@ describe('generateShell', () => {
   })
 
   it('documents the declared display modes in the README', () => {
-    const readme = stage({ display: { modes: ['dialog', 'popup'] } }).read('README.md', 'utf-8')
-    expect(readme).toContain('## Display modes')
-    expect(readme).toContain('This feature supports `dialog`, `popup`; `open()` defaults to `dialog`.')
+    expect(stage({ display: { modes: ['dialog', 'popup'] } }).read('README.md', 'utf-8')).toContain(
+      '## Display modes\n\nThis feature supports `dialog`, `popup`; `open()` defaults to `dialog`.'
+    )
   })
 
   it('lists all four modes in the README when the config declares no display', () => {

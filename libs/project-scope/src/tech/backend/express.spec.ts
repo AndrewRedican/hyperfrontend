@@ -15,9 +15,16 @@ describe('expressDetector', () => {
       dependencies: { express: '^4.18.0' },
     }
     const result = expressDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('express')
-    expect(result?.version).toBe('4.18.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'express', version: '4.18.0' }))
+  })
+
+  it('scores an express dependency at least 60', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { express: '^4.18.0' },
+    }
+    const result = expressDetector('/some/path', pkg)
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 

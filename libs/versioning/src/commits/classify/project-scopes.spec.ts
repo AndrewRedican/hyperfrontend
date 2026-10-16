@@ -73,8 +73,7 @@ describe('deriveProjectScopes', () => {
         projectName: 'lib-versioning',
         additionalScopes: ['semver', 'version-utils'],
       })
-      expect(scopes).toContain('semver')
-      expect(scopes).toContain('version-utils')
+      expect(scopes).toEqual(expect.arrayContaining(['semver', 'version-utils']))
     })
 
     it('deduplicates additional scopes', () => {
@@ -91,8 +90,7 @@ describe('deriveProjectScopes', () => {
         projectName: 'lib-versioning',
         additionalScopes: ['', 'valid'],
       })
-      expect(scopes).not.toContain('')
-      expect(scopes).toContain('valid')
+      expect(scopes).toEqual(['lib-versioning', 'versioning', 'valid'])
     })
   })
 })
@@ -101,23 +99,32 @@ describe('scopeMatchesProject', () => {
   const projectScopes = ['lib-versioning', 'versioning']
 
   it('matches exact scope', () => {
-    expect(scopeMatchesProject(['versioning'], projectScopes)).toBe(true)
-    expect(scopeMatchesProject(['lib-versioning'], projectScopes)).toBe(true)
+    const commitScopes = [['versioning'], ['lib-versioning']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches case-insensitively', () => {
-    expect(scopeMatchesProject(['Versioning'], projectScopes)).toBe(true)
-    expect(scopeMatchesProject(['VERSIONING'], projectScopes)).toBe(true)
+    const commitScopes = [['Versioning'], ['VERSIONING']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches when any scope in a multi-scope list matches', () => {
     expect(scopeMatchesProject(['logging', 'versioning'], projectScopes)).toBe(true)
+  })
+
+  it('returns false when no scope in a multi-scope list matches', () => {
     expect(scopeMatchesProject(['questions', 'cryptography'], projectScopes)).toBe(false)
   })
 
   it('returns false for non-matching scope', () => {
-    expect(scopeMatchesProject(['logging'], projectScopes)).toBe(false)
-    expect(scopeMatchesProject(['cryptography'], projectScopes)).toBe(false)
+    const commitScopes = [['logging'], ['cryptography']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, false])
+    )
   })
 
   it('returns false for empty scope array', () => {
@@ -133,14 +140,17 @@ describe('scopeIsExcluded', () => {
   const excludeScopes = ['release', 'deps']
 
   it('returns true when all scopes are excluded', () => {
-    expect(scopeIsExcluded(['release'], excludeScopes)).toBe(true)
-    expect(scopeIsExcluded(['deps'], excludeScopes)).toBe(true)
-    expect(scopeIsExcluded(['release', 'deps'], excludeScopes)).toBe(true)
+    const commitScopes = [['release'], ['deps'], ['release', 'deps']]
+    expect(commitScopes.map((scopes) => [scopes, scopeIsExcluded(scopes, excludeScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches case-insensitively', () => {
-    expect(scopeIsExcluded(['Release'], excludeScopes)).toBe(true)
-    expect(scopeIsExcluded(['DEPS'], excludeScopes)).toBe(true)
+    const commitScopes = [['Release'], ['DEPS']]
+    expect(commitScopes.map((scopes) => [scopes, scopeIsExcluded(scopes, excludeScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('returns false for non-excluded scope', () => {
@@ -158,25 +168,13 @@ describe('scopeIsExcluded', () => {
 
 describe('DEFAULT_EXCLUDE_SCOPES', () => {
   it('includes common infrastructure scopes', () => {
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('release')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('deps')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('workspace')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('root')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('repo')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('ci')
-    expect(DEFAULT_EXCLUDE_SCOPES).toContain('build')
+    expect(DEFAULT_EXCLUDE_SCOPES).toEqual(expect.arrayContaining(['release', 'deps', 'workspace', 'root', 'repo', 'ci', 'build']))
   })
 })
 
 describe('DEFAULT_PROJECT_PREFIXES', () => {
   it('includes common project prefixes', () => {
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('lib-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('app-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('e2e-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('tool-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('plugin-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('feature-')
-    expect(DEFAULT_PROJECT_PREFIXES).toContain('package-')
+    expect(DEFAULT_PROJECT_PREFIXES).toEqual(expect.arrayContaining(['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']))
   })
 })
 
@@ -186,8 +184,7 @@ describe('custom prefixes', () => {
       projectName: 'pkg-auth',
       prefixes: ['pkg-', 'svc-'],
     })
-    expect(scopes).toContain('pkg-auth')
-    expect(scopes).toContain('auth')
+    expect(scopes).toEqual(['pkg-auth', 'auth'])
   })
 
   it('ignores default prefixes when custom provided', () => {
@@ -210,7 +207,6 @@ describe('custom prefixes', () => {
     const scopes = deriveProjectScopes({
       projectName: 'lib-versioning',
     })
-    expect(scopes).toContain('lib-versioning')
-    expect(scopes).toContain('versioning')
+    expect(scopes).toEqual(['lib-versioning', 'versioning'])
   })
 })

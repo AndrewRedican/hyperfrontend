@@ -1,5 +1,6 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { beforeEach } from 'node:test'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
@@ -25,14 +26,11 @@ jest.mock('@hyperfrontend/project-scope/project/traversal', () => ({
 
 describe('CHANGELOG_NAMES', () => {
   it('contains common changelog names', () => {
-    expect(CHANGELOG_NAMES).toContain('CHANGELOG.md')
-    expect(CHANGELOG_NAMES).toContain('Changelog.md')
-    expect(CHANGELOG_NAMES).toContain('changelog.md')
+    expect(CHANGELOG_NAMES).toEqual(expect.arrayContaining(['CHANGELOG.md', 'Changelog.md', 'changelog.md']))
   })
 
   it('contains alternative names', () => {
-    expect(CHANGELOG_NAMES).toContain('HISTORY.md')
-    expect(CHANGELOG_NAMES).toContain('CHANGES.md')
+    expect(CHANGELOG_NAMES).toEqual(expect.arrayContaining(['HISTORY.md', 'CHANGES.md']))
   })
 
   it('has CHANGELOG.md first (highest priority)', () => {
@@ -111,9 +109,12 @@ describe('findChangelogs', () => {
 
     const result = findChangelogs('/workspace', packages)
 
-    expect(result.size).toBe(2)
-    expect(result.get('/workspace/libs/lib-a')).toBe(normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md'))
-    expect(result.get('/workspace/libs/lib-b')).toBe(normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md'))
+    expect(result).toEqual(
+      createMap([
+        ['/workspace/libs/lib-a', normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md')],
+        ['/workspace/libs/lib-b', normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md')],
+      ])
+    )
   })
 
   it('skips packages without changelog', () => {
@@ -128,9 +129,7 @@ describe('findChangelogs', () => {
 
     const result = findChangelogs('/workspace', packages)
 
-    expect(result.size).toBe(1)
-    expect(result.has('/workspace/libs/lib-a')).toBe(true)
-    expect(result.has('/workspace/libs/lib-b')).toBe(false)
+    expect([...result.keys()]).toEqual(['/workspace/libs/lib-a'])
   })
 
   it('returns empty map for empty package list', () => {
@@ -218,6 +217,13 @@ describe('findProjectChangelogInTree', () => {
     const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
 
     expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
+  })
+
+  it('queries the tree with the root-relative changelog path', () => {
+    const tree = createMockTree(['libs/my-lib/CHANGELOG.md'])
+
+    findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
+
     expect(tree.isFile).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
   })
 
@@ -282,9 +288,12 @@ describe('findChangelogsInTree', () => {
 
     const result = findChangelogsInTree(tree as Tree, packages)
 
-    expect(result.size).toBe(2)
-    expect(result.get('/workspace/libs/lib-a')).toBe(normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md'))
-    expect(result.get('/workspace/libs/lib-b')).toBe(normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md'))
+    expect(result).toEqual(
+      createMap([
+        ['/workspace/libs/lib-a', normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md')],
+        ['/workspace/libs/lib-b', normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md')],
+      ])
+    )
   })
 
   it('skips packages without changelog in tree', () => {
@@ -297,9 +306,7 @@ describe('findChangelogsInTree', () => {
 
     const result = findChangelogsInTree(tree as Tree, packages)
 
-    expect(result.size).toBe(1)
-    expect(result.has('/workspace/libs/lib-a')).toBe(true)
-    expect(result.has('/workspace/libs/lib-b')).toBe(false)
+    expect([...result.keys()]).toEqual(['/workspace/libs/lib-a'])
   })
 
   it('returns empty map for empty package list', () => {
@@ -320,7 +327,6 @@ describe('findChangelogsInTree', () => {
 
     const result = findChangelogsInTree(tree as Tree, packages)
 
-    expect(result.size).toBe(2)
-    expect(result.has('/workspace/libs/new-package')).toBe(true)
+    expect([...result.keys()]).toEqual(['/workspace/libs/existing', '/workspace/libs/new-package'])
   })
 })

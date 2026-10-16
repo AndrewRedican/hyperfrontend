@@ -14,9 +14,15 @@ describe('esbuildDetector', () => {
     }
     const result = esbuildDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('esbuild')
-    expect(result?.name).toBe('esbuild')
+    expect(result).toEqual(expect.objectContaining({ id: 'esbuild', name: 'esbuild' }))
+  })
+
+  it('scores an esbuild dependency at least 70', () => {
+    const pkg: PackageJson = {
+      devDependencies: { esbuild: '^0.19.0' },
+    }
+    const result = esbuildDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -30,7 +36,18 @@ describe('esbuildDetector', () => {
     const result = esbuildDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(85)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies (esbuild plugins)')).toBe(true)
+  })
+
+  it('records esbuild plugins as a detection source', () => {
+    const pkg: PackageJson = {
+      devDependencies: {
+        esbuild: '^0.19.0',
+        'esbuild-plugin-copy': '^2.0.0',
+      },
+    }
+    const result = esbuildDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies (esbuild plugins)' })]))
   })
 
   it('increases confidence with esbuild- prefix plugins', () => {
@@ -55,7 +72,18 @@ describe('esbuildDetector', () => {
     const result = esbuildDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'scripts.build')).toBe(true)
+  })
+
+  it('records an esbuild build script as a detection source', () => {
+    const pkg: PackageJson = {
+      devDependencies: { esbuild: '^0.19.0' },
+      scripts: {
+        build: 'esbuild src/index.ts --bundle --outfile=dist/index.js',
+      },
+    }
+    const result = esbuildDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'scripts.build' })]))
   })
 
   it('has maximum confidence with all indicators', () => {

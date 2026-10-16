@@ -2,6 +2,7 @@ import type { MultiselectConfig, Choice } from '../types'
 import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { stripAnsi } from '../ansi-text'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { multiselect } from './multiselect'
@@ -110,8 +111,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['banana'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['banana'] })
     })
 
     it('shows no matches message', async () => {
@@ -133,9 +133,8 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
       // why: first match for 'a' is Apple
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('shows filter hint when searchable', async () => {
@@ -157,8 +156,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('backspace does nothing on empty filter', async () => {
@@ -169,8 +167,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('handles alternate backspace character', async () => {
@@ -181,8 +178,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('handles non-searchable mode ignoring typed keys', async () => {
@@ -194,8 +190,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('resets cursor on filter change', async () => {
@@ -207,9 +202,8 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
       // why: 'c' matches Cherry
-      expect(result.value).toEqual(['cherry'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['cherry'] })
     })
   })
 
@@ -248,11 +242,8 @@ describe('multiselect searchable mode', () => {
       input.enqueueKeys(['a', 'p', Key.Space, Key.Enter])
       await promise
 
-      const data = output.getWrittenData()
-
-      // why: Should show both the query and the filter hint
-      expect(data).toContain('ap')
-      expect(data).toContain('type to filter')
+      // why: the header renders the query followed by the filter hint
+      expect(stripAnsi(output.getWrittenData())).toContain('ap (type to filter)')
     })
 
     it('handles filter clearing empty query via alternate backspace', async () => {
@@ -264,8 +255,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
   })
 
@@ -279,8 +269,7 @@ describe('multiselect searchable mode', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['banana'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['banana'] })
     })
 
     it('appends a non-bracketed pasted run to the filter', async () => {

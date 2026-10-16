@@ -28,12 +28,13 @@ describe('pnpmWorkspacesDetector', () => {
 
     const result = pnpmWorkspacesDetector(mockProjectPath)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('pnpm-workspaces')
-    expect(result?.name).toBe('pnpm Workspaces')
-    expect(result?.configPath).toBe('pnpm-workspace.yaml')
-    expect(result?.confidence).toBe(90)
-    expect(result?.detectedFrom).toEqual([{ type: 'config-file', path: 'pnpm-workspace.yaml' }])
+    expect(result).toEqual({
+      id: 'pnpm-workspaces',
+      name: 'pnpm Workspaces',
+      configPath: 'pnpm-workspace.yaml',
+      confidence: 90,
+      detectedFrom: [{ type: 'config-file', path: 'pnpm-workspace.yaml' }],
+    })
   })
 
   it('detects pnpm workspaces from pnpm-lock.yaml only', () => {
@@ -41,12 +42,12 @@ describe('pnpmWorkspacesDetector', () => {
 
     const result = pnpmWorkspacesDetector(mockProjectPath)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('pnpm-workspaces')
-    expect(result?.name).toBe('pnpm Workspaces')
-    expect(result?.configPath).toBeUndefined()
-    expect(result?.confidence).toBe(10)
-    expect(result?.detectedFrom).toEqual([{ type: 'lockfile', path: 'pnpm-lock.yaml' }])
+    expect(result).toEqual({
+      id: 'pnpm-workspaces',
+      name: 'pnpm Workspaces',
+      confidence: 10,
+      detectedFrom: [{ type: 'lockfile', path: 'pnpm-lock.yaml' }],
+    })
   })
 
   it('detects pnpm workspaces from both config and lockfile', () => {
@@ -54,12 +55,15 @@ describe('pnpmWorkspacesDetector', () => {
 
     const result = pnpmWorkspacesDetector(mockProjectPath)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('pnpm-workspaces')
-    expect(result?.configPath).toBe('pnpm-workspace.yaml')
-    expect(result?.confidence).toBe(100)
-    expect(result?.detectedFrom).toHaveLength(2)
-    expect(result?.detectedFrom).toContainEqual({ type: 'config-file', path: 'pnpm-workspace.yaml' })
-    expect(result?.detectedFrom).toContainEqual({ type: 'lockfile', path: 'pnpm-lock.yaml' })
+    expect(result).toEqual({
+      id: 'pnpm-workspaces',
+      name: 'pnpm Workspaces',
+      configPath: 'pnpm-workspace.yaml',
+      confidence: 100,
+      detectedFrom: [
+        { type: 'config-file', path: 'pnpm-workspace.yaml' },
+        { type: 'lockfile', path: 'pnpm-lock.yaml' },
+      ],
+    })
   })
 })

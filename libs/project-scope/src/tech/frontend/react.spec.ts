@@ -28,10 +28,15 @@ describe('reactDetector', () => {
     }
     const result = reactDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('react')
-    expect(result?.name).toBe('React')
-    expect(result?.version).toBe('18.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'react', name: 'React', version: '18.0.0' }))
+  })
+
+  it('scores a react dependency at least 60', () => {
+    const pkg: PackageJson = {
+      dependencies: { react: '^18.0.0' },
+    }
+    const result = reactDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 
@@ -45,7 +50,18 @@ describe('reactDetector', () => {
     const result = reactDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.react-dom')).toBe(true)
+  })
+
+  it('records react-dom as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        react: '^18.0.0',
+        'react-dom': '^18.0.0',
+      },
+    }
+    const result = reactDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.react-dom' })]))
   })
 
   it('increases confidence with react-native', () => {
@@ -58,7 +74,18 @@ describe('reactDetector', () => {
     const result = reactDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.react-native')).toBe(true)
+  })
+
+  it('records react-native as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        react: '^18.0.0',
+        'react-native': '^0.72.0',
+      },
+    }
+    const result = reactDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.react-native' })]))
   })
 
   it('increases confidence with JSX/TSX files', () => {
@@ -72,7 +99,19 @@ describe('reactDetector', () => {
     const result = reactDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
-    expect(result?.detectedFrom.some((s) => s.path === 'src/*.tsx or src/*.jsx')).toBe(true)
+  })
+
+  it('records JSX/TSX files as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('App.tsx') || path.includes('App.jsx')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { react: '^18.0.0' },
+    }
+    const result = reactDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'src/*.tsx or src/*.jsx' })]))
   })
 
   it('detects Next.js meta-framework', () => {
@@ -84,8 +123,7 @@ describe('reactDetector', () => {
     }
     const result = reactDetector('/some/path', pkg)
 
-    expect(result?.metaFrameworks).toBeDefined()
-    expect(result?.metaFrameworks?.some((m) => m.id === 'nextjs')).toBe(true)
+    expect(result?.metaFrameworks).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'nextjs' })]))
   })
 
   it('detects Gatsby meta-framework', () => {

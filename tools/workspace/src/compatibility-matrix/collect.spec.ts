@@ -37,8 +37,7 @@ describe('collectMatrixLibraries', () => {
 
     const libraries = collectMatrixLibraries(root)
 
-    expect(libraries.length).toBe(1)
-    expect(libraries[0]?.shortName).toBe('json-utils')
+    expect(libraries.map((library) => library.shortName)).toEqual(['json-utils'])
   })
 
   it('ignores projects without a publish target', () => {
@@ -122,6 +121,22 @@ describe('collectMatrixLibraries', () => {
     const library = collectMatrixLibraries(root)[0]
 
     expect(library?.environments).toEqual({ node: 'partial', browser: 'full', webWorker: 'none' })
+  })
+
+  it('reads the compatibility note from project.json', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/ui',
+        projectJson: publishableProject({
+          name: 'lib-ui-utils',
+          compatibility: { environments: { node: 'partial', browser: 'full', webWorker: 'none' }, note: 'Browser first.' },
+        }),
+        packageJson: { name: '@hyperfrontend/ui-utils', version: '0.0.8' },
+      },
+    ])
+
+    const library = collectMatrixLibraries(root)[0]
+
     expect(library?.note).toBe('Browser first.')
   })
 
@@ -137,6 +152,19 @@ describe('collectMatrixLibraries', () => {
     const library = collectMatrixLibraries(root)[0]
 
     expect(library?.environments).toEqual({ node: null, browser: null, webWorker: null })
+  })
+
+  it('leaves the note unset when project.json carries no compatibility metadata', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/undeclared',
+        projectJson: publishableProject({ name: 'lib-undeclared' }),
+        packageJson: { name: '@hyperfrontend/undeclared', version: '1.0.0' },
+      },
+    ])
+
+    const library = collectMatrixLibraries(root)[0]
+
     expect(library?.note).toBe(null)
   })
 
@@ -172,6 +200,22 @@ describe('collectMatrixLibraries', () => {
     const library = collectMatrixLibraries(root)[0]
 
     expect(library?.formats).toEqual({ esm: true, cjs: true, iife: true, umd: true })
+  })
+
+  it('lists a global name the IIFE and UMD bundles share only once', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/bundled',
+        projectJson: publishableProject({
+          name: 'lib-bundled',
+          buildOptions: { esm: {}, cjs: {}, iife: { entry: '.', globalName: 'Bundled' }, umd: { entry: '.', globalName: 'Bundled' } },
+        }),
+        packageJson: { name: '@hyperfrontend/bundled', version: '1.0.0' },
+      },
+    ])
+
+    const library = collectMatrixLibraries(root)[0]
+
     expect(library?.globalNames).toEqual(['Bundled'])
   })
 
@@ -194,6 +238,26 @@ describe('collectMatrixLibraries', () => {
     const library = collectMatrixLibraries(root)[0]
 
     expect(library?.globalNames).toEqual(['Host', 'Hostee'])
+  })
+
+  it('reads output formats from a multi-bundle configuration', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/multi',
+        projectJson: publishableProject({
+          name: 'lib-multi',
+          buildOptions: {
+            esm: {},
+            iife: [{ entry: './host', globalName: 'Host' }, { entry: './hostee', globalName: 'Hostee' }, { entry: './debug' }],
+            umd: [{ entry: './host', globalName: 'Host' }],
+          },
+        }),
+        packageJson: { name: '@hyperfrontend/multi', version: '1.0.0' },
+      },
+    ])
+
+    const library = collectMatrixLibraries(root)[0]
+
     expect(library?.formats).toEqual({ esm: true, cjs: false, iife: true, umd: true })
   })
 
@@ -230,9 +294,7 @@ describe('collectMatrixLibraries', () => {
 
     const library = collectMatrixLibraries(root)[0]
 
-    expect(library?.version).toBe('2.1.0')
-    expect(library?.nodeEngine).toBe('>=18.0.0')
-    expect(library?.npmEngine).toBe('>=8.0.0')
+    expect(library).toMatchObject({ version: '2.1.0', nodeEngine: '>=18.0.0', npmEngine: '>=8.0.0' })
   })
 
   it('leaves version and engines unset when package.json declares none', () => {
@@ -246,9 +308,7 @@ describe('collectMatrixLibraries', () => {
 
     const library = collectMatrixLibraries(root)[0]
 
-    expect(library?.version).toBe(null)
-    expect(library?.nodeEngine).toBe(null)
-    expect(library?.npmEngine).toBe(null)
+    expect(library).toMatchObject({ version: null, nodeEngine: null, npmEngine: null })
   })
 
   it('keeps both rows when two directories declare the same package name', () => {
@@ -267,9 +327,7 @@ describe('collectMatrixLibraries', () => {
 
     const libraries = collectMatrixLibraries(root)
 
-    expect(libraries.length).toBe(2)
-    expect(libraries[0]?.packageName).toBe('@hyperfrontend/twin')
-    expect(libraries[1]?.packageName).toBe('@hyperfrontend/twin')
+    expect(libraries.map((library) => library.packageName)).toEqual(['@hyperfrontend/twin', '@hyperfrontend/twin'])
   })
 
   it('treats a build target without options as shipping no format', () => {
@@ -284,6 +342,19 @@ describe('collectMatrixLibraries', () => {
     const library = collectMatrixLibraries(root)[0]
 
     expect(library?.formats).toEqual({ esm: false, cjs: false, iife: false, umd: false })
+  })
+
+  it('claims no global name for a build target without options', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/optionless',
+        projectJson: { name: 'lib-optionless', projectType: 'library', targets: { build: {}, publish: {} } },
+        packageJson: { name: '@hyperfrontend/optionless', version: '1.0.0' },
+      },
+    ])
+
+    const library = collectMatrixLibraries(root)[0]
+
     expect(library?.globalNames).toEqual([])
   })
 })

@@ -26,18 +26,12 @@ describe('core/fs/stat', () => {
   describe('getFileStat', () => {
     it('returns stats for file', () => {
       const stats = getFileStat(join(TEST_DIR, 'file.txt'))
-      expect(stats).not.toBeNull()
-      expect(stats?.isFile).toBe(true)
-      expect(stats?.isDirectory).toBe(false)
-      expect(stats?.size).toBeGreaterThan(0)
-      expect(stats?.modified).toBeTruthy()
+      expect(stats).toEqual(expect.objectContaining({ isFile: true, isDirectory: false, size: 7, modified: expect.any(Date) }))
     })
 
     it('returns stats for directory', () => {
       const stats = getFileStat(join(TEST_DIR, 'subdir'))
-      expect(stats).not.toBeNull()
-      expect(stats?.isFile).toBe(false)
-      expect(stats?.isDirectory).toBe(true)
+      expect(stats).toEqual(expect.objectContaining({ isFile: false, isDirectory: true }))
     })
 
     it('returns null for non-existent path', () => {
@@ -91,8 +85,7 @@ describe('core/fs/stat', () => {
   describe('getFileStat - followSymlinks option', () => {
     it('uses lstatSync when followSymlinks is false', () => {
       const stats = getFileStat(join(TEST_DIR, 'file.txt'), false)
-      expect(stats).not.toBeNull()
-      expect(stats?.isFile).toBe(true)
+      expect(stats).toEqual(expect.objectContaining({ isFile: true }))
     })
 
     it('detects symlink as symlink when followSymlinks is false', () => {

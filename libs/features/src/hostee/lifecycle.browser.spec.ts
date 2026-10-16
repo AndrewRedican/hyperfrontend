@@ -392,6 +392,12 @@ describe('createFeatureHandle', () => {
     const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     handle.setDirty(true)
     expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: true })
+  })
+
+  it('sends the clean declaration that follows through the control plane', () => {
+    const mock = createMockChannel()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
+    handle.setDirty(true)
     handle.setDirty(false)
     expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: false })
   })
@@ -465,8 +471,13 @@ describe('createFeatureHandle', () => {
     it('keeps a schema-violating payload off the channel', () => {
       const mock = createMockChannel()
       const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract })
-      expect(() => handle.send('timeUpdated', {})).toThrow()
-      expect(mock.send).not.toHaveBeenCalled()
+      let rejected = false
+      try {
+        handle.send('timeUpdated', {})
+      } catch {
+        rejected = true
+      }
+      expect({ rejected, sends: mock.send.mock.calls.length }).toEqual({ rejected: true, sends: 0 })
     })
 
     it('sends a schema-valid payload through the channel', () => {

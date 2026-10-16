@@ -16,6 +16,12 @@ describe('addStylesheet function', () => {
     const css = '.test { color: red; }'
     const [styleElement, remove] = addStylesheet(css)
     expect(document.head.contains(styleElement)).toBe(true)
+    removeCallbacks.push(remove)
+  })
+
+  it('fills a new stylesheet with the given css string', () => {
+    const css = '.test { color: red; }'
+    const [styleElement, remove] = addStylesheet(css)
     expect(styleElement.textContent).toEqual(css)
     removeCallbacks.push(remove)
   })
@@ -25,15 +31,19 @@ describe('addStylesheet function', () => {
     const [styleElement, remove] = addStylesheet(styleMap)
 
     expect(document.head.contains(styleElement)).toBe(true)
+    removeCallbacks.push(remove)
+  })
+
+  it('renders a StyleMap into the css rules of a new stylesheet', () => {
+    const styleMap = { '.test': { color: 'red' } }
+    const [styleElement, remove] = addStylesheet(styleMap)
+
     expect(styleElement.textContent).toContain('.test{color: red;}')
     removeCallbacks.push(remove)
   })
 
-  it('throws an error when css is not a string or StyleMap or is empty', () => {
-    expect(() => addStylesheet('')).toThrow()
-    expect(() => addStylesheet(123 as any)).toThrow()
-    expect(() => addStylesheet({} as any)).toThrow()
-    expect(() => addStylesheet(null as any)).toThrow()
+  it.each(['', 123, {}, null])('throws an error for the css %p, which is empty or not a string or StyleMap', (css: unknown) => {
+    expect(() => addStylesheet(css as any)).toThrow()
   })
 
   it('throws an error if a stylesheet with the same label already exists', () => {
@@ -62,17 +72,19 @@ describe('removeStylesheet function', () => {
   it('removes a stylesheet from the document', () => {
     const css = '.test { color: red; }'
     const [styleElement, remove] = addStylesheet(css, 'label')
-    expect(document.head.contains(styleElement)).toBe(true)
+    const attachedBefore = document.head.contains(styleElement)
     remove()
-    expect(document.head.contains(styleElement)).toBe(false)
+    const attachedAfter = document.head.contains(styleElement)
+    expect({ attachedBefore, attachedAfter }).toEqual({ attachedBefore: true, attachedAfter: false })
   })
 
   it('removes a stylesheet by directly passing HTMLStyleElement', () => {
     const css = '.test { color: red; }'
     const [styleElement] = addStylesheet(css)
-    expect(document.head.contains(styleElement)).toBe(true)
+    const attachedBefore = document.head.contains(styleElement)
     removeStylesheet(styleElement)
-    expect(document.head.contains(styleElement)).toBe(false)
+    const attachedAfter = document.head.contains(styleElement)
+    expect({ attachedBefore, attachedAfter }).toEqual({ attachedBefore: true, attachedAfter: false })
   })
 
   it('handles the removal of an already removed stylesheet', () => {

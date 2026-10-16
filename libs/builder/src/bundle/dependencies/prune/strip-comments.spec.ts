@@ -127,8 +127,7 @@ describe('stripComments', () => {
   it('is idempotent on a second run', () => {
     const source = ['/** doc */', 'export const a = 1; // tail'].join('\n')
     const once = stripComments(source)
-    expect(once).toBe('export const a = 1; ')
-    expect(stripComments(once as string)).toBe(null)
+    expect({ firstRun: once, secondRun: stripComments(once as string) }).toEqual({ firstRun: 'export const a = 1; ', secondRun: null })
   })
 })
 
@@ -157,26 +156,41 @@ describe('stripCommentsPass', () => {
     expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })
   })
 
-  it('strips ordinary comments from ESM and CJS chunks and counts the bytes', () => {
+  it('counts the bytes of the comments stripped from ESM and CJS chunks', () => {
     write('a/index.mjs', '/** doc */\nexport const a = 1;')
     write('a/index.cjs', '/** doc */\nexports.a = 1;')
-    const result = stripCommentsPass(depsRoot())
-    expect(result.commentBytesRemoved).toBe(Buffer.byteLength('/** doc */\n') * 2)
-    expect(read('a/index.mjs')).toBe('export const a = 1;')
-    expect(read('a/index.cjs')).toBe('exports.a = 1;')
+    expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: Buffer.byteLength('/** doc */\n') * 2 })
   })
 
-  it('ignores non-chunk files and chunks with nothing removable', () => {
+  it('strips ordinary comments from ESM and CJS chunks', () => {
+    write('a/index.mjs', '/** doc */\nexport const a = 1;')
+    write('a/index.cjs', '/** doc */\nexports.a = 1;')
+    stripCommentsPass(depsRoot())
+    expect({ esm: read('a/index.mjs'), cjs: read('a/index.cjs') }).toEqual({ esm: 'export const a = 1;', cjs: 'exports.a = 1;' })
+  })
+
+  it('counts nothing for non-chunk files and chunks with nothing removable', () => {
     write('a/index.mjs', 'export const a = 1;')
     write('a/index.d.ts', '/** kept */\nexport declare const a: number;')
     write('keep.txt', '// not a chunk')
     expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })
+  })
+
+  it('leaves the comments of a non-chunk file in place', () => {
+    write('a/index.mjs', 'export const a = 1;')
+    write('a/index.d.ts', '/** kept */\nexport declare const a: number;')
+    write('keep.txt', '// not a chunk')
+    stripCommentsPass(depsRoot())
     expect(read('a/index.d.ts')).toBe('/** kept */\nexport declare const a: number;')
   })
 
   it('is idempotent across two passes over the same tree', () => {
     write('a/index.mjs', '/** doc */\nexport const a = 1;')
-    expect(stripCommentsPass(depsRoot()).commentBytesRemoved).toBeGreaterThan(0)
-    expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })
+    const firstPass = stripCommentsPass(depsRoot())
+    const secondPass = stripCommentsPass(depsRoot())
+    expect({ firstPass, secondPass }).toEqual({
+      firstPass: { commentBytesRemoved: Buffer.byteLength('/** doc */\n') },
+      secondPass: { commentBytesRemoved: 0 },
+    })
   })
 })

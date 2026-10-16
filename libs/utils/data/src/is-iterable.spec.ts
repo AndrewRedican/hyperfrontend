@@ -5,24 +5,26 @@ import { isIterable } from './is-iterable'
 import { registerIterableClass } from './register-iterable-class'
 
 describe('isIterable', () => {
-  it('returns true for object and array values, regardless of having items or values or being empty', () => {
-    expect(isIterable([])).toBe(true)
-    expect(isIterable([1, 2, 3])).toBe(true)
-    expect(isIterable({})).toBe(true)
-    expect(isIterable({ a: 1, b: 2 })).toBe(true)
-  })
+  it.each([[[]], [[1, 2, 3]], [{}], [{ a: 1, b: 2 }]])(
+    'returns true for object and array values, regardless of having items or values or being empty: %p',
+    (value: unknown) => {
+      expect(isIterable(value)).toBe(true)
+    }
+  )
 
-  it('returns false for non-iterable values', () => {
-    expect(isIterable(null)).toBe(false)
-    expect(isIterable(undefined)).toBe(false)
-    expect(isIterable(42)).toBe(false)
-    expect(isIterable('hello')).toBe(false)
-    expect(isIterable(true)).toBe(false)
-    expect(
-      isIterable(() => {
+  it.each([
+    [null],
+    [undefined],
+    [42],
+    ['hello'],
+    [true],
+    [
+      () => {
         /* empty function for test */
-      })
-    ).toBe(false)
+      },
+    ],
+  ])('returns false for the non-iterable value %p', (value: unknown) => {
+    expect(isIterable(value)).toBe(false)
   })
 })
 
@@ -46,8 +48,7 @@ describe('isIterable with registered iterable class', () => {
 
   afterAll(() => deregisterIterableClass())
 
-  it('returns true for instances of registered iterable classes', () => {
-    expect(isIterable(new Map())).toBe(true)
-    expect(isIterable(new Set())).toBe(true)
+  it.each([[new Map()], [new Set()]])('returns true for the instance %p of a registered iterable class', (value: unknown) => {
+    expect(isIterable(value)).toBe(true)
   })
 })

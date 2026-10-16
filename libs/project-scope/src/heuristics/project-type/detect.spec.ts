@@ -20,9 +20,7 @@ describe('detectProjectType', () => {
   describe('with non-existent path', () => {
     it('returns unknown type for non-existent path', () => {
       const result = detectProjectType('/non/existent/path', { skipTechDetection: true })
-      expect(result.type).toBe('unknown')
-      expect(result.confidence).toBe(0)
-      expect(result.evidence).toEqual([])
+      expect(result).toEqual({ type: 'unknown', secondaryTypes: [], confidence: 0, evidence: [] })
     })
   })
 
@@ -30,23 +28,27 @@ describe('detectProjectType', () => {
     it('detects project type with evidence', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      expect(result).toBeDefined()
-      expect(result.type).toBeDefined()
-      expect(['library', 'application', 'e2e', 'tool', 'plugin', 'unknown']).toContain(result.type)
-      expect(Array.isArray(result.secondaryTypes)).toBe(true)
-      expect(typeof result.confidence).toBe('number')
-      expect(result.confidence).toBeGreaterThanOrEqual(0)
-      expect(result.confidence).toBeLessThanOrEqual(100)
+      expect(result).toEqual(
+        expect.objectContaining({
+          type: expect.stringMatching(/^(?:library|application|e2e|tool|plugin|unknown)$/),
+          secondaryTypes: expect.any(Array),
+          confidence: expect.any(Number),
+        })
+      )
+    })
+
+    it('keeps the confidence between 0 and 100', () => {
+      const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
+
+      const outOfRange = [result.confidence].filter((confidence) => confidence < 0 || confidence > 100)
+      expect(outOfRange).toEqual([])
     })
 
     it('returns evidence array with correct structure', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      expect(Array.isArray(result.evidence)).toBe(true)
       for (const e of result.evidence) {
-        expect(typeof e.factor).toBe('string')
-        expect(typeof e.confidence).toBe('number')
-        expect(typeof e.description).toBe('string')
+        expect(e).toEqual({ factor: expect.any(String), confidence: expect.any(Number), description: expect.any(String) })
       }
     })
 
@@ -61,8 +63,12 @@ describe('detectProjectType', () => {
     it('detects NX workspace', () => {
       const result = detectProjectType(MONOREPO, { skipTechDetection: true })
 
-      expect(result).toBeDefined()
-      expect(result.type).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ type: expect.any(String) }))
+    })
+
+    it('reports a non-negative confidence for the monorepo', () => {
+      const result = detectProjectType(MONOREPO, { skipTechDetection: true })
+
       expect(result.confidence).toBeGreaterThanOrEqual(0)
     })
   })
@@ -71,8 +77,8 @@ describe('detectProjectType', () => {
     it('returns confidence as proportion of scores', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      expect(result.confidence).toBeGreaterThanOrEqual(0)
-      expect(result.confidence).toBeLessThanOrEqual(100)
+      const outOfRange = [result.confidence].filter((confidence) => confidence < 0 || confidence > 100)
+      expect(outOfRange).toEqual([])
     })
   })
 
@@ -80,8 +86,7 @@ describe('detectProjectType', () => {
     it('includes framework detection in evidence', () => {
       const result = detectProjectType(MINIMAL_PROJECT)
 
-      expect(result).toBeDefined()
-      expect(result.type).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ type: expect.any(String) }))
     })
   })
 
@@ -95,8 +100,7 @@ describe('detectProjectType', () => {
       detectProjectType(MINIMAL_PROJECT, { skipTechDetection: false })
       const full = Date.now() - start2
 
-      expect(typeof skip).toBe('number')
-      expect(typeof full).toBe('number')
+      expect({ skip, full }).toEqual({ skip: expect.any(Number), full: expect.any(Number) })
     })
   })
 
@@ -121,7 +125,6 @@ describe('detectProjectType', () => {
     it('detects application from pages directory', () => {
       const result = detectProjectType(NEXTJS_APP, { skipTechDetection: true })
 
-      expect(result).toBeDefined()
       const hasStructureEvidence = result.evidence.some((e) => e.factor === 'structure')
       expect(hasStructureEvidence === false || result.confidence > 0).toBe(true)
     })
@@ -174,7 +177,6 @@ describe('detectProjectType', () => {
     it('returns secondary types sorted by score', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      expect(Array.isArray(result.secondaryTypes)).toBe(true)
       expect(result.secondaryTypes).not.toContain(result.type)
     })
   })
@@ -199,18 +201,32 @@ describe('detectProjectType', () => {
 })
 
 describe('detectProjectType name patterns', () => {
-  it('detects CLI tool from -cli name pattern', () => {
+  it('records name-pattern evidence for a -cli name', () => {
     const result = detectProjectType(CLI_TOOL, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'name-pattern' && e.description.includes('CLI'))).toBe(true)
-    expect(result.type === 'tool' || result.secondaryTypes.includes('tool')).toBe(true)
+    expect(result.evidence).toEqual(
+      expect.arrayContaining([expect.objectContaining({ factor: 'name-pattern', description: expect.stringContaining('CLI') })])
+    )
   })
 
-  it('detects plugin from -plugin name pattern', () => {
+  it('ranks tool among the types for a -cli name', () => {
+    const result = detectProjectType(CLI_TOOL, { skipTechDetection: true })
+
+    expect([result.type, ...result.secondaryTypes]).toContain('tool')
+  })
+
+  it('records name-pattern evidence for a -plugin name', () => {
     const result = detectProjectType(PLUGIN_PROJECT, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'name-pattern' && e.description.includes('plugin'))).toBe(true)
-    expect(result.type === 'plugin' || result.secondaryTypes.includes('plugin')).toBe(true)
+    expect(result.evidence).toEqual(
+      expect.arrayContaining([expect.objectContaining({ factor: 'name-pattern', description: expect.stringContaining('plugin') })])
+    )
+  })
+
+  it('ranks plugin among the types for a -plugin name', () => {
+    const result = detectProjectType(PLUGIN_PROJECT, { skipTechDetection: true })
+
+    expect([result.type, ...result.secondaryTypes]).toContain('plugin')
   })
 
   it('detects e2e from -e2e name pattern', () => {
@@ -233,10 +249,15 @@ describe('detectProjectType name patterns', () => {
 })
 
 describe('detectProjectType with bin field', () => {
-  it('detects tool from bin field in package.json', () => {
+  it('records bin-field evidence for a package with a bin field', () => {
     const result = detectProjectType(CLI_TOOL, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'bin-field')).toBe(true)
+    expect(result.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ factor: 'bin-field' })]))
+  })
+
+  it('classifies a package with a bin field as a tool', () => {
+    const result = detectProjectType(CLI_TOOL, { skipTechDetection: true })
+
     expect(result.type).toBe('tool')
   })
 })
@@ -263,10 +284,15 @@ describe('detectProjectType directory structure', () => {
 })
 
 describe('detectProjectType with tech detection', () => {
-  it('detects e2e from Cypress framework', () => {
+  it('records e2e-framework evidence for a Cypress project', () => {
     const result = detectProjectType(E2E_PROJECT, { skipTechDetection: false })
 
-    expect(result.evidence.some((e) => e.factor === 'e2e-framework')).toBe(true)
+    expect(result.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ factor: 'e2e-framework' })]))
+  })
+
+  it('classifies a Cypress project as e2e', () => {
+    const result = detectProjectType(E2E_PROJECT, { skipTechDetection: false })
+
     expect(result.type).toBe('e2e')
   })
 
@@ -286,19 +312,29 @@ describe('detectProjectType with tech detection', () => {
 })
 
 describe('detectProjectType with Docker', () => {
-  it('detects application from Dockerfile presence', () => {
+  it('records docker evidence for a project with a Dockerfile', () => {
     const result = detectProjectType(DOCKER_APP, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'docker')).toBe(true)
-    expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
+    expect(result.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ factor: 'docker' })]))
+  })
+
+  it('ranks application among the types for a project with a Dockerfile', () => {
+    const result = detectProjectType(DOCKER_APP, { skipTechDetection: true })
+
+    expect([result.type, ...result.secondaryTypes]).toContain('application')
   })
 })
 
 describe('detectProjectType with NX project.json', () => {
-  it('uses NX projectType field', () => {
+  it('records nx-project-type evidence from the projectType field', () => {
     const result = detectProjectType(NX_TAGGED_LIB, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'nx-project-type')).toBe(true)
+    expect(result.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ factor: 'nx-project-type' })]))
+  })
+
+  it('classifies a project by its NX projectType field', () => {
+    const result = detectProjectType(NX_TAGGED_LIB, { skipTechDetection: true })
+
     expect(result.type).toBe('library')
   })
 
@@ -333,28 +369,40 @@ describe('detectProjectType unit framework detection', () => {
 })
 
 describe('detectProjectType backend framework detection', () => {
-  it('detects application from backend framework', () => {
+  it('records framework evidence naming express for a backend-only project', () => {
     const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: false })
 
-    expect(result.evidence.some((e) => e.factor === 'framework')).toBe(true)
-    expect(result.evidence.some((e) => e.description.toLowerCase().includes('express'))).toBe(true)
-    expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
+    expect(result.evidence).toEqual(
+      expect.arrayContaining([expect.objectContaining({ factor: 'framework', description: expect.stringMatching(/express/i) })])
+    )
+  })
+
+  it('ranks application among the types for a backend-only project', () => {
+    const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: false })
+
+    expect([result.type, ...result.secondaryTypes]).toContain('application')
   })
 
   it('includes backend framework names in evidence description', () => {
     const result = detectProjectType(DOCKER_APP, { skipTechDetection: false })
 
     const frameworkEvidence = result.evidence.find((e) => e.factor === 'framework')
-    expect(frameworkEvidence).toBeDefined()
-    expect(frameworkEvidence?.description.toLowerCase()).toContain('express')
+    expect(frameworkEvidence).toEqual(expect.objectContaining({ description: expect.stringMatching(/express/i) }))
   })
 })
 
 describe('detectProjectType server entry detection', () => {
-  it('detects application from server entry point', () => {
+  it('records entry-point evidence for a server entry point', () => {
     const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: true })
 
-    expect(result.evidence.some((e) => e.factor === 'entry-point' && e.description.includes('server'))).toBe(true)
-    expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
+    expect(result.evidence).toEqual(
+      expect.arrayContaining([expect.objectContaining({ factor: 'entry-point', description: expect.stringContaining('server') })])
+    )
+  })
+
+  it('ranks application among the types for a server entry point', () => {
+    const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: true })
+
+    expect([result.type, ...result.secondaryTypes]).toContain('application')
   })
 })

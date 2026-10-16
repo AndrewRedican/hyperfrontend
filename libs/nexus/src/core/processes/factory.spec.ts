@@ -16,8 +16,7 @@ describe('createProcessManager', () => {
 
       const processId = processManager.create(channel)
 
-      expect(typeof processId).toBe('string')
-      expect(processId).toBeTruthy()
+      expect(processId).toEqual(expect.stringMatching(/^.+$/))
     })
 
     it('registers the channel with the process ID', () => {
@@ -48,12 +47,11 @@ describe('createProcessManager', () => {
     it('removes process ID mapping', () => {
       const channel = { id: 'test-channel' }
       const processId = processManager.create(channel)
-
-      expect(processManager.get(processId)).toBe(channel)
+      const before = processManager.get(processId)
 
       processManager.remove(processId)
 
-      expect(processManager.get(processId)).toBeUndefined()
+      expect({ before, after: processManager.get(processId) }).toEqual({ before: channel, after: undefined })
     })
 
     it('does not throw when removing non-existent process ID', () => {
@@ -99,13 +97,12 @@ describe('createProcessManager', () => {
 
       const processId1 = manager1.create(channel1)
       const processId2 = manager2.create(channel2)
-
-      expect(manager1.get(processId1)).toBe(channel1)
-      expect(manager2.get(processId2)).toBe(channel2)
+      const beforeClear = [manager1.get(processId1), manager2.get(processId2)]
 
       manager1.clear()
-      expect(manager1.get(processId1)).toBeUndefined()
-      expect(manager2.get(processId2)).toBe(channel2)
+
+      const afterClear = [manager1.get(processId1), manager2.get(processId2)]
+      expect({ beforeClear, afterClear }).toEqual({ beforeClear: [channel1, channel2], afterClear: [undefined, channel2] })
     })
   })
 
@@ -123,12 +120,14 @@ describe('createProcessManager', () => {
       const channel1 = { id: 'channel-1' }
       const channel2 = { id: 'channel-2' }
       const processId = 'shared-process-id'
+      const tracked: unknown[] = []
 
       processManager.track(processId, channel1)
-      expect(processManager.get(processId)).toBe(channel1)
-
+      tracked.push(processManager.get(processId))
       processManager.track(processId, channel2)
-      expect(processManager.get(processId)).toBe(channel2)
+      tracked.push(processManager.get(processId))
+
+      expect(tracked).toEqual([channel1, channel2])
     })
 
     it('can be removed after tracking', () => {
@@ -166,23 +165,21 @@ describe('createProcessManager', () => {
     it('returns false after process is removed', () => {
       const channel = { id: 'test-channel' }
       const processId = processManager.create(channel)
-
-      expect(processManager.has(processId)).toBe(true)
+      const before = processManager.has(processId)
 
       processManager.remove(processId)
 
-      expect(processManager.has(processId)).toBe(false)
+      expect({ before, after: processManager.has(processId) }).toEqual({ before: true, after: false })
     })
 
     it('returns false after clear', () => {
       const channel = { id: 'test-channel' }
       const processId = processManager.create(channel)
-
-      expect(processManager.has(processId)).toBe(true)
+      const before = processManager.has(processId)
 
       processManager.clear()
 
-      expect(processManager.has(processId)).toBe(false)
+      expect({ before, after: processManager.has(processId) }).toEqual({ before: true, after: false })
     })
   })
 })

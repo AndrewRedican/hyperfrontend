@@ -6,7 +6,7 @@ import { StepStatus } from '../models/step'
 import { breakingStep } from './breaking'
 
 describe('breakingStep', () => {
-  it('records breaking: false when user says no', async () => {
+  it('completes the step when user says no', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
@@ -15,7 +15,30 @@ describe('breakingStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('records breaking: false when user says no', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+
+    const pending = breakingStep.run(ctx)
+    term.input.enqueueKeys(['n'])
+    await pending
+
     expect(ctx.draft.breaking).toBe(false)
+    term.destroy()
+  })
+
+  it('completes the step after collecting a breaking description', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+
+    const pending = breakingStep.run(ctx)
+    term.input.enqueueKeys(['y', 'A', 'P', 'I', TestKey.Enter])
+    const result = await pending
+
+    expect(result).toEqual({ status: StepStatus.Done })
     term.destroy()
   })
 
@@ -25,9 +48,8 @@ describe('breakingStep', () => {
 
     const pending = breakingStep.run(ctx)
     term.input.enqueueKeys(['y', 'A', 'P', 'I', TestKey.Enter])
-    const result = await pending
+    await pending
 
-    expect(result).toEqual({ status: StepStatus.Done })
     expect(ctx.draft).toEqual(expect.objectContaining({ breaking: true, breakingDescription: 'API' }))
     term.destroy()
   })

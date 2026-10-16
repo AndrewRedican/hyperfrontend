@@ -69,7 +69,7 @@ describe('handleCancelAcknowledged', () => {
     }
   })
 
-  it('process cancel acknowledgement for existing channel', () => {
+  it('removes the pending process for an existing channel', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -84,9 +84,7 @@ describe('handleCancelAcknowledged', () => {
       source: mockWindow,
     } as MessageEvent<IAction>
 
-    expect(() => {
-      handleCancelAcknowledged(routingContext, message)
-    }).not.toThrow()
+    handleCancelAcknowledged(routingContext, message)
 
     expect(processManager.get(processId)).toBeUndefined()
   })
@@ -167,7 +165,6 @@ describe('handleCancelAcknowledged', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(processManager.get(processId1)).toBeUndefined()
-    expect(processManager.get(processId2)).toBeUndefined()
+    expect([processId1, processId2].filter((processId) => processManager.has(processId))).toEqual([])
   })
 })

@@ -81,7 +81,10 @@ describe('createSessionProtocol', () => {
     const first = await initiator.seal(packet)
     const second = await initiator.seal(packet)
     second[second.length - 1] ^= 1
-    await expect(responder.open(second)).rejects.toThrow()
-    await expect(responder.open(first)).resolves.toEqual(packet)
+    const tampered = await responder.open(second).then(
+      () => 'opened',
+      () => 'rejected'
+    )
+    expect({ tampered, first: await responder.open(first) }).toEqual({ tampered: 'rejected', first: packet })
   })
 })

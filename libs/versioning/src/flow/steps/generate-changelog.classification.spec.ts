@@ -103,9 +103,14 @@ describe('Write Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      const entry = result.stateUpdates?.changelogEntry
-      expect(entry.sections.length).toBeGreaterThan(0)
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({ sections: expect.arrayContaining([expect.objectContaining({ type: 'features' })]) }),
+          }),
+        })
+      )
     })
 
     it('omits scope for direct-scope commits (redundant)', async () => {
@@ -134,8 +139,9 @@ describe('Write Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0]).toEqual(expect.objectContaining({ scope: undefined, description: 'add feature' }))
+      expect(featuresSection).toEqual(
+        expect.objectContaining({ items: [expect.objectContaining({ scope: undefined, description: 'add feature' })] })
+      )
     })
 
     it('preserves scope for direct-file commits (informative)', async () => {
@@ -164,8 +170,7 @@ describe('Write Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0].scope).toBe('lib-other')
+      expect(featuresSection).toEqual(expect.objectContaining({ items: [expect.objectContaining({ scope: 'lib-other' })] }))
     })
 
     it('preserves scope for indirect-dependency commits', async () => {
@@ -194,8 +199,7 @@ describe('Write Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
-      expect(depSection).toBeDefined()
-      expect(depSection.items[0].scope).toBe('lib-utils')
+      expect(depSection).toEqual(expect.objectContaining({ items: [expect.objectContaining({ scope: 'lib-utils' })] }))
     })
 
     it('creates Dependency Updates section for indirect commits', async () => {
@@ -230,13 +234,12 @@ describe('Write Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      const entry = result.stateUpdates?.changelogEntry
-      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
-
-      expect(featuresSection).toBeDefined()
-      expect(depSection).toBeDefined()
-      expect(depSection.items[0].scope).toBe('lib-dep')
+      expect(result.stateUpdates?.changelogEntry?.sections).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'features' }),
+          expect.objectContaining({ heading: 'Dependency Updates', items: [expect.objectContaining({ scope: 'lib-dep' })] }),
+        ])
+      )
     })
 
     it('sets indirect flag on ChangelogItem for indirect commits', async () => {
@@ -265,9 +268,9 @@ describe('Write Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
-      expect(depSection).toBeDefined()
-      expect(depSection.items[0].indirect).toBe(true)
-      expect(depSection.items[0].source).toBe('indirect-infra')
+      expect(depSection).toEqual(
+        expect.objectContaining({ items: [expect.objectContaining({ indirect: true, source: 'indirect-infra' })] })
+      )
     })
 
     it('handles breaking changes with classification', async () => {
@@ -305,9 +308,9 @@ describe('Write Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const breakingSection = entry.sections.find((s: { type: string }) => s.type === 'breaking')
-      expect(breakingSection).toBeDefined()
-      expect(breakingSection.heading).toBe('Breaking Changes')
-      expect(breakingSection.items[0].breaking).toBe(true)
+      expect(breakingSection).toEqual(
+        expect.objectContaining({ heading: 'Breaking Changes', items: [expect.objectContaining({ breaking: true })] })
+      )
     })
 
     it('falls back to commits without classification for backward compatibility', async () => {
@@ -320,11 +323,18 @@ describe('Write Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      const entry = result.stateUpdates?.changelogEntry
-      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0].scope).toBe('other')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({
+              sections: expect.arrayContaining([
+                expect.objectContaining({ type: 'features', items: [expect.objectContaining({ scope: 'other' })] }),
+              ]),
+            }),
+          }),
+        })
+      )
     })
   })
 })

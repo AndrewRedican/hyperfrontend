@@ -15,9 +15,16 @@ describe('koaDetector', () => {
       dependencies: { koa: '^2.14.0' },
     }
     const result = koaDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('koa')
-    expect(result?.version).toBe('2.14.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'koa', version: '2.14.0' }))
+  })
+
+  it('scores a koa dependency at least 60', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { koa: '^2.14.0' },
+    }
+    const result = koaDetector('/some/path', pkg)
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 

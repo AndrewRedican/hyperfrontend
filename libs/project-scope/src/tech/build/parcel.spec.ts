@@ -29,9 +29,15 @@ describe('parcelDetector', () => {
     }
     const result = parcelDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('parcel')
-    expect(result?.name).toBe('Parcel')
+    expect(result).toEqual(expect.objectContaining({ id: 'parcel', name: 'Parcel' }))
+  })
+
+  it('scores a parcel dependency at least 60', () => {
+    const pkg: PackageJson = {
+      devDependencies: { parcel: '^2.0.0' },
+    }
+    const result = parcelDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 
@@ -41,8 +47,7 @@ describe('parcelDetector', () => {
     }
     const result = parcelDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.version).toBe('1.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'parcel', version: '1.0.0' }))
   })
 
   it('detects parcel from .parcelrc config file', () => {
@@ -53,8 +58,22 @@ describe('parcelDetector', () => {
     }
     const result = parcelDetector('/project', pkg)
 
-    expect(result?.configPath).toBe('/project/.parcelrc')
-    expect(result?.detectedFrom.some((s) => s.type === 'config-file')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: '/project/.parcelrc',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ type: 'config-file' })]),
+      })
+    )
+  })
+
+  it('increases confidence with a .parcelrc config file', () => {
+    jest.mocked(detectorHelpers.locateConfigFile).mockReturnValueOnce('/project/.parcelrc')
+
+    const pkg: PackageJson = {
+      devDependencies: { parcel: '^2.0.0' },
+    }
+    const result = parcelDetector('/project', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
   })
 

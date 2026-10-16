@@ -37,16 +37,15 @@ describe('detectConfigs', () => {
   it('filters by specific types', () => {
     const configs = detectConfigs(MINIMAL_PROJECT, ['package.json'])
 
-    expect(configs.every((c) => c.type === 'package.json')).toBe(true)
-    expect(configs.length).toBe(1)
+    expect(configs.map((c) => c.type)).toEqual(['package.json'])
   })
 
   it('returns config info with pattern details', () => {
     const configs = detectConfigs(MINIMAL_PROJECT, ['package.json'])
 
-    expect(configs[0].info).toBeDefined()
-    expect(configs[0].info.format).toBe('json')
-    expect(configs[0].matchedPattern).toBe('package.json')
+    expect(configs[0]).toEqual(
+      expect.objectContaining({ matchedPattern: 'package.json', info: expect.objectContaining({ format: 'json' }) })
+    )
   })
 })
 
@@ -54,8 +53,7 @@ describe('findConfigFile', () => {
   it('finds package.json in project', () => {
     const result = findConfigFile(MINIMAL_PROJECT, 'package.json')
 
-    expect(result).toContain('package.json')
-    expect(result).toContain(MINIMAL_PROJECT)
+    expect(result).toBe(join(MINIMAL_PROJECT, 'package.json'))
   })
 
   it('finds tsconfig.json in project', () => {
@@ -87,8 +85,7 @@ describe('getConfigPaths', () => {
   it('returns multiple patterns for tsconfig type', () => {
     const paths = getConfigPaths('tsconfig')
 
-    expect(paths).toContain('tsconfig.json')
-    expect(paths).toContain('tsconfig.*.json')
+    expect(paths).toEqual(['tsconfig.json', 'tsconfig.*.json'])
   })
 
   it('returns empty array for unknown type', () => {
@@ -131,8 +128,7 @@ describe('detectConfigs - caching', () => {
     const result1 = detectConfigs(MINIMAL_PROJECT, undefined, { maxDepth: 1 })
     const result2 = detectConfigs(MINIMAL_PROJECT, undefined, { maxDepth: 10 })
 
-    expect(result1).toBeDefined()
-    expect(result2).toBeDefined()
+    expect(result2).not.toBe(result1)
   })
 })
 
@@ -158,8 +154,7 @@ describe('detectConfigs - edge cases', () => {
 
     const configs = detectConfigs(join(TEST_DIR, 'exact-test'), ['tsconfig'], { skipCache: true })
 
-    expect(configs.length).toBeGreaterThan(0)
-    expect(configs.some((c) => c.path === 'tsconfig.json')).toBe(true)
+    expect(configs.map((c) => c.path)).toEqual(['tsconfig.json'])
   })
 
   it('detects eslint flat config', () => {
@@ -177,8 +172,7 @@ describe('detectConfigs - edge cases', () => {
 
     const configs = detectConfigs(join(TEST_DIR, 'nested-config'), ['project.json'], { maxDepth: 10, skipCache: true })
 
-    expect(configs.length).toBeGreaterThan(0)
-    expect(configs.some((c) => c.path.includes('project.json'))).toBe(true)
+    expect(configs.map((c) => c.path)).toEqual(expect.arrayContaining([expect.stringContaining('project.json')]))
   })
 
   it('does not duplicate configs when patterns match same file', () => {

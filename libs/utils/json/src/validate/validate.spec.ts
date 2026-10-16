@@ -1,68 +1,97 @@
 import type { Schema } from '../types/schema'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validate } from './validate'
 
 describe('validate', () => {
   describe('type keyword', () => {
-    it('validates string type', () => {
+    it('accepts a string for the string type', () => {
       const schema: Schema = { type: 'string' }
       expect(validate('hello', schema).valid).toBe(true)
-      expect(validate(123, schema).valid).toBe(false)
-      expect(validate(null, schema).valid).toBe(false)
     })
 
-    it('validates number type', () => {
+    it.each([123, null])('rejects %p for the string type', (data: unknown) => {
+      const schema: Schema = { type: 'string' }
+      expect(validate(data, schema).valid).toBe(false)
+    })
+
+    it.each([123, 1.5])('accepts %p for the number type', (data: number) => {
       const schema: Schema = { type: 'number' }
-      expect(validate(123, schema).valid).toBe(true)
-      expect(validate(1.5, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a numeric string for the number type', () => {
+      const schema: Schema = { type: 'number' }
       expect(validate('123', schema).valid).toBe(false)
     })
 
-    it('validates integer type', () => {
+    it('accepts an integer for the integer type', () => {
       const schema: Schema = { type: 'integer' }
       expect(validate(123, schema).valid).toBe(true)
-      expect(validate(1.5, schema).valid).toBe(false)
-      expect(validate('123', schema).valid).toBe(false)
     })
 
-    it('validates boolean type', () => {
+    it.each([1.5, '123'])('rejects %p for the integer type', (data: unknown) => {
+      const schema: Schema = { type: 'integer' }
+      expect(validate(data, schema).valid).toBe(false)
+    })
+
+    it.each([true, false])('accepts %p for the boolean type', (data: boolean) => {
       const schema: Schema = { type: 'boolean' }
-      expect(validate(true, schema).valid).toBe(true)
-      expect(validate(false, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a boolean-like string for the boolean type', () => {
+      const schema: Schema = { type: 'boolean' }
       expect(validate('true', schema).valid).toBe(false)
     })
 
-    it('validates array type', () => {
+    it('accepts an empty array for the array type', () => {
       const schema: Schema = { type: 'array' }
       expect(validate([], schema).valid).toBe(true)
+    })
+
+    it('accepts a populated array for the array type', () => {
+      const schema: Schema = { type: 'array' }
       expect(validate([1, 2, 3], schema).valid).toBe(true)
+    })
+
+    it('rejects an object for the array type', () => {
+      const schema: Schema = { type: 'array' }
       expect(validate({}, schema).valid).toBe(false)
     })
 
-    it('validates object type', () => {
+    it.each([{}, { a: 1 }])('accepts %p for the object type', (data: object) => {
       const schema: Schema = { type: 'object' }
-      expect(validate({}, schema).valid).toBe(true)
-      expect(validate({ a: 1 }, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects an array for the object type', () => {
+      const schema: Schema = { type: 'object' }
       expect(validate([], schema).valid).toBe(false)
     })
 
-    it('validates null type', () => {
+    it('accepts null for the null type', () => {
       const schema: Schema = { type: 'null' }
       expect(validate(null, schema).valid).toBe(true)
-      expect(validate(undefined, schema).valid).toBe(false)
-      expect(validate('null', schema).valid).toBe(false)
     })
 
-    it('validates union types', () => {
+    it.each([undefined, 'null'])('rejects %p for the null type', (data: unknown) => {
+      const schema: Schema = { type: 'null' }
+      expect(validate(data, schema).valid).toBe(false)
+    })
+
+    it.each(['hello', 123])('accepts %p for a union of the string and number types', (data: unknown) => {
       const schema: Schema = { type: ['string', 'number'] }
-      expect(validate('hello', schema).valid).toBe(true)
-      expect(validate(123, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a boolean for a union of the string and number types', () => {
+      const schema: Schema = { type: ['string', 'number'] }
       expect(validate(true, schema).valid).toBe(false)
     })
   })
 
   describe('object keywords', () => {
-    it('validates properties', () => {
+    it('accepts an object whose properties match their schemas', () => {
       const schema: Schema = {
         type: 'object',
         properties: {
@@ -71,10 +100,20 @@ describe('validate', () => {
         },
       }
       expect(validate({ name: 'Alice', age: 30 }, schema).valid).toBe(true)
+    })
+
+    it('rejects an object with a property that violates its schema', () => {
+      const schema: Schema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'integer' },
+        },
+      }
       expect(validate({ name: 123, age: 30 }, schema).valid).toBe(false)
     })
 
-    it('validates required properties', () => {
+    it('accepts an object carrying every required property', () => {
       const schema: Schema = {
         type: 'object',
         properties: {
@@ -83,10 +122,20 @@ describe('validate', () => {
         required: ['name'],
       }
       expect(validate({ name: 'Alice' }, schema).valid).toBe(true)
+    })
+
+    it('rejects an object missing a required property', () => {
+      const schema: Schema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+      }
       expect(validate({}, schema).valid).toBe(false)
     })
 
-    it('validates additionalProperties: false', () => {
+    it('accepts an object with only declared properties when additionalProperties is false', () => {
       const schema: Schema = {
         type: 'object',
         properties: {
@@ -95,10 +144,20 @@ describe('validate', () => {
         additionalProperties: false,
       }
       expect(validate({ name: 'Alice' }, schema).valid).toBe(true)
+    })
+
+    it('rejects an undeclared property when additionalProperties is false', () => {
+      const schema: Schema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        additionalProperties: false,
+      }
       expect(validate({ name: 'Alice', extra: true }, schema).valid).toBe(false)
     })
 
-    it('validates additionalProperties with schema', () => {
+    it('accepts an undeclared property matching the additionalProperties schema', () => {
       const schema: Schema = {
         type: 'object',
         properties: {
@@ -107,116 +166,202 @@ describe('validate', () => {
         additionalProperties: { type: 'number' },
       }
       expect(validate({ name: 'Alice', age: 30 }, schema).valid).toBe(true)
+    })
+
+    it('rejects an undeclared property violating the additionalProperties schema', () => {
+      const schema: Schema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        additionalProperties: { type: 'number' },
+      }
       expect(validate({ name: 'Alice', age: 'thirty' }, schema).valid).toBe(false)
     })
 
-    it('validates minProperties and maxProperties', () => {
+    it('rejects an object with fewer properties than minProperties', () => {
       const schema: Schema = { type: 'object', minProperties: 1, maxProperties: 2 }
       expect(validate({}, schema).valid).toBe(false)
-      expect(validate({ a: 1 }, schema).valid).toBe(true)
-      expect(validate({ a: 1, b: 2 }, schema).valid).toBe(true)
+    })
+
+    it.each([{ a: 1 }, { a: 1, b: 2 }])('accepts %p within minProperties and maxProperties', (data: object) => {
+      const schema: Schema = { type: 'object', minProperties: 1, maxProperties: 2 }
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects an object with more properties than maxProperties', () => {
+      const schema: Schema = { type: 'object', minProperties: 1, maxProperties: 2 }
       expect(validate({ a: 1, b: 2, c: 3 }, schema).valid).toBe(false)
     })
   })
 
   describe('array keywords', () => {
-    it('validates items with single schema', () => {
+    it('accepts an array whose items all match the single items schema', () => {
       const schema: Schema = {
         type: 'array',
         items: { type: 'string' },
       }
       expect(validate(['a', 'b', 'c'], schema).valid).toBe(true)
+    })
+
+    it('rejects an array with an item violating the single items schema', () => {
+      const schema: Schema = {
+        type: 'array',
+        items: { type: 'string' },
+      }
       expect(validate(['a', 1, 'c'], schema).valid).toBe(false)
     })
 
-    it('validates tuple items', () => {
+    it('accepts items matching their tuple schemas by position', () => {
       const schema: Schema = {
         type: 'array',
         items: [{ type: 'string' }, { type: 'number' }],
       }
       expect(validate(['a', 1], schema).valid).toBe(true)
+    })
+
+    it('rejects items that violate their tuple schemas by position', () => {
+      const schema: Schema = {
+        type: 'array',
+        items: [{ type: 'string' }, { type: 'number' }],
+      }
       expect(validate([1, 'a'], schema).valid).toBe(false)
     })
 
-    it('validates minItems and maxItems', () => {
+    it('rejects an array shorter than minItems', () => {
       const schema: Schema = { type: 'array', minItems: 1, maxItems: 3 }
       expect(validate([], schema).valid).toBe(false)
+    })
+
+    it('accepts an array at minItems', () => {
+      const schema: Schema = { type: 'array', minItems: 1, maxItems: 3 }
       expect(validate([1], schema).valid).toBe(true)
+    })
+
+    it('accepts an array at maxItems', () => {
+      const schema: Schema = { type: 'array', minItems: 1, maxItems: 3 }
       expect(validate([1, 2, 3], schema).valid).toBe(true)
+    })
+
+    it('rejects an array longer than maxItems', () => {
+      const schema: Schema = { type: 'array', minItems: 1, maxItems: 3 }
       expect(validate([1, 2, 3, 4], schema).valid).toBe(false)
     })
 
-    it('validates uniqueItems', () => {
+    it('accepts distinct primitive items under uniqueItems', () => {
       const schema: Schema = { type: 'array', uniqueItems: true }
       expect(validate([1, 2, 3], schema).valid).toBe(true)
+    })
+
+    it('rejects a repeated primitive item under uniqueItems', () => {
+      const schema: Schema = { type: 'array', uniqueItems: true }
       expect(validate([1, 2, 1], schema).valid).toBe(false)
+    })
+
+    it('accepts structurally distinct object items under uniqueItems', () => {
+      const schema: Schema = { type: 'array', uniqueItems: true }
       expect(validate([{ a: 1 }, { a: 2 }], schema).valid).toBe(true)
+    })
+
+    it('rejects deeply equal object items under uniqueItems', () => {
+      const schema: Schema = { type: 'array', uniqueItems: true }
       expect(validate([{ a: 1 }, { a: 1 }], schema).valid).toBe(false)
     })
   })
 
   describe('string keywords', () => {
-    it('validates minLength and maxLength', () => {
+    it('rejects a string shorter than minLength', () => {
       const schema: Schema = { type: 'string', minLength: 2, maxLength: 5 }
       expect(validate('a', schema).valid).toBe(false)
-      expect(validate('ab', schema).valid).toBe(true)
-      expect(validate('abcde', schema).valid).toBe(true)
+    })
+
+    it.each(['ab', 'abcde'])('accepts %p within minLength and maxLength', (data: string) => {
+      const schema: Schema = { type: 'string', minLength: 2, maxLength: 5 }
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a string longer than maxLength', () => {
+      const schema: Schema = { type: 'string', minLength: 2, maxLength: 5 }
       expect(validate('abcdef', schema).valid).toBe(false)
     })
 
-    it('validates pattern', () => {
+    it('accepts a string matching the pattern', () => {
       const schema: Schema = { type: 'string', pattern: '^[a-z]+$' }
       expect(validate('hello', schema).valid).toBe(true)
-      expect(validate('Hello', schema).valid).toBe(false)
-      expect(validate('hello123', schema).valid).toBe(false)
+    })
+
+    it.each(['Hello', 'hello123'])('rejects %p for not matching the pattern', (data: string) => {
+      const schema: Schema = { type: 'string', pattern: '^[a-z]+$' }
+      expect(validate(data, schema).valid).toBe(false)
     })
   })
 
   describe('number keywords', () => {
-    it('validates minimum and maximum', () => {
+    it('rejects a number below minimum', () => {
       const schema: Schema = { type: 'number', minimum: 0, maximum: 100 }
       expect(validate(-1, schema).valid).toBe(false)
-      expect(validate(0, schema).valid).toBe(true)
-      expect(validate(50, schema).valid).toBe(true)
-      expect(validate(100, schema).valid).toBe(true)
+    })
+
+    it.each([0, 50, 100])('accepts %p within the inclusive minimum and maximum', (data: number) => {
+      const schema: Schema = { type: 'number', minimum: 0, maximum: 100 }
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a number above maximum', () => {
+      const schema: Schema = { type: 'number', minimum: 0, maximum: 100 }
       expect(validate(101, schema).valid).toBe(false)
     })
 
-    it('validates exclusive minimum and maximum', () => {
+    it('rejects a number equal to an exclusive minimum', () => {
       const schema: Schema = { type: 'number', minimum: 0, exclusiveMinimum: true, maximum: 100, exclusiveMaximum: true }
       expect(validate(0, schema).valid).toBe(false)
-      expect(validate(0.1, schema).valid).toBe(true)
-      expect(validate(99.9, schema).valid).toBe(true)
+    })
+
+    it.each([0.1, 99.9])('accepts %p strictly between the exclusive minimum and maximum', (data: number) => {
+      const schema: Schema = { type: 'number', minimum: 0, exclusiveMinimum: true, maximum: 100, exclusiveMaximum: true }
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a number equal to an exclusive maximum', () => {
+      const schema: Schema = { type: 'number', minimum: 0, exclusiveMinimum: true, maximum: 100, exclusiveMaximum: true }
       expect(validate(100, schema).valid).toBe(false)
     })
 
-    it('validates multipleOf', () => {
+    it.each([10, 15])('accepts %p as a multiple of multipleOf', (data: number) => {
       const schema: Schema = { type: 'number', multipleOf: 5 }
-      expect(validate(10, schema).valid).toBe(true)
-      expect(validate(15, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a number that is not a multiple of multipleOf', () => {
+      const schema: Schema = { type: 'number', multipleOf: 5 }
       expect(validate(12, schema).valid).toBe(false)
     })
   })
 
   describe('enum keyword', () => {
-    it('validates enum values', () => {
+    it.each(['red', 'green'])('accepts the enum member %p', (data: string) => {
       const schema: Schema = { enum: ['red', 'green', 'blue'] }
-      expect(validate('red', schema).valid).toBe(true)
-      expect(validate('green', schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a value outside the enum', () => {
+      const schema: Schema = { enum: ['red', 'green', 'blue'] }
       expect(validate('yellow', schema).valid).toBe(false)
     })
 
-    it('validates enum with mixed types', () => {
+    it.each([1, 'one', null])('accepts the mixed-type enum member %p', (data: unknown) => {
       const schema: Schema = { enum: [1, 'one', null] }
-      expect(validate(1, schema).valid).toBe(true)
-      expect(validate('one', schema).valid).toBe(true)
-      expect(validate(null, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a value outside a mixed-type enum', () => {
+      const schema: Schema = { enum: [1, 'one', null] }
       expect(validate(2, schema).valid).toBe(false)
     })
   })
 
   describe('composition keywords', () => {
-    it('validates allOf', () => {
+    it('accepts a value satisfying every allOf schema', () => {
       const schema: Schema = {
         allOf: [
           { type: 'object', properties: { a: { type: 'string' } }, required: ['a'] },
@@ -224,41 +369,75 @@ describe('validate', () => {
         ],
       }
       expect(validate({ a: 'hello', b: 123 }, schema).valid).toBe(true)
-      expect(validate({ a: 'hello' }, schema).valid).toBe(false)
-      expect(validate({ b: 123 }, schema).valid).toBe(false)
     })
 
-    it('validates anyOf', () => {
+    it.each([{ a: 'hello' }, { b: 123 }])('rejects %p for failing one allOf schema', (data: object) => {
+      const schema: Schema = {
+        allOf: [
+          { type: 'object', properties: { a: { type: 'string' } }, required: ['a'] },
+          { type: 'object', properties: { b: { type: 'number' } }, required: ['b'] },
+        ],
+      }
+      expect(validate(data, schema).valid).toBe(false)
+    })
+
+    it.each(['hello', 123])('accepts %p for matching an anyOf schema', (data: unknown) => {
       const schema: Schema = {
         anyOf: [{ type: 'string' }, { type: 'number' }],
       }
-      expect(validate('hello', schema).valid).toBe(true)
-      expect(validate(123, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a value matching no anyOf schema', () => {
+      const schema: Schema = {
+        anyOf: [{ type: 'string' }, { type: 'number' }],
+      }
       expect(validate(true, schema).valid).toBe(false)
     })
 
-    it('validates oneOf', () => {
+    it.each([9, 10])('accepts %p for matching exactly one oneOf schema', (data: number) => {
       const schema: Schema = {
         oneOf: [
           { type: 'number', multipleOf: 3 },
           { type: 'number', multipleOf: 5 },
         ],
       }
-      expect(validate(9, schema).valid).toBe(true)
-      expect(validate(10, schema).valid).toBe(true)
+      expect(validate(data, schema).valid).toBe(true)
+    })
+
+    it('rejects a value matching more than one oneOf schema', () => {
+      const schema: Schema = {
+        oneOf: [
+          { type: 'number', multipleOf: 3 },
+          { type: 'number', multipleOf: 5 },
+        ],
+      }
       expect(validate(15, schema).valid).toBe(false)
+    })
+
+    it('rejects a value matching no oneOf schema', () => {
+      const schema: Schema = {
+        oneOf: [
+          { type: 'number', multipleOf: 3 },
+          { type: 'number', multipleOf: 5 },
+        ],
+      }
       expect(validate(7, schema).valid).toBe(false)
     })
 
-    it('validates not', () => {
+    it('accepts a value that does not match the not schema', () => {
       const schema: Schema = { not: { type: 'string' } }
       expect(validate(123, schema).valid).toBe(true)
+    })
+
+    it('rejects a value that matches the not schema', () => {
+      const schema: Schema = { not: { type: 'string' } }
       expect(validate('hello', schema).valid).toBe(false)
     })
   })
 
   describe('$ref keyword', () => {
-    it('resolves $ref to definitions', () => {
+    it('accepts data satisfying the definition a $ref resolves to', () => {
       const schema: Schema = {
         definitions: {
           address: {
@@ -273,6 +452,22 @@ describe('validate', () => {
         },
       }
       expect(validate({ home: { city: 'London' } }, schema).valid).toBe(true)
+    })
+
+    it('rejects data violating the definition a $ref resolves to', () => {
+      const schema: Schema = {
+        definitions: {
+          address: {
+            type: 'object',
+            properties: { city: { type: 'string' } },
+            required: ['city'],
+          },
+        },
+        type: 'object',
+        properties: {
+          home: { $ref: '#/definitions/address' },
+        },
+      }
       expect(validate({ home: {} }, schema).valid).toBe(false)
     })
 
@@ -288,373 +483,39 @@ describe('validate', () => {
   })
 
   describe('format keyword', () => {
-    it('validates email format', () => {
+    it('accepts a valid email for the email format', () => {
       const schema: Schema = { type: 'string', format: 'email' }
       expect(validate('test@example.com', schema).valid).toBe(true)
+    })
+
+    it('rejects an invalid email for the email format', () => {
+      const schema: Schema = { type: 'string', format: 'email' }
       expect(validate('invalid', schema).valid).toBe(false)
     })
 
-    it('validates uri format', () => {
+    it('accepts a valid uri for the uri format', () => {
       const schema: Schema = { type: 'string', format: 'uri' }
       expect(validate('https://example.com', schema).valid).toBe(true)
+    })
+
+    it('rejects an invalid uri for the uri format', () => {
+      const schema: Schema = { type: 'string', format: 'uri' }
       expect(validate('not a uri', schema).valid).toBe(false)
     })
 
-    it('validates date-time format', () => {
+    it('accepts a valid date-time for the date-time format', () => {
       const schema: Schema = { type: 'string', format: 'date-time' }
       expect(validate('2024-01-15T10:30:00Z', schema).valid).toBe(true)
+    })
+
+    it('rejects an invalid date-time for the date-time format', () => {
+      const schema: Schema = { type: 'string', format: 'date-time' }
       expect(validate('not a date', schema).valid).toBe(false)
     })
 
     it('allows unknown formats', () => {
       const schema: Schema = { type: 'string', format: 'custom-format' }
       expect(validate('anything', schema).valid).toBe(true)
-    })
-  })
-
-  describe('error collection', () => {
-    it('collects all errors by default', () => {
-      const schema: Schema = {
-        type: 'object',
-        properties: {
-          a: { type: 'string' },
-          b: { type: 'string' },
-        },
-      }
-      const result = validate({ a: 1, b: 2 }, schema)
-      expect(result.valid).toBe(false)
-      expect(result.errors.length).toBe(2)
-    })
-
-    it('stops at first error when collectAllErrors is false', () => {
-      const schema: Schema = {
-        type: 'object',
-        properties: {
-          a: { type: 'string' },
-          b: { type: 'string' },
-        },
-      }
-      const result = validate({ a: 1, b: 2 }, schema, { collectAllErrors: false })
-      expect(result.valid).toBe(false)
-      expect(result.errors.length).toBe(1)
-    })
-
-    describe('early exit paths with collectAllErrors: false', () => {
-      it('exits early on type validation failure', () => {
-        const schema: Schema = { type: 'string', minLength: 1 }
-        const result = validate(123, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('type')
-      })
-
-      it('exits early on enum validation failure', () => {
-        const schema: Schema = { enum: ['a', 'b'], minLength: 1 }
-        const result = validate('c', schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('enum')
-      })
-
-      it('exits early on string bounds validation failure', () => {
-        const schema: Schema = { type: 'string', minLength: 5, format: 'email' }
-        const result = validate('ab', schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('minLength')
-      })
-
-      it('exits early on format validation failure', () => {
-        const schema: Schema = { type: 'string', format: 'email' }
-        const result = validate('not-an-email', schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('format')
-      })
-
-      it('exits early on number bounds validation failure', () => {
-        const schema: Schema = { type: 'number', minimum: 10 }
-        const result = validate(5, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('minimum')
-      })
-
-      it('exits early on items validation failure', () => {
-        const schema: Schema = { type: 'array', items: { type: 'string' }, minItems: 5 }
-        const result = validate([1, 2], schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('type')
-      })
-
-      it('exits early on array bounds validation failure', () => {
-        const schema: Schema = { type: 'array', minItems: 5 }
-        const result = validate([1], schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('minItems')
-      })
-
-      it('exits early on properties validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          properties: { name: { type: 'string' } },
-          required: ['name', 'age'],
-        }
-        const result = validate({ name: 123 }, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-      })
-
-      it('exits early on required validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          required: ['name', 'age'],
-          minProperties: 5,
-        }
-        const result = validate({}, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('required')
-      })
-
-      it('exits early on patternProperties validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          patternProperties: { '^x-': { type: 'string' } },
-          additionalProperties: false,
-        }
-        const result = validate({ 'x-value': 123, 'x-other': 456 }, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-      })
-
-      it('exits early on additionalProperties validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          properties: { name: { type: 'string' } },
-          additionalProperties: false,
-          minProperties: 10,
-        }
-        const result = validate({ name: 'test', extra: true }, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('additionalProperties')
-      })
-
-      it('exits early on object bounds validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          minProperties: 3,
-        }
-        const result = validate({ a: 1 }, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('minProperties')
-      })
-
-      it('exits early on dependencies validation failure', () => {
-        const schema: Schema = {
-          type: 'object',
-          dependencies: {
-            bar: ['baz'],
-          },
-        }
-        const result = validate({ bar: 1 }, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('dependencies')
-      })
-
-      it('exits early on allOf validation failure', () => {
-        const schema: Schema = {
-          allOf: [{ type: 'string' }, { minLength: 5 }],
-        }
-        const result = validate(123, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-      })
-
-      it('exits early on anyOf validation failure', () => {
-        const schema: Schema = {
-          anyOf: [{ type: 'string' }, { type: 'number' }],
-        }
-        const result = validate(true, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('anyOf')
-      })
-
-      it('exits early on oneOf validation failure', () => {
-        const schema: Schema = {
-          oneOf: [{ type: 'string' }, { type: 'number' }],
-        }
-        const result = validate(true, schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('oneOf')
-      })
-
-      it('exits early on not validation failure', () => {
-        const schema: Schema = {
-          not: { type: 'string' },
-        }
-        const result = validate('hello', schema, { collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-        expect(result.errors[0].code).toBe('not')
-      })
-    })
-  })
-
-  describe('strictPatterns option', () => {
-    it('reports error for invalid regex pattern when strictPatterns is true', () => {
-      const schema: Schema = { type: 'string', pattern: '[invalid' }
-      const result = validate('test', schema, { strictPatterns: true })
-      expect(result.valid).toBe(false)
-      expect(result.errors.length).toBe(1)
-      expect(result.errors[0].message).toContain('Invalid regex')
-    })
-
-    it('skips validation for invalid regex when strictPatterns is false', () => {
-      const schema: Schema = { type: 'string', pattern: '[invalid' }
-      const result = validate('test', schema, { strictPatterns: false })
-      expect(result.valid).toBe(true)
-    })
-
-    it('reports error for invalid patternProperties regex when strictPatterns is true', () => {
-      const schema: Schema = {
-        type: 'object',
-        patternProperties: { '[invalid': { type: 'string' } },
-      }
-      const result = validate({ foo: 'bar' }, schema, { strictPatterns: true })
-      expect(result.valid).toBe(false)
-      expect(result.errors[0].message).toContain('Invalid regex')
-    })
-  })
-
-  describe('safePatterns option', () => {
-    describe('with built-in heuristics (true)', () => {
-      it('rejects nested quantifier patterns', () => {
-        const schema: Schema = { type: 'string', pattern: '(a+)+' }
-        const result = validate('aaa', schema, { safePatterns: true })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('Unsafe regex')
-        expect(result.errors[0].message).toContain('Nested quantifiers')
-      })
-
-      it('rejects overlapping alternation patterns', () => {
-        const schema: Schema = { type: 'string', pattern: '(a|a)+' }
-        const result = validate('aaa', schema, { safePatterns: true })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('Unsafe regex')
-      })
-
-      it('rejects multiple unbounded wildcards', () => {
-        const schema: Schema = { type: 'string', pattern: '.*foo.*' }
-        const result = validate('foobar', schema, { safePatterns: true })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('unbounded wildcards')
-      })
-
-      it('allows safe patterns', () => {
-        const schema: Schema = { type: 'string', pattern: '^[a-z]+$' }
-        const result = validate('hello', schema, { safePatterns: true })
-        expect(result.valid).toBe(true)
-      })
-
-      it('rejects unsafe patternProperties', () => {
-        const schema: Schema = {
-          type: 'object',
-          patternProperties: { '(a+)+': { type: 'string' } },
-        }
-        const result = validate({ aaa: 'test' }, schema, { safePatterns: true })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('Unsafe regex')
-      })
-    })
-
-    describe('with custom checker function', () => {
-      it('uses custom checker for pattern validation', () => {
-        const customChecker = jest.fn().mockReturnValue({ safe: false, reason: 'Custom rejection' })
-        const schema: Schema = { type: 'string', pattern: 'any-pattern' }
-        const result = validate('test', schema, { safePatterns: customChecker })
-        expect(result.valid).toBe(false)
-        expect(customChecker).toHaveBeenCalledWith('any-pattern')
-        expect(result.errors[0].message).toContain('Custom rejection')
-      })
-
-      it('uses default reason when custom checker provides no reason', () => {
-        const customChecker = jest.fn().mockReturnValue({ safe: false })
-        const schema: Schema = { type: 'string', pattern: 'any-pattern' }
-        const result = validate('test', schema, { safePatterns: customChecker })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('Pattern may cause ReDoS')
-      })
-
-      it('allows pattern when custom checker returns safe', () => {
-        const customChecker = jest.fn().mockReturnValue({ safe: true })
-        const schema: Schema = { type: 'string', pattern: '^test$' }
-        const result = validate('test', schema, { safePatterns: customChecker })
-        expect(result.valid).toBe(true)
-        expect(customChecker).toHaveBeenCalledWith('^test$')
-      })
-
-      it('uses custom checker for patternProperties', () => {
-        const customChecker = jest.fn().mockReturnValue({ safe: false, reason: 'Blocked' })
-        const schema: Schema = {
-          type: 'object',
-          patternProperties: { '^test_': { type: 'string' } },
-        }
-        const result = validate({ test_foo: 'bar' }, schema, { safePatterns: customChecker })
-        expect(result.valid).toBe(false)
-        expect(customChecker).toHaveBeenCalledWith('^test_')
-      })
-
-      it('uses default reason for patternProperties when checker provides no reason', () => {
-        const customChecker = jest.fn().mockReturnValue({ safe: false })
-        const schema: Schema = {
-          type: 'object',
-          patternProperties: { '^test_': { type: 'string' } },
-        }
-        const result = validate({ test_foo: 'bar' }, schema, { safePatterns: customChecker })
-        expect(result.valid).toBe(false)
-        expect(result.errors[0].message).toContain('Pattern may cause ReDoS')
-      })
-    })
-
-    describe('disabled (default)', () => {
-      it('does not check pattern safety when safePatterns is not set', () => {
-        const schema: Schema = { type: 'string', pattern: '(a+)+' }
-        const result = validate('aaa', schema)
-        expect(result.valid).toBe(true)
-      })
-
-      it('does not check pattern safety when safePatterns is false', () => {
-        const schema: Schema = { type: 'string', pattern: '(a+)+' }
-        const result = validate('aaa', schema, { safePatterns: false })
-        expect(result.valid).toBe(true)
-      })
-    })
-
-    describe('with collectAllErrors: false', () => {
-      it('stops at first unsafe pattern error', () => {
-        const schema: Schema = { type: 'string', pattern: '(a+)+' }
-        const result = validate('aaa', schema, { safePatterns: true, collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-      })
-
-      it('stops at first unsafe patternProperties error', () => {
-        const schema: Schema = {
-          type: 'object',
-          patternProperties: { '(a+)+': { type: 'string' }, '(b+)+': { type: 'number' } },
-        }
-        const result = validate({ aaa: 'test' }, schema, { safePatterns: true, collectAllErrors: false })
-        expect(result.valid).toBe(false)
-        expect(result.errors.length).toBe(1)
-      })
     })
   })
 })

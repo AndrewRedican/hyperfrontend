@@ -87,13 +87,24 @@ describe('LifecycleAwareComponent', () => {
 
   it(`invokes onInitStatusChange callback function when initializing status changes`, (done) => {
     asyncProcess.onInitializingStatusChange(callback)
+    let midway: unknown[][] = []
     sleep(100).then(() => {
-      expect(asyncProcess.initializing).toBe(true)
-      expect(callback).toHaveBeenNthCalledWith(1, true)
+      midway = [...callback.mock.calls]
     })
     asyncProcess.init().then(() => {
-      expect(asyncProcess.initializing).toBe(false)
-      expect(callback).toHaveBeenNthCalledWith(2, false)
+      expect({ midway, settled: callback.mock.calls }).toEqual({ midway: [[true]], settled: [[true], [false]] })
+      done()
+    })
+  })
+
+  it(`reports initializing while init runs and not once it settles`, (done) => {
+    asyncProcess.onInitializingStatusChange(callback)
+    let midway: boolean | undefined
+    sleep(100).then(() => {
+      midway = asyncProcess.initializing
+    })
+    asyncProcess.init().then(() => {
+      expect({ midway, settled: asyncProcess.initializing }).toEqual({ midway: true, settled: false })
       done()
     })
   })
@@ -107,11 +118,12 @@ describe('LifecycleAwareComponent', () => {
   it(`invokes onStartStatusChange callback function after starting`, (done) => {
     asyncProcess.onStartStatusChange(callback)
     asyncProcess.init().then(() => {
+      let midway: unknown[][] = []
       sleep(100).then(() => {
-        expect(callback).toHaveBeenNthCalledWith(1, true)
+        midway = [...callback.mock.calls]
       })
       asyncProcess.start().then(() => {
-        expect(callback).toHaveBeenNthCalledWith(2, false)
+        expect({ midway, settled: callback.mock.calls }).toEqual({ midway: [[true]], settled: [[true], [false]] })
         done()
       })
     })
@@ -128,11 +140,12 @@ describe('LifecycleAwareComponent', () => {
     asyncProcess.onStopStatusChange(callback)
     asyncProcess.init().then(() => {
       asyncProcess.start().then(() => {
+        let midway: unknown[][] = []
         sleep(100).then(() => {
-          expect(callback).toHaveBeenNthCalledWith(1, true)
+          midway = [...callback.mock.calls]
         })
         asyncProcess.stop().then(() => {
-          expect(callback).toHaveBeenNthCalledWith(2, false)
+          expect({ midway, settled: callback.mock.calls }).toEqual({ midway: [[true]], settled: [[true], [false]] })
           done()
         })
       })

@@ -4,26 +4,22 @@ import { byNames } from './by-names'
 describe('byNames', () => {
   it('returns true for every name in the configured list', () => {
     const predicate = byNames(['@scope/a', 'internal-utils'])
-    expect(predicate('@scope/a')).toBe(true)
-    expect(predicate('internal-utils')).toBe(true)
+    expect(['@scope/a', 'internal-utils'].filter((name) => !predicate(name))).toEqual([])
   })
 
   it('returns false for names not in the list', () => {
     const predicate = byNames(['@scope/a'])
-    expect(predicate('@scope/b')).toBe(false)
-    expect(predicate('rollup')).toBe(false)
+    expect(['@scope/b', 'rollup'].filter((name) => predicate(name))).toEqual([])
   })
 
   it('returns false for every name when the list is empty', () => {
     const predicate = byNames([])
-    expect(predicate('@scope/a')).toBe(false)
-    expect(predicate('')).toBe(false)
+    expect(['@scope/a', ''].filter((name) => predicate(name))).toEqual([])
   })
 
   it('does not treat substring matches as a hit (exact match only)', () => {
     const predicate = byNames(['@scope/a'])
-    expect(predicate('@scope/aa')).toBe(false)
-    expect(predicate('@scope')).toBe(false)
+    expect(['@scope/aa', '@scope'].filter((name) => predicate(name))).toEqual([])
   })
 
   it('snapshots the supplied list — later mutations to the original array are not observed', () => {

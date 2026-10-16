@@ -40,17 +40,14 @@ describe('collectThirdPartyLicenses', () => {
     writePkg(dep, { name: 'rollup', license: 'MIT', repository: 'https://github.com/rollup/rollup.git' })
     writeFileSync(join(dep, 'LICENSE.md'), 'MIT License\n\n...')
     const result = collectThirdPartyLicenses(workspaceRoot, ['rollup'])
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('rollup')
-    expect(result[0].licenseType).toBe('MIT')
+    expect(result).toEqual([expect.objectContaining({ name: 'rollup', licenseType: 'MIT' })])
   })
 
   it('resolves scoped packages under node_modules/@scope/name', () => {
     const dep = join(nodeModules, '@rollup', 'plugin-json')
     writePkg(dep, { name: '@rollup/plugin-json', license: 'MIT', repository: 'https://github.com/rollup/plugins.git' })
     const result = collectThirdPartyLicenses(workspaceRoot, ['@rollup/plugin-json'])
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('@rollup/plugin-json')
+    expect(result).toEqual([expect.objectContaining({ name: '@rollup/plugin-json' })])
   })
 
   it('drops dependencies whose package.json is not present on disk', () => {

@@ -30,9 +30,12 @@ describe('filterWorkspaceDepsFromOutput', () => {
       peerDependencies: { react: '*', '@hyperfrontend/logging': '*' },
       optionalDependencies: { '@hyperfrontend/logging': '*' },
     }
-    const result = filterWorkspaceDepsFromOutput(pkg, isHyperfrontend)
-    expect(result.peerDependencies).toEqual({ react: '*', '@hyperfrontend/logging': '*' })
-    expect(result.optionalDependencies).toEqual({ '@hyperfrontend/logging': '*' })
+    expect(filterWorkspaceDepsFromOutput(pkg, isHyperfrontend)).toEqual(
+      expect.objectContaining({
+        peerDependencies: { react: '*', '@hyperfrontend/logging': '*' },
+        optionalDependencies: { '@hyperfrontend/logging': '*' },
+      })
+    )
   })
 
   it('does not mutate the input package.json', () => {
@@ -70,9 +73,9 @@ describe('filterBundledDepsFromOutput', () => {
       peerDependencies: { react: '*' },
       optionalDependencies: { typescript: '*' },
     }
-    const result = filterBundledDepsFromOutput(pkg, ['rollup'])
-    expect(result.peerDependencies).toEqual({ react: '*' })
-    expect(result.optionalDependencies).toEqual({ typescript: '*' })
+    expect(filterBundledDepsFromOutput(pkg, ['rollup'])).toEqual(
+      expect.objectContaining({ peerDependencies: { react: '*' }, optionalDependencies: { typescript: '*' } })
+    )
   })
 
   it('does not mutate the input package.json', () => {

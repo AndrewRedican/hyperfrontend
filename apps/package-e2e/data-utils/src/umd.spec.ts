@@ -33,26 +33,31 @@ describe('@hyperfrontend/data-utils UMD bundle', () => {
     expect(typeof global.getType).toBe('function')
   })
 
-  it('correctly detects types from UMD bundle', () => {
+  it.each([
+    ['hello', 'string'],
+    [123, 'number'],
+    [[], 'array'],
+  ])('detects the type of %p as %s from UMD bundle', (input, expected) => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       getType: (value: unknown) => string
     }
 
-    expect(global.getType('hello')).toBe('string')
-    expect(global.getType(123)).toBe('number')
-    expect(global.getType([])).toBe('array')
+    expect(global.getType(input)).toBe(expected)
   })
 
   it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.getType).toBe('function')
-    expect(typeof exports.isIdentical).toBe('function')
-    expect(typeof exports.sameType).toBe('function')
-    expect(typeof exports.traverse).toBe('function')
-    expect(typeof exports.hasCircularReference).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        getType: expect.any(Function),
+        isIdentical: expect.any(Function),
+        sameType: expect.any(Function),
+        traverse: expect.any(Function),
+        hasCircularReference: expect.any(Function),
+      })
+    )
   })
 })

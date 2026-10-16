@@ -34,8 +34,7 @@ describe('isIterableType (after registering a new iterable class)', () => {
 
   afterAll(() => deregisterIterableClass())
 
-  it('returns true for newly registered iterable types', () => {
-    expect(isIterableType('Map')).toBe(true)
-    expect(isIterableType('Set')).toBe(true)
+  it.each([['Map'], ['Set']])('returns true for the newly registered iterable type %s', (type: string) => {
+    expect(isIterableType(type)).toBe(true)
   })
 })

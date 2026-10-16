@@ -50,16 +50,18 @@ describe('@hyperfrontend/logging UMD bundle', () => {
     const mockError = jest.fn()
     const logger = global.createLogger(mockError)
 
-    expect(logger).toBeDefined()
-    expect(typeof logger.info).toBe('function')
-    expect(typeof logger.error).toBe('function')
+    expect(logger).toEqual(
+      expect.objectContaining({
+        info: expect.any(Function),
+        error: expect.any(Function),
+      })
+    )
   })
 
   it('is requireable as CommonJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.createLogger).toBe('function')
+    expect(exports).toEqual(expect.objectContaining({ createLogger: expect.any(Function) }))
   })
 })

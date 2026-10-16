@@ -27,6 +27,8 @@ describe('Event Filters', () => {
   })
 
   describe('create', () => {
+    const allEvents: ChannelEvent[] = ['open', 'close', 'cancel', 'deny', 'invalid']
+
     it('creates a filter for specific event type', () => {
       const handler = jest.fn()
       const filteredHandler = create('open')(handler)
@@ -37,8 +39,7 @@ describe('Event Filters', () => {
       }
 
       filteredHandler('open', openData, mockChannel)
-      expect(handler).toHaveBeenCalledWith('open', openData, mockChannel)
-      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler.mock.calls).toEqual([['open', openData, mockChannel]])
     })
 
     it('does not call handler for different event type', () => {
@@ -51,25 +52,24 @@ describe('Event Filters', () => {
       expect(handler).not.toHaveBeenCalled()
     })
 
-    it('workss with all event types', () => {
-      const events: ChannelEvent[] = ['open', 'close', 'cancel', 'deny', 'invalid']
+    it.each(allEvents)('forwards only %s events to a handler filtered for that type', (eventType: ChannelEvent) => {
+      const handler = jest.fn()
+      const filteredHandler = create(eventType)(handler)
 
-      events.forEach((eventType) => {
-        const handler = jest.fn()
-        const filteredHandler = create(eventType)(handler)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      filteredHandler(eventType, {} as any, mockChannel)
+      const callsAfterOwnEvent = handler.mock.calls.length
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filteredHandler(eventType, {} as any, mockChannel)
-        expect(handler).toHaveBeenCalledTimes(1)
+      allEvents
+        .filter((e) => e !== eventType)
+        .forEach((otherEvent) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          filteredHandler(otherEvent, {} as any, mockChannel)
+        })
 
-        events
-          .filter((e) => e !== eventType)
-          .forEach((otherEvent) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            filteredHandler(otherEvent, {} as any, mockChannel)
-          })
-
-        expect(handler).toHaveBeenCalledTimes(1)
+      expect({ callsAfterOwnEvent, callsAfterOtherEvents: handler.mock.calls.length }).toEqual({
+        callsAfterOwnEvent: 1,
+        callsAfterOtherEvents: 1,
       })
     })
   })
@@ -231,30 +231,33 @@ describe('Event Filters', () => {
       }
       const closeData: CloseEventData = { notify: true }
       const cancelData: CancelEventData = { notify: false }
+      const snapshot = (after: ChannelEvent) => ({
+        after,
+        open: openHandler.mock.calls.length,
+        close: closeHandler.mock.calls.length,
+        cancel: cancelHandler.mock.calls.length,
+      })
 
       filteredOpen('open', openData, mockChannel)
       filteredClose('open', openData, mockChannel)
       filteredCancel('open', openData, mockChannel)
-
-      expect(openHandler).toHaveBeenCalledTimes(1)
-      expect(closeHandler).not.toHaveBeenCalled()
-      expect(cancelHandler).not.toHaveBeenCalled()
+      const afterOpen = snapshot('open')
 
       filteredOpen('close', closeData, mockChannel)
       filteredClose('close', closeData, mockChannel)
       filteredCancel('close', closeData, mockChannel)
-
-      expect(openHandler).toHaveBeenCalledTimes(1)
-      expect(closeHandler).toHaveBeenCalledTimes(1)
-      expect(cancelHandler).not.toHaveBeenCalled()
+      const afterClose = snapshot('close')
 
       filteredOpen('cancel', cancelData, mockChannel)
       filteredClose('cancel', cancelData, mockChannel)
       filteredCancel('cancel', cancelData, mockChannel)
+      const afterCancel = snapshot('cancel')
 
-      expect(openHandler).toHaveBeenCalledTimes(1)
-      expect(closeHandler).toHaveBeenCalledTimes(1)
-      expect(cancelHandler).toHaveBeenCalledTimes(1)
+      expect([afterOpen, afterClose, afterCancel]).toEqual([
+        { after: 'open', open: 1, close: 0, cancel: 0 },
+        { after: 'close', open: 1, close: 1, cancel: 0 },
+        { after: 'cancel', open: 1, close: 1, cancel: 1 },
+      ])
     })
   })
 })

@@ -39,12 +39,24 @@ describe('createMockFn call recording', () => {
     assert.deepEqual(mock.mock.results, [{ type: 'return', value: 7 }])
   })
 
-  it('records a thrown error without swallowing it', () => {
+  it('rethrows an error its implementation throws, rather than swallowing it', () => {
     const failure = new Error('boom')
     const mock = createMockFn(() => {
       throw failure
     })
     assert.throws(() => mock())
+  })
+
+  it('records an error its implementation throws as a throw result', () => {
+    const failure = new Error('boom')
+    const mock = createMockFn(() => {
+      throw failure
+    })
+    try {
+      mock()
+    } catch {
+      // why: the rethrow has a test of its own; this one reads only what the call recorded.
+    }
     assert.deepEqual(mock.mock.results, [{ type: 'throw', value: failure }])
   })
 

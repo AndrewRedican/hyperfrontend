@@ -137,9 +137,9 @@ describe('docs-site-secondary-entries', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingSecondaryRoute')
-      expect(messageIds).toContain('missingSecondaryNavigation')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(
+        expect.arrayContaining(['missingSecondaryRoute', 'missingSecondaryNavigation'])
+      )
     })
   })
 

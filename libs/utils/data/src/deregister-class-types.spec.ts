@@ -1,8 +1,12 @@
+import type { UnknownClass } from './models'
 import { after as afterAll, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterClassTypes } from './deregister-class-types'
 import { registerClassTypes } from './register-class-types'
 import { registeredClasses } from './shared/consts'
+
+// why: the registry keeps classes in registration order, which earlier tests in this file reshuffle, so membership is compared in name order.
+const byName = (left: UnknownClass, right: UnknownClass): number => left.name.localeCompare(right.name)
 
 describe('deregisterClassTypes', () => {
   class A {}
@@ -21,20 +25,12 @@ describe('deregisterClassTypes', () => {
 
   it('removes only specified classes when called with class references', () => {
     deregisterClassTypes(B, D)
-    expect(registeredClasses).toHaveLength(2)
-    expect(registeredClasses).toContain(A)
-    expect(registeredClasses).toContain(C)
-    expect(registeredClasses).not.toContain(B)
-    expect(registeredClasses).not.toContain(D)
+    expect([...registeredClasses].sort(byName)).toEqual([A, C])
   })
 
   it('does nothing when called with unregistered class references', () => {
     class E {}
     deregisterClassTypes(E)
-    expect(registeredClasses).toHaveLength(4)
-    expect(registeredClasses).toContain(A)
-    expect(registeredClasses).toContain(B)
-    expect(registeredClasses).toContain(C)
-    expect(registeredClasses).toContain(D)
+    expect([...registeredClasses].sort(byName)).toEqual([A, B, C, D])
   })
 })

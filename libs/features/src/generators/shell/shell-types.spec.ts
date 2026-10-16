@@ -111,29 +111,33 @@ describe('buildShellTypes', () => {
 
   it('omits the frame surface entirely for a windowed-only feature', () => {
     const types = buildShellTypes(contract, ['popup', 'standalone'])
-    expect(types).not.toContain('FeatureSandboxOptions')
-    expect(types).not.toContain('sandbox')
-    expect(types).not.toContain('permissions')
-    expect(types).not.toContain('container')
-    expect(types).not.toContain('concealUnresponsive')
+    expect(
+      ['FeatureSandboxOptions', 'sandbox', 'permissions', 'container', 'concealUnresponsive'].filter((name) => types.includes(name))
+    ).toEqual([])
   })
 
   it('emits the frame surface when an iframe mode is declared', () => {
     const types = buildShellTypes(contract, ['dialog'])
-    expect(types).toContain('export interface FeatureSandboxOptions {')
-    expect(types).toContain('sandbox?: boolean | FeatureSandboxOptions')
-    expect(types).toContain('permissions?: readonly string[]')
-    expect(types).toContain('concealUnresponsive?: boolean')
+    expect(
+      [
+        'export interface FeatureSandboxOptions {',
+        'sandbox?: boolean | FeatureSandboxOptions',
+        'permissions?: readonly string[]',
+        'concealUnresponsive?: boolean',
+      ].filter((fragment) => !types.includes(fragment))
+    ).toEqual([])
   })
 
   it('lets an unresponsive callback conceal the frame', () => {
     expect(buildShellTypes(contract, ['embedded'])).toContain('  conceal(): void\n  /** Closes the feature gracefully. */')
   })
 
-  it('requires container when embedded is the first declared mode', () => {
-    const types = buildShellTypes(contract, ['embedded', 'dialog'])
-    expect(types).toContain('  container: string | HTMLElement')
-    expect(types).not.toContain('container?:')
+  it('declares a required container when embedded is the first declared mode', () => {
+    expect(buildShellTypes(contract, ['embedded', 'dialog'])).toContain('  container: string | HTMLElement')
+  })
+
+  it('declares no optional container when embedded is the first declared mode', () => {
+    expect(buildShellTypes(contract, ['embedded', 'dialog'])).not.toContain('container?:')
   })
 
   it('makes container optional when embedded is not the default mode', () => {
@@ -142,19 +146,23 @@ describe('buildShellTypes', () => {
 
   it('omits the embed options for a dialog-only feature', () => {
     const types = buildShellTypes(contract, ['dialog'])
-    expect(types).not.toContain('container')
-    expect(types).not.toContain('embedWidth')
-    expect(types).toContain('dialogBackdrop?:')
+    expect(['container', 'embedWidth'].filter((name) => types.includes(name))).toEqual([])
+  })
+
+  it('keeps the dialog options for a dialog-only feature', () => {
+    expect(buildShellTypes(contract, ['dialog'])).toContain('dialogBackdrop?:')
   })
 
   it('omits the dialog options when dialog is not declared', () => {
     const types = buildShellTypes(contract, ['embedded'])
-    expect(types).not.toContain('dialogWidth')
-    expect(types).not.toContain('closeOnEscape')
+    expect(['dialogWidth', 'closeOnEscape'].filter((name) => types.includes(name))).toEqual([])
   })
 
-  it('emits the popup dimensions only when popup is declared', () => {
+  it('emits the popup dimensions when popup is declared', () => {
     expect(buildShellTypes(contract, ['popup', 'standalone'])).toContain('popupWidth?: number')
+  })
+
+  it('omits the popup dimensions when popup is not declared', () => {
     expect(buildShellTypes(contract, ['embedded'])).not.toContain('popupWidth')
   })
 
@@ -198,9 +206,13 @@ describe('buildShellTypes', () => {
     )
   })
 
-  it('keeps dismiss out of the lifecycle union without dialog', () => {
-    const types = buildShellTypes(contract, ['embedded'])
-    expect(types).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen', handler")
-    expect(types).not.toContain("'dismiss'")
+  it('closes the lifecycle union after reopen without dialog', () => {
+    expect(buildShellTypes(contract, ['embedded'])).toContain(
+      "'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen', handler"
+    )
+  })
+
+  it('keeps dismiss out of the generated types without dialog', () => {
+    expect(buildShellTypes(contract, ['embedded'])).not.toContain("'dismiss'")
   })
 })

@@ -1,6 +1,7 @@
 import type { Schema } from '../types/schema'
 import type { PatternSafetyChecker } from '../types/validation'
 import type { SchemaValidator } from './context'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createValidationContext, createBranchContext, pushPath, addError, shouldContinue } from './context'
@@ -38,8 +39,12 @@ describe('createValidationContext', () => {
     }
     const ctx = createValidationContext(schema, mockValidator)
 
-    expect(ctx.definitions.has('#/definitions/address')).toBe(true)
-    expect(ctx.definitions.has('#/definitions/name')).toBe(true)
+    expect(ctx.definitions).toEqual(
+      createMap<string, Schema>([
+        ['#/definitions/address', { type: 'object' }],
+        ['#/definitions/name', { type: 'string' }],
+      ])
+    )
   })
 
   it('defaults collectAllErrors to true', () => {
@@ -113,7 +118,7 @@ describe('pushPath', () => {
     expect(childCtx.path).toBe('/a~1b')
   })
 
-  it('preserves shared references to rootSchema and definitions', () => {
+  it('preserves the shared rootSchema reference', () => {
     const schema: Schema = {
       definitions: { test: { type: 'string' } },
     }
@@ -121,6 +126,15 @@ describe('pushPath', () => {
     const childCtx = pushPath(ctx, 'prop')
 
     expect(childCtx.rootSchema).toBe(ctx.rootSchema)
+  })
+
+  it('preserves the shared definitions reference', () => {
+    const schema: Schema = {
+      definitions: { test: { type: 'string' } },
+    }
+    const ctx = createValidationContext(schema, mockValidator)
+    const childCtx = pushPath(ctx, 'prop')
+
     expect(childCtx.definitions).toBe(ctx.definitions)
   })
 
@@ -179,8 +193,7 @@ describe('addError', () => {
     const ctx = createValidationContext(schema, mockValidator)
     addError(ctx, 'Invalid value')
 
-    expect(ctx.errors).toHaveLength(1)
-    expect(ctx.errors[0].message).toBe('Invalid value')
+    expect(ctx.errors).toEqual([expect.objectContaining({ message: 'Invalid value' })])
   })
 
   it('adds error with current path', () => {

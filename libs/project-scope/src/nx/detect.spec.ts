@@ -62,7 +62,6 @@ describe('NX Detection', () => {
     it('finds workspace root from nested project', () => {
       const root = findNxWorkspaceRoot(CORE_PROJECT)
       expect(root).toBe(MONOREPO)
-      expect(root).not.toBeNull()
     })
 
     it('finds workspace root from workspace root', () => {
@@ -91,12 +90,9 @@ describe('NX Detection', () => {
     it('returns workspace info for NX workspace', () => {
       const info = getNxWorkspaceInfo(MONOREPO)
 
-      expect(info).not.toBeNull()
-      expect(info?.root).toBe(MONOREPO)
-      expect(info?.nxJson).toBeDefined()
-      expect(info?.workspaceLayout).toBeDefined()
-      expect(info?.workspaceLayout.appsDir).toBe('apps')
-      expect(info?.workspaceLayout.libsDir).toBe('libs')
+      expect(info).toEqual(
+        expect.objectContaining({ root: MONOREPO, nxJson: expect.any(Object), workspaceLayout: { appsDir: 'apps', libsDir: 'libs' } })
+      )
     })
 
     it('returns null for non-NX workspace', () => {
@@ -111,19 +107,19 @@ describe('NX Detection', () => {
 
     it('detects integrated vs standalone status', () => {
       const info = getNxWorkspaceInfo(MONOREPO)
-      expect(info?.isIntegrated).toBeDefined()
       expect(typeof info?.isIntegrated).toBe('boolean')
     })
 
     it('falls back to workspace.json when nx.json is missing', () => {
       const info = getNxWorkspaceInfo(NX_WORKSPACE_JSON_ONLY)
 
-      expect(info).not.toBeNull()
-      expect(info?.root).toBe(NX_WORKSPACE_JSON_ONLY)
-      expect(info?.isIntegrated).toBe(true)
-      expect(info?.workspaceLayout.appsDir).toBe('apps')
-      expect(info?.workspaceLayout.libsDir).toBe('libs')
-      expect(info?.nxJson).toEqual({})
+      expect(info).toEqual({
+        root: NX_WORKSPACE_JSON_ONLY,
+        version: '18.0.0',
+        nxJson: {},
+        isIntegrated: true,
+        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+      })
     })
 
     it('detects NX version from package.json', () => {
@@ -147,8 +143,7 @@ describe('NX Detection', () => {
     it('returns custom workspaceLayout from nx.json', () => {
       const info = getNxWorkspaceInfo(NX_INTEGRATED_WORKSPACE)
 
-      expect(info?.workspaceLayout.appsDir).toBe('applications')
-      expect(info?.workspaceLayout.libsDir).toBe('libraries')
+      expect(info?.workspaceLayout).toEqual({ appsDir: 'applications', libsDir: 'libraries' })
     })
 
     it('returns defaultProject from nx.json', () => {

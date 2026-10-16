@@ -22,8 +22,7 @@ describe('pause', () => {
 
     await pausePromise
 
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(1)
-    expect(setTimeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), timeMS)
+    expect(setTimeoutSpy.mock.calls).toEqual([[expect.any(Function), timeMS]])
   })
 
   it('does not wait when given a zero timeMS value', async () => {
@@ -34,8 +33,7 @@ describe('pause', () => {
 
     await pausePromise
 
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(1)
-    expect(setTimeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), timeMS)
+    expect(setTimeoutSpy.mock.calls).toEqual([[expect.any(Function), timeMS]])
   })
 
   it('does not wait when given a negative timeMS value', async () => {
@@ -46,8 +44,7 @@ describe('pause', () => {
 
     await pausePromise
 
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(1)
-    expect(setTimeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), timeMS)
+    expect(setTimeoutSpy.mock.calls).toEqual([[expect.any(Function), timeMS]])
   })
 
   afterEach(() => {

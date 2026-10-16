@@ -6,26 +6,24 @@ import { registerIterableClass } from './register-iterable-class'
 import { setConfig, getConfig } from './shared/consts'
 
 describe('hasCircularReference', () => {
-  it('returns false for values that are non-iterable values', () => {
-    expect(hasCircularReference(5)).toEqual(false)
-    expect(hasCircularReference('foo bar')).toEqual(false)
-    expect(hasCircularReference(null)).toEqual(false)
-    expect(hasCircularReference(void 0)).toEqual(false)
-    expect(hasCircularReference(Symbol())).toEqual(false)
-    expect(hasCircularReference(true)).toEqual(false)
+  it.each([[5], ['foo bar'], [null], [void 0], [Symbol()], [true]])('returns false for the non-iterable value %p', (value: unknown) => {
+    expect(hasCircularReference(value)).toEqual(false)
   })
 
-  it('returns false for iterable values that do not have circular references', () => {
-    expect(hasCircularReference({})).toEqual(false)
-    expect(hasCircularReference([])).toEqual(false)
-    expect(hasCircularReference({ a: { b: { c: {} } } })).toEqual(false)
-  })
+  it.each([[{}], [[]], [{ a: { b: { c: {} } } }]])(
+    'returns false for the iterable value %p that does not have circular references',
+    (value: unknown) => {
+      expect(hasCircularReference(value)).toEqual(false)
+    }
+  )
 
-  it('returns true for values with circular reference', () => {
+  it('returns true for an array that contains itself', () => {
     const selfContainingArray: unknown[] = []
     selfContainingArray[0] = selfContainingArray
     expect(hasCircularReference(selfContainingArray)).toEqual(true)
+  })
 
+  it('returns true for an object that references itself from a nested value', () => {
     const selfReferencingObject = { a: { b: { c: {} } } }
     selfReferencingObject.a.b.c = selfReferencingObject
     expect(hasCircularReference(selfReferencingObject)).toEqual(true)
@@ -81,13 +79,26 @@ describe('hasCircularReference - with non-extensible input', () => {
 })
 
 describe('hasCircularReference - when reading a value throws', () => {
-  it('restores the configuration it turned on', () => {
+  it('lets the error thrown by the reader propagate', () => {
     const target = {
       get explode(): unknown {
         throw new Error('reader exploded')
       },
     }
     expect(() => hasCircularReference(target)).toThrow('reader exploded')
+  })
+
+  it('restores the configuration it turned on', () => {
+    const target = {
+      get explode(): unknown {
+        throw new Error('reader exploded')
+      },
+    }
+    try {
+      hasCircularReference(target)
+    } catch {
+      // note: the reader's error only triggers the restore here; the test above pins that it propagates.
+    }
     expect(getConfig().detectCircularReferences).toBe(false)
   })
 })
@@ -128,18 +139,31 @@ describe('hasCircularReference - with detectCircularReferences already enabled',
     setConfig({ detectCircularReferences: false })
   })
 
-  it('returns false for values without circular references when config is already enabled', () => {
-    expect(getConfig().detectCircularReferences).toBe(true)
-    expect(hasCircularReference({})).toEqual(false)
-    expect(hasCircularReference({ a: { b: { c: {} } } })).toEqual(false)
-    expect(getConfig().detectCircularReferences).toBe(true)
+  it.each([[{}], [{ a: { b: { c: {} } } }]])(
+    'returns false for the value %p without circular references when config is already enabled',
+    (value: unknown) => {
+      expect(hasCircularReference(value)).toEqual(false)
+    }
+  )
+
+  it('leaves the already enabled config enabled after checking values without circular references', () => {
+    const before = getConfig().detectCircularReferences
+    hasCircularReference({})
+    hasCircularReference({ a: { b: { c: {} } } })
+    expect({ before, after: getConfig().detectCircularReferences }).toEqual({ before: true, after: true })
   })
 
   it('returns true for values with circular references when config is already enabled', () => {
-    expect(getConfig().detectCircularReferences).toBe(true)
     const selfReferencingObject = { a: { b: { c: {} } } }
     selfReferencingObject.a.b.c = selfReferencingObject
     expect(hasCircularReference(selfReferencingObject)).toEqual(true)
-    expect(getConfig().detectCircularReferences).toBe(true)
+  })
+
+  it('leaves the already enabled config enabled after checking a value with circular references', () => {
+    const before = getConfig().detectCircularReferences
+    const selfReferencingObject = { a: { b: { c: {} } } }
+    selfReferencingObject.a.b.c = selfReferencingObject
+    hasCircularReference(selfReferencingObject)
+    expect({ before, after: getConfig().detectCircularReferences }).toEqual({ before: true, after: true })
   })
 })

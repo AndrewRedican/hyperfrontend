@@ -37,64 +37,49 @@ function createMockSourceCode(text: string, lines?: string[]): SourceCode {
 
 describe('comment-analysis utilities', () => {
   describe('containsJsDocTag', () => {
-    it('detects common JSDoc tags', () => {
-      expect(containsJsDocTag('@param name The parameter')).toBe(true)
-      expect(containsJsDocTag('@returns The result')).toBe(true)
-      expect(containsJsDocTag('@module myModule')).toBe(true)
-      expect(containsJsDocTag('@example')).toBe(true)
+    it.each(['@param name The parameter', '@returns The result', '@module myModule', '@example'])(
+      'detects the common JSDoc tag in %p',
+      (text: string) => {
+        expect(containsJsDocTag(text)).toBe(true)
+      }
+    )
+
+    it.each(['@PARAM name', '@Param name'])('detects the tag in %p regardless of case', (text: string) => {
+      expect(containsJsDocTag(text)).toBe(true)
     })
 
-    it('handles tags case-insensitively', () => {
-      expect(containsJsDocTag('@PARAM name')).toBe(true)
-      expect(containsJsDocTag('@Param name')).toBe(true)
+    it.each(['@parameters name', '@returning value'])('rejects the partial tag match in %p', (text: string) => {
+      expect(containsJsDocTag(text)).toBe(false)
     })
 
-    it('rejects partial tag matches', () => {
-      expect(containsJsDocTag('@parameters name')).toBe(false)
-      expect(containsJsDocTag('@returning value')).toBe(false)
+    it.each(['@param\n', '@param ', '@param\t', '* @param'])('accepts the tag terminator in %p', (text: string) => {
+      expect(containsJsDocTag(text)).toBe(true)
     })
 
-    it('accepts tags followed by valid terminators', () => {
-      expect(containsJsDocTag('@param\n')).toBe(true)
-      expect(containsJsDocTag('@param ')).toBe(true)
-      expect(containsJsDocTag('@param\t')).toBe(true)
-      expect(containsJsDocTag('* @param')).toBe(true)
+    it.each(['@vitest-environment jsdom', '@jsxImportSource react'])('detects the specialized tag in %p', (text: string) => {
+      expect(containsJsDocTag(text)).toBe(true)
     })
 
-    it('detects specialized tags', () => {
-      expect(containsJsDocTag('@vitest-environment jsdom')).toBe(true)
-      expect(containsJsDocTag('@jsxImportSource react')).toBe(true)
-    })
-
-    it('returns false for plain text without tags', () => {
-      expect(containsJsDocTag('This is just text')).toBe(false)
-      expect(containsJsDocTag('')).toBe(false)
+    it.each(['This is just text', ''])('returns false for the tagless text %p', (text: string) => {
+      expect(containsJsDocTag(text)).toBe(false)
     })
   })
 
   describe('isToolingDirective', () => {
-    it('detects TypeScript directives', () => {
-      expect(isToolingDirective('@ts-ignore')).toBe(true)
-      expect(isToolingDirective('@ts-expect-error')).toBe(true)
-      expect(isToolingDirective('@ts-nocheck')).toBe(true)
-      expect(isToolingDirective('@ts-check')).toBe(true)
+    it.each(['@ts-ignore', '@ts-expect-error', '@ts-nocheck', '@ts-check'])('detects the TypeScript directive %s', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
-    it('detects ESLint directives', () => {
-      expect(isToolingDirective('eslint-disable')).toBe(true)
-      expect(isToolingDirective('eslint-disable-next-line')).toBe(true)
-      expect(isToolingDirective('eslint-enable')).toBe(true)
+    it.each(['eslint-disable', 'eslint-disable-next-line', 'eslint-enable'])('detects the ESLint directive %s', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
-    it('detects Istanbul/coverage directives', () => {
-      expect(isToolingDirective('istanbul ignore next')).toBe(true)
-      expect(isToolingDirective('istanbul ignore line')).toBe(true)
-      expect(isToolingDirective('c8 ignore next')).toBe(true)
+    it.each(['istanbul ignore next', 'istanbul ignore line', 'c8 ignore next'])('detects the coverage directive %s', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
-    it('detects bundler directives', () => {
-      expect(isToolingDirective('webpackChunkName: "chunk"')).toBe(true)
-      expect(isToolingDirective('@vite-ignore')).toBe(true)
+    it.each(['webpackChunkName: "chunk"', '@vite-ignore'])('detects the bundler directive %s', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
     it('detects TypeScript triple-slash references', () => {
@@ -109,19 +94,16 @@ describe('comment-analysis utilities', () => {
       expect(isToolingDirective(' </hf:feature>')).toBe(true)
     })
 
-    it('handles leading whitespace', () => {
-      expect(isToolingDirective('  @ts-ignore')).toBe(true)
-      expect(isToolingDirective('\t@ts-expect-error')).toBe(true)
+    it.each(['  @ts-ignore', '\t@ts-expect-error'])('detects the directive behind the leading whitespace in %p', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
-    it('is case-insensitive', () => {
-      expect(isToolingDirective('@TS-IGNORE')).toBe(true)
-      expect(isToolingDirective('ESLINT-DISABLE')).toBe(true)
+    it.each(['@TS-IGNORE', 'ESLINT-DISABLE'])('detects the directive %s regardless of case', (text: string) => {
+      expect(isToolingDirective(text)).toBe(true)
     })
 
-    it('returns false for non-directives', () => {
-      expect(isToolingDirective('This is a comment')).toBe(false)
-      expect(isToolingDirective('')).toBe(false)
+    it.each(['This is a comment', ''])('returns false for the non-directive %p', (text: string) => {
+      expect(isToolingDirective(text)).toBe(false)
     })
   })
 
@@ -132,49 +114,38 @@ describe('comment-analysis utilities', () => {
       }
     })
 
-    it('handles case-insensitivity', () => {
-      expect(hasAllowedHintPrefix('WHY: explanation')).toBe(true)
-      expect(hasAllowedHintPrefix('Why: explanation')).toBe(true)
-      expect(hasAllowedHintPrefix('TODO: do this')).toBe(true)
+    it.each(['WHY: explanation', 'Why: explanation', 'TODO: do this'])('accepts the prefix in %p regardless of case', (text: string) => {
+      expect(hasAllowedHintPrefix(text)).toBe(true)
     })
 
-    it('handles leading whitespace', () => {
-      expect(hasAllowedHintPrefix('  why: explanation')).toBe(true)
-      expect(hasAllowedHintPrefix('\tnote: important')).toBe(true)
+    it.each(['  why: explanation', '\tnote: important'])('accepts the prefix behind the leading whitespace in %p', (text: string) => {
+      expect(hasAllowedHintPrefix(text)).toBe(true)
     })
 
-    it('requires colon after prefix', () => {
-      expect(hasAllowedHintPrefix('why explanation')).toBe(false)
-      expect(hasAllowedHintPrefix('why-explanation')).toBe(false)
+    it.each(['why explanation', 'why-explanation'])('rejects %p, whose prefix lacks a colon', (text: string) => {
+      expect(hasAllowedHintPrefix(text)).toBe(false)
     })
 
-    it('returns false for non-prefixed comments', () => {
-      expect(hasAllowedHintPrefix('This is plain text')).toBe(false)
-      expect(hasAllowedHintPrefix('')).toBe(false)
+    it.each(['This is plain text', ''])('returns false for the unprefixed comment %p', (text: string) => {
+      expect(hasAllowedHintPrefix(text)).toBe(false)
     })
   })
 
   describe('containsSectionDivider', () => {
-    it('detects 4+ consecutive equals signs', () => {
-      expect(containsSectionDivider('====')).toBe(true)
-      expect(containsSectionDivider('=====')).toBe(true)
-      expect(containsSectionDivider('==============================')).toBe(true)
+    it.each(['====', '=====', '=============================='])('detects the run of four or more equals signs in %p', (text: string) => {
+      expect(containsSectionDivider(text)).toBe(true)
     })
 
-    it('detects equals in context', () => {
-      expect(containsSectionDivider('// ==== Section ====')).toBe(true)
-      expect(containsSectionDivider('  ====  ')).toBe(true)
+    it.each(['// ==== Section ====', '  ====  '])('detects the equals signs in the context of %p', (text: string) => {
+      expect(containsSectionDivider(text)).toBe(true)
     })
 
-    it('rejects fewer than 4 equals', () => {
-      expect(containsSectionDivider('===')).toBe(false)
-      expect(containsSectionDivider('==')).toBe(false)
-      expect(containsSectionDivider('=')).toBe(false)
+    it.each(['===', '==', '='])('rejects %p, which has fewer than four equals signs', (text: string) => {
+      expect(containsSectionDivider(text)).toBe(false)
     })
 
-    it('rejects non-contiguous equals', () => {
-      expect(containsSectionDivider('= = = =')).toBe(false)
-      expect(containsSectionDivider('=-=')).toBe(false)
+    it.each(['= = = =', '=-='])('rejects the non-contiguous equals signs in %p', (text: string) => {
+      expect(containsSectionDivider(text)).toBe(false)
     })
 
     it('handles empty strings', () => {
@@ -183,39 +154,41 @@ describe('comment-analysis utilities', () => {
   })
 
   describe('isConfigFile', () => {
-    it('identifies TypeScript config files', () => {
-      expect(isConfigFile('/path/to/tsconfig.json')).toBe(true)
-      expect(isConfigFile('/path/to/tsconfig.base.json')).toBe(true)
+    it.each(['/path/to/tsconfig.json', '/path/to/tsconfig.base.json'])('identifies the TypeScript config file %s', (path: string) => {
+      expect(isConfigFile(path)).toBe(true)
     })
 
-    it('identifies Jest config files', () => {
-      expect(isConfigFile('/path/to/jest.config.ts')).toBe(true)
-      expect(isConfigFile('/path/to/jest.config.js')).toBe(true)
+    it.each(['/path/to/jest.config.ts', '/path/to/jest.config.js'])('identifies the Jest config file %s', (path: string) => {
+      expect(isConfigFile(path)).toBe(true)
     })
 
-    it('identifies ESLint config files', () => {
-      expect(isConfigFile('/path/to/eslint.config.js')).toBe(true)
-      expect(isConfigFile('/path/to/eslint.base.config.cjs')).toBe(true)
-      expect(isConfigFile('/path/to/.eslintrc.json')).toBe(true)
-    })
+    it.each(['/path/to/eslint.config.js', '/path/to/eslint.base.config.cjs', '/path/to/.eslintrc.json'])(
+      'identifies the ESLint config file %s',
+      (path: string) => {
+        expect(isConfigFile(path)).toBe(true)
+      }
+    )
 
-    it('identifies various build tool configs', () => {
-      expect(isConfigFile('/path/to/vite.config.ts')).toBe(true)
-      expect(isConfigFile('/path/to/webpack.config.js')).toBe(true)
-      expect(isConfigFile('/path/to/rollup.config.js')).toBe(true)
-    })
+    it.each(['/path/to/vite.config.ts', '/path/to/webpack.config.js', '/path/to/rollup.config.js'])(
+      'identifies the build tool config file %s',
+      (path: string) => {
+        expect(isConfigFile(path)).toBe(true)
+      }
+    )
 
-    it('identifies Nx/Angular configs', () => {
-      expect(isConfigFile('/path/to/nx.json')).toBe(true)
-      expect(isConfigFile('/path/to/project.json')).toBe(true)
-      expect(isConfigFile('/path/to/angular.json')).toBe(true)
-    })
+    it.each(['/path/to/nx.json', '/path/to/project.json', '/path/to/angular.json'])(
+      'identifies the Nx or Angular config file %s',
+      (path: string) => {
+        expect(isConfigFile(path)).toBe(true)
+      }
+    )
 
-    it('returns false for regular source files', () => {
-      expect(isConfigFile('/path/to/component.ts')).toBe(false)
-      expect(isConfigFile('/path/to/utils.js')).toBe(false)
-      expect(isConfigFile('/path/to/index.tsx')).toBe(false)
-    })
+    it.each(['/path/to/component.ts', '/path/to/utils.js', '/path/to/index.tsx'])(
+      'returns false for the regular source file %s',
+      (path: string) => {
+        expect(isConfigFile(path)).toBe(false)
+      }
+    )
   })
 
   describe('isDecorativeHeaderComment', () => {
@@ -400,9 +373,7 @@ describe('comment-analysis utilities', () => {
         end: { line: 1, column: 7 },
       })
       const sourceCode = createMockSourceCode('// ====\n')
-      const blocks = findSectionDividerBlocks([comment], sourceCode)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]?.comments).toHaveLength(1)
+      expect(findSectionDividerBlocks([comment], sourceCode)).toEqual([expect.objectContaining({ comments: [comment] })])
     })
 
     it('groups consecutive divider comments', () => {
@@ -421,9 +392,7 @@ describe('comment-analysis utilities', () => {
         }),
       ]
       const sourceCode = createMockSourceCode('// ====\n// Section\n// ====\n')
-      const blocks = findSectionDividerBlocks(comments, sourceCode)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]?.comments).toHaveLength(3)
+      expect(findSectionDividerBlocks(comments, sourceCode)).toEqual([expect.objectContaining({ comments })])
     })
 
     it('ignores block comments', () => {
@@ -476,9 +445,7 @@ describe('comment-analysis utilities', () => {
         }),
       ]
       const sourceCode = createMockSourceCode('// Header\n// ====\n')
-      const blocks = findSectionDividerBlocks(comments, sourceCode)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]?.comments).toHaveLength(2)
+      expect(findSectionDividerBlocks(comments, sourceCode)).toEqual([expect.objectContaining({ comments })])
     })
 
     it('captures correct range including newline', () => {
@@ -493,23 +460,16 @@ describe('comment-analysis utilities', () => {
   })
 
   describe('constants export correctly', () => {
-    it('exports JSDOC_TAGS array', () => {
-      expect(Array.isArray(JSDOC_TAGS)).toBe(true)
-      expect(JSDOC_TAGS.length).toBeGreaterThan(0)
-      expect(JSDOC_TAGS).toContain('@param')
-      expect(JSDOC_TAGS).toContain('@returns')
+    it('exports the JSDOC_TAGS array with the core documentation tags', () => {
+      expect(JSDOC_TAGS).toEqual(expect.arrayContaining(['@param', '@returns']))
     })
 
-    it('exports TOOLING_DIRECTIVE_PATTERNS array', () => {
-      expect(Array.isArray(TOOLING_DIRECTIVE_PATTERNS)).toBe(true)
-      expect(TOOLING_DIRECTIVE_PATTERNS.length).toBeGreaterThan(0)
-      expect(TOOLING_DIRECTIVE_PATTERNS).toContain('@ts-ignore')
+    it('exports the TOOLING_DIRECTIVE_PATTERNS array with the TypeScript suppression directive', () => {
+      expect(TOOLING_DIRECTIVE_PATTERNS).toEqual(expect.arrayContaining(['@ts-ignore']))
     })
 
-    it('exports ALLOWED_HINT_PREFIXES array', () => {
-      expect(Array.isArray(ALLOWED_HINT_PREFIXES)).toBe(true)
-      expect(ALLOWED_HINT_PREFIXES).toContain('why')
-      expect(ALLOWED_HINT_PREFIXES).toContain('todo')
+    it('exports the ALLOWED_HINT_PREFIXES array with the why and todo prefixes', () => {
+      expect(ALLOWED_HINT_PREFIXES).toEqual(expect.arrayContaining(['why', 'todo']))
     })
   })
 })

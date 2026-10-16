@@ -83,8 +83,7 @@ describe('previewStep', () => {
     const data = term.output.getWrittenData()
 
     // why: preview must reach stdout regardless of logger level so the user sees what's being committed
-    expect(data).toContain('feat: added login')
-    expect(data).toContain('warn(imperative-mood):')
+    expect(data).toMatch(/\nfeat: added login\n[\s\S]*warn\(imperative-mood\): /)
 
     term.destroy()
   })

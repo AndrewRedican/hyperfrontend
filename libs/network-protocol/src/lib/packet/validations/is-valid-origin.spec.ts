@@ -7,12 +7,7 @@ describe('isValidOrigin', () => {
     expect(isValidOrigin(uuidV4())).toBe(true)
   })
 
-  it('returns false for invalid origin', () => {
-    expect(isValidOrigin(null)).toBe(false)
-    expect(isValidOrigin(void 0)).toBe(false)
-    expect(isValidOrigin(5)).toBe(false)
-    expect(isValidOrigin({})).toBe(false)
-    expect(isValidOrigin('')).toBe(false)
-    expect(isValidOrigin('not-a-guid')).toBe(false)
+  it.each([null, void 0, 5, {}, '', 'not-a-guid'])('returns false for the invalid origin %p', (value) => {
+    expect(isValidOrigin(value)).toBe(false)
   })
 })

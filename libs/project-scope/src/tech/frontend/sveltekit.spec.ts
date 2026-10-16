@@ -29,8 +29,15 @@ describe('sveltekitDetector', () => {
     }
     const result = sveltekitDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('sveltekit')
+    expect(result).toEqual(expect.objectContaining({ id: 'sveltekit' }))
+  })
+
+  it('scores @sveltejs/kit at least 70', () => {
+    const pkg: PackageJson = {
+      devDependencies: { '@sveltejs/kit': '^2.0.0' },
+    }
+    const result = sveltekitDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -45,7 +52,19 @@ describe('sveltekitDetector', () => {
     const result = sveltekitDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.path === 'svelte.config.js')).toBe(true)
+  })
+
+  it('records svelte.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('svelte.config.js')
+    })
+
+    const pkg: PackageJson = {
+      devDependencies: { '@sveltejs/kit': '^2.0.0' },
+    }
+    const result = sveltekitDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'svelte.config.js' })]))
   })
 
   it('increases confidence with src/routes directory', () => {
@@ -59,6 +78,18 @@ describe('sveltekitDetector', () => {
     const result = sveltekitDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.path === 'src/routes/')).toBe(true)
+  })
+
+  it('records the src/routes directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes(join('src', 'routes')) || path.endsWith('routes')
+    })
+
+    const pkg: PackageJson = {
+      devDependencies: { '@sveltejs/kit': '^2.0.0' },
+    }
+    const result = sveltekitDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'src/routes/' })]))
   })
 })

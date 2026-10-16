@@ -135,22 +135,28 @@ describe('createTokenParser', () => {
     })
 
     it('accumulates a paste body across chunks', () => {
-      expect(parser.feed('\x1B[200~he')).toEqual([])
-      expect(parser.feed('llo')).toEqual([])
-      expect(parser.feed('\x1B[201~x')).toEqual([
-        { type: TokenType.Paste, value: 'hello' },
-        { type: TokenType.Key, value: 'x' },
+      const tokensPerChunk = [parser.feed('\x1B[200~he'), parser.feed('llo'), parser.feed('\x1B[201~x')]
+
+      expect(tokensPerChunk).toEqual([
+        [],
+        [],
+        [
+          { type: TokenType.Paste, value: 'hello' },
+          { type: TokenType.Key, value: 'x' },
+        ],
       ])
     })
 
     it('handles an end marker split across chunks', () => {
-      expect(parser.feed('\x1B[200~abc\x1B[2')).toEqual([])
-      expect(parser.feed('01~')).toEqual([{ type: TokenType.Paste, value: 'abc' }])
+      const tokensPerChunk = [parser.feed('\x1B[200~abc\x1B[2'), parser.feed('01~')]
+
+      expect(tokensPerChunk).toEqual([[], [{ type: TokenType.Paste, value: 'abc' }]])
     })
 
     it('handles a start marker split across chunks', () => {
-      expect(parser.feed('\x1B[20')).toEqual([])
-      expect(parser.feed('0~hi\x1B[201~')).toEqual([{ type: TokenType.Paste, value: 'hi' }])
+      const tokensPerChunk = [parser.feed('\x1B[20'), parser.feed('0~hi\x1B[201~')]
+
+      expect(tokensPerChunk).toEqual([[], [{ type: TokenType.Paste, value: 'hi' }]])
     })
 
     it('preserves escape sequences inside the paste body', () => {
@@ -171,18 +177,21 @@ describe('createTokenParser', () => {
 
   describe('partial escape sequences', () => {
     it('carries a partial CSI sequence to the next chunk', () => {
-      expect(parser.feed('\x1B[')).toEqual([])
-      expect(parser.feed('B')).toEqual([{ type: TokenType.Key, value: '\x1B[B' }])
+      const tokensPerChunk = [parser.feed('\x1B['), parser.feed('B')]
+
+      expect(tokensPerChunk).toEqual([[], [{ type: TokenType.Key, value: '\x1B[B' }]])
     })
 
     it('carries a trailing lone escape to the next chunk', () => {
-      expect(parser.feed('a\x1B')).toEqual([{ type: TokenType.Key, value: 'a' }])
-      expect(parser.feed('[C')).toEqual([{ type: TokenType.Key, value: '\x1B[C' }])
+      const tokensPerChunk = [parser.feed('a\x1B'), parser.feed('[C')]
+
+      expect(tokensPerChunk).toEqual([[{ type: TokenType.Key, value: 'a' }], [{ type: TokenType.Key, value: '\x1B[C' }]])
     })
 
     it('carries a partial SS3 sequence to the next chunk', () => {
-      expect(parser.feed('\x1BO')).toEqual([])
-      expect(parser.feed('B')).toEqual([{ type: TokenType.Key, value: '\x1BOB' }])
+      const tokensPerChunk = [parser.feed('\x1BO'), parser.feed('B')]
+
+      expect(tokensPerChunk).toEqual([[], [{ type: TokenType.Key, value: '\x1BOB' }]])
     })
   })
 })

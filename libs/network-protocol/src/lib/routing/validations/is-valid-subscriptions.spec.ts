@@ -6,16 +6,12 @@ describe('isValidSubscriptions', () => {
     expect(isValidSubscriptions(new WeakMap())).toBe(true)
   })
 
-  test('returns false if subscriptions is not a WeakMap', () => {
-    expect(isValidSubscriptions([])).toBe(false)
-    expect(isValidSubscriptions({})).toBe(false)
-    expect(isValidSubscriptions(null)).toBe(false)
-    expect(isValidSubscriptions(undefined)).toBe(false)
+  // note: every row is wrapped in an array because a bare array row is spread across the test's parameters.
+  test.each([[[]], [{}], [null], [undefined]])('returns false if subscriptions is %p, which is not a WeakMap', (value) => {
+    expect(isValidSubscriptions(value)).toBe(false)
   })
 
-  test('returns false for other data types', () => {
-    expect(isValidSubscriptions(42)).toBe(false)
-    expect(isValidSubscriptions('not a WeakMap')).toBe(false)
-    expect(isValidSubscriptions(Symbol('not a WeakMap'))).toBe(false)
+  test.each([42, 'not a WeakMap', Symbol('not a WeakMap')])('returns false for the other data type %p', (value) => {
+    expect(isValidSubscriptions(value)).toBe(false)
   })
 })

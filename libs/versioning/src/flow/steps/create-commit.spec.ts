@@ -146,16 +146,17 @@ describe('Create Commit Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createGitCommitStep()
 
-      expect(step.id).toBe(CREATE_COMMIT_STEP_ID)
-      expect(step.id).toBe('create-commit')
-      expect(step.name).toBe('Create Version Commit')
+      expect(step).toEqual(expect.objectContaining({ id: CREATE_COMMIT_STEP_ID, name: 'Create Version Commit' }))
+    })
+
+    it('exposes create-commit as the step ID constant', () => {
+      expect(CREATE_COMMIT_STEP_ID).toBe('create-commit')
     })
 
     it('depends on update-packages and write-changelog', () => {
       const step = createGitCommitStep()
 
-      expect(step.dependsOn).toContain('update-packages')
-      expect(step.dependsOn).toContain('write-changelog')
+      expect(step.dependsOn).toEqual(expect.arrayContaining(['update-packages', 'write-changelog']))
     })
   })
 
@@ -166,8 +167,7 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('Git operations disabled')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Git operations disabled') }))
     })
 
     it('skips when no bump needed (no nextVersion)', async () => {
@@ -176,8 +176,7 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('No version bump')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('No version bump') }))
     })
 
     it('skips when bumpType is none', async () => {
@@ -191,7 +190,16 @@ describe('Create Commit Step', () => {
   })
 
   describe('execute - dry run', () => {
-    it('returns success without creating commit in dry run', async () => {
+    it('returns success with a dry run message in dry run', async () => {
+      const step = createGitCommitStep()
+      const ctx = createMockContext({ nextVersion: '1.1.0', bumpType: 'minor' }, { dryRun: true })
+
+      const result = await step.execute(ctx)
+
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('[DRY RUN] Would commit') }))
+    })
+
+    it('does not create a commit in dry run', async () => {
       const step = createGitCommitStep()
       const git = createMockGitClient()
       const ctx: FlowContext = {
@@ -199,11 +207,8 @@ describe('Create Commit Step', () => {
         git,
       }
 
-      const result = await step.execute(ctx)
+      await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('[DRY RUN]')
-      expect(result.message).toContain('Would commit')
       expect(git.createCommit).not.toHaveBeenCalled()
     })
 
@@ -213,8 +218,7 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.message).toContain('lib-test')
-      expect(result.message).toContain('2.0.0')
+      expect(result.message).toContain('chore(lib-test): release version 2.0.0')
     })
   })
 
@@ -276,6 +280,22 @@ describe('Create Commit Step', () => {
       await step.execute(ctx)
 
       expect(git.stage).toHaveBeenCalledWith(['/workspace/libs/test/package.json', '/workspace/libs/test/CHANGELOG.md'])
+    })
+
+    it('does not stage all files when modified files are provided', async () => {
+      const step = createGitCommitStep()
+      const git = createMockGitClient()
+      const ctx: FlowContext = {
+        ...createMockContext({
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          modifiedFiles: ['/workspace/libs/test/package.json', '/workspace/libs/test/CHANGELOG.md'],
+        }),
+        git,
+      }
+
+      await step.execute(ctx)
+
       expect(git.stageAll).not.toHaveBeenCalled()
     })
 
@@ -317,10 +337,13 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.commitHash).toBe('abc123def456')
-      expect(result.message).toContain('Created commit')
-      expect(result.message).toContain('abc123d')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ commitHash: 'abc123def456' }),
+          message: expect.stringContaining('Created commit abc123d'),
+        })
+      )
     })
 
     it('logs commit creation', async () => {
@@ -352,9 +375,9 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeDefined()
-      expect(result.message).toContain('Failed to stage')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'failed', error: expect.any(Error), message: expect.stringContaining('Failed to stage') })
+      )
     })
 
     it('fails when commit creation fails', async () => {
@@ -367,9 +390,9 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeDefined()
-      expect(result.message).toContain('Failed to create commit')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'failed', error: expect.any(Error), message: expect.stringContaining('Failed to create commit') })
+      )
     })
 
     it('wraps non-Error throws in Error objects', async () => {
@@ -387,8 +410,7 @@ describe('Create Commit Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBeInstanceOf(Error)
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', error: expect.any(Error) }))
     })
   })
 })

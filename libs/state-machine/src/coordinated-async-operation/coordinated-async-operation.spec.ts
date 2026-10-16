@@ -10,8 +10,7 @@ describe('CoordinatedAsyncProcess', () => {
 
     await coordinator.startAll()
 
-    expect(process1).toHaveBeenCalled()
-    expect(process2).toHaveBeenCalled()
+    expect({ process1: process1.mock.calls.length, process2: process2.mock.calls.length }).toEqual({ process1: 1, process2: 1 })
   })
 
   it('cancels all registered async processes', () => {

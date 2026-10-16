@@ -126,12 +126,19 @@ describe('generateDeclarations', () => {
     expect((spawn as Mock).mock.calls[0]?.[2]).not.toHaveProperty('shell')
   })
 
-  it('rejects without spawning when typescript cannot be resolved from the workspace root', async () => {
+  it('rejects with the resolution error when typescript cannot be resolved from the workspace root', async () => {
     const resolveError = new Error("Cannot find module 'typescript/bin/tsc'")
     ;(resolveTscScript as Mock).mockImplementation(() => {
       throw resolveError
     })
     await expect(generateDeclarations(makeContext())).rejects.toBe(resolveError)
+  })
+
+  it('spawns nothing when typescript cannot be resolved from the workspace root', async () => {
+    ;(resolveTscScript as Mock).mockImplementation(() => {
+      throw new Error("Cannot find module 'typescript/bin/tsc'")
+    })
+    await generateDeclarations(makeContext()).catch(() => undefined)
     expect(spawn).not.toHaveBeenCalled()
   })
 
@@ -167,8 +174,7 @@ describe('generateDeclarations', () => {
     child.stdout.emit('data', 'chunk-b\n')
     child.emit('close', 0)
     await promise
-    expect(mockChannel.debug).toHaveBeenCalledWith('chunk-a')
-    expect(mockChannel.debug).toHaveBeenCalledWith('chunk-b')
+    expect(mockChannel.debug.mock.calls.map(([line]) => line)).toEqual(expect.arrayContaining(['chunk-a', 'chunk-b']))
   })
 
   it('forwards stderr chunks to log.warn as they stream in', async () => {
@@ -190,7 +196,25 @@ describe('generateDeclarations', () => {
     const spawnError = new Error('spawn failed')
     child.emit('error', spawnError)
     await expect(promise).rejects.toBe(spawnError)
+  })
+
+  it('logs the spawn error when the child emits an error event', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('error', new Error('spawn failed'))
+    await promise.catch(() => undefined)
     expect(mockChannel.error).toHaveBeenCalledWith('tsc spawn error: spawn failed')
+  })
+
+  it('skips the flatten when the child emits an error event', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('error', new Error('spawn failed'))
+    await promise.catch(() => undefined)
     expect(flattenDeclarationPaths).not.toHaveBeenCalled()
   })
 
@@ -201,7 +225,25 @@ describe('generateDeclarations', () => {
     await tick()
     child.emit('close', 2)
     await expect(promise).rejects.toThrow(/tsc failed with exit code 2/)
+  })
+
+  it('skips the flatten when tsc closes with a non-zero exit code', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 2)
+    await promise.catch(() => undefined)
     expect(flattenDeclarationPaths).not.toHaveBeenCalled()
+  })
+
+  it('logs the exit code and elapsed time when tsc closes with a non-zero exit code', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 2)
+    await promise.catch(() => undefined)
     expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^tsc failed with exit code 2 after \d+ms$/))
   })
 
@@ -255,12 +297,21 @@ describe('generateDeclarations', () => {
     expect(mockChannel.debug).toHaveBeenCalledWith(expect.stringMatching(/^tsc args: .*--emitDeclarationOnly/))
   })
 
-  it('starts a heartbeat interval on spawn and clears it on close', async () => {
+  it('starts a 5s heartbeat interval on spawn', async () => {
     const child = makeFakeChild()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
+    child.emit('close', 0)
+    await promise
+  })
+
+  it('clears the heartbeat interval on close', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
     child.emit('close', 0)
     await promise
     expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
@@ -272,7 +323,7 @@ describe('generateDeclarations', () => {
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('error', new Error('boom'))
-    await expect(promise).rejects.toThrow('boom')
+    await promise.catch(() => undefined)
     expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
   })
 
@@ -307,7 +358,7 @@ describe('generateDeclarations', () => {
     await tick()
     child.emit('close', 0)
     await promise
-    expect(mockChannel.info).toHaveBeenCalledWith('flattening declaration paths')
-    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^flatten complete in \d+ms$/))
+    const flattenLines = mockChannel.info.mock.calls.map(([line]) => line as string).filter((line) => line.startsWith('flatten'))
+    expect(flattenLines).toEqual(['flattening declaration paths', expect.stringMatching(/^flatten complete in \d+ms$/)])
   })
 })

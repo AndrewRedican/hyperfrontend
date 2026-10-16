@@ -9,6 +9,13 @@ describe('setIntervalCallback', () => {
     await sleep(350)
     stopInterval()
     expect(callback).toHaveBeenCalledTimes(3)
+  })
+
+  it('stops calling the callback once the returned stop function runs', async () => {
+    const callback = jest.fn()
+    const stopInterval = setIntervalCallback(callback, 100)
+    await sleep(350)
+    stopInterval()
     await sleep(200)
     expect(callback).toHaveBeenCalledTimes(3)
   })

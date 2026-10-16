@@ -13,8 +13,7 @@ describe('TopicStore', () => {
     it('successfully creates a topic', () => {
       store.create('New Topic')
       const topic = store.getByName('New Topic') as Topic
-      expect(isValidTopic(topic)).toBe(true)
-      expect(topic.name).toEqual('New Topic')
+      expect({ valid: isValidTopic(topic), name: topic.name }).toEqual({ valid: true, name: 'New Topic' })
     })
 
     it('throws an error when creating a topic with an existing name', () => {
@@ -101,9 +100,9 @@ describe('TopicStore', () => {
     it('clears all topics', () => {
       store.create('Topic 1')
       store.add({ name: 'Topic 2', id: 'id2' })
-      expect(store.list.length).toBeGreaterThan(0)
+      const before = store.list.length
       store.clear()
-      expect(store.list.length).toBe(0)
+      expect({ before, after: store.list.length }).toEqual({ before: 2, after: 0 })
     })
   })
 
@@ -111,8 +110,7 @@ describe('TopicStore', () => {
     it('retrieves a topic by name', () => {
       store.create('Topic By Name')
       const topic = store.getByName('Topic By Name') as Topic
-      expect(isValidTopic(topic)).toBe(true)
-      expect(topic.name).toEqual('Topic By Name')
+      expect({ valid: isValidTopic(topic), name: topic.name }).toEqual({ valid: true, name: 'Topic By Name' })
     })
 
     it('returns null for a nonexistent topic by name', () => {
@@ -125,8 +123,7 @@ describe('TopicStore', () => {
       store.create('Topic By ID')
       const topicByName = store.getByName('Topic By ID') as Topic
       const topic = store.getById(topicByName.id) as Topic
-      expect(isValidTopic(topic)).toBe(true)
-      expect(topic.id).toBe(topicByName.id)
+      expect({ valid: isValidTopic(topic), id: topic.id }).toEqual({ valid: true, id: topicByName.id })
     })
 
     it('returns null for a nonexistent topic by id', () => {
@@ -139,25 +136,35 @@ describe('TopicStore', () => {
       store.create('Topic 1')
       store.add({ name: 'Topic 2', id: 'id2' })
       const topicsList = store.list
-      expect(topicsList.length).toBe(2)
-      expect(topicsList.some((t) => t.name === 'Topic 1')).toBe(true)
-      expect(topicsList.some((t) => t.id === 'id2')).toBe(true)
+      expect({ count: topicsList.length, topics: topicsList }).toEqual({
+        count: 2,
+        topics: expect.arrayContaining([expect.objectContaining({ name: 'Topic 1' }), expect.objectContaining({ id: 'id2' })]),
+      })
     })
   })
 
   describe('existsByName 2', () => {
-    it('verifies that a topic exists by name', () => {
+    it('verifies that a created topic exists by name', () => {
       store.create('Existing Topic')
       expect(store.existsByName('Existing Topic')).toBe(true)
+    })
+
+    it('verifies that no topic exists under a name that was never created', () => {
+      store.create('Existing Topic')
       expect(store.existsByName('Nonexistent Topic')).toBe(false)
     })
   })
 
   describe('existsById 2', () => {
-    it('verifies that a topic exists by id', () => {
+    it('verifies that an added topic exists by id', () => {
       const topic = { name: 'Unique Topic', id: 'unique-id' }
       store.add(topic)
       expect(store.existsById('unique-id')).toBe(true)
+    })
+
+    it('verifies that no topic exists under an id that was never added', () => {
+      const topic = { name: 'Unique Topic', id: 'unique-id' }
+      store.add(topic)
       expect(store.existsById('nonexistent-id')).toBe(false)
     })
   })

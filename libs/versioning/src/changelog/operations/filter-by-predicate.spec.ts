@@ -43,8 +43,7 @@ describe('filterEntries', () => {
     const changelog = createTestChangelog()
     const result = filterEntries(changelog, (entry) => entry.version === '1.0.0')
 
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '1.0.0' }))
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -61,8 +60,7 @@ describe('filterBreakingChanges', () => {
     })
 
     const result = filterBreakingChanges(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '2.0.0' }))
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('includes entries with breaking items in non-breaking sections', () => {
@@ -78,8 +76,7 @@ describe('filterBreakingChanges', () => {
     })
 
     const result = filterBreakingChanges(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '2.0.0' }))
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
 

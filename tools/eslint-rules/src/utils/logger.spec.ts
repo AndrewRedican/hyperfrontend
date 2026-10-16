@@ -1,3 +1,4 @@
+import type { ScopedLogger } from './logger'
 import { beforeEach } from 'node:test'
 import { logger as mockNxLogger } from '@nx/devkit'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -18,17 +19,12 @@ describe('logger', () => {
     jest.clearAllMocks()
   })
 
-  it('exposes standard log methods', () => {
-    expect(typeof logger.error).toBe('function')
-    expect(typeof logger.warn).toBe('function')
-    expect(typeof logger.log).toBe('function')
-    expect(typeof logger.info).toBe('function')
-    expect(typeof logger.debug).toBe('function')
+  it.each(['error', 'warn', 'log', 'info', 'debug'])('exposes the standard %s method', (method: keyof ScopedLogger) => {
+    expect(typeof logger[method]).toBe('function')
   })
 
-  it('exposes log level control methods', () => {
-    expect(typeof logger.setLogLevel).toBe('function')
-    expect(typeof logger.getLogLevel).toBe('function')
+  it.each(['setLogLevel', 'getLogLevel'])('exposes the %s log level control method', (method: keyof ScopedLogger) => {
+    expect(typeof logger[method]).toBe('function')
   })
 
   it('defaults to error log level', () => {
@@ -42,16 +38,12 @@ describe('createNxScopedLogger', () => {
     jest.clearAllMocks()
   })
 
-  it('creates a logger with default options', () => {
-    const scopedLogger = createNxScopedLogger('test-namespace')
-    expect(typeof scopedLogger.error).toBe('function')
-    expect(typeof scopedLogger.warn).toBe('function')
-    expect(typeof scopedLogger.log).toBe('function')
-    expect(typeof scopedLogger.info).toBe('function')
-    expect(typeof scopedLogger.debug).toBe('function')
-    expect(typeof scopedLogger.setLogLevel).toBe('function')
-    expect(typeof scopedLogger.getLogLevel).toBe('function')
-  })
+  it.each(['error', 'warn', 'log', 'info', 'debug', 'setLogLevel', 'getLogLevel'])(
+    'creates a logger exposing %s with default options',
+    (method: keyof ScopedLogger) => {
+      expect(typeof createNxScopedLogger('test-namespace')[method]).toBe('function')
+    }
+  )
 
   it('respects custom log level option', () => {
     const scopedLogger = createNxScopedLogger('test-namespace', { level: 'debug' })
@@ -60,9 +52,10 @@ describe('createNxScopedLogger', () => {
 
   it('allows changing log level via setLogLevel', () => {
     const scopedLogger = createNxScopedLogger('test-namespace')
-    expect(scopedLogger.getLogLevel()).toBe('error')
+    const levels = [scopedLogger.getLogLevel()]
     scopedLogger.setLogLevel('info')
-    expect(scopedLogger.getLogLevel()).toBe('info')
+    levels.push(scopedLogger.getLogLevel())
+    expect(levels).toEqual(['error', 'info'])
   })
 })
 
@@ -113,22 +106,23 @@ describe('createNxScopedLogger invocation', () => {
     expect(mockNxLogger.info).toHaveBeenCalledWith('[my-namespace] Config loaded {"apiKey":"[REDACTED]","name":"app"}')
   })
 
-  it('respects log level filtering - does not invoke lower priority logs', () => {
+  it.each([
+    ['debug', 'Debug message'],
+    ['info', 'Info message'],
+    ['log', 'Log message'],
+  ])('does not invoke nxLogger.%s below the warn level', (method: 'debug' | 'info' | 'log', message: string) => {
     const scopedLogger = createNxScopedLogger('my-namespace', { level: 'warn' })
-    scopedLogger.debug('Debug message')
-    scopedLogger.info('Info message')
-    scopedLogger.log('Log message')
-    expect(mockNxLogger.debug).not.toHaveBeenCalled()
-    expect(mockNxLogger.info).not.toHaveBeenCalled()
-    expect(mockNxLogger.log).not.toHaveBeenCalled()
+    scopedLogger[method](message)
+    expect(mockNxLogger[method]).not.toHaveBeenCalled()
   })
 
-  it('invokes logs at or above the set level', () => {
+  it.each([
+    ['warn', 'Warning message'],
+    ['error', 'Error message'],
+  ])('invokes nxLogger.%s at or above the warn level', (method: 'warn' | 'error', message: string) => {
     const scopedLogger = createNxScopedLogger('my-namespace', { level: 'warn' })
-    scopedLogger.warn('Warning message')
-    scopedLogger.error('Error message')
-    expect(mockNxLogger.warn).toHaveBeenCalledWith('[my-namespace] Warning message')
-    expect(mockNxLogger.error).toHaveBeenCalledWith('[my-namespace] Error message')
+    scopedLogger[method](message)
+    expect(mockNxLogger[method]).toHaveBeenCalledWith(`[my-namespace] ${message}`)
   })
 })
 
@@ -137,13 +131,8 @@ describe('createRuleLogger', () => {
     jest.clearAllMocks()
   })
 
-  it('creates a scoped logger instance', () => {
-    const ruleLogger = createRuleLogger('test-rule')
-    expect(typeof ruleLogger.error).toBe('function')
-    expect(typeof ruleLogger.warn).toBe('function')
-    expect(typeof ruleLogger.log).toBe('function')
-    expect(typeof ruleLogger.info).toBe('function')
-    expect(typeof ruleLogger.debug).toBe('function')
+  it.each(['error', 'warn', 'log', 'info', 'debug'])('creates a scoped logger instance exposing %s', (method: keyof ScopedLogger) => {
+    expect(typeof createRuleLogger('test-rule')[method]).toBe('function')
   })
 
   it('creates independent logger instances', () => {

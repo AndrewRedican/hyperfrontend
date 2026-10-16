@@ -28,9 +28,15 @@ describe('angularDetector', () => {
     }
     const result = angularDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('angular')
-    expect(result?.name).toBe('Angular')
+    expect(result).toEqual(expect.objectContaining({ id: 'angular', name: 'Angular' }))
+  })
+
+  it('scores @angular/core at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { '@angular/core': '^17.0.0' },
+    }
+    const result = angularDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -40,8 +46,7 @@ describe('angularDetector', () => {
     }
     const result = angularDetector('/some/path', pkg)
 
-    expect(result?.id).toBe('angularjs')
-    expect(result?.name).toBe('AngularJS (Legacy)')
+    expect(result).toEqual(expect.objectContaining({ id: 'angularjs', name: 'AngularJS (Legacy)' }))
   })
 
   it('increases confidence with @angular/cli', () => {
@@ -52,7 +57,16 @@ describe('angularDetector', () => {
     const result = angularDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(85)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.@angular/cli')).toBe(true)
+  })
+
+  it('records @angular/cli as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: { '@angular/core': '^17.0.0' },
+      devDependencies: { '@angular/cli': '^17.0.0' },
+    }
+    const result = angularDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.@angular/cli' })]))
   })
 
   it('increases confidence with angular.json', () => {
@@ -66,7 +80,19 @@ describe('angularDetector', () => {
     const result = angularDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(85)
-    expect(result?.detectedFrom.some((s) => s.path === 'angular.json')).toBe(true)
+  })
+
+  it('records angular.json as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('angular.json')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { '@angular/core': '^17.0.0' },
+    }
+    const result = angularDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'angular.json' })]))
   })
 
   it('caps confidence at 100', () => {

@@ -58,10 +58,14 @@ describe('initGenerator', () => {
     stderrSpy.mockRestore()
   })
 
+  it('defers the built-in install until the returned callback runs', async () => {
+    await initGenerator(createTree(UNDECLARED_MANIFEST, ['yarn.lock']), {})
+    expect(execFileSyncMock).not.toHaveBeenCalled()
+  })
+
   it('returns a callback that installs with the lockfile-detected package manager when devkit is absent', async () => {
     const tree = createTree(UNDECLARED_MANIFEST, ['yarn.lock'])
     const callback = await initGenerator(tree, {})
-    expect(execFileSyncMock).not.toHaveBeenCalled()
     await callback()
     expect(execFileSyncMock).toHaveBeenCalledWith('yarn', ['install'], {
       cwd: '/ws',
@@ -70,15 +74,34 @@ describe('initGenerator', () => {
     })
   })
 
-  it('awaits devkit formatFiles in the generator body and installs through installPackagesTask', async () => {
+  it('awaits devkit formatFiles in the generator body', async () => {
+    const devkit = createDevkit()
+    loadDevkitMock.mockReturnValue(devkit)
+    const tree = createTree(UNDECLARED_MANIFEST)
+    await initGenerator(tree, {})
+    expect(devkit.formatFiles).toHaveBeenCalledWith(tree)
+  })
+
+  it('defers the devkit install until the returned callback runs', async () => {
+    const devkit = createDevkit()
+    loadDevkitMock.mockReturnValue(devkit)
+    await initGenerator(createTree(UNDECLARED_MANIFEST), {})
+    expect(devkit.installPackagesTask).not.toHaveBeenCalled()
+  })
+
+  it('installs through installPackagesTask when the returned callback runs', async () => {
     const devkit = createDevkit()
     loadDevkitMock.mockReturnValue(devkit)
     const tree = createTree(UNDECLARED_MANIFEST)
     const callback = await initGenerator(tree, {})
-    expect(devkit.formatFiles).toHaveBeenCalledWith(tree)
-    expect(devkit.installPackagesTask).not.toHaveBeenCalled()
     await callback()
     expect(devkit.installPackagesTask).toHaveBeenCalledWith(tree)
+  })
+
+  it('skips the built-in installer when devkit installs', async () => {
+    loadDevkitMock.mockReturnValue(createDevkit())
+    const callback = await initGenerator(createTree(UNDECLARED_MANIFEST), {})
+    await callback()
     expect(execFileSyncMock).not.toHaveBeenCalled()
   })
 
@@ -98,14 +121,29 @@ describe('initGenerator', () => {
   })
 
   it('returns a callback that installs nothing when the manifest already declares the SDK', async () => {
-    const devkit = createDevkit()
-    loadDevkitMock.mockReturnValue(devkit)
+    const installPackagesTask = jest.fn()
+    loadDevkitMock.mockReturnValue({ ...createDevkit(), installPackagesTask })
     const callback = await initGenerator(createTree(DECLARED_MANIFEST), {})
     await callback()
-    expect(devkit.installPackagesTask).not.toHaveBeenCalled()
-    expect(execFileSyncMock).not.toHaveBeenCalled()
-    // why: the advisory must still run on no-op callbacks; the mocked manifest has no candidates, so it stays silent.
+    expect({ devkitInstalls: installPackagesTask.mock.calls, builtInInstalls: execFileSyncMock.mock.calls }).toEqual({
+      devkitInstalls: [],
+      builtInInstalls: [],
+    })
+  })
+
+  it('still runs the binding advisory from a callback that installs nothing', async () => {
+    loadDevkitMock.mockReturnValue(createDevkit())
+    const callback = await initGenerator(createTree(DECLARED_MANIFEST), {})
+    await callback()
+    // why: the advisory must still run on no-op callbacks.
     expect(resolveSdkManifestMock).toHaveBeenCalled()
+  })
+
+  it('keeps the advisory silent when the SDK manifest names no binding candidates', async () => {
+    loadDevkitMock.mockReturnValue(createDevkit())
+    const callback = await initGenerator(createTree(DECLARED_MANIFEST), {})
+    await callback()
+    // why: the mocked manifest has no candidates, so the advisory stays silent.
     expect(stderrSpy).not.toHaveBeenCalled()
   })
 
@@ -119,9 +157,10 @@ describe('initGenerator', () => {
     resolveSdkManifestMock.mockReturnValue({ optionalDependencies: { [CANDIDATE]: '9.9.9' } })
     const callback = await initGenerator(createTree(DECLARED_MANIFEST), {})
     await callback()
-    expect(stderrSpy).toHaveBeenCalledTimes(1)
-    expect(stderrSpy).toHaveBeenCalledWith(
-      `Rollup's native binding for this platform is not installed (expected one of: ${CANDIDATE}@9.9.9). \`hf build\` and the @hyperfrontend/features build executor need it to bundle. Run \`npm install --include=optional\` to install it.\n`
-    )
+    expect(stderrSpy.mock.calls).toEqual([
+      [
+        `Rollup's native binding for this platform is not installed (expected one of: ${CANDIDATE}@9.9.9). \`hf build\` and the @hyperfrontend/features build executor need it to bundle. Run \`npm install --include=optional\` to install it.\n`,
+      ],
+    ])
   })
 })

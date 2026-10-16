@@ -43,9 +43,10 @@ describe('renderCompatibilityDocument', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const lines = document.split(/\r?\n/)
 
-    expect(lines[0]).toBe('# Library Compatibility Matrix')
-    expect(lines[2]).toContain('> Generated from each')
-    expect(lines[2]).toContain('npx nx lint:all')
+    expect({ title: lines[0], note: lines[2] }).toEqual({
+      title: '# Library Compatibility Matrix',
+      note: expect.stringMatching(/> Generated from each.*npx nx lint:all/),
+    })
   })
 
   it('carries no date stamp', () => {
@@ -71,9 +72,14 @@ describe('renderCompatibilityDocument', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const platform = sectionOf(document, '## Platform Support')
 
-    expect(platform).toContain('| Library | Node.js | Browser | Web Worker | CDN Bundle |')
-    expect(platform).toContain('| `@hyperfrontend/data-utils` | ✅ | ⚠️ | ❌ | ❌ |')
-    expect(platform).toContain('| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |')
+    expect(platform).toContain(
+      [
+        '| Library | Node.js | Browser | Web Worker | CDN Bundle |',
+        '| --- | --- | --- | --- | --- |',
+        '| `@hyperfrontend/data-utils` | ✅ | ⚠️ | ❌ | ❌ |',
+        '| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |',
+      ].join('\n')
+    )
   })
 
   it('explains the glyphs below the platform table', () => {
@@ -109,8 +115,12 @@ describe('renderCompatibilityDocument', () => {
   it('lists a note for every library that declares one', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
 
-    expect(document).toContain('**Notes**')
-    expect(document).toContain('- `@hyperfrontend/data-utils`: Reads DOM ranges.')
+    expect(document).toContain('**Notes**\n\n- `@hyperfrontend/data-utils`: Reads DOM ranges.')
+  })
+
+  it('lists no note for a library that declares none', () => {
+    const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
+
     expect(document).not.toContain('- `@hyperfrontend/logging`:')
   })
 
@@ -130,9 +140,14 @@ describe('renderCompatibilityDocument', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const formats = sectionOf(document, '## Output Formats')
 
-    expect(formats).toContain('| Library | ESM | CJS | IIFE | UMD | Global name |')
-    expect(formats).toContain('| `@hyperfrontend/data-utils` | ✅ | ✅ | ❌ | ❌ | - |')
-    expect(formats).toContain('| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendLogging` |')
+    expect(formats).toContain(
+      [
+        '| Library | ESM | CJS | IIFE | UMD | Global name |',
+        '| --- | --- | --- | --- | --- | --- |',
+        '| `@hyperfrontend/data-utils` | ✅ | ✅ | ❌ | ❌ | - |',
+        '| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendLogging` |',
+      ].join('\n')
+    )
   })
 
   it('joins several global names into one cell', () => {
@@ -159,18 +174,28 @@ describe('renderCompatibilityDocument', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const engines = sectionOf(document, '## Engine Requirements')
 
-    expect(engines).toContain('| Library | Node.js | npm |')
-    expect(engines).toContain('| `@hyperfrontend/data-utils` | `>=18.0.0` | - |')
-    expect(engines).toContain('| `@hyperfrontend/logging` | `>=18.0.0` | `>=8.0.0` |')
+    expect(engines).toContain(
+      [
+        '| Library | Node.js | npm |',
+        '| --- | --- | --- |',
+        '| `@hyperfrontend/data-utils` | `>=18.0.0` | - |',
+        '| `@hyperfrontend/logging` | `>=18.0.0` | `>=8.0.0` |',
+      ].join('\n')
+    )
   })
 
   it('renders the dependency table with a dash for a library that depends on nothing first-party', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const dependencies = sectionOf(document, '## Dependency Graph')
 
-    expect(dependencies).toContain('| Library | Depends on |')
-    expect(dependencies).toContain('| `@hyperfrontend/data-utils` | - |')
-    expect(dependencies).toContain('| `@hyperfrontend/logging` | `@hyperfrontend/data-utils` |')
+    expect(dependencies).toContain(
+      [
+        '| Library | Depends on |',
+        '| --- | --- |',
+        '| `@hyperfrontend/data-utils` | - |',
+        '| `@hyperfrontend/logging` | `@hyperfrontend/data-utils` |',
+      ].join('\n')
+    )
   })
 
   it('marks a peer dependency in the dependency table', () => {
@@ -197,17 +222,13 @@ describe('renderCompatibilityDocument', () => {
   it('draws the dependency diagram in a fenced mermaid block with a theme config', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
 
-    expect(document).toContain('```mermaid')
-    expect(document).toContain('config:\n  theme: base')
-    expect(document).toContain('flowchart TB')
+    expect(document).toMatch(/```mermaid[\s\S]*config:\n {2}theme: base[\s\S]*flowchart TB/)
   })
 
   it('gives every node an identifier free of hyphens', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
 
-    expect(document).toContain('    data_utils["data-utils"]')
-    expect(document).toContain('    logging["logging"]')
-    expect(document).toContain('    logging --> data_utils')
+    expect(document).toContain(['    data_utils["data-utils"]', '    logging["logging"]', '    logging --> data_utils'].join('\n'))
   })
 
   it('draws a peer dependency as a dotted edge', () => {
@@ -246,16 +267,39 @@ describe('renderCompatibilityDocument', () => {
 
     const document = buildCompatibilityDocument(root)
 
-    expect(document).toContain('| `@hyperfrontend/consumer` | `@hyperfrontend/absent` |')
     expect(document).not.toContain('consumer --> absent')
+  })
+
+  it('still lists a dependency on a package the matrix does not document in the dependency table', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/consumer',
+        projectJson: publishableProject({ name: 'lib-consumer' }),
+        packageJson: {
+          name: '@hyperfrontend/consumer',
+          version: '1.0.0',
+          dependencies: { '@hyperfrontend/absent': '1.0.0' },
+        },
+      },
+    ])
+
+    const document = buildCompatibilityDocument(root)
+
+    expect(document).toContain('| `@hyperfrontend/consumer` | `@hyperfrontend/absent` |')
   })
 
   it('renders the published version table', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const versions = sectionOf(document, '## Published Versions')
 
-    expect(versions).toContain('| Library | Version |')
-    expect(versions).toContain('| `@hyperfrontend/logging` | `1.0.0` |')
+    expect(versions).toContain(
+      [
+        '| Library | Version |',
+        '| --- | --- |',
+        '| `@hyperfrontend/data-utils` | `1.0.0` |',
+        '| `@hyperfrontend/logging` | `1.0.0` |',
+      ].join('\n')
+    )
   })
 
   it('renders a dash for a library with no published version', () => {
@@ -273,8 +317,10 @@ describe('renderCompatibilityDocument', () => {
   it('ends with exactly one trailing newline', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
 
-    expect(document.endsWith('\n')).toBe(true)
-    expect(document.endsWith('\n\n')).toBe(false)
+    expect({ endsWithNewline: document.endsWith('\n'), endsWithBlankLine: document.endsWith('\n\n') }).toEqual({
+      endsWithNewline: true,
+      endsWithBlankLine: false,
+    })
   })
 
   it('uses no em dash anywhere', () => {
@@ -288,11 +334,21 @@ describe('renderCompatibilityDocument', () => {
     expect(fences).toEqual(['```mermaid', '```'])
   })
 
-  it('renders headers only when the workspace holds no publishable library', () => {
+  it('renders the platform table header when the workspace holds no publishable library', () => {
     const document = renderCompatibilityDocument([])
 
     expect(document).toContain('| Library | Node.js | Browser | Web Worker | CDN Bundle |')
+  })
+
+  it('renders no library row when the workspace holds no publishable library', () => {
+    const document = renderCompatibilityDocument([])
+
     expect(document).not.toContain('| `@hyperfrontend/')
+  })
+
+  it('draws an empty diagram when the workspace holds no publishable library', () => {
+    const document = renderCompatibilityDocument([])
+
     expect(document).toContain('flowchart TB\n```')
   })
 

@@ -50,31 +50,47 @@ describe('serializeChangelog', () => {
     const changelog = createTestChangelog()
     const result = serializeChangelog(changelog)
 
-    expect(result).toContain('# Changelog')
-    expect(result).toContain('## 1.1.0 - 2024-01-15')
-    expect(result).toContain('### Features')
-    expect(result).toContain('- **api:** Added new feature')
-    expect(result).toContain('- Another feature')
-    expect(result).toContain('### Bug Fixes')
-    expect(result).toContain('- Fixed a bug')
-    expect(result).toContain('## 1.0.0 - 2024-01-01')
+    expect(result).toBe(
+      [
+        '# Changelog',
+        '',
+        'All notable changes to this project will be documented in this file.',
+        '',
+        'The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).',
+        '',
+        '## 1.1.0 - 2024-01-15',
+        '',
+        '### Features',
+        '',
+        '- **api:** Added new feature',
+        '- Another feature',
+        '',
+        '### Bug Fixes',
+        '',
+        '- Fixed a bug',
+        '',
+        '## 1.0.0 - 2024-01-01',
+        '',
+        '### Features',
+        '',
+        '- Initial release',
+        '',
+      ].join('\n')
+    )
   })
 
   it('serializes without scope when disabled', () => {
     const changelog = createTestChangelog()
     const result = serializeChangelog(changelog, { includeScope: false })
 
-    expect(result).not.toContain('**api:**')
-    expect(result).toContain('- Added new feature')
+    expect(result).toContain('\n- Added new feature\n')
   })
 
   it('uses asterisks when configured', () => {
     const changelog = createTestChangelog()
     const result = serializeChangelog(changelog, { useAsterisks: true })
 
-    expect(result).toContain('* ')
-    expect(result).not.toContain('- **api:**')
-    expect(result).toContain('* **api:**')
+    expect(result).toContain('### Features\n\n* **api:** Added new feature\n* Another feature\n')
   })
 
   it('serializes with breaking change indicator', () => {
@@ -117,8 +133,7 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog)
-    expect(result).toContain('(abc1234')
-    expect(result).toContain('[def5678](https://github.com/test/repo/commit/def5678)')
+    expect(result).toContain('- New feature (abc1234, [def5678](https://github.com/test/repo/commit/def5678))\n')
   })
 
   it('serializes issue references', () => {
@@ -140,8 +155,7 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog)
-    expect(result).toContain('[#123](https://github.com/test/repo/issues/123)')
-    expect(result).toContain('#456')
+    expect(result).toContain('- Fixed issue [#123](https://github.com/test/repo/issues/123), #456\n')
   })
 
   it('omits a commit reference the description already carries', () => {
@@ -229,8 +243,7 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog, { includeCompareUrls: false })
-    expect(result).not.toContain('http://compare')
-    expect(result).toContain('## 1.0.0')
+    expect(result).toBe('# Changelog\n\n## 1.0.0\n\n')
   })
 
   it('excludes commits when includeCommits is false', () => {
@@ -334,8 +347,7 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog)
-    expect(result).toContain('## Unreleased')
-    expect(result).not.toContain('null')
+    expect(result).toBe('# Changelog\n\n## Unreleased\n\n### Features\n\n- Upcoming feature\n')
   })
 
   it('serializes header links when includeLinks is true', () => {
@@ -353,8 +365,9 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog, { includeLinks: true })
-    expect(result).toContain('[Unreleased]: https://github.com/foo/bar/compare/v1.0.0...HEAD')
-    expect(result).toContain('[1.0.0]: https://github.com/foo/bar/releases/tag/v1.0.0')
+    expect(result).toContain(
+      '[Unreleased]: https://github.com/foo/bar/compare/v1.0.0...HEAD\n[1.0.0]: https://github.com/foo/bar/releases/tag/v1.0.0\n'
+    )
   })
 
   it('serializes header description with all lines', () => {
@@ -373,16 +386,16 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog, { includeDescription: true })
-    expect(result).toContain('All notable changes to this project will be documented in this file.')
-    expect(result).toContain('The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).')
+    expect(result).toContain(
+      'All notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).\n'
+    )
   })
 })
 
 describe('DEFAULT_SERIALIZE_OPTIONS', () => {
   it('has expected defaults', () => {
-    expect(DEFAULT_SERIALIZE_OPTIONS.includeDescription).toBe(true)
-    expect(DEFAULT_SERIALIZE_OPTIONS.includeScope).toBe(true)
-    expect(DEFAULT_SERIALIZE_OPTIONS.lineEnding).toBe('\n')
-    expect(DEFAULT_SERIALIZE_OPTIONS.useAsterisks).toBe(false)
+    expect(DEFAULT_SERIALIZE_OPTIONS).toEqual(
+      expect.objectContaining({ includeDescription: true, includeScope: true, lineEnding: '\n', useAsterisks: false })
+    )
   })
 })

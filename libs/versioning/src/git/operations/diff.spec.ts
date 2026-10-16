@@ -298,6 +298,13 @@ describe('getCommitWithFiles', () => {
     const result = getCommitWithFiles('nonexistent')
 
     expect(result).toBeNull()
+  })
+
+  it('does not run git diff-tree if commit not found', () => {
+    mockGetCommit.mockReturnValue(null)
+
+    getCommitWithFiles('nonexistent')
+
     expect(mockExecFileSync).not.toHaveBeenCalled()
   })
 
@@ -323,9 +330,7 @@ describe('getCommitWithFiles', () => {
 
     const result = getCommitWithFiles('abc1234')
 
-    expect(result).not.toBeNull()
-    expect(result?.files).toEqual([])
-    expect(result?.hash).toBe('abc1234567890def1234567890abc1234567890de')
+    expect(result).toEqual(expect.objectContaining({ hash: 'abc1234567890def1234567890abc1234567890de', files: [] }))
   })
 
   it('returns commit with files', () => {
@@ -348,12 +353,15 @@ describe('getCommitWithFiles', () => {
 
     const result = getCommitWithFiles('abc1234')
 
-    expect(result).not.toBeNull()
-    expect(result?.subject).toBe('feat: add feature')
-    expect(result?.files).toEqual([
-      { path: 'src/new.ts', status: 'added' },
-      { path: 'src/index.ts', status: 'modified' },
-    ])
+    expect(result).toEqual(
+      expect.objectContaining({
+        subject: 'feat: add feature',
+        files: [
+          { path: 'src/new.ts', status: 'added' },
+          { path: 'src/index.ts', status: 'modified' },
+        ],
+      })
+    )
   })
 
   it('calls git diff-tree with correct arguments', () => {
@@ -385,7 +393,7 @@ describe('getCommitWithFiles', () => {
     )
   })
 
-  it('uses custom cwd option', () => {
+  it('forwards the custom cwd option to getCommit', () => {
     mockGetCommit.mockReturnValue({
       hash: 'abc1234567890def1234567890abc1234567890de',
       shortHash: 'abc1234',
@@ -406,6 +414,28 @@ describe('getCommitWithFiles', () => {
     getCommitWithFiles('abc1234', { cwd: '/custom/path' })
 
     expect(mockGetCommit).toHaveBeenCalledWith('abc1234', expect.objectContaining({ cwd: '/custom/path' }))
+  })
+
+  it('forwards the custom cwd option to git diff-tree', () => {
+    mockGetCommit.mockReturnValue({
+      hash: 'abc1234567890def1234567890abc1234567890de',
+      shortHash: 'abc1234',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: test',
+      body: '',
+      message: 'feat: test',
+      parents: [],
+      refs: [],
+    })
+    mockExecFileSync.mockReturnValue('')
+
+    getCommitWithFiles('abc1234', { cwd: '/custom/path' })
+
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
       expect.anything(),

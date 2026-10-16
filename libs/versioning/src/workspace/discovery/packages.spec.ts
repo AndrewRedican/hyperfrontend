@@ -1,6 +1,8 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { posix } from 'node:path'
 import { beforeEach } from 'node:test'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import * as projectScopePackage from '@hyperfrontend/project-scope/project/package'
@@ -47,10 +49,7 @@ describe('discoverProject', () => {
 
     const project = discoverProject('/workspace/libs/my-package')
 
-    expect(project).not.toBeNull()
-    expect(project?.name).toBe('my-package')
-    expect(project?.version).toBe('1.0.0')
-    expect(project?.path).toBe('/workspace/libs/my-package')
+    expect(project).toEqual(expect.objectContaining({ name: 'my-package', version: '1.0.0', path: '/workspace/libs/my-package' }))
   })
 
   it('sets packageJsonPath correctly', () => {
@@ -96,9 +95,7 @@ describe('discoverProject', () => {
 
     const project = discoverProject('/workspace/libs/my-package/package.json')
 
-    expect(project).not.toBeNull()
-    expect(project?.name).toBe('my-package')
-    expect(project?.path).toBe('/workspace/libs/my-package')
+    expect(project).toEqual(expect.objectContaining({ name: 'my-package', path: '/workspace/libs/my-package' }))
   })
 
   it('returns null when package.json cannot be read', () => {
@@ -144,8 +141,7 @@ describe('discoverProjectByName', () => {
 
     const project = discoverProjectByName('my-lib')
 
-    expect(project).not.toBeNull()
-    expect(project?.name).toBe('my-lib')
+    expect(project).toEqual(expect.objectContaining({ name: 'my-lib' }))
   })
 
   it('returns null when project not found', () => {
@@ -163,7 +159,7 @@ describe('discoverProjectByName', () => {
     expect(() => discoverProjectByName('my-lib')).toThrow(/workspace root/i)
   })
 
-  it('passes custom options to discoverPackages', () => {
+  it('finds the project when custom options are given', () => {
     projectScope.findWorkspaceRoot.mockReturnValue('/workspace')
     projectScope.findFiles.mockReturnValue(['custom/my-lib/package.json'])
     projectScope.readPackageJson.mockReturnValue({
@@ -177,7 +173,23 @@ describe('discoverProjectByName', () => {
       exclude: ['**/ignored/**'],
     })
 
-    expect(project).not.toBeNull()
+    expect(project).toEqual(expect.objectContaining({ name: 'my-lib' }))
+  })
+
+  it('passes custom options to discoverPackages', () => {
+    projectScope.findWorkspaceRoot.mockReturnValue('/workspace')
+    projectScope.findFiles.mockReturnValue(['custom/my-lib/package.json'])
+    projectScope.readPackageJson.mockReturnValue({
+      name: 'my-lib',
+      version: '1.0.0',
+    })
+    projectScope.exists.mockReturnValue(false)
+
+    discoverProjectByName('my-lib', {
+      patterns: ['custom/*/package.json'],
+      exclude: ['**/ignored/**'],
+    })
+
     expect(projectScope.findFiles).toHaveBeenCalledWith('/workspace', ['custom/*/package.json'], expect.any(Object))
   })
 })
@@ -199,9 +211,12 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.projects).toHaveLength(2)
-    expect(result.packageNames.has('lib-a')).toBe(true)
-    expect(result.packageNames.has('lib-b')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        projects: [expect.objectContaining({ name: 'lib-a' }), expect.objectContaining({ name: 'lib-b' })],
+        packageNames: createSet(['lib-a', 'lib-b']),
+      })
+    )
   })
 
   it('discovers packages with custom workspace root', () => {
@@ -211,11 +226,12 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages({ workspaceRoot: '/custom/workspace' })
 
-    expect(result.workspaceRoot).toBe('/custom/workspace')
-    expect(result.projects).toHaveLength(1)
+    expect(result).toEqual(
+      expect.objectContaining({ workspaceRoot: '/custom/workspace', projects: [expect.objectContaining({ name: 'pkg' })] })
+    )
   })
 
-  it('skips changelog discovery when includeChangelogs is false', () => {
+  it('leaves changelogPath null when includeChangelogs is false', () => {
     projectScope.findWorkspaceRoot.mockReturnValue('/workspace')
     projectScope.findFiles.mockReturnValue(['libs/lib-a/package.json'])
     projectScope.readPackageJson.mockReturnValue({ name: 'lib-a', version: '1.0.0' })
@@ -224,6 +240,16 @@ describe('discoverPackages', () => {
     const result = discoverPackages({ includeChangelogs: false })
 
     expect(result.projects).toEqual([expect.objectContaining({ changelogPath: null })])
+  })
+
+  it('skips changelog discovery when includeChangelogs is false', () => {
+    projectScope.findWorkspaceRoot.mockReturnValue('/workspace')
+    projectScope.findFiles.mockReturnValue(['libs/lib-a/package.json'])
+    projectScope.readPackageJson.mockReturnValue({ name: 'lib-a', version: '1.0.0' })
+    projectScope.exists.mockReturnValue(true)
+
+    discoverPackages({ includeChangelogs: false })
+
     expect(projectScope.exists).not.toHaveBeenCalled()
   })
 
@@ -237,8 +263,10 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages({ trackDependencies: false })
 
-    expect(result.projects).toHaveLength(2)
-    expect(result.projects.every((p) => p.internalDependencies.length === 0)).toBe(true)
+    expect(result.projects).toEqual([
+      expect.objectContaining({ name: 'lib-a', internalDependencies: [] }),
+      expect.objectContaining({ name: 'lib-b', internalDependencies: [] }),
+    ])
   })
 
   it('skips packages without a name', () => {
@@ -287,9 +315,12 @@ describe('discoverPackages', () => {
       exclude: ['**/ignored/**'],
     })
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.config.patterns).toEqual(['custom/*/package.json'])
-    expect(result.config.exclude).toEqual(['**/ignored/**'])
+    expect(result).toEqual(
+      expect.objectContaining({
+        projects: [expect.objectContaining({ name: 'pkg' })],
+        config: expect.objectContaining({ patterns: ['custom/*/package.json'], exclude: ['**/ignored/**'] }),
+      })
+    )
   })
 
   it('indexes projects by name in projectMap', () => {
@@ -302,11 +333,12 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.projectMap.get('lib-a')).toBeDefined()
-    expect(result.projectMap.get('lib-a')?.version).toBe('1.0.0')
-    expect(result.projectMap.get('lib-b')).toBeDefined()
-    expect(result.projectMap.get('lib-b')?.version).toBe('2.0.0')
-    expect(result.projectMap.get('nonexistent')).toBeUndefined()
+    expect(result.projectMap).toEqual(
+      createMap([
+        ['lib-a', expect.objectContaining({ name: 'lib-a', version: '1.0.0' })],
+        ['lib-b', expect.objectContaining({ name: 'lib-b', version: '2.0.0' })],
+      ])
+    )
   })
 
   it('sets changelogPath when changelog exists', () => {
@@ -373,10 +405,9 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.config.includeChangelogs).toBe(true)
-    expect(result.config.trackDependencies).toBe(true)
-    expect(result.config.patterns).toBeDefined()
-    expect(result.config.exclude).toBeDefined()
+    expect(result.config).toEqual(
+      expect.objectContaining({ includeChangelogs: true, trackDependencies: true, patterns: expect.anything(), exclude: expect.anything() })
+    )
   })
 })
 
@@ -408,6 +439,30 @@ describe('discoverPackages with VFS tree', () => {
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
+    discoverPackages({
+      tree: tree as Tree,
+      workspaceRoot: '/workspace',
+      includeChangelogs: false,
+      trackDependencies: false,
+    })
+
+    const searches = {
+      treeSearches: jest.mocked(projectScope.findFilesInTree).mock.calls,
+      diskSearches: jest.mocked(projectScope.findFiles).mock.calls,
+    }
+
+    expect(searches).toEqual({
+      treeSearches: expect.arrayContaining([[tree, expect.any(Array), expect.any(Object)]]),
+      diskSearches: [],
+    })
+  })
+
+  it('discovers the packages found in the VFS tree', () => {
+    const tree = createMockTree({
+      'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
+    })
+    projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
+
     const result = discoverPackages({
       tree: tree as Tree,
       workspaceRoot: '/workspace',
@@ -415,12 +470,31 @@ describe('discoverPackages with VFS tree', () => {
       trackDependencies: false,
     })
 
-    expect(projectScope.findFilesInTree).toHaveBeenCalledWith(tree, expect.any(Array), expect.any(Object))
-    expect(projectScope.findFiles).not.toHaveBeenCalled()
     expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 
   it('reads package.json from tree instead of disk', () => {
+    const tree = createMockTree({
+      'libs/lib-a/package.json': JSON.stringify({ name: 'from-tree', version: '2.0.0' }),
+    })
+    projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
+
+    discoverPackages({
+      tree: tree as Tree,
+      workspaceRoot: '/workspace',
+      includeChangelogs: false,
+      trackDependencies: false,
+    })
+
+    const reads = { treeReads: tree.read.mock.calls, diskReads: jest.mocked(projectScope.readPackageJson).mock.calls }
+
+    expect(reads).toEqual({
+      treeReads: expect.arrayContaining([['libs/lib-a/package.json', 'utf-8']]),
+      diskReads: [],
+    })
+  })
+
+  it('builds projects from the package.json content in the tree', () => {
     const tree = createMockTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'from-tree', version: '2.0.0' }),
     })
@@ -433,8 +507,6 @@ describe('discoverPackages with VFS tree', () => {
       trackDependencies: false,
     })
 
-    expect(tree.read).toHaveBeenCalledWith('libs/lib-a/package.json', 'utf-8')
-    expect(projectScope.readPackageJson).not.toHaveBeenCalled()
     expect(result.projects).toEqual([expect.objectContaining({ name: 'from-tree', version: '2.0.0' })])
   })
 
@@ -470,9 +542,12 @@ describe('discoverPackages with VFS tree', () => {
       trackDependencies: false,
     })
 
-    expect(result.projects).toHaveLength(2)
-    expect(result.packageNames.has('existing')).toBe(true)
-    expect(result.packageNames.has('new-package')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        projects: [expect.objectContaining({ name: 'existing' }), expect.objectContaining({ name: 'new-package' })],
+        packageNames: createSet(['existing', 'new-package']),
+      })
+    )
   })
 
   it('skips packages with unreadable content in tree', () => {

@@ -114,10 +114,8 @@ describe('runBundlePhase', () => {
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
     } as BuildConfig)
-    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor, options] = (dispatchRollupWorker as Mock).mock.calls[0]
-    expect(descriptor.format).toBe('esm')
-    expect(options.workerPath).toBe(ROLLUP_WORKER_PATH)
+    const esmFork = [expect.objectContaining({ format: 'esm' }), expect.objectContaining({ workerPath: ROLLUP_WORKER_PATH })]
+    expect(asMock(dispatchRollupWorker).mock.calls).toEqual([esmFork, esmFork])
   })
 
   it('respects per-format entry filters when resolving entries', async () => {
@@ -135,18 +133,25 @@ describe('runBundlePhase', () => {
       workspaceRoot: '',
       cjs: { bundleWorkspaceDeps: false },
     } as BuildConfig)
-    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor] = (dispatchRollupWorker as Mock).mock.calls[0]
-    expect(descriptor.format).toBe('cjs')
+    const cjsFork = [expect.objectContaining({ format: 'cjs' }), expect.anything()]
+    expect(asMock(dispatchRollupWorker).mock.calls).toEqual([cjsFork, cjsFork])
   })
 
-  it('records IIFE outputs and ensures the bundle directory exists when at least one entry resolves', async () => {
+  it('records IIFE outputs when at least one entry resolves', async () => {
     const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: '.' },
     } as BuildConfig)
     expect(result.iife).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
+  })
+
+  it('ensures the IIFE bundle directory exists when at least one entry resolves', async () => {
+    await runBundlePhase(makeContext(), {
+      projectRoot: '',
+      workspaceRoot: '',
+      iife: { globalName: 'MyLib', entry: '.' },
+    } as BuildConfig)
     expect(ensureDir).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/bundle'))
   })
 
@@ -336,11 +341,13 @@ describe('runBundlePhase', () => {
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup', 'postject']
     await runBundlePhase(ctx, config)
-    expect(runPrePass).toHaveBeenCalledTimes(1)
-    const [jobs, options] = (runPrePass as Mock).mock.calls[0]
-    expect(jobs).toHaveLength(4)
-    expect(jobs.every((j: { kind: string }) => j.kind === 'js')).toBe(true)
-    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs')
+    const jsJob = expect.objectContaining({ kind: 'js' })
+    expect(asMock(runPrePass).mock.calls).toEqual([
+      [
+        [jsJob, jsJob, jsJob, jsJob],
+        expect.objectContaining({ workerPath: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs' }),
+      ],
+    ])
   })
 
   it('throws a context-rich error when the pre-pass worker cannot be located', async () => {
@@ -382,11 +389,10 @@ describe('runBundlePhase', () => {
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config, monitor)
-    expect(checks[0]).toBe('bundle:dependencies:prepass:start')
-    expect(checks).toContain('bundle:dependencies:prepass:end')
+    expect(checks.slice(0, 2)).toEqual(['bundle:dependencies:prepass:start', 'bundle:dependencies:prepass:end'])
   })
 
-  it('runs the d.ts pre-pass and per-entry d.ts pass after declarations when bundledDeps is non-empty', async () => {
+  it('runs the d.ts pre-pass once when bundledDeps is non-empty', async () => {
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -396,7 +402,41 @@ describe('runBundlePhase', () => {
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config)
     expect(runDtsPrePass).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs the per-entry d.ts pass once when bundledDeps is non-empty', async () => {
+    const config = {
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    } as BuildConfig
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config)
     expect(runDtsPerEntry).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs the d.ts pre-pass, then the per-entry d.ts pass, after declarations when bundledDeps is non-empty', async () => {
+    const order: string[] = []
+    asMock(generateDeclarations).mockImplementationOnce(async () => {
+      order.push('declarations')
+      return { success: true, stdout: '', stderr: '' }
+    })
+    asMock(runDtsPrePass).mockImplementationOnce(async () => {
+      order.push('dts-pre-pass')
+    })
+    asMock(runDtsPerEntry).mockImplementationOnce(async () => {
+      order.push('dts-per-entry')
+    })
+    const config = {
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    } as BuildConfig
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config)
+    expect(order).toEqual(['declarations', 'dts-pre-pass', 'dts-per-entry'])
   })
 
   it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {
@@ -447,7 +487,7 @@ describe('runBundlePhase', () => {
     expect(checks).toContain('bundle:dependencies:prune:end')
   })
 
-  it('skips the d.ts pre-pass and per-entry pass when no bundled deps', async () => {
+  it('skips the d.ts pre-pass when no bundled deps', async () => {
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -455,6 +495,15 @@ describe('runBundlePhase', () => {
     } as BuildConfig
     await runBundlePhase(makeContext(), config)
     expect(runDtsPrePass).not.toHaveBeenCalled()
+  })
+
+  it('skips the per-entry d.ts pass when no bundled deps', async () => {
+    const config = {
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false },
+    } as BuildConfig
+    await runBundlePhase(makeContext(), config)
     expect(runDtsPerEntry).not.toHaveBeenCalled()
   })
 
@@ -478,14 +527,15 @@ describe('runBundlePhase', () => {
     ]
     await runBundlePhase(ctx, config)
     const jobs = (runPrePass as Mock).mock.calls[0][0]
-    const npmJobs = jobs.filter((j: { kind: string }) => j.kind === 'js')
-    expect(npmJobs).toHaveLength(2)
-    expect(npmJobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
-    expect(npmJobs[0].dep).toBe('rollup')
-    expect(npmJobs[0].npmDeps).toEqual(['postject'])
-    expect(npmJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
-    expect(npmJobs[1].dep).toBe('postject')
-    expect(npmJobs[1].npmDeps).toEqual(['rollup'])
+    expect(jobs.filter((j: { kind: string }) => j.kind === 'js')).toEqual([
+      expect.objectContaining({
+        dep: 'rollup',
+        depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+        npmDeps: ['postject'],
+        workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      }),
+      expect.objectContaining({ dep: 'postject', npmDeps: ['rollup'] }),
+    ])
   })
 
   it('threads npmDeps and self-excluded workspaceRoutes into workspace-js pre-pass jobs', async () => {
@@ -516,13 +566,17 @@ describe('runBundlePhase', () => {
     ]
     await runBundlePhase(ctx, config)
     const jobs = (runPrePass as Mock).mock.calls[0][0]
-    const workspaceJobs = jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')
-    expect(workspaceJobs).toHaveLength(2)
-    expect(workspaceJobs[0].dep).toBe('@hyperfrontend/logging')
-    expect(workspaceJobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
-    expect(workspaceJobs[0].npmDeps).toEqual(['rollup'])
-    expect(workspaceJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }])
-    expect(workspaceJobs[1].dep).toBe('@hyperfrontend/project-scope')
-    expect(workspaceJobs[1].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+    expect(jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')).toEqual([
+      expect.objectContaining({
+        dep: '@hyperfrontend/logging',
+        depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+        npmDeps: ['rollup'],
+        workspaceRoutes: [{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }],
+      }),
+      expect.objectContaining({
+        dep: '@hyperfrontend/project-scope',
+        workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      }),
+    ])
   })
 })

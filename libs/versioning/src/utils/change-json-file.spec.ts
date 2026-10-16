@@ -43,8 +43,7 @@ function createMockTree(files: Record<string, string>): Tree & { _getWrittenFile
 describe('changeJsonFile', () => {
   describe('DEFAULT_CHANGE_JSON_FILE_OPTIONS', () => {
     it('has expected defaults', () => {
-      expect(DEFAULT_CHANGE_JSON_FILE_OPTIONS.indent).toBe(2)
-      expect(DEFAULT_CHANGE_JSON_FILE_OPTIONS.trailingNewline).toBe(true)
+      expect(DEFAULT_CHANGE_JSON_FILE_OPTIONS).toEqual({ indent: 2, trailingNewline: true })
     })
   })
 
@@ -61,8 +60,7 @@ describe('changeJsonFile', () => {
 
       const written = tree._getWrittenFiles()
       const result = JSON.parse(written['package.json'])
-      expect(result.version).toBe('2.0.0')
-      expect(result.name).toBe('test')
+      expect(result).toEqual({ name: 'test', version: '2.0.0' })
     })
 
     it('preserves all fields when transforming', () => {
@@ -82,10 +80,7 @@ describe('changeJsonFile', () => {
 
       const written = tree._getWrittenFiles()
       const result = JSON.parse(written['package.json'])
-      expect(result.name).toBe('test')
-      expect(result.version).toBe('2.0.0')
-      expect(result.description).toBe('Test package')
-      expect(result.main).toBe('index.js')
+      expect(result).toEqual({ name: 'test', version: '2.0.0', description: 'Test package', main: 'index.js' })
     })
 
     it('can add new fields', () => {
@@ -115,8 +110,7 @@ describe('changeJsonFile', () => {
 
       const written = tree._getWrittenFiles()
       const result = JSON.parse(written['package.json'])
-      expect(result['private']).toBeUndefined()
-      expect(result.name).toBe('test')
+      expect(result).toEqual({ name: 'test', version: '1.0.0' })
     })
   })
 
@@ -162,8 +156,7 @@ describe('changeJsonFile', () => {
       changeJsonFile(tree, 'package.json', (data) => data, { trailingNewline: false })
 
       const written = tree._getWrittenFiles()['package.json']
-      expect(written.endsWith('\n')).toBe(false)
-      expect(written.endsWith('}')).toBe(true)
+      expect(written).toBe('{\n  "name": "test"\n}')
     })
   })
 
@@ -206,8 +199,7 @@ describe('changeJsonFile', () => {
 
       const written = tree._getWrittenFiles()
       const result = JSON.parse(written['package.json'])
-      expect(result.dependencies.underscore).toBe('^1.0.0')
-      expect(result.dependencies.lodash).toBe('^4.0.0')
+      expect(result.dependencies).toEqual({ lodash: '^4.0.0', underscore: '^1.0.0' })
     })
   })
 })

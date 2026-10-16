@@ -58,13 +58,15 @@ describe('lockeded classic prototype method', () => {
     expect(secondRead).toBe(firstRead)
   })
 
-  it('caches the bound function per instance', () => {
+  it('returns the expected value on every call through the cached bound function', () => {
     const firstCall = instance.method()
-    expect(firstCall).toEqual(instance.value)
-
     const secondCall = instance.method()
-    expect(secondCall).toEqual(instance.value)
+    expect({ firstCall, secondCall }).toEqual({ firstCall: instance.value, secondCall: instance.value })
+  })
 
+  it('caches the bound function per instance', () => {
+    instance.method()
+    instance.method()
     expect(instance.method).toBe(instance.method)
   })
 })

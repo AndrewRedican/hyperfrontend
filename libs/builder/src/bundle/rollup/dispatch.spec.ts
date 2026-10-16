@@ -73,17 +73,25 @@ beforeEach(() => {
 })
 
 describe('dispatchRollupWorker', () => {
-  it('forks the worker, reads the JSON report, and resolves with the parsed value', async () => {
+  it('forks exactly one worker for a dispatch', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const descriptor = baseDescriptor()
-    const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
-    expect(records).toHaveLength(1)
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
-    const result = await promise
-    expect(result).toEqual({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
+    await promise
+    expect(records).toHaveLength(1)
+  })
+
+  it('resolves with the parsed JSON report the worker wrote', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
+    await tick()
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    expect(await promise).toEqual({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
   })
 
   it('overwrites the descriptor reportPath with a temp-dir path before forking', async () => {
@@ -92,7 +100,6 @@ describe('dispatchRollupWorker', () => {
     const descriptor = baseDescriptor({ reportPath: '/abs/orig.json' })
     const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs' })
     await tick()
-    expect((records[0] as SpawnRecord).descriptor.reportPath).not.toBe('/abs/orig.json')
     expect((records[0] as SpawnRecord).descriptor.reportPath).toContain('hf-builder-rollup-')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
@@ -136,8 +143,10 @@ describe('dispatchRollupWorker', () => {
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
-    expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
-    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs'])
+    expect({ execPath: (records[0] as SpawnRecord).execPath, leadingArgs: (records[0] as SpawnRecord).args.slice(0, 3) }).toEqual({
+      execPath: '/usr/bin/custom-node',
+      leadingArgs: ['--require', '@swc-node/register', '/abs/worker.cjs'],
+    })
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
@@ -221,8 +230,11 @@ describe('dispatchRollupWorker', () => {
     await tick()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
-    await expect(promise).rejects.toThrow()
-    expect(existsSync(reportDir)).toBe(false)
+    const outcome = await promise.then(
+      () => 'resolved',
+      () => 'rejected'
+    )
+    expect({ outcome, reportDirExists: existsSync(reportDir) }).toEqual({ outcome: 'rejected', reportDirExists: false })
   })
 
   it('passes stdout chunks through to the parent stdout', async () => {

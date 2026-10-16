@@ -25,14 +25,14 @@ describe('injectBlob', () => {
     expect(mockCopy).toHaveBeenCalledWith('/opt/node', '/dist/cli.linux-x64')
   })
 
-  it('reads the blob from disk and forwards it to postject.inject', async () => {
+  it('reads the blob from the blobPath', async () => {
     await injectBlob({ hostBinary: '/opt/node', outputBinary: '/dist/cli', blobPath: '/dist/cli.blob' })
     expect(mockRead).toHaveBeenCalledWith('/dist/cli.blob')
-    const [filename, resourceName, resourceData] = mockInject.mock.calls[0]
-    expect(filename).toBe('/dist/cli')
-    expect(resourceName).toBe(NODE_SEA_RESOURCE_NAME)
-    expect(Buffer.isBuffer(resourceData)).toBe(true)
-    expect(resourceData.toString()).toBe('blob-bytes')
+  })
+
+  it('forwards the output binary, the resource name and the blob bytes to postject.inject', async () => {
+    await injectBlob({ hostBinary: '/opt/node', outputBinary: '/dist/cli', blobPath: '/dist/cli.blob' })
+    expect(mockInject.mock.calls[0].slice(0, 3)).toEqual(['/dist/cli', NODE_SEA_RESOURCE_NAME, Buffer.from('blob-bytes')])
   })
 
   it('passes the default macho segment name and sentinel fuse to postject', async () => {
@@ -74,9 +74,11 @@ describe('injectBlob', () => {
   })
 
   it('exposes the Node SEA defaults as named constants', () => {
-    expect(NODE_SEA_RESOURCE_NAME).toBe('NODE_SEA_BLOB')
-    expect(NODE_SEA_MACHO_SEGMENT).toBe('NODE_SEA')
-    expect(NODE_SEA_FUSE).toBe('NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2')
+    expect({ NODE_SEA_RESOURCE_NAME, NODE_SEA_MACHO_SEGMENT, NODE_SEA_FUSE }).toEqual({
+      NODE_SEA_RESOURCE_NAME: 'NODE_SEA_BLOB',
+      NODE_SEA_MACHO_SEGMENT: 'NODE_SEA',
+      NODE_SEA_FUSE: 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2',
+    })
   })
 
   it('propagates rejections from postject.inject', async () => {

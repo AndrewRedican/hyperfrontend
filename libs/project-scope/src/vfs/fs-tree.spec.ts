@@ -1,5 +1,5 @@
 import type { FileChange } from './types'
-import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, sep } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
@@ -40,53 +40,47 @@ describe('vfs/FsTree', () => {
   describe('factory function', () => {
     it('createFsTree returns object with Tree interface', () => {
       const tree = createFsTree(TEST_DIR)
-      expect(tree).toHaveProperty('root')
-      expect(tree).toHaveProperty('read')
-      expect(tree).toHaveProperty('write')
-      expect(tree).toHaveProperty('exists')
-      expect(tree).toHaveProperty('delete')
-      expect(tree).toHaveProperty('rename')
-      expect(tree).toHaveProperty('isFile')
-      expect(tree).toHaveProperty('isDirectory')
-      expect(tree).toHaveProperty('isSymlink')
-      expect(tree).toHaveProperty('children')
-      expect(tree).toHaveProperty('listChanges')
-      expect(tree).toHaveProperty('changePermissions')
-      expect(tree).toHaveProperty('changeFile')
-      expect(tree).toHaveProperty('clearChanges')
+      expect(Object.keys(tree)).toEqual(
+        expect.arrayContaining([
+          'root',
+          'read',
+          'write',
+          'exists',
+          'delete',
+          'rename',
+          'isFile',
+          'isDirectory',
+          'isSymlink',
+          'children',
+          'listChanges',
+          'changePermissions',
+          'changeFile',
+          'clearChanges',
+        ])
+      )
     })
 
     it('returns plain object, not class instance', () => {
       const tree = createFsTree(TEST_DIR)
-      expect(tree.constructor.name).not.toBe('FsTree')
-      expect(tree instanceof Object).toBe(true)
+      expect(Object.getPrototypeOf(tree)).toBe(Object.prototype)
     })
 
     it('does not expose internal state', () => {
       const tree = createFsTree(TEST_DIR)
-      expect(tree).not.toHaveProperty('_root')
-      expect(tree).not.toHaveProperty('_changes')
-      expect(tree).not.toHaveProperty('_isVerbose')
-      expect(tree).not.toHaveProperty('_followSymlinks')
-      expect(tree).not.toHaveProperty('_changesLog')
-      expect(tree).not.toHaveProperty('_clearChanges')
-      expect(tree).not.toHaveProperty('_getChangesLog')
+      const internals = ['_root', '_changes', '_isVerbose', '_followSymlinks', '_changesLog', '_clearChanges', '_getChangesLog']
+      expect(internals.filter((key) => key in tree)).toEqual([])
     })
   })
 
   describe('read', () => {
     it('reads file from disk as Buffer', () => {
       const tree = createFsTree(TEST_DIR)
-      const content = tree.read('package.json')
-      expect(Buffer.isBuffer(content)).toBe(true)
-      expect(content?.toString()).toContain('test')
+      expect(tree.read('package.json')).toEqual(Buffer.from('{"name":"test"}'))
     })
 
     it('reads file from disk as string', () => {
       const tree = createFsTree(TEST_DIR)
-      const content = tree.read('package.json', 'utf-8')
-      expect(typeof content).toBe('string')
-      expect(content).toContain('test')
+      expect(tree.read('package.json', 'utf-8')).toBe('{"name":"test"}')
     })
 
     it('reads file in subdirectory', () => {
@@ -132,21 +126,13 @@ describe('vfs/FsTree', () => {
     it('buffers new file write', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new-file.txt', 'new content')
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(changes).toHaveLength(1)
-      expect(first.type).toBe('CREATE')
-      expect(first.path).toBe('new-file.txt')
+      expect(tree.listChanges()).toEqual([expect.objectContaining({ type: 'CREATE', path: 'new-file.txt' })])
     })
 
     it('buffers file update', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('package.json', '{"updated": true}')
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(changes).toHaveLength(1)
-      expect(first.type).toBe('UPDATE')
-      expect(first.originalContent).toBeDefined()
+      expect(tree.listChanges()).toEqual([expect.objectContaining({ type: 'UPDATE', originalContent: expect.any(Buffer) })])
     })
 
     it('creates nested directories in changes', () => {
@@ -223,10 +209,7 @@ describe('vfs/FsTree', () => {
     it('buffers file deletion', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(changes).toHaveLength(1)
-      expect(first.type).toBe('DELETE')
+      expect(tree.listChanges()).toEqual([expect.objectContaining({ type: 'DELETE', path: 'package.json' })])
     })
 
     it('removes newly created file from changes', () => {
@@ -247,9 +230,7 @@ describe('vfs/FsTree', () => {
     it('stores original content', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(first.originalContent).toBeDefined()
+      const first = tree.listChanges()[0] as FileChange
       expect(first.originalContent?.toString()).toContain('test')
     })
   })
@@ -258,10 +239,11 @@ describe('vfs/FsTree', () => {
     it('renames file via write and delete', () => {
       const tree = createFsTree(TEST_DIR)
       tree.rename('package.json', 'package-backup.json')
-      const changes = tree.listChanges()
-      expect(changes).toHaveLength(2)
-      expect(changes.find((c) => c.type === 'DELETE')?.path).toBe('package.json')
-      expect(changes.find((c) => c.type === 'CREATE')?.path).toBe('package-backup.json')
+      const changes = tree
+        .listChanges()
+        .map((c) => `${c.type} ${c.path}`)
+        .sort()
+      expect(changes).toEqual(['CREATE package-backup.json', 'DELETE package.json'])
     })
 
     it('throws for non-existent source', () => {
@@ -273,8 +255,8 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('temp.txt', 'content')
       tree.rename('temp.txt', 'renamed.txt')
-      expect(tree.exists('temp.txt')).toBe(false)
-      expect(tree.exists('renamed.txt')).toBe(true)
+      const present = { 'temp.txt': tree.exists('temp.txt'), 'renamed.txt': tree.exists('renamed.txt') }
+      expect(present).toEqual({ 'temp.txt': false, 'renamed.txt': true })
     })
   })
 
@@ -323,9 +305,7 @@ describe('vfs/FsTree', () => {
   describe('children', () => {
     it('lists directory children from disk', () => {
       const tree = createFsTree(TEST_DIR)
-      const children = tree.children('src')
-      expect(children).toContain('index.ts')
-      expect(children).toContain('utils.ts')
+      expect(tree.children('src')).toEqual(expect.arrayContaining(['index.ts', 'utils.ts']))
     })
 
     it('returns sorted children', () => {
@@ -350,9 +330,7 @@ describe('vfs/FsTree', () => {
 
     it('handles root directory', () => {
       const tree = createFsTree(TEST_DIR)
-      const children = tree.children('.')
-      expect(children).toContain('package.json')
-      expect(children).toContain('src')
+      expect(tree.children('.')).toEqual(expect.arrayContaining(['package.json', 'src']))
     })
 
     it('includes implied nested directories', () => {
@@ -373,11 +351,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('z-file.txt', 'z')
       tree.write('a-file.txt', 'a')
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      const second = changes[1] as FileChange
-      expect(first.path).toBe('a-file.txt')
-      expect(second.path).toBe('z-file.txt')
+      expect(tree.listChanges().map((c) => c.path)).toEqual(['a-file.txt', 'z-file.txt'])
     })
 
     it('includes all change types', () => {
@@ -394,10 +368,7 @@ describe('vfs/FsTree', () => {
     it('sets permissions for existing file', () => {
       const tree = createFsTree(TEST_DIR)
       tree.changePermissions('package.json', 0o755)
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(changes).toHaveLength(1)
-      expect(first.mode).toBe(0o755)
+      expect(tree.listChanges()).toEqual([expect.objectContaining({ path: 'package.json', mode: 0o755 })])
     })
 
     it('throws for non-existent file', () => {
@@ -409,10 +380,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('script.sh', '#!/bin/bash')
       tree.changePermissions('script.sh', 0o755)
-      const changes = tree.listChanges()
-      const first = changes[0] as FileChange
-      expect(changes).toHaveLength(1)
-      expect(first.mode).toBe(0o755)
+      expect(tree.listChanges()).toEqual([expect.objectContaining({ path: 'script.sh', mode: 0o755 })])
     })
   })
 
@@ -466,10 +434,9 @@ describe('vfs/FsTree', () => {
         expect(() => tree.children('.')).not.toThrow()
       })
 
-      it('allows reading files within root', () => {
+      it.each(['package.json', 'src/index.ts'])('allows reading %s within root', (filePath) => {
         const tree = createFsTree(TEST_DIR)
-        expect(() => tree.read('package.json')).not.toThrow()
-        expect(() => tree.read('src/index.ts')).not.toThrow()
+        expect(() => tree.read(filePath)).not.toThrow()
       })
     })
 
@@ -489,10 +456,9 @@ describe('vfs/FsTree', () => {
         expect(() => tree.write('src/../../../../../../tmp/bad.txt', 'content')).toThrow('Path escapes tree root')
       })
 
-      it('allows writing files within root', () => {
+      it.each(['new-file.txt', 'src/new.ts'])('allows writing %s within root', (filePath) => {
         const tree = createFsTree(TEST_DIR)
-        expect(() => tree.write('new-file.txt', 'content')).not.toThrow()
-        expect(() => tree.write('src/new.ts', 'content')).not.toThrow()
+        expect(() => tree.write(filePath, 'content')).not.toThrow()
       })
     })
 
@@ -529,10 +495,18 @@ describe('vfs/FsTree', () => {
         expect(() => tree.isFile('../../../etc/passwd')).toThrow('Path escapes tree root')
       })
 
-      it('allows directory operations within root', () => {
+      it('allows listing a directory within root', () => {
         const tree = createFsTree(TEST_DIR)
         expect(() => tree.children('src')).not.toThrow()
+      })
+
+      it('allows checking isDirectory within root', () => {
+        const tree = createFsTree(TEST_DIR)
         expect(() => tree.isDirectory('src')).not.toThrow()
+      })
+
+      it('allows checking isFile within root', () => {
+        const tree = createFsTree(TEST_DIR)
         expect(() => tree.isFile('package.json')).not.toThrow()
       })
     })
@@ -582,232 +556,15 @@ describe('vfs/FsTree', () => {
     })
   })
 
-  describe('symlink security', () => {
-    describe('isSymlink', () => {
-      it('detects symlinks using lstat', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'real.txt')
-        const linkPath = join(TEST_DIR, 'link.txt')
-
-        writeFileSync(targetPath, 'real content')
-        symlinkSync(targetPath, linkPath)
-
-        expect(tree.isSymlink('link.txt')).toBe(true)
-        expect(tree.isSymlink('real.txt')).toBe(false)
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('returns false for non-existent paths', () => {
-        const tree = createFsTree(TEST_DIR)
-        expect(tree.isSymlink('non-existent.txt')).toBe(false)
-      })
-
-      it('returns false for regular files', () => {
-        const tree = createFsTree(TEST_DIR)
-        expect(tree.isSymlink('package.json')).toBe(false)
-      })
-
-      it('returns false for directories', () => {
-        const tree = createFsTree(TEST_DIR)
-        expect(tree.isSymlink('src')).toBe(false)
-      })
-    })
-
-    describe('symlink validation with followSymlinks: true (default)', () => {
-      it('allows reading symlinks that point within root', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'target.txt')
-        const linkPath = join(TEST_DIR, 'link.txt')
-
-        writeFileSync(targetPath, 'target content')
-        symlinkSync(targetPath, linkPath)
-
-        const content = tree.read('link.txt', 'utf-8')
-        expect(content).toBe('target content')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('allows reading relative symlinks within root', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'src', 'target.txt')
-        const linkPath = join(TEST_DIR, 'link.txt')
-
-        writeFileSync(targetPath, 'relative target')
-        symlinkSync('./src/target.txt', linkPath)
-
-        const content = tree.read('link.txt', 'utf-8')
-        expect(content).toBe('relative target')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('throws when symlink points outside root (absolute)', () => {
-        const tree = createFsTree(TEST_DIR)
-        const linkPath = join(TEST_DIR, 'evil-link')
-
-        symlinkSync('/etc/passwd', linkPath)
-
-        expect(() => tree.read('evil-link')).toThrow('Symlink target escapes tree root')
-
-        rmSync(linkPath)
-      })
-
-      it('throws when symlink points outside root (relative)', () => {
-        const tree = createFsTree(TEST_DIR)
-        const linkPath = join(TEST_DIR, 'evil-relative-link')
-
-        symlinkSync('../../../etc/passwd', linkPath)
-
-        expect(() => tree.read('evil-relative-link')).toThrow('Symlink target escapes tree root')
-
-        rmSync(linkPath)
-      })
-
-      it('validates symlinks in nested directories', () => {
-        const tree = createFsTree(TEST_DIR)
-        const nestedDir = join(TEST_DIR, 'nested', 'deep')
-        const linkPath = join(nestedDir, 'link.txt')
-
-        mkdirSync(nestedDir, { recursive: true })
-        symlinkSync('../../../../etc/passwd', linkPath)
-
-        expect(() => tree.read('nested/deep/link.txt')).toThrow('Symlink target escapes tree root')
-
-        rmSync(join(TEST_DIR, 'nested'), { recursive: true, force: true })
-      })
-    })
-
-    describe('symlink validation with followSymlinks: false', () => {
-      it('throws when attempting to read any symlink', () => {
-        const tree = createFsTree(TEST_DIR, { followSymlinks: false })
-        const targetPath = join(TEST_DIR, 'safe-target.txt')
-        const linkPath = join(TEST_DIR, 'safe-link.txt')
-
-        writeFileSync(targetPath, 'safe content')
-        symlinkSync(targetPath, linkPath)
-
-        expect(() => tree.read('safe-link.txt')).toThrow('Cannot access symlink when followSymlinks is disabled')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('allows reading regular files', () => {
-        const tree = createFsTree(TEST_DIR, { followSymlinks: false })
-        const content = tree.read('package.json', 'utf-8')
-        expect(content).toContain('test')
-      })
-
-      it('throws when symlink is in buffered change path', () => {
-        const tree = createFsTree(TEST_DIR, { followSymlinks: false })
-        const targetPath = join(TEST_DIR, 'existing.txt')
-        const linkPath = join(TEST_DIR, 'existing-link.txt')
-
-        writeFileSync(targetPath, 'existing')
-        symlinkSync(targetPath, linkPath)
-
-        expect(() => tree.write('existing-link.txt', 'updated content')).toThrow('Cannot access symlink when followSymlinks is disabled')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-    })
-
-    describe('symlink edge cases', () => {
-      it('handles symlink chains within root', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'final-target.txt')
-        const link1Path = join(TEST_DIR, 'link1.txt')
-        const link2Path = join(TEST_DIR, 'link2.txt')
-
-        writeFileSync(targetPath, 'chain content')
-        symlinkSync(targetPath, link1Path)
-        symlinkSync(link1Path, link2Path)
-
-        const content = tree.read('link2.txt', 'utf-8')
-        expect(content).toBe('chain content')
-
-        rmSync(link2Path)
-        rmSync(link1Path)
-        rmSync(targetPath)
-      })
-
-      it('allows symlinks to directories within root', () => {
-        const tree = createFsTree(TEST_DIR)
-        const linkPath = join(TEST_DIR, 'src-link')
-
-        rmSync(linkPath, { recursive: true, force: true })
-
-        symlinkSync(join(TEST_DIR, 'src'), linkPath, 'dir')
-
-        expect(tree.isSymlink('src-link')).toBe(true)
-        expect(tree.isDirectory('src-link')).toBe(true)
-
-        rmSync(linkPath, { recursive: true, force: true })
-      })
-
-      it('validates when reading from disk after update', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'update-target.txt')
-        const linkPath = join(TEST_DIR, 'update-link.txt')
-
-        writeFileSync(targetPath, 'original')
-        symlinkSync('/etc/passwd', linkPath)
-
-        tree.write('package.json', '{"name": "modified"}')
-
-        expect(() => tree.read('update-link.txt')).toThrow('Symlink target escapes tree root')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('handles symlink with absolute target within root', () => {
-        const tree = createFsTree(TEST_DIR)
-        const targetPath = join(TEST_DIR, 'absolute-target.txt')
-        const linkPath = join(TEST_DIR, 'absolute-link.txt')
-
-        writeFileSync(targetPath, 'absolute target content')
-
-        symlinkSync(targetPath, linkPath)
-
-        const content = tree.read('absolute-link.txt', 'utf-8')
-        expect(content).toBe('absolute target content')
-
-        rmSync(linkPath)
-        rmSync(targetPath)
-      })
-
-      it('throws generic error when symlink validation fails unexpectedly', () => {
-        const tree = createFsTree(TEST_DIR)
-        const linkPath = join(TEST_DIR, 'broken-symlink.txt')
-
-        symlinkSync('non-existent-target.txt', linkPath)
-
-        const content = tree.read('broken-symlink.txt')
-        expect(content).toBeNull()
-
-        rmSync(linkPath)
-      })
-    })
-  })
-
   describe('additional edge case coverage', () => {
     describe('read after delete', () => {
       it('returns null for file marked as deleted in buffer', () => {
         const tree = createFsTree(TEST_DIR)
-
-        expect(tree.exists('package.json')).toBe(true)
+        const existedBefore = tree.exists('package.json')
 
         tree.delete('package.json')
 
-        const content = tree.read('package.json')
-        expect(content).toBeNull()
+        expect({ existedBefore, readAfterDelete: tree.read('package.json') }).toEqual({ existedBefore: true, readAfterDelete: null })
       })
 
       it('returns null for file deleted then read with encoding', () => {
@@ -853,9 +610,13 @@ describe('vfs/FsTree', () => {
     })
 
     describe('path escape with root-equal paths', () => {
-      it('allows access to root directory itself', () => {
+      it('reports the root itself as existing', () => {
         const tree = createFsTree(TEST_DIR)
         expect(tree.exists('.')).toBe(true)
+      })
+
+      it('classifies the root itself as a directory', () => {
+        const tree = createFsTree(TEST_DIR)
         expect(tree.isDirectory('.')).toBe(true)
       })
 

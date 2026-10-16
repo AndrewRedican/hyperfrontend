@@ -79,9 +79,7 @@ describe('resolveExternals', () => {
 
   it('strips bundled deps from the resolved external list', () => {
     const path = writePkg(root, { dependencies: { rollup: '*', lodash: '*' } })
-    const result = resolveExternals({ packageJsonPath: path, bundledDeps: ['rollup'] })
-    expect(result).toContain('lodash')
-    expect(result).not.toContain('rollup')
+    expect(resolveExternals({ packageJsonPath: path, bundledDeps: ['rollup'] })).toEqual(['lodash'])
   })
 
   it('strips bundled deps even when also listed in additional', () => {
@@ -92,13 +90,13 @@ describe('resolveExternals', () => {
 
   it('strips workspace bundled deps from the resolved external list', () => {
     const path = writePkg(root, { dependencies: { '@hyperfrontend/logging': '*', rollup: '*' } })
-    const result = resolveExternals({
-      packageJsonPath: path,
-      isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
-      workspaceBundledDepNames: ['@hyperfrontend/logging'],
-    })
-    expect(result).toContain('rollup')
-    expect(result).not.toContain('@hyperfrontend/logging')
+    expect(
+      resolveExternals({
+        packageJsonPath: path,
+        isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
+        workspaceBundledDepNames: ['@hyperfrontend/logging'],
+      })
+    ).toEqual(['rollup'])
   })
 
   it('strips workspace bundled deps even when also listed in additional', () => {

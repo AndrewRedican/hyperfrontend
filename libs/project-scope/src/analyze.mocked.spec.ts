@@ -62,9 +62,7 @@ describe('analyzeProject workspace type detection (mocked)', () => {
     it('enables verbose logging and completes analysis', () => {
       const minimalDir = resolve(FIXTURES_DIR, 'minimal-project')
       const result = analyzeProject(minimalDir, { verbose: true })
-      expect(result).toBeDefined()
-      expect(result.projectType).toBeDefined()
-      expect(result.metadata).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ projectType: expect.any(String), metadata: expect.any(Object) }))
     })
   })
 
@@ -72,15 +70,13 @@ describe('analyzeProject workspace type detection (mocked)', () => {
     it('handles project with unusual structure', () => {
       const emptyDir = resolve(FIXTURES_DIR, 'empty')
       const result = analyzeProject(emptyDir)
-      expect(result).toBeDefined()
       expect(['application', 'library', 'e2e', 'tool', 'plugin', 'unknown']).toContain(result.projectType)
     })
 
     it('handles project with no markers', () => {
       const noMarkersDir = resolve(FIXTURES_DIR, 'no-markers-project')
       const result = analyzeProject(noMarkersDir)
-      expect(result).toBeDefined()
-      expect(result.projectType).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ projectType: expect.any(String) }))
     })
   })
 })

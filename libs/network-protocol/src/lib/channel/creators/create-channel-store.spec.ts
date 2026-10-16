@@ -11,10 +11,8 @@ describe('createChannelStore', () => {
 
   describe('create', () => {
     it('creates and adds a valid channel', () => {
-      expect(() => store.create(label, options)).not.toThrow()
-      expect(store.list.length).toBe(1)
-      expect(store.list[0].name).toBe(label)
-      expect(isUuidV4(store.list[0].id)).toBe(true)
+      store.create(label, options)
+      expect(store.list.map(({ id, name }) => ({ name, idIsUuidV4: isUuidV4(id) }))).toEqual([{ name: label, idIsUuidV4: true }])
     })
 
     it('throws an error for invalid label', () => {
@@ -30,17 +28,25 @@ describe('createChannelStore', () => {
   })
 
   describe('existsByName', () => {
-    it('checks if a channel with the name exists', () => {
+    it('returns true for the name of a created channel', () => {
       store.create(label, options)
       expect(store.existsByName(label)).toBe(true)
+    })
+
+    it('returns false for a name no channel was created with', () => {
+      store.create(label, options)
       expect(store.existsByName('NonExistingChannel')).toBe(false)
     })
   })
 
   describe('existsById', () => {
-    it('checks if a channel with the ID exists', () => {
+    it('returns true for the ID of a created channel', () => {
       store.create(label, options)
       expect(store.existsById(store.list[0].id)).toBe(true)
+    })
+
+    it('returns false for an ID no channel holds', () => {
+      store.create(label, options)
       expect(store.existsById('non-existing-id')).toBe(false)
     })
   })
@@ -49,9 +55,9 @@ describe('createChannelStore', () => {
     beforeEach(() => store.create(label, options))
 
     it('removes a channel by name', () => {
-      expect(store.list.length).toBe(1)
+      const before = store.list.length
       store.removeByName(label)
-      expect(store.list.length).toBe(0)
+      expect({ before, after: store.list.length }).toEqual({ before: 1, after: 0 })
     })
 
     it('throws an error if no channel with the name exists to remove', () => {
@@ -63,9 +69,9 @@ describe('createChannelStore', () => {
     beforeEach(() => store.create(label, options))
 
     it('removes a channel by id', () => {
-      expect(store.list.length).toBe(1)
+      const before = store.list.length
       store.removeById(store.list[0].id)
-      expect(store.list.length).toBe(0)
+      expect({ before, after: store.list.length }).toEqual({ before: 1, after: 0 })
     })
 
     it('throws an error if no channel with the id exists to remove', () => {
@@ -104,9 +110,9 @@ describe('createChannelStore', () => {
   describe('clear', () => {
     it('removes all channels', () => {
       store.create(label, options)
-      expect(store.list.length).toBeGreaterThan(0)
+      const before = store.list.length
       store.clear()
-      expect(store.list.length).toBe(0)
+      expect({ before, after: store.list.length }).toEqual({ before: 1, after: 0 })
     })
   })
 
@@ -115,7 +121,7 @@ describe('createChannelStore', () => {
       const channel = store.create(label, options)
       store.removeByName(label)
 
-      expect(() => store.add(channel)).not.toThrow()
+      store.add(channel)
       expect(store.list.length).toBe(1)
     })
 

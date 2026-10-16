@@ -82,9 +82,7 @@ describe('executeFlow - buildSummary behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.status).toBe('success')
-    expect(result.state.bumpType).toBe('none')
-    expect(result.summary).toContain('No release needed')
+    expect(result).toMatchObject({ status: 'success', state: { bumpType: 'none' }, summary: expect.stringContaining('No release needed') })
   })
 
   it('shows step counts in summary', async () => {
@@ -112,9 +110,7 @@ describe('executeFlow - buildSummary behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.summary).toContain('1 completed')
-    expect(result.summary).toContain('1 skipped')
-    expect(result.summary).toContain('0 failed')
+    expect(result.summary).toContain('1 completed, 1 skipped, 0 failed')
   })
 })
 
@@ -281,8 +277,7 @@ describe('executeFlow - step dependencies', () => {
     })
 
     const depResult = result.steps.find((s) => s.stepId === 'dependent')
-    expect(depResult?.status).toBe('skipped')
-    expect(depResult?.message).toBe('Dependencies not met')
+    expect(depResult).toEqual({ stepId: 'dependent', stepName: 'Dependent', status: 'skipped', message: 'Dependencies not met' })
   })
 
   it('executes step when all dependencies succeed', async () => {
@@ -342,9 +337,7 @@ describe('executeFlow - state accumulation', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.state.currentVersion).toBe('1.0.0')
-    expect(result.state.nextVersion).toBe('1.1.0')
-    expect(result.state.bumpType).toBe('minor')
+    expect(result.state).toEqual({ currentVersion: '1.0.0', nextVersion: '1.1.0', bumpType: 'minor' })
   })
 
   it('later steps can access state from earlier steps', async () => {
@@ -382,7 +375,7 @@ describe('executeFlow - state accumulation', () => {
 })
 
 describe('executeFlow - error handling', () => {
-  it('converts non-Error throws to Error objects', async () => {
+  it('fails the flow when a step throws a non-Error value', async () => {
     const throwStringStep = createStep('throw-string', 'Throw String', async () => {
       throw 'string error'
     })
@@ -409,14 +402,47 @@ describe('executeFlow - error handling', () => {
     })
 
     expect(result.status).toBe('failed')
+  })
+
+  it('converts non-Error throws to Error objects', async () => {
+    const throwStringStep = createStep('throw-string', 'Throw String', async () => {
+      throw 'string error'
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStringStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
     const failedStep = result.steps.find((s) => s.stepId === 'throw-string')
-    expect(failedStep?.error).toBeInstanceOf(Error)
-    expect(failedStep?.message).toBe('string error')
+    expect(failedStep).toEqual({
+      stepId: 'throw-string',
+      stepName: 'Throw String',
+      status: 'failed',
+      error: expect.any(Error),
+      message: 'string error',
+    })
   })
 })
 
 describe('executeFlow - timing', () => {
-  it('returns duration in milliseconds', async () => {
+  it('returns duration as a number', async () => {
     const flow = {
       id: 'test',
       name: 'Test Flow',
@@ -439,6 +465,30 @@ describe('executeFlow - timing', () => {
     })
 
     expect(typeof result.duration).toBe('number')
+  })
+
+  it('returns a non-negative duration', async () => {
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
     expect(result.duration).toBeGreaterThanOrEqual(0)
   })
 })
@@ -472,8 +522,7 @@ describe('executeFlow - buildSummary edge cases', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.summary).toContain('?.?.?')
-    expect(result.summary).toContain('2.0.0')
+    expect(result.summary).toContain('Version: ?.?.? → 2.0.0')
   })
 
   it('shows failed count in summary when steps fail with continueOnError', async () => {
@@ -509,8 +558,7 @@ describe('executeFlow - buildSummary edge cases', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.summary).toContain('1 completed')
-    expect(result.summary).toContain('1 failed')
+    expect(result.summary).toContain('1 completed, 0 skipped, 1 failed')
   })
 })
 
@@ -546,7 +594,7 @@ describe('executeFlow - continueOnError with throws', () => {
       }),
     })
 
-    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+    await executeFlow(flow, 'lib-test', '/workspace', {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
@@ -554,9 +602,78 @@ describe('executeFlow - continueOnError with throws', () => {
     })
 
     expect(secondStepRan).toBe(true)
+  })
+
+  it('reports a partial flow when a throwing step has continueOnError', async () => {
+    const throwStep = createStep(
+      'throw',
+      'Throw',
+      async () => {
+        throw new Error('Intentional error')
+      },
+      { continueOnError: true }
+    )
+
+    const secondStep = createStep('second', 'Second', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
     expect(result.status).toBe('partial')
-    expect(result.steps[0].status).toBe('failed')
-    expect(result.steps[1].status).toBe('success')
+  })
+
+  it('records the throwing step as failed and the next step as succeeded', async () => {
+    const throwStep = createStep(
+      'throw',
+      'Throw',
+      async () => {
+        throw new Error('Intentional error')
+      },
+      { continueOnError: true }
+    )
+
+    const secondStep = createStep('second', 'Second', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.steps.map((s) => s.status)).toEqual(['failed', 'success'])
   })
 
   it('stops execution when step throws and continueOnError is false', async () => {
@@ -585,7 +702,7 @@ describe('executeFlow - continueOnError with throws', () => {
       }),
     })
 
-    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+    await executeFlow(flow, 'lib-test', '/workspace', {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
@@ -593,7 +710,67 @@ describe('executeFlow - continueOnError with throws', () => {
     })
 
     expect(secondStepRan).toBe(false)
+  })
+
+  it('fails the flow when a throwing step stops execution', async () => {
+    const throwStep = createStep('throw', 'Throw', async () => {
+      throw new Error('Intentional error')
+    })
+
+    const secondStep = createStep('second', 'Second', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
     expect(result.status).toBe('failed')
-    expect(result.steps).toHaveLength(1)
+  })
+
+  it('records only the throwing step when execution stops', async () => {
+    const throwStep = createStep('throw', 'Throw', async () => {
+      throw new Error('Intentional error')
+    })
+
+    const secondStep = createStep('second', 'Second', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.steps).toEqual([expect.objectContaining({ stepId: 'throw', status: 'failed' })])
   })
 })

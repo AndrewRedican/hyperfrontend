@@ -1,5 +1,5 @@
 import type { RollupBuildDescriptor } from './types'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -61,7 +61,7 @@ describe('runRollupWorkerJob', () => {
     ...overrides,
   })
 
-  it('writes an ESM bundle and a JSON report when given an ESM descriptor', async () => {
+  it('reports a positive output size, positive memory figures and a non-negative duration for an ESM descriptor', async () => {
     const inputFile = writeSrc('input.ts', 'export const value = 42\n')
     const tsConfigPath = writeTsconfig()
     const outputDir = join(root, 'out')
@@ -69,12 +69,31 @@ describe('runRollupWorkerJob', () => {
     const report = await runRollupWorkerJob(
       baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath })
     )
-    expect(report.outputSize).toBeGreaterThan(0)
-    expect(report.endHeapMB).toBeGreaterThan(0)
-    expect(report.endRssMB).toBeGreaterThan(0)
-    expect(report.durationMs).toBeGreaterThanOrEqual(0)
-    const persisted = JSON.parse(readFileSync(reportPath, 'utf8'))
-    expect(persisted.outputSize).toBe(report.outputSize)
+    expect({
+      outputSize: report.outputSize > 0,
+      endHeapMB: report.endHeapMB > 0,
+      endRssMB: report.endRssMB > 0,
+      durationMs: report.durationMs >= 0,
+    }).toEqual({ outputSize: true, endHeapMB: true, endRssMB: true, durationMs: true })
+  })
+
+  it('persists the returned report as JSON at reportPath', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    const report = await runRollupWorkerJob(
+      baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath })
+    )
+    expect(JSON.parse(readFileSync(reportPath, 'utf8'))).toEqual(report)
+  })
+
+  it('writes an ESM bundle under outputDir when given an ESM descriptor', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('42')
   })
 
@@ -159,7 +178,7 @@ describe('runRollupWorkerJob', () => {
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toMatch(/from\s+["']@other\/pkg["']/)
   })
 
-  it('drops type diagnostics computed without path mappings, where a workspace import cannot resolve', async () => {
+  it('still bundles an entry whose workspace import cannot resolve without path mappings', async () => {
     const inputFile = writeSrc(
       'input.ts',
       "import { isArray } from '@other/pkg'\nexport const joined = (value: unknown): string => (isArray(value) ? value.join(',') : '')\n"
@@ -173,6 +192,21 @@ describe('runRollupWorkerJob', () => {
       warn.mockRestore()
     }
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('isArray(value)')
+  })
+
+  it('drops type diagnostics computed without path mappings, where a workspace import cannot resolve', async () => {
+    const inputFile = writeSrc(
+      'input.ts',
+      "import { isArray } from '@other/pkg'\nexport const joined = (value: unknown): string => (isArray(value) ? value.join(',') : '')\n"
+    )
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: join(root, 'report.json') }))
+    } finally {
+      warn.mockRestore()
+    }
     expect(warn.mock.calls.flat().filter((entry) => /TS\d{4,5}/.test(String(entry)))).toEqual([])
   })
 
@@ -271,9 +305,8 @@ describe('runRollupWorkerJob', () => {
         bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.cjs'), 'utf8')
-    expect(contents).toMatch(/const \w+ = require\(/)
-    expect(contents).not.toMatch(/^var \w+ = require\(/m)
+    // why: the lookahead lists only the declaration keyword of every require binding, so a lone `const` proves the single binding is const and no `var` form slipped in.
+    expect(readFileSync(join(outputDir, 'index.cjs'), 'utf8').match(/^(?:const|var)(?= \w+ = require\()/gm)).toEqual(['const'])
   })
 
   it('compiles TS-only syntax through the baseUrl branch when sources live outside the process cwd', async () => {
@@ -328,9 +361,10 @@ describe('runRollupWorkerJob', () => {
         bundle: { globalName: 'MyLib', minify: false },
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.iife.js'), 'utf8')
-    expect(contents).toContain('MyLib')
-    expect(() => readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8')).toThrow()
+    expect({ files: readdirSync(outputDir), unminified: readFileSync(join(outputDir, 'index.iife.js'), 'utf8') }).toEqual({
+      files: ['index.iife.js'],
+      unminified: expect.stringContaining('MyLib'),
+    })
   })
 
   it('writes both unminified and minified IIFE bundles when minify is enabled', async () => {
@@ -349,8 +383,13 @@ describe('runRollupWorkerJob', () => {
         bundle: { globalName: 'MyLib', minify: true },
       })
     )
-    expect(readFileSync(join(outputDir, 'index.iife.js'), 'utf8')).toContain('MyLib')
-    expect(readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8')).toContain('MyLib')
+    expect({
+      unminified: readFileSync(join(outputDir, 'index.iife.js'), 'utf8'),
+      minified: readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8'),
+    }).toEqual({
+      unminified: expect.stringContaining('MyLib'),
+      minified: expect.stringContaining('MyLib'),
+    })
   })
 
   it('writes a UMD bundle with amdId when supplied', async () => {
@@ -369,13 +408,16 @@ describe('runRollupWorkerJob', () => {
         bundle: { globalName: 'MyLib', minify: true, amdId: 'mylib' },
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.umd.js'), 'utf8')
-    expect(contents).toContain('MyLib')
-    expect(contents).toContain('mylib')
-    expect(readFileSync(join(outputDir, 'index.umd.min.js'), 'utf8')).toContain('MyLib')
+    expect({
+      unminified: readFileSync(join(outputDir, 'index.umd.js'), 'utf8'),
+      minified: readFileSync(join(outputDir, 'index.umd.min.js'), 'utf8'),
+    }).toEqual({
+      unminified: expect.stringMatching(/define\('mylib'[\s\S]*global\.MyLib/),
+      minified: expect.stringContaining('MyLib'),
+    })
   })
 
-  it('writes a bin CJS bundle to bin.outputFile with shebang banner, footer, and chmod applied', async () => {
+  it('writes a bin CJS bundle to bin.outputFile wrapped in the shebang banner and the bootstrap footer', async () => {
     const inputFile = writeSrc('hf-build.ts', 'export const runCz = async () => 0\n')
     const tsConfigPath = writeTsconfig()
     const outputDir = join(root, 'bin-out')
@@ -400,12 +442,36 @@ describe('runRollupWorkerJob', () => {
         },
       })
     )
-    const contents = readFileSync(outputFile, 'utf8')
-    expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
-    expect(contents).toContain('// bootstrap-footer')
-    const mode = statSync(outputFile).mode & 0o777
+    expect(readFileSync(outputFile, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n[\s\S]*\/\/ bootstrap-footer\n$/)
+  })
+
+  it('marks the bin CJS bundle executable', async () => {
+    const inputFile = writeSrc('hf-build.ts', 'export const runCz = async () => 0\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'bin-out')
+    const outputFile = join(outputDir, 'hf-build.js')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'cjs',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundleWorkspaceDeps: true,
+        bin: {
+          outputFile,
+          banner: '#!/usr/bin/env node',
+          footer: '// bootstrap-footer',
+          exports: 'named',
+          inlineDynamicImports: true,
+          chmod: 0o755,
+        },
+      })
+    )
     // why: Windows has no execute bit, so chmod leaves the file at its writable default.
-    expect(mode).toBe(process.platform === 'win32' ? 0o666 : 0o755)
+    expect(statSync(outputFile).mode & 0o777).toBe(process.platform === 'win32' ? 0o666 : 0o755)
   })
 
   it('writes a bin ESM bundle to bin.outputFile when format is esm', async () => {
@@ -433,9 +499,7 @@ describe('runRollupWorkerJob', () => {
         },
       })
     )
-    const contents = readFileSync(outputFile, 'utf8')
-    expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
-    expect(contents).toContain('// esm-bootstrap')
+    expect(readFileSync(outputFile, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n[\s\S]*\/\/ esm-bootstrap\n$/)
   })
 
   it('routes workspace-dep imports through _dependencies/<packageName>/ when workspaceRoutes is populated', async () => {

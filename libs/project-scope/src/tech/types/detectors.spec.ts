@@ -15,17 +15,22 @@ describe('typescriptDetector', () => {
     expect(typescriptDetector('/some/path', pkg)).toBeNull()
   })
 
-  it('detects typescript devDependency', () => {
+  it('detects typescript from a devDependency', () => {
     const pkg: PackageJson = {
       name: 'test',
       version: '1.0.0',
       devDependencies: { typescript: '^5.0.0' },
     }
-    const result = typescriptDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('typescript')
-    expect(result?.version).toBe('5.0.0')
-    expect(result?.confidence).toBeGreaterThanOrEqual(50)
+    expect(typescriptDetector('/some/path', pkg)).toEqual(expect.objectContaining({ id: 'typescript', version: '5.0.0' }))
+  })
+
+  it('scores a typescript devDependency at 50 or more', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      devDependencies: { typescript: '^5.0.0' },
+    }
+    expect(typescriptDetector('/some/path', pkg)?.confidence).toBeGreaterThanOrEqual(50)
   })
 
   it('detects typescript in dependencies', () => {
@@ -34,9 +39,7 @@ describe('typescriptDetector', () => {
       version: '1.0.0',
       dependencies: { typescript: '^5.0.0' },
     }
-    const result = typescriptDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('typescript')
+    expect(typescriptDetector('/some/path', pkg)).toEqual(expect.objectContaining({ id: 'typescript' }))
   })
 })
 
@@ -46,17 +49,22 @@ describe('flowDetector', () => {
     expect(flowDetector('/some/path', pkg)).toBeNull()
   })
 
-  it('detects flow-bin dependency', () => {
+  it('detects flow from a flow-bin devDependency', () => {
     const pkg: PackageJson = {
       name: 'test',
       version: '1.0.0',
       devDependencies: { 'flow-bin': '^0.220.0' },
     }
-    const result = flowDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('flow')
-    expect(result?.version).toBe('0.220.0')
-    expect(result?.confidence).toBeGreaterThanOrEqual(60)
+    expect(flowDetector('/some/path', pkg)).toEqual(expect.objectContaining({ id: 'flow', version: '0.220.0' }))
+  })
+
+  it('scores a flow-bin devDependency at 60 or more', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      devDependencies: { 'flow-bin': '^0.220.0' },
+    }
+    expect(flowDetector('/some/path', pkg)?.confidence).toBeGreaterThanOrEqual(60)
   })
 })
 
@@ -66,16 +74,22 @@ describe('jsdocDetector', () => {
     expect(jsdocDetector('/some/path', pkg)).toBeNull()
   })
 
-  it('detects jsdoc dependency', () => {
+  it('detects jsdoc from a jsdoc devDependency', () => {
     const pkg: PackageJson = {
       name: 'test',
       version: '1.0.0',
       devDependencies: { jsdoc: '^4.0.0' },
     }
-    const result = jsdocDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('jsdoc')
-    expect(result?.confidence).toBeGreaterThanOrEqual(30)
+    expect(jsdocDetector('/some/path', pkg)).toEqual(expect.objectContaining({ id: 'jsdoc' }))
+  })
+
+  it('scores a jsdoc devDependency at 30 or more', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      devDependencies: { jsdoc: '^4.0.0' },
+    }
+    expect(jsdocDetector('/some/path', pkg)?.confidence).toBeGreaterThanOrEqual(30)
   })
 })
 
@@ -91,9 +105,7 @@ describe('detectTypeSystems', () => {
       version: '1.0.0',
       devDependencies: { typescript: '^5.0.0' },
     }
-    const results = detectTypeSystems('/some/path', pkg)
-    expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('typescript')
+    expect(detectTypeSystems('/some/path', pkg)).toEqual([expect.objectContaining({ id: 'typescript' })])
   })
 
   it('detects multiple type systems', () => {
@@ -105,11 +117,8 @@ describe('detectTypeSystems', () => {
         jsdoc: '^4.0.0',
       },
     }
-    const results = detectTypeSystems('/some/path', pkg)
-    expect(results.length).toBeGreaterThanOrEqual(2)
-    const ids = results.map((r) => r.id)
-    expect(ids).toContain('typescript')
-    expect(ids).toContain('jsdoc')
+    const ids = detectTypeSystems('/some/path', pkg).map((r) => r.id)
+    expect(ids).toEqual(expect.arrayContaining(['typescript', 'jsdoc']))
   })
 
   it('sorts results by confidence', () => {
@@ -131,24 +140,18 @@ describe('detectTypeSystems', () => {
 
 describe('typeSystemDetectors', () => {
   it('exports array of detector objects', () => {
-    expect(Array.isArray(typeSystemDetectors)).toBe(true)
-    expect(typeSystemDetectors.length).toBe(3)
-    typeSystemDetectors.forEach((detector) => {
-      expect(typeof detector).toBe('object')
-      expect(typeof detector.detect).toBe('function')
-      expect(typeof detector.id).toBe('string')
-      expect(typeof detector.name).toBe('string')
-    })
+    const detectorShape = expect.objectContaining({ id: expect.any(String), name: expect.any(String), detect: expect.any(Function) })
+    expect(typeSystemDetectors).toEqual([detectorShape, detectorShape, detectorShape])
   })
 })
 
 describe('typescriptDetector with fixtures', () => {
-  it('detects tsconfig.json presence', () => {
-    const result = typescriptDetector(TYPESCRIPT_STRICT)
+  it('reports tsconfig.json as the config path', () => {
+    expect(typescriptDetector(TYPESCRIPT_STRICT)).toEqual(expect.objectContaining({ configPath: 'tsconfig.json' }))
+  })
 
-    expect(result).not.toBeNull()
-    expect(result?.configPath).toBe('tsconfig.json')
-    expect(result?.confidence).toBeGreaterThanOrEqual(90)
+  it('scores a project with tsconfig.json at 90 or more', () => {
+    expect(typescriptDetector(TYPESCRIPT_STRICT)?.confidence).toBeGreaterThanOrEqual(90)
   })
 
   it('detects strict mode from tsconfig', () => {
@@ -157,7 +160,20 @@ describe('typescriptDetector with fixtures', () => {
     expect(result?.strictMode).toBe(true)
   })
 
-  it('detects @types packages', () => {
+  it('scores @types packages beside typescript at 60 or more', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      devDependencies: {
+        typescript: '^5.0.0',
+        '@types/node': '^20.0.0',
+        '@types/react': '^18.0.0',
+      },
+    }
+    expect(typescriptDetector('/some/path', pkg)?.confidence).toBeGreaterThanOrEqual(60)
+  })
+
+  it('records @types packages as a detection source', () => {
     const pkg: PackageJson = {
       name: 'test',
       version: '1.0.0',
@@ -169,7 +185,6 @@ describe('typescriptDetector with fixtures', () => {
     }
     const result = typescriptDetector('/some/path', pkg)
 
-    expect(result?.confidence).toBeGreaterThanOrEqual(60)
     expect(result?.detectedFrom.some((s) => s.field?.includes('@types'))).toBe(true)
   })
 
@@ -182,10 +197,7 @@ describe('typescriptDetector with fixtures', () => {
 
 describe('flowDetector with fixtures', () => {
   it('detects .flowconfig presence', () => {
-    const result = flowDetector(FLOW_PROJECT)
-
-    expect(result).not.toBeNull()
-    expect(result?.configPath).toBe('.flowconfig')
+    expect(flowDetector(FLOW_PROJECT)).toEqual(expect.objectContaining({ configPath: '.flowconfig' }))
   })
 
   it('detects flow-typed directory', () => {
@@ -205,7 +217,6 @@ describe('flowDetector with fixtures', () => {
     }
     const result = flowDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
     expect(result?.detectedFrom.some((s) => s.field?.includes('@babel/preset-flow'))).toBe(true)
   })
 })
@@ -214,16 +225,17 @@ describe('jsdocDetector with fixtures', () => {
   it('detects checkJs/allowJs in tsconfig', () => {
     const result = jsdocDetector(JSDOC_PROJECT)
 
-    expect(result).not.toBeNull()
     expect(result?.detectedFrom.some((s) => s.path?.includes('checkJs') || s.path?.includes('allowJs'))).toBe(true)
   })
 
-  it('detects jsconfig.json presence', () => {
+  it('records jsconfig.json as a detection source', () => {
     const result = jsdocDetector(JSCONFIG_PROJECT)
 
-    expect(result).not.toBeNull()
     expect(result?.detectedFrom.some((s) => s.path?.includes('jsconfig.json'))).toBe(true)
-    expect(result?.confidence).toBeGreaterThanOrEqual(40)
+  })
+
+  it('scores a project with jsconfig.json at 40 or more', () => {
+    expect(jsdocDetector(JSCONFIG_PROJECT)?.confidence).toBeGreaterThanOrEqual(40)
   })
 
   it('detects JSDoc annotations in source files', () => {
@@ -243,17 +255,13 @@ describe('detectTypeSystems with fixtures', () => {
   it('detects TypeScript with strict mode', () => {
     const results = detectTypeSystems(TYPESCRIPT_STRICT)
 
-    const tsResult = results.find((r) => r.id === 'typescript')
-    expect(tsResult).toBeDefined()
-    expect(tsResult?.strictMode).toBe(true)
+    expect(results.find((r) => r.id === 'typescript')?.strictMode).toBe(true)
   })
 
   it('detects Flow with all indicators', () => {
     const results = detectTypeSystems(FLOW_PROJECT)
 
-    const flowResult = results.find((r) => r.id === 'flow')
-    expect(flowResult).toBeDefined()
-    expect(flowResult?.confidence).toBeGreaterThanOrEqual(100)
+    expect(results.find((r) => r.id === 'flow')?.confidence).toBeGreaterThanOrEqual(100)
   })
 
   it('detects JSDoc with jsconfig', () => {
@@ -267,12 +275,12 @@ describe('detectTypeSystems with fixtures', () => {
 const INVALID_TSCONFIG = resolve(FIXTURES_DIR, 'invalid-tsconfig')
 
 describe('typescriptDetector edge cases', () => {
-  it('handles invalid tsconfig.json gracefully', () => {
-    const result = typescriptDetector(INVALID_TSCONFIG)
+  it('still detects typescript when tsconfig.json is invalid', () => {
+    expect(typescriptDetector(INVALID_TSCONFIG)).toEqual(expect.objectContaining({ id: 'typescript' }))
+  })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('typescript')
-    expect(result?.strictMode === undefined || result?.strictMode === false).toBe(true)
+  it('does not report strict mode when tsconfig.json is invalid', () => {
+    expect([undefined, false]).toContain(typescriptDetector(INVALID_TSCONFIG)?.strictMode)
   })
 
   it('handles non-existent tsconfig gracefully', () => {
@@ -283,7 +291,6 @@ describe('typescriptDetector edge cases', () => {
     }
     const result = typescriptDetector('/non/existent/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.strictMode).toBeUndefined()
+    expect({ id: result?.id, strictMode: result?.strictMode }).toEqual({ id: 'typescript', strictMode: undefined })
   })
 })

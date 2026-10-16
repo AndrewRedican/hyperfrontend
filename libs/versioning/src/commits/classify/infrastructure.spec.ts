@@ -82,21 +82,20 @@ function createMockContext(overrides: MockContextOverrides = {}): Infrastructure
 describe('scopeMatcher', () => {
   it('returns true when scope matches exactly', () => {
     const matcher = scopeMatcher(['ci', 'build'])
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'build' }))).toBe(true)
+    const scopes = ['ci', 'build']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('matches case-insensitively', () => {
     const matcher = scopeMatcher(['ci', 'build'])
-    expect(matcher(createMockContext({ scope: 'CI' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'BUILD' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'Ci' }))).toBe(true)
+    const scopes = ['CI', 'BUILD', 'Ci']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('returns false when scope does not match', () => {
     const matcher = scopeMatcher(['ci', 'build'])
-    expect(matcher(createMockContext({ scope: 'feat' }))).toBe(false)
-    expect(matcher(createMockContext({ scope: 'lib-utils' }))).toBe(false)
+    const scopes = ['feat', 'lib-utils']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, false]))
   })
 
   it('returns false when scope is undefined', () => {
@@ -113,21 +112,20 @@ describe('scopeMatcher', () => {
 describe('scopePrefixMatcher', () => {
   it('returns true when scope starts with prefix', () => {
     const matcher = scopePrefixMatcher(['tool-', 'infra-'])
-    expect(matcher(createMockContext({ scope: 'tool-package' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'tool-scripts' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'infra-ci' }))).toBe(true)
+    const scopes = ['tool-package', 'tool-scripts', 'infra-ci']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('matches case-insensitively', () => {
     const matcher = scopePrefixMatcher(['tool-'])
-    expect(matcher(createMockContext({ scope: 'TOOL-package' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'Tool-Scripts' }))).toBe(true)
+    const scopes = ['TOOL-package', 'Tool-Scripts']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('returns false when scope does not start with prefix', () => {
     const matcher = scopePrefixMatcher(['tool-'])
-    expect(matcher(createMockContext({ scope: 'lib-utils' }))).toBe(false)
-    expect(matcher(createMockContext({ scope: 'feat' }))).toBe(false)
+    const scopes = ['lib-utils', 'feat']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, false]))
   })
 
   it('returns false when scope is undefined', () => {
@@ -144,14 +142,18 @@ describe('scopePrefixMatcher', () => {
 describe('messageMatcher', () => {
   it('returns true when message contains pattern', () => {
     const matcher = messageMatcher(['[infra]', '[ci skip]'])
-    expect(matcher(createMockContext({ message: 'fix: update build [infra]' }))).toBe(true)
-    expect(matcher(createMockContext({ message: 'chore: minor update [ci skip]' }))).toBe(true)
+    const messages = ['fix: update build [infra]', 'chore: minor update [ci skip]']
+    expect(messages.map((message) => [message, matcher(createMockContext({ message }))])).toEqual(
+      messages.map((message) => [message, true])
+    )
   })
 
   it('matches case-insensitively', () => {
     const matcher = messageMatcher(['[infra]'])
-    expect(matcher(createMockContext({ message: 'fix: update [INFRA]' }))).toBe(true)
-    expect(matcher(createMockContext({ message: 'fix: update [Infra]' }))).toBe(true)
+    const messages = ['fix: update [INFRA]', 'fix: update [Infra]']
+    expect(messages.map((message) => [message, matcher(createMockContext({ message }))])).toEqual(
+      messages.map((message) => [message, true])
+    )
   })
 
   it('returns false when message does not contain pattern', () => {
@@ -168,15 +170,14 @@ describe('messageMatcher', () => {
 describe('scopeRegexMatcher', () => {
   it('returns true when scope matches regex', () => {
     const matcher = scopeRegexMatcher(/^(ci|build|tool)-.+/)
-    expect(matcher(createMockContext({ scope: 'ci-pipeline' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'build-scripts' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'tool-package' }))).toBe(true)
+    const scopes = ['ci-pipeline', 'build-scripts', 'tool-package']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('returns false when scope does not match regex', () => {
     const matcher = scopeRegexMatcher(/^(ci|build|tool)-.+/)
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(false)
-    expect(matcher(createMockContext({ scope: 'lib-utils' }))).toBe(false)
+    const scopes = ['ci', 'lib-utils']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, false]))
   })
 
   it('returns false when scope is undefined', () => {
@@ -188,8 +189,8 @@ describe('scopeRegexMatcher', () => {
 describe('anyOf', () => {
   it('returns true if any matcher matches', () => {
     const combined = anyOf(scopeMatcher(['ci']), scopeMatcher(['build']))
-    expect(combined(createMockContext({ scope: 'ci' }))).toBe(true)
-    expect(combined(createMockContext({ scope: 'build' }))).toBe(true)
+    const scopes = ['ci', 'build']
+    expect(scopes.map((scope) => [scope, combined(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
   })
 
   it('returns false if no matcher matches', () => {
@@ -223,8 +224,14 @@ describe('allOf', () => {
 
   it('returns false if any matcher fails', () => {
     const combined = allOf(scopeMatcher(['ci']), messageMatcher(['build']))
-    expect(combined(createMockContext({ scope: 'ci', message: 'ci: update config' }))).toBe(false)
-    expect(combined(createMockContext({ scope: 'feat', message: 'feat: build something' }))).toBe(false)
+    const cases = [
+      ['ci', 'ci: update config'],
+      ['feat', 'feat: build something'],
+    ] as const
+    expect(cases.map(([scope, message]) => [scope, message, combined(createMockContext({ scope, message }))])).toEqual([
+      ['ci', 'ci: update config', false],
+      ['feat', 'feat: build something', false],
+    ])
   })
 
   it('short-circuits on first failure', () => {
@@ -262,54 +269,54 @@ describe('not', () => {
 describe('pre-built matchers', () => {
   describe('CI_SCOPE_MATCHER', () => {
     it('matches CI/CD scopes', () => {
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'ci' }))).toBe(true)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'cd' }))).toBe(true)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'build' }))).toBe(true)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'pipeline' }))).toBe(true)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'workflow' }))).toBe(true)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'actions' }))).toBe(true)
+      const scopes = ['ci', 'cd', 'build', 'pipeline', 'workflow', 'actions']
+      expect(scopes.map((scope) => [scope, CI_SCOPE_MATCHER(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, true]))
     })
 
     it('does not match non-CI scopes', () => {
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'feat' }))).toBe(false)
-      expect(CI_SCOPE_MATCHER(createMockContext({ scope: 'lib-utils' }))).toBe(false)
+      const scopes = ['feat', 'lib-utils']
+      expect(scopes.map((scope) => [scope, CI_SCOPE_MATCHER(createMockContext({ scope }))])).toEqual(scopes.map((scope) => [scope, false]))
     })
   })
 
   describe('TOOLING_SCOPE_MATCHER', () => {
     it('matches tooling scopes', () => {
-      expect(TOOLING_SCOPE_MATCHER(createMockContext({ scope: 'tooling' }))).toBe(true)
-      expect(TOOLING_SCOPE_MATCHER(createMockContext({ scope: 'workspace' }))).toBe(true)
-      expect(TOOLING_SCOPE_MATCHER(createMockContext({ scope: 'monorepo' }))).toBe(true)
-      expect(TOOLING_SCOPE_MATCHER(createMockContext({ scope: 'nx' }))).toBe(true)
-      expect(TOOLING_SCOPE_MATCHER(createMockContext({ scope: 'root' }))).toBe(true)
+      const scopes = ['tooling', 'workspace', 'monorepo', 'nx', 'root']
+      expect(scopes.map((scope) => [scope, TOOLING_SCOPE_MATCHER(createMockContext({ scope }))])).toEqual(
+        scopes.map((scope) => [scope, true])
+      )
     })
   })
 
   describe('TOOL_PREFIX_MATCHER', () => {
     it('matches tool-prefixed scopes', () => {
-      expect(TOOL_PREFIX_MATCHER(createMockContext({ scope: 'tool-package' }))).toBe(true)
-      expect(TOOL_PREFIX_MATCHER(createMockContext({ scope: 'tool-scripts' }))).toBe(true)
+      const scopes = ['tool-package', 'tool-scripts']
+      expect(scopes.map((scope) => [scope, TOOL_PREFIX_MATCHER(createMockContext({ scope }))])).toEqual(
+        scopes.map((scope) => [scope, true])
+      )
     })
 
     it('does not match non-tool-prefixed scopes', () => {
-      expect(TOOL_PREFIX_MATCHER(createMockContext({ scope: 'lib-utils' }))).toBe(false)
-      expect(TOOL_PREFIX_MATCHER(createMockContext({ scope: 'tooling' }))).toBe(false)
+      const scopes = ['lib-utils', 'tooling']
+      expect(scopes.map((scope) => [scope, TOOL_PREFIX_MATCHER(createMockContext({ scope }))])).toEqual(
+        scopes.map((scope) => [scope, false])
+      )
     })
   })
 
   describe('DEFAULT_INFRA_SCOPE_MATCHER', () => {
-    it('combines CI, tooling, and tool-prefix matchers', () => {
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'ci' }))).toBe(true)
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'build' }))).toBe(true)
+    it('matches scopes from the CI, tooling and tool-prefix groups', () => {
+      const scopes = ['ci', 'build', 'workspace', 'nx', 'tool-package']
+      expect(scopes.map((scope) => [scope, DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope }))])).toEqual(
+        scopes.map((scope) => [scope, true])
+      )
+    })
 
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'workspace' }))).toBe(true)
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'nx' }))).toBe(true)
-
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'tool-package' }))).toBe(true)
-
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'feat' }))).toBe(false)
-      expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'lib-utils' }))).toBe(false)
+    it('does not match scopes outside the CI, tooling and tool-prefix groups', () => {
+      const scopes = ['feat', 'lib-utils']
+      expect(scopes.map((scope) => [scope, DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope }))])).toEqual(
+        scopes.map((scope) => [scope, false])
+      )
     })
   })
 })
@@ -330,9 +337,12 @@ describe('buildInfrastructureMatcher', () => {
     if (matcher === null) {
       throw new Error('Expected matcher to be defined')
     }
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'build' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'feat' }))).toBe(false)
+    const scopes = ['ci', 'build', 'feat']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual([
+      ['ci', true],
+      ['build', true],
+      ['feat', false],
+    ])
   })
 
   it('uses custom matcher when provided', () => {
@@ -341,8 +351,11 @@ describe('buildInfrastructureMatcher', () => {
     if (matcher === null) {
       throw new Error('Expected matcher to be defined')
     }
-    expect(matcher(createMockContext({ scope: 'custom' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'other' }))).toBe(false)
+    const scopes = ['custom', 'other']
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual([
+      ['custom', true],
+      ['other', false],
+    ])
   })
 
   it('combines scopes and custom matcher with OR logic', () => {
@@ -354,12 +367,18 @@ describe('buildInfrastructureMatcher', () => {
     if (matcher === null) {
       throw new Error('Expected matcher to be defined')
     }
+    // note: 'test commit' is the message createMockContext gives a commit when none is passed
+    const cases = [
+      ['ci', 'test commit'],
+      ['feat', 'feat: update [infra]'],
+      ['feat', 'feat: normal update'],
+    ] as const
 
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
-
-    expect(matcher(createMockContext({ scope: 'feat', message: 'feat: update [infra]' }))).toBe(true)
-
-    expect(matcher(createMockContext({ scope: 'feat', message: 'feat: normal update' }))).toBe(false)
+    expect(cases.map(([scope, message]) => [scope, message, matcher(createMockContext({ scope, message }))])).toEqual([
+      ['ci', 'test commit', true],
+      ['feat', 'feat: update [infra]', true],
+      ['feat', 'feat: normal update', false],
+    ])
   })
 
   it('handles empty scopes array', () => {
@@ -386,10 +405,19 @@ describe('createMatchContext', () => {
     })
     const context = createMatchContext(commit)
 
+    expect(context).toEqual({
+      commit,
+      subject: 'feat(scope): add feature',
+      message: 'feat(scope): add feature\n\nBody text',
+      scope: [],
+    })
+  })
+
+  it('keeps the same commit object in the context', () => {
+    const commit = createMockCommit()
+    const context = createMatchContext(commit)
+
     expect(context.commit).toBe(commit)
-    expect(context.subject).toBe('feat(scope): add feature')
-    expect(context.message).toBe('feat(scope): add feature\n\nBody text')
-    expect(context.scope).toEqual([])
   })
 
   it('uses provided scope', () => {
@@ -426,26 +454,39 @@ describe('evaluateInfrastructure', () => {
 describe('complex composition scenarios', () => {
   it('creates complex matcher with nested composition', () => {
     const matcher = allOf(anyOf(scopeMatcher(['ci']), scopeMatcher(['build'])), not(scopeMatcher(['release'])))
+    const scopes = ['ci', 'build', 'release', 'feat']
 
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'build' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'release' }))).toBe(false)
-    expect(matcher(createMockContext({ scope: 'feat' }))).toBe(false)
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual([
+      ['ci', true],
+      ['build', true],
+      ['release', false],
+      ['feat', false],
+    ])
   })
 
   it('creates matcher for dependencies with security updates', () => {
     const matcher = allOf(scopeMatcher(['deps']), messageMatcher(['security']))
+    const cases = [
+      ['deps', 'chore(deps): security update'],
+      ['deps', 'chore(deps): bump lodash'],
+      ['feat', 'feat: security feature'],
+    ] as const
 
-    expect(matcher(createMockContext({ scope: 'deps', message: 'chore(deps): security update' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'deps', message: 'chore(deps): bump lodash' }))).toBe(false)
-    expect(matcher(createMockContext({ scope: 'feat', message: 'feat: security feature' }))).toBe(false)
+    expect(cases.map(([scope, message]) => [scope, message, matcher(createMockContext({ scope, message }))])).toEqual([
+      ['deps', 'chore(deps): security update', true],
+      ['deps', 'chore(deps): bump lodash', false],
+      ['feat', 'feat: security feature', false],
+    ])
   })
 
   it('creates matcher with regex and scope combinations', () => {
     const matcher = anyOf(scopePrefixMatcher(['tool-']), scopeRegexMatcher(/^infra-/))
+    const scopes = ['tool-package', 'infra-ci', 'lib-utils']
 
-    expect(matcher(createMockContext({ scope: 'tool-package' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'infra-ci' }))).toBe(true)
-    expect(matcher(createMockContext({ scope: 'lib-utils' }))).toBe(false)
+    expect(scopes.map((scope) => [scope, matcher(createMockContext({ scope }))])).toEqual([
+      ['tool-package', true],
+      ['infra-ci', true],
+      ['lib-utils', false],
+    ])
   })
 })

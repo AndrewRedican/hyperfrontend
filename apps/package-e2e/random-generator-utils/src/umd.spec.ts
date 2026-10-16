@@ -33,7 +33,7 @@ describe('@hyperfrontend/random-generator-utils UMD bundle', () => {
     expect(typeof global.uuidV4).toBe('function')
   })
 
-  it('generates valid UUIDv4 from UMD bundle', () => {
+  it('generates a UUIDv4 as a string from UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
       uuidV4: () => string
@@ -42,6 +42,16 @@ describe('@hyperfrontend/random-generator-utils UMD bundle', () => {
 
     const uuid = global.uuidV4()
     expect(typeof uuid).toBe('string')
+  })
+
+  it('generates a UUIDv4 from UMD bundle that isUuidV4 accepts', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
+      uuidV4: () => string
+      isUuidV4: (str: string) => boolean
+    }
+
+    const uuid = global.uuidV4()
     expect(global.isUuidV4(uuid)).toBe(true)
   })
 
@@ -49,10 +59,13 @@ describe('@hyperfrontend/random-generator-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.uuidV4).toBe('function')
-    expect(typeof exports.isUuidV4).toBe('function')
-    expect(typeof exports.randomUniform).toBe('function')
-    expect(typeof exports.randomGaussian).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        uuidV4: expect.any(Function),
+        isUuidV4: expect.any(Function),
+        randomUniform: expect.any(Function),
+        randomGaussian: expect.any(Function),
+      })
+    )
   })
 })

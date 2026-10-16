@@ -28,6 +28,8 @@ describe('createQueue', () => {
     for (let index = 0; index < count; index += 1) await release()
   }
 
+  const callCount = (): number => jest.mocked(messageProcessor).mock.calls.length
+
   beforeEach(() => {
     processedMessages = []
     gates = []
@@ -47,13 +49,15 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 2 })
 
     messageHandler.resume()
-    expect(messageProcessor).toHaveBeenCalledTimes(1)
+    const callsOnResume = callCount()
 
     await drain(2)
 
-    expect(messageProcessor).toHaveBeenCalledTimes(2)
-    expect(processedMessages[0]).toEqual({ id: 1 })
-    expect(processedMessages[1]).toEqual({ id: 2 })
+    expect({ callsOnResume, callsAfterDrain: callCount(), processedMessages }).toEqual({
+      callsOnResume: 1,
+      callsAfterDrain: 2,
+      processedMessages: [{ id: 1 }, { id: 2 }],
+    })
   })
 
   it('handles multiple messages correctly', async () => {
@@ -63,16 +67,16 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 3 })
 
     messageHandler.resume()
-    expect(messageProcessor).toHaveBeenCalledTimes(1)
+    const callCounts = [callCount()]
 
     await release()
-    expect(messageProcessor).toHaveBeenCalledTimes(2)
+    callCounts.push(callCount())
 
     await release()
-    expect(messageProcessor).toHaveBeenCalledTimes(3)
+    callCounts.push(callCount())
 
     await release()
-    expect(processedMessages).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }])
+    expect({ callCounts, processedMessages }).toEqual({ callCounts: [1, 2, 3], processedMessages: [{ id: 1 }, { id: 2 }, { id: 3 }] })
   })
 
   it('does not process when queue is empty', async () => {
@@ -91,12 +95,10 @@ describe('createQueue', () => {
     expect(() => createQueue(messageProcessor, null as any)).toThrow('autoStart must be a boolean')
   })
 
-  it('throws error for invalid message type', () => {
+  it.each([null, 'string', 123])('throws error for the invalid message type %p', (message) => {
     const messageHandler = createQueue(messageProcessor, false)
 
-    expect(() => messageHandler.addMessage(null as any)).toThrow('Message must be a non-null object')
-    expect(() => messageHandler.addMessage('string' as any)).toThrow('Message must be a non-null object')
-    expect(() => messageHandler.addMessage(123 as any)).toThrow('Message must be a non-null object')
+    expect(() => messageHandler.addMessage(message)).toThrow('Message must be a non-null object')
   })
 
   it('stops and resumes processing correctly', async () => {
@@ -113,12 +115,12 @@ describe('createQueue', () => {
 
   it('returns correct queue size', async () => {
     const messageHandler = createQueue(messageProcessor, false)
-    expect(messageHandler.size()).toEqual(0)
+    const initial = messageHandler.size()
     messageHandler.addMessage({ id: 1 })
-    expect(messageHandler.size()).toEqual(1)
+    const afterAdd = messageHandler.size()
     messageHandler.resume()
     await release()
-    expect(messageHandler.size()).toEqual(0)
+    expect({ initial, afterAdd, afterRelease: messageHandler.size() }).toEqual({ initial: 0, afterAdd: 1, afterRelease: 0 })
   })
 
   it('returns current message correctly', async () => {
@@ -126,17 +128,53 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 1 })
     messageHandler.addMessage({ id: 2 })
 
-    expect(messageHandler.currentMessage()).toBeNull()
+    const beforeResume = messageHandler.currentMessage()
 
     messageHandler.resume()
-    expect(messageHandler.currentMessage()).toEqual({ id: 1 })
+    const afterResume = messageHandler.currentMessage()
 
     await release()
-    expect(messageHandler.currentMessage()).toEqual({ id: 2 })
+    const afterFirstRelease = messageHandler.currentMessage()
 
     await release()
-    expect(messageHandler.currentMessage()).toBeNull()
-    expect(messageHandler.size()).toEqual(0)
+    expect({
+      beforeResume,
+      afterResume,
+      afterFirstRelease,
+      afterSecondRelease: messageHandler.currentMessage(),
+      sizeAfterSecondRelease: messageHandler.size(),
+    }).toEqual({
+      beforeResume: null,
+      afterResume: { id: 1 },
+      afterFirstRelease: { id: 2 },
+      afterSecondRelease: null,
+      sizeAfterSecondRelease: 0,
+    })
+  })
+
+  it('halts after the in-flight message when stopped with pending messages', async () => {
+    const messageHandler = createQueue(messageProcessor, false)
+    messageHandler.addMessage({ id: 1 })
+
+    messageHandler.resume()
+    messageHandler.stop()
+
+    messageHandler.addMessage({ id: 2 })
+    messageHandler.addMessage({ id: 3 })
+
+    // how: the message in flight when stop was called still completes, then the loop halts with the two later ones pending.
+    await release()
+    expect({
+      isRunning: messageHandler.isRunning(),
+      currentMessage: messageHandler.currentMessage(),
+      size: messageHandler.size(),
+      processedMessages,
+    }).toEqual({
+      isRunning: false,
+      currentMessage: null,
+      size: 2,
+      processedMessages: [{ id: 1 }],
+    })
   })
 
   it('resume starts processing when stopped with pending messages', async () => {
@@ -151,22 +189,18 @@ describe('createQueue', () => {
 
     // how: the message in flight when stop was called still completes, then the loop halts with the two later ones pending.
     await release()
-    expect(messageHandler.isRunning()).toBe(false)
-    expect(messageHandler.currentMessage()).toBeNull()
-    expect(messageHandler.size()).toBe(2)
-    expect(processedMessages).toEqual([{ id: 1 }])
 
     messageHandler.resume()
     await drain(2)
 
-    expect(processedMessages.length).toBe(3)
-    expect(messageHandler.size()).toBe(0)
+    expect({ processedCount: processedMessages.length, size: messageHandler.size() }).toEqual({ processedCount: 3, size: 0 })
   })
 
   it('resume does nothing when queue is empty', () => {
     const messageHandler = createQueue(messageProcessor, false)
 
-    expect(() => messageHandler.resume()).not.toThrow()
+    messageHandler.resume()
+
     expect(messageProcessor).not.toHaveBeenCalled()
   })
 
@@ -193,8 +227,7 @@ describe('createQueue', () => {
 
     await drain(3)
 
-    expect(processedMessages.length).toBe(3)
-    expect(messageHandler.size()).toBe(0)
+    expect({ processedCount: processedMessages.length, size: messageHandler.size() }).toEqual({ processedCount: 3, size: 0 })
   })
 
   it('keeps draining after a handler rejects', async () => {

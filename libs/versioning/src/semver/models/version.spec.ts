@@ -4,11 +4,7 @@ import { createSemVer, createInitialVersion, createFirstRelease, isPrerelease, i
 describe('createSemVer', () => {
   it('creates a basic version', () => {
     const v = createSemVer({ major: 1, minor: 2, patch: 3 })
-    expect(v.major).toBe(1)
-    expect(v.minor).toBe(2)
-    expect(v.patch).toBe(3)
-    expect(v.prerelease).toEqual([])
-    expect(v.build).toEqual([])
+    expect(v).toEqual({ major: 1, minor: 2, patch: 3, prerelease: [], build: [] })
   })
 
   it('creates a version with prerelease', () => {
@@ -30,18 +26,14 @@ describe('createSemVer', () => {
 describe('createInitialVersion', () => {
   it('creates 0.0.0', () => {
     const v = createInitialVersion()
-    expect(v.major).toBe(0)
-    expect(v.minor).toBe(0)
-    expect(v.patch).toBe(0)
+    expect(v).toEqual({ major: 0, minor: 0, patch: 0, prerelease: [], build: [] })
   })
 })
 
 describe('createFirstRelease', () => {
   it('creates 1.0.0', () => {
     const v = createFirstRelease()
-    expect(v.major).toBe(1)
-    expect(v.minor).toBe(0)
-    expect(v.patch).toBe(0)
+    expect(v).toEqual({ major: 1, minor: 0, patch: 0, prerelease: [], build: [] })
   })
 })
 
@@ -78,8 +70,7 @@ describe('stripBuild', () => {
   it('removes build metadata', () => {
     const v = createSemVer({ major: 1, minor: 0, patch: 0, build: ['123'] })
     const stripped = stripBuild(v)
-    expect(stripped.build).toEqual([])
-    expect(stripped.major).toBe(1)
+    expect(stripped).toEqual({ major: 1, minor: 0, patch: 0, prerelease: [], build: [] })
   })
 })
 
@@ -87,7 +78,6 @@ describe('stripPrerelease', () => {
   it('removes prerelease identifiers', () => {
     const v = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha'] })
     const stripped = stripPrerelease(v)
-    expect(stripped.prerelease).toEqual([])
-    expect(stripped.major).toBe(1)
+    expect(stripped).toEqual({ major: 1, minor: 0, patch: 0, prerelease: [], build: [] })
   })
 })

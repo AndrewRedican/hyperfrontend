@@ -346,7 +346,10 @@ describe('runBuild', () => {
     expect(code).toBe(0)
   })
 
-  it('drives the builder and npm pack when no runners are injected', async () => {
+  const runWithoutRunners = async (): Promise<void> => {
+    // why: the module mocks persist across tests, so each run starts from an empty call log
+    mockBuild.mockClear()
+    mockExecFileSync.mockClear()
     mockBuild.mockResolvedValue({} as Awaited<ReturnType<typeof build>>)
     mockExecFileSync.mockReturnValue('clock-shell-1.0.0.tgz\n')
     await runBuild({
@@ -356,9 +359,17 @@ describe('runBuild', () => {
       stderr: sink().stream,
       resolveConfig: () => Promise.resolve(bundle('v4')),
     })
+  }
+
+  it('drives the builder when no builder runner is injected', async () => {
+    await runWithoutRunners()
     expect(mockBuild).toHaveBeenCalledWith(
       expect.objectContaining({ esm: {}, cjs: {}, outputPath: expect.stringContaining('.hf-shell-clock-') })
     )
+  })
+
+  it('packs with npm when no pack runner is injected', async () => {
+    await runWithoutRunners()
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'npm',
       ['pack'],

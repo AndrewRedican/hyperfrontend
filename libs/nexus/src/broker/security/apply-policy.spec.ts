@@ -63,17 +63,16 @@ describe('applyPolicy', () => {
     expect(result).toBe(false)
   })
 
-  it('passs event to policy function', () => {
+  it('passes the event to the policy function once', () => {
     const mockPolicy = jest.fn(() => true)
     const event = createMockEvent('https://test.com')
 
     applyPolicy(mockPolicy, event, mockLogger)
 
-    expect(mockPolicy).toHaveBeenCalledWith(event)
-    expect(mockPolicy).toHaveBeenCalledTimes(1)
+    expect(mockPolicy.mock.calls).toEqual([[event]])
   })
 
-  it('return false when policy throws error', () => {
+  it('returns false when the policy throws', () => {
     const policy: SecurityPolicy = () => {
       throw new Error('Policy error')
     }
@@ -82,10 +81,9 @@ describe('applyPolicy', () => {
     const result = applyPolicy(policy, event, mockLogger)
 
     expect(result).toBe(false)
-    expect(mockLogger.error).toHaveBeenCalledWith('Security policy threw an error:', expect.any(Error))
   })
 
-  it('handles async policy that throws', () => {
+  it('returns false when the policy throws a TypeError', () => {
     const policy: SecurityPolicy = () => {
       throw new TypeError('Invalid operation')
     }
@@ -94,16 +92,29 @@ describe('applyPolicy', () => {
     const result = applyPolicy(policy, event, mockLogger)
 
     expect(result).toBe(false)
-    expect(mockLogger.error).toHaveBeenCalledWith('Security policy threw an error:', expect.any(Error))
+  })
+
+  it('logs a TypeError thrown by the policy', () => {
+    const policy: SecurityPolicy = () => {
+      throw new TypeError('Invalid operation')
+    }
+    const event = createMockEvent()
+
+    applyPolicy(policy, event, mockLogger)
+
+    expect(mockLogger.error).toHaveBeenCalledWith('Security policy threw an error:', expect.any(TypeError))
   })
 
   it('allows origin-based filtering', () => {
     const allowedOrigins = ['https://trusted.com', 'https://example.com']
     const policy: SecurityPolicy = (event) => allowedOrigins.includes(event.origin)
+    const origins = ['https://trusted.com', 'https://example.com', 'https://malicious.com']
 
-    expect(applyPolicy(policy, createMockEvent('https://trusted.com'), mockLogger)).toBe(true)
-    expect(applyPolicy(policy, createMockEvent('https://example.com'), mockLogger)).toBe(true)
-    expect(applyPolicy(policy, createMockEvent('https://malicious.com'), mockLogger)).toBe(false)
+    expect(origins.map((origin) => [origin, applyPolicy(policy, createMockEvent(origin), mockLogger)])).toEqual([
+      ['https://trusted.com', true],
+      ['https://example.com', true],
+      ['https://malicious.com', false],
+    ])
   })
 
   it('supports complex policy logic', () => {
@@ -111,10 +122,13 @@ describe('applyPolicy', () => {
       const origin = event.origin
       return origin.startsWith('https://') && !origin.includes('malicious')
     }
+    const origins = ['https://safe.com', 'http://safe.com', 'https://malicious.com']
 
-    expect(applyPolicy(policy, createMockEvent('https://safe.com'), mockLogger)).toBe(true)
-    expect(applyPolicy(policy, createMockEvent('http://safe.com'), mockLogger)).toBe(false)
-    expect(applyPolicy(policy, createMockEvent('https://malicious.com'), mockLogger)).toBe(false)
+    expect(origins.map((origin) => [origin, applyPolicy(policy, createMockEvent(origin), mockLogger)])).toEqual([
+      ['https://safe.com', true],
+      ['http://safe.com', false],
+      ['https://malicious.com', false],
+    ])
   })
 
   it('logs error when policy throws', () => {
@@ -123,9 +137,8 @@ describe('applyPolicy', () => {
     }
     const event = createMockEvent()
 
-    const result = applyPolicy(policy, event, mockLogger)
+    applyPolicy(policy, event, mockLogger)
 
-    expect(result).toBe(false)
     expect(mockLogger.error).toHaveBeenCalledWith('Security policy threw an error:', expect.any(Error))
   })
 })

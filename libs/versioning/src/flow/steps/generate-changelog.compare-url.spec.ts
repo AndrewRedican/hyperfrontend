@@ -33,8 +33,12 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ compareUrl: undefined }) }),
+        })
+      )
     })
 
     it('does not include compareUrl when effectiveBaseCommit is not present', async () => {
@@ -48,8 +52,12 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ compareUrl: undefined }) }),
+        })
+      )
     })
 
     it('does not include compareUrl when effectiveBaseCommit is null', async () => {
@@ -64,8 +72,33 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ compareUrl: undefined }) }),
+        })
+      )
+    })
+
+    it('omits compareUrl when publishedCommit exists but effectiveBaseCommit is null (fallback mode)', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'minor',
+        repositoryConfig: createGitHubConfig(),
+        publishedCommit: 'orphaned123',
+        effectiveBaseCommit: null,
+        commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ compareUrl: undefined }) }),
+        })
+      )
     })
 
     it('logs info when publishedCommit exists but effectiveBaseCommit is null (fallback mode)', async () => {
@@ -79,10 +112,8 @@ describe('Generate Changelog Step', () => {
         commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
       })
 
-      const result = await step.execute(ctx)
+      await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
       expect(ctx.logger.info).toHaveBeenCalledWith('Compare URL omitted: published commit not in current history')
     })
 
@@ -98,8 +129,14 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/def456789...abc123')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({ compareUrl: 'https://github.com/owner/repo/compare/def456789...abc123' }),
+          }),
+        })
+      )
     })
 
     it('generates GitLab compareUrl with /-/ prefix using commit hashes', async () => {
@@ -114,8 +151,14 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://gitlab.com/group/project/-/compare/def456789...abc123')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({ compareUrl: 'https://gitlab.com/group/project/-/compare/def456789...abc123' }),
+          }),
+        })
+      )
     })
 
     it('generates Bitbucket compareUrl with reversed order and two dots using commit hashes', async () => {
@@ -130,8 +173,14 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://bitbucket.org/owner/repo/compare/abc123..def456789')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({ compareUrl: 'https://bitbucket.org/owner/repo/compare/abc123..def456789' }),
+          }),
+        })
+      )
     })
 
     it('handles initial release path with repositoryConfig but no commits', async () => {
@@ -145,9 +194,13 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('initial release')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ compareUrl: undefined }) }),
+          message: expect.stringContaining('initial release'),
+        })
+      )
     })
 
     it('generates compareUrl for version reset scenario (empty commits but has effectiveBaseCommit)', async () => {
@@ -162,8 +215,14 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/def456789...abc123')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({ compareUrl: 'https://github.com/owner/repo/compare/def456789...abc123' }),
+          }),
+        })
+      )
     })
 
     it('uses custom formatter when platform is custom', async () => {

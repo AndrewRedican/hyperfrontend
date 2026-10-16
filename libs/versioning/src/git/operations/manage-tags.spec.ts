@@ -22,8 +22,18 @@ describe('createTag', () => {
 
     const tag = createTag('v1.0.0')
 
-    expect(tag.name).toBe('v1.0.0')
-    expect(tag.type).toBe('lightweight')
+    expect(tag).toMatchObject({ name: 'v1.0.0', type: 'lightweight' })
+  })
+
+  it('runs git tag with the tag name for a lightweight tag', () => {
+    mockExecFileSync.mockReturnValueOnce('')
+    mockExecFileSync.mockReturnValueOnce('abc123def456789012345678901234567890abcd')
+    mockExecFileSync.mockImplementationOnce(() => {
+      throw new Error('Not annotated')
+    })
+
+    createTag('v1.0.0')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['tag', 'v1.0.0']), expect.any(Object))
   })
 
@@ -37,6 +47,17 @@ describe('createTag', () => {
     const tag = createTag('v1.0.0', { message: 'Release 1.0.0' })
 
     expect(tag.type).toBe('annotated')
+  })
+
+  it('runs git tag -a with a message flag for an annotated tag', () => {
+    mockExecFileSync.mockReturnValueOnce('')
+    mockExecFileSync.mockReturnValueOnce('abc123def456789012345678901234567890abcd')
+    mockExecFileSync.mockReturnValueOnce(
+      'object abc123\ntype commit\ntag v1.0.0\ntagger Test <test@test.com> 1678900000 +0000\n\nRelease 1.0.0'
+    )
+
+    createTag('v1.0.0', { message: 'Release 1.0.0' })
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['tag', '-a', 'v1.0.0', '-m']), expect.any(Object))
   })
 
@@ -99,12 +120,19 @@ describe('deleteTag', () => {
     jest.clearAllMocks()
   })
 
-  it('deletes existing tag and returns true', () => {
+  it('returns true when the tag is deleted', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = deleteTag('v1.0.0')
 
     expect(result).toBe(true)
+  })
+
+  it('runs git tag -d with the tag name', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    deleteTag('v1.0.0')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['tag', '-d', 'v1.0.0']), expect.any(Object))
   })
 
@@ -132,21 +160,35 @@ describe('pushTag', () => {
     jest.clearAllMocks()
   })
 
-  it('pushes tag to origin by default', () => {
+  it('returns true when the tag is pushed to the default remote', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = pushTag('v1.0.0')
 
     expect(result).toBe(true)
+  })
+
+  it('runs git push against origin by default', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    pushTag('v1.0.0')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'origin', 'v1.0.0']), expect.any(Object))
   })
 
-  it('pushes tag to custom remote', () => {
+  it('returns true when the tag is pushed to a custom remote', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = pushTag('v1.0.0', 'upstream')
 
     expect(result).toBe(true)
+  })
+
+  it('runs git push against the custom remote', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    pushTag('v1.0.0', 'upstream')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'upstream', 'v1.0.0']), expect.any(Object))
   })
 

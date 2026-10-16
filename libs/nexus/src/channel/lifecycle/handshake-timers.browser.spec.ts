@@ -70,8 +70,7 @@ describe('channel/lifecycle/handshake-timers', () => {
 
       jest.advanceTimersByTime(500)
 
-      expect(sentActions).toHaveLength(1)
-      expect(firstDeadline).not.toHaveBeenCalled()
+      expect({ resent: sentActions, firstDeadlines: firstDeadline.mock.calls }).toEqual({ resent: [replayAction], firstDeadlines: [] })
     })
   })
 
@@ -83,8 +82,7 @@ describe('channel/lifecycle/handshake-timers', () => {
       clearHandshakeTimers(mockChannel)
       jest.advanceTimersByTime(20_000)
 
-      expect(sentActions).toHaveLength(0)
-      expect(onDeadline).not.toHaveBeenCalled()
+      expect({ resent: sentActions, deadlines: onDeadline.mock.calls }).toEqual({ resent: [], deadlines: [] })
     })
 
     it('nulls the timer handles in state', () => {
@@ -114,12 +112,19 @@ describe('channel/lifecycle/handshake-timers', () => {
   })
 
   describe('expireHandshake', () => {
-    it('removes the process and fires timeout with the elapsed deadline', () => {
+    it('removes the process', () => {
       startHandshakeTimers(mockChannel, replayAction, jest.fn())
 
       expireHandshake(mockChannel, 'process-1')
 
       expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-1')
+    })
+
+    it('fires connect-timeout with the elapsed deadline', () => {
+      startHandshakeTimers(mockChannel, replayAction, jest.fn())
+
+      expireHandshake(mockChannel, 'process-1')
+
       expect(mockChannel.notifyEvent).toHaveBeenCalledWith('connect-timeout', { elapsedMs: state.connectTimeoutMs })
     })
 

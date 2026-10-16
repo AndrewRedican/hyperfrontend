@@ -29,10 +29,15 @@ describe('babelDetector', () => {
     }
     const result = babelDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('babel')
-    expect(result?.name).toBe('Babel')
-    expect(result?.version).toBe('7.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'babel', name: 'Babel', version: '7.0.0' }))
+  })
+
+  it('scores @babel/core at least 50', () => {
+    const pkg: PackageJson = {
+      devDependencies: { '@babel/core': '^7.0.0' },
+    }
+    const result = babelDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(50)
   })
 
@@ -43,7 +48,16 @@ describe('babelDetector', () => {
     }
     const result = babelDetector('/some/path', pkg)
 
-    expect(result?.detectedFrom.some((s) => s.field === 'babel')).toBe(true)
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'babel' })]))
+  })
+
+  it('increases confidence with babel config in package.json', () => {
+    const pkg: PackageJson = {
+      devDependencies: { '@babel/core': '^7.0.0' },
+      babel: { presets: ['@babel/preset-env'] },
+    }
+    const result = babelDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
   })
 
@@ -55,8 +69,22 @@ describe('babelDetector', () => {
     }
     const result = babelDetector('/project', pkg)
 
-    expect(result?.configPath).toBe('/project/babel.config.js')
-    expect(result?.detectedFrom.some((s) => s.type === 'config-file')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: '/project/babel.config.js',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ type: 'config-file' })]),
+      })
+    )
+  })
+
+  it('increases confidence with a babel config file', () => {
+    jest.mocked(detectorHelpers.locateConfigFile).mockReturnValueOnce('/project/babel.config.js')
+
+    const pkg: PackageJson = {
+      devDependencies: { '@babel/core': '^7.0.0' },
+    }
+    const result = babelDetector('/project', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
   })
 

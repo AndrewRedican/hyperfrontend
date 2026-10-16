@@ -1,6 +1,6 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
-import type { PrePassJob } from './pre-pass'
+import type { PrePassJob, PrePassResult } from './pre-pass'
 import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -63,26 +63,42 @@ describe('runPrePass', () => {
   it('returns an empty list when no jobs are supplied', async () => {
     const results = await runPrePass([], { workerPath: '/abs/worker.cjs' })
     expect(results).toEqual([])
+  })
+
+  it('spawns no worker when no jobs are supplied', async () => {
+    await runPrePass([], { workerPath: '/abs/worker.cjs' })
     expect(spawn).not.toHaveBeenCalled()
   })
 
-  it('forks one worker per job sequentially and aggregates the JSON reports', async () => {
+  const driveTwoJobs = async (): Promise<{ spawnCounts: number[]; jobs: PrePassJob[]; results: PrePassResult[] }> => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const jobs = [baseJob({ dep: 'rollup' }), baseJob({ dep: 'postject', otherDeps: ['rollup'] })]
     const promise = runPrePass(jobs, { workerPath: '/abs/worker.cjs' })
+    const spawnCounts: number[] = []
     await tick()
-    expect(records).toHaveLength(1)
+    spawnCounts.push(records.length)
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await tick()
-    expect(records).toHaveLength(2)
+    spawnCounts.push(records.length)
     writeReport((records[1] as SpawnRecord).reportPath, { outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30 })
     ;(records[1] as SpawnRecord).child.emit('exit', 0)
     const results = await promise
-    expect(results).toHaveLength(2)
-    expect(results[0]).toMatchObject({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25, job: jobs[0] })
-    expect(results[1]).toMatchObject({ outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30, job: jobs[1] })
+    return { spawnCounts, jobs, results }
+  }
+
+  it('forks the workers one at a time, each after the previous one exits', async () => {
+    const { spawnCounts } = await driveTwoJobs()
+    expect(spawnCounts).toEqual([1, 2])
+  })
+
+  it('aggregates the JSON reports in job order', async () => {
+    const { jobs, results } = await driveTwoJobs()
+    expect(results).toEqual([
+      expect.objectContaining({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25, job: jobs[0] }),
+      expect.objectContaining({ outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30, job: jobs[1] }),
+    ])
   })
 
   it('rejects when a worker exits with a non-zero code and includes the job in the message', async () => {
@@ -121,8 +137,10 @@ describe('runPrePass', () => {
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
-    expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
-    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs'])
+    expect({ execPath: (records[0] as SpawnRecord).execPath, leadingArgs: (records[0] as SpawnRecord).args.slice(0, 3) }).toEqual({
+      execPath: '/usr/bin/custom-node',
+      leadingArgs: ['--require', '@swc-node/register', '/abs/worker.cjs'],
+    })
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
@@ -157,7 +175,7 @@ describe('runPrePass', () => {
     await tick()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
-    await expect(promise).rejects.toThrow()
+    await promise.catch(() => undefined)
     expect(existsSync(reportDir)).toBe(false)
   })
 })

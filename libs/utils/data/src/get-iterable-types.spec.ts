@@ -6,9 +6,7 @@ import { registerIterableClass } from './register-iterable-class'
 
 describe('getIterableTypes', () => {
   it('returns list of known iterable classes, containing object and array by default', () => {
-    const types = getIterableTypes()
-    expect(types).toContain('object')
-    expect(types).toContain('array')
+    expect(getIterableTypes()).toEqual(expect.arrayContaining(['object', 'array']))
   })
 })
 
@@ -33,10 +31,6 @@ describe('getIterableTypes (after registering a new iterable class)', () => {
   afterAll(() => deregisterIterableClass())
 
   it('returns a list of known iterable classes including the newly registered ones', () => {
-    const types = getIterableTypes()
-    expect(types).toContain('object')
-    expect(types).toContain('array')
-    expect(types).toContain('Map')
-    expect(types).toContain('Set')
+    expect(getIterableTypes()).toEqual(expect.arrayContaining(['object', 'array', 'Map', 'Set']))
   })
 })

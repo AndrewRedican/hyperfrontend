@@ -6,29 +6,31 @@ import { registerClassTypes } from './register-class-types'
 import { sameType } from './same-type'
 
 describe('sameType', () => {
-  it('returns the matching data type for both targets when they are of the same type', () => {
-    expect(sameType(5, -100)).toBe('number')
-    expect(sameType('hello', 'world')).toBe('string')
+  it.each([
+    [5, -100, 'number'],
+    ['hello', 'world', 'string'],
     // eslint-disable-next-line @typescript-eslint/no-array-constructor
-    expect(sameType(new Array(), [1, 2, 3])).toBe('array')
-    expect(sameType({ a: 1 }, { b: 2 })).toBe('object')
-    expect(
-      sameType(
-        () => {},
-        function () {}
-      )
-    ).toBe('function')
-    expect(sameType(true, false)).toBe('boolean')
-    expect(sameType(Symbol('a'), Symbol())).toBe('symbol')
-    expect(sameType(null, null)).toBe('null')
-    expect(sameType(undefined, undefined)).toBe('undefined')
-  })
+    [new Array(), [1, 2, 3], 'array'],
+    [{ a: 1 }, { b: 2 }, 'object'],
+    [() => {}, function () {}, 'function'],
+    [true, false, 'boolean'],
+    [Symbol('a'), Symbol(), 'symbol'],
+    [null, null, 'null'],
+    [undefined, undefined, 'undefined'],
+  ])(
+    'returns the matching data type for both targets when they are of the same type: %p and %p',
+    (left: unknown, right: unknown, expected: string) => {
+      expect(sameType(left, right)).toBe(expected)
+    }
+  )
 
-  it('returns false when the targets are of different types', () => {
-    expect(sameType(5, '5')).toBe(false)
-    expect(sameType([], {})).toBe(false)
-    expect(sameType(null, undefined)).toBe(false)
-    expect(sameType(true, 1)).toBe(false)
+  it.each([
+    [5, '5'],
+    [[], {}],
+    [null, undefined],
+    [true, 1],
+  ])('returns false when the targets are of different types: %p and %p', (left: unknown, right: unknown) => {
+    expect(sameType(left, right)).toBe(false)
   })
 })
 
@@ -39,8 +41,11 @@ describe('sameType with custom registered class types', () => {
   beforeEach(() => registerClassTypes(CustomClassA, CustomClassB))
 
   afterAll(() => deregisterClassTypes(CustomClassA, CustomClassB))
-  it('returns the matching data type for both targets when they are of the same registered class type', () => {
+  it('returns the matching data type for both targets when they are of the same registered class type CustomClassA', () => {
     expect(sameType(new CustomClassA(), new CustomClassA())).toBe('CustomClassA')
+  })
+
+  it('returns the matching data type for both targets when they are of the same registered class type CustomClassB', () => {
     expect(sameType(new CustomClassB(), new CustomClassB())).toBe('CustomClassB')
   })
 

@@ -184,13 +184,7 @@ describe('require-codeblock-language', () => {
 
   describe('detectUnlabeledCodeBlocks', () => {
     it('detects unlabeled code blocks', () => {
-      const content = createMarkdownWithUnlabeledCodeBlock()
-      const blocks = detectUnlabeledCodeBlocks(content)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]).toEqual({
-        startLine: 5,
-        column: 0,
-      })
+      expect(detectUnlabeledCodeBlocks(createMarkdownWithUnlabeledCodeBlock())).toEqual([{ startLine: 5, column: 0 }])
     })
 
     it('returns empty for labeled code blocks', () => {
@@ -206,11 +200,7 @@ describe('require-codeblock-language', () => {
     })
 
     it('detects multiple unlabeled code blocks', () => {
-      const content = createMarkdownWithMixedCodeBlocks()
-      const blocks = detectUnlabeledCodeBlocks(content)
-      expect(blocks).toHaveLength(2)
-      expect(blocks[0]?.startLine).toBe(9)
-      expect(blocks[1]?.startLine).toBe(19)
+      expect(detectUnlabeledCodeBlocks(createMarkdownWithMixedCodeBlocks())).toMatchObject([{ startLine: 9 }, { startLine: 19 }])
     })
 
     it('handles nested backticks correctly', () => {
@@ -232,9 +222,7 @@ code
 code
 \`\`\`
 `
-      const blocks = detectUnlabeledCodeBlocks(content)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]?.startLine).toBe(1)
+      expect(detectUnlabeledCodeBlocks(content)).toMatchObject([{ startLine: 1 }])
     })
 
     it('handles indented code blocks', () => {
@@ -244,9 +232,7 @@ code
   code
   \`\`\`
 `
-      const blocks = detectUnlabeledCodeBlocks(content)
-      expect(blocks).toHaveLength(1)
-      expect(blocks[0]?.column).toBe(2)
+      expect(detectUnlabeledCodeBlocks(content)).toMatchObject([{ column: 2 }])
     })
   })
 

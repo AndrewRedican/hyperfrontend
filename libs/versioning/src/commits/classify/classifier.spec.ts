@@ -44,9 +44,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('direct-scope')
-      expect(result.include).toBe(true)
-      expect(result.preserveScope).toBe(false)
+      expect(result).toEqual(expect.objectContaining({ source: 'direct-scope', include: true, preserveScope: false }))
     })
 
     it('matches scope variations', () => {
@@ -58,8 +56,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('direct-scope')
-      expect(result.include).toBe(true)
+      expect(result).toEqual(expect.objectContaining({ source: 'direct-scope', include: true }))
     })
 
     it('excludes commits with non-matching scope', () => {
@@ -71,8 +68,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('excluded')
-      expect(result.include).toBe(false)
+      expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
     })
 
     it('excludes commits with explicitly excluded scope', () => {
@@ -85,8 +81,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('excluded')
-      expect(result.include).toBe(false)
+      expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
     })
   })
 
@@ -100,9 +95,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('direct-file')
-      expect(result.include).toBe(true)
-      expect(result.preserveScope).toBe(true)
+      expect(result).toEqual(expect.objectContaining({ source: 'direct-file', include: true, preserveScope: true }))
     })
 
     it('classifies unscoped commits touching project files', () => {
@@ -114,9 +107,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('unscoped-file')
-      expect(result.include).toBe(true)
-      expect(result.preserveScope).toBe(false)
+      expect(result).toEqual(expect.objectContaining({ source: 'unscoped-file', include: true, preserveScope: false }))
     })
   })
 
@@ -142,8 +133,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('direct-file')
-      expect(result.include).toBe(true)
+      expect(result).toEqual(expect.objectContaining({ source: 'direct-file', include: true }))
     })
   })
 
@@ -158,10 +148,9 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('indirect-dependency')
-      expect(result.include).toBe(true)
-      expect(result.preserveScope).toBe(true)
-      expect(result.dependencyPath).toEqual(['lib-utils'])
+      expect(result).toEqual(
+        expect.objectContaining({ source: 'indirect-dependency', include: true, preserveScope: true, dependencyPath: ['lib-utils'] })
+      )
     })
 
     it('matches dependency scope variations', () => {
@@ -174,8 +163,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('indirect-dependency')
-      expect(result.include).toBe(true)
+      expect(result).toEqual(expect.objectContaining({ source: 'indirect-dependency', include: true }))
     })
   })
 
@@ -189,8 +177,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('unscoped-global')
-      expect(result.include).toBe(false)
+      expect(result).toEqual(expect.objectContaining({ source: 'unscoped-global', include: false }))
     })
   })
 
@@ -205,8 +192,7 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      expect(result.source).toBe('direct-scope')
-      expect(result.include).toBe(true)
+      expect(result).toEqual(expect.objectContaining({ source: 'direct-scope', include: true }))
     })
   })
 })
@@ -228,9 +214,11 @@ describe('classifyCommits', () => {
 
     const result = classifyCommits(commits, context)
 
-    expect(result.commits).toHaveLength(4)
-    expect(result.included).toHaveLength(2)
-    expect(result.excluded).toHaveLength(2)
+    expect({ commits: result.commits.length, included: result.included.length, excluded: result.excluded.length }).toEqual({
+      commits: 4,
+      included: 2,
+      excluded: 2,
+    })
   })
 
   it('provides accurate summary', () => {
@@ -247,11 +235,20 @@ describe('classifyCommits', () => {
 
     const result = classifyCommits(commits, context)
 
-    expect(result.summary.total).toBe(3)
-    expect(result.summary.included).toBe(2)
-    expect(result.summary.excluded).toBe(1)
-    expect(result.summary.bySource['direct-scope']).toBe(2)
-    expect(result.summary.bySource['excluded']).toBe(1)
+    expect(result.summary).toEqual({
+      total: 3,
+      included: 2,
+      excluded: 1,
+      bySource: {
+        'direct-scope': 2,
+        'direct-file': 0,
+        'unscoped-file': 0,
+        'indirect-dependency': 0,
+        'indirect-infra': 0,
+        'unscoped-global': 0,
+        excluded: 1,
+      },
+    })
   })
 })
 
@@ -259,9 +256,13 @@ describe('createClassificationContext', () => {
   it('creates context with defaults', () => {
     const context = createClassificationContext(['versioning'], new Set(['abc123']))
 
-    expect(context.projectScopes).toEqual(['versioning'])
-    expect(context.fileCommitHashes.has('abc123')).toBe(true)
-    expect(context.excludeScopes).toContain('release')
+    expect(context).toEqual(
+      expect.objectContaining({
+        projectScopes: ['versioning'],
+        fileCommitHashes: new Set(['abc123']),
+        excludeScopes: expect.arrayContaining(['release']),
+      })
+    )
   })
 
   it('accepts optional parameters', () => {
@@ -274,10 +275,33 @@ describe('createClassificationContext', () => {
       includeScopes: ['shared'],
     })
 
+    expect(context).toEqual(expect.objectContaining({ excludeScopes: ['custom-exclude'], includeScopes: ['shared'] }))
+  })
+
+  it('keeps the given dependency commit map by reference', () => {
+    const depMap = new Map([['lib-utils', new Set(['def456'])]])
+    const infraHashes = new Set(['ghi789'])
+    const context = createClassificationContext(['versioning'], new Set(['abc123']), {
+      dependencyCommitMap: depMap,
+      infrastructureCommitHashes: infraHashes,
+      excludeScopes: ['custom-exclude'],
+      includeScopes: ['shared'],
+    })
+
     expect(context.dependencyCommitMap).toBe(depMap)
+  })
+
+  it('keeps the given infrastructure commit hash set by reference', () => {
+    const depMap = new Map([['lib-utils', new Set(['def456'])]])
+    const infraHashes = new Set(['ghi789'])
+    const context = createClassificationContext(['versioning'], new Set(['abc123']), {
+      dependencyCommitMap: depMap,
+      infrastructureCommitHashes: infraHashes,
+      excludeScopes: ['custom-exclude'],
+      includeScopes: ['shared'],
+    })
+
     expect(context.infrastructureCommitHashes).toBe(infraHashes)
-    expect(context.excludeScopes).toEqual(['custom-exclude'])
-    expect(context.includeScopes).toEqual(['shared'])
   })
 })
 
@@ -291,8 +315,7 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    expect(changelogCommit.scope).toEqual([])
-    expect(changelogCommit.subject).toBe('add feature')
+    expect(changelogCommit).toEqual(expect.objectContaining({ scope: [], subject: 'add feature' }))
   })
 
   it('preserves scope from direct-file commits', () => {
@@ -354,8 +377,7 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    expect(changelogCommit.raw).toContain('feat: add feature')
-    expect(changelogCommit.raw).toContain('This is the commit body.')
+    expect(changelogCommit.raw).toBe('feat: add feature\n\nThis is the commit body.\n\nWith multiple paragraphs.')
   })
 
   it('rebuilds raw message with footers when removing scope', () => {
@@ -464,9 +486,10 @@ describe('filterIncluded', () => {
     const result = classifyCommits(commits, context)
     const included = filterIncluded(result.commits)
 
-    expect(included).toHaveLength(2)
-    expect(included.every((c) => c.include)).toBe(true)
-    expect(included.every((c) => c.source === 'direct-scope')).toBe(true)
+    expect(included.map((c) => ({ hash: c.raw.hash, include: c.include, source: c.source }))).toEqual([
+      { hash: 'abc111', include: true, source: 'direct-scope' },
+      { hash: 'abc333', include: true, source: 'direct-scope' },
+    ])
   })
 
   it('returns empty array when no commits are included', () => {
@@ -499,10 +522,10 @@ describe('extractConventionalCommits', () => {
     const result = classifyCommits(commits, context)
     const conventional = extractConventionalCommits(result.commits)
 
-    expect(conventional).toHaveLength(2)
-    expect(conventional[0]?.subject).toBe('first')
-    expect(conventional[1]?.subject).toBe('second')
-    expect(conventional[0]?.type).toBe('feat')
+    expect(conventional).toEqual([
+      expect.objectContaining({ type: 'feat', subject: 'first' }),
+      expect.objectContaining({ type: 'feat', subject: 'second' }),
+    ])
   })
 })
 
@@ -517,8 +540,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-infra')
-    expect(result.include).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-infra', include: true }))
   })
 
   it('preserves scope for infrastructure commits', () => {
@@ -531,9 +553,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-infra')
-    expect(result.include).toBe(true)
-    expect(result.preserveScope).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-infra', include: true, preserveScope: true }))
   })
 
   it('does not match commits without infrastructure hash', () => {
@@ -546,8 +566,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('excluded')
-    expect(result.include).toBe(false)
+    expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
   })
 
   it('classifies unscoped commits as indirect-infra when hash matches', () => {
@@ -560,8 +579,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-infra')
-    expect(result.include).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-infra', include: true }))
   })
 
   it('file-based detection takes priority over infrastructure', () => {
@@ -574,8 +592,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('direct-file')
-    expect(result.include).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'direct-file', include: true }))
   })
 
   it('dependency detection takes priority over infrastructure', () => {
@@ -589,8 +606,7 @@ describe('infrastructure classification', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-dependency')
-    expect(result.include).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-dependency', include: true }))
   })
 })
 
@@ -605,9 +621,9 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-dependency')
-    expect(result.include).toBe(true)
-    expect(result.dependencyPath).toEqual(['@hyperfrontend/utils'])
+    expect(result).toEqual(
+      expect.objectContaining({ source: 'indirect-dependency', include: true, dependencyPath: ['@hyperfrontend/utils'] })
+    )
   })
 
   it('does not match when dependency scope has no variations matching', () => {
@@ -620,8 +636,7 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('excluded')
-    expect(result.include).toBe(false)
+    expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
   })
 
   it('excludes commits when scope matches dependency but hash is not in commit set (mislabeled commit)', () => {
@@ -634,8 +649,7 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('excluded')
-    expect(result.include).toBe(false)
+    expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
   })
 
   it('excludes commits when scope variation matches but hash is not verified', () => {
@@ -648,8 +662,7 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('excluded')
-    expect(result.include).toBe(false)
+    expect(result).toEqual(expect.objectContaining({ source: 'excluded', include: false }))
   })
 
   it('performs case-insensitive scope matching for dependencies', () => {
@@ -662,8 +675,7 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-dependency')
-    expect(result.include).toBe(true)
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-dependency', include: true }))
   })
 
   it('matches first dependency when multiple dependencies exist', () => {
@@ -679,8 +691,6 @@ describe('dependency scope variations', () => {
 
     const result = classifyCommit(input, context)
 
-    expect(result.source).toBe('indirect-dependency')
-    expect(result.include).toBe(true)
-    expect(result.dependencyPath).toEqual(['lib-utils'])
+    expect(result).toEqual(expect.objectContaining({ source: 'indirect-dependency', include: true, dependencyPath: ['lib-utils'] }))
   })
 })

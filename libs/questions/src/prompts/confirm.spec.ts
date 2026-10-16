@@ -101,8 +101,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
 
     it('returns true for uppercase Y', async () => {
@@ -113,8 +112,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
   })
 
@@ -127,8 +125,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(false)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: false })
     })
 
     it('returns false for uppercase N', async () => {
@@ -139,8 +136,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(false)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: false })
     })
   })
 
@@ -153,8 +149,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Cancelled)
-      expect(result.value).toBeUndefined()
+      expect(result).toEqual({ result: PromptResult.Cancelled, value: undefined })
     })
   })
 
@@ -167,8 +162,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
 
     it('returns initial false on Enter', async () => {
@@ -179,8 +173,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(false)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: false })
     })
 
     it('ignores Enter when no initial provided', async () => {
@@ -192,8 +185,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
   })
 
@@ -206,8 +198,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
 
     it('ignores arrow keys', async () => {
@@ -218,8 +209,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(false)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: false })
     })
   })
 
@@ -232,8 +222,7 @@ describe('confirm', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(true)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: true })
     })
 
     it('accepts a pasted no with surrounding whitespace', async () => {
@@ -280,8 +269,21 @@ describe('confirm', () => {
       const before = output.getWrittenData().length
       output.emit('resize')
       await new Promise((resolve) => setImmediate(resolve))
+      const repaint = output.getWrittenData().slice(before)
 
-      expect(output.getWrittenData().slice(before)).toContain('Proceed?')
+      input.enqueueKeys(['y'])
+      await promise
+
+      expect(repaint).toContain('Proceed?')
+    })
+
+    it('still accepts an answer after the terminal resizes', async () => {
+      const config = createConfig({ message: 'Proceed?' })
+      const promise = confirm(config)
+
+      await new Promise((resolve) => setImmediate(resolve))
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
 
       input.enqueueKeys(['y'])
 

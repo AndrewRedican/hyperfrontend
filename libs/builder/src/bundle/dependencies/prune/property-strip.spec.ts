@@ -96,9 +96,10 @@ const BASE = 'const a = 1;\nconst b = 2;\nconst NS = Object.freeze({ a, b });\ne
 
 describe('stripDeadProperties', () => {
   it('drops the slots outside the kept set', () => {
-    const result = strip(BASE, { NS: ['a'] })
-    expect(result?.removedProperties).toBe(1)
-    expect(result?.code).toContain('Object.freeze({ a })')
+    expect(strip(BASE, { NS: ['a'] })).toEqual({
+      code: 'const a = 1;\nconst b = 2;\nconst NS = Object.freeze({ a });\nexport { a, b, NS };',
+      removedProperties: 1,
+    })
   })
 
   it('preserves the original text of a kept key:value slot', () => {
@@ -121,18 +122,18 @@ describe('stripDeadProperties', () => {
   it('strips one namespace and leaves another untouched', () => {
     const source =
       'const a = 1;\nconst b = 2;\nconst c = 3;\nconst NS = Object.freeze({ a, b });\nconst MS = Object.freeze({ c });\nexport { NS, MS };'
-    const result = strip(source, { NS: ['a'] })
-    expect(result?.removedProperties).toBe(1)
-    expect(result?.code).toContain('Object.freeze({ a })')
-    expect(result?.code).toContain('Object.freeze({ c })')
+    expect(strip(source, { NS: ['a'] })).toEqual({
+      code: 'const a = 1;\nconst b = 2;\nconst c = 3;\nconst NS = Object.freeze({ a });\nconst MS = Object.freeze({ c });\nexport { NS, MS };',
+      removedProperties: 1,
+    })
   })
 
   it('strips two namespaces in one pass, ordering the edits back-to-front', () => {
     const source =
       'const a = 1;\nconst b = 2;\nconst c = 3;\nconst d = 4;\nconst NS = Object.freeze({ a, b });\nconst MS = Object.freeze({ c, d });\nexport { NS, MS };'
-    const result = strip(source, { NS: ['a'], MS: ['c'] })
-    expect(result?.removedProperties).toBe(2)
-    expect(result?.code).toContain('Object.freeze({ a })')
-    expect(result?.code).toContain('Object.freeze({ c })')
+    expect(strip(source, { NS: ['a'], MS: ['c'] })).toEqual({
+      code: 'const a = 1;\nconst b = 2;\nconst c = 3;\nconst d = 4;\nconst NS = Object.freeze({ a });\nconst MS = Object.freeze({ c });\nexport { NS, MS };',
+      removedProperties: 2,
+    })
   })
 })

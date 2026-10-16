@@ -5,18 +5,20 @@ import { createClassifiedCommit, createEmptyClassificationSummary } from './mode
 
 describe('createEmptyClassificationSummary', () => {
   it('creates a summary with all counts at zero', () => {
-    const summary = createEmptyClassificationSummary()
-
-    expect(summary.total).toBe(0)
-    expect(summary.included).toBe(0)
-    expect(summary.excluded).toBe(0)
-    expect(summary.bySource['direct-scope']).toBe(0)
-    expect(summary.bySource['direct-file']).toBe(0)
-    expect(summary.bySource['unscoped-file']).toBe(0)
-    expect(summary.bySource['indirect-dependency']).toBe(0)
-    expect(summary.bySource['indirect-infra']).toBe(0)
-    expect(summary.bySource['unscoped-global']).toBe(0)
-    expect(summary.bySource['excluded']).toBe(0)
+    expect(createEmptyClassificationSummary()).toEqual({
+      total: 0,
+      included: 0,
+      excluded: 0,
+      bySource: {
+        'direct-scope': 0,
+        'direct-file': 0,
+        'unscoped-file': 0,
+        'indirect-dependency': 0,
+        'indirect-infra': 0,
+        'unscoped-global': 0,
+        excluded: 0,
+      },
+    })
   })
 })
 

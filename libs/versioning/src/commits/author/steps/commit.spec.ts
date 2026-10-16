@@ -25,7 +25,7 @@ describe('commitStep', () => {
     expect(result).toEqual({ status: StepStatus.Done })
   })
 
-  it('hands the formatted message to the configured commit executor', async () => {
+  it('returns done after the configured commit executor runs', async () => {
     const executor = jest.fn<void, [string]>()
     const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))
     ctx.draft = { type: 'feat', subject: 'hi' }
@@ -33,6 +33,15 @@ describe('commitStep', () => {
     const result = await commitStep.run(ctx)
 
     expect(result).toEqual({ status: StepStatus.Done })
+  })
+
+  it('hands the formatted message to the configured commit executor', async () => {
+    const executor = jest.fn<void, [string]>()
+    const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))
+    ctx.draft = { type: 'feat', subject: 'hi' }
+
+    await commitStep.run(ctx)
+
     expect(executor).toHaveBeenCalledWith('feat: hi')
   })
 
@@ -64,13 +73,21 @@ describe('commitStep', () => {
     })
   })
 
-  it('falls back to git commit when no executor is configured', async () => {
+  it('returns done after falling back to git commit', async () => {
     const ctx = createSessionContext(createTestConfig({ cwd: '/repo', skipCommit: false }))
     ctx.draft = { type: 'feat', subject: 'hi' }
 
     const result = await commitStep.run(ctx)
 
     expect(result).toEqual({ status: StepStatus.Done })
+  })
+
+  it('falls back to git commit when no executor is configured', async () => {
+    const ctx = createSessionContext(createTestConfig({ cwd: '/repo', skipCommit: false }))
+    ctx.draft = { type: 'feat', subject: 'hi' }
+
+    await commitStep.run(ctx)
+
     expect(mockedGitCommit).toHaveBeenCalledWith('feat: hi', { cwd: '/repo' })
   })
 })

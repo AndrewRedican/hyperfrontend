@@ -6,9 +6,11 @@ describe('getLastKeyInMap', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const map = new Map<string, any>()
     map.set('hello', {})
-    expect(getLastKeyInMap(map)).toEqual('hello')
+    const afterFirstSet = getLastKeyInMap(map)
 
     map.set('world', 42)
-    expect(getLastKeyInMap(map)).toEqual('world')
+    const afterSecondSet = getLastKeyInMap(map)
+
+    expect({ afterFirstSet, afterSecondSet }).toEqual({ afterFirstSet: 'hello', afterSecondSet: 'world' })
   })
 })

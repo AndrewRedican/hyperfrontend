@@ -17,10 +17,7 @@ describe('createLightweightTag', () => {
       commitHash: 'abc123',
     })
 
-    expect(tag.name).toBe('v1.0.0')
-    expect(tag.commitHash).toBe('abc123')
-    expect(tag.type).toBe('lightweight')
-    expect(tag.message).toBeUndefined()
+    expect(tag).toEqual({ name: 'v1.0.0', commitHash: 'abc123', type: 'lightweight' })
   })
 })
 
@@ -35,11 +32,15 @@ describe('createAnnotatedTag', () => {
       tagDate: '2026-03-12T10:00:00Z',
     })
 
-    expect(tag.name).toBe('v1.0.0')
-    expect(tag.commitHash).toBe('abc123')
-    expect(tag.type).toBe('annotated')
-    expect(tag.message).toBe('Release v1.0.0')
-    expect(tag.taggerName).toBe('John Doe')
+    expect(tag).toEqual({
+      name: 'v1.0.0',
+      commitHash: 'abc123',
+      type: 'annotated',
+      message: 'Release v1.0.0',
+      taggerName: 'John Doe',
+      taggerEmail: 'john@example.com',
+      tagDate: '2026-03-12T10:00:00Z',
+    })
   })
 })
 
@@ -82,29 +83,36 @@ describe('isLightweightTag', () => {
 })
 
 describe('extractVersionFromTag', () => {
-  it('extracts version from v-prefixed tags', () => {
-    expect(extractVersionFromTag('v1.2.3')).toBe('1.2.3')
-    expect(extractVersionFromTag('V1.0.0')).toBe('1.0.0')
+  it.each([
+    ['v1.2.3', '1.2.3'],
+    ['V1.0.0', '1.0.0'],
+  ])('extracts the version from the v-prefixed tag %p', (tag, version) => {
+    expect(extractVersionFromTag(tag)).toBe(version)
   })
 
-  it('extracts version from @-format tags', () => {
-    expect(extractVersionFromTag('@scope/pkg@1.2.3')).toBe('1.2.3')
-    expect(extractVersionFromTag('package@1.0.0')).toBe('1.0.0')
+  it.each([
+    ['@scope/pkg@1.2.3', '1.2.3'],
+    ['package@1.0.0', '1.0.0'],
+  ])('extracts the version from the @-format tag %p', (tag, version) => {
+    expect(extractVersionFromTag(tag)).toBe(version)
   })
 
-  it('extracts version with prerelease', () => {
-    expect(extractVersionFromTag('v1.0.0-alpha.1')).toBe('1.0.0-alpha.1')
-    expect(extractVersionFromTag('v1.0.0-beta+build123')).toBe('1.0.0-beta+build123')
+  it.each([
+    ['v1.0.0-alpha.1', '1.0.0-alpha.1'],
+    ['v1.0.0-beta+build123', '1.0.0-beta+build123'],
+  ])('extracts the prerelease version from the tag %p', (tag, version) => {
+    expect(extractVersionFromTag(tag)).toBe(version)
   })
 
-  it('extracts version from release-style tags', () => {
-    expect(extractVersionFromTag('release-1.2.3')).toBe('1.2.3')
-    expect(extractVersionFromTag('pkg-v1.0.0')).toBe('1.0.0')
+  it.each([
+    ['release-1.2.3', '1.2.3'],
+    ['pkg-v1.0.0', '1.0.0'],
+  ])('extracts the version from the release-style tag %p', (tag, version) => {
+    expect(extractVersionFromTag(tag)).toBe(version)
   })
 
-  it('returns undefined for non-version tags', () => {
-    expect(extractVersionFromTag('latest')).toBeUndefined()
-    expect(extractVersionFromTag('main')).toBeUndefined()
+  it.each(['latest', 'main'])('returns undefined for the non-version tag %p', (tag) => {
+    expect(extractVersionFromTag(tag)).toBeUndefined()
   })
 
   it('returns undefined for empty string', () => {
@@ -131,36 +139,42 @@ describe('extractVersionFromTag', () => {
     expect(extractVersionFromTag('1.2.3')).toBe('1.2.3')
   })
 
-  it('returns undefined when separator followed by digit but not valid version', () => {
-    expect(extractVersionFromTag('pkg-1')).toBeUndefined()
-    expect(extractVersionFromTag('pkg_2')).toBeUndefined()
+  it.each(['pkg-1', 'pkg_2'])('returns undefined for %p, whose separator is followed by a digit but not a valid version', (tag) => {
+    expect(extractVersionFromTag(tag)).toBeUndefined()
   })
 })
 
 describe('extractPackageFromTag', () => {
-  it('extracts package from scoped package tags', () => {
-    expect(extractPackageFromTag('@scope/pkg@1.2.3')).toBe('@scope/pkg')
-    expect(extractPackageFromTag('@hyperfrontend/versioning@1.0.0')).toBe('@hyperfrontend/versioning')
+  it.each([
+    ['@scope/pkg@1.2.3', '@scope/pkg'],
+    ['@hyperfrontend/versioning@1.0.0', '@hyperfrontend/versioning'],
+  ])('extracts the package from the scoped package tag %p', (tag, pkg) => {
+    expect(extractPackageFromTag(tag)).toBe(pkg)
   })
 
-  it('extracts package from simple package tags', () => {
-    expect(extractPackageFromTag('utils@1.2.3')).toBe('utils')
-    expect(extractPackageFromTag('lib-versioning@1.0.0')).toBe('lib-versioning')
+  it.each([
+    ['utils@1.2.3', 'utils'],
+    ['lib-versioning@1.0.0', 'lib-versioning'],
+  ])('extracts the package from the simple package tag %p', (tag, pkg) => {
+    expect(extractPackageFromTag(tag)).toBe(pkg)
   })
 
-  it('extracts package from -v format', () => {
-    expect(extractPackageFromTag('package-v1.0.0')).toBe('package')
-    expect(extractPackageFromTag('lib_v2.0.0')).toBe('lib')
+  it.each([
+    ['package-v1.0.0', 'package'],
+    ['lib_v2.0.0', 'lib'],
+  ])('extracts the package from the -v format tag %p', (tag, pkg) => {
+    expect(extractPackageFromTag(tag)).toBe(pkg)
   })
 
-  it('extracts package from -V format (uppercase)', () => {
-    expect(extractPackageFromTag('package-V1.0.0')).toBe('package')
-    expect(extractPackageFromTag('lib_V2.0.0')).toBe('lib')
+  it.each([
+    ['package-V1.0.0', 'package'],
+    ['lib_V2.0.0', 'lib'],
+  ])('extracts the package from the uppercase -V format tag %p', (tag, pkg) => {
+    expect(extractPackageFromTag(tag)).toBe(pkg)
   })
 
-  it('returns undefined for version-only tags', () => {
-    expect(extractPackageFromTag('v1.0.0')).toBeUndefined()
-    expect(extractPackageFromTag('1.0.0')).toBeUndefined()
+  it.each(['v1.0.0', '1.0.0'])('returns undefined for the version-only tag %p', (tag) => {
+    expect(extractPackageFromTag(tag)).toBeUndefined()
   })
 
   it('returns undefined when @ is not followed by digit', () => {
@@ -177,14 +191,18 @@ describe('extractPackageFromTag', () => {
 })
 
 describe('buildTagName', () => {
-  it('builds tag with default format', () => {
-    expect(buildTagName('@scope/pkg', '1.2.3')).toBe('@scope/pkg@1.2.3')
-    expect(buildTagName('utils', '1.0.0')).toBe('utils@1.0.0')
+  it.each([
+    ['@scope/pkg', '1.2.3', '@scope/pkg@1.2.3'],
+    ['utils', '1.0.0', 'utils@1.0.0'],
+  ])('builds the default-format tag for %p at version %p', (pkg, version, tagName) => {
+    expect(buildTagName(pkg, version)).toBe(tagName)
   })
 
-  it('builds tag with custom format', () => {
-    expect(buildTagName('pkg', '1.0.0', 'v${version}')).toBe('v1.0.0')
-    expect(buildTagName('pkg', '2.0.0', '${package}-v${version}')).toBe('pkg-v2.0.0')
+  it.each([
+    ['v${version}', 'pkg', '1.0.0', 'v1.0.0'],
+    ['${package}-v${version}', 'pkg', '2.0.0', 'pkg-v2.0.0'],
+  ])('builds the tag from the custom format %p', (format, pkg, version, tagName) => {
+    expect(buildTagName(pkg, version, format)).toBe(tagName)
   })
 
   it('builds tag with format that has no placeholders', () => {
@@ -210,9 +228,7 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    expect(sorted[0]?.name).toBe('v2.0.0')
-    expect(sorted[1]?.name).toBe('v1.5.0')
-    expect(sorted[2]?.name).toBe('v1.0.0')
+    expect(sorted.map((tag) => tag.name)).toEqual(['v2.0.0', 'v1.5.0', 'v1.0.0'])
   })
 
   it('handles tags with no version (both have no version)', () => {
@@ -222,11 +238,17 @@ describe('compareTagsByVersion', () => {
     expect(compareTagsByVersion(a, b)).toBe(0)
   })
 
-  it('handles one tag with version, one without (version-less comes last)', () => {
+  it('sorts a versioned tag before a version-less one', () => {
     const withVersion = createLightweightTag({ name: 'v1.0.0', commitHash: 'a' })
     const withoutVersion = createLightweightTag({ name: 'latest', commitHash: 'b' })
 
     expect(compareTagsByVersion(withVersion, withoutVersion)).toBe(-1)
+  })
+
+  it('sorts a version-less tag after a versioned one', () => {
+    const withVersion = createLightweightTag({ name: 'v1.0.0', commitHash: 'a' })
+    const withoutVersion = createLightweightTag({ name: 'latest', commitHash: 'b' })
+
     expect(compareTagsByVersion(withoutVersion, withVersion)).toBe(1)
   })
 
@@ -239,9 +261,7 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    expect(sorted[0]?.name).toBe('v1.0.1')
-    expect(sorted[1]?.name).toBe('v1.0')
-    expect(sorted[2]?.name).toBe('v1.0.0')
+    expect(sorted.map((tag) => tag.name)).toEqual(['v1.0.1', 'v1.0', 'v1.0.0'])
   })
 
   it('handles versions with prerelease identifiers', () => {
