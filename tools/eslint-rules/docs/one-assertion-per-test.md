@@ -11,6 +11,8 @@ A unit test describes one behaviour. When it holds two assertions it names two b
 
 Which remedy fits is a judgement about the behaviour under test, not about the number of `expect` calls, so the rule never fixes anything on its own. It also never requires an assertion: a test with none is left alone.
 
+A fold should still name what failed. Prefer `toEqual` on a keyed object (`{ before, after }`) or on the inputs that broke (`inputs.filter((input) => !isValid(input))` against `[]`) over a positional array of booleans, whose failure reads `[true, false]` and names nothing.
+
 ### What declares a test
 
 `it`, `test`, `fit`, `xit` and `xtest`, with or without the modifiers `only`, `skip`, `todo`, `failing`, `concurrent` and `each`, including the table forms `it.each(table)(...)` and ``it.each`table`(...)``. The body is the first argument that is a function, or a name bound to a function in the same file; a body built by a call or imported from another module is not read. `describe` blocks and hooks (`beforeEach`, `afterEach` and the rest) are not tests, so assertions inside them are not counted.
