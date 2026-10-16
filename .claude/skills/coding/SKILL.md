@@ -286,6 +286,13 @@ it('returns the correct value', ...)
 
 Never satisfy the rule by weakening a check, deleting one, skipping the test, moving assertions into a helper in another module, or adding a lint suppression. Do not combine unrelated checks into one matcher just to pass; that trades one vague test for one vague assertion.
 
+A fold must still say what failed. Positional booleans do not: `expect([isLetter('a'), isLetter('z')]).toEqual([true, true])` fails as `[true, false]` and names nothing.
+
+- Several inputs through one predicate: `it.each` with one assertion per row, or keep the inputs in the diff with `expect(inputs.filter((input) => !isLetter(input))).toEqual([])`. Filter the inputs, not derived values: `toEqual` ignores `undefined` array items, so `expect([undefined]).toEqual([])` passes; use `toStrictEqual([])` when a filtered value could be `undefined`.
+- Several observations of one scenario: key them, `expect({ before, after }).toEqual({ before: false, after: true })`.
+- An undefined field inside a fold: `expect.objectContaining({ key: undefined })` demands the key exist; compare a constructed object instead, `expect({ id: r.id, mode: r.mode }).toEqual({ id: 'ts', mode: undefined })`.
+- Dropping a check is allowed only for a pure existence check (`toBeDefined`, `not.toBeNull`) on the same value a stronger assertion already reads. An exit code, status or count beside a parsed output is its own fact: fold it, `expect({ exitCode: r.exitCode, entries: JSON.parse(r.output) }).toEqual({ exitCode: 0, entries: [...] })`, or split it.
+
 Use the matchers of `@hyperfrontend/testing` (`expect`, `toBe`, `toEqual`, `toThrow`, `toHaveBeenCalledWith` and the rest). Do **not** introduce raw assertion libraries or custom matchers; `libs/testing`'s own specs use `node:assert/strict` because they test `expect` itself.
 
 ```typescript
