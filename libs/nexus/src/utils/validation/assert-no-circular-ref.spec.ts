@@ -105,7 +105,7 @@ describe('assertNoCircularRef', () => {
           },
         },
       }
-      ;((circular.a as Record<string, unknown>).b as Record<string, unknown>).c = circular
+      ;((circular['a'] as Record<string, unknown>)['b'] as Record<string, unknown>)['c'] = circular
 
       expect(() => assertNoCircularRef(circular, 'deep')).toThrow('Circular reference detected in parameter "deep"')
     })

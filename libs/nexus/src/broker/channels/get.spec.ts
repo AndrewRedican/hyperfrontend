@@ -1,9 +1,10 @@
 import type { BrokerState } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
+import { createMockLogger } from '../../integration-tests/test-utils'
 import { addChannel } from './add'
 import { getChannel } from './get'
 
@@ -22,15 +23,7 @@ describe('getChannel', () => {
         emitted: [],
       },
     },
-    logger: {
-      log: jest.fn(),
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(),
-    },
+    logger: createMockLogger(),
   }
 
   let registry: ReturnType<typeof createRegistry>
