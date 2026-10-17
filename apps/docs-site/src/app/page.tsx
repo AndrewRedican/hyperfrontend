@@ -22,14 +22,12 @@ export default function HomePage() {
           {/* Hero Section - 50/50 Split Layout */}
           <LandingHero downloads={downloads === null ? null : { total: downloads.total, packages: downloads.packages.length }} />
 
-          {/* Tutorials, how-to guides, the launch film, demos, and articles on one arc, in water lit by the staged demo */}
+          {/* Everything below the hero sits in water lit by the staged demo: the discovery arc, the architecture, and the packages */}
           <LightWell>
             <LandingDiscoverySection />
+            <HowItWorks />
+            <PackagesSection />
           </LightWell>
-
-          <HowItWorks />
-
-          <PackagesSection />
         </main>
         <Footer />
       </div>

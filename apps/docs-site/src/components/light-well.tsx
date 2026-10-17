@@ -7,7 +7,7 @@ import { AmbientKoi } from '@/components/landing/ambient-koi'
 
 /** Props for {@link LightWell} */
 interface LightWellProps {
-  /** The section that sits in the lit water */
+  /** Everything below the hero that sits in the water */
   children: ReactNode
 }
 
@@ -25,25 +25,29 @@ function cssTriple(rgb: string): string {
 }
 
 /**
- * The band under the hero, lit from above by whatever demo is on stage, with
+ * The water below the hero, lit from above by whatever demo is on stage, with
  * one koi somewhere in it.
  *
  * The hero is a bespoke surface and the documentation below it is not, so the
  * seam between them used to be a hairline rule with a flat grey section under
- * it. This carries the hero's identity a screen further down: a blue volume
- * with the staged demo's hue entering at the top as one broad bloom and a few
- * soft shafts, thinning to nothing well before the content ends, and under the
- * surfaces in it a koi sketched in a few lines, swimming where it likes. It is
- * light in water, not water: no simulation for the light, a handful of painted
- * layers moving on composited transforms and opacity, and the koi on a canvas
- * that rides along with the viewport.
+ * it. This carries the hero's identity down the rest of the page: a blue
+ * volume with the staged demo's hue entering at the top as one broad bloom and
+ * a few soft shafts, thinning to nothing a screen or so down, and under the
+ * surfaces that follow a koi sketched in a few lines, swimming where it likes.
+ * It is light in water, not water: no simulation for the light, a handful of
+ * painted layers moving on composited transforms and opacity, and the koi on a
+ * canvas that rides along with the viewport.
+ *
+ * Every section inside keeps its surfaces translucent, which is what lets the
+ * light and the fish read through them without either ever being in front of
+ * anything a reader is using.
  *
  * The staged demo's accent arrives as CSS custom properties, so a rotation
  * recolours the band by changing two strings on one element rather than
- * re-rendering the section beneath it, and the light and dark triples are both
- * published for the stylesheet to choose between under `.dark`.
+ * re-rendering the sections beneath it, and the light and dark triples are
+ * both published for the stylesheet to choose between under `.dark`.
  * @param props - Component props
- * @param props.children - The section that sits in the lit water
+ * @param props.children - Everything below the hero that sits in the water
  * @returns The lit band wrapping its children
  */
 export function LightWell({ children }: LightWellProps) {
@@ -55,10 +59,12 @@ export function LightWell({ children }: LightWellProps) {
       className="light-well"
       style={{ '--demo-accent-light': cssTriple(accent.light), '--demo-accent-dark': cssTriple(accent.dark) } as CSSProperties}
     >
-      <div aria-hidden="true" className="light-well__bloom" />
-      <div aria-hidden="true" className="light-well__rays">
-        <div className="light-well__beams light-well__beams--near" />
-        <div className="light-well__beams light-well__beams--far" />
+      <div aria-hidden="true" className="light-well__light">
+        <div className="light-well__bloom" />
+        <div className="light-well__rays">
+          <div className="light-well__beams light-well__beams--near" />
+          <div className="light-well__beams light-well__beams--far" />
+        </div>
       </div>
       <AmbientKoi accent={accent} />
       <div className="relative">{children}</div>
