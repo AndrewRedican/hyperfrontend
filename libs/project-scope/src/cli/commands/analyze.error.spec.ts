@@ -13,7 +13,7 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 jest.mock('../../analyze', () => {
-  const actual = jest.requireActual('../../analyze')
+  const actual = jest.requireActual<typeof import('../../analyze')>('../../analyze')
   return {
     ...actual,
     analyzeProject: jest.fn().mockImplementation(actual.analyzeProject),
@@ -47,7 +47,7 @@ describe('analyzeCommand meta-frameworks branch (L72)', () => {
   })
 
   afterEach(() => {
-    mockAnalyzeProject.mockImplementation(jest.requireActual('../../analyze').analyzeProject)
+    mockAnalyzeProject.mockImplementation(jest.requireActual<typeof import('../../analyze')>('../../analyze').analyzeProject)
   })
 
   it('displays meta-frameworks with indentation when framework has metaFrameworks', () => {
@@ -81,7 +81,7 @@ describe('analyzeCommand build tools formatting (L80-85)', () => {
   })
 
   afterEach(() => {
-    mockAnalyzeProject.mockImplementation(jest.requireActual('../../analyze').analyzeProject)
+    mockAnalyzeProject.mockImplementation(jest.requireActual<typeof import('../../analyze')>('../../analyze').analyzeProject)
   })
 
   it('displays multiple build tools with versions', () => {
@@ -122,7 +122,7 @@ describe('analyzeCommand entry points truncation (L103)', () => {
   })
 
   afterEach(() => {
-    mockAnalyzeProject.mockImplementation(jest.requireActual('../../analyze').analyzeProject)
+    mockAnalyzeProject.mockImplementation(jest.requireActual<typeof import('../../analyze')>('../../analyze').analyzeProject)
   })
 
   it('truncates entry points when more than 5 and shows count', () => {
@@ -168,7 +168,7 @@ describe('analyzeCommand config files truncation (L114)', () => {
   })
 
   afterEach(() => {
-    mockAnalyzeProject.mockImplementation(jest.requireActual('../../analyze').analyzeProject)
+    mockAnalyzeProject.mockImplementation(jest.requireActual<typeof import('../../analyze')>('../../analyze').analyzeProject)
   })
 
   it('truncates config files when more than 8 and shows count', () => {
@@ -220,7 +220,7 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
   })
 
   afterEach(() => {
-    mockAnalyzeProject.mockImplementation(jest.requireActual('../../analyze').analyzeProject)
+    mockAnalyzeProject.mockImplementation(jest.requireActual<typeof import('../../analyze')>('../../analyze').analyzeProject)
   })
 
   it('handles nested objects in YAML output', () => {

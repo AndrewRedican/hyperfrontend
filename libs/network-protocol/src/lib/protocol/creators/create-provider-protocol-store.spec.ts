@@ -3,23 +3,9 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createProtocolProviderStore } from './create-provider-protocol-store'
 
 describe('createProtocolProviderStore', () => {
-  const mockProvider1: ProtocolProvider = {
-    name: 'test-provider-1',
-    send: jest.fn(),
-    receive: jest.fn(),
-  }
-
-  const mockProvider2: ProtocolProvider = {
-    name: 'test-provider-2',
-    send: jest.fn(),
-    receive: jest.fn(),
-  }
-
-  const mockProvider3: ProtocolProvider = {
-    name: 'test-provider-3',
-    send: jest.fn(),
-    receive: jest.fn(),
-  }
+  const mockProvider1: ProtocolProvider = jest.fn()
+  const mockProvider2: ProtocolProvider = jest.fn()
+  const mockProvider3: ProtocolProvider = jest.fn()
 
   describe('add', () => {
     it('adds a provider with valid name', () => {

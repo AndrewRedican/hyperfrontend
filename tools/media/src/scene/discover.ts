@@ -35,7 +35,7 @@ async function loadScenes(filePath: string): Promise<readonly LoadedScene[]> {
   if (scenes.length === 0 || scenes.some((scene) => !LANES.includes(scene.kind))) {
     throw createError(`${filePath} must default-export defineBrowserScene({ ... }), defineScriptedScene({ ... }) or a list of them`)
   }
-  return scenes.map((scene) => ({ filePath, scene }))
+  return scenes.map((scene) => ({ filePath, scene, sharesFile: isArray(exported) }))
 }
 
 /**

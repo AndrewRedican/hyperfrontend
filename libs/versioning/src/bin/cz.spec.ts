@@ -4,6 +4,7 @@ import type { RunCzOptions } from './cz'
 import { PassThrough } from 'node:stream'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTestConfig } from '../commits/author/__test-utils__/base-config'
 import { EXIT_COMMITTED, EXIT_ERROR, EXIT_SIGINT, outcomeToExit, parseCzArgs, runCz } from './cz'
 
 /**
@@ -110,7 +111,7 @@ describe('runCz', () => {
   function stubCreateSession(capture: { options?: CreateAuthorSessionOptions }): (options?: CreateAuthorSessionOptions) => AuthorSession {
     return (options = {}) => {
       capture.options = options
-      return { steps: [], config: {} } as AuthorSession
+      return { steps: [], config: createTestConfig() }
     }
   }
 

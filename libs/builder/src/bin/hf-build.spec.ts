@@ -15,7 +15,7 @@ import runHfBuildDefault, {
 } from './hf-build'
 jest.mock('../build', () => ({ build: jest.fn() }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
-  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core')
   return { ...actual, readJsonFile: jest.fn() }
 })
 

@@ -1,6 +1,5 @@
 ---
 name: architecture-docs
-version: 1.0.0
 description: Write ARCHITECTURE.md files for hyperfrontend libraries. Use when creating architecture documentation, documenting design decisions, adding system overview diagrams, or explaining module composition and data flow.
 ---
 

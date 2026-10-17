@@ -15,7 +15,7 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 jest.mock('../../project/traversal', () => {
-  const actual = jest.requireActual('../../project/traversal')
+  const actual = jest.requireActual<typeof import('../../project/traversal')>('../../project/traversal')
   return {
     ...actual,
     walkDirectory: jest.fn().mockImplementation(actual.walkDirectory),
@@ -23,7 +23,7 @@ jest.mock('../../project/traversal', () => {
 })
 
 jest.mock('../../core/fs', () => {
-  const actual = jest.requireActual('../../core/fs')
+  const actual = jest.requireActual<typeof import('../../core/fs')>('../../core/fs')
   return {
     ...actual,
     getFileStat: jest.fn().mockImplementation(actual.getFileStat),
@@ -50,8 +50,10 @@ function createMockStats(size: number): FileStats {
 describe('treeCommand error branches', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockWalkDirectory.mockImplementation(jest.requireActual('../../project/traversal').walkDirectory)
-    mockGetFileStat.mockImplementation(jest.requireActual('../../core/fs').getFileStat)
+    mockWalkDirectory.mockImplementation(
+      jest.requireActual<typeof import('../../project/traversal')>('../../project/traversal').walkDirectory
+    )
+    mockGetFileStat.mockImplementation(jest.requireActual<typeof import('../../core/fs')>('../../core/fs').getFileStat)
   })
 
   describe('treeCommand catch block (L267-268)', () => {

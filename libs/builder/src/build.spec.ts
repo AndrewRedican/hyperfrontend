@@ -1,5 +1,5 @@
 import type { Mock, Mocked } from '@hyperfrontend/testing'
-import type { MemoryMonitor } from './memory/monitor'
+import type { MemoryMonitor, MemorySnapshot } from './memory/monitor'
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -41,7 +41,7 @@ const makeMonitor = (): Mocked<MemoryMonitor> => ({
   check: jest.fn(),
   logDebug: jest.fn(),
   logSummary: jest.fn(),
-  getSnapshots: jest.fn().mockReturnValue([]),
+  getSnapshots: jest.fn<[], MemorySnapshot[]>().mockReturnValue([]),
 })
 
 beforeEach(() => {

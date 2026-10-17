@@ -1,3 +1,4 @@
+import type { MockFn } from '@hyperfrontend/testing'
 import type { Clock } from './create-clock'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -5,7 +6,7 @@ import { createClock } from './create-clock'
 import { sleep } from './sleep'
 
 describe('createClock', () => {
-  let callback: jest.Func
+  let callback: MockFn<[currentTime: Date], void>
   let clock: Clock
 
   beforeEach(() => {

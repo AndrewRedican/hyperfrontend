@@ -5,7 +5,7 @@ import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { collectThirdPartyLicenses } from './collect'
 jest.mock('@hyperfrontend/logging', () => {
-  const actual = jest.requireActual('@hyperfrontend/logging')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
   return {
     ...actual,
     logger: { channel: jest.fn(() => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() })) },

@@ -11,7 +11,7 @@ import { encodeFrames } from '../encode/frames'
 import { logger } from '../lib/logger'
 import { mediaError } from '../lib/media-error'
 import { ExitCode } from '../models/exit-code'
-import { hashScene, nowIso, writeSidecar } from '../report/sidecar'
+import { nowIso, writeSidecar } from '../report/sidecar'
 import { playStage } from '../stage/play'
 import { resolveProfile } from '../stage/profiles'
 import { resolveTheme } from '../theme/resolve'
@@ -107,13 +107,13 @@ async function renderVariant(
  * top level, so anything reading the record for one asset reads the one under
  * the bare name.
  *
- * @param filePath - Absolute path of the scene file, digested into the record.
+ * @param sceneHash - Digest of what the scene was recorded from, written into the record.
  * @param scene - The scene to record.
  * @param config - The workspace configuration.
  * @returns What the scene produced.
  * @throws {Error} When the stage errors, or a variant is over budget.
  */
-export async function recordScriptedScene(filePath: string, scene: ScriptedScene, config: ResolvedMediaConfig): Promise<RunSummaryRow> {
+export async function recordScriptedScene(sceneHash: string, scene: ScriptedScene, config: ResolvedMediaConfig): Promise<RunSummaryRow> {
   const startedAt = performance.now()
   const assetName = scene.asset ?? 'hero'
   const profile = resolveProfile(scene.profile)
@@ -147,7 +147,7 @@ export async function recordScriptedScene(filePath: string, scene: ScriptedScene
       slug: scene.slug,
       asset: primaryAsset,
       generatedAt: nowIso(),
-      sceneHash: hashScene(filePath),
+      sceneHash,
       sourceUrl: `stage:${scene.stageId}`,
       profile,
       viewport: { width: profile.width, height: profile.height },

@@ -3,8 +3,8 @@ import type { SceneWorkspace } from '../../scene/__test-utils__/scene-dir'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { hashScene } from '../../report/sidecar'
 import { browserSceneSource, createSceneWorkspace, scriptedSceneSource } from '../../scene/__test-utils__/scene-dir'
+import { digestFile } from '../../scene/digest'
 import { runCheck } from './check'
 
 /** The fields every fixture record shares. */
@@ -65,7 +65,7 @@ function setUp(workspace: SceneWorkspace, fixture: Fixture): void {
     ...RECORD_BASE,
     slug: fixture.slug,
     asset: first?.asset ?? 'hero.gif',
-    sceneHash: fixture.stale === true ? '0000000000000000' : hashScene(filePath),
+    sceneHash: fixture.stale === true ? '0000000000000000' : digestFile(filePath),
     ...(fixture.bytes === undefined ? {} : { bytes: fixture.bytes }),
     ...(fixture.stills === undefined ? {} : { stills: fixture.stills }),
     ...(fixture.variants === undefined ? {} : { variants: fixture.variants }),

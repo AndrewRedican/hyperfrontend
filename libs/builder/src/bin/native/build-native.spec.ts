@@ -2,7 +2,6 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { BinConfig, BuildContext } from '../../models'
 import { unlinkSync } from 'node:fs'
 import { beforeEach } from 'node:test'
-import { __mockChannel } from '@hyperfrontend/logging'
 import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -15,7 +14,7 @@ import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
 import { generateSeaBlob } from './sea-blob'
 import { generateSeaConfig } from './sea-config'
 jest.mock('@hyperfrontend/logging', () => {
-  const actual = jest.requireActual('@hyperfrontend/logging')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return {
     ...actual,
@@ -23,9 +22,9 @@ jest.mock('@hyperfrontend/logging', () => {
     __mockChannel: mockChannel,
   }
 })
-jest.mock('node:fs', () => ({ ...jest.requireActual('node:fs'), unlinkSync: jest.fn() }))
+jest.mock('node:fs', () => ({ ...jest.requireActual<typeof import('node:fs')>('node:fs'), unlinkSync: jest.fn() }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
-  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn(), writeJsonFile: jest.fn(), exists: jest.fn() }
 })
 jest.mock('./codesign', () => ({ removeCodesign: jest.fn() }))
@@ -58,13 +57,15 @@ const makeContext = (): BuildContext => ({
 
 const seaBin: BinConfig = { name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }
 
-const mockChannel = __mockChannel as {
-  error: Mock
-  warn: Mock
-  info: Mock
-  debug: Mock
-  log: Mock
-}
+const mockChannel = jest.requireMock<{
+  __mockChannel: {
+    error: Mock
+    warn: Mock
+    info: Mock
+    debug: Mock
+    log: Mock
+  }
+}>('@hyperfrontend/logging').__mockChannel
 
 beforeEach(() => {
   ;(ensureDir as Mock).mockReset()

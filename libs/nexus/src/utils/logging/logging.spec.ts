@@ -3,6 +3,7 @@ import type { IAction } from '../../types/action'
 import type { Logger } from './create-logger'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMockLogger } from '../../integration-tests/test-utils'
 import { ACTION_TYPES } from '../../types/action'
 import { createLogger } from './create-logger'
 import { logAction } from './log-action'
@@ -44,15 +45,7 @@ describe('Logging Utilities', () => {
     })
 
     it('uses custom logger when provided', () => {
-      const customLogger: Logger = {
-        debug: jest.fn(),
-        info: jest.fn(),
-        log: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      const customLogger = createMockLogger()
 
       const logger = createLogger({ customLogger })
 
@@ -60,15 +53,7 @@ describe('Logging Utilities', () => {
     })
 
     it('custom logger receives calls correctly', () => {
-      const customLogger: Logger = {
-        debug: jest.fn(),
-        info: jest.fn(),
-        log: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      const customLogger = createMockLogger()
 
       const logger = createLogger({ customLogger })
 
@@ -91,15 +76,7 @@ describe('Logging Utilities', () => {
     })
 
     it('custom logger is used regardless of level setting', () => {
-      const customLogger: Logger = {
-        debug: jest.fn(),
-        info: jest.fn(),
-        log: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      const customLogger = createMockLogger()
 
       const logger = createLogger({ level: 'error', customLogger })
 
@@ -219,15 +196,7 @@ describe('Logging Utilities', () => {
       })
 
       it('uses customLogger from options object', () => {
-        const customLogger: Logger = {
-          error: jest.fn(),
-          warn: jest.fn(),
-          log: jest.fn(),
-          info: jest.fn(),
-          debug: jest.fn(),
-          setLogLevel: jest.fn(),
-          getLogLevel: jest.fn(() => 'debug'),
-        }
+        const customLogger = createMockLogger()
 
         const logger = createLogger({ customLogger })
 
@@ -252,15 +221,7 @@ describe('Logging Utilities', () => {
     let mockLogger: Logger
 
     beforeEach(() => {
-      mockLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        log: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      mockLogger = createMockLogger()
     })
 
     it('logs sent action', () => {
@@ -350,15 +311,7 @@ describe('Logging Utilities', () => {
     let mockLogger: Logger
 
     beforeEach(() => {
-      mockLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        log: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      mockLogger = createMockLogger()
     })
 
     it('logs OPEN event', () => {
@@ -424,15 +377,7 @@ describe('Logging Utilities', () => {
 
   describe('Integration', () => {
     it('works together for action logging flow', () => {
-      const mockLogger: Logger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        log: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      const mockLogger = createMockLogger()
 
       const action: IAction = {
         type: ACTION_TYPES.NEW_MESSAGE,
@@ -455,15 +400,7 @@ describe('Logging Utilities', () => {
     })
 
     it('works together for event logging flow', () => {
-      const mockLogger: Logger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        log: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      const mockLogger = createMockLogger()
 
       logEvent(mockLogger, 'open', { channelId: '1' })
       logEvent(mockLogger, 'close', { reason: 'done' })

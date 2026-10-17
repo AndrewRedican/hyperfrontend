@@ -1,7 +1,6 @@
-import type { EcosystemLibrary } from './ecosystem'
 import type { GuideIndexEntry } from './guides'
 import { describe, expect, it } from 'vitest'
-import { selectFeaturedGuides, selectFeaturedPackages } from './landing-highlights'
+import { selectFeaturedGuides } from './landing-highlights'
 
 /**
  * Build a guide index entry with only the fields the landing selection reads.
@@ -24,25 +23,6 @@ function guide(slug: string, packageName: string, priority: GuideIndexEntry['pri
     verification: { kind: 'demo', source: 'apps/demos/clock/src/main.ts' },
     keywords: [],
     headings: [],
-  }
-}
-
-/**
- * Build a library with only the fields the landing selection reads.
- *
- * @param packageName - npm package name, the key the hierarchy is joined on
- * @returns A library carrying just enough shape for the selection
- */
-function library(packageName: string): EcosystemLibrary {
-  return {
-    packageName,
-    name: packageName.replace('@hyperfrontend/', ''),
-    description: `${packageName} description`,
-    keywords: [],
-    version: '1.0.0',
-    isPrivate: false,
-    npmUrl: `https://www.npmjs.com/package/${packageName}/v/1.0.0`,
-    href: `/docs/libraries/${packageName.replace('@hyperfrontend/', '')}`,
   }
 }
 
@@ -95,44 +75,5 @@ describe('selectFeaturedGuides', () => {
 
   it('returns nothing for an uncompiled corpus', () => {
     expect(selectFeaturedGuides([], 4)).toEqual([])
-  })
-})
-
-describe('selectFeaturedPackages', () => {
-  it('names the flagship first', () => {
-    const libraries = [library('@hyperfrontend/time-utils'), library('@hyperfrontend/features')]
-
-    expect(selectFeaturedPackages(libraries, 2)[0]).toEqual(expect.objectContaining({ packageName: '@hyperfrontend/features' }))
-  })
-
-  it('orders by altitude rather than by name', () => {
-    const libraries = [
-      library('@hyperfrontend/data-utils'),
-      library('@hyperfrontend/builder'),
-      library('@hyperfrontend/nexus'),
-      library('@hyperfrontend/features'),
-    ]
-
-    expect(selectFeaturedPackages(libraries, 4).map((entry) => entry.packageName)).toEqual([
-      '@hyperfrontend/features',
-      '@hyperfrontend/nexus',
-      '@hyperfrontend/builder',
-      '@hyperfrontend/data-utils',
-    ])
-  })
-
-  it('keeps a package no level names, last', () => {
-    const libraries = [library('@hyperfrontend/not-a-package'), library('@hyperfrontend/logging')]
-
-    expect(selectFeaturedPackages(libraries, 2).map((entry) => entry.packageName)).toEqual([
-      '@hyperfrontend/logging',
-      '@hyperfrontend/not-a-package',
-    ])
-  })
-
-  it('stops at the limit', () => {
-    const libraries = [library('@hyperfrontend/features'), library('@hyperfrontend/nexus')]
-
-    expect(selectFeaturedPackages(libraries, 1)).toHaveLength(1)
   })
 })

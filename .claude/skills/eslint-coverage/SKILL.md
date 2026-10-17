@@ -1,13 +1,6 @@
 ---
 name: eslint-coverage
-version: 2.0.0
 description: Achieve 100% code coverage for custom ESLint rules. Use when reviewing ESLint rules for coverage gaps, adding missing tests, or applying istanbul ignore comments.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
 ---
 
 # ESLint Rule Coverage

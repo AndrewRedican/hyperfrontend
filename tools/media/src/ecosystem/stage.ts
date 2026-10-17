@@ -105,12 +105,12 @@ ${figureStyles(theme, metrics)}
 /**
  * The published packages, grouped by the kind of need that produced them.
  *
- * The flagship sits at the top centre with the two communication packages
- * hanging under it; the primitives and the tooling flank that spine; the
- * utilities run along the foot as the layer everything else rests on. A few
- * arrows carry the story the article tells, from a need to the package it
- * produced. The full dependency graph is deliberately absent: the figure is
- * about why there are nineteen, not which imports which.
+ * The flagship sits at the top with the two communication packages hanging
+ * under it; two clusters flank that spine; a cluster may run the width of the
+ * frame under them; the utilities run along the foot as the layer everything
+ * else rests on. A few arrows carry the story the article tells, from a need
+ * to the package it produced. The full dependency graph is deliberately
+ * absent: the figure is about why there are twenty, not which imports which.
  */
 export const ecosystemStage: Stage<EcosystemConfig> = defineStage<EcosystemConfig>({
   id: 'ecosystem',
@@ -144,6 +144,7 @@ export const ecosystemStage: Stage<EcosystemConfig> = defineStage<EcosystemConfi
         ${stamp}
         ${renderCluster(layout.left, layout, theme)}
         ${renderCluster(layout.right, layout, theme)}
+        ${layout.middle === undefined ? '' : renderCluster(layout.middle, layout, theme)}
         ${renderCluster(layout.foot, layout, theme)}
         ${edges}
         ${renderChip(layout.hub, layout, theme)}

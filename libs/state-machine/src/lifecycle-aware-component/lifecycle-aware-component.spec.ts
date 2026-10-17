@@ -1,3 +1,4 @@
+import type { MockFn } from '@hyperfrontend/testing'
 import type { Process } from './lifecycle-aware-component.model'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -70,7 +71,7 @@ describe('LifecycleAwareComponent', () => {
   }
 
   let asyncProcess: AsyncProcess
-  let callback: jest.Func
+  let callback: MockFn<[boolean], void>
 
   beforeEach(() => {
     asyncProcess = new AsyncProcess()

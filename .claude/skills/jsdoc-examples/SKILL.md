@@ -1,12 +1,6 @@
 ---
 name: jsdoc-examples
-version: 1.0.0
 description: Write high-value @example blocks in JSDoc. Use when documenting functions, adding API examples, writing library docs, reviewing doc quality, or asked about examples.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
 ---
 
 # JSDoc Examples

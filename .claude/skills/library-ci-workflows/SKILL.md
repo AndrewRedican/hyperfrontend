@@ -1,13 +1,6 @@
 ---
 name: library-ci-workflows
-version: 1.1.0
 description: Configure CI/CD workflows for publishable hyperfrontend libraries. Use when adding CI configuration for a new library, fixing lib-ci-workflows lint errors, or setting up path filters for library builds.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
 ---
 
 # Library CI Workflows

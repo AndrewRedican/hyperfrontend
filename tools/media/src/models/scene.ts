@@ -217,6 +217,8 @@ export interface ScriptedScene extends SceneCommon {
   profile: ProfileRef
   /** Name of the stage that draws it, recorded in the audit record. */
   stageId: string
+  /** The configuration the stage is bound with, kept so the scene's digest can see it. */
+  config: unknown
   /** The variants this scene is rendered in, or undefined for every configured one. */
   themes?: readonly ThemeId[]
   /** The hue the ground is tinted with, or undefined for the theme's own. */
@@ -262,4 +264,6 @@ export interface LoadedScene {
   filePath: string
   /** The scene the file exported. */
   scene: MediaScene
+  /** Whether the file exported a list of scenes rather than this one alone. */
+  sharesFile: boolean
 }

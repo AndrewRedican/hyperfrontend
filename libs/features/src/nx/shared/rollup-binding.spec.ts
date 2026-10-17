@@ -146,23 +146,26 @@ describe('warnIfRollupBindingMissing', () => {
     expect(resolveBinding).toHaveBeenCalledTimes(2)
   })
 
-  it.each<[string[], string]>([
+  it.each([
     [['package-lock.json'], 'npm install --include=optional'],
     [['yarn.lock'], 'yarn install'],
     [['pnpm-lock.yaml'], 'pnpm install'],
     [['bun.lockb'], 'bun install'],
-  ])('warns once with the %j remediation when no candidate resolves', (lockfiles, remediation) => {
-    const stderr = { write: jest.fn() }
-    warnIfRollupBindingMissing('/ws', {
-      loadManifest: candidateManifest,
-      resolveBinding: () => {
-        throw new Error('not installed')
-      },
-      stderr: stderr as unknown as NodeJS.WritableStream,
-      pathExists: (relativePath) => lockfiles.includes(relativePath),
-    })
-    expect(stderr.write.mock.calls).toEqual([[expectedWarning(remediation)]])
-  })
+  ] satisfies [string[], string][])(
+    'warns once with the %j remediation when no candidate resolves',
+    (lockfiles: string[], remediation: string) => {
+      const stderr = { write: jest.fn() }
+      warnIfRollupBindingMissing('/ws', {
+        loadManifest: candidateManifest,
+        resolveBinding: () => {
+          throw new Error('not installed')
+        },
+        stderr: stderr as unknown as NodeJS.WritableStream,
+        pathExists: (relativePath) => lockfiles.includes(relativePath),
+      })
+      expect(stderr.write.mock.calls).toEqual([[expectedWarning(remediation)]])
+    }
+  )
 
   it('defaults to process.stderr and on-disk lockfile detection', () => {
     warnIfRollupBindingMissing(WORKSPACE_ROOT, {

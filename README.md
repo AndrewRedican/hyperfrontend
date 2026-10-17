@@ -109,7 +109,7 @@ Start with [Core Concepts](https://www.hyperfrontend.dev/docs/core-concepts), th
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/">
-    <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-ecosystem/figure.png?raw=true" alt="The published packages as a map: features at the top; nexus and network-protocol under it as cross-window messaging, with an arrow from network-protocol to cryptography, which seals the channel; cryptography, state-machine and logging grouped as packages that stand on their own; builder, which packs the shell, versioning, project-scope and questions grouped as build and release tooling; and nine utilities along the foot, from json-utils to function-utils.">
+    <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-ecosystem/figure.png?raw=true" alt="The published packages as a map: features at the top; nexus and network-protocol under it as cross-window messaging, with an arrow from network-protocol to cryptography, which seals the channel; cryptography, state-machine and logging grouped as packages that stand on their own; builder, which packs the shell, versioning, project-scope, questions and testing grouped as build, release and test tooling; json-utils, ui-utils and immutable-api-utils across the middle as the primitives the runtime is built from; and six utilities along the foot, from data-utils to function-utils.">
   </a>
 </p>
 

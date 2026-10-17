@@ -1,9 +1,9 @@
 import type { FlowContext } from '../models/types'
 import { beforeEach } from 'node:test'
-import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
-import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { discoverNxProjects, isNxWorkspace } from '@hyperfrontend/project-scope/nx'
+import { commitChanges } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import * as workspaceDiscovery from '../../workspace/discovery'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { createSkippedResult, createStep, createSuccessResult } from '../models/step'
 import { createMinimalFlow } from '../presets/conventional'
 import { createMockGitClient, createMockRegistry, createMockTree } from './__test-utils__/mocks'
@@ -26,12 +26,17 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   formatUnifiedDiff: jest.fn(),
 }))
 
+const discoverNxProjectsMock = jest.mocked(discoverNxProjects)
+const isNxWorkspaceMock = jest.mocked(isNxWorkspace)
+const commitChangesMock = jest.mocked(commitChanges)
+const discoverProjectByNameMock = jest.mocked(discoverProjectByName)
+
 beforeEach(() => {
   jest.clearAllMocks()
-  projectScopeNx.isNxWorkspace.mockReturnValue(false)
-  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
+  isNxWorkspaceMock.mockReturnValue(false)
+  discoverNxProjectsMock.mockReturnValue(new Map())
+  discoverProjectByNameMock.mockReturnValue(null)
+  commitChangesMock.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - buildSummary behavior', () => {

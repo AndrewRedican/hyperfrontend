@@ -1,3 +1,4 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
 import type { BrokerHandle } from '../broker/types'
 import type { IAction } from '../types/action'
@@ -244,6 +245,34 @@ export async function flushAsync(): Promise<void> {
   await wait(0)
   jest.runAllTimers()
   await wait(0)
+}
+
+/**
+ * Creates a logger whose every member is a mock, so a spec can hand it to code under test
+ * and read back what was logged.
+ *
+ * @returns A complete `Logger` that reports the `debug` level and records every call
+ *
+ * @example Asserting on a debug line
+ * ```typescript
+ * const mockLogger = createMockLogger()
+ * logEvent(mockLogger, 'open', { channelId: '1' })
+ * expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'open', { channelId: '1' })
+ * ```
+ */
+export function createMockLogger(): Logger {
+  return {
+    log: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    setLogLevel: jest.fn(),
+    getLogLevel: jest.fn(() => 'debug'),
+    channel: jest.fn(),
+    timed: jest.fn(),
+    timedAsync: jest.fn(),
+  }
 }
 
 /**

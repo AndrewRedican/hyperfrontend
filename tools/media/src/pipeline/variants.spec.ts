@@ -20,6 +20,7 @@ function scene(fields: Partial<ScriptedScene> = {}): ScriptedScene {
     outputs: ['gif'],
     profile: 'compact',
     stageId: 'dot',
+    config: {},
     styles: () => '',
     durationMs: () => 1_000,
     frame: () => '',

@@ -50,7 +50,7 @@ Format-centric build executor. All output formats are opt-in — nothing is buil
 
 ### typecheck
 
-Runs `tsc --noEmit` against the library's tsconfig. Zero configuration needed.
+Runs `tsc --noEmit` against the library's `tsconfig.lib.json` and, when the project has one, its `tsconfig.spec.json`. Specs run with their types stripped, so this is the only step that type checks them. Zero configuration needed; `tsConfig` and `specTsConfig` override either path.
 
 ### version
 

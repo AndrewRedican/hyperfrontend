@@ -1,20 +1,20 @@
 {
   "slug": "readme-ecosystem",
   "asset": "figure.png",
-  "generatedAt": "2026-09-19T12:33:30.869Z",
-  "sceneHash": "14ec90498151d413",
+  "generatedAt": "2026-10-17T02:54:20.586Z",
+  "sceneHash": "28b9a35b5fbf7a20",
   "sourceUrl": "stage:ecosystem",
   "profile": {
     "id": "readme",
     "intent": "the repository readme on GitHub, at a laptop's width",
     "width": 832,
-    "height": 540,
+    "height": 628,
     "scale": 2,
     "fps": 12
   },
   "viewport": {
     "width": 832,
-    "height": 540
+    "height": 628
   },
   "record": {
     "settleMs": 0,
@@ -24,7 +24,7 @@
   "stills": [
     {
       "asset": "figure.png",
-      "bytes": 54372,
+      "bytes": 64315,
       "maxBytes": 220000
     }
   ],
@@ -34,7 +34,7 @@
       "stills": [
         {
           "asset": "figure.png",
-          "bytes": 54372,
+          "bytes": 64315,
           "maxBytes": 220000
         }
       ]

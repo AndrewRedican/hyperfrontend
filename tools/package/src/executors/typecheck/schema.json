@@ -2,11 +2,15 @@
   "$schema": "http://json-schema.org/schema",
   "type": "object",
   "title": "Typecheck executor schema",
-  "description": "Runs TypeScript type checking without emitting files.",
+  "description": "Runs TypeScript type checking without emitting files, over the library config and the spec config.",
   "properties": {
     "tsConfig": {
       "type": "string",
-      "description": "Path to the TypeScript configuration file. Defaults to {projectRoot}/tsconfig.lib.json."
+      "description": "Path to the library TypeScript configuration file, relative to the workspace root. Defaults to {projectRoot}/tsconfig.lib.json."
+    },
+    "specTsConfig": {
+      "type": "string",
+      "description": "Path to the spec TypeScript configuration file, relative to the workspace root. Defaults to {projectRoot}/tsconfig.spec.json, checked when that file exists."
     }
   },
   "additionalProperties": false

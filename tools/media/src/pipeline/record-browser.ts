@@ -10,7 +10,7 @@ import { launchBrowser } from '../browser/launch'
 import { openSession } from '../browser/session'
 import { recordWindow } from '../capture/record-video'
 import { encodeGif } from '../encode/gif'
-import { hashScene, nowIso, writeSidecar } from '../report/sidecar'
+import { nowIso, writeSidecar } from '../report/sidecar'
 import { mergeGifOptions } from '../scene/merge-options'
 import { startServer } from '../serve/run-command'
 import { writeStills } from './write-stills'
@@ -22,7 +22,7 @@ import { writeStills } from './write-stills'
  * or not, because a leaked server holds a port and the next run allocates a
  * different one and looks like it worked.
  *
- * @param filePath - Absolute path of the scene file, digested into the record.
+ * @param sceneHash - Digest of what the scene was recorded from, written into the record.
  * @param scene - The scene to record.
  * @param config - The workspace configuration.
  * @param options - Switches for this run.
@@ -30,7 +30,7 @@ import { writeStills } from './write-stills'
  * @throws {Error} When the page never becomes ready, or the asset is over budget.
  */
 export async function recordBrowserScene(
-  filePath: string,
+  sceneHash: string,
   scene: BrowserScene,
   config: ResolvedMediaConfig,
   options: RecordOptions
@@ -86,7 +86,7 @@ export async function recordBrowserScene(
       slug: scene.slug,
       asset: primary,
       generatedAt: nowIso(),
-      sceneHash: hashScene(filePath),
+      sceneHash,
       sourceUrl: url,
       viewport: scene.viewport,
       record: scene.record,

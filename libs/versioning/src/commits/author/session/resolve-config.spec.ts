@@ -20,7 +20,7 @@ describe('resolveSessionConfig', () => {
 
   it('keeps caller-supplied overrides on top of defaults', () => {
     const scopeFilter = () => true
-    const commitExecutor = jest.fn<void, [string]>()
+    const commitExecutor = jest.fn<[string], void>()
     const stagedPathsProvider = () => ['file.ts']
 
     const resolved = resolveSessionConfig({

@@ -20,7 +20,6 @@ describe('getUniqueKeys', () => {
   })
 
   it('throws an error for incorrect pattern types', () => {
-    // @ts-expect-error TS-2554 - deliberately passing incorrect data types
     expect(() => getUniqueKeys(target, null)).toThrow('Expected pattern to be either a string of a regular expression.')
   })
 

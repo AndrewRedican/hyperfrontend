@@ -1,3 +1,4 @@
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { IMessage } from '../../types/message'
@@ -11,7 +12,7 @@ import { validateMessage } from './message'
 describe('Schema Validation', () => {
   describe('createValidator', () => {
     it('creates a validator function', () => {
-      const schema = {
+      const schema: Schema = {
         type: 'object',
         properties: {
           name: { type: 'string' },
@@ -25,7 +26,7 @@ describe('Schema Validation', () => {
     })
 
     it('validates valid data', () => {
-      const schema = {
+      const schema: Schema = {
         type: 'object',
         properties: {
           name: { type: 'string' },
@@ -41,7 +42,7 @@ describe('Schema Validation', () => {
     })
 
     it('detects invalid data', () => {
-      const schema = {
+      const schema: Schema = {
         type: 'object',
         properties: {
           name: { type: 'string' },
@@ -57,7 +58,7 @@ describe('Schema Validation', () => {
     })
 
     it('provides error details', () => {
-      const schema = {
+      const schema: Schema = {
         type: 'object',
         properties: {
           email: { type: 'string', format: 'email' },

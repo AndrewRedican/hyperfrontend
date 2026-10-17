@@ -16,6 +16,12 @@ export interface EcosystemCluster {
   caption: string
   /** The chips, in reading order. */
   chips: readonly EcosystemChip[]
+  /**
+   * How many columns a flanking cluster lists its chips in, read down each
+   * column before moving to the next; one when absent. A cluster drawn as
+   * rows ignores it.
+   */
+  columns?: number
 }
 
 /** An arrow from one chip to another, named by the packages at either end. */
@@ -44,6 +50,8 @@ export interface EcosystemConfig {
   left: EcosystemCluster
   /** The cluster to the right of the spine. */
   right: EcosystemCluster
+  /** A cluster drawn the width of the frame between the flanks and the foot, laid out in rows; absent for none. */
+  middle?: EcosystemCluster
   /** The cluster along the foot of the figure, laid out in rows. */
   foot: EcosystemCluster
   /** The arrows that carry the story; the full dependency graph is deliberately not drawn. */

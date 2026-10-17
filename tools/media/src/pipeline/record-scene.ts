@@ -1,6 +1,7 @@
 import type { ResolvedMediaConfig } from '../models/config'
 import type { RunSummaryRow } from '../models/report'
 import type { LoadedScene } from '../models/scene'
+import { digestScene } from '../scene/digest'
 import { recordBrowserScene } from './record-browser'
 import { recordScriptedScene } from './record-stage'
 
@@ -29,6 +30,6 @@ export interface RecordOptions {
  */
 export async function recordScene(loaded: LoadedScene, config: ResolvedMediaConfig, options: RecordOptions): Promise<RunSummaryRow> {
   return loaded.scene.kind === 'browser'
-    ? recordBrowserScene(loaded.filePath, loaded.scene, config, options)
-    : recordScriptedScene(loaded.filePath, loaded.scene, config)
+    ? recordBrowserScene(digestScene(loaded), loaded.scene, config, options)
+    : recordScriptedScene(digestScene(loaded), loaded.scene, config)
 }

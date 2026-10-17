@@ -9,7 +9,9 @@ jest.useFakeTimers()
  * Without this mock, jest.spyOn() cannot replace methods on the logger.
  */
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/object', () => ({
-  ...jest.requireActual('@hyperfrontend/immutable-api-utils/built-in-copy/object'),
+  ...jest.requireActual<typeof import('@hyperfrontend/immutable-api-utils/built-in-copy/object')>(
+    '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+  ),
   freeze: <T>(obj: T): T => obj,
 }))
 

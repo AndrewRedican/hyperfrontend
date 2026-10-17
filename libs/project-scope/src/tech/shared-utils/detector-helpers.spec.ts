@@ -1,4 +1,4 @@
-import type { PackageJson } from '../../project/package/types'
+import type { PackageJson } from '../../project/package'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

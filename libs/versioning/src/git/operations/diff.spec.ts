@@ -7,7 +7,7 @@ import { getCommit } from './log'
 
 jest.mock('node:child_process')
 jest.mock('./log', () => ({
-  ...jest.requireActual('./log'),
+  ...jest.requireActual<typeof import('./log')>('./log'),
   getCommit: jest.fn(),
 }))
 

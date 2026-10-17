@@ -1,5 +1,5 @@
 import { beforeEach } from 'node:test'
-import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { exists } from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getExpectedChangelogPath, hasChangelog } from './changelog-path'
@@ -7,6 +7,8 @@ import { getExpectedChangelogPath, hasChangelog } from './changelog-path'
 jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
   exists: jest.fn(),
 }))
+
+const existsMock = jest.mocked(exists)
 
 describe('getExpectedChangelogPath', () => {
   it('returns path with CHANGELOG.md', () => {
@@ -41,7 +43,7 @@ describe('hasChangelog', () => {
   })
 
   it('returns true when changelog exists', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path.includes('CHANGELOG.md')
     })
 
@@ -49,7 +51,7 @@ describe('hasChangelog', () => {
   })
 
   it('returns false when no changelog exists', () => {
-    projectScopeFs.exists.mockReturnValue(false)
+    existsMock.mockReturnValue(false)
 
     expect(hasChangelog('/workspace/libs/my-lib')).toBe(false)
   })

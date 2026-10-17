@@ -1,12 +1,6 @@
 ---
 name: library-generators
-version: 1.2.0
 description: Use @hyperfrontend/package generators to create, promote, rename, or move libraries. Use when scaffolding a new library, promoting internal to publishable, renaming a project, or relocating a library directory.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Terminal
 ---
 
 # Library Generators

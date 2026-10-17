@@ -14,19 +14,28 @@ export interface HeaderProps {
    * than the default. Defaults to {@link docLayout.bar}.
    */
   width?: string
+  /**
+   * Whether the bar stands above the landing stage, where the staged demo's
+   * hue enters its links from below and tints the rule beneath it. Off
+   * everywhere else, so the chrome is the same colour on every other page.
+   */
+  staged?: boolean
 }
 
-export function Header({ width = docLayout.bar }: HeaderProps = {}) {
+export function Header({ width = docLayout.bar, staged = false }: HeaderProps = {}) {
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/80">
+    <header
+      className={`site-header sticky top-0 z-50 border-b border-slate-200 bg-white/70 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/70 ${staged ? 'site-header--staged' : ''}`}
+    >
       {/* note: The bar tracks the width of the page beneath it, or the logo and the search control stop lining up with the content they sit above. */}
       <div className={`flex h-16 items-center justify-between ${width} ${docLayout.gutter}`}>
         <div className="flex items-center gap-4">
-          <MobileMenu />
+          <MobileMenu staged={staged} />
           {/* why: on the narrowest phones the wordmark and the controls beside it overlap, so the mark alone carries the brand there; the link's name is the wordmark either way */}
-          <Link href="/" className="flex items-center gap-3" aria-label="HyperFrontend home">
-            <Logo className="h-8 w-8" />
-            <span className="hidden font-display text-xl font-bold text-slate-900 min-[360px]:inline dark:text-white">HyperFrontend</span>
+          <Link href="/" className="flex items-center gap-2.5" aria-label="HyperFrontend home">
+            {/* why: the cube is drawn in the middle half of its own canvas, so the image is a third larger than the glyph the reader sees, which at this size centres on the wordmark's capitals */}
+            <Logo className="site-logo h-[42px] w-[42px]" />
+            <span className="wordmark hidden font-display text-xl font-bold min-[360px]:inline">HyperFrontend</span>
           </Link>
         </div>
 
@@ -63,7 +72,10 @@ type NavLinkProps = { href: string; children: React.ReactNode }
 
 function NavLink({ href, children }: NavLinkProps) {
   return (
-    <Link href={href} className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+    <Link
+      href={href}
+      className="site-nav-link text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+    >
       {children}
     </Link>
   )

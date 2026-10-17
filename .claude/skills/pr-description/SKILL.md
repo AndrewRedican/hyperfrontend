@@ -1,14 +1,6 @@
 ---
 name: pr-description
-version: 1.0.0
 description: Generate a PR description and write it to PR.md by comparing the current branch against main. Use when creating a pull request, writing PR descriptions, drafting PR copy, or generating PR.md. Reads commit messages first, then lightly inspects diffs only when further context improves accuracy.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Terminal
-  - Grep
-  - Glob
 ---
 
 # PR Description Maker
@@ -73,7 +65,7 @@ Read `.github/PULL_REQUEST_TEMPLATE.md` and populate each section:
 | `## Testing`            | Fill if test files were changed or testing context is derivable; otherwise **remove**                         |
 | `## Screenshots/Videos` | Include only if UI/visual changes are evident; otherwise **remove**                                           |
 | `## Checklist`          | Always keep; leave checkboxes as-is                                                                           |
-| `## AI Assistance`      | Always fill: `GitHub Copilot was used to generate this PR description.`                                       |
+| `## AI Assistance`      | Always fill: `Claude was used to write code changes and this PR description under my direct supervision.`     |
 | `## Additional Notes`   | Include only if there are breaking changes, performance notes, or special reviewer info; otherwise **remove** |
 | `## CLA Requirement`    | Always keep                                                                                                   |
 

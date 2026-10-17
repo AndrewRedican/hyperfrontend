@@ -13,7 +13,7 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 jest.mock('../../project/config', () => {
-  const actual = jest.requireActual('../../project/config')
+  const actual = jest.requireActual<typeof import('../../project/config')>('../../project/config')
   return {
     ...actual,
     parseConfig: jest.fn().mockImplementation(actual.parseConfig),
@@ -30,8 +30,8 @@ describe('configCommand error branches', () => {
   })
 
   afterEach(() => {
-    mockParseConfig.mockImplementation(jest.requireActual('../../project/config').parseConfig)
-    mockDetectConfigs.mockImplementation(jest.requireActual('../../project/config').detectConfigs)
+    mockParseConfig.mockImplementation(jest.requireActual<typeof import('../../project/config')>('../../project/config').parseConfig)
+    mockDetectConfigs.mockImplementation(jest.requireActual<typeof import('../../project/config')>('../../project/config').detectConfigs)
   })
 
   describe('formatConfigText catch block (L129)', () => {
@@ -41,7 +41,7 @@ describe('configCommand error branches', () => {
       })
 
       mockDetectConfigs.mockImplementationOnce((projectPath) => {
-        return jest.requireActual('../../project/config').detectConfigs(projectPath)
+        return jest.requireActual<typeof import('../../project/config')>('../../project/config').detectConfigs(projectPath)
       })
 
       const result = configCommand({ path: MINIMAL_PROJECT, showContents: true })
@@ -57,7 +57,7 @@ describe('configCommand error branches', () => {
       })
 
       mockDetectConfigs.mockImplementationOnce((projectPath) => {
-        return jest.requireActual('../../project/config').detectConfigs(projectPath)
+        return jest.requireActual<typeof import('../../project/config')>('../../project/config').detectConfigs(projectPath)
       })
 
       const result = configCommand({ path: MINIMAL_PROJECT, showContents: true, format: 'json' })

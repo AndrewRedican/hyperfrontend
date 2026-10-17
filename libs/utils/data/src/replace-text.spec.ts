@@ -36,7 +36,6 @@ describe('replaceText', () => {
   })
 
   it('throws an error for incorrect name types', () => {
-    // @ts-expect-error TS-2345 - deliberately passing incorrect data types
     expect(() => replaceText(target, '', null)).toThrow('Expected name to be a string.')
   })
 
@@ -112,7 +111,6 @@ describe('replaceText - with config detectCircularReferences:true', () => {
   })
 
   it('throws an error for incorrect name types', () => {
-    // @ts-expect-error TS-2345 - deliberately passing incorrect data types
     expect(() => replaceText(target, '', null)).toThrow('Expected name to be a string.')
   })
 

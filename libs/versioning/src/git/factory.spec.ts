@@ -8,13 +8,13 @@ jest.mock('node:child_process')
 
 const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
 jest.mock('./operations/commit', () => ({
-  ...jest.requireActual('./operations/commit'),
+  ...jest.requireActual<typeof import('./operations/commit')>('./operations/commit'),
   commit: jest.fn().mockReturnValue({ hash: 'mock-hash', shortHash: 'mock', message: 'test' }),
   amendCommit: jest.fn().mockReturnValue({ hash: 'amended-hash', shortHash: 'amend', message: 'amended' }),
   createEmptyCommit: jest.fn().mockReturnValue({ hash: 'empty-hash', shortHash: 'empt', message: 'empty' }),
 }))
 jest.mock('./operations/stage', () => ({
-  ...jest.requireActual('./operations/stage'),
+  ...jest.requireActual<typeof import('./operations/stage')>('./operations/stage'),
   stage: jest.fn().mockReturnValue(true),
   unstage: jest.fn().mockReturnValue(true),
   stageAll: jest.fn().mockReturnValue(true),
@@ -24,13 +24,13 @@ jest.mock('./operations/stage', () => ({
   discardAllChanges: jest.fn().mockReturnValue(true),
 }))
 jest.mock('./operations/head-info', () => ({
-  ...jest.requireActual('./operations/head-info'),
+  ...jest.requireActual<typeof import('./operations/head-info')>('./operations/head-info'),
   getHead: jest.fn().mockReturnValue('abc123'),
   getCurrentBranch: jest.fn().mockReturnValue('main'),
   hasUntrackedFiles: jest.fn().mockReturnValue(false),
 }))
 jest.mock('./operations/log', () => ({
-  ...jest.requireActual('./operations/log'),
+  ...jest.requireActual<typeof import('./operations/log')>('./operations/log'),
   getCommitLog: jest.fn().mockReturnValue([]),
   getCommitsBetween: jest.fn().mockReturnValue([]),
   getCommitsSince: jest.fn().mockReturnValue([]),
@@ -39,7 +39,7 @@ jest.mock('./operations/log', () => ({
   commitReachableFromHead: jest.fn().mockReturnValue(false),
 }))
 jest.mock('./operations/diff', () => ({
-  ...jest.requireActual('./operations/diff'),
+  ...jest.requireActual<typeof import('./operations/diff')>('./operations/diff'),
   getChangedFilesBetween: jest.fn().mockReturnValue([]),
   getChangedFilesBetweenWithStatus: jest.fn().mockReturnValue([]),
   getCommitWithFiles: jest.fn().mockReturnValue(null),
@@ -71,7 +71,7 @@ jest.mock('./operations/status', () => ({
   getUntrackedFiles: jest.fn().mockReturnValue([]),
 }))
 jest.mock('./operations/query-tags', () => ({
-  ...jest.requireActual('./operations/query-tags'),
+  ...jest.requireActual<typeof import('./operations/query-tags')>('./operations/query-tags'),
   getTags: jest.fn().mockReturnValue([]),
   getTag: jest.fn().mockReturnValue(null),
   tagExists: jest.fn().mockReturnValue(false),
@@ -79,13 +79,13 @@ jest.mock('./operations/query-tags', () => ({
   getTagsForPackage: jest.fn().mockReturnValue([]),
 }))
 jest.mock('./operations/manage-tags', () => ({
-  ...jest.requireActual('./operations/manage-tags'),
+  ...jest.requireActual<typeof import('./operations/manage-tags')>('./operations/manage-tags'),
   createTag: jest.fn().mockReturnValue({ name: 'v1.0.0', version: { major: 1, minor: 0, patch: 0 } }),
   deleteTag: jest.fn().mockReturnValue(true),
   pushTag: jest.fn().mockReturnValue(true),
 }))
 jest.mock('./operations/operation-state', () => ({
-  ...jest.requireActual('./operations/operation-state'),
+  ...jest.requireActual<typeof import('./operations/operation-state')>('./operations/operation-state'),
   getOperationState: jest
     .fn()
     .mockReturnValue({ inProgress: false, reason: null, details: { rebaseMerge: false, rebaseApply: false, mergeHead: false } }),

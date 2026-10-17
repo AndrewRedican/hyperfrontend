@@ -1,8 +1,8 @@
 {
   "slug": "banner-testing",
   "asset": "banner.gif",
-  "generatedAt": "2026-10-14T23:26:02.573Z",
-  "sceneHash": "e1d5c7ecc1c00f70",
+  "generatedAt": "2026-10-17T12:54:24.696Z",
+  "sceneHash": "e98cb62b0bfaa945",
   "sourceUrl": "stage:banner",
   "profile": {
     "id": "banner",
@@ -37,13 +37,13 @@
       "version": "8.18.7"
     }
   ],
-  "bytes": 402891,
+  "bytes": 396534,
   "frames": 46,
   "variants": [
     {
       "theme": "portable",
       "asset": "banner.gif",
-      "bytes": 402891,
+      "bytes": 396534,
       "maxBytes": 1200000,
       "frames": 46,
       "gif": {
@@ -60,7 +60,7 @@
     {
       "theme": "dark",
       "asset": "banner.dark.gif",
-      "bytes": 325983,
+      "bytes": 316480,
       "maxBytes": 500000,
       "frames": 45,
       "gif": {
@@ -77,7 +77,7 @@
     {
       "theme": "light",
       "asset": "banner.light.gif",
-      "bytes": 239991,
+      "bytes": 233199,
       "maxBytes": 500000,
       "frames": 44,
       "gif": {

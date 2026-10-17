@@ -26,7 +26,7 @@ describe('commitStep', () => {
   })
 
   it('returns done after the configured commit executor runs', async () => {
-    const executor = jest.fn<void, [string]>()
+    const executor = jest.fn<[string], void>()
     const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))
     ctx.draft = { type: 'feat', subject: 'hi' }
 
@@ -36,7 +36,7 @@ describe('commitStep', () => {
   })
 
   it('hands the formatted message to the configured commit executor', async () => {
-    const executor = jest.fn<void, [string]>()
+    const executor = jest.fn<[string], void>()
     const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))
     ctx.draft = { type: 'feat', subject: 'hi' }
 
@@ -47,7 +47,7 @@ describe('commitStep', () => {
 
   it('returns cancelled with the thrown error when the executor fails', async () => {
     const boom = createError('boom')
-    const executor = jest.fn<void, [string]>(() => {
+    const executor = jest.fn<[string], void>(() => {
       throw boom
     })
     const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))
@@ -59,7 +59,7 @@ describe('commitStep', () => {
   })
 
   it('wraps non-Error throws into an Error before cancelling', async () => {
-    const executor = jest.fn<void, [string]>(() => {
+    const executor = jest.fn<[string], void>(() => {
       throw 'not-an-error'
     })
     const ctx = createSessionContext(createTestConfig({ skipCommit: false, commitExecutor: executor }))

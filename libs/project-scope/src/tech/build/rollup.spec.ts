@@ -5,7 +5,7 @@ import * as detectorHelpers from '../shared-utils/detector-helpers'
 import { rollupDetector, ROLLUP_CONFIG_PATTERNS } from './rollup'
 
 jest.mock('../shared-utils/detector-helpers', () => ({
-  ...jest.requireActual('../shared-utils/detector-helpers'),
+  ...jest.requireActual<typeof import('../shared-utils/detector-helpers')>('../shared-utils/detector-helpers'),
   locateConfigFile: jest.fn().mockReturnValue(null),
 }))
 
