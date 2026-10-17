@@ -3,7 +3,9 @@ import randomGaussian from './random-gaussian'
 
 // why: An unseeded source failed about one run in a hundred here, because rejecting out-of-range draws truncates the tail and pulls the sample deviation below sigma before sampling noise is even counted; a fixed stream makes both moments exactly reproducible.
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/math', () => {
-  const actual = jest.requireActual('@hyperfrontend/immutable-api-utils/built-in-copy/math')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/immutable-api-utils/built-in-copy/math')>(
+    '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+  )
   let seed = 1
   return {
     ...actual,
