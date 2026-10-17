@@ -44,6 +44,7 @@ const TAGLINES: Record<string, string> = {
   [`${SCOPE}project-scope`]: 'Reads a repository it has never seen, scores what it finds, and stages writes until you commit them.',
   [`${SCOPE}questions`]: 'Terminal prompts that return a value, never an exception: text, select, confirm, multiselect.',
   [`${SCOPE}state-machine`]: 'The lifecycle of an async operation as a store, with the states a lone isLoading cannot tell apart.',
+  [`${SCOPE}testing`]: 'A lightweight Jest-like testing library built on native Node capabilities.',
   [`${SCOPE}versioning`]: 'From conventional commits to the bump, the version and the changelog entry, with nobody choosing.',
   [`${SCOPE}data-utils`]: 'Walk, compare and repair data structures, circular references included.',
   [`${SCOPE}function-utils`]: 'Wrappers that change what a call does without changing what it looks like.',
