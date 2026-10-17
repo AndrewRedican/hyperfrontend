@@ -94,6 +94,7 @@ describe('walkDirectory', () => {
       if (entry.name === 'src') {
         return 'skip'
       }
+      return undefined
     }
 
     walkDirectory(MINIMAL_PROJECT, visitor, { includeHidden: true })
@@ -109,6 +110,7 @@ describe('walkDirectory', () => {
       if (entries.length >= 2) {
         return 'stop'
       }
+      return undefined
     }
 
     walkDirectory(MINIMAL_PROJECT, visitor, { includeHidden: true })
@@ -182,6 +184,7 @@ describe('walkTree', () => {
       if (entry.name === 'src') {
         return 'skip'
       }
+      return undefined
     }
 
     walkTree(tree, '', visitor, { includeHidden: true })
@@ -198,6 +201,7 @@ describe('walkTree', () => {
       if (entries.length >= 2) {
         return 'stop'
       }
+      return undefined
     }
 
     walkTree(tree, '', visitor, { includeHidden: true })
@@ -216,6 +220,7 @@ describe('walkTree', () => {
         if (entry.relativePath.includes(posix.sep)) {
           return 'stop'
         }
+        return undefined
       },
       // why: the depth cap keeps the walk bounded even if the stop signal is ever dropped again.
       { maxDepth: 3 }
@@ -390,6 +395,7 @@ describe('walkDirectory - edge cases', () => {
       if (entry.name === 'aaa-stop.txt') {
         return 'stop'
       }
+      return undefined
     }
 
     walkDirectory(join(TEST_DIR, 'nested-stop'), visitor, { includeHidden: true })
