@@ -3350,6 +3350,33 @@
 }
 
 @layer components {
+  /* The hero's backdrop ends on a hard line where the water starts. This
+     fades the backdrop's last stretch into the water's first colour, which is
+     the page ground plus the same share of the staged demo's hue the bloom
+     brings in at the top, so the seam is a continuation rather than an edge.
+     Nothing moves: the edge stays where it is, the backdrop keeps running
+     under the fade, and the water's own light is untouched. */
+  .hero-veil {
+    --hero-veil-ground: var(--color-white);
+    --hero-veil-centre: 8%;
+    --hero-veil-side: 5%;
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--stage-accent) var(--hero-veil-side), transparent),
+        color-mix(in srgb, var(--stage-accent) var(--hero-veil-centre), transparent) 50%,
+        color-mix(in srgb, var(--stage-accent) var(--hero-veil-side), transparent)
+      ),
+      linear-gradient(var(--hero-veil-ground), var(--hero-veil-ground));
+    mask-image: linear-gradient(to bottom, transparent, #000);
+  }
+
+  .dark .hero-veil {
+    --hero-veil-ground: var(--color-slate-900);
+    --hero-veil-centre: 11%;
+    --hero-veil-side: 7%;
+  }
+
   /* The landing page's lit band, directly under the hero.
 
      Everything here is one idea: light entering a body of blue water from

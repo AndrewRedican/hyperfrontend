@@ -35,6 +35,9 @@ export function LandingHero({ downloads }: LandingHeroProps) {
       {/* Composability matrix — a 4D micro-frontend lattice diving through nested layers, tinted toward the staged demo's ambient hue */}
       <TesseractBackground dive accent={activeDemo ? getDemoTheme(activeDemo.slug).accent : undefined} />
 
+      {/* The last stretch of the backdrop settles into the colour the water below starts from, so the two meet without a line */}
+      <div aria-hidden="true" className="hero-veil pointer-events-none absolute inset-x-0 bottom-0 h-32 sm:h-40" />
+
       <div className="relative mx-auto flex h-full max-w-8xl flex-col lg:flex-row lg:items-stretch">
         {/* Left Side - Value Proposition */}
         <div className="flex w-full flex-col justify-center px-6 py-12 sm:px-8 lg:w-1/2 lg:px-12 lg:py-8 xl:px-16">
