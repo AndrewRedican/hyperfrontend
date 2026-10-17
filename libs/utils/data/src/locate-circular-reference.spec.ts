@@ -17,7 +17,6 @@ describe('locateCircularReference', () => {
   })
 
   it('throws an error when maxResults is neither a string nor a number', () => {
-    // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => locateCircularReference(null, null)).toThrow('Invalid maxResults argument.')
   })
 
