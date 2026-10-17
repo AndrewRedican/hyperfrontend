@@ -1,14 +1,6 @@
 ---
 name: eslint-rules
-version: 1.0.0
-description: Create custom ESLint rules for the hyperfrontend Nx monorepo.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Terminal
+description: Create custom ESLint rules for the hyperfrontend Nx monorepo in tools/eslint-rules. Use when adding a lint rule, changing an existing rule's behaviour or autofix, writing rule docs or specs, or registering a rule in the workspace config.
 ---
 
 # ESLint Rules Skill

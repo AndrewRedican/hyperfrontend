@@ -1,14 +1,6 @@
 ---
 name: coding
-version: 1.0.0
 description: Coding conventions for the hyperfrontend Nx monorepo. Use when refactoring, adding features, fixing bugs, or writing any new code across libs/, apps/, tools/, or plugins/.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Terminal
 ---
 
 # Coding Skill

@@ -1,14 +1,6 @@
 ---
 name: pr-description
-version: 1.0.0
 description: Generate a PR description and write it to PR.md by comparing the current branch against main. Use when creating a pull request, writing PR descriptions, drafting PR copy, or generating PR.md. Reads commit messages first, then lightly inspects diffs only when further context improves accuracy.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Terminal
-  - Grep
-  - Glob
 ---
 
 # PR Description Maker

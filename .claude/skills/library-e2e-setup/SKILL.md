@@ -1,12 +1,6 @@
 ---
 name: library-e2e-setup
-version: 1.0.0
 description: Create E2E test projects for publishable hyperfrontend libraries. Use when adding E2E tests for a new library, fixing lib-e2e-project-required lint errors, or verifying package outputs work in ESM, CJS, IIFE, and UMD.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Terminal
 ---
 
 # Library E2E Setup

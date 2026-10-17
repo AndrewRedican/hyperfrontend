@@ -1,13 +1,6 @@
 ---
 name: library-package-config
-version: 1.0.0
 description: Configure package.json and project.json for hyperfrontend libraries. Use when setting up library configuration, adding entry points, configuring build targets, or fixing ESLint errors about missing fields.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
 ---
 
 # Library Package Config

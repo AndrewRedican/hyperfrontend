@@ -1,6 +1,5 @@
 ---
 name: mermaid-diagrams
-version: 1.0.0
 description: Create Mermaid diagrams following hyperfrontend standards. Use when adding diagrams to documentation, creating flowcharts, sequence diagrams, or architecture visualizations. Enforces theme configuration and bans hardcoded colors.
 ---
 

@@ -1,15 +1,6 @@
 ---
 name: implementation-plans
-version: 1.0.0
 description: Create rigorous implementation plans documenting what to change, where, and why. Use when planning features, writing roadmap documents, or scoping multi-step refactors. Produces phased plans with verification checkpoints and complete file listings.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Terminal
-  - Subagent
 ---
 
 # Implementation Plans

@@ -1,6 +1,5 @@
 ---
 name: readme-docs
-version: 2.1.0
 description: Write and review README.md files for hyperfrontend libraries and sub-modules. Use when creating or editing a package README, writing its one-line description or banner tagline, cutting filler from a README, reviewing README quality, or checking README structure and lint compliance.
 ---
 

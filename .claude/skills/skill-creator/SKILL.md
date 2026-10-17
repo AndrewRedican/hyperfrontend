@@ -1,15 +1,6 @@
 ---
 name: skill-creator
-version: 2.0.0
 description: Create SKILL.md files. Use when building domain skills, packaging workflows, or codifying conventions.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Terminal
-  - AskQuestions
 ---
 
 # Skill Creator
@@ -53,9 +44,18 @@ Omit what doesn't apply.
 
 ---
 
-## Description Field
+## Frontmatter
 
-Agent sees **only** description when choosing. ≤1024 chars · Third person · "Use when [triggers]."
+**`name` + `description` only.** Spec: [Claude Code skills](https://code.claude.com/docs/en/skills); VS Code reads `.claude/skills/` too.
+
+| Field                                                                             | Rule                                                                                                                                                                             |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                                                                            | = folder name; lowercase, digits, hyphens; ≤64 chars (VS Code skips others silently)                                                                                             |
+| `description`                                                                     | ≤1024 chars (VS Code cap), third person, key use case first, "Use when [triggers]."                                                                                              |
+| `disable-model-invocation`, `user-invocable`, `argument-hint`, `paths`, `context` | Only when the skill must behave differently                                                                                                                                      |
+| `version`, `license`, `allowed-tools`                                             | **Never.** Git versions files; repo `LICENSE.md` covers skills; permissions live in `.claude/settings.json` (`allowed-tools` pre-approves tools, bypassing its `ask` guardrails) |
+
+Agent sees **only** description when choosing.
 
 ✓ `Extract/fill/merge PDFs. Use when working with PDF files or forms.`
 ✗ `Helps with documents.`
@@ -71,13 +71,14 @@ Agent sees **only** description when choosing. ≤1024 chars · Third person · 
 
 ## Split & Script
 
-Split to `REFERENCE.md` at ~100 lines or distinct sub-domains.
+Split to `REFERENCE.md` at ~100 lines or distinct sub-domains. Link every supporting file from `SKILL.md`, saying what it holds.
 Add script when: deterministic, repeated, needs explicit error handling.
 
 ---
 
 ## Checklist
 
+- [ ] Frontmatter is `name` + `description` only (exceptions per table)
 - [ ] `name` = folder name
 - [ ] Description: ≤1024 chars, third-person, "Use when"
 - [ ] Paths as table
