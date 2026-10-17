@@ -1,9 +1,9 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { beforeEach } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { exists } from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
+import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   CHANGELOG_NAMES,
@@ -23,6 +23,9 @@ jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
 jest.mock('@hyperfrontend/project-scope/project/traversal', () => ({
   findFiles: jest.fn(),
 }))
+
+const existsMock = jest.mocked(exists)
+const findFilesMock = jest.mocked(findFiles)
 
 describe('CHANGELOG_NAMES', () => {
   it('contains common changelog names', () => {
@@ -44,7 +47,7 @@ describe('findProjectChangelog', () => {
   })
 
   it('finds CHANGELOG.md when it exists', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path === normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md')
     })
 
@@ -54,7 +57,7 @@ describe('findProjectChangelog', () => {
   })
 
   it('finds Changelog.md as fallback', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path === normalizeToNative('/workspace/libs/my-lib/Changelog.md')
     })
 
@@ -64,7 +67,7 @@ describe('findProjectChangelog', () => {
   })
 
   it('finds HISTORY.md as fallback', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path === normalizeToNative('/workspace/libs/my-lib/HISTORY.md')
     })
 
@@ -74,7 +77,7 @@ describe('findProjectChangelog', () => {
   })
 
   it('returns null when no changelog exists', () => {
-    projectScopeFs.exists.mockReturnValue(false)
+    existsMock.mockReturnValue(false)
 
     const result = findProjectChangelog('/workspace/libs/my-lib')
 
@@ -82,7 +85,7 @@ describe('findProjectChangelog', () => {
   })
 
   it('returns first matching changelog in priority order', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path.includes('CHANGELOG.md') || path.includes('changelog.md')
     })
 
@@ -98,7 +101,7 @@ describe('findChangelogs', () => {
   })
 
   it('finds changelogs for multiple packages', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path.includes('CHANGELOG.md')
     })
 
@@ -118,7 +121,7 @@ describe('findChangelogs', () => {
   })
 
   it('skips packages without changelog', () => {
-    projectScopeFs.exists.mockImplementation((path: string) => {
+    existsMock.mockImplementation((path: string) => {
       return path.includes('lib-a')
     })
 
@@ -145,7 +148,7 @@ describe('discoverAllChangelogs', () => {
   })
 
   it('discovers changelogs using glob patterns', () => {
-    projectScopeTraversal.findFiles.mockReturnValue(['libs/lib-a/CHANGELOG.md', 'libs/lib-b/changelog.md'])
+    findFilesMock.mockReturnValue(['libs/lib-a/CHANGELOG.md', 'libs/lib-b/changelog.md'])
 
     const result = discoverAllChangelogs('/workspace')
 
@@ -162,7 +165,7 @@ describe('discoverAllChangelogs', () => {
   })
 
   it('extracts project path from changelog path', () => {
-    projectScopeTraversal.findFiles.mockReturnValue(['packages/my-package/CHANGELOG.md'])
+    findFilesMock.mockReturnValue(['packages/my-package/CHANGELOG.md'])
 
     const result = discoverAllChangelogs('/workspace')
 
@@ -170,7 +173,7 @@ describe('discoverAllChangelogs', () => {
   })
 
   it('returns empty array when no changelogs found', () => {
-    projectScopeTraversal.findFiles.mockReturnValue([])
+    findFilesMock.mockReturnValue([])
 
     const result = discoverAllChangelogs('/workspace')
 
@@ -178,11 +181,11 @@ describe('discoverAllChangelogs', () => {
   })
 
   it('uses custom patterns', () => {
-    projectScopeTraversal.findFiles.mockReturnValue([])
+    findFilesMock.mockReturnValue([])
 
     discoverAllChangelogs('/workspace', ['apps/**/CHANGELOG.md'])
 
-    expect(projectScopeTraversal.findFiles).toHaveBeenCalledWith(
+    expect(findFilesMock).toHaveBeenCalledWith(
       '/workspace',
       ['apps/**/CHANGELOG.md'],
       expect.objectContaining({

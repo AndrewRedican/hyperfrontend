@@ -5,7 +5,7 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
 import { getCommit } from './log'
 jest.mock('./log', () => ({
-  ...jest.requireActual('./log'),
+  ...jest.requireActual<typeof import('./log')>('./log'),
   getCommit: jest.fn(),
 }))
 jest.mock('node:child_process')

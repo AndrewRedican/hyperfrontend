@@ -4,13 +4,13 @@ import type { Registry } from '../../registry/models/registry'
 import type { FlowContext } from '../models/types'
 import { beforeEach } from 'node:test'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
-import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { discoverNxProjects, isNxWorkspace } from '@hyperfrontend/project-scope/nx'
+import { commitChanges } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import * as workspaceDiscovery from '../../workspace/discovery'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { createStep, createSuccessResult } from '../models/step'
 import { createMinimalFlow } from '../presets/conventional'
-import { createMockGitClient, createMockLogger, createMockRegistry, createMockTree } from './__test-utils__/mocks'
+import { createMockGitClient, createMockLogger, createMockProject, createMockRegistry, createMockTree } from './__test-utils__/mocks'
 import { executeFlow } from './execute'
 
 jest.mock('@hyperfrontend/project-scope/nx', () => ({
@@ -31,12 +31,17 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   formatUnifiedDiff: jest.fn(),
 }))
 
+const discoverNxProjectsMock = jest.mocked(discoverNxProjects)
+const isNxWorkspaceMock = jest.mocked(isNxWorkspace)
+const commitChangesMock = jest.mocked(commitChanges)
+const discoverProjectByNameMock = jest.mocked(discoverProjectByName)
+
 beforeEach(() => {
   jest.clearAllMocks()
-  projectScopeNx.isNxWorkspace.mockReturnValue(false)
-  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
+  isNxWorkspaceMock.mockReturnValue(false)
+  discoverNxProjectsMock.mockReturnValue(new Map())
+  discoverProjectByNameMock.mockReturnValue(null)
+  commitChangesMock.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - project discovery with explicit projectRoot', () => {
@@ -466,8 +471,8 @@ describe('executeFlow - context properties', () => {
 
 describe('executeFlow - Nx workspace project discovery', () => {
   it('asks whether the workspace root is an Nx workspace', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
 
     const logger = createMockLogger()
     const flow = {
@@ -491,12 +496,12 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(projectScopeNx.isNxWorkspace).toHaveBeenCalledWith('/workspace')
+    expect(isNxWorkspaceMock).toHaveBeenCalledWith('/workspace')
   })
 
   it('reads the Nx project graph from the workspace root', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
 
     const logger = createMockLogger()
     const flow = {
@@ -520,12 +525,12 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(projectScopeNx.discoverNxProjects).toHaveBeenCalledWith('/workspace')
+    expect(discoverNxProjectsMock).toHaveBeenCalledWith('/workspace')
   })
 
   it('discovers project via Nx when workspace is Nx-based and project exists', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
 
     const logger = createMockLogger()
     const flow = {
@@ -553,8 +558,8 @@ describe('executeFlow - Nx workspace project discovery', () => {
   })
 
   it('logs that an Nx workspace was detected', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
 
     const logger = createMockLogger()
     const flow = {
@@ -582,15 +587,17 @@ describe('executeFlow - Nx workspace project discovery', () => {
   })
 
   it('logs the Nx discovery failure when reading the Nx project graph throws', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockImplementation(() => {
       throw new Error('Nx project graph read failed')
     })
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'fallback-pkg',
-      path: '/workspace/libs/fallback',
-      version: '1.0.0',
-    })
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'fallback-pkg',
+        path: '/workspace/libs/fallback',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -618,15 +625,17 @@ describe('executeFlow - Nx workspace project discovery', () => {
   })
 
   it('falls back to workspace discovery when Nx discovery throws an error', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockImplementation(() => {
       throw new Error('Nx project graph read failed')
     })
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'fallback-pkg',
-      path: '/workspace/libs/fallback',
-      version: '1.0.0',
-    })
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'fallback-pkg',
+        path: '/workspace/libs/fallback',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -650,19 +659,21 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalled()
+    expect(discoverProjectByNameMock).toHaveBeenCalled()
   })
 
   it('succeeds with the project found by workspace discovery when Nx discovery throws an error', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockImplementation(() => {
       throw new Error('Nx project graph read failed')
     })
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'fallback-pkg',
-      path: '/workspace/libs/fallback',
-      version: '1.0.0',
-    })
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'fallback-pkg',
+        path: '/workspace/libs/fallback',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -690,13 +701,15 @@ describe('executeFlow - Nx workspace project discovery', () => {
   })
 
   it('logs that the project is missing from the Nx project graph', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'discovered-pkg',
-      path: '/workspace/packages/discovered',
-      version: '2.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map())
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'discovered-pkg',
+        path: '/workspace/packages/discovered',
+        version: '2.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -724,13 +737,15 @@ describe('executeFlow - Nx workspace project discovery', () => {
   })
 
   it('falls back to workspace discovery when project not found in Nx graph', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'discovered-pkg',
-      path: '/workspace/packages/discovered',
-      version: '2.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map())
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'discovered-pkg',
+        path: '/workspace/packages/discovered',
+        version: '2.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -754,20 +769,19 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
-      'lib-discovered',
-      expect.objectContaining({ workspaceRoot: '/workspace', tree })
-    )
+    expect(discoverProjectByNameMock).toHaveBeenCalledWith('lib-discovered', expect.objectContaining({ workspaceRoot: '/workspace', tree }))
   })
 
   it('succeeds with the project found by workspace discovery when it is missing from the Nx graph', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'discovered-pkg',
-      path: '/workspace/packages/discovered',
-      version: '2.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(true)
+    discoverNxProjectsMock.mockReturnValue(new Map())
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'discovered-pkg',
+        path: '/workspace/packages/discovered',
+        version: '2.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -797,12 +811,14 @@ describe('executeFlow - Nx workspace project discovery', () => {
 
 describe('executeFlow - workspace discovery fallback', () => {
   it('skips Nx project discovery when not in Nx workspace', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'my-lib',
-      path: '/workspace/packages/my-lib',
-      version: '1.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'my-lib',
+        path: '/workspace/packages/my-lib',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -826,16 +842,18 @@ describe('executeFlow - workspace discovery fallback', () => {
       logger,
     })
 
-    expect(projectScopeNx.discoverNxProjects).not.toHaveBeenCalled()
+    expect(discoverNxProjectsMock).not.toHaveBeenCalled()
   })
 
   it('discovers project via discoverProjectByName when not in Nx workspace', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'my-lib',
-      path: '/workspace/packages/my-lib',
-      version: '1.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'my-lib',
+        path: '/workspace/packages/my-lib',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -859,19 +877,18 @@ describe('executeFlow - workspace discovery fallback', () => {
       logger,
     })
 
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
-      'my-lib',
-      expect.objectContaining({ workspaceRoot: '/workspace', tree })
-    )
+    expect(discoverProjectByNameMock).toHaveBeenCalledWith('my-lib', expect.objectContaining({ workspaceRoot: '/workspace', tree }))
   })
 
   it('succeeds with the project found by workspace discovery when not in Nx workspace', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'my-lib',
-      path: '/workspace/packages/my-lib',
-      version: '1.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'my-lib',
+        path: '/workspace/packages/my-lib',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -899,12 +916,14 @@ describe('executeFlow - workspace discovery fallback', () => {
   })
 
   it('logs the workspace discovery attempt when not in Nx workspace', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockReturnValue({
-      name: 'my-lib',
-      path: '/workspace/packages/my-lib',
-      version: '1.0.0',
-    })
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockReturnValue(
+      createMockProject({
+        name: 'my-lib',
+        path: '/workspace/packages/my-lib',
+        version: '1.0.0',
+      })
+    )
 
     const logger = createMockLogger()
     const flow = {
@@ -932,8 +951,8 @@ describe('executeFlow - workspace discovery fallback', () => {
   })
 
   it('logs the workspace discovery failure', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockImplementation(() => {
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockImplementation(() => {
       throw new Error('Workspace traversal failed')
     })
 
@@ -958,8 +977,8 @@ describe('executeFlow - workspace discovery fallback', () => {
   })
 
   it('returns failed with a not-found summary when workspace discovery throws', async () => {
-    projectScopeNx.isNxWorkspace.mockReturnValue(false)
-    workspaceDiscovery.discoverProjectByName.mockImplementation(() => {
+    isNxWorkspaceMock.mockReturnValue(false)
+    discoverProjectByNameMock.mockImplementation(() => {
       throw new Error('Workspace traversal failed')
     })
 

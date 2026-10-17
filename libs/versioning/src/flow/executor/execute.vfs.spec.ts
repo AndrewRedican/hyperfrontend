@@ -1,9 +1,9 @@
 import type { MockFileChange } from './__test-utils__/mocks'
 import { beforeEach } from 'node:test'
-import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
-import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { discoverNxProjects, isNxWorkspace } from '@hyperfrontend/project-scope/nx'
+import { commitChanges } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import * as workspaceDiscovery from '../../workspace/discovery'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { createStep, createSuccessResult } from '../models/step'
 import { createMockGitClient, createMockLogger, createMockRegistry, createMockTree } from './__test-utils__/mocks'
 import { executeFlow } from './execute'
@@ -25,12 +25,17 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   formatUnifiedDiff: jest.fn(),
 }))
 
+const discoverNxProjectsMock = jest.mocked(discoverNxProjects)
+const isNxWorkspaceMock = jest.mocked(isNxWorkspace)
+const commitChangesMock = jest.mocked(commitChanges)
+const discoverProjectByNameMock = jest.mocked(discoverProjectByName)
+
 beforeEach(() => {
   jest.clearAllMocks()
-  projectScopeNx.isNxWorkspace.mockReturnValue(false)
-  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
+  isNxWorkspaceMock.mockReturnValue(false)
+  discoverNxProjectsMock.mockReturnValue(new Map())
+  discoverProjectByNameMock.mockReturnValue(null)
+  commitChangesMock.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - VFS commit behavior', () => {
@@ -59,7 +64,7 @@ describe('executeFlow - VFS commit behavior', () => {
       dryRun: false,
     })
 
-    expect(projectScopeVfs.commitChanges).toHaveBeenCalledWith(tree, { verbose: undefined })
+    expect(commitChangesMock).toHaveBeenCalledWith(tree, { verbose: undefined })
   })
 
   it('logs that file changes were committed to disk', async () => {
@@ -116,11 +121,11 @@ describe('executeFlow - VFS commit behavior', () => {
       verbose: true,
     })
 
-    expect(projectScopeVfs.commitChanges).toHaveBeenCalledWith(tree, { verbose: true })
+    expect(commitChangesMock).toHaveBeenCalledWith(tree, { verbose: true })
   })
 
   it('logs an error when commitChanges throws', async () => {
-    projectScopeVfs.commitChanges.mockImplementation(() => {
+    commitChangesMock.mockImplementation(() => {
       throw new Error('Filesystem permission denied')
     })
 
@@ -152,7 +157,7 @@ describe('executeFlow - VFS commit behavior', () => {
   })
 
   it('does not fail the flow when commitChanges throws', async () => {
-    projectScopeVfs.commitChanges.mockImplementation(() => {
+    commitChangesMock.mockImplementation(() => {
       throw new Error('Filesystem permission denied')
     })
 
@@ -207,7 +212,7 @@ describe('executeFlow - VFS commit behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
+    expect(commitChangesMock).not.toHaveBeenCalled()
   })
 
   it('logs that a dry run writes nothing when there are no changes', async () => {
@@ -266,7 +271,7 @@ describe('executeFlow - VFS commit behavior', () => {
       dryRun: false,
     })
 
-    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
+    expect(commitChangesMock).not.toHaveBeenCalled()
   })
 
   it('fails the flow when a step throws before any commit', async () => {
@@ -404,7 +409,7 @@ describe('executeFlow - VFS commit behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
+    expect(commitChangesMock).not.toHaveBeenCalled()
   })
 
   it('shows would-modify message in dry-run mode with pending changes', async () => {

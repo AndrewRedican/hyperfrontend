@@ -1,9 +1,9 @@
 import type { MockFileChange } from './__test-utils__/mocks'
 import { beforeEach } from 'node:test'
-import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
-import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { discoverNxProjects, isNxWorkspace } from '@hyperfrontend/project-scope/nx'
+import { commitChanges, rollbackChanges } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import * as workspaceDiscovery from '../../workspace/discovery'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { createStep, createSuccessResult } from '../models/step'
 import { createMockGitClient, createMockLogger, createMockRegistry, createMockTree } from './__test-utils__/mocks'
 import { executeFlow } from './execute'
@@ -25,17 +25,23 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   formatUnifiedDiff: jest.fn(),
 }))
 
+const discoverNxProjectsMock = jest.mocked(discoverNxProjects)
+const isNxWorkspaceMock = jest.mocked(isNxWorkspace)
+const commitChangesMock = jest.mocked(commitChanges)
+const rollbackChangesMock = jest.mocked(rollbackChanges)
+const discoverProjectByNameMock = jest.mocked(discoverProjectByName)
+
 beforeEach(() => {
   jest.clearAllMocks()
-  projectScopeNx.isNxWorkspace.mockReturnValue(false)
-  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
+  isNxWorkspaceMock.mockReturnValue(false)
+  discoverNxProjectsMock.mockReturnValue(new Map())
+  discoverProjectByNameMock.mockReturnValue(null)
+  commitChangesMock.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - rollbackOnFailure option', () => {
   beforeEach(() => {
-    projectScopeVfs.rollbackChanges.mockClear()
+    rollbackChangesMock.mockClear()
   })
 
   it('fails the flow when a step returns failed status', async () => {
@@ -109,7 +115,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(rollbackChangesMock).toHaveBeenCalledWith(tree)
   })
 
   it('warns about rolling back the pending change when a step returns failed status', async () => {
@@ -224,7 +230,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(rollbackChangesMock).toHaveBeenCalledWith(tree)
   })
 
   it('warns about rolling back both pending changes when a step throws', async () => {
@@ -339,7 +345,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       rollbackOnFailure: false,
     })
 
-    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
+    expect(rollbackChangesMock).not.toHaveBeenCalled()
   })
 
   it('does not warn about a rollback when rollbackOnFailure is false', async () => {
@@ -463,7 +469,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
+    expect(rollbackChangesMock).not.toHaveBeenCalled()
   })
 
   it('fails the flow when a step returns failed status with no pending changes', async () => {
@@ -533,7 +539,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
+    expect(rollbackChangesMock).not.toHaveBeenCalled()
   })
 
   it('does not warn about a rollback when there are no pending changes', async () => {
@@ -636,7 +642,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
+    expect(rollbackChangesMock).not.toHaveBeenCalled()
   })
 
   it('fails the flow when a step returns failed status and rollbackOnFailure is true', async () => {
@@ -712,6 +718,6 @@ describe('executeFlow - rollbackOnFailure option', () => {
       rollbackOnFailure: true,
     })
 
-    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(rollbackChangesMock).toHaveBeenCalledWith(tree)
   })
 })

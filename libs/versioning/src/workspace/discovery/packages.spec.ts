@@ -3,11 +3,11 @@ import { posix } from 'node:path'
 import { beforeEach } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { exists } from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import * as projectScopePackage from '@hyperfrontend/project-scope/project/package'
-import * as projectScopeRoot from '@hyperfrontend/project-scope/project/root'
-import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
+import { readPackageJson } from '@hyperfrontend/project-scope/project/package'
+import { findWorkspaceRoot } from '@hyperfrontend/project-scope/project/root'
+import { findFiles, findFilesInTree } from '@hyperfrontend/project-scope/project/traversal'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { discoverPackages, discoverProject, discoverProjectByName } from './packages'
 
@@ -28,13 +28,7 @@ jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
   exists: jest.fn(),
 }))
 
-const projectScope = {
-  readPackageJson: projectScopePackage.readPackageJson,
-  findWorkspaceRoot: projectScopeRoot.findWorkspaceRoot,
-  findFiles: projectScopeTraversal.findFiles,
-  findFilesInTree: projectScopeTraversal.findFilesInTree,
-  exists: projectScopeFs.exists,
-}
+const projectScope = jest.mocked({ readPackageJson, findWorkspaceRoot, findFiles, findFilesInTree, exists })
 
 beforeEach(() => {
   jest.clearAllMocks()

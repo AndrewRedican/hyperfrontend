@@ -1,10 +1,10 @@
 import type { FlowContext } from '../models/types'
 import type { MockFileChange } from './__test-utils__/mocks'
 import { beforeEach } from 'node:test'
-import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
-import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { discoverNxProjects, isNxWorkspace } from '@hyperfrontend/project-scope/nx'
+import { commitChanges, formatUnifiedDiff, generateAllDiffs } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import * as workspaceDiscovery from '../../workspace/discovery'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { createStep, createSuccessResult } from '../models/step'
 import { createMockGitClient, createMockLogger, createMockRegistry, createMockTree } from './__test-utils__/mocks'
 import { dryRun, executeFlow, validateFlow } from './execute'
@@ -26,12 +26,19 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   formatUnifiedDiff: jest.fn(),
 }))
 
+const discoverNxProjectsMock = jest.mocked(discoverNxProjects)
+const isNxWorkspaceMock = jest.mocked(isNxWorkspace)
+const commitChangesMock = jest.mocked(commitChanges)
+const formatUnifiedDiffMock = jest.mocked(formatUnifiedDiff)
+const generateAllDiffsMock = jest.mocked(generateAllDiffs)
+const discoverProjectByNameMock = jest.mocked(discoverProjectByName)
+
 beforeEach(() => {
   jest.clearAllMocks()
-  projectScopeNx.isNxWorkspace.mockReturnValue(false)
-  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
-  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
+  isNxWorkspaceMock.mockReturnValue(false)
+  discoverNxProjectsMock.mockReturnValue(new Map())
+  discoverProjectByNameMock.mockReturnValue(null)
+  commitChangesMock.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - verbose logging', () => {
@@ -424,8 +431,8 @@ describe('executeFlow - showDiff option', () => {
   }
 
   beforeEach(() => {
-    projectScopeVfs.generateAllDiffs.mockReturnValue([mockFileDiff])
-    projectScopeVfs.formatUnifiedDiff.mockReturnValue('--- a/libs/test/package.json\n+++ b/libs/test/package.json')
+    generateAllDiffsMock.mockReturnValue([mockFileDiff])
+    formatUnifiedDiffMock.mockReturnValue('--- a/libs/test/package.json\n+++ b/libs/test/package.json')
   })
 
   it('does not generate diffs when showDiff is false', async () => {
@@ -458,7 +465,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.generateAllDiffs).not.toHaveBeenCalled()
+    expect(generateAllDiffsMock).not.toHaveBeenCalled()
   })
 
   it('omits diffs from the result when showDiff is false', async () => {
@@ -524,7 +531,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.generateAllDiffs).toHaveBeenCalledWith(tree)
+    expect(generateAllDiffsMock).toHaveBeenCalledWith(tree)
   })
 
   it('formats each diff as a unified patch by default', async () => {
@@ -557,7 +564,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.formatUnifiedDiff).toHaveBeenCalledWith(mockFileDiff)
+    expect(formatUnifiedDiffMock).toHaveBeenCalledWith(mockFileDiff)
   })
 
   it('logs the pending changes header and the unified patch', async () => {
@@ -662,7 +669,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.generateAllDiffs).toHaveBeenCalledWith(tree)
+    expect(generateAllDiffsMock).toHaveBeenCalledWith(tree)
   })
 
   it('does not format unified patches when diffFormat is summary', async () => {
@@ -696,7 +703,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.formatUnifiedDiff).not.toHaveBeenCalled()
+    expect(formatUnifiedDiffMock).not.toHaveBeenCalled()
   })
 
   it('logs per-file change counts when diffFormat is summary', async () => {
@@ -795,7 +802,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.generateAllDiffs).not.toHaveBeenCalled()
+    expect(generateAllDiffsMock).not.toHaveBeenCalled()
   })
 
   it('logs "No file changes to commit" when showDiff is true but no changes exist', async () => {
@@ -932,8 +939,8 @@ describe('executeFlow - showDiff option', () => {
       { path: 'libs/test/package.json', lines: [], additions: 1, deletions: 1 },
       { path: 'libs/test/CHANGELOG.md', lines: [], additions: 10, deletions: 0 },
     ]
-    projectScopeVfs.generateAllDiffs.mockReturnValue(mockDiffs)
-    projectScopeVfs.formatUnifiedDiff.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
+    generateAllDiffsMock.mockReturnValue(mockDiffs)
+    formatUnifiedDiffMock.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
 
     const logger = createMockLogger()
     const flow = {
@@ -975,8 +982,8 @@ describe('executeFlow - showDiff option', () => {
       { path: 'libs/test/package.json', lines: [], additions: 1, deletions: 1 },
       { path: 'libs/test/CHANGELOG.md', lines: [], additions: 10, deletions: 0 },
     ]
-    projectScopeVfs.generateAllDiffs.mockReturnValue(mockDiffs)
-    projectScopeVfs.formatUnifiedDiff.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
+    generateAllDiffsMock.mockReturnValue(mockDiffs)
+    formatUnifiedDiffMock.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
 
     const logger = createMockLogger()
     const flow = {
@@ -1010,6 +1017,6 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScopeVfs.formatUnifiedDiff.mock.calls).toEqual(mockDiffs.map((diff) => [diff]))
+    expect(formatUnifiedDiffMock.mock.calls).toEqual(mockDiffs.map((diff) => [diff]))
   })
 })
