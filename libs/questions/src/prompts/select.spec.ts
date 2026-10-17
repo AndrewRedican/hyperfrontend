@@ -264,7 +264,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: navigate down past visible area
-      const keys = Array.from({ length: 7 }, () => Key.Down)
+      const keys: Key[] = Array.from({ length: 7 }, () => Key.Down)
       keys.push(Key.Enter)
       input.enqueueKeys(keys)
 
@@ -475,7 +475,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: Navigate down many times to force scroll offset adjustment
-      const keys = Array.from({ length: 12 }, () => Key.Down)
+      const keys: Key[] = Array.from({ length: 12 }, () => Key.Down)
       keys.push(Key.Enter)
       input.enqueueKeys(keys)
 
