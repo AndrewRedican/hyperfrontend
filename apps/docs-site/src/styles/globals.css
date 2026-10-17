@@ -3832,3 +3832,85 @@
     word-break: break-all;
   }
 }
+
+/* ------------------------------------------------------------------------- */
+/* The landing page's chrome: the staged demo's accent as one colour, the
+   wordmark, and the navigation it tints. Unlayered on purpose: these rules dress
+   elements that also carry utilities, and the chrome's tint has to win. */
+
+/* The staged demo's accent, registered as a colour so the chrome eases from
+   one demo's hue to the next instead of snapping; transparent on every page
+   that has no stage. */
+@property --stage-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+:root {
+  --stage-accent: var(--stage-accent-light, transparent);
+  transition: --stage-accent 1600ms ease-in-out;
+}
+
+:root.dark {
+  --stage-accent: var(--stage-accent-dark, transparent);
+}
+
+/* The wordmark's gradient is the logo's own indigo and blue with the violet
+   the indigo leans from; it never takes the stage's hue, so the brand stays
+   the brand whichever demo is on. */
+.wordmark {
+  background-image: linear-gradient(100deg, #6d28d9 0%, #4f46e5 46%, #0063f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .wordmark {
+  background-image: linear-gradient(100deg, #a78bfa 0%, #818cf8 46%, #4facfe 100%);
+}
+
+.site-header--staged {
+  border-bottom-color: color-mix(in srgb, var(--stage-accent) 34%, var(--color-slate-200));
+  transition: border-color 1600ms ease-in-out;
+}
+
+.dark .site-header--staged {
+  border-bottom-color: color-mix(in srgb, var(--stage-accent) 30%, var(--color-slate-800));
+}
+
+/* Over the stage, a link's text is ink with the staged hue entering from the
+   baseline: black or white for most of the glyph, colour where it rests. */
+.site-header--staged .site-nav-link,
+.mobile-drawer--staged .site-nav-link {
+  --nav-ink: var(--color-slate-900);
+  background-image: linear-gradient(to top, var(--stage-accent) 0%, var(--nav-ink) 58%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .site-header--staged .site-nav-link,
+.dark .mobile-drawer--staged .site-nav-link {
+  --nav-ink: var(--color-white);
+}
+
+.site-header--staged .site-nav-link:hover,
+.mobile-drawer--staged a:hover .site-nav-link {
+  --nav-ink: color-mix(in srgb, var(--stage-accent) 50%, var(--color-slate-900));
+}
+
+.dark .site-header--staged .site-nav-link:hover,
+.dark .mobile-drawer--staged a:hover .site-nav-link {
+  --nav-ink: color-mix(in srgb, var(--stage-accent) 45%, var(--color-white));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+
+  .site-header--staged {
+    transition: none;
+  }
+}

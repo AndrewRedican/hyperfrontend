@@ -3,6 +3,7 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { LandingHero } from '@/components/landing-hero'
 import { LandingLearnSection } from '@/components/landing-learn-section'
+import { StageAccent } from '@/components/landing/stage-accent'
 import { LightWell } from '@/components/light-well'
 import { getAllLibraryData } from '@/lib/docs-loader'
 import { getDownloadsSnapshot } from '@/lib/downloads'
@@ -18,10 +19,12 @@ export default function HomePage() {
   const downloads = getDownloadsSnapshot()
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main id="main-content" className="flex-1">
-        <DemoStageProvider>
+    <DemoStageProvider>
+      {/* why: the staged demo's hue reaches the header as well as the water below the fold, so the stage wraps the whole page rather than the hero alone */}
+      <StageAccent />
+      <div className="flex min-h-screen flex-col">
+        <Header staged />
+        <main id="main-content" className="flex-1">
           {/* Hero Section - 50/50 Split Layout */}
           <LandingHero downloads={downloads === null ? null : { total: downloads.total, packages: downloads.packages.length }} />
 
@@ -29,94 +32,99 @@ export default function HomePage() {
           <LightWell>
             <LandingLearnSection />
           </LightWell>
-        </DemoStageProvider>
 
-        {/* Secondary Content - Collapsed for Landing */}
-        <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">How it works</h2>
-              <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
-                Each feature operates in its own iframe with standardized communication via the{' '}
-                <code className="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-sm dark:bg-slate-800">@hyperfrontend/nexus</code>{' '}
-                library. Messages are routed through a broker-channel architecture with optional encryption.
-              </p>
-            </div>
+          {/* Secondary Content - Collapsed for Landing */}
+          <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">
+            <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+              <div className="mx-auto max-w-3xl text-center">
+                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">How it works</h2>
+                <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
+                  Each feature operates in its own iframe with standardized communication via the{' '}
+                  <code className="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-sm dark:bg-slate-800">@hyperfrontend/nexus</code>{' '}
+                  library. Messages are routed through a broker-channel architecture with optional encryption.
+                </p>
+              </div>
 
-            {/* Architecture Cards */}
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <ArchitectureCard
-                title="Host Application"
-                description="Your main app loads features dynamically and manages their lifecycle. No build-time dependencies."
-                icon={<HostIcon />}
-                href="/architecture#runtime-flow"
-              />
-              <ArchitectureCard
-                title="Feature Shell"
-                description="A lightweight loader that bootstraps your micro-frontend and establishes the communication channel."
-                icon={<ShellIcon />}
-                href="/architecture#the-shell-pattern"
-              />
-              <ArchitectureCard
-                title="Message Broker"
-                description="Routes typed messages between contexts with validation. Supports encryption for sensitive data."
-                icon={<BrokerIcon />}
-                href="/architecture#broker-channel-model"
-              />
-            </div>
+              {/* Architecture Cards */}
+              <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <ArchitectureCard
+                  title="Host Application"
+                  description="Your main app loads features dynamically and manages their lifecycle. No build-time dependencies."
+                  icon={<HostIcon />}
+                  href="/architecture#runtime-flow"
+                />
+                <ArchitectureCard
+                  title="Feature Shell"
+                  description="A lightweight loader that bootstraps your micro-frontend and establishes the communication channel."
+                  icon={<ShellIcon />}
+                  href="/architecture#the-shell-pattern"
+                />
+                <ArchitectureCard
+                  title="Message Broker"
+                  description="Routes typed messages between contexts with validation. Supports encryption for sensitive data."
+                  icon={<BrokerIcon />}
+                  href="/architecture#broker-channel-model"
+                />
+              </div>
 
-            {/* CTA */}
-            <div className="mt-12 text-center">
-              <a
-                href="/architecture"
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-              >
-                Read the Architecture Guide
-                <ArrowRightIcon className="h-4 w-4" />
-              </a>
+              {/* CTA */}
+              <div className="mt-12 text-center">
+                <a
+                  href="/architecture"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                >
+                  Read the Architecture Guide
+                  <ArrowRightIcon className="h-4 w-4" />
+                </a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Packages Strip - the top of the library hierarchy, flagship first */}
-        <section className="border-t border-slate-200 bg-slate-50 py-8 dark:border-slate-800 dark:bg-slate-900/50">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <a
-                href="https://www.npmjs.com/search?q=%40hyperfrontend"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-              >
-                <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
-                <div>
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
-                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                    {libraries.length} packages, from the SDK down to the single-purpose utilities
-                  </span>
-                </div>
-              </a>
-              <a
-                href="/docs/libraries"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 whitespace-nowrap"
-              >
-                Browse all packages
-                <ArrowRightIcon className="h-3.5 w-3.5" />
-              </a>
+          {/* Packages Strip - the top of the library hierarchy, flagship first */}
+          <section className="border-t border-slate-200 bg-slate-50 py-8 dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <a
+                  href="https://www.npmjs.com/search?q=%40hyperfrontend"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                >
+                  <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
+                    <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                      {libraries.length} packages, from the SDK down to the single-purpose utilities
+                    </span>
+                  </div>
+                </a>
+                <a
+                  href="/docs/libraries"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 whitespace-nowrap"
+                >
+                  Browse all packages
+                  <ArrowRightIcon className="h-3.5 w-3.5" />
+                </a>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {featuredPackages.map((pkg) => (
+                  <PackageTag
+                    key={pkg.packageName}
+                    name={pkg.packageName}
+                    href={pkg.href}
+                    flagship={pkg.packageName === FLAGSHIP_PACKAGE}
+                  />
+                ))}
+                <span className="text-xs text-slate-400 dark:text-slate-500 self-center">
+                  +{libraries.length - featuredPackages.length} more
+                </span>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {featuredPackages.map((pkg) => (
-                <PackageTag key={pkg.packageName} name={pkg.packageName} href={pkg.href} flagship={pkg.packageName === FLAGSHIP_PACKAGE} />
-              ))}
-              <span className="text-xs text-slate-400 dark:text-slate-500 self-center">
-                +{libraries.length - featuredPackages.length} more
-              </span>
-            </div>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
+    </DemoStageProvider>
   )
 }
 
