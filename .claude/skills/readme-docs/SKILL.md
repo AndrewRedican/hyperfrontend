@@ -1,144 +1,81 @@
 ---
 name: readme-docs
-version: 1.0.0
-description: Write README.md files for hyperfrontend libraries and sub-modules. Use when creating library documentation, writing sub-module READMEs, documenting API tables, adding quick start guides, or reviewing README structure compliance.
+version: 2.1.0
+description: Write and review README.md files for hyperfrontend libraries and sub-modules. Use when creating or editing a package README, writing its one-line description or banner tagline, cutting filler from a README, reviewing README quality, or checking README structure and lint compliance.
 ---
 
 # README Docs
 
-Create README.md files—library root for consumers, sub-module for maintainers.
+A package README says **what this is and why you would want it**, gets the reader running, then links to the docs.
+
+Structure, badges, lint rules, banner commands: [REFERENCE.md](REFERENCE.md).
+
+| Role           | Path                                                        |
+| -------------- | ----------------------------------------------------------- |
+| Library README | `libs/<name>/README.md`                                     |
+| Precedent      | `libs/*/README.md` (siblings)                               |
+| Banner tagline | `TAGLINES` in `tools/media/scenes/package-banners.scene.ts` |
+
+**Before editing: read two sibling READMEs. Keep every section they carry.** Cut filler sentences, never established sections.
 
 ---
 
-## Reference Locations
+## Description Line
 
-| Item              | Path                                 |
-| ----------------- | ------------------------------------ |
-| Library README    | `libs/<name>/README.md`              |
-| Sub-module README | `libs/<name>/src/<module>/README.md` |
-| Library ESLint    | `lib-readme-structure`               |
-| Submodule ESLint  | `docs-site-secondary-entries`        |
-| Submodule README  | `lib-pkg-secondary-entry-readme`     |
+One idea: what the package is and why it is worth having. No feature list. **Two banner lines at most**: preview the banner; a third line means rewrite, never shrink the type. Offer the user 3 to 4 candidates with different angles before committing.
+
+| ✗ Lists features, wraps to 3 lines                                                                                                            | ✓                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Jest-style describe, it, expect and jest on Node's built-in test runner, with module mocks, fake timers, an optional DOM and a coverage gate. | A lightweight Jest-like testing library built on native Node capabilities. |
 
 ---
 
-## Document Types
+## Section Budgets
 
-| Type              | Location                          | Audience  | Focus                                  |
-| ----------------- | --------------------------------- | --------- | -------------------------------------- |
-| Library README    | `libs/<name>/README.md`           | Consumers | Value prop, install, quick start       |
-| Sub-module README | `libs/<name>/src/<mod>/README.md` | Consumers | Intent, design, examples — NO API list |
-
-The sub-module page renders this README plus an auto-generated scoped API reference. Manual API tables would duplicate the rendered ref.
-
----
-
-## Library README Structure
-
-**Required sections (in order):**
-
-1. `## What is @hyperfrontend/<name>?`
-   - `### Key Features` (required)
-   - `### Architecture Highlights` (optional)
-2. `## Why Use @hyperfrontend/<name>?`
-3. `## Installation`
-4. `## Quick Start`
-5. `## API Overview`
-6. `## Compatibility`
-
-**`### Key Features`** is a flat bullet list of 3 to 12 items, each `- **Label**` (48 characters or fewer) followed by an explanation of at least 20 characters saying why the capability matters. The documentation site draws a correctly structured list as a marked run rather than as bullets, and falls back to plain markdown for one that is not. `lib-readme-structure` enforces the shape.
-
-**`### Architecture Highlights`** is optional and earns its place. Include it only for properties a consumer can rely on or must know to use the package correctly, such as a security guarantee, a cost, or a documented limit. Names of internal helpers, the fact that something uses factory functions, and anything already stated in Key Features all belong out of the README; where the package has an `ARCHITECTURE.md`, depth belongs there and the section becomes a short pointer. A package with nothing consumer-relevant to say omits the section entirely. The documentation site renders it as a quiet margin note at the end of the page rather than beside the capability list.
-
-**`## Compatibility`** wraps its runtime table in an `hf:media` region (`<!-- hf:media start id="runtimes" scene="runtimes-<name>" asset="runtimes" docs="#compatibility" alt="..." -->` ... `<!-- hf:media end -->`). The table is generated from `metadata.compatibility` in `project.json` (`lib-readme-compatibility-table` fixes drift); the build replaces the region with the recorded runtime strip in the distribution readme only. The package banner is never authored: the build replaces the `# @hyperfrontend/<name>` title with `assets/media/banner-<name>/banner.gif`, and `lib-readme-media-regions` reports a README whose banner has not been recorded. The one-line description below the badges is mirrored into the manifest's `description` by `lib-pkg-description`; write it in the README and let `--fix` copy it.
-
-**Required badges:**
-
-```markdown
-[![Build](https://github.com/AndrewRedican/hyperfrontend/actions/workflows/core-ci.yml/badge.svg)](...)
-[![Coverage](https://codecov.io/gh/AndrewRedican/hyperfrontend/branch/main/graph/badge.svg?flag=<name>)](...)
-[![npm version](https://img.shields.io/npm/v/@hyperfrontend/<name>)](...)
-[![npm downloads](https://img.shields.io/npm/dm/@hyperfrontend/<name>)](...)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@hyperfrontend/<name>)](...)
-[![All Contributors](https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?...)](...)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](...)
-[![Node Version](https://img.shields.io/node/v/@hyperfrontend/<name>)](...)
-[![Tree-Shakeable](https://img.shields.io/badge/tree--shakeable-yes-brightgreen)](...)
-```
-
-**Required links:**
-
-```markdown
-• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<name>/)
-• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2F<name>)
-• 👉 See [**roadmap**](https://github.com/AndrewRedican/hyperfrontend/blob/main/roadmap/<name>/)
-```
-
-The guides link is checked by `lib-readme-structure` against `package.json`'s
-`name`, URL-encoded the way the site's own filter encodes it. It points at a
-filter rather than at guide slugs, so it is correct before any guide exists and
-starts surfacing guides the moment they are written.
+| Section                 | Budget                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| What is                 | Two short paragraphs: what it is; what it is not or who it is for.            |
+| Key Features            | 5 to 7 bullets, one clause each, what the reader gains.                       |
+| Architecture Highlights | Consumer-relevant guarantees only, then a link to the architecture page.      |
+| Why Use                 | 2 to 4 reasons, one short paragraph each.                                     |
+| Installation            | The command, plus an optional peer if any.                                    |
+| Quick Start             | One working example, one command to run it. Fuller setups: a link to a guide. |
+| API Overview            | Entry-point table and a link to the API reference.                            |
+| Limitations (optional)  | 2 to 4 bullets that would change an adoption decision, then a link.           |
+| Compatibility           | One sentence plus the generated tables.                                       |
+| Part of hyperfrontend   | Sibling form: monorepo line, docs link, related-package bullets only.         |
 
 ---
 
-## Sub-Module README Structure
+## Filler: Cut on Sight
 
-**Required (the floor):**
+- **Timeless only.** No test counts, adoption stats, "used in production by", dates or proof that it works.
+- **Lead-ins that restate what follows.** "The root entry is everything a spec imports: `describe`, `it`…" above a table or example that already shows it.
+- **Saying it twice.** A caveat or rationale appears in one section.
+- **Explaining how.** Name the capability; link the page that explains it.
+- **Internals and version archaeology.** Mechanisms, which Node minor added which primitive.
+- **Inventories.** Every modifier, option, member or matcher count listed inline.
+- **Padding clauses.** "...so you are not left to discover it one failing test at a time."
+- **Code names in prose.** Each needs a link (REFERENCE.md); say "mock functions", not `jest.fn`, unless the reader will type it.
 
-```markdown
-# moduleName
-
-One-sentence statement of what this module does and why it exists.
-```
-
-**Optional sections** — add when the module's complexity warrants them:
-
-| Section            | When to add                                     |
-| ------------------ | ----------------------------------------------- |
-| `## Overview`      | Multi-step pipelines, mermaid diagrams          |
-| `## Usage`         | Composition examples beyond a single signature  |
-| `## Configuration` | User-facing config knobs that need explanation  |
-| Semantic tables    | Taxonomies, decision rules, behavior contracts  |
-| Mermaid diagram    | Data flow, state machines, dependency relations |
-| `## Design`        | Trade-offs, invariants, "why this and not that" |
-
-**Do NOT include:**
-
-- `## API` table listing exports (the page renders this automatically below your README).
-- "Key Interfaces" code blocks duplicating typedoc-extractable types.
-- Installation, npm install commands (consumer-facing — belongs in library README).
+Test each sentence: delete it. Reader loses something they need now? Keep it.
 
 ---
 
-## Validation
+## Voice
 
-```bash
-npx nx lint <project>
-```
-
-| Rule                             | Enforces                                                                          |
-| -------------------------------- | --------------------------------------------------------------------------------- |
-| `lib-readme-structure`           | Library-root README sections, badges, links                                       |
-| `docs-site-secondary-entries`    | Every secondary entrypoint has a `page.tsx` + sidebar nav                         |
-| `lib-pkg-secondary-entry-readme` | Every secondary entrypoint has a README with H1 (matching basename) + description |
-| `docs-site-library-docs`         | Every library README has a corresponding docs-site page                           |
+- Address the reader's decision, not the author's achievement.
+- No em dashes: use a colon, semicolon, parentheses or a full stop.
+- No marketing adjectives. State the property.
 
 ---
 
 ## Checklist
 
-**Library README:**
-
-- [ ] All required badges present
-- [ ] Required sections in correct order
-- [ ] Documentation and roadmap links present
-- [ ] Consumer-facing content only
-- [ ] Passes `npx nx lint <project>`
-
-**Sub-module README:**
-
-- [ ] H1 matches the module folder name
-- [ ] One-sentence purpose under the H1
-- [ ] No manual API table — page renders the scoped API ref automatically
-- [ ] No installation / npm commands
-- [ ] Optional sections only when complexity warrants them
+- [ ] Every section the siblings carry is present
+- [ ] Description: one idea, no list, ≤2 banner lines (previewed)
+- [ ] `TAGLINES` entry when the manifest description wraps the banner
+- [ ] Each section within budget; no filler from the list above
+- [ ] Quick Start verified against the published package
+- [ ] No em dashes (`grep —`)
+- [ ] `npx nx lint:all` passes
