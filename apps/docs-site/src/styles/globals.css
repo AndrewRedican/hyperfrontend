@@ -3858,8 +3858,9 @@
 }
 
 /* ------------------------------------------------------------------------- */
-/* The landing page's chrome: the staged demo's accent as one colour, the
-   wordmark, and the navigation it tints. Unlayered on purpose: these rules dress
+/* The landing page's chrome and arc: the staged demo's accent as one colour,
+   the wordmark, the navigation it tints, and the discovery arc and its
+   player. Unlayered on purpose: these rules dress
    elements that also carry utilities, and the chrome's tint has to win. */
 
 /* The staged demo's accent, registered as a colour so the chrome eases from
@@ -3929,6 +3930,274 @@
   --nav-ink: color-mix(in srgb, var(--stage-accent) 45%, var(--color-white));
 }
 
+/* The arc's tiles. Each is positioned by an inline transform; what lives here
+   is how a tile moves between positions, and how it looks at rest, in focus,
+   under the pointer, and under the koi. */
+.arc-tile {
+  border-radius: 1rem;
+  border: 1px solid rgb(226 232 240 / 0.85);
+  background-color: rgb(255 255 255 / 0.74);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  transition:
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 420ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 420ms ease;
+}
+
+.dark .arc-tile {
+  border-color: rgb(51 65 85 / 0.75);
+  background-color: rgb(15 23 42 / 0.62);
+}
+
+.arc-tile:where(:hover, .is-lit) {
+  border-color: var(--color-primary-300);
+  background-color: rgb(239 246 255 / 0.88);
+}
+
+.dark .arc-tile:where(:hover, .is-lit) {
+  border-color: var(--color-primary-600);
+  background-color: rgb(30 41 59 / 0.78);
+}
+
+.arc-tile--focused {
+  border-color: color-mix(in srgb, var(--stage-accent) 55%, var(--color-primary-300));
+  box-shadow:
+    0 16px 36px -14px color-mix(in srgb, var(--stage-accent) 55%, transparent),
+    0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.dark .arc-tile--focused {
+  border-color: color-mix(in srgb, var(--stage-accent) 55%, var(--color-primary-600));
+}
+
+.arc-tile--leaving {
+  opacity: 0;
+}
+
+.arc-tile--jumping,
+.arc-tile--unsettled {
+  transition: none;
+}
+
+.arc-tile--jumping {
+  opacity: 0;
+}
+
+.arc-tile__select {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.arc-tile__select:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 3px;
+}
+
+/* The way out to the category: a small arrow in the corner, present on the
+   focused tile and on any tile the reader has reached, so choosing a tile
+   and leaving for its index never share one click. */
+.arc-tile__go {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 1;
+  display: inline-flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--color-primary-600);
+  color: var(--color-white);
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    background-color 150ms ease;
+}
+
+.arc-tile:where(:hover, :focus-within, .arc-tile--focused, .is-lit) .arc-tile__go,
+.arc-tile__go:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.arc-tile__go:hover {
+  background-color: var(--color-primary-500);
+}
+
+.arc-tile__go:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.discovery-strip {
+  scrollbar-width: none;
+}
+
+.discovery-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* The shelf cards under the arc light in the staged demo's hue, and light the
+   same way whether the pointer is over them or the koi is under them. */
+.discovery-card {
+  border-color: rgb(226 232 240 / 0.8);
+  background-color: rgb(255 255 255 / 0.7);
+  transition:
+    border-color 240ms ease,
+    background-color 240ms ease,
+    box-shadow 360ms ease;
+}
+
+.dark .discovery-card {
+  border-color: rgb(51 65 85 / 0.7);
+  background-color: rgb(15 23 42 / 0.55);
+}
+
+.discovery-card:where(:hover, .is-lit) {
+  border-color: color-mix(in srgb, var(--stage-accent) 62%, var(--color-slate-200));
+  background-color: color-mix(in srgb, var(--stage-accent) 10%, rgb(255 255 255 / 0.84));
+  box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--stage-accent) 55%, transparent);
+}
+
+.dark .discovery-card:where(:hover, .is-lit) {
+  border-color: color-mix(in srgb, var(--stage-accent) 58%, var(--color-slate-700));
+  background-color: color-mix(in srgb, var(--stage-accent) 12%, rgb(15 23 42 / 0.74));
+}
+
+.discovery-card__title {
+  color: var(--color-slate-900);
+  transition: color 240ms ease;
+}
+
+.dark .discovery-card__title {
+  color: var(--color-white);
+}
+
+.discovery-card:where(:hover, .is-lit) .discovery-card__title {
+  color: color-mix(in srgb, var(--stage-accent) 72%, var(--color-slate-900));
+}
+
+.dark .discovery-card:where(:hover, .is-lit) .discovery-card__title {
+  color: color-mix(in srgb, var(--stage-accent) 72%, var(--color-white));
+}
+
+/* The film's frame keeps its dark ground; only its edge and its glow take the hue. */
+.discovery-card--film,
+.dark .discovery-card--film {
+  border-color: rgb(15 23 42 / 0.12);
+  background-color: var(--color-slate-900);
+}
+
+.dark .discovery-card--film {
+  border-color: rgb(255 255 255 / 0.12);
+}
+
+.discovery-card--film:where(:hover, .is-lit),
+.dark .discovery-card--film:where(:hover, .is-lit) {
+  border-color: color-mix(in srgb, var(--stage-accent) 72%, transparent);
+  background-color: var(--color-slate-900);
+  box-shadow: 0 20px 44px -18px color-mix(in srgb, var(--stage-accent) 60%, transparent);
+}
+
+@keyframes discovery-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.discovery-panel__enter {
+  animation: discovery-enter 360ms ease-out both;
+}
+
+/* The player: the film in a sixteen-by-nine frame over a dimmed, blurred page. */
+.launch-film {
+  width: 100%;
+  max-width: min(1120px, 94vw);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.launch-film::backdrop {
+  background: rgb(2 6 23 / 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.launch-film[open] {
+  animation: discovery-enter 240ms ease-out both;
+}
+
+.launch-film__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: #000;
+  box-shadow:
+    0 30px 80px -20px rgb(2 6 23 / 0.75),
+    0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.launch-film__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.launch-film__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background-color: rgb(15 23 42 / 0.6);
+  color: var(--color-white);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background-color 150ms ease;
+}
+
+.launch-film__close:hover {
+  background-color: rgb(15 23 42 / 0.88);
+}
+
+.launch-film__close:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     transition: none;
@@ -3936,5 +4205,15 @@
 
   .site-header--staged {
     transition: none;
+  }
+
+  .arc-tile,
+  .arc-tile__go {
+    transition: none;
+  }
+
+  .discovery-panel__enter,
+  .launch-film[open] {
+    animation: none;
   }
 }

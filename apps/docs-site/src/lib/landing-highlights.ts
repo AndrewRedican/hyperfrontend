@@ -28,6 +28,32 @@ function primaryPackage(guide: GuideIndexEntry): string {
 }
 
 /**
+ * Order guides by the altitude of the package each one is about.
+ *
+ * The flagship SDK's material leads, then the levels beneath it in order;
+ * editorial priority orders a level's own guides, and the title settles the
+ * rest. This is the one order every landing surface reads guides in, so a
+ * shelf that shows a whole small corpus and one that features a few of a
+ * large one agree about what comes first.
+ *
+ * @param guides - Guide index entries in any order
+ * @returns The same entries, highest altitude first
+ *
+ * @example Ordering the tutorials
+ * ```typescript
+ * rankGuidesByAltitude(getGuideIndex().filter((guide) => guide.type === 'tutorial'))
+ * ```
+ */
+export function rankGuidesByAltitude(guides: GuideIndexEntry[]): GuideIndexEntry[] {
+  return [...guides].sort(
+    (a, b) =>
+      ecosystemRank(primaryPackage(a)) - ecosystemRank(primaryPackage(b)) ||
+      PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
+      a.title.localeCompare(b.title)
+  )
+}
+
+/**
  * Pick the guides the landing page opens with.
  *
  * The landing page is the site's most valuable navigation, so what it offers
@@ -47,12 +73,7 @@ function primaryPackage(guide: GuideIndexEntry): string {
  * ```
  */
 export function selectFeaturedGuides(guides: GuideIndexEntry[], limit: number): GuideIndexEntry[] {
-  const ranked = [...guides].sort(
-    (a, b) =>
-      ecosystemRank(primaryPackage(a)) - ecosystemRank(primaryPackage(b)) ||
-      PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
-      a.title.localeCompare(b.title)
-  )
+  const ranked = rankGuidesByAltitude(guides)
 
   const takenPerPackage = createMap<string, number>()
   const featured: GuideIndexEntry[] = []

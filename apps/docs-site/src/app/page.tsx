@@ -1,8 +1,8 @@
 import { DemoStageProvider } from '@/components/demo-stage'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { LandingDiscoverySection } from '@/components/landing-discovery-section'
 import { LandingHero } from '@/components/landing-hero'
-import { LandingLearnSection } from '@/components/landing-learn-section'
 import { StageAccent } from '@/components/landing/stage-accent'
 import { LightWell } from '@/components/light-well'
 import { getAllLibraryData } from '@/lib/docs-loader'
@@ -28,9 +28,9 @@ export default function HomePage() {
           {/* Hero Section - 50/50 Split Layout */}
           <LandingHero downloads={downloads === null ? null : { total: downloads.total, packages: downloads.packages.length }} />
 
-          {/* Guides, tutorials, demos, and articles as four distinct destinations, in water lit by the staged demo */}
+          {/* Tutorials, how-to guides, the launch film, demos, and articles on one arc, in water lit by the staged demo */}
           <LightWell>
-            <LandingLearnSection />
+            <LandingDiscoverySection />
           </LightWell>
 
           {/* Secondary Content - Collapsed for Landing */}
