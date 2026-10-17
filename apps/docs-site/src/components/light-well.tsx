@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useDemoStage } from '@/components/demo-stage'
 import { getDemoTheme } from '@/components/demos/demo-fallback-card'
+import { AmbientKoi } from '@/components/landing/ambient-koi'
 
 /** Props for {@link LightWell} */
 interface LightWellProps {
@@ -24,15 +25,18 @@ function cssTriple(rgb: string): string {
 }
 
 /**
- * The band under the hero, lit from above by whatever demo is on stage.
+ * The band under the hero, lit from above by whatever demo is on stage, with
+ * one koi somewhere in it.
  *
  * The hero is a bespoke surface and the documentation below it is not, so the
  * seam between them used to be a hairline rule with a flat grey section under
  * it. This carries the hero's identity a screen further down: a blue volume
  * with the staged demo's hue entering at the top as one broad bloom and a few
- * soft shafts, thinning to nothing well before the content ends. It is light
- * in water, not water: no simulation, no canvas, a handful of painted layers
- * moving on nothing but composited transforms and opacity.
+ * soft shafts, thinning to nothing well before the content ends, and under the
+ * surfaces in it a koi sketched in a few lines, swimming where it likes. It is
+ * light in water, not water: no simulation for the light, a handful of painted
+ * layers moving on composited transforms and opacity, and the koi on a canvas
+ * that rides along with the viewport.
  *
  * The staged demo's accent arrives as CSS custom properties, so a rotation
  * recolours the band by changing two strings on one element rather than
@@ -56,6 +60,7 @@ export function LightWell({ children }: LightWellProps) {
         <div className="light-well__beams light-well__beams--near" />
         <div className="light-well__beams light-well__beams--far" />
       </div>
+      <AmbientKoi accent={accent} />
       <div className="relative">{children}</div>
     </div>
   )
