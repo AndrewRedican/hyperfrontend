@@ -190,7 +190,7 @@ function resolveTarball(): PackedTarball {
  * @param args - The arguments as the child should receive them.
  * @returns The arguments to hand `execFileSync`, quoted only where a shell is in the way.
  */
-function shellSafe(args: readonly string[]): string[] {
+export function shellSafe(args: readonly string[]): string[] {
   // why: `npm` and `npx` are .cmd shims on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
   return process.platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
 }
@@ -268,7 +268,8 @@ export function copyWorkspace(pristineWorkspace: string, scenarioDir: string): v
     },
   })
   // why: The plugin resolves from the workspace root's node_modules; linking the pristine install makes each copy a real consumer of the packed tarball, per the cli.spec.ts symlink precedent.
-  symlinkSync(join(pristineWorkspace, 'node_modules'), join(scenarioDir, 'node_modules'), 'dir')
+  // why: a junction links a directory on Windows without the symlink privilege, and the type is ignored on POSIX.
+  symlinkSync(join(pristineWorkspace, 'node_modules'), join(scenarioDir, 'node_modules'), 'junction')
 }
 
 /**

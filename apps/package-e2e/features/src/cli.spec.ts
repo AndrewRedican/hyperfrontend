@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path'
 import { before as beforeAll, after as afterAll } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { shellSafe } from './support/nx-workspace'
 
 const require = createRequire(import.meta.url)
 
@@ -231,7 +232,8 @@ describe('@hyperfrontend/features hf CLI', () => {
         scratchDir = mkdtempSync(join(tmpdir(), 'hf-build-e2e-'))
         outDir = join(scratchDir, 'out')
         // why: The builder resolves the SDK and the tsc binary from the consumer's node_modules; linking this e2e project's install makes the scratch dir a real consumer of the packed tarball.
-        symlinkSync(join(import.meta.dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'dir')
+        // why: a junction links a directory on Windows without the symlink privilege, and the type is ignored on POSIX.
+        symlinkSync(join(import.meta.dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'junction')
         writeFileSync(
           join(scratchDir, 'feature.config.json'),
           // why: A strict subset of the display modes is the case that used to emit a shell its own declaration pass could not compile, so the fixture declares one to keep that path exercised by a real build.
@@ -318,7 +320,7 @@ export default contract
           consumerDir = mkdtempSync(join(tmpdir(), 'hf-shell-consumer-'))
           writeFileSync(join(consumerDir, 'package.json'), `${JSON.stringify({ name: 'shell-consumer', private: true, type: 'module' })}\n`)
           // why: The consumer gets the packed tarball and nothing else, no SDK and no linked node_modules, so every import below resolves through the shell's own published exports map the way it does for an external install.
-          execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)], {
+          execFileSync('npm', shellSafe(['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)]), {
             cwd: consumerDir,
             stdio: 'pipe',
             shell: process.platform === 'win32',
