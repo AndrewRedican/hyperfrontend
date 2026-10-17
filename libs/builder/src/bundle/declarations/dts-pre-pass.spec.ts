@@ -13,7 +13,7 @@ jest.mock('../dependencies/resolve-dep-entry', () => ({
   resolveDepEntry: jest.fn().mockReturnValue('/abs/repo/node_modules/<dep>/index.d.ts'),
 }))
 jest.mock('@hyperfrontend/logging', () => {
-  const actual = jest.requireActual('@hyperfrontend/logging')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return { ...actual, logger: { channel: jest.fn(() => mockChannel) } }
 })

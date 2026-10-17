@@ -10,7 +10,7 @@ import { writeOutputPackageJson } from './json/write'
 jest.mock('./json/reflect-files-allowlist', () => ({ reflectFilesAllowlist: jest.fn() }))
 jest.mock('./json/write', () => ({ writeOutputPackageJson: jest.fn() }))
 jest.mock('@hyperfrontend/project-scope/core', () => ({
-  ...jest.requireActual('@hyperfrontend/project-scope/core'),
+  ...jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core'),
   readJsonFile: jest.fn(),
 }))
 

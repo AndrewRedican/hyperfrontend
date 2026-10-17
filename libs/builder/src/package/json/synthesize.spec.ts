@@ -169,7 +169,7 @@ describe('synthesizePackageJson', () => {
     const result = synthesizePackageJson({ name: 'foo', packageManager: 'pnpm@9.0.0' }, makeContext(), formats, {
       inheritFieldsFrom: { from: sourcePath, fields: ['packageManager'] },
     })
-    expect(result.packageManager).toBe('npm@11.0.0')
+    expect(result['packageManager']).toBe('npm@11.0.0')
   })
 
   it('strips bundled deps from output dependencies when ctx.bundledDeps is non-empty', () => {

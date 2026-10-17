@@ -12,7 +12,7 @@ jest.mock('../../bundle/rollup/dispatch', () => ({
   resolveDefaultRollupWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs', execArgv: [] })),
 }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
-  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn() }
 })
 

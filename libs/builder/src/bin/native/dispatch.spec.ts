@@ -10,7 +10,7 @@ import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 jest.mock('@hyperfrontend/logging', () => {
-  const actual = jest.requireActual('@hyperfrontend/logging')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return {
     ...actual,

@@ -27,7 +27,7 @@ jest.mock('./declarations/generate-declarations', () => ({
   generateDeclarations: jest.fn().mockResolvedValue({ success: true, stdout: '', stderr: '' }),
 }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
-  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn() }
 })
 jest.mock('./dependencies/pre-pass', () => ({

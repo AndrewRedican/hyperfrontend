@@ -4,13 +4,12 @@ import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { beforeEach } from 'node:test'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { __mockChannel } from '@hyperfrontend/logging'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { flattenDeclarationPaths } from './flatten-paths'
 import { generateDeclarations } from './generate-declarations'
 import { resolveTscScript } from './resolve-tsc-script'
 jest.mock('@hyperfrontend/logging', () => {
-  const actual = jest.requireActual('@hyperfrontend/logging')
+  const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return {
     ...actual,
@@ -59,13 +58,15 @@ const TSC_SCRIPT = '/abs/repo/node_modules/typescript/bin/tsc'
 
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
 
-const mockChannel = __mockChannel as {
-  error: Mock
-  warn: Mock
-  info: Mock
-  debug: Mock
-  log: Mock
-}
+const mockChannel = jest.requireMock<{
+  __mockChannel: {
+    error: Mock
+    warn: Mock
+    info: Mock
+    debug: Mock
+    log: Mock
+  }
+}>('@hyperfrontend/logging').__mockChannel
 
 beforeEach(() => {
   ;(spawn as Mock).mockReset()
