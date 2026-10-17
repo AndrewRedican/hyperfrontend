@@ -157,6 +157,8 @@ module.exports = [
             '@hyperfrontend/demo-clock-shell',
             '@hyperfrontend/demo-heartbeat-shell',
             '@hyperfrontend/demo-koi-pond-shell',
+            // The koi pond's shared model, vendored the same way so the landing page can sketch its fish without a renderer
+            '@hyperfrontend/demo-koi-lib',
             // Third-party dependencies used by docs-site
             'mermaid',
             'next',

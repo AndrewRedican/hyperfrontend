@@ -17,6 +17,7 @@
   "dependencies": {
     "@hyperfrontend/demo-clock-shell": "file:vendor/hyperfrontend-demo-clock-shell-0.3.0.tgz",
     "@hyperfrontend/demo-heartbeat-shell": "file:vendor/hyperfrontend-demo-heartbeat-shell-0.2.0.tgz",
+    "@hyperfrontend/demo-koi-lib": "file:vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/demo-koi-pond-shell": "file:vendor/hyperfrontend-demo-koi-pond-shell-0.2.0.tgz",
     "@hyperfrontend/function-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
