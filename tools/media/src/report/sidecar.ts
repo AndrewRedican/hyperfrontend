@@ -1,22 +1,8 @@
 import type { AssetSidecar } from '../models/report'
-import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-
-/**
- * Digest a scene file so a stale asset can be told from a current one.
- *
- * Only the first sixteen hex characters are kept: the digest is compared, not
- * relied on for anything else, and a short one keeps the record readable.
- *
- * @param filePath - Absolute path of the scene file.
- * @returns A short hex digest.
- */
-export function hashScene(filePath: string): string {
-  return createHash('sha256').update(readFileSync(filePath)).digest('hex').slice(0, 16)
-}
 
 /**
  * Produce the current timestamp in the form the audit record stores it.

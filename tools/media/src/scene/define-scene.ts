@@ -32,6 +32,7 @@ export function defineScriptedScene<TConfig>(scene: ScriptedSceneInput<TConfig>)
     ...rest,
     kind: 'scripted',
     stageId: stage.id,
+    config,
     styles: (profile, theme) => stage.styles(config, profile, theme),
     durationMs: (profile) => stage.durationMs(config, profile),
     frame: (profile, theme, atMs) => stage.frame({ config, profile, theme, atMs }),

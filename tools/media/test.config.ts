@@ -18,6 +18,7 @@ const config: TestConfig = {
     'src/config/load-config.ts',
     'src/encode/runs.ts',
     'src/pipeline/variants.ts',
+    'src/scene/digest.ts',
     'src/scene/discover.ts',
     'src/sequence/**/*.ts',
     'src/stage/document.ts',

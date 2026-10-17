@@ -19,7 +19,7 @@ describe('discoverScenes', () => {
   it('loads a file that default-exports one scene', async () => {
     const filePath = workspace.writeScene('one.scene.ts', scriptedSceneSource("slug: 'one', outputs: ['gif'], profile: 'compact',"))
     expect(await discoverScenes(workspace.config.roots.sceneDir, 'one')).toEqual([
-      { filePath, scene: expect.objectContaining({ slug: 'one', kind: 'scripted' }) },
+      { filePath, scene: expect.objectContaining({ slug: 'one', kind: 'scripted' }), sharesFile: false },
     ])
   })
 
@@ -30,8 +30,8 @@ describe('discoverScenes', () => {
     )
     expect(await discoverScenes(workspace.config.roots.sceneDir, '')).toEqual(
       expect.arrayContaining([
-        { filePath, scene: expect.objectContaining({ slug: 'two-a' }) },
-        { filePath, scene: expect.objectContaining({ slug: 'two-b' }) },
+        { filePath, scene: expect.objectContaining({ slug: 'two-a' }), sharesFile: true },
+        { filePath, scene: expect.objectContaining({ slug: 'two-b' }), sharesFile: true },
       ])
     )
   })

@@ -5,7 +5,8 @@ import { existsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { formatBytes } from '../../lib/format-bytes'
 import { unconfiguredThemes, variantGifOptions, variantsFor } from '../../pipeline/variants'
-import { hashScene, readSidecar } from '../../report/sidecar'
+import { readSidecar } from '../../report/sidecar'
+import { digestScene } from '../../scene/digest'
 import { discoverScenes } from '../../scene/discover'
 import { mergeGifOptions } from '../../scene/merge-options'
 import { resolveProfile } from '../../stage/profiles'
@@ -146,7 +147,8 @@ function checkVariants(
 export async function runCheck(config: ResolvedMediaConfig, slug: string): Promise<CheckOutcome> {
   const scenes = await discoverScenes(config.roots.sceneDir, slug)
   const issues: CheckIssue[] = []
-  for (const { filePath, scene } of scenes) {
+  for (const loaded of scenes) {
+    const { scene } = loaded
     const stem = scene.asset ?? 'hero'
     const sceneDir = join(config.roots.outputDir, scene.slug)
     const rerun = `Run: nx media tool-media --scene=${scene.slug}`
@@ -167,7 +169,7 @@ export async function runCheck(config: ResolvedMediaConfig, slug: string): Promi
       issues.push(...checkStills(sceneDir, scene.slug, sidecar.stills ?? [], rerun))
     }
 
-    if (hashScene(filePath) !== sidecar.sceneHash) {
+    if (digestScene(loaded) !== sidecar.sceneHash) {
       issues.push({ slug: scene.slug, reason: `the scene changed since ${sidecar.asset} was produced. ${rerun}` })
     }
   }
