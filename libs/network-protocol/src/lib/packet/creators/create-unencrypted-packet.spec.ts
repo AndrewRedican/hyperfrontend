@@ -1,10 +1,11 @@
+import type { Data } from '../../data/model'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createUnencryptedPacket } from './create-unencrypted-packet'
 
 describe('createUnencryptedPacket', () => {
   const validOrigin = '550e8400-e29b-41d4-a716-446655440000'
   const validTarget = '641c7fcb-d7dd-4a18-ab50-ce797192ed82'
-  const validData = {
+  const validData: Data<string> = {
     pid: '5815e1c3-4083-4d3c-8795-96c4c2965f2d',
     id: '8b115bcd-d59b-4834-9290-b9a3a46df988',
     sequence: 1,
@@ -37,7 +38,7 @@ describe('createUnencryptedPacket', () => {
   it('throws error when data is invalid', () => {
     const invalidData = { invalid: 'data' }
 
-    expect(() => createUnencryptedPacket(validOrigin, validTarget, invalidData as unknown)).toThrow(
+    expect(() => createUnencryptedPacket(validOrigin, validTarget, invalidData as unknown as Data)).toThrow(
       'Cannot create a packet without a valid data value'
     )
   })

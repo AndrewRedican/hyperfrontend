@@ -6,7 +6,7 @@ import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtur
 
 // why: `create-data-factory` binds `getSchema` at link time, so nothing written onto the module namespace can reach it. A replacement that calls through is what a spy would have been.
 jest.mock('./get-schema', () => {
-  const actual = jest.requireActual('./get-schema') as { getSchema: unknown }
+  const actual = jest.requireActual<typeof import('./get-schema')>('./get-schema')
   return { ...actual, getSchema: jest.fn(actual.getSchema) }
 })
 

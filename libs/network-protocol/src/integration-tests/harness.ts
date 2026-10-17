@@ -131,7 +131,7 @@ export async function waitFor(condition: () => boolean, attempts = 200): Promise
     if (condition()) {
       return
     }
-    await createPromise((resolve) => setTimeout(resolve, 25))
+    await createPromise<void>((resolve) => setTimeout(resolve, 25))
   }
   throw createError('Timed out waiting for condition')
 }
