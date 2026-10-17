@@ -3859,8 +3859,8 @@
 
 /* ------------------------------------------------------------------------- */
 /* The landing page's chrome and arc: the staged demo's accent as one colour,
-   the wordmark, the navigation it tints, and the discovery arc and its
-   player. Unlayered on purpose: these rules dress
+   the wordmark, the navigation it tints, the discovery arc and its player,
+   and the architecture figure. Unlayered on purpose: these rules dress
    elements that also carry utilities, and the chrome's tint has to win. */
 
 /* The staged demo's accent, registered as a colour so the chrome eases from
@@ -4198,6 +4198,169 @@
   outline-offset: 2px;
 }
 
+/* The architecture figure's palette, resolved per theme so the drawing reads
+   on either ground; the parts dim together when one is lifted. */
+.arch-figure {
+  --arch-surface: rgb(255 255 255 / 0.9);
+  --arch-chrome: var(--color-slate-100);
+  --arch-stroke: var(--color-slate-300);
+  --arch-bar: var(--color-slate-200);
+  --arch-bar-feature: var(--color-slate-200);
+  --arch-muted: var(--color-slate-500);
+  --arch-accent: var(--color-primary-600);
+  --arch-accent-soft: rgb(37 99 235 / 0.16);
+  font-family: var(--font-sans);
+}
+
+.dark .arch-figure {
+  --arch-surface: rgb(15 23 42 / 0.72);
+  --arch-chrome: rgb(30 41 59 / 0.9);
+  --arch-stroke: var(--color-slate-700);
+  --arch-bar: var(--color-slate-700);
+  --arch-bar-feature: var(--color-slate-600);
+  --arch-muted: var(--color-slate-400);
+  --arch-accent: var(--color-primary-400);
+  --arch-accent-soft: rgb(96 165 250 / 0.18);
+}
+
+.arch-window {
+  fill: var(--arch-surface);
+  stroke: var(--arch-stroke);
+  stroke-width: 1.2;
+}
+
+.arch-chrome {
+  fill: var(--arch-chrome);
+}
+
+.arch-url {
+  fill: var(--arch-surface);
+  stroke: var(--arch-stroke);
+  stroke-width: 1;
+}
+
+.arch-bar {
+  fill: var(--arch-bar);
+}
+
+.arch-bar--feature {
+  fill: var(--arch-bar-feature);
+}
+
+.arch-caps {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--arch-muted);
+}
+
+.arch-mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--arch-muted);
+}
+
+.arch-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--arch-accent);
+}
+
+.arch-note {
+  font-size: 10.5px;
+  font-weight: 500;
+  fill: var(--arch-muted);
+}
+
+.arch-shell {
+  fill: none;
+  stroke: var(--arch-accent);
+  stroke-width: 1.6;
+}
+
+.arch-pill {
+  fill: var(--arch-surface);
+  stroke: var(--arch-accent);
+  stroke-width: 1.4;
+}
+
+.arch-mark {
+  color: var(--arch-accent);
+  stroke: currentColor;
+}
+
+.arch-boundary {
+  fill: none;
+  stroke: var(--arch-stroke);
+  stroke-width: 1.4;
+  stroke-dasharray: 5 4;
+}
+
+.arch-channel {
+  fill: none;
+  stroke: var(--arch-accent);
+  stroke-width: 1.6;
+}
+
+.arch-port {
+  fill: var(--arch-surface);
+  stroke: var(--arch-accent);
+  stroke-width: 1.6;
+}
+
+.arch-node {
+  fill: var(--arch-surface);
+  stroke: var(--arch-accent);
+  stroke-width: 1.6;
+}
+
+.arch-pulse {
+  fill: none;
+  stroke: var(--arch-accent);
+  stroke-width: 1.2;
+  opacity: 0;
+}
+
+.arch-lock {
+  fill: var(--arch-surface);
+  stroke: var(--arch-accent);
+  stroke-width: 1.3;
+}
+
+.arch-msg {
+  fill: var(--arch-accent);
+}
+
+.arch-part {
+  transition:
+    opacity 300ms ease,
+    filter 300ms ease;
+}
+
+.arch-figure[data-highlight] .arch-part {
+  opacity: 0.42;
+}
+
+.arch-figure[data-highlight='host'] .arch-part--host,
+.arch-figure[data-highlight='shell'] .arch-part--shell,
+.arch-figure[data-highlight='broker'] .arch-part--broker {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--arch-accent-soft));
+}
+
+/* On a phone the figure is drawn at under half its size, where its labels
+   would be a few pixels tall; the drawing keeps its shapes and the legend
+   under it keeps the words. */
+@media (max-width: 639px) {
+  .arch-caps,
+  .arch-mono,
+  .arch-label,
+  .arch-note {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     transition: none;
@@ -4208,7 +4371,8 @@
   }
 
   .arc-tile,
-  .arc-tile__go {
+  .arc-tile__go,
+  .arch-part {
     transition: none;
   }
 
