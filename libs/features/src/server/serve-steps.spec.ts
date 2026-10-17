@@ -196,7 +196,7 @@ describe('negotiateEncoding', () => {
     expect(negotiateEncoding(undefined)).toBeNull()
   })
 
-  it.each<[string, 'br' | 'gzip' | null]>([
+  it.each([
     ['gzip, deflate, br', 'br'],
     ['gzip', 'gzip'],
     ['br;q=0, gzip', 'gzip'],
@@ -210,7 +210,7 @@ describe('negotiateEncoding', () => {
     ['br;Q=0, gzip', 'gzip'],
     [', ,, gzip', 'gzip'],
     ['identity', null],
-  ])('negotiates %j to %j', (header, expected) => {
+  ] satisfies [string, 'br' | 'gzip' | null][])('negotiates %j to %j', (header: string, expected: 'br' | 'gzip' | null) => {
     expect(negotiateEncoding(header)).toBe(expected)
   })
 })

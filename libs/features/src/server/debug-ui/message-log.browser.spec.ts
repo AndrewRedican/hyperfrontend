@@ -1,3 +1,4 @@
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createMessageLog } from './message-log'
 
@@ -51,7 +52,7 @@ describe('createMessageLog', () => {
   it('switches view when a toolbar button is clicked', () => {
     const log = createMessageLog()
     log.append({ direction: 'incoming', raw: { a: 1 } })
-    const rawButton = [...log.element.querySelectorAll('button')].find((b) => b.textContent === 'raw')
+    const rawButton = from(log.element.querySelectorAll('button')).find((b) => b.textContent === 'raw')
     rawButton?.click()
     expect(log.element.textContent).toEqual(expect.stringContaining('{"a":1}'))
   })

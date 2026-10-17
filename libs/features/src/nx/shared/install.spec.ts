@@ -18,14 +18,14 @@ function createTree(lockfiles: readonly string[]): Tree {
 }
 
 describe('detectPackageManager', () => {
-  it.each<[string[], string]>([
+  it.each([
     [['package-lock.json'], 'npm'],
     [['yarn.lock'], 'yarn'],
     [['pnpm-lock.yaml'], 'pnpm'],
     [['bun.lock'], 'bun'],
     [['bun.lockb'], 'bun'],
     [[], 'npm'],
-  ])('detects %j as %s', (lockfiles, expected) => {
+  ] satisfies [string[], string][])('detects %j as %s', (lockfiles: string[], expected: string) => {
     expect(detectPackageManager((relativePath) => lockfiles.includes(relativePath))).toBe(expected)
   })
 

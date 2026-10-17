@@ -51,9 +51,9 @@ const openViaWire = (frame: HTMLIFrameElement): void => {
   // why: The shell holds its handshake until the cross-origin frame reports load — jsdom never fires it for an unfetched URL, so the feature document's load is played explicitly.
   frame.dispatchEvent(new Event('load'))
   jest.advanceTimersByTime(500)
-  const request = post.mock.calls.map((call) => call[0] as { type: string }).find((action) => action.type === REQUEST_CONNECTION) as
-    | { processId: string }
-    | undefined
+  const request = post.mock.calls
+    .map((call) => call[0] as { type: string; processId: string })
+    .find((action) => action.type === REQUEST_CONNECTION)
   if (!request) throw new Error('The shell never sent a connection request.')
   window.dispatchEvent(
     new MessageEvent('message', {
