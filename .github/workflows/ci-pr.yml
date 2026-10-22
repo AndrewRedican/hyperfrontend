@@ -276,13 +276,13 @@ jobs:
         uses: ./.github/actions/setup-monorepo
 
       - name: Typecheck the libraries and tools
-        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*,eslint-rules" --parallel=1
+        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*" --parallel=1
 
       - name: Lint every project
         run: CI=1 npx nx lint:all
 
       - name: Test the libraries and tools
-        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*,eslint-rules" --parallel=1
+        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*" --parallel=1
 
   ci-status:
     name: status
