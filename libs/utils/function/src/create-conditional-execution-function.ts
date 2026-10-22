@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 /**
  * Creates a wrapper function that only executes the wrapped function if the condition function returns true.
  * The wrapped function is called with the receiver the wrapper was invoked on, so a method wrapped in place
