@@ -4,7 +4,7 @@
  *
  * @module @hyperfrontend/builder/bundle/dependencies/worker
  */
-/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
+/* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 /* istanbul ignore file -- @preserve self-execution Node script; logic lives in job-runner.ts */
 import type { PrePassWorkerJob } from './job-runner'
 import { runPrePassWorkerJob } from './job-runner'

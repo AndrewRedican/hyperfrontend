@@ -1,6 +1,6 @@
-const baseConfig = require('../../eslint.base.config.cjs')
+import baseConfig from '../../lint.base.config.ts'
 
-module.exports = [
+export default [
   ...baseConfig,
   {
     files: ['**/*.ts'],
@@ -12,7 +12,7 @@ module.exports = [
   {
     files: ['**/*.json'],
     rules: {
-      '@nx/dependency-checks': [
+      'projects/dependency-checks': [
         'error',
         {
           ignoredDependencies: [
@@ -47,12 +47,9 @@ module.exports = [
             '@rollup/rollup-win32-x64-gnu',
             '@rollup/rollup-win32-x64-msvc',
           ],
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+          ignoredFiles: ['{projectRoot}/lint.config.ts'],
         },
       ],
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
     },
   },
 ]

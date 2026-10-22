@@ -1,4 +1,4 @@
-/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
+/* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { InjectWorkerJob, InjectWorkerReport } from './types'
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'

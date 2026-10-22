@@ -8,7 +8,7 @@ import { constructLicenseUrl } from './license-url'
 const log = logger.channel('builder:package:licenses')
 
 const matchPattern = (content: string, source: string): boolean =>
-  // eslint-disable-next-line workspace/no-unsafe-regex -- @preserve: SPDX patterns are static, vetted strings declared inline
+  // lint-disable-next-line workspace/no-unsafe-regex -- @preserve: SPDX patterns are static, vetted strings declared inline
   createRegExp(source, 'i').test(content)
 
 const findLicenseFile = (packageDir: string): string | null => {
