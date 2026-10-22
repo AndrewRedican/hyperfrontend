@@ -199,7 +199,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       return _root
     },
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     read(filePath: string, encoding?: BufferEncoding): any {
       const normalPath = normalizeFilePath(filePath)
 

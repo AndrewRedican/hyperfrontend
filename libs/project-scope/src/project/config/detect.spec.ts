@@ -89,7 +89,7 @@ describe('getConfigPaths', () => {
   })
 
   it('returns empty array for unknown type', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     const paths = getConfigPaths('unknown' as any)
 
     expect(paths).toEqual([])
@@ -186,7 +186,7 @@ describe('detectConfigs - edge cases', () => {
   })
 
   it('handles unknown config type gracefully', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     const configs = detectConfigs(MINIMAL_PROJECT, ['unknown-type' as any])
 
     expect(configs).toEqual([])
@@ -222,7 +222,7 @@ describe('findConfigFile - edge cases', () => {
   })
 
   it('returns null for unknown config type', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     const result = findConfigFile(MINIMAL_PROJECT, 'unknown' as any)
 
     expect(result).toBeNull()
