@@ -1,0 +1,7 @@
+{
+  "name": "@hyperfrontend/lint",
+  "version": "0.0.0",
+  "description": "The workspace linter, written from zero: its own parsers, no external packages, the behaviour of the enabled rules as its only target.",
+  "private": true,
+  "type": "module"
+}

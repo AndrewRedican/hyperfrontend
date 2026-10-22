@@ -1,0 +1,5 @@
+{
+  "name": "lib-same",
+  "projectType": "library",
+  "targets": { "build": { "options": { "iife": { "entry": "." }, "umd": { "entry": "." } } }, "publish": {} }
+}

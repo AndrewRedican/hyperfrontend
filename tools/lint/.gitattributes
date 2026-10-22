@@ -1,0 +1,3 @@
+# These fixtures test CRLF line breaks, so Git keeps their bytes as written.
+src/code/__fixtures__/crlf.ts -text
+src/markdown/__fixtures__/crlf.md -text

@@ -1,0 +1,1 @@
+{ "headers": [{ "headers": { "content-security-policy": "frame-ancestors 'self' https://example.invalid" } }] }

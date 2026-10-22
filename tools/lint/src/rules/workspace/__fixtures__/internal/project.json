@@ -1,0 +1,7 @@
+{
+  "name": "tool-fixture",
+  "projectType": "library",
+  "targets": {
+    "build": {}
+  }
+}

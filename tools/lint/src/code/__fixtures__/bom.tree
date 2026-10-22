@@ -1,0 +1,5 @@
+Program 1-15 sourceType="module"
+  VariableDeclaration 1-14 kind=const
+    VariableDeclarator 7-14
+      Identifier 7-10 name="bom"
+      Literal 13-14 raw="1"

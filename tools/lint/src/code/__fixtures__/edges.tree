@@ -1,0 +1,137 @@
+Program 0-590 sourceType="module"
+  ClassDeclaration 0-85
+    Identifier 6-9 name="Foo"
+    ClassBody 10-85
+      StaticBlock 14-60
+        ExpressionStatement 40-56
+          AssignmentExpression 40-56 operator="="
+            MemberExpression 40-49
+              Identifier 40-43 name="Foo"
+              Identifier 44-49 name="ready"
+            Literal 52-56 raw="true"
+      PropertyDefinition 63-83 static=true
+        Identifier 70-75 name="ready"
+        Literal 78-83 raw="false"
+  VariableDeclaration 86-183 kind=const
+    VariableDeclarator 92-183
+      Identifier 92-100 name="settings"
+      ObjectExpression 103-183
+        Property 105-131 kind=get
+          Identifier 109-113 name="name"
+          FunctionExpression 114-131
+            BlockStatement 117-131
+              ReturnStatement 119-129
+                Literal 126-129 raw="'a'"
+        Property 133-152 kind=set
+          Identifier 137-141 name="name"
+          FunctionExpression 142-152
+            Identifier 143-148 name="value"
+            BlockStatement 150-152
+        Property 154-163 kind=init method=true
+          Identifier 154-157 name="run"
+          FunctionExpression 158-163
+            BlockStatement 161-163
+        Property 165-181 kind=init method=true
+          Identifier 172-175 name="gen"
+          FunctionExpression 176-181 async=true generator=true
+            BlockStatement 179-181
+  FunctionDeclaration 184-222
+    Identifier 193-198 name="plain"
+    BlockStatement 201-222
+      ExpressionStatement 205-212
+        YieldExpression 205-212
+          Literal 211-212 raw="1"
+      ExpressionStatement 215-220
+        Identifier 215-220 name="yield"
+  VariableDeclaration 223-256 kind=const
+    VariableDeclarator 229-256
+      Identifier 229-236 name="literal"
+      TSTypeAssertion 239-256
+        TSTypeReference 240-245
+          Identifier 240-245 name="const"
+        ObjectExpression 246-256
+          Property 248-254 kind=init
+            Identifier 248-251 name="bar"
+            Literal 253-254 raw="5"
+  VariableDeclaration 257-293 kind=const
+    VariableDeclarator 263-293
+      Identifier 263-268 name="typed"
+      TSAsExpression 271-293
+        Identifier 271-272 name="b"
+        TSTypeReference 276-293
+          TSQualifiedName 276-285
+            Identifier 276-281 name="const"
+            Identifier 282-285 name="Foo"
+          TSTypeParameterInstantiation 285-293
+            TSNumberKeyword 286-292
+  VariableDeclaration 294-337 kind=const
+    VariableDeclarator 300-337
+      Identifier 300-304 name="made"
+      NewExpression 307-337
+        TSAsExpression 312-334
+          TSInstantiationExpression 312-327
+            Identifier 312-319 name="Generic"
+            TSTypeParameterInstantiation 319-327
+              TSStringKeyword 320-326
+          TSTypeReference 331-334
+            Identifier 331-334 name="Foo"
+  VariableDeclaration 338-380 kind=const
+    VariableDeclarator 344-380
+      Identifier 344-348 name="kept"
+      TSSatisfiesExpression 351-380
+        TSInstantiationExpression 351-366
+          Identifier 351-358 name="Generic"
+          TSTypeParameterInstantiation 358-366
+            TSStringKeyword 359-365
+        TSTypeReference 377-380
+          Identifier 377-380 name="Foo"
+  ClassDeclaration 381-444
+    Decorator 381-426
+      CallExpression 382-426
+        Identifier 382-387 name="State"
+        TSTypeParameterInstantiation 387-403
+          TSTypeReference 388-402
+            Identifier 388-395 name="Partial"
+            TSTypeParameterInstantiation 395-402
+              TSTypeReference 396-401
+                Identifier 396-401 name="Model"
+        ObjectExpression 405-425
+          Property 407-423 kind=init
+            Identifier 407-411 name="name"
+            Literal 413-423 raw="'settings'"
+    Identifier 433-441 name="Settings"
+    ClassBody 442-444
+  ClassDeclaration 445-473
+    Decorator 445-458
+      TSInstantiationExpression 446-458
+        Identifier 446-451 name="Plain"
+        TSTypeParameterInstantiation 451-458
+          TSTypeReference 452-457
+            Identifier 452-457 name="Model"
+    Identifier 465-470 name="Other"
+    ClassBody 471-473
+  ExpressionStatement 474-485
+    AssignmentExpression 474-485 operator="="
+      MemberExpression 474-481
+        Identifier 474-478 name="𠮷𩸽"
+        Identifier 479-481 name="𠮷"
+      Literal 484-485 raw="1"
+  ExpressionStatement 486-493
+    TaggedTemplateExpression 486-493
+      Identifier 486-489 name="tag"
+      TemplateLiteral 489-493
+        TemplateElement 489-493 tail=true raw="\\8"
+  ExpressionStatement 494-495
+    Literal 494-495 raw="1"
+  ExpressionStatement 496-508
+    Literal 496-508 raw="'use strict'"
+  FunctionDeclaration 509-570
+    Identifier 518-526 name="prologue"
+    BlockStatement 529-570
+      ExpressionStatement 533-549 directive="use strict"
+        Literal 533-545 raw="'use strict'"
+      ExpressionStatement 549-568
+        Literal 550-567 raw="'not a directive'"
+  BlockStatement 571-589
+    ExpressionStatement 575-587
+      Literal 575-587 raw="'in a block'"
