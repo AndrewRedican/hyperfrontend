@@ -4,7 +4,7 @@
  *
  * @module @hyperfrontend/builder/bin/native/worker
  */
-/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
+/* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 /* istanbul ignore file -- @preserve self-execution Node script; logic lives in job-runner.ts */
 import type { InjectWorkerJob } from './types'
 import { runInjectWorkerJob } from './job-runner'

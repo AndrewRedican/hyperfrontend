@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-function */
+/* lint-disable typescript/no-unused-vars */
+/* lint-disable typescript/no-explicit-any */
+/* lint-disable typescript/no-empty-function */
 import type { Mock } from '@hyperfrontend/testing'
 import type { DepthConfig } from './models'
 import { afterEach, beforeEach } from 'node:test'

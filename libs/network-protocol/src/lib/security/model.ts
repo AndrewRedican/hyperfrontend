@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { PacketOpener, PacketSealer } from '../packet/model'
 
 export type { PacketSealer, PacketOpener }

@@ -39,8 +39,6 @@
       "Bash(npm update *)",
       "Bash(npm -v)",
       "Bash(npm --version)",
-      "Bash(npx eslint *)",
-      "Bash(NODE_OPTIONS='--max-old-space-size=8192' npx eslint *)",
       "Bash(npx prettier *)",
       "Bash(npx jest *)",
       "Bash(npx tsc *)",

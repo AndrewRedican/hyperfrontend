@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/weak-map
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _WeakMap = globalThis.WeakMap
 const _Reflect = globalThis.Reflect

@@ -24,5 +24,5 @@ export type Status = 'success' | 'fail' | 'skipped'
 export type Result = Promise<Status>
 
 /** Async process function that returns a status */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type Process<T extends any[] = []> = (...args: T) => Result

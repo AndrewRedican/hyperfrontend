@@ -1,0 +1,5 @@
+{
+  "name": "lib-empty",
+  "projectType": "library",
+  "targets": { "build": { "options": { "iife": { "entry": "" }, "umd": { "entry": "." } } }, "publish": {} }
+}

@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/date
  */
-/* eslint-disable jsdoc/require-param */
+/* lint-disable jsdoc/require-param */
 
 const _Date = globalThis.Date
 const _Reflect = globalThis.Reflect

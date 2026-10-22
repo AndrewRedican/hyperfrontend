@@ -10,7 +10,7 @@ import { normalizePath } from '@hyperfrontend/project-scope/core/path'
  *
  * Matches ESC[...X where ... is up to 20 digits/semicolons and X is a letter.
  */
-// eslint-disable-next-line no-control-regex -- Required to match ANSI escape codes
+// lint-disable-next-line no-control-regex -- Required to match ANSI escape codes
 const ANSI_PATTERN = /\x1B\[[0-9;]{0,20}[a-zA-Z]/g
 
 /**
@@ -117,10 +117,10 @@ function findOwner(file: string, projectRoots: Map<string, string>): string | nu
 }
 
 /**
- * Select the failed projects that own none of the parsed ESLint errors.
+ * Select the failed projects that own none of the parsed lint errors.
  *
  * A lint task that fails without a single error to show for it did not lint:
- * ESLint or a rule threw, or the process was killed.
+ * the linter or a rule threw, or the process was killed.
  *
  * @param failedProjects - Projects whose lint task failed
  * @param entries - Parsed lint entries

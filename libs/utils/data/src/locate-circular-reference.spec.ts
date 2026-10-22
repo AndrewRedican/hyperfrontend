@@ -142,7 +142,7 @@ describe('locateCircularReference - with extended iterable class types', () => {
   afterEach(() => deregisterIterableClass())
 
   it('returns a list of circular references are encountered', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     const map = new Map<string, Map<string, any>>()
     map.set('emerald', map)
     map.set('ruby', map)

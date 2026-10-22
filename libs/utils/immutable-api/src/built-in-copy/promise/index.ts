@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/promise
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _Promise = globalThis.Promise
 const _Reflect = globalThis.Reflect
@@ -54,7 +54,7 @@ export const promiseAny = _Promise.any.bind(_Promise)
  * (Safe copy) Creates a Promise along with its resolve and reject functions.
  * Note: Available only in ES2024+ environments.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export const promiseWithResolvers = (_Promise as any).withResolvers?.bind(_Promise)
 
 /**

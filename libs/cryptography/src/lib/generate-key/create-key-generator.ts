@@ -42,7 +42,7 @@ export function createKeyGenerator(
     return subtle.deriveKey(
       {
         name: keyStretchingConfig.name,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         salt: salt as any,
         iterations: keyStretchingConfig.iterations,
         hash: keyStretchingConfig.hash,

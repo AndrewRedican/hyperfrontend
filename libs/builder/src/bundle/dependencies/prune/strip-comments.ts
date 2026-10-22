@@ -22,8 +22,8 @@ export interface CommentStripResult {
  */
 const PRESERVE = /@(?:__PURE__|__NO_SIDE_EFFECTS__|license|preserve|cc_on)|^\s*\/[*/]!|#__PURE__/
 
-// why: an eslint pragma is internal tooling residue that must never ship, even when its description text happens to contain a preserved marker like '@preserve'; it takes precedence over PRESERVE.
-const ESLINT_PRAGMA = /^\/[*/]\s*eslint-(?:disable|enable)/
+// why: a lint pragma (the workspace linter's `lint-disable`/`lint-enable` or ESLint's `eslint-disable`/`eslint-enable` in third-party code) is internal tooling residue that must never ship, even when its description text happens to contain a preserved marker like '@preserve'; it takes precedence over PRESERVE.
+const LINT_PRAGMA = /^\/[*/]\s*(?:es)?lint-(?:disable|enable)/
 
 // why: tokens after which a `/` is the division operator, not a regex opener. After every other token (operators, `(`, `,`, `=`, keywords like `return`/`typeof`, or start of input) a `/` begins a regex, so the scanner must re-lex it as a whole regex literal — otherwise a `//` or `/*` *inside the regex body* (e.g. `/https?:\/\//`, `str.split(/\//g)`) is mis-scanned as comment trivia and the splice corrupts the regex.
 const VALUE_END_TOKENS: ReadonlySet<ts.SyntaxKind> = createSet<ts.SyntaxKind>([
@@ -139,8 +139,9 @@ const removalRange = (text: string, comment: CommentRange): CommentRange => {
 
 /**
  * Strips ordinary comments from `source`, preserving `@__PURE__` /
- * `@__NO_SIDE_EFFECTS__` and legal comments. `eslint-disable`/`eslint-enable`
- * pragmas are always removed, even when their text contains a preserved marker.
+ * `@__NO_SIDE_EFFECTS__` and legal comments. `lint-disable`/`lint-enable` and
+ * `eslint-disable`/`eslint-enable` pragmas are always removed, even when their
+ * text contains a preserved marker.
  * Returns the rewritten text, or `null` when there is nothing removable (leaving
  * the file untouched and the pass idempotent on a second run).
  *
@@ -156,7 +157,7 @@ const removalRange = (text: string, comment: CommentRange): CommentRange => {
 export const stripComments = (source: string): string | null => {
   const removable = collectComments(source).filter((range) => {
     const text = source.slice(range.start, range.end)
-    return ESLINT_PRAGMA.test(text) || !PRESERVE.test(text)
+    return LINT_PRAGMA.test(text) || !PRESERVE.test(text)
   })
   if (removable.length === 0) return null
   const ranges = removable.map((comment) => removalRange(source, comment))
@@ -167,8 +168,8 @@ export const stripComments = (source: string): string | null => {
 }
 
 /**
- * Comment Strip: removes ordinary comments — source banners, `eslint-disable`
- * pragmas, and full JSDoc — from every surviving `_dependencies/**` runtime chunk
+ * Comment Strip: removes ordinary comments — source banners, `lint-disable` and
+ * `eslint-disable` pragmas, and full JSDoc — from every surviving `_dependencies/**` runtime chunk
  * while preserving `@__PURE__` / `@__NO_SIDE_EFFECTS__` annotations and legal
  * comments.
  *

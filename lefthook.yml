@@ -13,6 +13,9 @@ output:
 pre-commit:
   parallel: false
   commands:
+    binary-budget:
+      run: node tools/workspace/scripts/check-binary-budget.mjs --staged --allow-over-budget
+      fail_text: 'A staged file is over the 2,000,000-byte limit. Unstage it and keep it out of Git, or shrink it.'
     format:
       run: npx nx format:write
       stage_fixed: true
@@ -59,3 +62,7 @@ pre-push:
         Please check the output above for details.
         If you need to skip versioning temporarily, use: git push --no-verify
         Note: CI will fail if versions are not properly applied.
+    binary-budget:
+      priority: 1
+      run: node tools/workspace/scripts/check-binary-budget.mjs --allow-over-budget
+      fail_text: 'A commit on this branch adds a file over the 2,000,000-byte limit, which CI rejects. Drop it from the branch history before pushing.'

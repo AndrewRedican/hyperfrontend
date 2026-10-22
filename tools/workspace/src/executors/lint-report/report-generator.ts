@@ -64,11 +64,11 @@ function sortFilesForQuickWins(files: FileStats[]): FileStats[] {
  */
 function findRelevantSkills(workspaceRoot: string): string[] {
   const skills: string[] = []
-  const codingSkill = join(workspaceRoot, '.github/skills/coding/SKILL.md')
-  const eslintSkill = join(workspaceRoot, '.github/skills/eslint-rules/SKILL.md')
+  const codingSkill = join(workspaceRoot, '.claude/skills/coding/SKILL.md')
+  const lintRulesSkill = join(workspaceRoot, '.claude/skills/lint-rules/SKILL.md')
 
-  if (existsSync(codingSkill)) skills.push('.github/skills/coding/SKILL.md')
-  if (existsSync(eslintSkill)) skills.push('.github/skills/eslint-rules/SKILL.md')
+  if (existsSync(codingSkill)) skills.push('.claude/skills/coding/SKILL.md')
+  if (existsSync(lintRulesSkill)) skills.push('.claude/skills/lint-rules/SKILL.md')
 
   return skills
 }
@@ -76,15 +76,15 @@ function findRelevantSkills(workspaceRoot: string): string[] {
 /**
  * Find documentation for a specific rule.
  *
- * @param rule - ESLint rule name
+ * @param rule - Lint rule name
  * @param workspaceRoot - Workspace root path
  * @returns Path to documentation or null
  */
 function findRuleDoc(rule: string, workspaceRoot: string): string | null {
   if (rule.startsWith('workspace/')) {
     const ruleName = rule.replace('workspace/', '')
-    const docPath = join(workspaceRoot, 'tools/eslint-rules/docs', `${ruleName}.md`)
-    if (existsSync(docPath)) return `tools/eslint-rules/docs/${ruleName}.md`
+    const docPath = join(workspaceRoot, 'tools/lint/docs/rules', `${ruleName}.md`)
+    if (existsSync(docPath)) return `tools/lint/docs/rules/${ruleName}.md`
   }
   return null
 }
@@ -126,7 +126,7 @@ export interface ReportConfig {
   workspaceRoot: string
 
   /**
-   * Projects whose lint task failed without reporting any ESLint error.
+   * Projects whose lint task failed without reporting any lint error.
    */
   crashes?: CrashedProject[]
 }
@@ -141,12 +141,12 @@ function renderCrashes(out: string[], crashes: CrashedProject[]): void {
   out.push('## Crashed Projects')
   out.push('')
   out.push('Lint did not complete for these projects, so the findings below do not cover them.')
-  out.push('A crash is ESLint or a rule throwing, an out-of-memory kill or a launch failure. Fix the cause, not a file.')
+  out.push('A crash is the linter or a rule throwing, an out-of-memory kill or a launch failure. Fix the cause, not a file.')
   out.push('')
 
   for (const { project, failure, tail } of crashes) {
     if (failure === null || tail === null) {
-      out.push(`**${project}** failed without reporting an ESLint error (not rerun on its own)`)
+      out.push(`**${project}** failed without reporting a lint error (not rerun on its own)`)
       out.push('')
       continue
     }

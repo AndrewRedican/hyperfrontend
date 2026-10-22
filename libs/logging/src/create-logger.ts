@@ -7,23 +7,23 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createLogLevelConfig } from './create-log-level-config'
 
 /** Function signature for standard log output */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type LogLevelFn = (...data: any[]) => void
 
 /** Function signature for warning output */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type WarnLevelFn = (...data: any[]) => void
 
 /** Function signature for error output */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type ErrorLevelFn = (...data: any[]) => void
 
 /** Function signature for info output */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type InfoLevelFn = (...data: any[]) => void
 
 /** Function signature for debug output */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type DebugLevelFn = (...data: any[]) => void
 
 /** Returns a sub-logger that prepends `[prefix]` to every message. */
@@ -163,7 +163,7 @@ function createPrefixedLogger(core: LoggerCore, fullPrefix: string): Logger {
   const tag = fullPrefix ? `[${fullPrefix}]` : ''
   const prefixed = (fn: LogFunction): LogFunction => {
     if (!tag) return fn
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     return (...data: any[]) => fn(tag, ...data)
   }
   const instance: Logger = freeze({

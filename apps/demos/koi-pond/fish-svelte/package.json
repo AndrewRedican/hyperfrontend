@@ -16,16 +16,16 @@
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/features": "0.11.4",
-    "svelte": "5.57.1",
+    "svelte": "5.57.2",
     "three": "0.185.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "7.3.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
     "@tsconfig/node24": "24.0.5",
-    "@types/node": "24.13.3",
+    "@types/node": "24.19.2",
     "@types/three": "0.185.4",
     "npm-run-all2": "9.0.3",
-    "svelte-check": "4.7.6",
+    "svelte-check": "4.7.7",
     "typescript": "6.0.3",
     "vite": "8.3.4"
   },

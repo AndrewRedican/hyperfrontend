@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { Style } from './style.model'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '@hyperfrontend/logging'

@@ -66,7 +66,7 @@ export function subscribeToEvents<E extends ChannelEvent>(
 
     wrappedHandler = (event, data, channelJSON) => {
       if (event === eventType) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         ;(callback as any)(data, channelJSON)
       }
     }

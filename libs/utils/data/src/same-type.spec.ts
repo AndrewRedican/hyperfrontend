@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
+/* lint-disable typescript/no-empty-function */
 import { after as afterAll, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterClassTypes } from './deregister-class-types'
@@ -9,7 +9,7 @@ describe('sameType', () => {
   it.each([
     [5, -100, 'number'],
     ['hello', 'world', 'string'],
-    // eslint-disable-next-line @typescript-eslint/no-array-constructor
+    // lint-disable-next-line typescript/no-array-constructor
     [new Array(), [1, 2, 3], 'array'],
     [{ a: 1 }, { b: 2 }, 'object'],
     [() => {}, function () {}, 'function'],

@@ -114,7 +114,7 @@ describe('Message Filters', () => {
       const handler = jest.fn()
 
       const userFilter = byType('user')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const adminFilter = create<IMessage>((msg) => (msg.data as any)?.admin === true)
 
       const composedHandler = compose(adminFilter, userFilter)(handler)
@@ -189,7 +189,7 @@ describe('Message Filters', () => {
       const handler = jest.fn()
 
       const typeFilter = byType('data-update')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const priorityFilter = create<IMessage>((msg) => (msg.data as any)?.priority === 'high')
       const validDataFilter = create<IMessage>((msg) => msg.data !== undefined)
 
@@ -267,9 +267,9 @@ describe('Message Filters', () => {
       const adminHandler = jest.fn()
       const userHandler = jest.fn()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const adminFilter = create<IMessage>((msg) => (msg.data as any)?.role === 'admin')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const userFilter = create<IMessage>((msg) => (msg.data as any)?.role === 'user')
 
       const filteredAdmin = adminFilter(adminHandler)

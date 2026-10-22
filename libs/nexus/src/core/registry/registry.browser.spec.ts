@@ -158,7 +158,7 @@ describe('Channel Registry', () => {
       add(registry, channel)
       expect(getByWindow(registry, mockWindow)).toBe(channel)
 
-      // eslint-disable-next-line no-useless-assignment -- intentional: demonstrates WeakMap GC behavior
+      // lint-disable-next-line no-useless-assignment -- intentional: demonstrates WeakMap GC behavior
       mockWindow = null
     })
   })

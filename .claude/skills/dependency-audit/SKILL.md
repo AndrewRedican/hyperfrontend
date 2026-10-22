@@ -9,11 +9,11 @@ One package.json at a time; run every command from its directory. Root, `apps/do
 
 ## Paths
 
-| Role                 | Path                                                                      |
-| -------------------- | ------------------------------------------------------------------------- |
-| Lint dep rules       | `<app>/eslint.config.cjs` `@nx/dependency-checks` → `ignoredDependencies` |
-| Lock-regen toolchain | `/usr/local/share/nvm/versions/node/v24.18.1/bin`                         |
-| Workaround registry  | project `README.md` + findings registry (see `demo-findings` skill)       |
+| Role                 | Path                                                                        |
+| -------------------- | --------------------------------------------------------------------------- |
+| Lint dep rules       | `<app>/lint.config.ts` `projects/dependency-checks` → `ignoredDependencies` |
+| Lock-regen toolchain | `/usr/local/share/nvm/versions/node/v24.18.1/bin`                           |
+| Workaround registry  | project `README.md` + findings registry (see `demo-findings` skill)         |
 
 ## Gate
 
@@ -83,11 +83,11 @@ Inert-override removal = zero lock churn. Non-empty diff → not inert; stop, re
 
 ## Verify
 
-| Audited   | Commands                                                                             |
-| --------- | ------------------------------------------------------------------------------------ |
-| Root      | `npx nx test lib-json-utils --skipNxCache` (jest + ts-node + ts-jest)                |
-| docs-site | `npx tsc --noEmit` + `npx eslint package.json` — **never `nx lint docs-site`** (OOM) |
-| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`       |
+| Audited   | Commands                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| Root      | `npx nx test lib-json-utils --skipNxCache` (jest + ts-node + ts-jest)                                       |
+| docs-site | `npx tsc --noEmit` + `node ../../tools/lint/bin/lint.ts package.json` — **never `nx lint docs-site`** (OOM) |
+| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`                              |
 
 Removed a `@types/*` → type-check mandatory. Leave everything uncommitted.
 

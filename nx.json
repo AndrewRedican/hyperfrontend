@@ -6,12 +6,13 @@
       "cache": true,
       "inputs": [
         "default",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.cjs",
-        "{workspaceRoot}/eslint.base.config.cjs",
+        "{workspaceRoot}/lint.config.ts",
+        "{workspaceRoot}/lint.base.config.ts",
         "{workspaceRoot}/package.json",
         "{projectRoot}/package.json",
-        "{projectRoot}/eslint.config.cjs"
+        "{projectRoot}/lint.config.ts",
+        "{workspaceRoot}/tools/lint/src/**/*",
+        "{workspaceRoot}/tools/lint/config/**/*"
       ]
     },
     "@hyperfrontend/package:test": {
@@ -94,7 +95,7 @@
     ],
     "production": [
       "default",
-      "!{projectRoot}/eslint.config.cjs",
+      "!{projectRoot}/lint.config.ts",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/test.config.ts",
@@ -110,10 +111,7 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      },
+      "plugin": "./tools/lint/src/nx/plugin.ts",
       "exclude": ["apps/demos/**/*"]
     }
   ],

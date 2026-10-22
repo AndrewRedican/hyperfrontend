@@ -4,14 +4,14 @@
   "description": "Configuration-driven recorder that captures browser and terminal sessions and emits size-budgeted GIFs and stills.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.0",
-    "@hyperfrontend/logging": "1.0.0",
-    "playwright-core": "1.62.1",
+    "@hyperfrontend/immutable-api-utils": "1.0.2",
+    "@hyperfrontend/logging": "1.0.1",
+    "playwright-core": "1.64.1",
     "sharp": "0.35.5"
   },
   "devDependencies": {
-    "@types/node": "25.3.3",
-    "tsx": "4.23.12",
+    "@types/node": "25.9.9",
+    "tsx": "4.23.15",
     "typescript": "5.9.3"
   }
 }

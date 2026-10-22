@@ -1,0 +1,5 @@
+Program 0-39 sourceType="module"
+  ExportDefaultDeclaration 0-38 exportKind="value"
+    ClassDeclaration 15-38 abstract=true
+      Identifier 30-35 name="Shape"
+      ClassBody 36-38

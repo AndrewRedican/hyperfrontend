@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { Data } from '../../data/model'
 import type { UnencryptedPacket } from '../model'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

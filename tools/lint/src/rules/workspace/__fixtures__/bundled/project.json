@@ -1,0 +1,8 @@
+{
+  "name": "lib-bundled",
+  "projectType": "library",
+  "targets": {
+    "build": { "options": { "iife": { "entry": "." }, "umd": { "entry": "./browser" } } },
+    "publish": {}
+  }
+}

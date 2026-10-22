@@ -81,7 +81,7 @@ Detail in [00-strategy.md](00-strategy.md).
 6. **Mock unless it merits real.** Fake data/backends by default; real (small Railway backend) services only for auth/payments-class demos where realism _is_ the proof.
 7. **The generator is internal.** It lives in `tools/`, may assume the Nx workspace, and must never leak into the published `@hyperfrontend/features` (whose own `src/nx/` adapter stays vendor-agnostic).
 8. **Don't author docs ahead of code.** READMEs, ARCHITECTURE, `@example` blocks come after the thing they describe exists.
-9. **Know conventions before coding.** Read the `coding` skill and skim `tools/eslint-rules/docs/`; gate every demo with the cache-busted quad check (`typecheck`/`lint`/`test`/`build`).
+9. **Know conventions before coding.** Read the `coding` skill and skim `tools/lint/docs/rules/`; gate every demo with the cache-busted quad check (`typecheck`/`lint`/`test`/`build`).
 
 ---
 

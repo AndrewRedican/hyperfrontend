@@ -70,7 +70,7 @@ interface LintRun {
  */
 interface IsolationResult {
   /**
-   * Projects that failed again without reporting any ESLint error.
+   * Projects that failed again without reporting any lint error.
    */
   crashes: CrashedProject[]
 
@@ -142,7 +142,7 @@ function outputTail(raw: string, lineCount: number): string {
 }
 
 /**
- * Build the report for a lint run that failed without any parseable ESLint error or failed task.
+ * Build the report for a lint run that failed without any parseable lint error or failed task.
  *
  * @param command - Command line that was run
  * @param failure - Phrase describing how the command ended
@@ -153,8 +153,8 @@ function generateCrashReport(command: string, failure: string, raw: string): str
   return [
     '# Lint Report',
     '',
-    `Lint did not complete: \`${command}\` ${failure} and its output holds no ESLint error.`,
-    'This is a crash of the lint run itself (ESLint or a rule throwing, an out-of-memory kill, a launch failure), not a clean result.',
+    `Lint did not complete: \`${command}\` ${failure} and its output holds no lint error.`,
+    'This is a crash of the lint run itself (the linter or a rule throwing, an out-of-memory kill, a launch failure), not a clean result.',
     '',
     `## Output tail (last ${CRASH_TAIL_LINES} lines)`,
     '',
@@ -168,9 +168,9 @@ function generateCrashReport(command: string, failure: string, raw: string): str
 /**
  * Rerun each suspect project on its own to tell a crash from a failure the combined run obscured.
  *
- * A rerun that passes, or that reports ESLint errors, is not a crash. Its output joins the combined output so its findings reach the report.
+ * A rerun that passes, or that reports lint errors, is not a crash. Its output joins the combined output so its findings reach the report.
  *
- * @param suspects - Failed projects that own no parsed ESLint error
+ * @param suspects - Failed projects that own no parsed lint error
  * @param cwd - Workspace root
  * @returns Crashed projects and the output of every rerun
  */
@@ -211,7 +211,7 @@ function isolateCrashes(suspects: string[], cwd: string): IsolationResult {
  * - Imperative instructions for fixing
  * - Reference to relevant skill files
  *
- * A lint task that fails without a single parseable ESLint error did not
+ * A lint task that fails without a single parseable lint error did not
  * lint at all. Each such project is rerun on its own, and the ones that
  * still fail that way are reported as crashed. A crash fails the executor
  * regardless of `failOnError`.
@@ -243,7 +243,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
     if (failedProjects.length === 0 && !entries.some((e) => e.severity === 'error')) {
       writeFileSync(reportPath, generateCrashReport(['npx', ...args].join(' '), run.failure, run.raw))
       logger.error(
-        `Lint did not complete: the lint command ${run.failure} without reporting any ESLint error. See ${outputPath} for details.`
+        `Lint did not complete: the lint command ${run.failure} without reporting any lint error. See ${outputPath} for details.`
       )
       return { success: false }
     }

@@ -267,7 +267,7 @@ describe('Integration: Contract Validation', () => {
       channel.connect()
 
       expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         channel.send('NOT_IN_CONTRACT' as any, {})
       }).toThrow('not in the emitted actions')
     })
@@ -374,7 +374,7 @@ describe('Integration: Contract Validation', () => {
       expect(() => {
         createBroker({
           name: 'test-broker',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // lint-disable-next-line typescript/no-explicit-any
           contract: {} as any,
           settings: { logLevel: 'error' },
         })
@@ -398,7 +398,7 @@ describe('Integration: Contract Validation', () => {
       expect(() => {
         createBroker({
           name: 'test-broker',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // lint-disable-next-line typescript/no-explicit-any
           contract: null as any,
           settings: { logLevel: 'error' },
         })

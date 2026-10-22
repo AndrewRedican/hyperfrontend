@@ -56,7 +56,7 @@ function callGtag(...args: unknown[]): void {
   if (!window.gtag) {
     window.gtag = function gtag(): void {
       // why: gtag.js only replays queue entries shaped like an arguments object, so the raw arguments object is pushed instead of an array
-      // eslint-disable-next-line prefer-rest-params
+      // lint-disable-next-line prefer-rest-params
       window.dataLayer?.push(arguments)
     }
   }

@@ -36,6 +36,37 @@ jobs:
           base-ref: origin/${{ github.base_ref }}
           head-ref: HEAD
 
+  binary-budget:
+    name: binary-budget
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # why: the approval label is read when the job runs, so re-running it after labelling the pull request sees the label
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # why: every commit the pull request adds is walked, not only its net diff
+
+      - name: Read the approval label
+        id: approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # why: reading the labels on their own line fails the step when gh fails, instead of silently treating the pull request as unapproved
+          labels=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels --jq '.labels[].name')
+          if grep -qx 'binary-budget-approved' <<< "$labels"; then
+            echo "flag=--allow-over-budget" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check the binary budget
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          APPROVAL_FLAG: ${{ steps.approval.outputs.flag }}
+        run: node tools/workspace/scripts/check-binary-budget.mjs --base "$BASE_REF" $APPROVAL_FLAG
+
   version-check:
     name: version-check
     runs-on: ubuntu-latest
@@ -245,22 +276,28 @@ jobs:
         uses: ./.github/actions/setup-monorepo
 
       - name: Typecheck the libraries and tools
-        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*,eslint-rules" --parallel=1
+        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*" --parallel=1
 
       - name: Lint every project
         run: CI=1 npx nx lint:all
 
       - name: Test the libraries and tools
-        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*,eslint-rules" --parallel=1
+        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*" --parallel=1
 
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [setup, version-check, format, lint, typecheck, build, test, e2e, node-floor, windows]
+    needs: [setup, binary-budget, version-check, format, lint, typecheck, build, test, e2e, node-floor, windows]
     if: always()
     steps:
       - name: Check CI status
         run: |
+          # why: the binary budget applies whether or not any project is affected, so it gates before that short-circuit
+          if [ "${{ needs.binary-budget.result }}" != "success" ]; then
+            echo "❌ The binary budget check did not pass"
+            exit 1
+          fi
+
           # If no affected projects, pass
           if [ "${{ needs.setup.outputs.has-affected }}" != "true" ]; then
             echo "✅ No affected projects - PR checks passed"

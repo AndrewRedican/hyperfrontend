@@ -5,7 +5,7 @@ import { lockedPropertyDescriptors } from './locked-prop-descriptors'
 /** Locks multiple properties on an object making them non-writable and non-configurable. */
 export type PropertyLock = (
   object: object,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   propertyValuePairs: [string, any][]
 ) => void
 

@@ -1,4 +1,4 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**

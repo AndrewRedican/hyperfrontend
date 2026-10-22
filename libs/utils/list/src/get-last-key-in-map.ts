@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 
 /**
  * Retrieves the final key from a Map by converting keys to an array.

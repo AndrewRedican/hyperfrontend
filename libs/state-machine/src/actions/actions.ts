@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import { START, CANCEL, PAUSE, SUCCESS, FAIL } from './actions.types'
 
 /**

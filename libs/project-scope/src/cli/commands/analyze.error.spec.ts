@@ -22,7 +22,7 @@ jest.mock('../../analyze', () => {
 
 const mockAnalyzeProject = analyzeModule.analyzeProject as MockedFunction<typeof analyzeModule.analyzeProject>
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 function createMockResult(overrides: Record<string, any> = {}): ReturnType<typeof analyzeModule.analyzeProject> {
   return {
     name: 'test-project',
@@ -37,7 +37,7 @@ function createMockResult(overrides: Record<string, any> = {}): ReturnType<typeo
     dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 },
     metadata: { timestamp: new Date(), durationMs: 100, version: '1.0.0' },
     ...overrides,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
   } as any
 }
 

@@ -36,7 +36,7 @@ Omit what doesn't apply.
 | Show don't tell  | "The function should report"      | "Reports"                       |
 | Examples > prose | "Format paths as tables because…" | `\| Rules \| src/rules/*.ts \|` |
 | Inference        | "Since TypeScript compiles to…"   | (omit—reader knows)             |
-| Signpost         | Re-explain AST traversal here     | See `eslint-rules` skill        |
+| Signpost         | Re-explain AST traversal here     | See `lint-rules` skill          |
 | Bold = mandatory | "Consider reusing"                | **MUST REUSE**                  |
 | Code = exact     | `doThing(<your-value>)`           | `doThing('actual-value')`       |
 

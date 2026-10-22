@@ -15,18 +15,18 @@
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/features": "0.11.4",
     "three": "0.185.1",
-    "vue": "3.5.43"
+    "vue": "3.5.44"
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.5",
-    "@types/node": "24.13.3",
+    "@types/node": "24.19.2",
     "@types/three": "0.185.4",
-    "@vitejs/plugin-vue": "6.0.8",
+    "@vitejs/plugin-vue": "6.0.10",
     "@vue/tsconfig": "0.9.1",
     "npm-run-all2": "9.0.3",
     "typescript": "6.0.3",
     "vite": "8.3.4",
-    "vue-tsc": "3.3.10"
+    "vue-tsc": "3.3.13"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"

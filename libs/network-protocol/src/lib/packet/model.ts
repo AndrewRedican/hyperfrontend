@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { Data } from '../data/model'
 
 /** Bytes as they travel: a sealed frame carrying one packet */

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { getColorVariation } from './get-color-variation'
 

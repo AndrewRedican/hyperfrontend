@@ -21,6 +21,6 @@ import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/tim
  * ```
  */
 export function pause(timeMS: number): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // lint-disable-next-line typescript/no-unused-vars
   return createPromise((resolve, _) => setTimeout(() => resolve(void 0), timeMS))
 }

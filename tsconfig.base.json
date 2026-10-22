@@ -119,6 +119,8 @@
       "@hyperfrontend/network-protocol/topic": ["libs/network-protocol/src/lib/topic/index.ts"],
       "@hyperfrontend/nexus": ["libs/nexus/src/index.ts"],
       "@hyperfrontend/package": ["tools/package/src/index.ts"],
+      "@hyperfrontend/package/readme/markers": ["tools/package/src/readme/markers.ts"],
+      "@hyperfrontend/package/readme/transform": ["tools/package/src/readme/transform.ts"],
       "@hyperfrontend/project-scope": ["libs/project-scope/src/index.ts"],
       "@hyperfrontend/project-scope/cli": ["libs/project-scope/src/cli/index.ts"],
       "@hyperfrontend/project-scope/core": ["libs/project-scope/src/core/index.ts"],

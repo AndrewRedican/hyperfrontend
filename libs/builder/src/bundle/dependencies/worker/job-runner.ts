@@ -1,4 +1,4 @@
-/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
+/* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
 import type { SiblingEntry } from '../../declarations/sibling-resolver'
 import type { ExternalizeFormat, WorkspaceBundledDepRoute } from '../externalize-plugin'

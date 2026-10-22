@@ -5,9 +5,9 @@ import { createWeakMap } from '../built-in-copy/weak-map'
 export type LockedMethod = (
   target: object,
   propertyKey: string | symbol,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   descriptor: TypedPropertyDescriptor<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
 ) => any
 
 /**
@@ -36,14 +36,14 @@ export type LockedMethod = (
  */
 export const locked = (): LockedMethod => {
   return function lockMethod(target, key, descriptor) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    // lint-disable-next-line typescript/no-unsafe-function-type
     const original = descriptor.value as Function
     // why: holding the bound method beside the instance rather than on it keeps a frozen, sealed or non-extensible instance callable.
     const boundToInstance = createWeakMap<object, typeof original>()
     return {
       configurable: false,
       enumerable: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       get(this: any) {
         const cached = boundToInstance.get(this)
         if (cached) {

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["bin/**/*.ts", "config/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/__fixtures__/**"]
+}

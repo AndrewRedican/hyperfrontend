@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
+/* lint-disable typescript/no-unused-vars */
+/* lint-disable typescript/no-empty-function */
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
@@ -119,7 +119,7 @@ describe('selectiveCopy', () => {
       [key: string]: unknown
       constructor() {
         const sym = Symbol('testKey')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         ;(this as any)[sym] = 'symbolValue'
         this['regular'] = 'value'
       }
@@ -147,9 +147,9 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).polluted
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).value
   })
 
@@ -271,7 +271,7 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
       [key: string]: unknown
       constructor() {
         const sym = Symbol('testKey')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         ;(this as any)[sym] = 'symbolValue'
         this['regular'] = 'value'
       }
@@ -384,9 +384,9 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).polluted
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).value
   })
 
@@ -467,11 +467,11 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).polluted
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).value
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (Object.prototype as any).traversal
   })
 
@@ -489,7 +489,7 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
       inner: { value: 'inner' },
       innerKeys: ['value'],
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     delete (inner as any).__proto__
   })
 

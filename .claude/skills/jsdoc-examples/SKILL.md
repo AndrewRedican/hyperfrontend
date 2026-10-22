@@ -9,10 +9,10 @@ Examples teach what types can't. **No net-new value → no example.**
 
 ---
 
-## ESLint Rule
+## Lint Rule
 
-`@hyperfrontend/lib-require-jsdoc-example` enforces examples on exported APIs in publishable libs.
-Docs: `tools/eslint-rules/docs/lib-require-jsdoc-example.md`
+`workspace/lib-require-jsdoc-example` enforces examples on exported APIs in publishable libs.
+Docs: `tools/lint/docs/rules/lib-require-jsdoc-example.md`
 
 ---
 
@@ -27,7 +27,7 @@ Docs: `tools/eslint-rules/docs/lib-require-jsdoc-example.md`
 | Config gotchas / defaults | Uniform behavior across inputs |
 | Frequently-used canonical | Simple delegating wrappers     |
 
-- When criteria is not met, skip enforcement by adding exactly `/* eslint-disable workspace/lib-require-jsdoc-example */` at the top of the file. We cannot inline disable because it would conflict with jsdoc comments themselves which need to be above the code it is for.
+- When criteria is not met, skip enforcement by adding exactly `/* lint-disable workspace/lib-require-jsdoc-example */` at the top of the file. We cannot inline disable because it would conflict with jsdoc comments themselves which need to be above the code it is for.
 
 ---
 

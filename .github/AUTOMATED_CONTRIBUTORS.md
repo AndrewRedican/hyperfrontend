@@ -23,7 +23,7 @@ The system automatically detects contribution types based on file patterns:
 | **code**          | Source code files         | `src/**/*.ts`, `packages/**/*.js`, `apps/**/*.tsx`    |
 | **test**          | Test files                | `*.test.ts`, `*.spec.js`, `__tests__/`, `*.e2e.*`     |
 | **infra**         | CI/CD and infrastructure  | `.github/workflows/`, `.devcontainer/`, `Dockerfile`  |
-| **tool**          | Configuration and tooling | `eslint.config.js`, `tsconfig.json`, `scripts/`       |
+| **tool**          | Configuration and tooling | `lint.config.ts`, `tsconfig.json`, `scripts/`         |
 | **design**        | Design and styling        | `*.css`, `*.scss`, `assets/`, `*.svg`, `packages/ui/` |
 | **example**       | Examples and demos        | `examples/`, `demos/`, sample files                   |
 | **plugin**        | Plugin development        | `plugins/`, `packages/nx-plugin/`                     |

@@ -491,14 +491,14 @@ describe('deepFreeze', () => {
     })
 
     it('freezes arrays with sparse elements', () => {
-      const arr = [1, , 3, , 5] // eslint-disable-line no-sparse-arrays
+      const arr = [1, , 3, , 5] // lint-disable-line no-sparse-arrays
       const result = deepFreeze(arr, mockLogger)
 
       expect(Object.isFrozen(result)).toBe(true)
     })
 
     it('keeps the length of arrays with sparse elements', () => {
-      const arr = [1, , 3, , 5] // eslint-disable-line no-sparse-arrays
+      const arr = [1, , 3, , 5] // lint-disable-line no-sparse-arrays
       const result = deepFreeze(arr, mockLogger)
 
       expect(result.length).toBe(5)

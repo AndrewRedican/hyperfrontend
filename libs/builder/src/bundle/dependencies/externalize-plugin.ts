@@ -1,4 +1,4 @@
-/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps via @swc-node/register before workspace packages are loadable */
+/* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps via @swc-node/register before workspace packages are loadable */
 import type { Plugin } from 'rollup'
 import type { WorkspaceBundledDep } from '../../models'
 import { relative } from 'node:path'

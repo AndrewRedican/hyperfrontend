@@ -1,0 +1,1 @@
+{ "headers": [{ "prefix": "/embed", "headers": { "Content-Security-Policy": "frame-ancestors 'none'" } }, { "headers": { "X-Frame-Options": "DENY" } }] }

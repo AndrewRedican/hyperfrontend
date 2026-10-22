@@ -4,7 +4,7 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFifoList } from './create-fifo-list'
 
 describe('createFifoList', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   let fifoList: FifoList<any>
 
   beforeEach(() => {

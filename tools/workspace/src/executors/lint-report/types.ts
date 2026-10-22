@@ -14,7 +14,7 @@ export interface LintEntry {
   /** Error/warning message. */
   message: string
 
-  /** ESLint rule name. */
+  /** Lint rule name. */
   rule: string
 }
 
@@ -28,7 +28,7 @@ export interface LegendEntry {
   /** Severity level. */
   severity: 'error' | 'warning'
 
-  /** ESLint rule name. */
+  /** Lint rule name. */
   rule: string
 
   /** Error/warning message. */
@@ -56,7 +56,7 @@ export interface FileStats {
 }
 
 /**
- * Project whose lint task failed without reporting any ESLint error.
+ * Project whose lint task failed without reporting any lint error.
  */
 export interface CrashedProject {
   /** Nx project name. */

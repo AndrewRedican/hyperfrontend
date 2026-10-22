@@ -129,7 +129,7 @@ function escapeRegExp(str: string): string {
 function containsWord(text: string, word: string): boolean {
   const pattern = `\\b${escapeRegExp(word)}`
   // note: pattern is safe. the escapeRegExp sanitizes all special regex characters
-  // eslint-disable-next-line workspace/no-unsafe-regex
+  // lint-disable-next-line workspace/no-unsafe-regex
   const regex = createRegExp(pattern, 'i')
   return regex.test(text)
 }

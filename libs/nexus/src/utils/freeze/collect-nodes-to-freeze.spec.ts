@@ -186,7 +186,7 @@ describe('collectNodesToFreeze', () => {
     })
 
     it('handles sparse arrays', () => {
-      const arr = [1, , 3] // eslint-disable-line no-sparse-arrays
+      const arr = [1, , 3] // lint-disable-line no-sparse-arrays
       const wrapper = { arr }
       const result = collectNodesToFreeze(wrapper)
 

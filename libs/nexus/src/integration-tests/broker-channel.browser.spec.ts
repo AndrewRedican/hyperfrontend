@@ -234,7 +234,7 @@ describe('Integration: Broker + Channel', () => {
       const { channelA } = setupPair(contractA, contractB)
 
       expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         channelA.send('INVALID_TYPE' as any, {})
       }).toThrow('not in the emitted actions')
     })

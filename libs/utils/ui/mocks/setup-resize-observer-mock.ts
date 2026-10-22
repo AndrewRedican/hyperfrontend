@@ -40,7 +40,7 @@ export function setupResizeObserverMock() {
   mock.observe = jest.fn()
   mock.unobserve = jest.fn()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   ;(globalThis as any).ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
     mock.callback = callback
     return {

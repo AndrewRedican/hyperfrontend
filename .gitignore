@@ -36,7 +36,6 @@ testem.log
 /typings
 projectStructure.cache.json
 *.local
-.eslintcache
 
 # system files
 .DS_Store
@@ -55,3 +54,4 @@ _
 .claude/worktrees
 .nx/polygraph
 .nx/self-healing
+.nx/migrate-runs

@@ -1,0 +1,5 @@
+{
+  "name": "demo-deploy-unbounded",
+  "projectType": "application",
+  "metadata": { "deploy": { "kind": "static" } }
+}
