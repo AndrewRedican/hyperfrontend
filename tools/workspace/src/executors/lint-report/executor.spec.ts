@@ -23,7 +23,7 @@ const context = {
 const report = (): string => readFileSync(join(root, 'lint-output.txt'), 'utf-8')
 
 const findings = (severity: 'error' | 'warning'): string =>
-  [`${join(root, 'libs', 'a', 'src', 'index.ts')}`, `  3:7  ${severity}  Unexpected any  @typescript-eslint/no-explicit-any`, ''].join('\n')
+  [`${join(root, 'libs', 'a', 'src', 'index.ts')}`, `  3:7  ${severity}  Unexpected any  typescript/no-explicit-any`, ''].join('\n')
 
 const failedTasks = (...projects: string[]): string =>
   ['', 'Failed tasks:', '', ...projects.map((project) => `- ${project}:lint`), ''].join('\n')
@@ -75,7 +75,7 @@ describe('lintReportExecutor', () => {
     it('lists the warnings in the report', async () => {
       mockExec.mockReturnValue(findings('warning'))
       await lintReportExecutor({ failOnError: true }, context)
-      expect(report()).toEqual(expect.stringContaining('@typescript-eslint/no-explicit-any'))
+      expect(report()).toEqual(expect.stringContaining('typescript/no-explicit-any'))
     })
   })
 
@@ -88,7 +88,7 @@ describe('lintReportExecutor', () => {
     it('lists the errors in the report', async () => {
       failWith({ status: 1, stdout: findings('error'), stderr: '' })
       await lintReportExecutor({ failOnError: true }, context)
-      expect(report()).toEqual(expect.stringContaining('@typescript-eslint/no-explicit-any'))
+      expect(report()).toEqual(expect.stringContaining('typescript/no-explicit-any'))
     })
 
     it('succeeds when failOnError is off', async () => {
@@ -98,7 +98,7 @@ describe('lintReportExecutor', () => {
   })
 
   describe('crashed run', () => {
-    it('fails when the command exits non-zero without any ESLint error', async () => {
+    it('fails when the command exits non-zero without any lint error', async () => {
       failWith({ status: 1, stdout: 'Oops! Something went wrong! :(\n', stderr: 'Error: rule threw\n' })
       expect(await lintReportExecutor({ failOnError: true }, context)).toEqual({ success: false })
     })
@@ -223,7 +223,7 @@ describe('lintReportExecutor', () => {
         'run lib-b:lint': crash,
       })
       await lintReportExecutor({ failOnError: true }, context)
-      expect(report()).toEqual(expect.stringContaining('@typescript-eslint/no-explicit-any'))
+      expect(report()).toEqual(expect.stringContaining('typescript/no-explicit-any'))
     })
 
     it('reruns only the failed projects that own no error', async () => {
@@ -291,7 +291,7 @@ describe('lintReportExecutor', () => {
         'run lib-a:lint': failure({ status: 1, stdout: findings('error'), stderr: '' }),
       })
       await lintReportExecutor({ failOnError: true }, context)
-      expect(report()).toEqual(expect.stringContaining('@typescript-eslint/no-explicit-any'))
+      expect(report()).toEqual(expect.stringContaining('typescript/no-explicit-any'))
     })
 
     it('reports no crash when a rerun surfaces errors', async () => {
@@ -317,7 +317,7 @@ describe('lintReportExecutor', () => {
     it('lists the projects beyond the fifth as not rerun', async () => {
       crashSevenProjects()
       await lintReportExecutor({}, context)
-      expect(report()).toEqual(expect.stringContaining('**p7** failed without reporting an ESLint error (not rerun on its own)'))
+      expect(report()).toEqual(expect.stringContaining('**p7** failed without reporting a lint error (not rerun on its own)'))
     })
 
     it('counts every crashed project in the summary, rerun or not', async () => {
