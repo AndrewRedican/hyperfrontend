@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 
 /** Function that tests if a value matches a condition */
 export type Predicate = (x: unknown) => boolean

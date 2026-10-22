@@ -43,7 +43,7 @@ describe('locateText', () => {
 })
 
 describe('locateText - with config detectCircularReferences:true', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   let target: any
 
   beforeEach(() => setConfig({ detectCircularReferences: true }))

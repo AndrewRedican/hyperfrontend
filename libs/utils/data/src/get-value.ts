@@ -32,7 +32,7 @@ export const getValue = <T = unknown>(target: unknown, path: [string, ...string[
   if (path.length === 0) return target as T
   const hasOnMissingKeyDefault = !!(defaultValue && 'onMissingKey' in defaultValue)
   const hasOnErrorDefault = !!(defaultValue && 'onError' in defaultValue)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   let scope: any
   let scopeType: DataType
   let scopeIterable: boolean

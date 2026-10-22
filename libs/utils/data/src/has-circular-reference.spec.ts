@@ -123,7 +123,7 @@ describe('hasCircularReference - with extended iterable class types', () => {
   })
 
   it('returns true when encountering a circular reference', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // lint-disable-next-line typescript/no-explicit-any
     const map = new Map<string, Map<string, any>>()
     map.set('emerald', map)
     expect(hasCircularReference(map)).toEqual(true)

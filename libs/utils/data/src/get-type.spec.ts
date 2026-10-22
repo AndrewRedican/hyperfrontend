@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
+/* lint-disable typescript/no-empty-function */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterClassTypes } from './deregister-class-types'
 import { getType } from './get-type'
@@ -131,7 +131,7 @@ describe('getType', () => {
   })
 
   it('returns "array" for a reference set to new Array()', () => {
-    // eslint-disable-next-line @typescript-eslint/no-array-constructor
+    // lint-disable-next-line typescript/no-array-constructor
     expect(getType(new Array())).toBe('array')
   })
 

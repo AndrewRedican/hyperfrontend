@@ -3,7 +3,7 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { getValue } from './get-value'
 
 describe('getValue', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // lint-disable-next-line typescript/no-explicit-any
   let target: any
 
   beforeEach(() => {
