@@ -15,6 +15,7 @@ import type { ProjectRecord } from '../../graph/model.ts'
 import { dirname, posix } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { defineRule } from '../../engine/rule.ts'
 import { workspaceGraph } from '../../graph/build.ts'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
@@ -284,7 +285,7 @@ export default defineRule<ModuleBoundariesOptions | undefined, Node>({
     const root = baseConfigRootOf(dirname(context.file.path))
     if (root === null) return {}
     const graph = workspaceGraph(root)
-    const file = posix.relative(root, context.file.path)
+    const file = workspaceRelativePath(root, context.file.path)
     const fromSource = (node: Node): void => {
       const source = node.source as Node | null | undefined
       if (source?.kind === 'Literal' && typeof source.value === 'string') check(context, graph, file, source.value, node)

@@ -9,9 +9,10 @@
 import type { JsonNode, JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
 import type { Fix } from '../../engine/report.ts'
 import type { JsonTreeNode } from '../../languages/json.ts'
-import { basename, dirname, join, posix } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { eq, parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
 import { defineRule } from '../../engine/rule.ts'
 import { workspaceGraph } from '../../graph/build.ts'
@@ -102,7 +103,7 @@ export default defineRule<DependencyChecksOptions | undefined, JsonTreeNode>({
     const root = baseConfigRootOf(dirname(path))
     if (root === null) return {}
     const graph = workspaceGraph(root)
-    const project = graph.projectOf(posix.relative(root, path))
+    const project = graph.projectOf(workspaceRelativePath(root, path))
     if (project === null || project.configuration?.targets?.['build'] === undefined) return {}
     const ignoredDependencies = context.options?.ignoredDependencies ?? []
     const files = inputFiles(project, selfInputs(root, project, 'build'), context.options?.ignoredFiles ?? [])

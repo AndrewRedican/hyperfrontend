@@ -10,7 +10,8 @@ import type { Node } from '../../../code/model.ts'
 import type { WorkspaceGraph } from '../../../graph/build.ts'
 import type { ProjectRecord } from '../../../graph/model.ts'
 import { existsSync } from 'node:fs'
-import { join, posix } from 'node:path'
+import { basename, dirname, join, posix } from 'node:path'
+import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { fileOf, substituteWildcard } from '../../../graph/resolve.ts'
 import { moduleExports } from '../../workspace/shared/exports-index.ts'
 
@@ -145,8 +146,8 @@ export function relativeImports(graph: WorkspaceGraph, file: string, specifier: 
     for (const name of names) {
       const declaring = declaringFile(graph, path, name)
       if (declaring === null) continue
-      const directory = posix.relative(posix.dirname(join(graph.root, file)), posix.dirname(declaring))
-      const base = posix.basename(declaring)
+      const directory = relativePath(dirname(join(graph.root, file)), dirname(declaring))
+      const base = basename(declaring)
       const joined = directory === '' ? `./${base}` : posix.join(directory, base)
       const relative = joined.startsWith('./') || joined.startsWith('../') ? joined : `./${joined}`
       remapped.push({ member: String(name), path: relative.replace(/.tsx?$/, '') })
