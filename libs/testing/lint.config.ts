@@ -1,6 +1,6 @@
-const baseConfig = require('../../eslint.base.config.cjs')
+import baseConfig from '../../lint.base.config.ts'
 
-module.exports = [
+export default [
   ...baseConfig,
   {
     // context: this package is the test runtime itself. It must resolve to zero workspace packages, because every
@@ -10,7 +10,7 @@ module.exports = [
     rules: {
       'workspace/no-unsafe-builtin-methods': 'off',
       // context: this is the replacement for @types/jest, whose own surface is `any`-typed; narrowing it here would reject the call sites it exists to type.
-      '@typescript-eslint/no-explicit-any': 'off',
+      'typescript/no-explicit-any': 'off',
     },
   },
   {
@@ -24,15 +24,12 @@ module.exports = [
   {
     files: ['**/*.json'],
     rules: {
-      '@nx/dependency-checks': [
+      'projects/dependency-checks': [
         'error',
         {
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+          ignoredFiles: ['{projectRoot}/lint.config.ts'],
         },
       ],
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
     },
   },
 ]
