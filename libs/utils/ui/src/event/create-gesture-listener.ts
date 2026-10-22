@@ -52,7 +52,7 @@ export function createGestureListener(callback: Callback) {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // lint-disable-next-line typescript/no-unused-vars
   const handleTouchEnd = (_: TouchEvent): void => {
     initialDistance = null
   }

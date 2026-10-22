@@ -3,7 +3,7 @@ import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/dat
 const SHORT = 'short'
 const D2 = '2-digit'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 /**
  * Converts a Unix timestamp to a formatted date-time string.
  *

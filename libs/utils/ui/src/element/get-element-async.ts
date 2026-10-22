@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable prefer-const */
+/* lint-disable typescript/no-explicit-any */
+/* lint-disable prefer-const */
 import { getType } from '@hyperfrontend/data-utils'
 import { setTimeout, setInterval, clearTimeout, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
