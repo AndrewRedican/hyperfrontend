@@ -5,7 +5,6 @@
   "tags": [],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
       "inputs": [
         "{workspaceRoot}/.github/workflows/**/*",
         "{workspaceRoot}/package.json",
@@ -13,9 +12,10 @@
         "{workspaceRoot}/ARCHITECTURE.md",
         "{workspaceRoot}/LIBRARY_COMPATIBILITY.md",
         "{workspaceRoot}/tsconfig.base.json",
-        "{workspaceRoot}/eslint.config.cjs",
-        "{workspaceRoot}/eslint.base.config.cjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "{workspaceRoot}/lint.config.ts",
+        "{workspaceRoot}/lint.base.config.ts",
+        "{workspaceRoot}/tools/lint/src/**/*",
+        "{workspaceRoot}/tools/lint/config/**/*",
         "{workspaceRoot}/libs/**/project.json",
         "{workspaceRoot}/plugins/**/project.json",
         "{workspaceRoot}/apps/**/project.json",
@@ -23,25 +23,7 @@
         "{workspaceRoot}/apps/package-e2e/shared/**/*",
         "{workspaceRoot}/.devcontainer/devcontainer.json"
       ],
-      "options": {
-        "lintFilePatterns": [
-          ".github/workflows",
-          "package.json",
-          "README.md",
-          "ARCHITECTURE.md",
-          "LIBRARY_COMPATIBILITY.md",
-          "tsconfig.base.json",
-          "apps/*/project.json",
-          "apps/*/*/project.json",
-          "apps/*/*/*/project.json",
-          "apps/*/package.json",
-          "apps/*/*/package.json",
-          "apps/*/*/*/package.json",
-          "apps/package-e2e/shared"
-        ],
-        "maxWarnings": 0,
-        "errorOnUnmatchedPattern": false
-      }
+      "command": "node tools/lint/bin/lint.ts --max-warnings 0 --no-error-on-unmatched-pattern '.github/workflows' 'package.json' 'README.md' 'ARCHITECTURE.md' 'LIBRARY_COMPATIBILITY.md' 'tsconfig.base.json' 'apps/*/project.json' 'apps/*/*/project.json' 'apps/*/*/*/project.json' 'apps/*/package.json' 'apps/*/*/package.json' 'apps/*/*/*/package.json' 'apps/package-e2e/shared'"
     },
     "version:all": {
       "executor": "@hyperfrontend/package:version-batch",

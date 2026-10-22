@@ -1,5 +1,4 @@
-const baseConfig = require('./eslint.base.config.cjs')
-const eslintRules = require('./tools/eslint-rules/src/index.ts')
+import baseConfig from './lint.base.config.ts'
 
 /**
  * What a project declaring `metadata.lifecycle.state: "frozen"` may not carry.
@@ -39,6 +38,7 @@ const FROZEN_PROJECT_POLICY = {
     '**/*.test.*',
     '**/__tests__/**',
     'eslint.config.*',
+    'lint.config.*',
     '.oxlintrc.json',
     '.eslintrc*',
     'vitest.config.*',
@@ -58,14 +58,11 @@ const PLANNED_PROJECT_POLICY = {
   forbiddenFiles: ['src/**'],
 }
 
-module.exports = [
+export default [
   {
     files: ['**/*.json'],
     // Override or add rules here
     rules: {},
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
-    },
   },
 
   ...baseConfig,
@@ -73,24 +70,12 @@ module.exports = [
     // context: the projects this governs deliberately have no lint target of their own, so the
     // context: workspace-root lint target names their manifests in lintFilePatterns and reports here.
     files: ['**/project.json', '**/package.json'],
-    plugins: {
-      workspace: eslintRules,
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
-    },
     rules: {
       'workspace/project-lifecycle-policy': ['error', { states: { frozen: FROZEN_PROJECT_POLICY, planned: PLANNED_PROJECT_POLICY } }],
     },
   },
   {
     files: ['**/package.json'],
-    plugins: {
-      workspace: eslintRules,
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
-    },
     rules: {
       'workspace/no-vscode-config': 'error',
     },
@@ -102,7 +87,7 @@ module.exports = [
       // why: the safe built-in copies live in an internal package a consumer-lens demo must not depend on, so the rule is unsatisfiable rather than unmet.
       'workspace/no-unsafe-builtin-methods': 'off',
       // why: a demo consumes the published packages by npm name, and the project graph resolves those names through the tsconfig path aliases and reads them as coupling to workspace sources.
-      '@nx/enforce-module-boundaries': 'off',
+      'projects/module-boundaries': 'off',
       // why: a shipped simulation is an exhibit; splitting its steering brain or pond assembly for a line count is surgery that changes nothing a visitor sees.
       'workspace/max-file-lines': 'off',
     },
@@ -126,7 +111,7 @@ module.exports = [
     // context: their specs also import shared helpers that live one level above each project root.
     files: ['apps/package-e2e/**/*.ts'],
     rules: {
-      '@nx/enforce-module-boundaries': [
+      'projects/module-boundaries': [
         'error',
         {
           allow: ['^@hyperfrontend/', '^\\.\\./\\.\\./shared/'],
@@ -143,21 +128,17 @@ module.exports = [
   },
   {
     // context: spec files in this directory were excluded from linting entirely until test-name enforcement was added.
-    // todo: onboard the package-e2e specs to the remaining workspace style rules, then delete this override.
+    // context: until the package-e2e specs are onboarded to the remaining workspace style rules, this override keeps them out of those rules.
     files: ['apps/package-e2e/**/*.spec.ts'],
     rules: {
       'workspace/no-decorative-header-comments': 'off',
       'workspace/no-plain-inline-comments': 'off',
       'workspace/import-order': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
+      'typescript/no-empty-function': 'off',
     },
   },
   {
     files: ['README.md'],
-    plugins: {
-      markdown: require('@eslint/markdown').default,
-    },
-    language: 'markdown/gfm',
     rules: {
       // why: the root readme is a landing page that lists every package under one heading, flagship first, rather than sorting them into main and internal
       'workspace/root-readme-packages': ['error', { sections: ['Packages'] }],
@@ -165,18 +146,12 @@ module.exports = [
   },
   {
     files: ['.github/workflows/ci-libraries.yml'],
-    languageOptions: {
-      parser: require('yaml-eslint-parser'),
-    },
     rules: {
       'workspace/lib-ci-workflows': 'error',
     },
   },
   {
     files: ['tsconfig.base.json'],
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
-    },
     rules: {
       'workspace/lib-tsconfig-paths': [
         'error',
