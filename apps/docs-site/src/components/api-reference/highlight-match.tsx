@@ -31,7 +31,7 @@ export function HighlightMatch({ text, query }: HighlightMatchProps) {
     return <>{text}</>
   }
 
-  // eslint-disable-next-line workspace/no-unsafe-regex
+  // lint-disable-next-line workspace/no-unsafe-regex
   const regex = createRegExp(`(${escapeRegex(trimmed)})`, 'gi')
   const parts = text.split(regex)
 

@@ -1,10 +1,7 @@
-const baseConfig = require('../../eslint.base.config.cjs')
-const pluginReact = require('eslint-plugin-react')
-const pluginReactHooks = require('eslint-plugin-react-hooks')
-const pluginJsxA11y = require('eslint-plugin-jsx-a11y')
-const eslintRules = require('../../tools/eslint-rules/src/index.ts')
+import baseConfig from '../../lint.base.config.ts'
+import { REACT_RULES } from '../../tools/lint/config/rule-sets.ts'
 
-module.exports = [
+export default [
   {
     ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts'],
   },
@@ -13,10 +10,6 @@ module.exports = [
     // context: the rule governs documentation read at a phone's width. The site's own editorial content is exactly that and keeps the rule; the app's README is an engineering note read on GitHub, where a wide line is a wide line and nothing more.
     files: ['**/*.md'],
     ignores: ['content/**/*.md'],
-    plugins: {
-      markdown: require('@eslint/markdown').default,
-    },
-    language: 'markdown/gfm',
     rules: {
       'workspace/codeblock-line-width': 'off',
     },
@@ -24,18 +17,12 @@ module.exports = [
   {
     // Ensure all publishable libraries are documented in content.ts and generate-docs.ts
     files: ['src/lib/content.ts', 'scripts/generate-docs.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/docs-site-libraries': 'error',
     },
   },
   {
     files: ['src/lib/content.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/docs-site-routes': 'error',
       'workspace/docs-site-library-docs': 'error',
@@ -45,9 +32,6 @@ module.exports = [
   {
     // Every app router page must export metadata following the src/lib/metadata.ts conventions
     files: ['src/app/**/page.tsx'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/docs-site-page-metadata': 'error',
     },
@@ -64,38 +48,28 @@ module.exports = [
     // package identity data, which the site and the media recorder both read so a package's mark and hue are stated once
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      '@nx/enforce-module-boundaries': [
+      'projects/module-boundaries': [
         'error',
         {
-          allow: ['^@hyperfrontend/', '^.*/assets/brand/[^/]+\\.json$'],
+          allow: [
+            '^@hyperfrontend/',
+            '^.*/assets/brand/[^/]+\\.json$',
+            '^.*/lint(\\.base)?\\.config\\.ts$',
+            '^(?:\\.\\./)*(?:\\./)?tools/lint/config/[^/]+\\.ts$',
+          ],
         },
       ],
     },
   },
   {
     files: ['**/*.tsx', '**/*.jsx'],
-    plugins: {
-      react: pluginReact,
-      'react-hooks': pluginReactHooks,
-      'jsx-a11y': pluginJsxA11y,
-    },
-    languageOptions: {
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
     settings: {
       react: {
         version: '19.0',
       },
     },
     rules: {
-      ...pluginReact.configs.recommended.rules,
-      ...pluginReactHooks.configs.recommended.rules,
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
+      ...REACT_RULES,
       'jsdoc/require-jsdoc': 'off',
       'jsdoc/require-param-description': 'off',
       'jsdoc/require-returns-description': 'off',
@@ -112,9 +86,6 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/max-file-lines': [
         'error',
@@ -128,10 +99,10 @@ module.exports = [
   {
     files: ['**/*.json'],
     rules: {
-      '@nx/dependency-checks': [
+      'projects/dependency-checks': [
         'error',
         {
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+          ignoredFiles: ['{projectRoot}/lint.config.ts'],
           ignoredDependencies: [
             // Apps are standalone and install @hyperfrontend packages from npm
             // They should not be subject to monorepo version synchronization rules
@@ -176,9 +147,6 @@ module.exports = [
           ],
         },
       ],
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
     },
   },
 ]
