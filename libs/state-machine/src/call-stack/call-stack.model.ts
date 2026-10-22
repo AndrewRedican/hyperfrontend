@@ -1,5 +1,5 @@
 /** Generic callback function type */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export type Callback = (...args: any[]) => void
 
 /** Function that removes a subscription when called */
