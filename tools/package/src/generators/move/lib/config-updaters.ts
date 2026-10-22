@@ -3,13 +3,13 @@ import type { NormalizedOptions } from './move-helpers'
 import { joinPathFragments, updateJson } from '@nx/devkit'
 
 /**
- * Update eslint.config.cjs with the correct base config path.
+ * Update lint.config.ts with the correct base config path.
  *
  * @param tree - The virtual file system tree
  * @param options - Normalized move generator options
  */
 export function updateEslintConfig(tree: Tree, options: NormalizedOptions): void {
-  const eslintConfigPath = joinPathFragments(options.newProjectRoot, 'eslint.config.cjs')
+  const eslintConfigPath = joinPathFragments(options.newProjectRoot, 'lint.config.ts')
 
   if (!tree.exists(eslintConfigPath)) {
     return
@@ -17,10 +17,7 @@ export function updateEslintConfig(tree: Tree, options: NormalizedOptions): void
 
   let content = tree.read(eslintConfigPath, 'utf-8')
   if (content) {
-    content = content.replace(
-      /require\(['"](?:\.\.\/)+eslint\.base\.config\.cjs['"]\)/g,
-      `require('${options.newOffsetFromRoot}eslint.base.config.cjs')`
-    )
+    content = content.replace(/from ['"](?:\.\.\/)+lint\.base\.config\.ts['"]/g, `from '${options.newOffsetFromRoot}lint.base.config.ts'`)
     tree.write(eslintConfigPath, content)
   }
 }
