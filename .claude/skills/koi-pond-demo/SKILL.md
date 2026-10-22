@@ -109,7 +109,7 @@ npx nx run demo-koi-pond:pack-shell     # hf build → dist/apps/demos/koi-pond/
 npx nx run docs-site:refresh-shell      # packs all demo shells + copies to docs-site/vendor + explicit-path install
 ```
 
-Vendored shell + touched `package.json` + `package-lock.json` land **together** (a tarball without its locks fails `npm ci` EINTEGRITY on a cold cache). The koi shell name must stay in docs-site `eslint.config.cjs` `ignoredDependencies` or lint `--fix` deletes the dep.
+Vendored shell + touched `package.json` + `package-lock.json` land **together** (a tarball without its locks fails `npm ci` EINTEGRITY on a cold cache). The koi shell name must stay in docs-site `lint.config.ts` `ignoredDependencies` or lint `--fix` deletes the dep.
 
 ### Contract bump pipeline (the order that works)
 
@@ -172,7 +172,7 @@ Fish sizing: `FISH_LENGTH_RATIO` 0.36 of the world's shorter axis (clamp 130..56
 - **Debug UI port**: the koi host pins it with `debug.port: 4290` in `hf-dev.config.ts`.
 - **Per-fish three.js** (~180 kB gzip each): inherent to independent apps; a shared chunk breaks the isolation the demo proves. Curtain covers the load. Not a bug.
 - **Unit tests live in `demo-koi-lib` and `demo-koi-pond` only.** The eight `fish-*` apps carry no vitest, no `test` target, and no test devDeps by design. Do not add unit tests back to a fish app. Keep the lib's specs mutation-proven (disable avoidance → boundary specs fail) across all seeds, and never write `?.foo()).not.toBe(null)` (passes on absent nodes). Canvas grammar is asserted through `scene/__tests__/overlay-recorder.ts`, a recording 2D context.
-- **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists (`npx eslint <files>`).
+- **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists from the owning project's directory so its own config applies (`cd apps/docs-site && node ../../tools/lint/bin/lint.ts <files>`); the workspace installs no `eslint`, so `npx eslint` would download one.
 
 ## Checklist
 

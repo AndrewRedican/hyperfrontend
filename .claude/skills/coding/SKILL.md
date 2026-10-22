@@ -16,8 +16,8 @@ Know all enforced rules **before** generating code. Violations will be caught by
 | Docs site               | `apps/docs-site/`                    |
 | Package e2e             | `apps/package-e2e/`                  |
 | Tooling                 | `tools/`, `plugins/`                 |
-| ESLint rule docs        | `tools/eslint-rules/docs/`           |
-| Base ESLint config      | `eslint.base.config.cjs`             |
+| Lint rule docs          | `tools/lint/docs/rules/`             |
+| Base lint config        | `lint.base.config.ts`                |
 | TS path aliases         | `tsconfig.base.json` → `paths`       |
 | Immutable-safe builtins | `@hyperfrontend/immutable-api-utils` |
 
@@ -158,7 +158,7 @@ import { readFile } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 ```
 
-**Check `tools/eslint-rules/src/utils/fs.ts` before reimplementing any file operation.**
+**Check `libs/project-scope/src/core/fs/` (`@hyperfrontend/project-scope/core`) before reimplementing any file operation.**
 
 ### Shell Commands — no execSync
 
@@ -357,7 +357,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] No enums — use `freeze({...} as const)` + type derivation
 - [ ] No direct built-in calls — use `@hyperfrontend/immutable-api-utils`
 - [ ] No `execSync` — use `execFileSync`
-- [ ] Sync fs only — reuse `tools/eslint-rules/src/utils/fs.ts`
+- [ ] Sync fs only — reuse `@hyperfrontend/project-scope/core` file helpers
 - [ ] JSDoc on all exported members (`@param`, `@returns`)
 - [ ] Member docs as JSDoc above, not trailing `//`
 - [ ] Comments use categorized prefixes; no plain `//`, no `TODO`, no `====` blocks
