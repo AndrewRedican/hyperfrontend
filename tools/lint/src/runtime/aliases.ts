@@ -32,7 +32,7 @@ interface BaseTsconfig {
 export const WORKSPACE_ROOT: string = resolve(import.meta.dirname, '..', '..', '..', '..')
 
 /** The suffixes tried, in order, for a relative import that names no file as written. */
-const COMPLETIONS = ['.ts', '.tsx', '/index.ts'] as const
+const COMPLETIONS = ['.ts', '.tsx', `${sep}index.ts`] as const
 
 const ALIASES: Readonly<Record<string, readonly string[]>> = (
   createRequire(import.meta.url)(resolve(WORKSPACE_ROOT, 'tsconfig.base.json')) as BaseTsconfig
