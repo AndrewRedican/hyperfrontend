@@ -118,6 +118,19 @@ const specifier = relative(from, to).replace(/\\/g, '/')
 const specifier = relative(from, to).split(sep).join(posix.sep)
 ```
 
+### `posixNative`
+
+A native path, or a `relative()` result, given to `basename`, `dirname`, `extname`, `isAbsolute`, `join`, `normalize`, `parse`, `relative`, or `resolve` of `path/posix`. Those functions split on `/` alone, so on Windows `posix.dirname('C:\\x\\y.ts')` answers `.` and `posix.relative('C:\\x', 'C:\\x\\y.ts')` answers a path that climbs out of the drive. Only proven native arguments are reported; a value named like a path may be portable, and `posix.*` is the right call for it then. There is no autofix: either call the `node:path` function, or convert the path first.
+
+```typescript
+// ❌
+const directory = posix.dirname(join(root, file))
+
+// ✅
+const directory = dirname(join(root, file))
+const key = workspaceRelativePath(root, join(root, file))
+```
+
 ### `nativeImport`
 
 A dynamic `import()` of a native path.

@@ -63,6 +63,15 @@ const SPAWN = "import { execFileSync, execSync, spawn, spawnSync } from 'node:ch
 // why: the cases recorded from the previous linter cover only the separator checks; the specifier, URL, line, temporary-path, spawn and conversion checks are specified here.
 testRule(rule, {
   valid: [
+    valid('portable and unknown paths given to path/posix functions', [
+      "import { join, posix, relative, sep } from 'node:path'",
+      'const a = posix.join(root, file)',
+      "const b = posix.dirname('libs/a/src/x.ts')",
+      'const c = posix.relative(relative(a, b).split(sep).join(posix.sep), file)',
+      'const d = posix.sep.concat(join(root, file))',
+      'const e = posix.format({ dir: join(root, file) })',
+      'const f = join(process.cwd(), file)',
+    ]),
     valid('imports of specifiers and file URLs', [
       "import { pathToFileURL } from 'node:url'",
       "await import('./x.js')",
@@ -410,6 +419,22 @@ testRule(rule, {
         '}',
       ],
       [at('posixConversion', 1, 11), at('posixConversion', 4, 11), at('posixConversion', 4, 34)]
+    ),
+    invalid(
+      'native paths given to path/posix functions',
+      [
+        "import { join, posix, relative } from 'node:path'",
+        'const a = posix.relative(process.cwd(), file)',
+        'const b = posix.dirname(join(root, file))',
+        "const c = posix.join(relative(a, b), 'x')",
+        'const d = posix.basename(__dirname)',
+      ],
+      [
+        at('posixNative', 2, 26, { method: 'relative' }),
+        at('posixNative', 3, 25, { method: 'dirname' }),
+        at('posixNative', 4, 22, { method: 'join' }),
+        at('posixNative', 5, 26, { method: 'basename' }),
+      ]
     ),
     invalid('legacy conversions in a file without node: imports', ["const a = x.replace(/\\\\/g, '/')"], [at('posixConversion', 1, 11)]),
     invalid(

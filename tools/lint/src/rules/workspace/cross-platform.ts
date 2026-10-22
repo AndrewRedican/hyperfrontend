@@ -26,7 +26,7 @@ import {
   checkRuntimeCall,
   checkTemporaryPath,
 } from './shared/cross-platform/runtime.ts'
-import { checkBuiltString, checkMethodCall, checkRelative } from './shared/cross-platform/separators.ts'
+import { checkBuiltString, checkMethodCall, checkPosixInput, checkRelative } from './shared/cross-platform/separators.ts'
 import { workspaceRootOf } from './shared/locate.ts'
 
 /** The rule's options. */
@@ -121,6 +121,7 @@ export default defineRule<CrossPlatformOptions | undefined, Node>({
       CallExpression(node) {
         checkMethodCall(scan, node)
         checkRelative(scan, node)
+        checkPosixInput(scan, node)
         checkRuntimeCall(scan, node)
       },
       TemplateLiteral(node) {

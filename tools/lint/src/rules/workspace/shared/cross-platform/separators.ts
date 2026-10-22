@@ -29,11 +29,26 @@ const MESSAGES = {
     "Rebuilding an absolute path as '/' plus joined segments drops the drive on Windows: 'C:\\x' becomes '/C:/x'. Walk up with `dirname()` instead.",
   posixConversion:
     'Convert native paths to POSIX with `normalizePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported. This spelling also rewrites backslashes on POSIX, where they are legal file-name characters.',
+  posixNative:
+    "`posix.{{ method }}()` splits on '/' alone, and this argument is a native path, which uses '\\' on Windows. Call `{{ method }}()` from node:path on native paths, or convert the path first with `workspaceRelativePath` or `normalizePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported.",
   lineSplit: "Splitting on a bare line feed leaves '\\r' on every line of a CRLF file. Split on `/\\r?\\n/`.",
 } as const
 
 /** The string methods that match a separator. */
 const SEPARATOR_METHODS = createSet(['split', 'indexOf', 'lastIndexOf', 'startsWith', 'endsWith', 'includes', 'replace', 'replaceAll'])
+
+/** The `path/posix` functions that read their arguments as paths split on '/'. */
+const POSIX_PATH_FUNCTIONS = createSet([
+  'basename',
+  'dirname',
+  'extname',
+  'isAbsolute',
+  'join',
+  'normalize',
+  'parse',
+  'relative',
+  'resolve',
+])
 
 /** The collection methods a `relative()` result is stored through. */
 const STORING_METHODS = createSet(['push', 'unshift', 'add', 'set', 'has', 'get'])
@@ -462,4 +477,20 @@ export function checkRelative(scan: Scan, call: Node): void {
           { start: call.end, end: call.end, text: `.split(${naming.texts[0] as string}).join(${naming.texts[1] as string}.sep)` },
         ])
   scan.report(call, MESSAGES.relativeEscapes, fix)
+}
+
+/**
+ * Checks a call of a `path/posix` function for arguments proven native, which it cannot split on Windows.
+ *
+ * @param scan - The file's checks
+ * @param call - Any call
+ */
+export function checkPosixInput(scan: Scan, call: Node): void {
+  const qualified = scan.tracer.qualify(call.callee as Node)
+  if (qualified?.module !== 'path/posix' || qualified.members.length !== 1 || !POSIX_PATH_FUNCTIONS.has(qualified.members[0])) return
+  for (const argument of call.arguments as readonly Node[]) {
+    const { domain } = scan.tracer.originOf(argument)
+    if (domain === 'native' || domain === 'relative')
+      scan.report(argument, MESSAGES.posixNative.split('{{ method }}').join(qualified.members[0]))
+  }
 }
