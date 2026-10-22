@@ -32,12 +32,12 @@ describe('Log Level Configuration Tests', () => {
     })
 
     it('throws an error when created with an invalid log level', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       expect(() => createLogLevelConfig('qwerty' as any)).toThrow(Error)
     })
 
     it('names the rejected value in the error thrown for an invalid log level', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       expect(() => createLogLevelConfig('qwerty' as any)).toThrow(
         "Cannot create log level configuration with invalid default level 'qwerty'."
       )
@@ -46,7 +46,7 @@ describe('Log Level Configuration Tests', () => {
     it('returns an immutable log level configuration', () => {
       const config = createLogLevelConfig()
       expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         ;(config as any).newProp = 'test'
       }).toThrow()
     })
@@ -67,7 +67,7 @@ describe('Log Level Configuration Tests', () => {
 
       it('throws an error for invalid log levels', () => {
         const config = createLogLevelConfig()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         expect(() => config.setLogLevel('qwerty' as any)).toThrow(Error)
       })
     })
@@ -85,7 +85,7 @@ describe('Log Level Configuration Tests', () => {
 
       it('returns false if the level is invalid', () => {
         const config = createLogLevelConfig()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // lint-disable-next-line typescript/no-explicit-any
         expect(config.shouldLog('qwerty' as any)).toBe(false)
       })
 
