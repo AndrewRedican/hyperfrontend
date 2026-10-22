@@ -26,9 +26,9 @@ export interface ReadmeLine {
 /** What marks a badge, wherever it sits in the block. */
 export const BADGE_PATTERNS: readonly RegExp[] = [
   /\/github\/actions\/workflow\/status/i,
-  /:\/\/codecov\.io/i,
+  /:\/\/codecov\.io\//i,
   /\/npm\/v\//i,
-  /:\/\/bundlephobia\.com/i,
+  /:\/\/bundlephobia\.com\//i,
   /\/all-contributors/i,
   /\/license-MIT/i,
   /\/npm\/dm\//i,
