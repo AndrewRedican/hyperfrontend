@@ -1,4 +1,4 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 

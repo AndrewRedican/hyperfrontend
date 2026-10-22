@@ -56,14 +56,14 @@ describe('Event Filters', () => {
       const handler = jest.fn()
       const filteredHandler = create(eventType)(handler)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       filteredHandler(eventType, {} as any, mockChannel)
       const callsAfterOwnEvent = handler.mock.calls.length
 
       allEvents
         .filter((e) => e !== eventType)
         .forEach((otherEvent) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // lint-disable-next-line typescript/no-explicit-any
           filteredHandler(otherEvent, {} as any, mockChannel)
         })
 
@@ -77,7 +77,7 @@ describe('Event Filters', () => {
   describe('open', () => {
     it('filters for OPEN events only', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = open(handler as any)
 
       const openData: OpenEventData = {
@@ -91,7 +91,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for CLOSE events', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = open(handler as any)
 
       const closeData: CloseEventData = { notify: true }
@@ -102,7 +102,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for other event types', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = open(handler as any)
 
       filteredHandler('cancel', { notify: true }, mockChannel)
@@ -116,7 +116,7 @@ describe('Event Filters', () => {
   describe('close', () => {
     it('filterss for CLOSE events only', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = close(handler as any)
 
       const closeData: CloseEventData = { notify: true }
@@ -127,7 +127,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for other event types', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = close(handler as any)
 
       const openData: OpenEventData = {
@@ -143,7 +143,7 @@ describe('Event Filters', () => {
   describe('cancel', () => {
     it('filterss for CANCEL events only', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = cancel(handler as any)
 
       const cancelData: CancelEventData = { notify: true }
@@ -154,7 +154,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for other event types', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = cancel(handler as any)
 
       filteredHandler('open', { origin: 'http://test.com', contract: { accepted: [], emitted: [] } }, mockChannel)
@@ -167,7 +167,7 @@ describe('Event Filters', () => {
   describe('deny', () => {
     it('filterss for DENY events only', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = deny(handler as any)
 
       const denyData: DenyEventData = { reason: 'Test denial' }
@@ -178,7 +178,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for other event types', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = deny(handler as any)
 
       filteredHandler('cancel', { notify: false }, mockChannel)
@@ -191,7 +191,7 @@ describe('Event Filters', () => {
   describe('invalid', () => {
     it('filterss for INVALID events only', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = invalid(handler as any)
 
       const invalidData: InvalidEventData = { error: 'Test error' }
@@ -202,7 +202,7 @@ describe('Event Filters', () => {
 
     it('does not call handler for other event types', () => {
       const handler = jest.fn()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredHandler = invalid(handler as any)
 
       filteredHandler('open', { origin: 'http://test.com', contract: { accepted: [], emitted: [] } }, mockChannel)
@@ -218,11 +218,11 @@ describe('Event Filters', () => {
       const closeHandler = jest.fn()
       const cancelHandler = jest.fn()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredOpen = open(openHandler as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredClose = close(closeHandler as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // lint-disable-next-line typescript/no-explicit-any
       const filteredCancel = cancel(cancelHandler as any)
 
       const openData: OpenEventData = {
