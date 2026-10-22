@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { MessageHandler, Queue } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { createError, createTypeError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

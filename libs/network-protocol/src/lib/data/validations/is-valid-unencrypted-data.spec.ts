@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { Schema } from '@hyperfrontend/json-utils'
 import { before as beforeAll } from 'node:test'
 import { createHash } from '@hyperfrontend/cryptography/node'

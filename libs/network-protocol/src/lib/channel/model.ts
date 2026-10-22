@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
 import type { PacketDropHandler, PacketOpener, PacketSealer, WirePacket } from '../packet/model'
 import type { ReceiveFn, ReceivePacketFn, InboundQueue } from '../receiver/model'

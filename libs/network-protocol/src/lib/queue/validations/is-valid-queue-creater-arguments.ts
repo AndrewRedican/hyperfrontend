@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* lint-disable typescript/no-explicit-any */
 import type { QueueCreatorArguments, QueueCreatorValidity } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { isValidLogger } from '@hyperfrontend/logging'
