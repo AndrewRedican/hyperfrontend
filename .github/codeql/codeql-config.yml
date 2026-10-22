@@ -1,0 +1,6 @@
+name: hyperfrontend CodeQL config
+
+# Test inputs that are deliberately unused, unreachable or unparseable code, kept out of extraction.
+paths-ignore:
+  - '**/__fixtures__/**'
+  - '**/fixtures/**'
