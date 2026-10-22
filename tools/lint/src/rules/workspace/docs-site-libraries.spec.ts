@@ -84,7 +84,7 @@ testRule(rule, {
       'a content file listing and placing every library',
       PLACED,
       CONTENT,
-      LISTED.replace('json-utils', 'json-utils').replace('[{', "[{ packageName: '@hyperfrontend/json-utils' }, {")
+      LISTED.replace('[{', "[{ packageName: '@hyperfrontend/json-utils' }, {")
     ),
     site('an array that is not exported from the content', PLACED, CONTENT, 'const LIBRARIES = []'),
     site('an array declared with let', PLACED, CONTENT, 'export let LIBRARIES = []'),
