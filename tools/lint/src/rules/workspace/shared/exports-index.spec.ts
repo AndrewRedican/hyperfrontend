@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { moduleDeclarations, moduleExports, parsedModule, resolveModule } from './exports-index.ts'
 
@@ -122,7 +123,7 @@ describe('moduleDeclarations', () => {
 
 describe('moduleExports', () => {
   it('follows stars, lists, imports and defaults to the declaring files', () => {
-    expect(moduleExports(join(ROOT, 'src/index.ts')).map((item) => [item.name, item.kind, item.file.slice(ROOT.length + 1)])).toEqual([
+    expect(moduleExports(join(ROOT, 'src/index.ts')).map((item) => [item.name, item.kind, relativePath(ROOT, item.file)])).toEqual([
       ['local', 'variable', 'src/index.ts'],
       ['one', 'variable', 'src/star.ts'],
       ['Two', 'type', 'src/star.ts'],

@@ -2,10 +2,15 @@ import type { RunEnvironment } from './run.ts'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { run } from './run.ts'
 
 const FIXTURES = join(import.meta.dirname, '..', 'config', '__fixtures__')
+const PLAIN = join(FIXTURES, '..', '..', 'rules', 'workspace', '__fixtures__', 'plain')
+
+// why: the JSON report carries native absolute paths, which escape their backslashes on Windows, so the paths are read back rather than searched for.
+const reportedFiles = (out: readonly string[]): string[] => (parse(out.join('')) as { filePath: string }[]).map((result) => result.filePath)
 
 /** A project whose configuration sits above the directory the command runs in. */
 const TREE = mkdtempSync(join(tmpdir(), 'lint-run-'))
@@ -154,15 +159,15 @@ describe('run', () => {
   })
 
   it('lints the files of a directory that the configuration selects', async () => {
-    const captured = capture(join(FIXTURES, '..', '..', 'rules', 'workspace', '__fixtures__', 'plain'))
+    const captured = capture(PLAIN)
     const code = await run(['--config', join(FIXTURES, 'warn.ts'), '--format', 'json', '.'], captured.environment)
-    expect({ code, out: captured.out.join('') }).toEqual({ code: 0, out: expect.stringContaining('plain/package.json') })
+    expect({ code, files: reportedFiles(captured.out) }).toEqual({ code: 0, files: [join(PLAIN, 'package.json')] })
   })
 
   it('lints the working directory when no path is given', async () => {
-    const captured = capture(join(FIXTURES, '..', '..', 'rules', 'workspace', '__fixtures__', 'plain'))
+    const captured = capture(PLAIN)
     await run(['--config', join(FIXTURES, 'warn.ts'), '--format', 'json'], captured.environment)
-    expect(captured.out.join('')).toContain('plain/package.json')
+    expect(reportedFiles(captured.out)).toEqual([join(PLAIN, 'package.json')])
   })
 
   it('answers an ignored piped-in file with the ignore warning', async () => {

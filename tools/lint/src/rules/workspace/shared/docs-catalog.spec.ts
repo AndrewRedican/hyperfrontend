@@ -2,6 +2,7 @@ import type { DocsPackage } from './docs-catalog.ts'
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDocsWorkspace } from '../__fixtures__/docs-workspace.ts'
 import {
@@ -101,7 +102,10 @@ describe('routeKey', () => {
 
 describe('markdownOfRoute', () => {
   it('finds the documents routes render', () => {
-    const shown = (route: string): string | null => markdownOfRoute(index, route)?.slice(root.length + 1) ?? null
+    const shown = (route: string): string | null => {
+      const document = markdownOfRoute(index, route)
+      return document === null ? null : relativePath(root, document)
+    }
     expect(
       [
         '/architecture',
