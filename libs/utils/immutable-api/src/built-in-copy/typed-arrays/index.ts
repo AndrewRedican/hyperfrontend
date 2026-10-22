@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _ArrayBuffer = globalThis.ArrayBuffer
 // why: SharedArrayBuffer is hidden on pages without cross-origin isolation, so capture it guarded to keep this module import-safe everywhere

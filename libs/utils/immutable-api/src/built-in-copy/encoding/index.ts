@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/encoding
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _TextEncoder = globalThis.TextEncoder
 const _TextDecoder = globalThis.TextDecoder

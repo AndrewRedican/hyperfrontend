@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/function
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _Function = globalThis.Function
 const _FunctionPrototype = _Function.prototype

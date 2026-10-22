@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/map
  */
-/* eslint-disable workspace/lib-require-jsdoc-example */
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 const _Map = globalThis.Map
 const _Reflect = globalThis.Reflect
@@ -23,7 +23,7 @@ export const createMap = <K, V>(iterable?: Iterable<readonly [K, V]> | null): Ma
  * (Safe copy) Groups elements by key using the captured Map.groupBy if available.
  * Note: Available only in ES2024+ environments.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// lint-disable-next-line typescript/no-explicit-any
 export const mapGroupBy = (_Map as any).groupBy
 
 /**
