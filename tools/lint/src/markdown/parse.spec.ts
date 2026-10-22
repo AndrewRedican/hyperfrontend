@@ -32,4 +32,9 @@ describe('parseMarkdown', () => {
       expect(withoutDroppedPositions(actual, expected).join('\n')).toBe(expected.join('\n'))
     })
   }
+
+  it('opens a raw HTML block only on a raw tag name that ends there', () => {
+    const kinds = (text: string): string[] => (parseMarkdown(text).children ?? []).map((node) => node.kind)
+    expect([kinds('<script>\n\n*a*'), kinds('<scripts>\n\n*a*')]).toEqual([['html'], ['html', 'paragraph']])
+  })
 })

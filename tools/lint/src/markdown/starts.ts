@@ -288,7 +288,7 @@ export function listMarker(text: string, at: number, lineEnd: number, column: nu
 export function htmlStart(text: string, at: number, lineEnd: number, paragraphOpen: boolean): number {
   const line = text.slice(at, lineEnd)
   const lower = line.toLowerCase()
-  if (RAW_TAGS.some((tag) => lower.startsWith(`<${tag}`) && /[\s>]|$/.test(lower.charAt(tag.length + 1)))) return 1
+  if (RAW_TAGS.some((tag) => lower.startsWith(`<${tag}`) && /^[\s>]?$/.test(lower.charAt(tag.length + 1)))) return 1
   if (line.startsWith('<!--')) return 2
   if (line.startsWith('<?')) return 3
   if (/^<![A-Za-z]/.test(line)) return 4
