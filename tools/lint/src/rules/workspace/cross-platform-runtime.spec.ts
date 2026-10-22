@@ -93,7 +93,7 @@ testRule(rule, {
       'const e = `--import=${pathToFileURL(join(root, "x.js")).href}`',
       `const f = \`--import=\${join(root, "x.js")}.js\``,
       `const g = \`--require=\${join(root, "x.js")}\``,
-      'const h = `${a}--import=${join(root, "x.js")}`',
+      `const h = \`\${a}--import=\${join(root, "x.js")}\``,
       'const i = `--import=`',
       "register('./hooks.mjs', import.meta.url)",
       "register(pathToFileURL(join(root, 'hooks.mjs')).href)",
