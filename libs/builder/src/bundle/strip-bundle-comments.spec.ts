@@ -6,7 +6,7 @@ import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { stripBundleCommentsPass } from './strip-bundle-comments'
 
-const PRAGMA = '// eslint-disable-next-line workspace/no-unsafe-builtin-methods'
+const PRAGMA = '// lint-disable-next-line workspace/no-unsafe-builtin-methods'
 const CODE = 'var MyLib = { value: 1 };\n'
 
 describe('stripBundleCommentsPass', () => {
