@@ -1,6 +1,6 @@
-const baseConfig = require('../../eslint.base.config.cjs')
+import baseConfig from '../../lint.base.config.ts'
 
-module.exports = [
+export default [
   ...baseConfig,
   {
     ignores: ['__fixtures__/**'],
@@ -20,16 +20,13 @@ module.exports = [
   {
     files: ['**/*.json'],
     rules: {
-      '@nx/dependency-checks': [
+      'projects/dependency-checks': [
         'error',
         {
           ignoredDependencies: ['@hyperfrontend/testing'],
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}', '{projectRoot}/scripts/**'],
+          ignoredFiles: ['{projectRoot}/lint.config.ts', '{projectRoot}/scripts/**'],
         },
       ],
-    },
-    languageOptions: {
-      parser: require('jsonc-eslint-parser'),
     },
   },
 ]
