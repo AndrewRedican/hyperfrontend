@@ -55,6 +55,18 @@ export function fileOf(files: ReadonlySet<string>, path: string): string | null 
   return candidates.find((candidate) => files.has(candidate)) ?? null
 }
 
+/**
+ * A path pattern with its wildcard, the first `*`, standing for a value taken literally.
+ *
+ * @param pattern - The pattern, as a tsconfig path alias or target writes it
+ * @param value - What the wildcard stands for
+ * @returns The pattern with the value in place of its wildcard, or as is when it has none
+ */
+export function substituteWildcard(pattern: string, value: string): string {
+  const star = pattern.indexOf('*')
+  return star === -1 ? pattern : `${pattern.slice(0, star)}${value}${pattern.slice(star + 1)}`
+}
+
 /** Each project table's projects by root, built on first use. */
 const rootIndexes = createWeakMap<ReadonlyMap<string, ProjectRecord>, Map<string, ProjectRecord>>()
 
@@ -189,7 +201,7 @@ function aliasTargets(aliases: ReadonlyMap<string, readonly string[]>, specifier
     const suffix = pattern.slice(star + 1)
     if (specifier.length < prefix.length + suffix.length || !specifier.startsWith(prefix) || !specifier.endsWith(suffix)) continue
     const captured = specifier.slice(prefix.length, specifier.length - suffix.length)
-    return targets.map((target) => target.replace('*', captured))
+    return targets.map((target) => substituteWildcard(target, captured))
   }
   return []
 }

@@ -11,7 +11,7 @@ import type { WorkspaceGraph } from '../../../graph/build.ts'
 import type { ProjectRecord } from '../../../graph/model.ts'
 import { existsSync } from 'node:fs'
 import { join, posix } from 'node:path'
-import { fileOf } from '../../../graph/resolve.ts'
+import { fileOf, substituteWildcard } from '../../../graph/resolve.ts'
 import { moduleExports } from '../../workspace/shared/exports-index.ts'
 
 /** One name to import from one module. */
@@ -114,11 +114,11 @@ export function aliasImports(graph: WorkspaceGraph, file: string, target: Projec
     let { path, scope } = entry
     if (path.includes('*')) {
       const imported = posix.normalize(posix.join(posix.dirname(file), specifier))
-      const base = path.replace('*', '')
+      const base = path.slice(0, path.indexOf('*'))
       if (imported.startsWith(base)) {
         const rest = imported.slice(base.length)
-        path = path.replace('*', rest)
-        scope = scope.replace('*', rest)
+        path = substituteWildcard(path, rest)
+        scope = substituteWildcard(scope, rest)
       }
     }
     for (const name of names) if (declaringFile(graph, path, name) !== null) remapped.push({ member: String(name), path: scope })
@@ -169,7 +169,7 @@ function entryPaths(graph: WorkspaceGraph, specifier: string): readonly string[]
   for (const [alias, targets] of graph.aliases) {
     if (!alias.endsWith('*')) continue
     const prefix = alias.slice(0, -1)
-    if (specifier.startsWith(prefix)) return targets.map((target) => target.replace('*', specifier.slice(prefix.length)))
+    if (specifier.startsWith(prefix)) return targets.map((target) => substituteWildcard(target, specifier.slice(prefix.length)))
   }
   return []
 }

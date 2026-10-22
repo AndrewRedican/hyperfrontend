@@ -5,7 +5,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { compileGlob } from '../files/glob.ts'
 import { createGraphWorkspace } from './__fixtures__/workspace.ts'
-import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier } from './resolve.ts'
+import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve.ts'
 import { discoverProjects, listFiles } from './workspace.ts'
 
 const root = createGraphWorkspace()
@@ -60,6 +60,16 @@ describe('fileOf', () => {
       fileOf(resolver.files, 'libs/a/src/deep.mjs'),
       fileOf(resolver.files, 'libs/a/src/x.js'),
     ]).toEqual(['libs/a/src/deep.ts', null, null])
+  })
+})
+
+describe('substituteWildcard', () => {
+  it('puts the value in place of the first wildcard, taken literally', () => {
+    expect([
+      substituteWildcard('libs/a/src/*.ts', 'deep'),
+      substituteWildcard('libs/*/*', "$&'"),
+      substituteWildcard('libs/a', 'deep'),
+    ]).toEqual(['libs/a/src/deep.ts', "libs/$&'/*", 'libs/a'])
   })
 })
 
