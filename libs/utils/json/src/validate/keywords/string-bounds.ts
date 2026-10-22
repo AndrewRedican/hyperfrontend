@@ -55,7 +55,7 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
     }
 
     try {
-      // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
+      // lint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       const regex = createRegExp(schema.pattern)
       if (!regex.test(instance)) {
         addError(ctx, `String does not match pattern: ${schema.pattern}`, instance, 'pattern', {
