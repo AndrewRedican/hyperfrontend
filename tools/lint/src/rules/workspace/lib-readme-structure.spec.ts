@@ -94,6 +94,10 @@ const at = (text: string, needle: string, message: string): LineError => ({
 const COMPLETE = readme()
 const NOTHING = 'Just words.\n'
 const OTHER_TITLE = readme(FEATURES, SECTIONS, `# Other\n\n${badges(BADGE_URLS.slice(0, 7))}\n## Heading first\n\n${LINKS}`)
+const LOOKALIKE = COMPLETE.replace('https://codecov.io/', 'https://codecov.io.example/').replace(
+  'https://bundlephobia.com/x',
+  'https://[bundlephobia.com]/x'
+)
 const ELSEWHERE = COMPLETE.replace('https://www.hyperfrontend.dev/docs/libraries/pub/', 'https://example.com/docs/').replace(
   'package=%40s%2Fpub',
   'package=other'
@@ -178,6 +182,14 @@ testRule(rule, {
         'Missing required badge: Tree-shakeable badge',
         'README must have a short description paragraph after the badges block',
       ].map((message) => whole(OTHER_TITLE, message)),
+    },
+    {
+      name: 'badges from a lookalike host or behind an unparsable URL',
+      path: README,
+      text: LOOKALIKE,
+      errors: ['Missing required badge: Coverage badge', 'Missing required badge: Bundle size badge'].map((message) =>
+        whole(LOOKALIKE, message)
+      ),
     },
     {
       name: 'links that point elsewhere',

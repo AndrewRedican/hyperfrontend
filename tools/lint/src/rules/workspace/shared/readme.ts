@@ -5,6 +5,8 @@
  * @module rules/workspace/shared/readme
  */
 
+import { parseURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+
 /** A run of centred paragraphs. */
 export interface CentredBlock {
   /** The lines of the block, joined. */
@@ -23,12 +25,21 @@ export interface ReadmeLine {
   readonly line: number
 }
 
+/** The host a badge is served from. */
+export interface BadgeHost {
+  /** The hostname, matched exactly. */
+  readonly host: string
+}
+
+/** A badge's mark: a fragment of its URL, or the host serving it. */
+export type BadgeMark = RegExp | BadgeHost
+
 /** What marks a badge, wherever it sits in the block. */
-export const BADGE_PATTERNS: readonly RegExp[] = [
+export const BADGE_MARKS: readonly BadgeMark[] = [
   /\/github\/actions\/workflow\/status/i,
-  /:\/\/codecov\.io\//i,
+  { host: 'codecov.io' },
   /\/npm\/v\//i,
-  /:\/\/bundlephobia\.com\//i,
+  { host: 'bundlephobia.com' },
   /\/all-contributors/i,
   /\/license-MIT/i,
   /\/npm\/dm\//i,
@@ -36,6 +47,21 @@ export const BADGE_PATTERNS: readonly RegExp[] = [
   /[/=]node-%3E%3D/i,
   /[/=]tree%20shakeable/i,
 ]
+
+/** A URL written out in full, wherever it sits in the text. */
+const ABSOLUTE_URL = /https?:\/\/[^\s"'<>()]+/gi
+
+/**
+ * Whether a text carries a badge: a URL fragment anywhere in it, or a URL served from the host.
+ *
+ * @param text - The text read for badges
+ * @param mark - What marks the badge
+ * @returns True when the text carries the mark
+ */
+export function carriesBadge(text: string, mark: BadgeMark): boolean {
+  if (mark instanceof RegExp) return mark.test(text)
+  return [...text.matchAll(ABSOLUTE_URL)].some(([written]) => parseURL(written)?.hostname === mark.host)
+}
 
 /**
  * Whether a line opens a centred paragraph.
@@ -81,7 +107,7 @@ export function centredBlocks(content: string): CentredBlock[] {
  */
 export function badgeBlock(content: string): CentredBlock | null {
   const blocks = centredBlocks(content)
-  return blocks.find((block) => BADGE_PATTERNS.some((pattern) => pattern.test(block.text))) ?? blocks[0] ?? null
+  return blocks.find((block) => BADGE_MARKS.some((mark) => carriesBadge(block.text, mark))) ?? blocks[0] ?? null
 }
 
 /**

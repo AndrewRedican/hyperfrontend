@@ -13,7 +13,7 @@ import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { defineRule } from '../../engine/rule.ts'
 import { keyFeatureFindings } from './shared/key-features.ts'
 import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
-import { BADGE_PATTERNS, badgeBlock, shortDescription } from './shared/readme.ts'
+import { BADGE_MARKS, badgeBlock, carriesBadge, shortDescription } from './shared/readme.ts'
 
 /** A heading and the content under it. */
 interface Section {
@@ -169,7 +169,7 @@ export default defineRule<undefined, MarkdownNode>({
         const badges = badgeBlock(content)
         if (badges === null) report('README must have a badges block with centered paragraphs (<p align="center">)')
         else
-          BADGE_PATTERNS.forEach((pattern, index) => pattern.test(badges.text) || report(`Missing required badge: ${BADGE_NAMES[index]}`))
+          BADGE_MARKS.forEach((mark, index) => carriesBadge(badges.text, mark) || report(`Missing required badge: ${BADGE_NAMES[index]}`))
         if (shortDescription(content, badges?.endLine ?? 0) === null)
           report('README must have a short description paragraph after the badges block')
         if (
