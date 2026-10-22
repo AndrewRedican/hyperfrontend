@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...1366cd2fb6206a834dd2ca822a6e0721c916d22e) - 2026-10-22
+
+### Bug Fixes
+
+- strip lint pragmas from bundled dependency code
+
 ## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...28ab8c85dd6b02b45c755c6ddbd19adc54645fe8) - 2026-10-14
 
 ### Bug Fixes
