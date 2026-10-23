@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to replace ESLint with @hyperfrontend/linter",
+  "problem": "ESLint, its parser and its plugins put dozens of packages into every install of a project whose checks fit a smaller set of rules, and removing them must not quietly drop a check the project depends on.",
+  "outcome": "The project linted by @hyperfrontend/linter with each ESLint rule mapped, ported or deliberately dropped, a comparison that shows the checks still run, and ESLint uninstalled.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/linter"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/linter@0.0.0",
+    "verifiedOn": "2026-10-23"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 60,
+  "apis": [
+    {
+      "package": "@hyperfrontend/linter",
+      "symbol": "CODE_RULES"
+    },
+    {
+      "package": "@hyperfrontend/linter",
+      "symbol": "REACT_RULES"
+    },
+    {
+      "package": "@hyperfrontend/linter",
+      "symbol": "defineRule"
+    },
+    {
+      "package": "@hyperfrontend/linter",
+      "symbol": "testRule"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A project that lints cleanly with ESLint today",
+      "Node.js 24 or later",
+      "A package.json that declares \"type\": \"module\""
+    ]
+  },
+  "related": {
+    "guides": ["lint-a-project-with-hyperfrontend-linter", "write-and-test-a-custom-lint-rule"],
+    "reference": ["/docs/libraries/linter", "/docs/libraries/linter/rules"],
+    "explanation": ["/docs/libraries/linter/architecture"]
+  },
+  "keywords": [
+    "eslint",
+    "migration",
+    "replace eslint",
+    "typescript-eslint",
+    "eslint-plugin-react",
+    "eslint-plugin-jsdoc",
+    "flat config",
+    "eslint-disable",
+    "lint-disable",
+    "dependencies",
+    "supply chain"
+  ]
+}
