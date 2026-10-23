@@ -213,6 +213,17 @@ const coreLibraries: NavItem[] = [
  * Written alphabetically; presented in ecosystem order by {@link byEcosystemRank}.
  */
 const supportingLibraries: NavItem[] = [
+  {
+    slug: 'linter',
+    packageName: '@hyperfrontend/linter',
+    href: '/docs/libraries/linter',
+    children: [
+      { slug: 'architecture', href: '/docs/libraries/linter/architecture' },
+      { slug: 'helpers', href: '/docs/libraries/linter/helpers' },
+      { slug: 'rules', href: '/docs/libraries/linter/rules' },
+      { slug: 'testing', href: '/docs/libraries/linter/testing' },
+    ],
+  },
   { slug: 'logging', packageName: '@hyperfrontend/logging', href: '/docs/libraries/logging' },
   {
     slug: 'project-scope',
