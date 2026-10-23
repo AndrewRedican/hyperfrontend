@@ -217,14 +217,14 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.5.2` |
+| `@hyperfrontend/builder` | `0.5.3` |
 | `@hyperfrontend/cryptography` | `1.1.1` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
 | `@hyperfrontend/features` | `0.11.5` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.2` |
 | `@hyperfrontend/json-utils` | `1.1.0` |
-| `@hyperfrontend/linter` | `0.0.0` |
+| `@hyperfrontend/linter` | `0.1.0` |
 | `@hyperfrontend/list-utils` | `0.1.1` |
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
