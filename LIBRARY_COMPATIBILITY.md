@@ -13,6 +13,7 @@
 | `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/linter` | ✅ | ❌ | ❌ | ❌ |
 | `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ |
@@ -35,6 +36,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 - `@hyperfrontend/cryptography`: `/browser` reads `globalThis.crypto` at first use; on Node.js that needs 19+ or 18 with `--experimental-global-webcrypto`.
 - `@hyperfrontend/features`: Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere. TypeScript `feature.config.*` and `*.contract.*` files need Node.js 23.6+ (22.6+ with `--experimental-strip-types`); JSON and JavaScript files load on every supported Node.js.
 - `@hyperfrontend/immutable-api-utils`: `built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there.
+- `@hyperfrontend/linter`: Needs Node.js 24 or later: configurations are TypeScript modules loaded through Node's own type stripping.
 - `@hyperfrontend/project-scope`: `/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0.
 - `@hyperfrontend/testing`: Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide.
 - `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
@@ -50,6 +52,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendFunctionUtils` |
 | `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendImmutableApiUtils` |
 | `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendJsonUtils` |
+| `@hyperfrontend/linter` | ✅ | ✅ | ❌ | ❌ | - |
 | `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendListUtils` |
 | `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendLogging` |
 | `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendNetworkProtocolV3`, `HyperfrontendNetworkProtocolV4` |
@@ -75,6 +78,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/function-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/immutable-api-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/json-utils` | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/linter` | `>=24.0.0` | `>=8.0.0` |
 | `@hyperfrontend/list-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/logging` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/network-protocol` | `>=18.0.0` | `>=8.0.0` |
@@ -100,6 +104,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/function-utils` | - |
 | `@hyperfrontend/immutable-api-utils` | - |
 | `@hyperfrontend/json-utils` | `@hyperfrontend/immutable-api-utils` |
+| `@hyperfrontend/linter` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/versioning` |
 | `@hyperfrontend/list-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/logging` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/network-protocol` | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils` |
@@ -131,6 +136,7 @@ flowchart TB
     function_utils["function-utils"]
     immutable_api_utils["immutable-api-utils"]
     json_utils["json-utils"]
+    linter["linter"]
     list_utils["list-utils"]
     logging["logging"]
     network_protocol["network-protocol"]
@@ -164,6 +170,9 @@ flowchart TB
     features --> ui_utils
     features --> versioning
     json_utils --> immutable_api_utils
+    linter --> immutable_api_utils
+    linter --> json_utils
+    linter --> versioning
     list_utils --> immutable_api_utils
     logging --> data_utils
     logging --> function_utils
@@ -215,6 +224,7 @@ flowchart TB
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.2` |
 | `@hyperfrontend/json-utils` | `1.1.0` |
+| `@hyperfrontend/linter` | `0.0.0` |
 | `@hyperfrontend/list-utils` | `0.1.1` |
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
