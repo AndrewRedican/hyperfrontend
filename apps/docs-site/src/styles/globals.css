@@ -3077,6 +3077,85 @@
 }
 
 @layer components {
+  /* The facts a rule catalogue states above each rule.
+
+     A rule's document says what the rule checks; the package's index says
+     what it reads, whether `--fix` applies its fixes and which preset turns
+     it on. Those are the facts a reader scans a catalogue for, so the page
+     writes them as a row of pills above each document rather than as a
+     sentence inside it. The markup is the catalogue script's
+     (`scripts/rule-catalogue.ts`); the look is here, so the two hundred
+     rows share one definition. A pill that marks a fix is tinted so the
+     fixable rules stand out when the page is skimmed, and one that says no
+     preset names the rule steps back, because it states an absence. */
+  .rule-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .rule-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--color-slate-200);
+    border-radius: 9999px;
+    background-color: var(--color-slate-50);
+    color: var(--color-slate-700);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    white-space: nowrap;
+  }
+
+  .dark .rule-fact {
+    border-color: var(--color-slate-700);
+    background-color: var(--color-slate-800);
+    color: var(--color-slate-300);
+  }
+
+  .rule-fact code {
+    font-size: 0.75rem;
+  }
+
+  /* why: the prose plugin gives a code span quotation marks and a weight of its own, and a pill is too small for either */
+  .prose .rule-fact code::before,
+  .prose .rule-fact code::after {
+    content: none;
+  }
+
+  .rule-fact--fix {
+    border-color: var(--color-emerald-200);
+    background-color: var(--color-emerald-50);
+    color: var(--color-emerald-800);
+  }
+
+  .dark .rule-fact--fix {
+    border-color: var(--color-emerald-800);
+    background-color: color-mix(in srgb, var(--color-emerald-900) 40%, transparent);
+    color: var(--color-emerald-300);
+  }
+
+  .rule-fact--preset {
+    border-color: var(--color-primary-200);
+    background-color: var(--color-primary-50);
+    color: var(--color-primary-800);
+  }
+
+  .dark .rule-fact--preset {
+    border-color: var(--color-primary-800);
+    background-color: color-mix(in srgb, var(--color-primary-900) 40%, transparent);
+    color: var(--color-primary-300);
+  }
+
+  .rule-fact--muted {
+    color: var(--color-slate-500);
+  }
+
+  .dark .rule-fact--muted {
+    color: var(--color-slate-400);
+  }
+
   /* The generated reference's type scale.
 
      A reference entry is a symbol, its kind, its signature or its members,

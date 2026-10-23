@@ -193,6 +193,17 @@ function generateSearchIndex(): void {
       })
     }
 
+    if (existsSync(join(OUTPUT_DIR, 'docs', library.slug, 'rules.md'))) {
+      seen.add(`${route}/rules`)
+      documents.push({
+        url: `${route}/rules`,
+        title: `${library.name} rule catalogue`,
+        kind: 'page',
+        package: library.packageName,
+        sections: sectionsFrom(`docs/${library.slug}/rules.md`),
+      })
+    }
+
     for (const symbol of collectApiSymbols(library.slug)) {
       documents.push({
         url: route,

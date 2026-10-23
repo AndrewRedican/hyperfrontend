@@ -10,6 +10,7 @@ import {
   getLibraryApi,
   getLibraryArchitecture,
   getLibraryReadme,
+  getLibraryRules,
   getManifest,
   getManifesto,
   getRegardingAi,
@@ -158,6 +159,20 @@ function collectLibraryDocuments(): DocumentSource[] {
         )
       )
     }
+
+    const rules = getLibraryRules(library.slug)
+    if (rules) {
+      documents.push(
+        source(
+          `${route}/rules`,
+          'page',
+          `${library.packageName} rule catalogue`,
+          `the ${library.packageName} rule catalogue`,
+          `Every rule ${library.packageName} ships, with its options and examples.`,
+          rules
+        )
+      )
+    }
   }
 
   return documents
@@ -179,8 +194,15 @@ function collectSubmoduleDocuments(items: NavItem[], packageName: string | undef
     const ownPackage = item.packageName ?? packageName
     const route = item.href
 
-    // why: a package's own page and its architecture document are collected from the manifest, which knows their titles; everything else beneath a package is a secondary entrypoint
-    if (route && ownPackage && !item.packageName && route.startsWith(LIBRARIES_PREFIX) && item.slug !== 'architecture') {
+    // why: a package's own page, its architecture document and its rule catalogue are collected from the manifest, which knows their titles; everything else beneath a package is a secondary entrypoint
+    if (
+      route &&
+      ownPackage &&
+      !item.packageName &&
+      route.startsWith(LIBRARIES_PREFIX) &&
+      item.slug !== 'architecture' &&
+      item.slug !== 'rules'
+    ) {
       const { librarySlug, submodulePath } = splitSubmoduleRoute(route)
       const readme = getSubmoduleReadme(librarySlug, submodulePath)
       const api = libraryApi(librarySlug)

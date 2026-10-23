@@ -200,6 +200,17 @@ export function getLibraryArchitecture(slug: string): string | null {
 }
 
 /**
+ * Load the rule catalogue a lint package's documentation generates
+ *
+ * @param slug - The URL slug identifier for the library
+ * @returns The catalogue's markdown, or null when the package keeps no rule index
+ */
+export function getLibraryRules(slug: string): string | null {
+  const generatedPath = join(DOCS_DIR, resolveGeneratedSlug(slug), 'rules.md')
+  return existsSync(generatedPath) ? readFileSync(generatedPath, 'utf-8') : null
+}
+
+/**
  * Load TypeDoc-generated API documentation JSON for a library
  *
  * @param slug - The URL slug identifier for the library

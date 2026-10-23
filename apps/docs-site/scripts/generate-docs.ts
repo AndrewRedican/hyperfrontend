@@ -16,6 +16,7 @@ import { generateMachineReadableDocs } from './generate-machine-readable'
 import { generateSearchIndex } from './generate-search-index'
 import { readPackageFacts } from './package-facts'
 import { REPO_BLOB_BASE } from './repo'
+import { ruleCatalogue } from './rule-catalogue'
 
 logger.setLogLevel('log')
 
@@ -696,6 +697,13 @@ function generateDocs() {
       const archOutput = join(DOCS_OUTPUT, lib.slug, 'architecture.md')
       ensureDir(dirname(archOutput))
       writeFileSync(archOutput, architecture.content)
+    }
+
+    const rules = ruleCatalogue(join(WORKSPACE_ROOT, lib.srcPath), lib.packageName)
+    if (rules !== null) {
+      const rulesOutput = join(DOCS_OUTPUT, lib.slug, 'rules.md')
+      ensureDir(dirname(rulesOutput))
+      writeFileSync(rulesOutput, transformLinks(rules, 'library', lib.slug))
     }
 
     libraryDocs.push({
