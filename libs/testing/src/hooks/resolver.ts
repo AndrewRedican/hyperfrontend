@@ -46,7 +46,7 @@ export function compileModuleMappings(serialised: string | undefined, projectRoo
 
   return (JSON.parse(serialised) as [string, string][]).map(([pattern, replacement]) => ({
     // why: the pattern is authored in the project's own test.config.ts and travels no further than this process; it is repository source, not input.
-    // lint-disable-next-line workspace/no-unsafe-regex
+    // lint-disable-next-line no-unsafe-regex
     pattern: new RegExp(pattern),
     replacement: replacement.replace('<rootDir>', projectRoot),
   }))
