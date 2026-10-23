@@ -1,7 +1,7 @@
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { createLibraryWorkspace } from './__fixtures__/library-workspace.ts'
 import rule from './lib-require-module-header.ts'
 

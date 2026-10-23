@@ -1,8 +1,8 @@
-import type { ExpectedError } from '../../testing/rule-tester.ts'
+import type { ExpectedError } from '@hyperfrontend/linter/testing'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { CONTENT, LISTING, createSiteWorkspaces } from './__fixtures__/site-workspace.ts'
 import rule from './docs-site-library-docs.ts'
 
@@ -31,6 +31,14 @@ testRule(rule, {
       root: workspaces.full,
       text: LISTING,
       errors: [
+        onEntry(
+          2,
+          `Library 'Alpha' markdown file 'docs/rules/no-var.md' is missing corresponding docs page at ${PAGES}/alpha/rules/page.tsx`
+        ),
+        onEntry(
+          2,
+          `Library 'Alpha' markdown file 'docs/rules/typescript/no-namespace.md' is missing corresponding docs page at ${PAGES}/alpha/rules/page.tsx`
+        ),
         onEntry(2, `Library 'Alpha' markdown file 'lib/x/README.md' is missing corresponding docs page at ${PAGES}/alpha/x/page.tsx`),
         onEntry(
           2,

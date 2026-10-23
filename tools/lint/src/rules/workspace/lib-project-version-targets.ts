@@ -5,7 +5,7 @@
  * @module rules/workspace/lib-project-version-targets
  */
 
-import { propertyOf, wholeDocument } from '../shared/json.ts'
+import { propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 const MISSING_VERSION = 'Publishable library must have "version" target for automated versioning. Add: "version": {} to targets.'

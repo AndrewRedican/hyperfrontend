@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './lib-tsconfig-paths.ts'
 
 // why: the rule scans the workspace below the configuration file, so the fixture is a disposable workspace in the temporary directory.

@@ -1,26 +1,19 @@
-// context: the linter knows every rule it implements and reads each file by its extension, so the configurations name rules only; a project's lint.config.ts spreads these blocks before its own.
-import {
-  CODE,
-  CODE_RULES,
-  DEPENDENCY_CONSTRAINTS,
-  JAVASCRIPT,
-  JSDOC_RULES,
-  on,
-  REQUIRE_JSDOC,
-  SCRIPT,
-  TYPESCRIPT,
-} from './tools/lint/config/rule-sets.ts'
-import { BROWSER_AND_NODE_GLOBALS } from './tools/lint/config/globals.ts'
+// context: the linter knows its packaged rules and reads each file by its extension; the first block registers the workspace's own rule families, and a project's lint.config.ts spreads these blocks before its own.
+import { BROWSER_AND_NODE_GLOBALS, CODE, CODE_RULES, JAVASCRIPT, JSDOC_RULES, SCRIPT, TYPESCRIPT, on } from '@hyperfrontend/linter'
+import { WORKSPACE_FAMILIES } from './tools/lint/config/families.ts'
+import { documentationScopes } from './tools/lint/config/documentation-scopes.ts'
+import { DEPENDENCY_CONSTRAINTS, REQUIRE_JSDOC } from './tools/lint/config/rule-sets.ts'
 
 /**
- * Package scope prefixes that must never appear bare in a JSDoc description. `workspace/escape-package-tags`
+ * Package scope prefixes that must never appear bare in a JSDoc description. `escape-package-tags`
  * reports and fixes them; the same list is handed to `jsdoc/escape-inline-tags` as an allowlist so a single
  * diagnostic and a single fixer own each occurrence.
  */
 const WORKSPACE_PACKAGE_PREFIXES = ['@hyperfrontend', '@nx']
 
 export default [
-  { ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'] },
+  { families: WORKSPACE_FAMILIES },
+  { ignores: ['.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'] },
   { files: CODE, rules: CODE_RULES },
   { files: JAVASCRIPT, language: { globals: BROWSER_AND_NODE_GLOBALS } },
   { files: SCRIPT, rules: JSDOC_RULES },
@@ -83,24 +76,27 @@ export default [
     ignores: ['**/test.setup.ts'],
     rules: {
       ...on(`
-        workspace/require-node-protocol workspace/no-mixed-type-import workspace/no-mixed-type-export workspace/max-path-occurrences
-        workspace/import-order workspace/export-order workspace/no-enum workspace/no-async-fs-api workspace/no-deprecated-tag
-        workspace/no-todo-comments workspace/no-unsafe-regex workspace/prefer-exec-file-sync workspace/deepest-import-path
-        workspace/no-section-dividers workspace/no-decorative-header-comments workspace/prefer-jsdoc-over-trailing-comments
-        workspace/no-plain-inline-comments
+        require-node-protocol no-mixed-type-import no-mixed-type-export max-path-occurrences
+        no-async-fs-api no-deprecated-tag
+        no-todo-comments no-unsafe-regex prefer-exec-file-sync workspace/deepest-import-path
+        no-section-dividers no-decorative-header-comments prefer-jsdoc-over-trailing-comments
+        no-plain-inline-comments
       `),
-      'workspace/max-file-lines': ['error', { maxLines: 600, maxLinesTest: 700 }],
+      'max-file-lines': ['error', { maxLines: 600, maxLinesTest: 700 }],
+      'import-order': ['error', { internalScopes: ['@hyperfrontend'] }],
+      'export-order': ['error', { internalScopes: ['@hyperfrontend'] }],
+      'no-enum': ['error', { freezeImport: "import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'" }],
     },
   },
   {
     files: SCRIPT,
     rules: {
-      'workspace/escape-package-tags': ['error', { prefixes: WORKSPACE_PACKAGE_PREFIXES }],
+      'escape-package-tags': ['error', { prefixes: WORKSPACE_PACKAGE_PREFIXES }],
       'jsdoc/escape-inline-tags': ['warn', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
     },
   },
   { files: TYPESCRIPT, ignores: ['**/test.setup.ts', '**/libs/logging/**'], rules: { 'workspace/no-direct-console': 'error' } },
-  { files: TYPESCRIPT, ignores: ['**/test.setup.ts', '**/*.spec.ts'], rules: { 'workspace/no-namespace-import': 'error' } },
+  { files: TYPESCRIPT, ignores: ['**/test.setup.ts', '**/*.spec.ts'], rules: { 'no-namespace-import': 'error' } },
   {
     files: TYPESCRIPT,
     rules: {
@@ -116,15 +112,14 @@ export default [
   {
     files: TYPESCRIPT,
     ignores: ['**/test.setup.ts', '**/*.spec.ts', '**/*.spec.tsx'],
-    rules: { 'workspace/no-inline-type-literal': 'error' },
+    rules: { 'no-inline-type-literal': 'error' },
   },
-  { files: ['**/*.spec.ts'], rules: on('workspace/assertive-test-names workspace/jest-mock-after-imports') },
+  { files: ['**/*.spec.ts'], rules: on('assertive-test-names jest-mock-after-imports') },
+  { files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'], rules: { 'one-assertion-per-test': 'error' } },
   {
-    files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'],
-    rules: {
-      // why: the fixture suites under the testing package's e2e project are inputs the suite executes and counts, and one of them must assert twice to exercise expect.assertions(2); their shape is the thing under test, not a test of this workspace.
-      'workspace/one-assertion-per-test': ['error', { exclude: ['apps/package-e2e/testing/src/fixtures/**'] }],
-    },
+    // why: the fixture suites under the testing package's e2e project are inputs the suite executes and counts, and one of them must assert twice to exercise expect.assertions(2); their shape is the thing under test, not a test of this workspace.
+    files: ['apps/package-e2e/testing/src/fixtures/**'],
+    rules: { 'one-assertion-per-test': 'off' },
   },
   {
     files: ['**/*.ts'],
@@ -156,9 +151,8 @@ export default [
     rules: {
       // why: the README rules decide for themselves whether a file is a publishable package's readme, so they can be switched on for every README and still touch only package documentation.
       ...on(`
-        workspace/lib-readme-structure workspace/lib-readme-compatibility-table workspace/lib-readme-media-regions workspace/readme-paragraph-length
-        workspace/no-ascii-art-diagrams workspace/require-codeblock-language workspace/codeblock-line-width workspace/lib-inline-code-links
-        workspace/no-manual-table-of-contents
+        workspace/lib-readme-structure workspace/lib-readme-compatibility-table workspace/lib-readme-media-regions
+        no-ascii-art-diagrams codeblock-line-width workspace/lib-inline-code-links
       `),
       'workspace/readme-media-asset': ['error', { baseUrl: 'https://www.hyperfrontend.dev/media/', assetRoot: 'assets/media' }],
     },
@@ -167,9 +161,8 @@ export default [
   {
     files: ['**/*.md'],
     ignores: ['**/README.md'],
-    rules: on(`
-      workspace/no-ascii-art-diagrams workspace/require-codeblock-language workspace/codeblock-line-width workspace/lib-inline-code-links
-      workspace/no-manual-table-of-contents
-    `),
+    rules: on('no-ascii-art-diagrams codeblock-line-width workspace/lib-inline-code-links'),
   },
+  // why: a lint process runs from its project's root, so the working directory names the project whose documentation these blocks scope.
+  ...documentationScopes(process.cwd()),
 ]

@@ -4,7 +4,7 @@
  * @module rules/workspace/lib-pkg-package-json-export
  */
 
-import { propertyOf } from '../shared/json.ts'
+import { propertyOf } from '@hyperfrontend/linter/helpers'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 const MESSAGE =

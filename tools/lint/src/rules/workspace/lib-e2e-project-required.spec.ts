@@ -1,6 +1,6 @@
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { WORKSPACE_ROOT } from '../../runtime/aliases.ts'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './lib-e2e-project-required.ts'
 
 const LOGGING = join(WORKSPACE_ROOT, 'libs', 'logging', 'project.json')

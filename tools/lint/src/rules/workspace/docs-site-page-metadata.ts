@@ -7,10 +7,9 @@
  * @module rules/workspace/docs-site-page-metadata
  */
 
-import type { Node } from '../../code/model.ts'
-import type { Fix } from '../../engine/report.ts'
+import type { Fix, Node } from '@hyperfrontend/linter'
 import { posix, sep } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 
 /** What a route's page exports. */
 interface RoutePlan {

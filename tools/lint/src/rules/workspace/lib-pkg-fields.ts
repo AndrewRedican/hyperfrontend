@@ -5,7 +5,7 @@
  * @module rules/workspace/lib-pkg-fields
  */
 
-import { propertyOf, wholeDocument } from '../shared/json.ts'
+import { propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 /** The required fields with the example each message suggests. */

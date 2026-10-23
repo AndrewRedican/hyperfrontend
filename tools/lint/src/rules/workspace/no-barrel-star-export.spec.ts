@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './no-barrel-star-export.ts'
 
 // why: every recorded case names a file in a temporary workspace; the hermetic cases below cover the same behaviours.

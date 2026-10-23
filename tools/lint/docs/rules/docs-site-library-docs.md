@@ -14,6 +14,7 @@ This rule validates that each markdown file in a publishable library has a corre
 | `libs/{slug}/ARCHITECTURE.md`           | `apps/docs-site/src/app/docs/libraries/{slug}/architecture/page.tsx` |
 | `libs/{slug}/src/core/README.md`        | `apps/docs-site/src/app/docs/libraries/{slug}/core/page.tsx`         |
 | `libs/{slug}/src/lib/channel/README.md` | `apps/docs-site/src/app/docs/libraries/{slug}/channel/page.tsx`      |
+| `libs/{slug}/docs/rules/**/*.md`        | `apps/docs-site/src/app/docs/libraries/{slug}/rules/page.tsx`        |
 | `plugins/{slug}/README.md`              | `apps/docs-site/src/app/docs/plugins/{slug}/page.tsx`                |
 
 ### Excluded Files
@@ -22,8 +23,10 @@ The following files are excluded from documentation requirements:
 
 - `CHANGELOG.md` - Auto-generated release notes
 - `LICENSE.md` - License information
+- `NOTICE.md` - Attribution of adapted work and its licences
 - `CONTRIBUTING.md` - Contribution guidelines
 - `CODE_OF_CONDUCT.md` - Community guidelines
+- Anything under a `__fixtures__` directory - Inputs a spec reads, not documentation
 - `docs/guides/**` - Guide units compiled by the docs-site generation pipeline into the global `/docs/guides/[slug]` route; the pipeline fails the build on any guide directory that does not produce a rendered page, so reachability is enforced there rather than by a literal page file
 
 ### Why?

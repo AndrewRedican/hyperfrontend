@@ -1,0 +1,49 @@
+{
+  "name": "@hyperfrontend/linter",
+  "version": "0.1.0",
+  "description": "A linter for TypeScript, JavaScript, JSX, JSON and Markdown with its own parsers and no external runtime packages.",
+  "license": "MIT",
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "1.0.2",
+    "@hyperfrontend/json-utils": "1.1.0",
+    "@hyperfrontend/versioning": "0.9.2"
+  },
+  "bin": {
+    "hf-lint": "./bin/hf-lint.mjs"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./helpers": "./src/helpers/index.js",
+    "./testing": "./src/testing/index.js",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "lint",
+    "linter",
+    "static-analysis",
+    "typescript",
+    "javascript",
+    "jsx",
+    "json",
+    "markdown",
+    "jsdoc",
+    "react",
+    "eslint-alternative",
+    "flat-config",
+    "custom-rules",
+    "autofix",
+    "cli",
+    "zero-dependencies",
+    "esm",
+    "hyperfrontend"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

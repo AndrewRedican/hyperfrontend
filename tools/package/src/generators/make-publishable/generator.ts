@@ -1,9 +1,11 @@
 import type { Tree } from '@nx/devkit'
 import type { DocsCategory, EcosystemTierId } from './lib/library-facts'
 import type { CompatibilityProfile, MakePublishableGeneratorSchema } from './schema'
+import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { formatFiles, generateFiles, names, offsetFromRoot, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '../../lib/logger'
 import { derivePackageName } from '../../lib/naming-utils'
@@ -196,9 +198,11 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
     // why: metadata sits between tags and targets in every hand-written publishable project.json, and a new key only lands there if targets is removed and re-added after it
     delete json.targets
 
+    const metadata = (json.metadata ?? {}) as Record<string, unknown>
+    // why: a re-run refreshes the environments and keeps what was added by hand beside them, such as the note
     json.metadata = {
-      ...(json.metadata as Record<string, unknown> | undefined),
-      compatibility: { environments: options.compatibility },
+      ...metadata,
+      compatibility: { ...(metadata['compatibility'] as Record<string, unknown> | undefined), environments: options.compatibility },
     }
 
     const buildOptions: Record<string, unknown> = {
@@ -227,11 +231,9 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
       typecheck: {},
     }
 
-    // why: assigning the block outright used to delete every target this generator does not write, including the test target the library template had just added
+    // why: assigning the block outright used to delete every target this generator does not write, including the test target the library template had just added; a target already configured keeps its configuration, so a re-run changes nothing
     for (const name of keys(existingTargets)) {
-      if (!(name in targets)) {
-        targets[name] = existingTargets[name]
-      }
+      targets[name] = existingTargets[name]
     }
 
     json.targets = targets
@@ -292,12 +294,39 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): string {
 }
 
 /**
+ * Writes a template directory's files, keeping every file that already exists when asked to.
+ *
+ * @param tree - Virtual file system tree
+ * @param source - The template directory
+ * @param target - The directory the files are written to
+ * @param substitutions - The template's values
+ * @param keepExisting - Whether a file already at its target is left as it is
+ */
+function writeTemplates(tree: Tree, source: string, target: string, substitutions: Record<string, unknown>, keepExisting: boolean): void {
+  const kept = createMap<string, Buffer>()
+  if (keepExisting) {
+    for (const entry of readdirSync(source, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile()) continue
+      const relative = join(entry.parentPath, entry.name)
+        .slice(source.length + 1)
+        .replace(/\.template$/, '')
+      const path = joinPathFragments(target, relative)
+      const content = tree.read(path)
+      if (content !== null) kept.set(path, content)
+    }
+  }
+  generateFiles(tree, source, target, substitutions)
+  for (const [path, content] of kept) tree.write(path, content)
+}
+
+/**
  * Create E2E project for the publishable library.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
+ * @param keepExisting - Whether files the project already has are kept
  */
-function createE2EProject(tree: Tree, options: NormalizedOptions): void {
+function createE2EProject(tree: Tree, options: NormalizedOptions, keepExisting: boolean): void {
   if (options.skipE2E) return
 
   const e2eTemplateOptions = {
@@ -306,12 +335,16 @@ function createE2EProject(tree: Tree, options: NormalizedOptions): void {
     e2eOffsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
   }
 
-  generateFiles(tree, join(__dirname, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions)
+  const existingSpecs = BROWSER_BUNDLE_FORMATS.filter((format) =>
+    tree.exists(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
+  )
+  writeTemplates(tree, join(__dirname, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
 
   if (options.compatibility.browser !== 'none') return
 
   // why: the templates cover a package that ships browser bundles, and a package that reaches no browser has none for these checks to load
   for (const format of BROWSER_BUNDLE_FORMATS) {
+    if (keepExisting && existingSpecs.includes(format)) continue
     tree.delete(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
   }
 
@@ -327,8 +360,9 @@ function createE2EProject(tree: Tree, options: NormalizedOptions): void {
  * @param tree - Virtual file system tree
  * @param options - Normalized options
  * @param nodeFloor - The lowest Node.js version the package declares, `18.0.0`
+ * @param keepExisting - Whether a README the project already has is kept
  */
-function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeFloor: string): void {
+function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeFloor: string, keepExisting: boolean): void {
   const templateOptions = {
     ...options,
     compatibilityGlyphs: {
@@ -341,7 +375,7 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeF
     template: '',
   }
 
-  generateFiles(tree, join(__dirname, 'files'), options.projectRoot, templateOptions)
+  writeTemplates(tree, join(__dirname, 'files'), options.projectRoot, templateOptions, keepExisting)
 }
 
 /**
@@ -452,14 +486,16 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {
   const normalizedOptions = normalizeOptions(tree, options)
+  // why: on a project that already publishes, a re-run must change nothing, so the README and the e2e files it once scaffolded, by now written by hand, are kept
+  const republishing = readProjectConfiguration(tree, options.project).targets?.['publish'] !== undefined
 
   updateProjectJson(tree, normalizedOptions)
 
   const nodeFloor = updatePackageJson(tree, normalizedOptions)
 
-  generatePublishableReadme(tree, normalizedOptions, nodeFloor)
+  generatePublishableReadme(tree, normalizedOptions, nodeFloor, republishing)
 
-  createE2EProject(tree, normalizedOptions)
+  createE2EProject(tree, normalizedOptions, republishing)
 
   createCIWorkflow(tree, normalizedOptions)
 

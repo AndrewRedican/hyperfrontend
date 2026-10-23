@@ -6,7 +6,7 @@
  */
 
 import { dirname } from 'node:path'
-import { propertyOf } from '../shared/json.ts'
+import { propertyOf } from '@hyperfrontend/linter/helpers'
 import { manifestRule } from './shared/manifest-rule.ts'
 import { readProjectFile } from './shared/project-file.ts'
 

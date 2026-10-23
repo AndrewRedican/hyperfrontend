@@ -6,7 +6,8 @@
  */
 
 import { extname } from 'node:path'
-import { isRelativePath, propertyOf, stringsUnder } from '../shared/json.ts'
+import { propertyOf, stringsUnder } from '@hyperfrontend/linter/helpers'
+import { isRelativePath } from './shared/manifest-paths.ts'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 /** The extensions a published path may have. */

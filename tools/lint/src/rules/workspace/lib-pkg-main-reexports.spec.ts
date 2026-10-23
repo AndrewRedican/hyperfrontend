@@ -1,10 +1,10 @@
-import type { InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { MainReexportsOptions } from './lib-pkg-main-reexports.ts'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './lib-pkg-main-reexports.ts'
 
 // why: the rule reads each library's manifest, so every case lints a library of its own in a disposable workspace.

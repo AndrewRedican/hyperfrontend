@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLibraryArchitecture, getManifest, getSubmoduleReadme } from './docs-loader'
+import { getLibraryArchitecture, getLibraryRules, getManifest, getSubmoduleReadme } from './docs-loader'
 import { markdownPathFor } from './document-model'
 import { getGuideIndex } from './guides'
 
@@ -369,6 +369,24 @@ export function getArchitectureMetadata(librarySlug: string): Metadata {
     title,
     description,
     ...buildSocialMetadata(title, description, `/docs/libraries/${librarySlug}/architecture/`, undefined, doc !== null),
+  }
+}
+
+/**
+ * Generate metadata for a lint package's rule catalogue page.
+ *
+ * @param librarySlug - The library URL slug
+ * @returns Metadata object with title, description, canonical, and social cards
+ */
+export function getRulesMetadata(librarySlug: string): Metadata {
+  const library = getManifest()?.libraries.find((lib) => lib.slug === librarySlug)
+  const packageName = library?.packageName ?? `@hyperfrontend/${librarySlug}`
+  const title = `Rule catalogue — ${packageName}`
+  const description = `Every rule ${packageName} ships: what it checks, its options, the files it reads, whether it fixes, the preset that turns it on, and examples of code it reports and accepts.`
+  return {
+    title,
+    description,
+    ...buildSocialMetadata(title, description, `/docs/libraries/${librarySlug}/rules/`, undefined, getLibraryRules(librarySlug) !== null),
   }
 }
 

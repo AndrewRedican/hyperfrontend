@@ -7,11 +7,11 @@
  * @module rules/workspace/no-unsafe-builtin-methods
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 
 /** The package of the copies. */
 const PACKAGE = '@hyperfrontend/immutable-api-utils'

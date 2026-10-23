@@ -6,11 +6,11 @@
  * @module rules/workspace/docs-site-libraries
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix, sep } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { publishableLibraries } from './shared/libraries.ts'
 import { workspaceRootOf } from './shared/locate.ts'
 import { readPackageFile } from './shared/project-file.ts'

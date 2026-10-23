@@ -148,6 +148,7 @@ jobs:
             "builder:libs/builder"
             "cryptography:libs/cryptography"
             "features:libs/features"
+            "linter:libs/linter"
             "logging:libs/logging"
             "network-protocol:libs/network-protocol"
             "nexus:libs/nexus"

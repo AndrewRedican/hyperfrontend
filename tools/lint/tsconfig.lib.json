@@ -6,5 +6,5 @@
     "allowImportingTsExtensions": true
   },
   "include": ["bin/**/*.ts", "config/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/__fixtures__/**"]
+  "exclude": ["src/**/*.spec.ts", "src/**/__fixtures__/**", "config/**/*.spec.ts"]
 }

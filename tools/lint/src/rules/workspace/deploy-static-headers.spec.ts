@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './deploy-static-headers.ts'
 
 const fixture = (name: string): string => join(import.meta.dirname, '__fixtures__', name, 'project.json')

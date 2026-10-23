@@ -6,7 +6,7 @@
  * @module rules/projects/shared/remap
  */
 
-import type { Node } from '../../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import type { WorkspaceGraph } from '../../../graph/build.ts'
 import type { ProjectRecord } from '../../../graph/model.ts'
 import { existsSync } from 'node:fs'

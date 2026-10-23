@@ -6,11 +6,10 @@
  */
 
 import type { JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { Fix } from '../../engine/report.ts'
-import type { JsonDocument, JsonTreeNode } from '../../languages/json.ts'
+import type { Fix, JsonDocument, JsonTreeNode } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
-import { indentationAt, propertyOf } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { indentationAt, propertyOf } from '@hyperfrontend/linter/helpers'
 import { isPublishableLibrary } from './shared/project-file.ts'
 
 const CONVERT = 'Do not use "main" field in publishable libraries. Use "exports" field instead: "exports": { ".": "./src/index.js" }'

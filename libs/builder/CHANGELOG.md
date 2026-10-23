@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3](https://github.com/AndrewRedican/hyperfrontend/compare/48c68a5121e56df2ff34e82df2c97002142a8538...63818b0b6230c4909ee5c020b8c2e18ffa293273) - 2026-10-23
+
+### Bug Fixes
+
+- inline dynamic imports into each library entry bundle
+
 ## [0.5.2](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...7a5eed4290fa24dc4a4942c8199fae010dd93aaf) - 2026-10-22
 
 ### Bug Fixes

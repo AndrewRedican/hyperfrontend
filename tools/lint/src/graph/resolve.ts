@@ -5,7 +5,7 @@
  * @module graph/resolve
  */
 
-import type { Glob } from '../files/glob.ts'
+import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { ProjectRecord, Resolution } from './model.ts'
 import { existsSync } from 'node:fs'
 import { builtinModules } from 'node:module'
@@ -13,7 +13,7 @@ import { join, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
-import { matchesAny } from '../files/glob.ts'
+import { matchesAny } from '@hyperfrontend/linter/helpers'
 
 /** The Node modules a bare name may import. */
 const BUILTINS = createSet<string>(builtinModules)

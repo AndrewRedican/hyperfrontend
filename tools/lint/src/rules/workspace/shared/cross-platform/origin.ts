@@ -8,13 +8,12 @@
  * @module rules/workspace/shared/cross-platform/origin
  */
 
-import type { Node, TemplateValue } from '../../../../code/model.ts'
-import type { ScopeAnalysis } from '../../../../scope/analysis.ts'
-import type { Definition, Reference, Variable } from '../../../../scope/model.ts'
+import type { Node, TemplateValue } from '@hyperfrontend/linter'
+import type { Definition, Reference, ScopeAnalysis, Variable } from '@hyperfrontend/linter/helpers'
 import { dirname, join, posix, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { isGlobalReference, referenceOf } from '../../../javascript/shared/constant.ts'
+import { isGlobalReference, referenceOf } from '@hyperfrontend/linter/helpers'
 
 /** Which separator convention a value follows. */
 export type Domain = 'native' | 'relative' | 'portable' | 'unknown'
@@ -99,13 +98,70 @@ export function combine(origins: readonly Origin[]): Origin {
 }
 
 /**
+ * Whether a character is an ASCII capital.
+ *
+ * @param char - One character, or undefined past the end of the name
+ * @returns Whether it is `A` to `Z`
+ */
+function isUpper(char: string | undefined): boolean {
+  return char !== undefined && char >= 'A' && char <= 'Z'
+}
+
+/**
+ * Whether a character is an ASCII lowercase letter.
+ *
+ * @param char - One character, or undefined past the end of the name
+ * @returns Whether it is `a` to `z`
+ */
+function isLower(char: string | undefined): boolean {
+  return char !== undefined && char >= 'a' && char <= 'z'
+}
+
+/**
+ * Whether a character continues a lowercase word.
+ *
+ * @param char - One character, or undefined past the end of the name
+ * @returns Whether it is `a` to `z` or `0` to `9`
+ */
+function isLowerOrDigit(char: string | undefined): boolean {
+  return isLower(char) || (char !== undefined && char >= '0' && char <= '9')
+}
+
+/**
  * The lowercase words of a name: camelCase, acronyms, snake_case and kebab-case split apart.
+ *
+ * A run of capitals is an acronym unless a lowercase letter follows it, in which case its last
+ * capital starts the next word (`XMLHttp` is `xml`, `http`). Anything else separates words.
+ * The name is read once, left to right, so its length alone bounds the work.
  *
  * @param name - An identifier or property name
  * @returns Its words
+ * @example
+ * ```ts
+ * splitWords('readXMLHttp_requestPath2') // ['read', 'xml', 'http', 'request', 'path2']
+ * ```
  */
 export function splitWords(name: string): string[] {
-  return (name.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) ?? []).map((word) => word.toLowerCase())
+  const words: string[] = []
+  let index = 0
+  while (index < name.length) {
+    let start = index
+    if (isUpper(name[index])) {
+      while (isUpper(name[index])) index += 1
+      if (!isLower(name[index])) {
+        words.push(name.slice(start, index))
+        continue
+      }
+      if (index - start > 1) words.push(name.slice(start, index - 1))
+      start = index - 1
+    } else if (!isLowerOrDigit(name[index])) {
+      index += 1
+      continue
+    }
+    while (isLowerOrDigit(name[index])) index += 1
+    words.push(name.slice(start, index))
+  }
+  return words.map((word) => word.toLowerCase())
 }
 
 /**

@@ -114,7 +114,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
 
   regex: (v) => {
     try {
-      // lint-disable-next-line workspace/no-unsafe-regex -- intentionally validating user-provided regex patterns
+      // lint-disable-next-line no-unsafe-regex -- intentionally validating user-provided regex patterns
       createRegExp(v)
       return true
     } catch {

@@ -13,7 +13,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { compileGlob } from '../files/glob.ts'
+import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { importsOfFiles, isCodeFile } from './imports.ts'
 import { installedPackages } from './lockfile.ts'
 import { packagesOf, projectOfFile, resolveSpecifier } from './resolve.ts'
@@ -109,7 +109,8 @@ export function buildGraph(root: string): WorkspaceGraph {
       own.push({ source: project.name, target: dependency, type: 'implicit', files: [] })
     for (const file of project.files) {
       if (!isCodeFile(file)) continue
-      for (const { specifier, dynamic } of imports.get(file) as readonly FileImport[]) {
+      // why: the file list can name a tracked file the working tree has deleted, which has no imports to read.
+      for (const { specifier, dynamic } of imports.get(file) ?? []) {
         const resolution = resolveSpecifier(resolver, file, specifier)
         if (resolution.kind === 'npm') {
           const list = uses.get(resolution.name) ?? []

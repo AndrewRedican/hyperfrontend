@@ -5,9 +5,9 @@
  * @module rules/workspace/lib-require-jsdoc-example
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { dirname } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { exampleTagAt, exportedApiListeners } from './shared/exported-api.ts'
 import { projectRootOf } from './shared/locate.ts'
 import { isPublishableLibrary } from './shared/project-file.ts'

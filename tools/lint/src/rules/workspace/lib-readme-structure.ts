@@ -6,11 +6,10 @@
  * @module rules/workspace/lib-readme-structure
  */
 
-import type { RuleContext } from '../../engine/rule.ts'
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { keyFeatureFindings } from './shared/key-features.ts'
 import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
 import { BADGE_MARKS, badgeBlock, carriesBadge, shortDescription } from './shared/readme.ts'

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { formatFiles, generateFiles, joinPathFragments, names, offsetFromRoot } from '@nx/devkit'
 import { derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
 import { addTsConfigPath } from '../../lib/tsconfig-utils'
+import { makePublishableGenerator } from '../make-publishable/generator'
 
 /**
  * Computed options derived from user input.
@@ -141,7 +142,6 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   updateTsConfigPaths(tree, normalizedOptions)
 
   if (normalizedOptions.publishable) {
-    const { makePublishableGenerator } = await import('../make-publishable/generator')
     await makePublishableGenerator(tree, {
       project: normalizedOptions.projectName,
       keywords: options.keywords,

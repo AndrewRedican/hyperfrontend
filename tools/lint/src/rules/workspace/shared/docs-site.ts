@@ -5,8 +5,7 @@
  * @module rules/workspace/shared/docs-site
  */
 
-import type { Node } from '../../../code/model.ts'
-import type { RuleContext } from '../../../engine/rule.ts'
+import type { Node, RuleContext } from '@hyperfrontend/linter'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix, sep } from 'node:path'
 import { workspaceRootOf } from './locate.ts'

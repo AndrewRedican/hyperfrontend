@@ -1,11 +1,11 @@
-import type { InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { ModuleBoundariesOptions } from './module-boundaries.ts'
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, posix } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule, { allows } from './module-boundaries.ts'
 
 // why: the rule reads the project graph the workspace's files draw, so the fixture is a disposable git workspace whose projects exercise each boundary.

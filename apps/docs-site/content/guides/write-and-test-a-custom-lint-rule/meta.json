@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to write and test a custom lint rule",
+  "problem": "A team needs a check the packaged lint rules do not make, with a fix where one is safe, and needs it to keep behaving as intended as the code around it changes.",
+  "outcome": "A rule of your own that reports and fixes a pattern, registered in lint.config.ts under its own prefix, with tests that run on Node's test runner.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/linter"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/linter@0.0.0",
+    "verifiedOn": "2026-10-23"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 20,
+  "apis": [
+    { "package": "@hyperfrontend/linter", "symbol": "defineRule" },
+    { "package": "@hyperfrontend/linter", "symbol": "RuleModule" },
+    { "package": "@hyperfrontend/linter", "symbol": "RuleContext" },
+    { "package": "@hyperfrontend/linter", "symbol": "Problem" },
+    { "package": "@hyperfrontend/linter", "symbol": "Node" },
+    { "package": "@hyperfrontend/linter", "symbol": "testRule" }
+  ],
+  "prerequisites": {
+    "knowledge": ["A project linted with @hyperfrontend/linter", "Node.js 24 or later"]
+  },
+  "related": {
+    "guides": ["lint-a-project-with-hyperfrontend-linter", "replace-eslint-with-hyperfrontend-linter"],
+    "reference": ["/docs/libraries/linter", "/docs/libraries/linter/helpers", "/docs/libraries/linter/testing"],
+    "explanation": ["/docs/libraries/linter/architecture"]
+  },
+  "keywords": [
+    "custom rule",
+    "lint rule",
+    "defineRule",
+    "autofix",
+    "fix",
+    "suggestion",
+    "testRule",
+    "node:test",
+    "families",
+    "AST",
+    "ESTree"
+  ]
+}

@@ -5,7 +5,7 @@
  * @module rules/workspace/lib-project-metadata
  */
 
-import { isString, propertyOf, wholeDocument } from '../shared/json.ts'
+import { isString, propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 const MISSING_TAGS = 'Publishable library project.json is missing required field \'tags\'. Add: "tags": ["type:util", "scope:public"]'

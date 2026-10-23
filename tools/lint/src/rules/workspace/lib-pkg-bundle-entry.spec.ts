@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './lib-pkg-bundle-entry.ts'
 
 const BUNDLED = join(import.meta.dirname, '__fixtures__', 'bundled', 'package.json')

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to lint a project with @hyperfrontend/linter",
+  "problem": "A project needs its code checked and fixed against agreed rules, without bringing a parser, plugins and their dependency trees into every install.",
+  "outcome": "A lint.config.ts that selects the project's rules, a command that lints and fixes from the terminal and fails CI on a problem, directives for deliberate exceptions, and the same lint available as a function.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/linter"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/linter@0.0.0",
+    "verifiedOn": "2026-10-23"
+  },
+  "complexity": "beginner",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/linter", "symbol": "ConfigBlock" },
+    { "package": "@hyperfrontend/linter", "symbol": "CODE_RULES" },
+    { "package": "@hyperfrontend/linter", "symbol": "on" },
+    { "package": "@hyperfrontend/linter", "symbol": "lint" },
+    { "package": "@hyperfrontend/linter", "symbol": "formatStylish" }
+  ],
+  "prerequisites": {
+    "knowledge": ["Node.js 24 or later", "A project whose package.json declares \"type\": \"module\""]
+  },
+  "related": {
+    "guides": ["write-and-test-a-custom-lint-rule", "replace-eslint-with-hyperfrontend-linter"],
+    "reference": ["/docs/libraries/linter", "/docs/libraries/linter/rules"],
+    "explanation": ["/docs/libraries/linter/architecture"]
+  },
+  "keywords": [
+    "lint",
+    "linter",
+    "hf-lint",
+    "lint.config.ts",
+    "flat config",
+    "autofix",
+    "--fix",
+    "lint-disable",
+    "CI",
+    "max-warnings",
+    "TypeScript",
+    "JavaScript"
+  ]
+}

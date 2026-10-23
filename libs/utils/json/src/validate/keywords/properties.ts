@@ -119,7 +119,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
       }
 
       try {
-        // lint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
+        // lint-disable-next-line no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
         patterns.push(createRegExp(pattern))
         // why: invalid regex patterns handled in patternProperties validator
       } catch {

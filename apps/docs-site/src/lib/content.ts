@@ -217,6 +217,15 @@ export const LIBRARIES: LibraryInfo[] = [
     ],
     category: 'core',
   },
+  {
+    name: 'Linter',
+    packageName: '@hyperfrontend/linter',
+    slug: 'linter',
+    readmePath: 'libs/linter/README.md',
+    architecturePath: 'libs/linter/ARCHITECTURE.md',
+    entryPoints: ['libs/linter/src/index.ts', 'libs/linter/src/helpers/index.ts', 'libs/linter/src/testing/index.ts'],
+    category: 'supporting',
+  },
 ]
 
 /**

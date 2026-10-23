@@ -16,6 +16,7 @@ import { generateMachineReadableDocs } from './generate-machine-readable'
 import { generateSearchIndex } from './generate-search-index'
 import { readPackageFacts } from './package-facts'
 import { REPO_BLOB_BASE } from './repo'
+import { ruleCatalogue } from './rule-catalogue'
 
 logger.setLogLevel('log')
 
@@ -227,6 +228,7 @@ const LIBRARIES: LibraryConfig[] = [
   { name: 'Features', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'libs/features', category: 'core' },
   { name: 'Questions', packageName: '@hyperfrontend/questions', slug: 'questions', srcPath: 'libs/questions', category: 'supporting' },
   { name: 'Testing', packageName: '@hyperfrontend/testing', slug: 'testing', srcPath: 'libs/testing', category: 'core' },
+  { name: 'Linter', packageName: '@hyperfrontend/linter', slug: 'linter', srcPath: 'libs/linter', category: 'supporting' },
 ]
 
 /**
@@ -259,6 +261,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   'web-worker': 'web-worker',
   versioning: 'versioning',
   testing: 'testing',
+  linter: 'linter',
 }
 
 /**
@@ -696,6 +699,13 @@ function generateDocs() {
       const archOutput = join(DOCS_OUTPUT, lib.slug, 'architecture.md')
       ensureDir(dirname(archOutput))
       writeFileSync(archOutput, architecture.content)
+    }
+
+    const rules = ruleCatalogue(join(WORKSPACE_ROOT, lib.srcPath), lib.packageName)
+    if (rules !== null) {
+      const rulesOutput = join(DOCS_OUTPUT, lib.slug, 'rules.md')
+      ensureDir(dirname(rulesOutput))
+      writeFileSync(rulesOutput, transformLinks(rules, 'library', lib.slug))
     }
 
     libraryDocs.push({

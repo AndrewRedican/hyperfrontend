@@ -6,12 +6,11 @@
  */
 
 import type { JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { RuleContext } from '../../engine/rule.ts'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { isPublishableLibrary } from './shared/project-file.ts'
 import { badgeBlock, shortDescription } from './shared/readme.ts'
 

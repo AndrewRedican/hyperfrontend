@@ -8,7 +8,7 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      'workspace/max-file-lines': [
+      'max-file-lines': [
         'error',
         {
           maxLines: 600,

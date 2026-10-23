@@ -6,7 +6,7 @@
  * @module graph/imports
  */
 
-import type { Node } from '../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import type { FileImport } from './model.ts'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
@@ -15,8 +15,7 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { childrenOf } from '../code/children.ts'
-import { parseCode } from '../code/parse.ts'
+import { childrenOf, parseCode } from '@hyperfrontend/linter/helpers'
 
 /** Where the remembered imports live under the workspace. */
 const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports.json')
@@ -24,11 +23,14 @@ const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports
 /** The extensions of the files whose imports count. */
 const CODE_EXTENSIONS = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 
+/** The package's parser sources, which the workspace runs from source. */
+const PARSER = join(import.meta.dirname, '..', '..', '..', '..', 'libs', 'linter', 'src', 'code')
+
 /** The parser's sources and this module, whose content decides what a remembered entry means. */
 const READER_SOURCES = [
-  ...readdirSync(join(import.meta.dirname, '..', 'code'))
+  ...readdirSync(PARSER)
     .filter((name) => name.endsWith('.ts') && !name.endsWith('.spec.ts'))
-    .map((name) => join(import.meta.dirname, '..', 'code', name)),
+    .map((name) => join(PARSER, name)),
   import.meta.filename,
 ]
 

@@ -6,12 +6,12 @@
  * @module rules/workspace/shared/exports-index
  */
 
-import type { Node } from '../../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { parseCode } from '../../../code/parse.ts'
+import { parseCode } from '@hyperfrontend/linter/helpers'
 
 /** What kind of thing a declaration is. */
 export type DeclarationKind = 'function' | 'class' | 'interface' | 'type' | 'enum' | 'variable' | 'namespace' | 'unknown'

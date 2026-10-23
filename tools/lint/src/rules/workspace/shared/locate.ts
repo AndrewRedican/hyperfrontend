@@ -1,14 +1,12 @@
 /**
- * Where a file sits in the workspace: the workspace root above it, the project that owns it,
- * and whether that project is a publishable library. Each answer is read once per directory.
+ * Where a file sits in the workspace: the workspace root above it and the project that owns it.
+ * Each answer is read once per directory.
  *
  * @module rules/workspace/shared/locate
  */
 
-import { dirname, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { findProjectRoot, findWorkspaceRoot } from '@hyperfrontend/project-scope/project/root'
-import { isPublishableLibrary } from './project-file.ts'
 
 const workspaceRoots = createMap<string, string | null>()
 const projectRoots = createMap<string, string | null>()
@@ -49,37 +47,4 @@ export function workspaceRootOf(directory: string): string | null {
  */
 export function projectRootOf(directory: string): string | null {
   return once(projectRoots, directory, findProjectRoot)
-}
-
-/**
- * Whether a file sits directly in the workspace root.
- *
- * @param file - The absolute path
- * @returns True when its directory is the workspace root
- */
-export function isAtWorkspaceRoot(file: string): boolean {
-  const directory = dirname(file)
-  return workspaceRootOf(directory) === directory
-}
-
-/**
- * Whether the project that owns a file is a publishable library.
- *
- * @param file - The absolute path
- * @returns True when the nearest project above it builds and publishes
- */
-export function isInPublishableProject(file: string): boolean {
-  const root = projectRootOf(dirname(file))
-  return root !== null && isPublishableLibrary(root)
-}
-
-/**
- * The first path segment of a file under its workspace root, such as `libs`.
- *
- * @param file - The absolute path
- * @returns The segment, or null when no workspace holds the file
- */
-export function workspaceSegmentOf(file: string): string | null {
-  const root = workspaceRootOf(dirname(file))
-  return root === null ? null : relative(root, file).split(sep)[0]
 }

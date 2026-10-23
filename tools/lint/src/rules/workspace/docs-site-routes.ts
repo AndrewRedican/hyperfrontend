@@ -5,10 +5,10 @@
  * @module rules/workspace/docs-site-routes
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { existsSync } from 'node:fs'
 import { join, posix } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { navigationLink, pagesDirectory, readSiteFile, siteListingListeners } from './shared/docs-site.ts'
 
 export default defineRule<undefined, Node>({

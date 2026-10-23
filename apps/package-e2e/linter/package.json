@@ -1,0 +1,16 @@
+{
+  "name": "@hyperfrontend/e2e-linter",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for @hyperfrontend/linter package outputs",
+  "scripts": {
+    "pack-install": "cd ../../../dist/libs/linter && npm pack && cd - && npm install ../../../dist/libs/linter/*.tgz"
+  },
+  "dependencies": {
+    "@hyperfrontend/linter": "file:../../../tmp/e2e-packs/hyperfrontend-linter-0.1.0.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "25.3.3",
+    "typescript": "5.7.3"
+  }
+}

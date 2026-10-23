@@ -38,6 +38,7 @@ const TAGLINES: Record<string, string> = {
   [`${SCOPE}builder`]: 'Bundles a TypeScript library into ESM, CJS, IIFE and UMD, and writes the manifest that ships with it.',
   [`${SCOPE}cryptography`]: 'Password and key encryption with one call, the same in the browser and in Node.js.',
   [`${SCOPE}features`]: 'Embed another team’s app in yours over a typed, supervised channel: the micro-frontend SDK, CLI and dev server.',
+  [`${SCOPE}linter`]: 'Lints TypeScript, JavaScript, JSON and Markdown with parsers of its own, and installs no dependencies.',
   [`${SCOPE}logging`]: 'Structured, levelled logging with channels and timers; how much survives is decided at run time.',
   [`${SCOPE}network-protocol`]: 'A session-keyed, replay-proof envelope for cross-window and cross-process messages, on any transport.',
   [`${SCOPE}nexus`]: 'Contract-validated messaging between windows, frames and workers, over a real handshake.',

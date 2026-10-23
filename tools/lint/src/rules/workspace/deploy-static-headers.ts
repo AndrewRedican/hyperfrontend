@@ -5,13 +5,13 @@
  * @module rules/workspace/deploy-static-headers
  */
 
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { JsonTreeNode } from '@hyperfrontend/linter'
 import { readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { defineRule } from '../../engine/rule.ts'
-import { propertyOf, rootObject, wholeDocument } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { propertyOf, rootObject, wholeDocument } from '@hyperfrontend/linter/helpers'
 
 /** One header rule of the serve configuration. */
 interface HeaderRule {

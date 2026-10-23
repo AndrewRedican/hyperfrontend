@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { createMarkdownWorkspace } from './__fixtures__/markdown-workspace.ts'
 import rule from './root-readme-packages.ts'
 

@@ -9,17 +9,17 @@ Know all enforced rules **before** generating code. Violations will be caught by
 
 ## Reference Locations
 
-| What                    | Where                                |
-| ----------------------- | ------------------------------------ |
-| Shared libs             | `libs/`                              |
-| Demos                   | `apps/demos/`                        |
-| Docs site               | `apps/docs-site/`                    |
-| Package e2e             | `apps/package-e2e/`                  |
-| Tooling                 | `tools/`, `plugins/`                 |
-| Lint rule docs          | `tools/lint/docs/rules/`             |
-| Base lint config        | `lint.base.config.ts`                |
-| TS path aliases         | `tsconfig.base.json` → `paths`       |
-| Immutable-safe builtins | `@hyperfrontend/immutable-api-utils` |
+| What                    | Where                                               |
+| ----------------------- | --------------------------------------------------- |
+| Shared libs             | `libs/`                                             |
+| Demos                   | `apps/demos/`                                       |
+| Docs site               | `apps/docs-site/`                                   |
+| Package e2e             | `apps/package-e2e/`                                 |
+| Tooling                 | `tools/`, `plugins/`                                |
+| Lint rule docs          | `libs/linter/docs/rules/`, `tools/lint/docs/rules/` |
+| Base lint config        | `lint.base.config.ts`                               |
+| TS path aliases         | `tsconfig.base.json` → `paths`                      |
+| Immutable-safe builtins | `@hyperfrontend/immutable-api-utils`                |
 
 ---
 
@@ -268,7 +268,7 @@ it('should return the correct value', ...)
 it('returns the correct value', ...)
 ```
 
-### Assertions — one per test body, enforced by `workspace/one-assertion-per-test`
+### Assertions — one per test body, enforced by `one-assertion-per-test`
 
 **One assertion per test body.** A unit test describes one behaviour, so its body reaches at most one assertion call: one `expect(...)`, or one call into `node:assert`. The lint rule counts lexically, nested callbacks and same-file helpers included, so a helper that asserts twice, or is called twice, still counts. It never requires an assertion, and it never fixes anything, because which remedy fits is a judgement about the behaviour under test. Decide case by case:
 
@@ -368,7 +368,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] File ≤400 lines (≤700 for tests) when multi-function; split if needed, colocate helpers
 - [ ] Reused logic extracted only when it deduplicates existing code immediately
 - [ ] Test names assertive (no "should")
-- [ ] One assertion per test body (`workspace/one-assertion-per-test`): split independent behaviours into titled tests, fold one indivisible behaviour into one composite or asymmetric matcher; never weaken, delete, skip, suppress or hide assertions in helpers
+- [ ] One assertion per test body (`one-assertion-per-test`): split independent behaviours into titled tests, fold one indivisible behaviour into one composite or asymmetric matcher; never weaken, delete, skip, suppress or hide assertions in helpers
 - [ ] Spec assertions describe whole shapes with asymmetric matchers (`objectContaining`, `arrayContaining`, etc.) — no property-by-property checks
 - [ ] No unreachable or unexercised branches
 - [ ] Validated: `test` → `lint --fix` → `typecheck` → `format:write` (targeted)

@@ -64,7 +64,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
     }
 
     try {
-      // lint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
+      // lint-disable-next-line no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
       // why: strictPatterns mode verified in validate.spec.ts

@@ -8,10 +8,10 @@
  * @module rules/workspace/no-direct-console
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 
 /** The module that holds the frozen console copies. */
 const CONSOLE_COPIES = '@hyperfrontend/immutable-api-utils/built-in-copy/console'

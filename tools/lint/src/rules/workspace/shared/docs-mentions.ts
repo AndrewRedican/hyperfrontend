@@ -90,7 +90,7 @@ const FILE_EXTENSIONS = createSet(
 )
 
 /** An identifier, or identifiers joined by dots. */
-// lint-disable-next-line workspace/no-unsafe-regex -- each repetition starts at a literal dot, so no two repetitions can share a character
+// lint-disable-next-line no-unsafe-regex -- each repetition starts at a literal dot, so no two repetitions can share a character
 const NAME = /^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$/
 
 /** A name written as one lower-case word, which in prose more often means the word. */
@@ -105,7 +105,7 @@ const WORD = /^[a-z]+$/
  * @returns True when the mention needs no link
  */
 export function exemptionOf(text: string): boolean {
-  // lint-disable-next-line workspace/no-unsafe-regex -- each repetition starts at a literal slash, which the segments exclude
+  // lint-disable-next-line no-unsafe-regex -- each repetition starts at a literal slash, which the segments exclude
   if (text.startsWith('@')) return !/^@[\w.-]+(?:\/[\w.-]+)+$/.test(text)
   if (text.startsWith('/')) return text.endsWith('/')
   if (!NAME.test(text) || text.length === 1 || text.startsWith('__')) return true

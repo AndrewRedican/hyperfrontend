@@ -1,4 +1,4 @@
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './plugin-manifests.ts'
 
 // why: the workspace enables the rule on manifests alone, so the cases recorded on generators, executors and migrations files are left out; the manifest cases name temporary paths the rule never reads.

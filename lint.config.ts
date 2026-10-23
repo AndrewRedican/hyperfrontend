@@ -89,21 +89,21 @@ export default [
       // why: a demo consumes the published packages by npm name, and the project graph resolves those names through the tsconfig path aliases and reads them as coupling to workspace sources.
       'projects/module-boundaries': 'off',
       // why: a shipped simulation is an exhibit; splitting its steering brain or pond assembly for a line count is surgery that changes nothing a visitor sees.
-      'workspace/max-file-lines': 'off',
+      'max-file-lines': 'off',
     },
   },
   {
     // context: a demo's README is an engineering note read on GitHub, never a document the site renders at a phone's width, and the demos are frozen besides; this only stops an editor resolving this config from asking a shipped demo to refold its samples.
     files: ['apps/demos/**/*.md'],
     rules: {
-      'workspace/codeblock-line-width': 'off',
+      'codeblock-line-width': 'off',
     },
   },
   {
     // context: the features CLI owns the `<hf:feature>` block at the top of a demo's entry module and deliberately imports the feature handle first. Ordering that block by source category moves the import and drops the block's closing marker, so the CLI can no longer find the region it manages.
     files: ['apps/demos/**/src/main.ts', 'apps/demos/**/src/main.tsx'],
     rules: {
-      'workspace/import-order': 'off',
+      'import-order': 'off',
     },
   },
   {
@@ -131,9 +131,9 @@ export default [
     // context: until the package-e2e specs are onboarded to the remaining workspace style rules, this override keeps them out of those rules.
     files: ['apps/package-e2e/**/*.spec.ts'],
     rules: {
-      'workspace/no-decorative-header-comments': 'off',
-      'workspace/no-plain-inline-comments': 'off',
-      'workspace/import-order': 'off',
+      'no-decorative-header-comments': 'off',
+      'no-plain-inline-comments': 'off',
+      'import-order': 'off',
       'typescript/no-empty-function': 'off',
     },
   },

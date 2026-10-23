@@ -6,12 +6,12 @@
  * @module rules/workspace/lib-require-module-header
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { basename, dirname, join, posix, resolve } from 'node:path'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
-import { positionAt } from '../../text/lines.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { positionAt } from '@hyperfrontend/linter/helpers'
 import { projectRootOf } from './shared/locate.ts'
 import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
 

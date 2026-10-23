@@ -6,18 +6,18 @@
  * @module rules/workspace/docs-site-library-docs
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { existsSync, readdirSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { pagesDirectory, siteListingListeners } from './shared/docs-site.ts'
 
 /** The documents that never get a page. */
-const SKIPPED_FILES = createSet(['CHANGELOG.md', 'LICENSE.md', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md'])
+const SKIPPED_FILES = createSet(['CHANGELOG.md', 'LICENSE.md', 'NOTICE.md', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md'])
 
 /** The directories never searched. */
-const SKIPPED_DIRECTORIES = createSet(['node_modules', 'dist', '.git', 'coverage', '.nx'])
+const SKIPPED_DIRECTORIES = createSet(['node_modules', 'dist', '.git', 'coverage', '.nx', '__fixtures__'])
 
 /**
  * The markdown documents below a directory, library-relative and POSIX.
@@ -36,12 +36,15 @@ function documents(directory: string, relative: string, found: string[]): void {
 }
 
 /**
- * The page a document belongs to, below the library's main page.
+ * The page a document belongs to, below the library's main page: a section directory under
+ * `docs/` is one page, which renders every document in it.
  *
  * @param document - The document, library-relative
  * @returns The page's subpath, empty for the main page
  */
 function pageOf(document: string): string {
+  const segments = document.split('/')
+  if (segments[0] === 'docs' && segments.length > 2) return (segments[1] as string).toLowerCase()
   if (posix.basename(document) !== 'README.md') return posix.basename(document, '.md').toLowerCase()
   const directory = posix.dirname(document).toLowerCase()
   if (directory === '.' || directory === 'src' || directory === 'lib') return ''

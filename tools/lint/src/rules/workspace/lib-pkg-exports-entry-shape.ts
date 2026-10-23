@@ -7,7 +7,8 @@
  */
 
 import { basename, extname } from 'node:path'
-import { SOURCE_PREFIX, isRelativePath, propertyOf, stringsUnder } from '../shared/json.ts'
+import { propertyOf, stringsUnder } from '@hyperfrontend/linter/helpers'
+import { isRelativePath, SOURCE_PREFIX } from './shared/manifest-paths.ts'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 /**

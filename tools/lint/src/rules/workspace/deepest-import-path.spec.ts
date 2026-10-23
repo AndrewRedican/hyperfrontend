@@ -1,9 +1,9 @@
-import type { InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './deepest-import-path.ts'
 
 // why: the rule reads the base configuration and the entry sources, so the fixture is a disposable workspace holding every entry the recorded cases import from.

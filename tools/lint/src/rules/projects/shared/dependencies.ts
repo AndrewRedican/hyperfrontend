@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { compileGlob } from '../../../files/glob.ts'
+import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { readJson } from '../../../graph/workspace.ts'
 
 /** An input of a target, as `nx.json` and `project.json` write it. */

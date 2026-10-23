@@ -284,10 +284,45 @@ jobs:
       - name: Test the libraries and tools
         run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*" --parallel=1
 
+  linter-support:
+    name: linter-support (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    needs: [setup, version-check]
+    # why: the linter declares Node.js 24 on Linux and Windows, so its packed CLI and API are exercised on the floor release and the newest 24 on both, whenever the package is affected
+    if: always() && needs.version-check.result == 'success' && contains(format(',{0},', needs.setup.outputs.affected-projects), ',lib-linter,')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['24.0.0', '24']
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Build the linter
+        run: CI=1 npx nx build lib-linter
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Lint, fix and test a rule in a consumer of the packed package
+        run: node apps/package-e2e/linter/scripts/consumer-smoke.mjs
+
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [setup, binary-budget, version-check, format, lint, typecheck, build, test, e2e, node-floor, windows]
+    needs: [setup, binary-budget, version-check, format, lint, typecheck, build, test, e2e, node-floor, windows, linter-support]
     if: always()
     steps:
       - name: Check CI status
@@ -313,7 +348,8 @@ jobs:
              [ "${{ needs.test.result }}" = "failure" ] || \
              [ "${{ needs.e2e.result }}" = "failure" ] || \
              [ "${{ needs.node-floor.result }}" = "failure" ] || \
-             [ "${{ needs.windows.result }}" = "failure" ]; then
+             [ "${{ needs.windows.result }}" = "failure" ] || \
+             [ "${{ needs.linter-support.result }}" = "failure" ]; then
             echo "❌ One or more CI checks failed"
             exit 1
           fi

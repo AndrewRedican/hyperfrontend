@@ -121,8 +121,20 @@ function extractLinks(content: string): ExtractedLink[] {
 
   const htmlLinkPattern = /href=["']([^"']+)["']/g
 
-  lines.forEach((line, index) => {
+  let fence: string | null = null
+  lines.forEach((raw, index) => {
     let match
+    // why: code samples hold brackets, parentheses and href attributes that are code, not links, so fenced blocks are skipped and inline code spans blanked
+    const opener = /^\s*(`{3,}|~{3,})/.exec(raw)?.[1]
+    if (fence !== null) {
+      if (opener !== undefined && opener[0] === fence[0] && opener.length >= fence.length) fence = null
+      return
+    }
+    if (opener !== undefined) {
+      fence = opener
+      return
+    }
+    const line = raw.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length))
 
     while ((match = markdownLinkPattern.exec(line)) !== null) {
       const destination = match[2]
@@ -665,7 +677,12 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   const rootMdFiles = await glob('*.md', { cwd: WORKSPACE_ROOT, absolute: true })
 
-  const libMdFiles = await glob('libs/**/*.md', { cwd: WORKSPACE_ROOT, absolute: true })
+  // why: a library's __fixtures__ hold spec inputs, among them Markdown written to exercise a parser's handling of broken links
+  const libMdFiles = await glob('libs/**/*.md', {
+    cwd: WORKSPACE_ROOT,
+    absolute: true,
+    ignore: ['**/__fixtures__/**', '**/node_modules/**'],
+  })
 
   const contentMdFiles = await glob('content/**/*.md', { cwd: DOCS_SITE_ROOT, absolute: true })
 

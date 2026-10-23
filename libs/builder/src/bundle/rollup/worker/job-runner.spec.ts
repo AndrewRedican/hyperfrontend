@@ -107,6 +107,26 @@ describe('runRollupWorkerJob', () => {
     expect(contents).toContain("'use strict'")
   })
 
+  it('folds a dynamic import of a local module into the single ESM entry file', async () => {
+    writeSrc('lazy.ts', 'export const lazy = 314\n')
+    const inputFile = writeSrc('input.ts', "export const load = () => import('./lazy')\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
+    expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('314')
+  })
+
+  it('folds a dynamic import of a local module into the single CJS entry file', async () => {
+    writeSrc('lazy.ts', 'export const lazy = 271\n')
+    const inputFile = writeSrc('input.ts', "export const load = () => import('./lazy')\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(baseDescriptor({ format: 'cjs', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
+    expect(readFileSync(join(outputDir, 'index.cjs'), 'utf8')).toContain('271')
+  })
+
   it('marks externals as external in the rollup config', async () => {
     const inputFile = writeSrc('input.ts', "import other from 'other-dep'\nexport default other\n")
     const tsConfigPath = writeTsconfig()
