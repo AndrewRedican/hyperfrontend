@@ -429,7 +429,7 @@ npm install @hyperfrontend/features
 ```
 ````
 
-`layout=compact` works the same way. A wide line never widens the page: a block is capped at its column and scrolls sideways inside itself, on every surface. The `workspace/codeblock-line-width` lint rule warns, separately, about lines that would read better one entry per line.
+`layout=compact` works the same way. A wide line never widens the page: a block is capped at its column and scrolls sideways inside itself, on every surface. The `codeblock-line-width` lint rule warns, separately, about lines that would read better one entry per line.
 
 ---
 

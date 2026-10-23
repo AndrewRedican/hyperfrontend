@@ -1,5 +1,5 @@
+import { REACT_RULES } from '@hyperfrontend/linter'
 import baseConfig from '../../lint.base.config.ts'
-import { REACT_RULES } from '../../tools/lint/config/rule-sets.ts'
 
 export default [
   {
@@ -11,7 +11,7 @@ export default [
     files: ['**/*.md'],
     ignores: ['content/**/*.md'],
     rules: {
-      'workspace/codeblock-line-width': 'off',
+      'codeblock-line-width': 'off',
     },
   },
   {
@@ -87,7 +87,7 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      'workspace/max-file-lines': [
+      'max-file-lines': [
         'error',
         {
           maxLines: 800,
