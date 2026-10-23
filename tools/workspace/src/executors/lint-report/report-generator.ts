@@ -81,12 +81,10 @@ function findRelevantSkills(workspaceRoot: string): string[] {
  * @returns Path to documentation or null
  */
 function findRuleDoc(rule: string, workspaceRoot: string): string | null {
-  if (rule.startsWith('workspace/')) {
-    const ruleName = rule.replace('workspace/', '')
-    const docPath = join(workspaceRoot, 'tools/lint/docs/rules', `${ruleName}.md`)
-    if (existsSync(docPath)) return `tools/lint/docs/rules/${ruleName}.md`
-  }
-  return null
+  // why: the workspace's own families document their rules under tools/lint by name; every packaged rule is documented in the package under its id.
+  const local = /^(workspace|projects)\/(.+)$/.exec(rule)
+  const docPath = local === null ? `libs/linter/docs/rules/${rule}.md` : `tools/lint/docs/rules/${local[2]}.md`
+  return existsSync(join(workspaceRoot, docPath)) ? docPath : null
 }
 
 /**
