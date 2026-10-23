@@ -47,7 +47,7 @@ describe('stripComments', () => {
   })
 
   it('strips a line lint pragma even when its text contains @preserve', () => {
-    const source = ['// lint-disable-next-line workspace/no-plain-inline-comments -- @preserve: reason', 'export const a = 1;'].join('\n')
+    const source = ['// lint-disable-next-line no-plain-inline-comments -- @preserve: reason', 'export const a = 1;'].join('\n')
     expect(stripComments(source)).toBe('export const a = 1;')
   })
 
