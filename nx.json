@@ -11,6 +11,7 @@
         "{workspaceRoot}/package.json",
         "{projectRoot}/package.json",
         "{projectRoot}/lint.config.ts",
+        "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
         "{workspaceRoot}/tools/lint/config/**/*"
       ]
