@@ -158,6 +158,8 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
     file: join(job.outputDir, filename),
     format,
     sourcemap: job.sourcemap,
+    // why: an entry is emitted as one file, so a dynamic import of the entry's own modules is folded into it; external specifiers stay dynamic imports.
+    inlineDynamicImports: true,
     generatedCode: { constBindings: true },
     ...(format === 'cjs' && { interop: 'compat' as const }),
   }
