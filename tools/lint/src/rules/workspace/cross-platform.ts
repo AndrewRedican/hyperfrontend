@@ -7,14 +7,14 @@
  * @module rules/workspace/cross-platform
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import type { Scan } from './shared/cross-platform/edits.ts'
 import type { Helper } from './shared/cross-platform/origin.ts'
 import type { Selector } from './shared/cross-platform/project.ts'
 import { dirname } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
-import { scopeAnalysisOf } from '../../scope/analysis.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { scopeAnalysisOf } from '@hyperfrontend/linter/helpers'
 import { createNamer } from './shared/cross-platform/edits.ts'
 import { createTracer } from './shared/cross-platform/origin.ts'
 import { checkedProject, isNodeProject } from './shared/cross-platform/project.ts'

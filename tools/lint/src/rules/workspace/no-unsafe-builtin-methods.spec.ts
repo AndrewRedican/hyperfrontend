@@ -1,4 +1,4 @@
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './no-unsafe-builtin-methods.ts'
 
 // why: the recorded cases name temporary paths the rule reads only for the copies' directory and test-file names.

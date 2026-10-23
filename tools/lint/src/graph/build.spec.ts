@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -60,6 +61,20 @@ describe('workspaceGraph', () => {
     writeFileSync(join(root, 'tsconfig.base.json'), '{}')
     const aliases = buildGraph(root).aliases.size
     expect([object, empty, none, aliases]).toEqual([3, 0, 0, 0])
+  })
+})
+
+describe('a tracked file the working tree has deleted', () => {
+  it('draws no edge from it and builds the rest of the graph', () => {
+    const file = join(root, 'libs', 'a', 'src', 'gone.ts')
+    writeFileSync(file, "import { b } from '@fixture/b'\n")
+    execFileSync('git', ['add', '--', file], { cwd: root })
+    rmSync(file)
+    expect(
+      buildGraph(root)
+        .edges.get('lib-a')
+        ?.some((edge) => edge.files.includes('libs/a/src/gone.ts'))
+    ).toBe(false)
   })
 })
 

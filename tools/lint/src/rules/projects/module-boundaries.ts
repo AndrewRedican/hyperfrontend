@@ -8,15 +8,14 @@
  * @module rules/projects/module-boundaries
  */
 
-import type { Node } from '../../code/model.ts'
-import type { RuleContext } from '../../engine/rule.ts'
+import type { Node, RuleContext } from '@hyperfrontend/linter'
 import type { WorkspaceGraph } from '../../graph/build.ts'
 import type { ProjectRecord } from '../../graph/model.ts'
 import { dirname, posix } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { defineRule } from '@hyperfrontend/linter'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
-import { defineRule } from '../../engine/rule.ts'
 import { workspaceGraph } from '../../graph/build.ts'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
 import { filesImporting, pathBetween, reachesDynamically } from './shared/reach.ts'
@@ -71,7 +70,7 @@ export function allows(entry: string, specifier: string): boolean {
     const [prefix, suffix] = entry.split('/**/') as [string, string]
     return specifier.startsWith(prefix) && specifier.endsWith(suffix)
   }
-  // lint-disable-next-line workspace/no-unsafe-regex -- why: the configuration's own patterns, compiled as written.
+  // lint-disable-next-line no-unsafe-regex -- why: the configuration's own patterns, compiled as written.
   return createRegExp(entry).test(specifier)
 }
 

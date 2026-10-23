@@ -5,10 +5,10 @@
  * @module rules/workspace/no-unwanted-barrel-files
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { basename, dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { projectRootOf } from './shared/locate.ts'
 import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
 

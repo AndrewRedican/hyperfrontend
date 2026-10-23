@@ -6,7 +6,7 @@
  * @module rules/workspace/shared/docs-api
  */
 
-import type { Node } from '../../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import type { DeclarationKind } from './exports-index.ts'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'

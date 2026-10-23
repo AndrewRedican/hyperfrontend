@@ -6,11 +6,11 @@
  * @module rules/workspace/no-vscode-config
  */
 
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { JsonTreeNode } from '@hyperfrontend/linter'
 import { existsSync, readdirSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
-import { wholeDocument } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { wholeDocument } from '@hyperfrontend/linter/helpers'
 
 /** The rule's options. */
 interface Options {

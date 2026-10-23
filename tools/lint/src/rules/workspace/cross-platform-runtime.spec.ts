@@ -1,8 +1,8 @@
-import type { ExpectedError, InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { ExpectedError, InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import { existsSync, rmSync } from 'node:fs'
 import { join, posix } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { createCrossPlatformWorkspace, recordedMessage } from './__fixtures__/cross-platform-workspace.ts'
 import rule from './cross-platform.ts'
 

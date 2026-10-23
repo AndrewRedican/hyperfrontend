@@ -22,7 +22,7 @@ interface BenchCase {
 
 /** The new linter's files by role. */
 interface FileCounts {
-  /** Implementation files outside `src/rules`, fixtures excluded. */
+  /** Implementation files outside `src/rules`, in the package and the workspace layer, fixtures excluded. */
   readonly core: number
   /** Rules and their helpers under `src/rules`. */
   readonly rules: number
@@ -86,7 +86,7 @@ function implementationFiles(): FileCounts {
       return []
     }
   }
-  for (const path of list(join(LINT_ROOT, 'src'))) {
+  for (const path of [...list(join(WORKSPACE_ROOT, 'libs', 'linter', 'src')), ...list(join(LINT_ROOT, 'src'))]) {
     if (path.includes('__fixtures__')) continue
     if (path.endsWith('.spec.ts')) counts.specs += 1
     else if (path.startsWith(`rules${posix.sep}`)) counts.rules += 1

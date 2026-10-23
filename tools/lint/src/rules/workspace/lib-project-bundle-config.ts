@@ -7,11 +7,10 @@
  */
 
 import type { JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { RuleContext } from '../../engine/rule.ts'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
-import { isString, propertyOf } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { isString, propertyOf } from '@hyperfrontend/linter/helpers'
 import { isPublishableLibrary } from './shared/project-file.ts'
 
 /** The bundled formats. */

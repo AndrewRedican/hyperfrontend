@@ -5,11 +5,10 @@
  * @module rules/workspace/lib-compatibility-matrix
  */
 
-import type { RuleContext } from '../../engine/rule.ts'
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
+import { defineRule } from '@hyperfrontend/linter'
 import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME } from '@hyperfrontend/workspace'
-import { defineRule } from '../../engine/rule.ts'
 import { workspaceRootOf } from './shared/locate.ts'
 
 const MESSAGE =

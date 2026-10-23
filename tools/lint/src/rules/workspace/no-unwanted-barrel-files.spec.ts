@@ -1,9 +1,9 @@
-import type { InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './no-unwanted-barrel-files.ts'
 
 // why: the rule reads each library's project file and manifest, so the cases lint libraries of a disposable workspace.

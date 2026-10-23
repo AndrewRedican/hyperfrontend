@@ -7,14 +7,11 @@
  */
 
 import type { JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { Fix, Suggestion } from '../../engine/report.ts'
-import type { RuleContext } from '../../engine/rule.ts'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { Fix, JsonTreeNode, RuleContext, Suggestion } from '@hyperfrontend/linter'
 import { readdirSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
-import { compileGlob } from '../../files/glob.ts'
-import { propertyOf, rootObject, wholeDocument } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { compileGlob, propertyOf, rootObject, wholeDocument } from '@hyperfrontend/linter/helpers'
 import { readProjectFile } from './shared/project-file.ts'
 
 /** The policy attached to one lifecycle state. */

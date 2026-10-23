@@ -1,8 +1,8 @@
-import type { ExpectedError } from '../../testing/rule-tester.ts'
+import type { ExpectedError } from '@hyperfrontend/linter/testing'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { CONTENT, LISTING, createSiteWorkspaces } from './__fixtures__/site-workspace.ts'
 import rule from './docs-site-secondary-entries.ts'
 

@@ -6,10 +6,8 @@
  * @module rules/workspace/shared/exported-api
  */
 
-import type { Node } from '../../../code/model.ts'
-import type { SourceComment } from '../../../config/directives.ts'
-import type { RuleContext } from '../../../engine/rule.ts'
-import { tokenBefore } from '../../../code/source.ts'
+import type { Node, RuleContext, SourceComment } from '@hyperfrontend/linter'
+import { tokenBefore } from '@hyperfrontend/linter/helpers'
 
 /** One documented export. */
 export interface ExportedApi {

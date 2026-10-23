@@ -7,11 +7,10 @@
  * @module rules/workspace/readme-media-asset
  */
 
-import type { RuleContext } from '../../engine/rule.ts'
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { existsSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { workspaceRootOf } from './shared/locate.ts'
 
 /** The rule's options; the rule is inert until both are set. */

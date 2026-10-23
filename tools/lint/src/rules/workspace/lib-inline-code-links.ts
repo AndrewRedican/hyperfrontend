@@ -6,11 +6,11 @@
  * @module rules/workspace/lib-inline-code-links
  */
 
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode } from '@hyperfrontend/linter'
 import { basename, dirname, join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { linkProblem } from './shared/docs-anchors.ts'
 import { docsIndex, packageOfFile, repositoryUrl } from './shared/docs-catalog.ts'
 import { resolveMention } from './shared/docs-mentions.ts'

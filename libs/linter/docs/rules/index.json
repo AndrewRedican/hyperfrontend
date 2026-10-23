@@ -1,0 +1,1336 @@
+[
+  {
+    "id": "assertive-test-names",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "codeblock-line-width",
+    "family": "conventions",
+    "language": "markdown",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "escape-package-tags",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "export-order",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "for-direction",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "import-order",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "jest-mock-after-imports",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "jsdoc/check-access",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/check-param-names",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/check-property-names",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/check-tag-names",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/check-types",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/check-values",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/empty-tags",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/escape-inline-tags",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/implements-on-classes",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/informative-docs",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "jsdoc/no-defaults",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/no-types",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/reject-any-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/reject-function-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-description",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "jsdoc/require-jsdoc",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-next-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-param",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-param-description",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-param-name",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-property",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-property-description",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-property-name",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-returns",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-returns-check",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-returns-description",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-throws-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-yields",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-yields-check",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/require-yields-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/ts-no-empty-object-type",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "jsdoc/valid-types",
+    "family": "jsdoc",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "JSDOC_RULES": "warn"
+    }
+  },
+  {
+    "id": "max-file-lines",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "max-path-occurrences",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-ascii-art-diagrams",
+    "family": "conventions",
+    "language": "markdown",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-async-fs-api",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-async-promise-executor",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-case-declarations",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-compare-neg-zero",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-cond-assign",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-constant-binary-expression",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-constant-condition",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-control-regex",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-debugger",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-decorative-header-comments",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "no-delete-var",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-deprecated-tag",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-dupe-else-if",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-duplicate-case",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-empty",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-empty-character-class",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-empty-pattern",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-empty-static-block",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-enum",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-ex-assign",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-extra-boolean-cast",
+    "family": "core",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-fallthrough",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-global-assign",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-inline-type-literal",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-invalid-regexp",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-irregular-whitespace",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-loss-of-precision",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-manual-table-of-contents",
+    "family": "conventions",
+    "language": "markdown",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-misleading-character-class",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-mixed-type-export",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "no-mixed-type-import",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "no-namespace-import",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-nonoctal-decimal-escape",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-octal",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-plain-inline-comments",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "no-prototype-builtins",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-regex-spaces",
+    "family": "core",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-restricted-imports",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-section-dividers",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "no-self-assign",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-shadow-restricted-names",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-sparse-arrays",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-todo-comments",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-unexpected-multiline",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-unsafe-finally",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-unsafe-optional-chaining",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-unsafe-regex",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-unused-labels",
+    "family": "core",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-unused-private-class-members",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-useless-assignment",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "no-useless-backreference",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-useless-catch",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-useless-escape",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "no-var",
+    "family": "core",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "one-assertion-per-test",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "package-json/restrict-dependency-ranges",
+    "family": "package-json",
+    "language": "json",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "prefer-const",
+    "family": "core",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "prefer-exec-file-sync",
+    "family": "conventions",
+    "language": "code",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "prefer-jsdoc-over-trailing-comments",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "prefer-rest-params",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "prefer-spread",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "react-hooks/exhaustive-deps",
+    "family": "react-hooks",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "warn"
+    }
+  },
+  {
+    "id": "react-hooks/rules-of-hooks",
+    "family": "react-hooks",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/display-name",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-key",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-no-comment-textnodes",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-no-duplicate-props",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-no-target-blank",
+    "family": "react",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-no-undef",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-uses-react",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/jsx-uses-vars",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-children-prop",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-danger-with-children",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-deprecated",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-direct-mutation-state",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-find-dom-node",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-is-mounted",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-render-return-value",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-string-refs",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-unescaped-entities",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/no-unknown-property",
+    "family": "react",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "react/require-render-return",
+    "family": "react",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "REACT_RULES": "error"
+    }
+  },
+  {
+    "id": "readme-paragraph-length",
+    "family": "conventions",
+    "language": "markdown",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "require-codeblock-language",
+    "family": "conventions",
+    "language": "markdown",
+    "fixable": false,
+    "presets": {}
+  },
+  {
+    "id": "require-node-protocol",
+    "family": "conventions",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "require-yield",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/adjacent-overload-signatures",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/ban-ts-comment",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/consistent-type-assertions",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "typescript/consistent-type-imports",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {}
+  },
+  {
+    "id": "typescript/no-array-constructor",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-duplicate-enum-values",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-empty-function",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-empty-interface",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-empty-object-type",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-explicit-any",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "warn"
+    }
+  },
+  {
+    "id": "typescript/no-extra-non-null-assertion",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-inferrable-types",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-misused-new",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-namespace",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-non-null-asserted-optional-chain",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-non-null-assertion",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "warn"
+    }
+  },
+  {
+    "id": "typescript/no-this-alias",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-unnecessary-type-constraint",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-unsafe-declaration-merging",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-unsafe-function-type",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-unused-expressions",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/no-unused-vars",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "warn"
+    }
+  },
+  {
+    "id": "typescript/no-wrapper-object-types",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/prefer-as-const",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/prefer-namespace-keyword",
+    "family": "typescript",
+    "language": "code",
+    "fixable": true,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "typescript/triple-slash-reference",
+    "family": "typescript",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "use-isnan",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  },
+  {
+    "id": "valid-typeof",
+    "family": "core",
+    "language": "code",
+    "fixable": false,
+    "presets": {
+      "CODE_RULES": "error"
+    }
+  }
+]

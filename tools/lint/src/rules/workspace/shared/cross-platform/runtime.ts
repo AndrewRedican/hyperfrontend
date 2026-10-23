@@ -6,11 +6,11 @@
  * @module rules/workspace/shared/cross-platform/runtime
  */
 
-import type { Node, RegexValue, TemplateValue } from '../../../../code/model.ts'
+import type { Node, RegexValue, TemplateValue } from '@hyperfrontend/linter'
 import type { Scan } from './edits.ts'
 import { posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { mergeEdits } from '../../../typescript/shared/edits.ts'
+import { mergeEdits } from '@hyperfrontend/linter/helpers'
 import { argumentText, reportTiered } from './edits.ts'
 import { MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
 import { methodOf } from './separators.ts'

@@ -7,13 +7,10 @@
  * @module rules/workspace/shared/cross-platform/edits
  */
 
-import type { Node } from '../../../../code/model.ts'
-import type { Fix, Suggestion } from '../../../../engine/report.ts'
-import type { ScopeAnalysis } from '../../../../scope/analysis.ts'
-import type { Variable } from '../../../../scope/model.ts'
+import type { Fix, Node, Suggestion } from '@hyperfrontend/linter'
+import type { ScopeAnalysis, Variable } from '@hyperfrontend/linter/helpers'
 import type { Origin, Tracer } from './origin.ts'
-import { findVariable, scopeOf } from '../../../../scope/analysis.ts'
-import { mergeEdits } from '../../../typescript/shared/edits.ts'
+import { findVariable, mergeEdits, scopeOf } from '@hyperfrontend/linter/helpers'
 import { compareModuleStatements, isTypeOnly } from '../sources.ts'
 
 /** The Node modules a fix imports from. */

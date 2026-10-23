@@ -8,13 +8,13 @@
  * @module rules/workspace/lib-readme-media-regions
  */
 
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode } from '@hyperfrontend/linter'
 import { existsSync, statSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { defineRule } from '@hyperfrontend/linter'
 import { parseMarkers } from '@hyperfrontend/package/readme/markers'
 import { packageBanner, resolveDocs } from '@hyperfrontend/package/readme/transform'
-import { defineRule } from '../../engine/rule.ts'
 import { linkProblem } from './shared/docs-anchors.ts'
 import { docsIndex, packageOfFile, repositoryUrl } from './shared/docs-catalog.ts'
 import { workspaceRootOf } from './shared/locate.ts'

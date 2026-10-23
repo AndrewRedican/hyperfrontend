@@ -6,7 +6,7 @@
  * @module rules/workspace/shared/sources
  */
 
-import type { Node } from '../../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { builtinModules } from 'node:module'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 

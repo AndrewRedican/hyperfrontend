@@ -7,15 +7,13 @@
  */
 
 import type { JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { Fix } from '../../engine/report.ts'
-import type { RuleContext } from '../../engine/rule.ts'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { Fix, JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { basename, dirname, join, posix, relative, sep } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { defineRule } from '../../engine/rule.ts'
-import { isString } from '../shared/json.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { isString } from '@hyperfrontend/linter/helpers'
 import { readProjectFile } from './shared/project-file.ts'
 
 /** The rule's options. */

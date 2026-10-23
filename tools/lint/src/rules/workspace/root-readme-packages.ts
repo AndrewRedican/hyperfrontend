@@ -6,12 +6,11 @@
  * @module rules/workspace/root-readme-packages
  */
 
-import type { RuleContext } from '../../engine/rule.ts'
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { publishableLibraries } from './shared/libraries.ts'
 import { workspaceRootOf } from './shared/locate.ts'
 import { readPackageFile, readProjectFile } from './shared/project-file.ts'

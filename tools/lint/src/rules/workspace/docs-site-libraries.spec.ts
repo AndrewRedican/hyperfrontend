@@ -1,9 +1,9 @@
-import type { ExpectedError, RuleCase } from '../../testing/rule-tester.ts'
+import type { ExpectedError, RuleCase } from '@hyperfrontend/linter/testing'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import rule from './docs-site-libraries.ts'
 
 /** A publishable library's project file. */

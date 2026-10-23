@@ -5,11 +5,11 @@
  * @module rules/workspace/lib-pkg-main-reexports
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { dirname, posix, resolve } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { projectRootOf } from './shared/locate.ts'
 import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
 

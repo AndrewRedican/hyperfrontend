@@ -15,7 +15,7 @@ import { extname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
-import { LINT_ROOT, WORKSPACE_ROOT, labelDir, say } from './paths.ts'
+import { WORKSPACE_ROOT, labelDir, say } from './paths.ts'
 
 /** What the subject must return. */
 interface SubjectScan {
@@ -63,7 +63,7 @@ export async function main(argv: readonly string[]): Promise<void> {
     const at = argv.indexOf(name)
     return at === -1 ? fallback : (argv[at + 1] ?? fallback)
   }
-  const subjectPath = resolve(WORKSPACE_ROOT, option('--subject', join(LINT_ROOT, 'src', 'code', 'parse.ts')))
+  const subjectPath = resolve(WORKSPACE_ROOT, option('--subject', join(WORKSPACE_ROOT, 'libs', 'linter', 'src', 'code', 'parse.ts')))
   const limit = parseInt(option('--limit', '0'), 10)
   const filter = option('--filter', '')
   let subject: SubjectModule

@@ -1,4 +1,4 @@
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './no-direct-console.ts'
 
 testRule(rule, {

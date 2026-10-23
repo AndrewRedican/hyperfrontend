@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { compileGlob, matchesAny } from '../files/glob.ts'
+import { compileGlob, matchesAny } from '@hyperfrontend/linter/helpers'
 
 /** The project files found in one directory. */
 interface ProjectFiles {

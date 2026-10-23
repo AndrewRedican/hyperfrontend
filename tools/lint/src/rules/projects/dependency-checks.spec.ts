@@ -1,11 +1,11 @@
-import type { ExpectedError, InvalidCase, RuleCase } from '../../testing/rule-tester.ts'
+import type { ExpectedError, InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { DependencyChecksOptions } from './dependency-checks.ts'
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { testRule } from '../../testing/rule-tester.ts'
 import { createDependencyWorkspace } from './__fixtures__/dependency-workspace.ts'
 import rule from './dependency-checks.ts'
 

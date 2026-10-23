@@ -1,0 +1,56 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-linter",
+  "description": "A linter for TypeScript, JavaScript, JSX, JSON and Markdown with its own parsers and no external runtime packages.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "none",
+        "webWorker": "none"
+      },
+      "note": "Needs Node.js 24 or later: configurations are TypeScript modules loaded through Node's own type stripping."
+    }
+  },
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "external": ["node:test"],
+        "esm": {
+          "bundleWorkspaceDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true
+        },
+        "assets": [
+          {
+            "from": "libs/linter",
+            "files": ["NOTICE.md"]
+          },
+          {
+            "from": "libs/linter/licenses",
+            "glob": "*.txt",
+            "to": "licenses"
+          }
+        ],
+        "bin": [
+          {
+            "name": "hf-lint",
+            "runner": "runHfLint",
+            "format": "esm",
+            "bootstrap": "runHfLint({ argv: process.argv.slice(2), cwd: process.cwd(), stdin: 0, stdout: process.stdout, stderr: process.stderr }).then(\n  (code) => { process.exitCode = code },\n  (error) => {\n    process.stderr.write((error instanceof Error ? error.message : String(error)) + '\\n')\n    process.exitCode = 2\n  }\n)"
+          }
+        ]
+      }
+    },
+    "publish": {},
+    "typecheck": {},
+    "test": {}
+  }
+}

@@ -6,9 +6,9 @@
  * @module rules/workspace/deepest-import-path
  */
 
-import type { Node } from '../../code/model.ts'
+import type { Node } from '@hyperfrontend/linter'
 import { dirname } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { baseConfigRootOf, pathAliases } from './shared/aliases.ts'
 import { moduleExports } from './shared/exports-index.ts'
 

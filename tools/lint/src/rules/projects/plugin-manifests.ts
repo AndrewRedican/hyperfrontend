@@ -7,11 +7,11 @@
  */
 
 import type { JsonNode, JsonObjectNode } from '@hyperfrontend/json-utils'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { JsonTreeNode } from '@hyperfrontend/linter'
 import { basename } from 'node:path'
+import { defineRule } from '@hyperfrontend/linter'
+import { propertyOf, rootObject } from '@hyperfrontend/linter/helpers'
 import { parseVersionStrict } from '@hyperfrontend/versioning/semver'
-import { defineRule } from '../../engine/rule.ts'
-import { propertyOf, rootObject } from '../shared/json.ts'
 
 /** The rule's options. */
 export interface PluginManifestsOptions {

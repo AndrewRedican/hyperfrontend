@@ -6,12 +6,11 @@
  * @module rules/workspace/lib-ci-workflows
  */
 
-import type { RuleContext } from '../../engine/rule.ts'
-import type { TextDocument } from '../../languages/text.ts'
+import type { RuleContext, TextDocument } from '@hyperfrontend/linter'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix } from 'node:path'
-import { defineRule } from '../../engine/rule.ts'
-import { positionAt } from '../../text/lines.ts'
+import { defineRule } from '@hyperfrontend/linter'
+import { positionAt } from '@hyperfrontend/linter/helpers'
 import { publishableLibraries } from './shared/libraries.ts'
 import { workspaceRootOf } from './shared/locate.ts'
 import { readProjectFile } from './shared/project-file.ts'

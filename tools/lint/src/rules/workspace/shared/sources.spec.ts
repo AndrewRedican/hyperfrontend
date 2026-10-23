@@ -1,5 +1,6 @@
+import type { Node } from '@hyperfrontend/linter'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { compareSources, isBuiltinModule, relativeDepth, sourceCategory } from './sources.ts'
+import { compareModuleStatements, compareSources, isBuiltinModule, isTypeOnly, relativeDepth, sourceCategory, sourceOf } from './sources.ts'
 
 describe('isBuiltinModule', () => {
   it('accepts a built-in by its first segment', () => {
@@ -54,5 +55,48 @@ describe('compareSources', () => {
 
   it('orders alphabetically within a category', () => {
     expect(compareSources('../b', '../a') > 0).toBe(true)
+  })
+})
+
+/**
+ * An import or re-export statement as the ordering reads it.
+ *
+ * @param source - The module specifier
+ * @param kind - `type` for a type-only statement
+ * @param field - Whether the statement is an import or an export
+ * @returns A node with the fields the helpers read
+ */
+const statement = (source: string, kind: 'type' | 'value' = 'value', field: 'importKind' | 'exportKind' = 'importKind'): Node =>
+  ({
+    kind: 'ImportDeclaration',
+    start: 0,
+    end: 0,
+    [field]: kind,
+    source: { kind: 'Literal', start: 0, end: 0, value: source },
+  }) as unknown as Node
+
+describe('compareModuleStatements', () => {
+  it('puts a type-only statement first', () => {
+    expect(compareModuleStatements(statement('./a'), statement('node:fs', 'type')) > 0).toBe(true)
+  })
+
+  it('puts a value statement after a type-only one', () => {
+    expect(compareModuleStatements(statement('node:fs', 'type'), statement('./a')) < 0).toBe(true)
+  })
+
+  it('orders statements of one kind by source', () => {
+    expect(compareModuleStatements(statement('@hyperfrontend/a'), statement('lodash')) > 0).toBe(true)
+  })
+})
+
+describe('isTypeOnly', () => {
+  it('recognises a type-only re-export', () => {
+    expect(isTypeOnly(statement('./a', 'type', 'exportKind'))).toBe(true)
+  })
+})
+
+describe('sourceOf', () => {
+  it('reads the module specifier', () => {
+    expect(sourceOf(statement('./a'))).toBe('./a')
   })
 })

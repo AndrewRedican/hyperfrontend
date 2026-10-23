@@ -7,12 +7,11 @@
  * @module rules/workspace/shared/cross-platform/separators
  */
 
-import type { Node, RegexValue, TemplateValue } from '../../../../code/model.ts'
-import type { Fix } from '../../../../engine/report.ts'
+import type { Fix, Node, RegexValue, TemplateValue } from '@hyperfrontend/linter'
 import type { Rewrite, Scan } from './edits.ts'
 import type { Part } from './origin.ts'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { mergeEdits } from '../../../typescript/shared/edits.ts'
+import { mergeEdits } from '@hyperfrontend/linter/helpers'
 import { argumentText, quote, reportTiered, templateText } from './edits.ts'
 import { combine, isQualified, isUrlName, MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
 

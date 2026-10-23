@@ -6,11 +6,9 @@
  */
 
 import type { JsonObjectNode } from '@hyperfrontend/json-utils'
-import type { RuleContext, RuleModule } from '../../../engine/rule.ts'
-import type { Listeners } from '../../../engine/traverse.ts'
-import type { JsonTreeNode } from '../../../languages/json.ts'
+import type { JsonTreeNode, Listeners, RuleContext, RuleModule } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
-import { rootObject } from '../../shared/json.ts'
+import { rootObject } from '@hyperfrontend/linter/helpers'
 import { isPublishableLibrary } from './project-file.ts'
 
 /** What a manifest rule does with the root object. */

@@ -1,6 +1,6 @@
 # @hyperfrontend/lint
 
-The workspace linter. It implements every rule this workspace enables with its own parsers for TypeScript, JavaScript, JSON and Markdown, a project graph computed the way Nx computes it, and no external packages.
+The workspace's lint integration: [`@hyperfrontend/linter`](../../libs/linter/README.md) run from its TypeScript source, the workspace's own rule families, the project graph those rules read, and the Nx plugin that gives every project a `lint` target.
 
 ## Running it
 
@@ -12,42 +12,30 @@ node tools/lint/bin/lint.ts [--fix | --fix-dry-run] [--format stylish|json] \
 node tools/lint/bin/lint.ts --stdin --stdin-filename src/file.ts < file.ts
 ```
 
-The exit code is 0 when clean, 1 when problems were reported, and 2 when the command could not run or a file could not be linted.
+`bin/lint.ts` installs the resolution hook in `src/runtime/aliases.ts` and then calls the package's `run`, so the package and the libraries it bundles load from source: a fresh checkout lints without a build or a published linter. The flags, the exit codes and the configuration are the package's; its [README](../../libs/linter/README.md) and the [rule catalogue](https://www.hyperfrontend.dev/docs/libraries/linter/rules/) describe them.
 
 ## Configuration
 
-The linter reads the nearest `lint.config.ts` at or above the directory it runs in: a module whose default export is a list of blocks `{ files, ignores, rules, settings, language }`, globs relative to that file's directory, a later block winning over an earlier one. Every project's file spreads the workspace's base before its own blocks:
+Every project's `lint.config.ts` spreads the root `lint.base.config.ts` before its own blocks. The base registers the workspace's families from `config/families.ts`, builds its blocks from the package's presets, and adds the workspace's settings from `config/rule-sets.ts`: where documentation comments are required and the tag constraints of the project graph.
 
-```ts
-import baseConfig from '../../lint.base.config.ts'
+## The workspace's rules
 
-export default [
-  ...baseConfig,
-  { files: ['**/*.json'], rules: { 'projects/dependency-checks': ['error', { ignoredDependencies: ['@hyperfrontend/testing'] }] } },
-]
-```
+| Family        | What it checks                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspace/*` | This repository's conventions: library manifests and READMEs, the docs site's registrations, CI workflows, the portable-path helpers, logging and editor policy |
+| `projects/*`  | Module boundaries, declared dependencies and Nx plugin manifests, on the project graph in `src/graph/`                                                          |
 
-`lint.base.config.ts` at the workspace root lists every rule the workspace enables, from the rule sets in `config/rule-sets.ts`; `config/globals.ts` holds the read-only browser and Node globals JavaScript files see. A rule turned on with options takes only the options the workspace configures.
-
-Comments switch rules off locally: `lint-disable` and `lint-enable` (block comments), `lint-disable-line` and `lint-disable-next-line`, each with optional rule ids and an optional `-- justification` after them. A directive that suppresses nothing is reported, with a fix that removes it.
+A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from `@hyperfrontend/linter`; the id names the file, and `config/families.ts` registers every file it finds. Its spec beside it lists valid and invalid cases with `testRule` from `@hyperfrontend/linter/testing`. The rules import only the package's public entries. Their documentation is in `docs/rules/`, and the `lint-rules` skill has the details.
 
 ## Layout
 
 - `bin/lint.ts`: the command.
-- `config/`: the rule sets and globals the base configuration is written from.
-- `src/cli/`, `src/config/`, `src/engine/`, `src/files/`, `src/output/`: arguments, configuration loading and resolution, directives, the per-file lint loop with up to ten fix passes, file enumeration, and the stylish and JSON formatters.
-- `src/languages/`: one adapter per language, picked by extension: code (TypeScript, TSX, JavaScript), JSON, Markdown and plain text (YAML).
-- `src/code/`, `src/markdown/`: the parsers, producing ESTree-shaped and mdast-shaped trees with positions.
-- `src/scope/`, `src/flow/`, `src/jsdoc/`, `src/regex/`: the semantic services rules share: scope analysis, code paths, JSDoc blocks and type expressions, regular-expression patterns.
+- `config/`: the families and the workspace's own settings.
+- `src/runtime/aliases.ts`: the resolution hook that loads workspace libraries from source.
+- `src/rules/workspace/`, `src/rules/projects/`: the workspace's rules, with specs and fixtures.
 - `src/graph/`: the project graph Nx would build: projects, their files and tags, each code file's imports and the edges they draw, cached under `node_modules/.cache/hyperfrontend-lint/`.
-- `src/rules/<family>/<rule>.ts`: one file per rule, its spec beside it; helpers a family shares sit in `src/rules/<family>/shared/`.
 - `src/nx/plugin.ts`: the Nx plugin inferring each project's `lint` target.
-- `docs/rules/`: the documentation of the workspace and project rules, which the lint report links to.
-- `scripts/`: development tooling: `parser-oracle.ts` compares the scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the graph with the file `nx graph --file` writes, `bench.ts` times the linter.
-
-## Writing a rule
-
-A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule({ id, language, fixable, create })` whose `create` returns listeners by node kind; the id names the file, so nothing registers it. Its spec beside it lists valid and invalid cases with `testRule`. The `lint-rules` skill has the details.
+- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the graph with the file `nx graph --file` writes, `bench.ts` times the linter.
 
 ## Commands
 
@@ -59,4 +47,4 @@ node tools/lint/scripts/graph-oracle.ts --graph <file written by nx graph --file
 node tools/lint/scripts/bench.ts
 ```
 
-Many rule specs carry cases adapted from the test suites of the projects whose rules this linter reimplements; `NOTICE.md` and `licenses/` record their origin.
+The `projects` family's specs carry cases adapted from Nx's test suites; `NOTICE.md` and `licenses/` record their origin.

@@ -7,17 +7,16 @@
  */
 
 import type { JsonNode, JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
-import type { Fix } from '../../engine/report.ts'
-import type { JsonTreeNode } from '../../languages/json.ts'
+import type { Fix, JsonTreeNode } from '@hyperfrontend/linter'
 import { basename, dirname, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { defineRule } from '@hyperfrontend/linter'
+import { isString, rootObject } from '@hyperfrontend/linter/helpers'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { eq, parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
-import { defineRule } from '../../engine/rule.ts'
 import { workspaceGraph } from '../../graph/build.ts'
 import { readJson } from '../../graph/workspace.ts'
-import { isString, rootObject } from '../shared/json.ts'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
 import { inputFiles, selfInputs, usedPackages } from './shared/dependencies.ts'
 

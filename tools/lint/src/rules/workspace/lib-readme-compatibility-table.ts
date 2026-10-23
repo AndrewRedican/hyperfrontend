@@ -7,10 +7,10 @@
  * @module rules/workspace/lib-readme-compatibility-table
  */
 
-import type { MarkdownNode } from '../../markdown/model.ts'
+import type { MarkdownNode } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
-import { defineRule } from '../../engine/rule.ts'
+import { defineRule } from '@hyperfrontend/linter'
 import { isPublishableProject, readPackageFile, readProjectFile } from './shared/project-file.ts'
 
 /** The heading that opens the section, matched at the start of a line. */

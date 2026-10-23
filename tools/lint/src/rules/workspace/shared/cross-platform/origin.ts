@@ -8,13 +8,12 @@
  * @module rules/workspace/shared/cross-platform/origin
  */
 
-import type { Node, TemplateValue } from '../../../../code/model.ts'
-import type { ScopeAnalysis } from '../../../../scope/analysis.ts'
-import type { Definition, Reference, Variable } from '../../../../scope/model.ts'
+import type { Node, TemplateValue } from '@hyperfrontend/linter'
+import type { Definition, Reference, ScopeAnalysis, Variable } from '@hyperfrontend/linter/helpers'
 import { dirname, join, posix, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { isGlobalReference, referenceOf } from '../../../javascript/shared/constant.ts'
+import { isGlobalReference, referenceOf } from '@hyperfrontend/linter/helpers'
 
 /** Which separator convention a value follows. */
 export type Domain = 'native' | 'relative' | 'portable' | 'unknown'

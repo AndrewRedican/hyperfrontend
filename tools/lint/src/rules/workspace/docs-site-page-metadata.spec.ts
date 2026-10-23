@@ -1,4 +1,4 @@
-import { testRule } from '../../testing/rule-tester.ts'
+import { testRule } from '@hyperfrontend/linter/testing'
 import rule from './docs-site-page-metadata.ts'
 
 // why: the recorded file names are absolute, and the rule reads nothing from them but the route.
