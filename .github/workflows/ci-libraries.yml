@@ -82,6 +82,8 @@ jobs:
               - 'libs/utils/ui/**'
             testing:
               - 'libs/testing/**'
+            linter:
+              - 'libs/linter/**'
             workflow-changed:
               - '.github/workflows/ci-libraries.yml'
               - '.github/workflows/_lib-ci.yml'
@@ -134,6 +136,7 @@ jobs:
           add_if_changed "${{ steps.filter.outputs.time-utils }}" "lib-time-utils" "libs/utils/time" "time-utils"
           add_if_changed "${{ steps.filter.outputs.ui-utils }}" "lib-ui-utils" "libs/utils/ui" "ui-utils"
           add_if_changed "${{ steps.filter.outputs.testing }}" "lib-testing" "libs/testing" "testing"
+          add_if_changed "${{ steps.filter.outputs.linter }}" "lib-linter" "libs/linter" "linter"
 
           # Check if matrix is empty
           COUNT=$(echo "$MATRIX_ITEMS" | jq 'length')
