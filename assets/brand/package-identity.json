@@ -426,6 +426,45 @@
         }
       ]
     },
+    "@hyperfrontend/linter": {
+      "note": "The diagnostic: lines of code, a squiggle under the one that needs a second look, and the dot a report points at.",
+      "hue": 72,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M7 9h11"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M7 14.5h18"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M7 20h13"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M7 25.5q1.6-2.2 3.2 0t3.2 0t3.2 0t3.2 0"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 24,
+            "cy": 9,
+            "r": 2.6
+          },
+          "solid": true
+        }
+      ]
+    },
     "@hyperfrontend/ui-utils": {
       "note": "The DOM layer: an element measured and held by its corners.",
       "hue": 322,
