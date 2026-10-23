@@ -1,19 +1,19 @@
 ---
 name: lint-coverage
-description: Achieve 100% code coverage for lint rules and the linter in tools/lint. Use when reviewing lint rules for coverage gaps, adding missing spec cases, or applying node:coverage ignore comments.
+description: Achieve 100% code coverage for lint rules and the linter in libs/linter and tools/lint. Use when reviewing lint rules for coverage gaps, adding missing spec cases, or applying node:coverage ignore comments.
 ---
 
 # Lint Rule Coverage
 
 **Be pedantic.** Every `if`, `else`, `?:`, `&&`, `||`, `??`, `?.`, early return, loop and callback: trace each branch. Miss nothing. Use `/* node:coverage ignore next */` comments only where a branch cannot be reached.
 
-| What          | Where                                                     |
-| ------------- | --------------------------------------------------------- |
-| Rules         | `tools/lint/src/rules/<family>/`                          |
-| Spec helper   | `tools/lint/src/testing/rule-tester.ts`                   |
-| Coverage gate | `tools/lint/test.config.ts` (100 / 100 / 100 over `src/`) |
+| What          | Where                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Rules         | `libs/linter/src/rules/<family>/`, `tools/lint/src/rules/<family>/`                             |
+| Spec helper   | `libs/linter/src/testing/rule-tester.ts` (`@hyperfrontend/linter/testing`)                      |
+| Coverage gate | `libs/linter/test.config.ts` and `tools/lint/test.config.ts` (100 / 100 / 100 over each `src/`) |
 
-Run `npx nx test tool-lint`; the report lists every file under the threshold, with the uncovered lines, and fails on a file no spec loads. For one spec, run it alone from `tools/lint` with `--experimental-test-coverage --test-coverage-include=<file>` and an lcov reporter, and read the `BRDA:…,0` and `DA:…,0` lines.
+Run `npx nx test lib-linter` or `npx nx test tool-lint`; the report lists every file under the threshold, with the uncovered lines, and fails on a file no spec loads. For one spec, run it alone from the project root with `--experimental-test-coverage --test-coverage-include=<file>` and an lcov reporter, and read the `BRDA:…,0` and `DA:…,0` lines.
 
 ---
 
@@ -31,7 +31,7 @@ if (attribute.kind !== 'JSXAttribute') {
 
 Prefer removing an unreachable branch to ignoring it: a `?? fallback` that can never apply, or a guard the types already rule out, is dead code (`as` with a `// why:` line instead).
 
-A module that holds only types has nothing a spec can load; list it in `coverageExclude` in `tools/lint/test.config.ts` beside the other type-only modules.
+A module that holds only types has nothing a spec can load; list it in `coverageExclude` in the project's `test.config.ts` beside the other type-only modules.
 
 ---
 
