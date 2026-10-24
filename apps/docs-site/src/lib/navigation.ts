@@ -199,6 +199,7 @@ const coreLibraries: NavItem[] = [
     href: '/docs/libraries/testing',
     children: [
       { slug: 'architecture', href: '/docs/libraries/testing/architecture' },
+      { slug: 'browser', href: '/docs/libraries/testing/browser' },
       { slug: 'coverage', href: '/docs/libraries/testing/coverage' },
       { slug: 'dom', href: '/docs/libraries/testing/dom' },
       { slug: 'fs', href: '/docs/libraries/testing/fs' },
