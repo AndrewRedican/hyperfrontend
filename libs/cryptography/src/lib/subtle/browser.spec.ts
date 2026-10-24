@@ -1,8 +1,7 @@
 import { afterEach } from 'node:test'
-import { defineProperty, getOwnPropertyDescriptor } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { symbolToStringTag } from '@hyperfrontend/immutable-api-utils/built-in-copy/symbol'
 import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { subtle } from './browser'
 
 describe('subtle (browser)', () => {
@@ -16,14 +15,12 @@ describe('subtle (browser)', () => {
   })
 
   describe('without a crypto global', () => {
-    const original = getOwnPropertyDescriptor(globalThis, 'crypto')
-
     afterEach(() => {
-      defineProperty(globalThis, 'crypto', original ?? { value: undefined, configurable: true, writable: true })
+      jest.restoreAllMocks()
     })
 
     it('throws a descriptive error at first use instead of at import', () => {
-      defineProperty(globalThis, 'crypto', { value: undefined, configurable: true, writable: true })
+      jest.stubGlobal('crypto', undefined)
       expect(() => subtle.digest).toThrow('Web Crypto is unavailable')
     })
   })
