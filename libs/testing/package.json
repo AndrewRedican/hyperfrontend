@@ -12,6 +12,7 @@
     ".": "./src/index.js",
     "./coverage": "./src/coverage/index.js",
     "./dom": "./src/dom/index.js",
+    "./fs": "./src/fs/index.js",
     "./hooks": "./src/hooks/index.js",
     "./reporter": "./src/reporter/index.js",
     "./runner": "./src/runner/index.js",
