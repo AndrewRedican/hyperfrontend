@@ -1,5 +1,0 @@
-S0 global Program 0-24 up=- strict=0
-S1 module Program 0-24 up=0 strict=1
-  T 
-S2 class ClassDeclaration 15-23 up=1 strict=1
-  T 

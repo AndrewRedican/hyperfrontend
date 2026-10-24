@@ -1,10 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeConfigModules } from './__test-utils__/config-modules'
 import { CONFIG_FILE, findConfigFile, loadConfig } from './load'
 
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
+const FIXTURES = writeConfigModules()
 
 const TREE = mkdtempSync(join(tmpdir(), 'lint-config-'))
 mkdirSync(join(TREE, 'project', 'src', 'deep'), { recursive: true })
@@ -48,6 +49,7 @@ describe('loadConfig', () => {
 
   it('leaves no temporary tree behind', () => {
     rmSync(TREE, { recursive: true, force: true })
-    expect(findConfigFile(join(TREE, 'project'))).toBeNull()
+    rmSync(FIXTURES, { recursive: true, force: true })
+    expect([findConfigFile(join(TREE, 'project')), existsSync(FIXTURES)]).toEqual([null, false])
   })
 })

@@ -1,15 +1,13 @@
 import type { Node } from '../code/model'
 import type { RuleContext } from '../engine/rule'
-import { readFileSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { extname } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { childrenOf } from '../code/children'
 import { parseCode } from '../code/parse'
 import { DEFAULT_LANGUAGE } from '../config/model'
-import { dumpFlow } from './__fixtures__/dump'
+import { ANALYSIS_CASES } from './__test-utils__/analysis-cases'
+import { dumpFlow } from './__test-utils__/dump'
 import { analyzeFlow, flowAnalysisOf } from './analysis'
-
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
 
 /**
  * Every switch case of a tree, in source order.
@@ -25,12 +23,10 @@ function switchCases(node: Node, found: Node[] = []): Node[] {
 }
 
 describe('analyzeFlow', () => {
-  for (const file of ['control.ts', 'exceptions.ts', 'expressions.tsx']) {
+  for (const { name: file, source, flow } of ANALYSIS_CASES) {
     it(`builds ${file} as recorded`, () => {
-      const expected = readFileSync(join(FIXTURES, file.replace(/\.[a-z]+$/, '.flow')), 'utf8')
-        .trimEnd()
-        .split(/\r?\n/)
-      const tree = parseCode(readFileSync(join(FIXTURES, file), 'utf8'), extname(file)).tree as Node
+      const expected = flow.trimEnd().split(/\r?\n/)
+      const tree = parseCode(source, extname(file)).tree as Node
       expect(dumpFlow(analyzeFlow(tree), switchCases(tree)).join('\n')).toBe(expected.join('\n'))
     })
   }

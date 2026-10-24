@@ -1,0 +1,198 @@
+/**
+ * The `containers.md` document the Markdown parser specs read, and the tree the reference parser builds from it.
+ *
+ * @module markdown/__test-utils__/cases/containers
+ */
+
+export const CONTAINERS = {
+  name: 'containers.md',
+  source: `> outer
+> > inner *em*
+> lazy
+
+- one
+  - two
+
+    code in item
+  - three
+- [x] done \`x\`
+- [X] also
+-
+  started later
+
+1. first
+10) tenth
+1234567890. not a marker
+
+- a
+
+  b
+- c
+not lazy? yes lazy
+
+#######  seven
+# a #
+# b#
+#\ttab
+#
+
+~~~ruby meta more
+tilde \`fence\`
+~~~
+
+~~~
+unclosed tilde
+   ~~~~
+    ~~~
+
+\`\`\`js title="x"
+\`\`\`
+
+   \`\`\`
+   indented fence
+   \`\`\`
+
+    four
+\ttab code
+
+    blank below
+
+
+next
+
+<pre>
+raw <b>
+</pre>
+<?php echo ?>
+<!DOCTYPE html>
+<![CDATA[ x ]]>
+<!-- multi
+line -->
+para
+<div>
+not interrupt
+
+</div>
+
+Text
+<img src="x">
+still paragraph
+
+Text
+<div>
+interrupts
+
+| a \\| b | \`c|d\` | e |
+| --- | :-- | --: |
+| 1 | 2 | 3 | 4 |
+| only |
+## after table
+
+| x |
+| - |
+
+a | b
+- | -
+c | d
+`,
+  tree: `root 1:1:0-89:1:699
+  blockquote 1:1:0-3:7:29
+    paragraph 1:3:2-1:8:7
+      text 1:3:2-1:8:7 value="outer"
+    blockquote 2:3:10-3:7:29
+      paragraph 2:5:12-3:7:29
+        text 2:5:12-2:11:18 value="inner "
+        emphasis 2:11:18-2:15:22
+          text 2:12:19-2:14:21 value="em"
+        text 2:15:22-3:7:29 value="\\nlazy"
+  list 5:1:31-13:16:116 ordered=false
+    listItem 5:1:31-9:10:72
+      paragraph 5:3:33-5:6:36
+        text 5:3:33-5:6:36 value="one"
+      list 6:3:39-9:10:72 ordered=false
+        listItem 6:3:39-8:17:62
+          paragraph 6:5:41-6:8:44
+            text 6:5:41-6:8:44 value="two"
+          paragraph 8:5:50-8:17:62
+            text 8:5:50-8:17:62 value="code in item"
+        listItem 9:3:65-9:10:72
+          paragraph 9:5:67-9:10:72
+            text 9:5:67-9:10:72 value="three"
+    listItem 10:1:73-10:15:87 checked=true
+      paragraph 10:7:79-10:15:87
+        text 10:7:79-10:12:84 value="done "
+        inlineCode 10:12:84-10:15:87 value="x"
+    listItem 11:1:88-11:11:98 checked=true
+      paragraph 11:7:94-11:11:98
+        text 11:7:94-11:11:98 value="also"
+    listItem 12:1:99-13:16:116
+      paragraph 13:3:103-13:16:116
+        text 13:3:103-13:16:116 value="started later"
+  list 15:1:118-15:9:126 ordered=true start=1
+    listItem 15:1:118-15:9:126
+      paragraph 15:4:121-15:9:126
+        text 15:4:121-15:9:126 value="first"
+  list 16:1:127-17:25:161 ordered=true start=10
+    listItem 16:1:127-17:25:161
+      paragraph 16:5:131-17:25:161
+        text 16:5:131-17:25:161 value="tenth\\n1234567890. not a marker"
+  list 19:1:163-23:19:194 ordered=false
+    listItem 19:1:163-21:4:171
+      paragraph 19:3:165-19:4:166
+        text 19:3:165-19:4:166 value="a"
+      paragraph 21:3:170-21:4:171
+        text 21:3:170-21:4:171 value="b"
+    listItem 22:1:172-23:19:194
+      paragraph 22:3:174-23:19:194
+        text 22:3:174-23:19:194 value="c\\nnot lazy? yes lazy"
+  paragraph 25:1:196-25:15:210
+    text 25:1:196-25:15:210 value="#######  seven"
+  heading 26:1:211-26:6:216 depth=1
+    text 26:3:213-26:4:214 value="a"
+  heading 27:1:217-27:5:221 depth=1
+    text 27:3:219-27:5:221 value="b#"
+  heading 28:1:222-28:6:227 depth=1
+    text 28:3:224-28:6:227 value="tab"
+  heading 29:1:228-29:2:229 depth=1
+  code 31:1:231-33:4:266 lang="ruby" meta="meta more" value="tilde \`fence\`"
+  code 35:1:268-37:8:294 value="unclosed tilde"
+  code 38:1:295-38:8:302 value="~~~"
+  code 40:1:304-41:4:323 lang="js" meta="title=\\"x\\"" value=""
+  code 43:4:328-45:7:356 value="indented fence"
+  code 47:1:358-50:16:393 value="four\\ntab code\\n\\nblank below"
+  paragraph 53:1:396-53:5:400
+    text 53:1:396-53:5:400 value="next"
+  html 55:1:402-57:7:422 value="<pre>\\nraw <b>\\n</pre>"
+  html 58:1:423-58:14:436 value="<?php echo ?>"
+  html 59:1:437-59:16:452 value="<!DOCTYPE html>"
+  html 60:1:453-60:16:468 value="<![CDATA[ x ]]>"
+  html 61:1:469-62:9:488 value="<!-- multi\\nline -->"
+  paragraph 63:1:489-63:5:493
+    text 63:1:489-63:5:493 value="para"
+  html 64:1:494-65:14:513 value="<div>\\nnot interrupt"
+  html 67:1:515-67:7:521 value="</div>"
+  paragraph 69:1:523-71:16:557
+    text 69:1:523-70:1:528 value="Text\\n"
+    html 70:1:528-70:14:541 value="<img src=\\"x\\">"
+    text 70:14:541-71:16:557 value="\\nstill paragraph"
+  paragraph 73:1:559-73:5:563
+    text 73:1:559-73:5:563 value="Text"
+  html 74:1:564-75:11:580 value="<div>\\ninterrupts"
+  paragraph 77:1:582-80:9:651
+    text 77:1:582-77:12:593 value="| a | b | "
+    inlineCode 77:12:593-77:17:598 value="c|d"
+    text 77:17:598-80:9:651 value=" | e |\\n| --- | :-- | --: |\\n| 1 | 2 | 3 | 4 |\\n| only |"
+  heading 81:1:652-81:15:666 depth=2
+    text 81:4:655-81:15:666 value="after table"
+  table 83:1:668-84:6:679 align=[null]
+    tableRow 83:1:668-83:6:673
+      tableCell 83:1:668-83:6:673
+        text 83:3:670-83:4:671 value="x"
+  paragraph 86:1:681-86:6:686
+    text 86:1:681-86:6:686 value="a | b"
+  list 87:1:687-88:6:698 ordered=false
+    listItem 87:1:687-88:6:698
+      paragraph 87:3:689-88:6:698
+        text 87:3:689-88:6:698 value="| -\\nc | d"
+`,
+}

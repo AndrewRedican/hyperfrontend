@@ -1,0 +1,1238 @@
+/**
+ * The `types.ts` source the parser specs read, and the tree the reference parser builds from it.
+ *
+ * @module code/__test-utils__/cases/types
+ */
+
+export const TYPES = {
+  name: 'types.ts',
+  source: `type Keywords = [any, unknown, never, void, undefined, null, string, number, boolean, bigint, symbol, object, this]
+type Literals = ['text', 1, -1, 1n, true, false, \`template \${string} \${number}\`]
+type Reference = Map<string, Array<number>>
+type Qualified = NS.Inner.Type<T>
+type Union = | A | B | C
+type Intersection = & A & B
+type Mixed = (A | B) & (C | D)
+type ArrayOf = string[][]
+type Indexed = T['key'][number]
+type Conditional = T extends string ? 'yes' : T extends (infer U extends number) ? U : never
+type Inferred = T extends [infer Head, ...infer Tail] ? Head : never
+type Mapped = { readonly [K in keyof T]?: T[K] }
+type MappedModifiers = { -readonly [K in keyof T]-?: T[K] }
+type MappedPlus = { +readonly [K in keyof T]+?: T[K] }
+type MappedAs = { [K in keyof T as \`get\${Capitalize<K & string>}\`]: () => T[K] }
+type MappedBare = { [K in Keys] }
+type MappedSemicolon = { [K in Keys]: V; }
+type Operators = keyof T | unique symbol | readonly string[]
+type FunctionType = (a: string, b?: number, ...rest: boolean[]) => void
+type GenericFunction = <T>(value: T) => T
+type ConstructorType = new (value: string) => Instance
+type AbstractConstructor = abstract new () => Instance
+type Tuple = [string, number?, ...boolean[]]
+type NamedTuple = [first: string, second?: number, ...rest: boolean[]]
+type RestNamed = [...head: string[], tail: number]
+type Query = typeof value
+type QueryMember = typeof value.member<string>
+type QueryImport = typeof import('module')
+type QueryThis = typeof this.member
+type Imported = import('module')
+type ImportedQualified = import('module').Nested.Type<string>
+type Predicate = (value: unknown) => value is string
+type AssertsPredicate = (value: unknown) => asserts value is string
+type AssertsPlain = (value: unknown) => asserts value
+type ThisPredicate = (this: Base) => this is Derived
+type ParenthesisedFunction = ((a: string) => void) | null
+type Optional = Partial<{ a?: string; b: number | undefined }>
+type TemplateLiteral = \`\${Prefix}-\${Suffix}\`
+type Negative = -1 | -2n
+type ObjectLiteral = {
+  property: string
+  optional?: number
+  readonly fixed: boolean
+  method(a: string): void
+  optionalMethod?(): void
+  generic<T>(value: T): T
+  (call: string): void
+  <T>(generic: T): T
+  new (construct: string): Instance
+  new (bare: string)
+  [index: string]: unknown
+  readonly [readonlyIndex: number]: string
+  get accessor(): string
+  set accessor(value: string)
+  'quoted': 1
+  42: 2
+  [computed]: 3
+  nested: { deeper: { deepest: true } }
+  arrow: (value: string) => void
+  union: string | number,
+  trailingComma: string,
+}
+interface Base<T = string> extends First, Second<T>, NS.Third {
+  property: T
+}
+interface Empty {}
+interface Extending extends Base<number> {
+  extra: string
+}
+declare function ambient(a: string): void
+declare const ambientConst: number
+declare let ambientLet: string
+declare var ambientVar: boolean
+declare class AmbientClass {}
+declare enum AmbientEnum {}
+declare namespace AmbientNamespace {
+  const inner: number
+  function fn(): void
+}
+declare module 'quoted-module' {
+  export const value: string
+}
+declare module Dotted.Namespace.Path {}
+declare global {
+  interface Window {
+    extra: string
+  }
+}
+declare abstract class AmbientAbstract {}
+declare module 'shorthand'
+namespace Plain {
+  export namespace Nested {}
+}
+module LegacyModule {}
+enum Numeric {
+  A,
+  B = 2,
+  C = B * 2,
+}
+enum StringEnum {
+  A = 'a',
+  'quoted' = 'q',
+}
+const enum Constant {
+  Only,
+}
+function withTypes<T extends string = 'x', const U = never>(a: T, b: U = 1 as U): asserts a is T {}
+function returnsPredicate(value: unknown): value is string {
+  return true
+}
+const annotated: Array<string> = []
+const nonNull = annotated!
+let withDefinite!: string
+type Generic<in out T> = T
+type ConditionalInUnion = A | (B extends C ? D : E)
+type ReadonlyTuple = readonly [string, number]
+type KeyofTypeof = keyof typeof value
+type IndexAccess = Record<string, number>['x']
+type NestedGenerics = Promise<Array<Map<string, Set<number>>>>
+type Abstract = typeof AmbientAbstract
+type ObjectKeyword = object
+type FunctionInUnion = (() => void) | string
+type InferConstraint = T extends [infer U extends string] ? U : never
+type InferNoConstraint = T extends [infer U] ? U : never
+type Intrinsic = intrinsic
+abstract class WithOverloads {
+  method(): void
+  method(x?: number): void {}
+}
+let generic = fn<string, number>(a)
+let instantiation = fn<string>
+let callWithTypeArgs = obj.method<T>()
+let newWithTypeArgs = new Container<string>()
+let optionalCallTypeArgs = obj?.method<T>(a)
+let tagged = tag<string>\`x\`
+let comparison = a < b && c > d
+let shift = a >> b >>> c
+let generics = a < (b > c)
+type InferInExtends = T extends infer U extends string ? U : never
+type InferTuple = T extends [infer U extends string, infer V] ? [U, V] : never
+type ParenthesisedKeyof = keyof (A | B)
+type AbstractReference = abstract
+let constAssertedTuple = [1, 2] as const
+type Bare = { a; b }
+type Signatures = { method(); generic<T>(x: T) }
+type InferOutside = infer U extends string ? U : never
+interface Indexed {
+  [key: string]: unknown; ['c']: 1
+}
+interface Listed {
+  [key: number]: unknown, ['d']: 2
+}
+`,
+  tree: `Program 0-5142 sourceType="module"
+  TSTypeAliasDeclaration 0-115
+    Identifier 5-13 name="Keywords"
+    TSTupleType 16-115
+      TSAnyKeyword 17-20
+      TSUnknownKeyword 22-29
+      TSNeverKeyword 31-36
+      TSVoidKeyword 38-42
+      TSUndefinedKeyword 44-53
+      TSNullKeyword 55-59
+      TSStringKeyword 61-67
+      TSNumberKeyword 69-75
+      TSBooleanKeyword 77-84
+      TSBigIntKeyword 86-92
+      TSSymbolKeyword 94-100
+      TSObjectKeyword 102-108
+      TSThisType 110-114
+  TSTypeAliasDeclaration 116-196
+    Identifier 121-129 name="Literals"
+    TSTupleType 132-196
+      TSLiteralType 133-139
+        Literal 133-139 raw="'text'"
+      TSLiteralType 141-142
+        Literal 141-142 raw="1"
+      TSLiteralType 144-146
+        UnaryExpression 144-146 operator="-" prefix=true
+          Literal 145-146 raw="1"
+      TSLiteralType 148-150
+        Literal 148-150 raw="1n"
+      TSLiteralType 152-156
+        Literal 152-156 raw="true"
+      TSLiteralType 158-163
+        Literal 158-163 raw="false"
+      TSTemplateLiteralType 165-195
+        TemplateElement 165-177 raw="template "
+        TemplateElement 183-187 raw=" "
+        TemplateElement 193-195 tail=true raw=""
+        TSStringKeyword 177-183
+        TSNumberKeyword 187-193
+  TSTypeAliasDeclaration 197-240
+    Identifier 202-211 name="Reference"
+    TSTypeReference 214-240
+      Identifier 214-217 name="Map"
+      TSTypeParameterInstantiation 217-240
+        TSStringKeyword 218-224
+        TSTypeReference 226-239
+          Identifier 226-231 name="Array"
+          TSTypeParameterInstantiation 231-239
+            TSNumberKeyword 232-238
+  TSTypeAliasDeclaration 241-274
+    Identifier 246-255 name="Qualified"
+    TSTypeReference 258-274
+      TSQualifiedName 258-271
+        TSQualifiedName 258-266
+          Identifier 258-260 name="NS"
+          Identifier 261-266 name="Inner"
+        Identifier 267-271 name="Type"
+      TSTypeParameterInstantiation 271-274
+        TSTypeReference 272-273
+          Identifier 272-273 name="T"
+  TSTypeAliasDeclaration 275-299
+    Identifier 280-285 name="Union"
+    TSUnionType 288-299
+      TSTypeReference 290-291
+        Identifier 290-291 name="A"
+      TSTypeReference 294-295
+        Identifier 294-295 name="B"
+      TSTypeReference 298-299
+        Identifier 298-299 name="C"
+  TSTypeAliasDeclaration 300-327
+    Identifier 305-317 name="Intersection"
+    TSIntersectionType 320-327
+      TSTypeReference 322-323
+        Identifier 322-323 name="A"
+      TSTypeReference 326-327
+        Identifier 326-327 name="B"
+  TSTypeAliasDeclaration 328-358
+    Identifier 333-338 name="Mixed"
+    TSIntersectionType 341-358
+      TSUnionType 342-347
+        TSTypeReference 342-343
+          Identifier 342-343 name="A"
+        TSTypeReference 346-347
+          Identifier 346-347 name="B"
+      TSUnionType 352-357
+        TSTypeReference 352-353
+          Identifier 352-353 name="C"
+        TSTypeReference 356-357
+          Identifier 356-357 name="D"
+  TSTypeAliasDeclaration 359-384
+    Identifier 364-371 name="ArrayOf"
+    TSArrayType 374-384
+      TSArrayType 374-382
+        TSStringKeyword 374-380
+  TSTypeAliasDeclaration 385-416
+    Identifier 390-397 name="Indexed"
+    TSIndexedAccessType 400-416
+      TSIndexedAccessType 400-408
+        TSTypeReference 400-401
+          Identifier 400-401 name="T"
+        TSLiteralType 402-407
+          Literal 402-407 raw="'key'"
+      TSNumberKeyword 409-415
+  TSTypeAliasDeclaration 417-509
+    Identifier 422-433 name="Conditional"
+    TSConditionalType 436-509
+      TSTypeReference 436-437
+        Identifier 436-437 name="T"
+      TSStringKeyword 446-452
+      TSLiteralType 455-460
+        Literal 455-460 raw="'yes'"
+      TSConditionalType 463-509
+        TSTypeReference 463-464
+          Identifier 463-464 name="T"
+        TSInferType 474-496
+          TSTypeParameter 480-496
+            Identifier 480-481 name="U"
+            TSNumberKeyword 490-496
+        TSTypeReference 500-501
+          Identifier 500-501 name="U"
+        TSNeverKeyword 504-509
+  TSTypeAliasDeclaration 510-578
+    Identifier 515-523 name="Inferred"
+    TSConditionalType 526-578
+      TSTypeReference 526-527
+        Identifier 526-527 name="T"
+      TSTupleType 536-563
+        TSInferType 537-547
+          TSTypeParameter 543-547
+            Identifier 543-547 name="Head"
+        TSRestType 549-562
+          TSInferType 552-562
+            TSTypeParameter 558-562
+              Identifier 558-562 name="Tail"
+      TSTypeReference 566-570
+        Identifier 566-570 name="Head"
+      TSNeverKeyword 573-578
+  TSTypeAliasDeclaration 579-627
+    Identifier 584-590 name="Mapped"
+    TSMappedType 593-627 optional=true readonly=true
+      Identifier 605-606 name="K"
+      TSTypeOperator 610-617 operator="keyof"
+        TSTypeReference 616-617
+          Identifier 616-617 name="T"
+      TSIndexedAccessType 621-625
+        TSTypeReference 621-622
+          Identifier 621-622 name="T"
+        TSTypeReference 623-624
+          Identifier 623-624 name="K"
+  TSTypeAliasDeclaration 628-687
+    Identifier 633-648 name="MappedModifiers"
+    TSMappedType 651-687 optional=- readonly=-
+      Identifier 664-665 name="K"
+      TSTypeOperator 669-676 operator="keyof"
+        TSTypeReference 675-676
+          Identifier 675-676 name="T"
+      TSIndexedAccessType 681-685
+        TSTypeReference 681-682
+          Identifier 681-682 name="T"
+        TSTypeReference 683-684
+          Identifier 683-684 name="K"
+  TSTypeAliasDeclaration 688-742
+    Identifier 693-703 name="MappedPlus"
+    TSMappedType 706-742 optional=+ readonly=+
+      Identifier 719-720 name="K"
+      TSTypeOperator 724-731 operator="keyof"
+        TSTypeReference 730-731
+          Identifier 730-731 name="T"
+      TSIndexedAccessType 736-740
+        TSTypeReference 736-737
+          Identifier 736-737 name="T"
+        TSTypeReference 738-739
+          Identifier 738-739 name="K"
+  TSTypeAliasDeclaration 743-823
+    Identifier 748-756 name="MappedAs"
+    TSMappedType 759-823
+      Identifier 762-763 name="K"
+      TSTypeOperator 767-774 operator="keyof"
+        TSTypeReference 773-774
+          Identifier 773-774 name="T"
+      TSTemplateLiteralType 778-808
+        TemplateElement 778-784 raw="get"
+        TemplateElement 806-808 tail=true raw=""
+        TSTypeReference 784-806
+          Identifier 784-794 name="Capitalize"
+          TSTypeParameterInstantiation 794-806
+            TSIntersectionType 795-805
+              TSTypeReference 795-796
+                Identifier 795-796 name="K"
+              TSStringKeyword 799-805
+      TSFunctionType 811-821
+        TSTypeAnnotation 814-821
+          TSIndexedAccessType 817-821
+            TSTypeReference 817-818
+              Identifier 817-818 name="T"
+            TSTypeReference 819-820
+              Identifier 819-820 name="K"
+  TSTypeAliasDeclaration 824-857
+    Identifier 829-839 name="MappedBare"
+    TSMappedType 842-857
+      Identifier 845-846 name="K"
+      TSTypeReference 850-854
+        Identifier 850-854 name="Keys"
+  TSTypeAliasDeclaration 858-900
+    Identifier 863-878 name="MappedSemicolon"
+    TSMappedType 881-900
+      Identifier 884-885 name="K"
+      TSTypeReference 889-893
+        Identifier 889-893 name="Keys"
+      TSTypeReference 896-897
+        Identifier 896-897 name="V"
+  TSTypeAliasDeclaration 901-961
+    Identifier 906-915 name="Operators"
+    TSUnionType 918-961
+      TSTypeOperator 918-925 operator="keyof"
+        TSTypeReference 924-925
+          Identifier 924-925 name="T"
+      TSTypeOperator 928-941 operator="unique"
+        TSSymbolKeyword 935-941
+      TSTypeOperator 944-961 operator="readonly"
+        TSArrayType 953-961
+          TSStringKeyword 953-959
+  TSTypeAliasDeclaration 962-1033
+    Identifier 967-979 name="FunctionType"
+    TSFunctionType 982-1033
+      Identifier 983-992 name="a"
+        TSTypeAnnotation 984-992
+          TSStringKeyword 986-992
+      Identifier 994-1004 name="b" optional=true
+        TSTypeAnnotation 996-1004
+          TSNumberKeyword 998-1004
+      RestElement 1006-1024
+        Identifier 1009-1013 name="rest"
+        TSTypeAnnotation 1013-1024
+          TSArrayType 1015-1024
+            TSBooleanKeyword 1015-1022
+      TSTypeAnnotation 1026-1033
+        TSVoidKeyword 1029-1033
+  TSTypeAliasDeclaration 1034-1075
+    Identifier 1039-1054 name="GenericFunction"
+    TSFunctionType 1057-1075
+      TSTypeParameterDeclaration 1057-1060
+        TSTypeParameter 1058-1059
+          Identifier 1058-1059 name="T"
+      Identifier 1061-1069 name="value"
+        TSTypeAnnotation 1066-1069
+          TSTypeReference 1068-1069
+            Identifier 1068-1069 name="T"
+      TSTypeAnnotation 1071-1075
+        TSTypeReference 1074-1075
+          Identifier 1074-1075 name="T"
+  TSTypeAliasDeclaration 1076-1130
+    Identifier 1081-1096 name="ConstructorType"
+    TSConstructorType 1099-1130
+      Identifier 1104-1117 name="value"
+        TSTypeAnnotation 1109-1117
+          TSStringKeyword 1111-1117
+      TSTypeAnnotation 1119-1130
+        TSTypeReference 1122-1130
+          Identifier 1122-1130 name="Instance"
+  TSTypeAliasDeclaration 1131-1185
+    Identifier 1136-1155 name="AbstractConstructor"
+    TSConstructorType 1158-1185 abstract=true
+      TSTypeAnnotation 1174-1185
+        TSTypeReference 1177-1185
+          Identifier 1177-1185 name="Instance"
+  TSTypeAliasDeclaration 1186-1230
+    Identifier 1191-1196 name="Tuple"
+    TSTupleType 1199-1230
+      TSStringKeyword 1200-1206
+      TSOptionalType 1208-1215
+        TSNumberKeyword 1208-1214
+      TSRestType 1217-1229
+        TSArrayType 1220-1229
+          TSBooleanKeyword 1220-1227
+  TSTypeAliasDeclaration 1231-1301
+    Identifier 1236-1246 name="NamedTuple"
+    TSTupleType 1249-1301
+      TSNamedTupleMember 1250-1263
+        Identifier 1250-1255 name="first"
+        TSStringKeyword 1257-1263
+      TSNamedTupleMember 1265-1280 optional=true
+        Identifier 1265-1271 name="second"
+        TSNumberKeyword 1274-1280
+      TSRestType 1282-1300
+        TSNamedTupleMember 1285-1300
+          Identifier 1285-1289 name="rest"
+          TSArrayType 1291-1300
+            TSBooleanKeyword 1291-1298
+  TSTypeAliasDeclaration 1302-1352
+    Identifier 1307-1316 name="RestNamed"
+    TSTupleType 1319-1352
+      TSRestType 1320-1337
+        TSNamedTupleMember 1323-1337
+          Identifier 1323-1327 name="head"
+          TSArrayType 1329-1337
+            TSStringKeyword 1329-1335
+      TSNamedTupleMember 1339-1351
+        Identifier 1339-1343 name="tail"
+        TSNumberKeyword 1345-1351
+  TSTypeAliasDeclaration 1353-1378
+    Identifier 1358-1363 name="Query"
+    TSTypeQuery 1366-1378
+      Identifier 1373-1378 name="value"
+  TSTypeAliasDeclaration 1379-1425
+    Identifier 1384-1395 name="QueryMember"
+    TSTypeQuery 1398-1425
+      TSQualifiedName 1405-1417
+        Identifier 1405-1410 name="value"
+        Identifier 1411-1417 name="member"
+      TSTypeParameterInstantiation 1417-1425
+        TSStringKeyword 1418-1424
+  TSTypeAliasDeclaration 1426-1468
+    Identifier 1431-1442 name="QueryImport"
+    TSTypeQuery 1445-1468
+      TSImportType 1452-1468
+        Literal 1459-1467 raw="'module'"
+  TSTypeAliasDeclaration 1469-1504
+    Identifier 1474-1483 name="QueryThis"
+    TSTypeQuery 1486-1504
+      TSQualifiedName 1493-1504
+        ThisExpression 1493-1497
+        Identifier 1498-1504 name="member"
+  TSTypeAliasDeclaration 1505-1537
+    Identifier 1510-1518 name="Imported"
+    TSImportType 1521-1537
+      Literal 1528-1536 raw="'module'"
+  TSTypeAliasDeclaration 1538-1599
+    Identifier 1543-1560 name="ImportedQualified"
+    TSImportType 1563-1599
+      Literal 1570-1578 raw="'module'"
+      TSQualifiedName 1580-1591
+        Identifier 1580-1586 name="Nested"
+        Identifier 1587-1591 name="Type"
+      TSTypeParameterInstantiation 1591-1599
+        TSStringKeyword 1592-1598
+  TSTypeAliasDeclaration 1600-1652
+    Identifier 1605-1614 name="Predicate"
+    TSFunctionType 1617-1652
+      Identifier 1618-1632 name="value"
+        TSTypeAnnotation 1623-1632
+          TSUnknownKeyword 1625-1632
+      TSTypeAnnotation 1634-1652
+        TSTypePredicate 1637-1652
+          Identifier 1637-1642 name="value"
+          TSTypeAnnotation 1646-1652
+            TSStringKeyword 1646-1652
+  TSTypeAliasDeclaration 1653-1720
+    Identifier 1658-1674 name="AssertsPredicate"
+    TSFunctionType 1677-1720
+      Identifier 1678-1692 name="value"
+        TSTypeAnnotation 1683-1692
+          TSUnknownKeyword 1685-1692
+      TSTypeAnnotation 1694-1720
+        TSTypePredicate 1697-1720 asserts=true
+          Identifier 1705-1710 name="value"
+          TSTypeAnnotation 1714-1720
+            TSStringKeyword 1714-1720
+  TSTypeAliasDeclaration 1721-1774
+    Identifier 1726-1738 name="AssertsPlain"
+    TSFunctionType 1741-1774
+      Identifier 1742-1756 name="value"
+        TSTypeAnnotation 1747-1756
+          TSUnknownKeyword 1749-1756
+      TSTypeAnnotation 1758-1774
+        TSTypePredicate 1761-1774 asserts=true
+          Identifier 1769-1774 name="value"
+  TSTypeAliasDeclaration 1775-1827
+    Identifier 1780-1793 name="ThisPredicate"
+    TSFunctionType 1796-1827
+      Identifier 1797-1807 name="this"
+        TSTypeAnnotation 1801-1807
+          TSTypeReference 1803-1807
+            Identifier 1803-1807 name="Base"
+      TSTypeAnnotation 1809-1827
+        TSTypePredicate 1812-1827
+          TSThisType 1812-1816
+          TSTypeAnnotation 1820-1827
+            TSTypeReference 1820-1827
+              Identifier 1820-1827 name="Derived"
+  TSTypeAliasDeclaration 1828-1885
+    Identifier 1833-1854 name="ParenthesisedFunction"
+    TSUnionType 1857-1885
+      TSFunctionType 1858-1877
+        Identifier 1859-1868 name="a"
+          TSTypeAnnotation 1860-1868
+            TSStringKeyword 1862-1868
+        TSTypeAnnotation 1870-1877
+          TSVoidKeyword 1873-1877
+      TSNullKeyword 1881-1885
+  TSTypeAliasDeclaration 1886-1948
+    Identifier 1891-1899 name="Optional"
+    TSTypeReference 1902-1948
+      Identifier 1902-1909 name="Partial"
+      TSTypeParameterInstantiation 1909-1948
+        TSTypeLiteral 1910-1947
+          TSPropertySignature 1912-1923 optional=true
+            Identifier 1912-1913 name="a"
+            TSTypeAnnotation 1914-1922
+              TSStringKeyword 1916-1922
+          TSPropertySignature 1924-1945
+            Identifier 1924-1925 name="b"
+            TSTypeAnnotation 1925-1945
+              TSUnionType 1927-1945
+                TSNumberKeyword 1927-1933
+                TSUndefinedKeyword 1936-1945
+  TSTypeAliasDeclaration 1949-1993
+    Identifier 1954-1969 name="TemplateLiteral"
+    TSTemplateLiteralType 1972-1993
+      TemplateElement 1972-1975 raw=""
+      TemplateElement 1981-1985 raw="-"
+      TemplateElement 1991-1993 tail=true raw=""
+      TSTypeReference 1975-1981
+        Identifier 1975-1981 name="Prefix"
+      TSTypeReference 1985-1991
+        Identifier 1985-1991 name="Suffix"
+  TSTypeAliasDeclaration 1994-2018
+    Identifier 1999-2007 name="Negative"
+    TSUnionType 2010-2018
+      TSLiteralType 2010-2012
+        UnaryExpression 2010-2012 operator="-" prefix=true
+          Literal 2011-2012 raw="1"
+      TSLiteralType 2015-2018
+        UnaryExpression 2015-2018 operator="-" prefix=true
+          Literal 2016-2018 raw="2n"
+  TSTypeAliasDeclaration 2019-2574
+    Identifier 2024-2037 name="ObjectLiteral"
+    TSTypeLiteral 2040-2574
+      TSPropertySignature 2044-2060
+        Identifier 2044-2052 name="property"
+        TSTypeAnnotation 2052-2060
+          TSStringKeyword 2054-2060
+      TSPropertySignature 2063-2080 optional=true
+        Identifier 2063-2071 name="optional"
+        TSTypeAnnotation 2072-2080
+          TSNumberKeyword 2074-2080
+      TSPropertySignature 2083-2106 readonly=true
+        Identifier 2092-2097 name="fixed"
+        TSTypeAnnotation 2097-2106
+          TSBooleanKeyword 2099-2106
+      TSMethodSignature 2109-2132 kind=method
+        Identifier 2109-2115 name="method"
+        Identifier 2116-2125 name="a"
+          TSTypeAnnotation 2117-2125
+            TSStringKeyword 2119-2125
+        TSTypeAnnotation 2126-2132
+          TSVoidKeyword 2128-2132
+      TSMethodSignature 2135-2158 kind=method optional=true
+        Identifier 2135-2149 name="optionalMethod"
+        TSTypeAnnotation 2152-2158
+          TSVoidKeyword 2154-2158
+      TSMethodSignature 2161-2184 kind=method
+        Identifier 2161-2168 name="generic"
+        TSTypeParameterDeclaration 2168-2171
+          TSTypeParameter 2169-2170
+            Identifier 2169-2170 name="T"
+        Identifier 2172-2180 name="value"
+          TSTypeAnnotation 2177-2180
+            TSTypeReference 2179-2180
+              Identifier 2179-2180 name="T"
+        TSTypeAnnotation 2181-2184
+          TSTypeReference 2183-2184
+            Identifier 2183-2184 name="T"
+      TSCallSignatureDeclaration 2187-2207
+        Identifier 2188-2200 name="call"
+          TSTypeAnnotation 2192-2200
+            TSStringKeyword 2194-2200
+        TSTypeAnnotation 2201-2207
+          TSVoidKeyword 2203-2207
+      TSCallSignatureDeclaration 2210-2228
+        TSTypeParameterDeclaration 2210-2213
+          TSTypeParameter 2211-2212
+            Identifier 2211-2212 name="T"
+        Identifier 2214-2224 name="generic"
+          TSTypeAnnotation 2221-2224
+            TSTypeReference 2223-2224
+              Identifier 2223-2224 name="T"
+        TSTypeAnnotation 2225-2228
+          TSTypeReference 2227-2228
+            Identifier 2227-2228 name="T"
+      TSConstructSignatureDeclaration 2231-2264
+        Identifier 2236-2253 name="construct"
+          TSTypeAnnotation 2245-2253
+            TSStringKeyword 2247-2253
+        TSTypeAnnotation 2254-2264
+          TSTypeReference 2256-2264
+            Identifier 2256-2264 name="Instance"
+      TSConstructSignatureDeclaration 2267-2285
+        Identifier 2272-2284 name="bare"
+          TSTypeAnnotation 2276-2284
+            TSStringKeyword 2278-2284
+      TSIndexSignature 2288-2312
+        Identifier 2289-2302 name="index"
+          TSTypeAnnotation 2294-2302
+            TSStringKeyword 2296-2302
+        TSTypeAnnotation 2303-2312
+          TSUnknownKeyword 2305-2312
+      TSIndexSignature 2315-2355 readonly=true
+        Identifier 2325-2346 name="readonlyIndex"
+          TSTypeAnnotation 2338-2346
+            TSNumberKeyword 2340-2346
+        TSTypeAnnotation 2347-2355
+          TSStringKeyword 2349-2355
+      TSMethodSignature 2358-2380 kind=get
+        Identifier 2362-2370 name="accessor"
+        TSTypeAnnotation 2372-2380
+          TSStringKeyword 2374-2380
+      TSMethodSignature 2383-2410 kind=set
+        Identifier 2387-2395 name="accessor"
+        Identifier 2396-2409 name="value"
+          TSTypeAnnotation 2401-2409
+            TSStringKeyword 2403-2409
+      TSPropertySignature 2413-2424
+        Literal 2413-2421 raw="'quoted'"
+        TSTypeAnnotation 2421-2424
+          TSLiteralType 2423-2424
+            Literal 2423-2424 raw="1"
+      TSPropertySignature 2427-2432
+        Literal 2427-2429 raw="42"
+        TSTypeAnnotation 2429-2432
+          TSLiteralType 2431-2432
+            Literal 2431-2432 raw="2"
+      TSPropertySignature 2435-2448 computed=true
+        Identifier 2436-2444 name="computed"
+        TSTypeAnnotation 2445-2448
+          TSLiteralType 2447-2448
+            Literal 2447-2448 raw="3"
+      TSPropertySignature 2451-2488
+        Identifier 2451-2457 name="nested"
+        TSTypeAnnotation 2457-2488
+          TSTypeLiteral 2459-2488
+            TSPropertySignature 2461-2486
+              Identifier 2461-2467 name="deeper"
+              TSTypeAnnotation 2467-2486
+                TSTypeLiteral 2469-2486
+                  TSPropertySignature 2471-2484
+                    Identifier 2471-2478 name="deepest"
+                    TSTypeAnnotation 2478-2484
+                      TSLiteralType 2480-2484
+                        Literal 2480-2484 raw="true"
+      TSPropertySignature 2491-2521
+        Identifier 2491-2496 name="arrow"
+        TSTypeAnnotation 2496-2521
+          TSFunctionType 2498-2521
+            Identifier 2499-2512 name="value"
+              TSTypeAnnotation 2504-2512
+                TSStringKeyword 2506-2512
+            TSTypeAnnotation 2514-2521
+              TSVoidKeyword 2517-2521
+      TSPropertySignature 2524-2547
+        Identifier 2524-2529 name="union"
+        TSTypeAnnotation 2529-2546
+          TSUnionType 2531-2546
+            TSStringKeyword 2531-2537
+            TSNumberKeyword 2540-2546
+      TSPropertySignature 2550-2572
+        Identifier 2550-2563 name="trailingComma"
+        TSTypeAnnotation 2563-2571
+          TSStringKeyword 2565-2571
+  TSInterfaceDeclaration 2575-2654
+    Identifier 2585-2589 name="Base"
+    TSTypeParameterDeclaration 2589-2601
+      TSTypeParameter 2590-2600
+        Identifier 2590-2591 name="T"
+        TSStringKeyword 2594-2600
+    TSInterfaceHeritage 2610-2615
+      Identifier 2610-2615 name="First"
+    TSInterfaceHeritage 2617-2626
+      Identifier 2617-2623 name="Second"
+      TSTypeParameterInstantiation 2623-2626
+        TSTypeReference 2624-2625
+          Identifier 2624-2625 name="T"
+    TSInterfaceHeritage 2628-2636
+      MemberExpression 2628-2636
+        Identifier 2628-2630 name="NS"
+        Identifier 2631-2636 name="Third"
+    TSInterfaceBody 2637-2654
+      TSPropertySignature 2641-2652
+        Identifier 2641-2649 name="property"
+        TSTypeAnnotation 2649-2652
+          TSTypeReference 2651-2652
+            Identifier 2651-2652 name="T"
+  TSInterfaceDeclaration 2655-2673
+    Identifier 2665-2670 name="Empty"
+    TSInterfaceBody 2671-2673
+  TSInterfaceDeclaration 2674-2734
+    Identifier 2684-2693 name="Extending"
+    TSInterfaceHeritage 2702-2714
+      Identifier 2702-2706 name="Base"
+      TSTypeParameterInstantiation 2706-2714
+        TSNumberKeyword 2707-2713
+    TSInterfaceBody 2715-2734
+      TSPropertySignature 2719-2732
+        Identifier 2719-2724 name="extra"
+        TSTypeAnnotation 2724-2732
+          TSStringKeyword 2726-2732
+  TSDeclareFunction 2735-2776 declare=true
+    Identifier 2752-2759 name="ambient"
+    Identifier 2760-2769 name="a"
+      TSTypeAnnotation 2761-2769
+        TSStringKeyword 2763-2769
+    TSTypeAnnotation 2770-2776
+      TSVoidKeyword 2772-2776
+  VariableDeclaration 2777-2811 kind=const declare=true
+    VariableDeclarator 2791-2811
+      Identifier 2791-2811 name="ambientConst"
+        TSTypeAnnotation 2803-2811
+          TSNumberKeyword 2805-2811
+  VariableDeclaration 2812-2842 kind=let declare=true
+    VariableDeclarator 2824-2842
+      Identifier 2824-2842 name="ambientLet"
+        TSTypeAnnotation 2834-2842
+          TSStringKeyword 2836-2842
+  VariableDeclaration 2843-2874 kind=var declare=true
+    VariableDeclarator 2855-2874
+      Identifier 2855-2874 name="ambientVar"
+        TSTypeAnnotation 2865-2874
+          TSBooleanKeyword 2867-2874
+  ClassDeclaration 2875-2904 declare=true
+    Identifier 2889-2901 name="AmbientClass"
+    ClassBody 2902-2904
+  TSEnumDeclaration 2905-2932 declare=true
+    Identifier 2918-2929 name="AmbientEnum"
+    TSEnumBody 2930-2932
+  TSModuleDeclaration 2933-3015 kind=namespace declare=true
+    Identifier 2951-2967 name="AmbientNamespace"
+    TSModuleBlock 2968-3015
+      VariableDeclaration 2972-2991 kind=const
+        VariableDeclarator 2978-2991
+          Identifier 2978-2991 name="inner"
+            TSTypeAnnotation 2983-2991
+              TSNumberKeyword 2985-2991
+      TSDeclareFunction 2994-3013
+        Identifier 3003-3005 name="fn"
+        TSTypeAnnotation 3007-3013
+          TSVoidKeyword 3009-3013
+  TSModuleDeclaration 3016-3079 kind=module declare=true
+    Literal 3031-3046 raw="'quoted-module'"
+    TSModuleBlock 3047-3079
+      ExportNamedDeclaration 3051-3077 exportKind="value"
+        VariableDeclaration 3058-3077 kind=const
+          VariableDeclarator 3064-3077
+            Identifier 3064-3077 name="value"
+              TSTypeAnnotation 3069-3077
+                TSStringKeyword 3071-3077
+  TSModuleDeclaration 3080-3119 kind=module declare=true
+    TSQualifiedName 3095-3116
+      TSQualifiedName 3095-3111
+        Identifier 3095-3101 name="Dotted"
+        Identifier 3102-3111 name="Namespace"
+      Identifier 3112-3116 name="Path"
+    TSModuleBlock 3117-3119
+  TSModuleDeclaration 3120-3181 kind=global declare=true global=true
+    Identifier 3128-3134 name="global"
+    TSModuleBlock 3135-3181
+      TSInterfaceDeclaration 3139-3179
+        Identifier 3149-3155 name="Window"
+        TSInterfaceBody 3156-3179
+          TSPropertySignature 3162-3175
+            Identifier 3162-3167 name="extra"
+            TSTypeAnnotation 3167-3175
+              TSStringKeyword 3169-3175
+  ClassDeclaration 3182-3223 abstract=true declare=true
+    Identifier 3205-3220 name="AmbientAbstract"
+    ClassBody 3221-3223
+  TSModuleDeclaration 3224-3250 kind=module declare=true
+    Literal 3239-3250 raw="'shorthand'"
+  TSModuleDeclaration 3251-3299 kind=namespace
+    Identifier 3261-3266 name="Plain"
+    TSModuleBlock 3267-3299
+      ExportNamedDeclaration 3271-3297 exportKind="value"
+        TSModuleDeclaration 3278-3297 kind=namespace
+          Identifier 3288-3294 name="Nested"
+          TSModuleBlock 3295-3297
+  TSModuleDeclaration 3300-3322 kind=module
+    Identifier 3307-3319 name="LegacyModule"
+    TSModuleBlock 3320-3322
+  TSEnumDeclaration 3323-3366
+    Identifier 3328-3335 name="Numeric"
+    TSEnumBody 3336-3366
+      TSEnumMember 3340-3341
+        Identifier 3340-3341 name="A"
+      TSEnumMember 3345-3350
+        Identifier 3345-3346 name="B"
+        Literal 3349-3350 raw="2"
+      TSEnumMember 3354-3363
+        Identifier 3354-3355 name="C"
+        BinaryExpression 3358-3363 operator="*"
+          Identifier 3358-3359 name="B"
+          Literal 3362-3363 raw="2"
+  TSEnumDeclaration 3367-3415
+    Identifier 3372-3382 name="StringEnum"
+    TSEnumBody 3383-3415
+      TSEnumMember 3387-3394
+        Identifier 3387-3388 name="A"
+        Literal 3391-3394 raw="'a'"
+      TSEnumMember 3398-3412
+        Literal 3398-3406 raw="'quoted'"
+        Literal 3409-3412 raw="'q'"
+  TSEnumDeclaration 3416-3447 const=true
+    Identifier 3427-3435 name="Constant"
+    TSEnumBody 3436-3447
+      TSEnumMember 3440-3444
+        Identifier 3440-3444 name="Only"
+  FunctionDeclaration 3448-3547
+    Identifier 3457-3466 name="withTypes"
+    TSTypeParameterDeclaration 3466-3507
+      TSTypeParameter 3467-3489
+        Identifier 3467-3468 name="T"
+        TSStringKeyword 3477-3483
+        TSLiteralType 3486-3489
+          Literal 3486-3489 raw="'x'"
+      TSTypeParameter 3491-3506 const=true
+        Identifier 3497-3498 name="U"
+        TSNeverKeyword 3501-3506
+    Identifier 3508-3512 name="a"
+      TSTypeAnnotation 3509-3512
+        TSTypeReference 3511-3512
+          Identifier 3511-3512 name="T"
+    AssignmentPattern 3514-3527
+      Identifier 3514-3518 name="b"
+        TSTypeAnnotation 3515-3518
+          TSTypeReference 3517-3518
+            Identifier 3517-3518 name="U"
+      TSAsExpression 3521-3527
+        Literal 3521-3522 raw="1"
+        TSTypeReference 3526-3527
+          Identifier 3526-3527 name="U"
+    TSTypeAnnotation 3528-3544
+      TSTypePredicate 3530-3544 asserts=true
+        Identifier 3538-3539 name="a"
+        TSTypeAnnotation 3543-3544
+          TSTypeReference 3543-3544
+            Identifier 3543-3544 name="T"
+    BlockStatement 3545-3547
+  FunctionDeclaration 3548-3624
+    Identifier 3557-3573 name="returnsPredicate"
+    Identifier 3574-3588 name="value"
+      TSTypeAnnotation 3579-3588
+        TSUnknownKeyword 3581-3588
+    TSTypeAnnotation 3589-3606
+      TSTypePredicate 3591-3606
+        Identifier 3591-3596 name="value"
+        TSTypeAnnotation 3600-3606
+          TSStringKeyword 3600-3606
+    BlockStatement 3607-3624
+      ReturnStatement 3611-3622
+        Literal 3618-3622 raw="true"
+  VariableDeclaration 3625-3660 kind=const
+    VariableDeclarator 3631-3660
+      Identifier 3631-3655 name="annotated"
+        TSTypeAnnotation 3640-3655
+          TSTypeReference 3642-3655
+            Identifier 3642-3647 name="Array"
+            TSTypeParameterInstantiation 3647-3655
+              TSStringKeyword 3648-3654
+      ArrayExpression 3658-3660
+  VariableDeclaration 3661-3687 kind=const
+    VariableDeclarator 3667-3687
+      Identifier 3667-3674 name="nonNull"
+      TSNonNullExpression 3677-3687
+        Identifier 3677-3686 name="annotated"
+  VariableDeclaration 3688-3713 kind=let
+    VariableDeclarator 3692-3713 definite=true
+      Identifier 3692-3713 name="withDefinite"
+        TSTypeAnnotation 3705-3713
+          TSStringKeyword 3707-3713
+  TSTypeAliasDeclaration 3714-3740
+    Identifier 3719-3726 name="Generic"
+    TSTypeParameterDeclaration 3726-3736
+      TSTypeParameter 3727-3735 in=true out=true
+        Identifier 3734-3735 name="T"
+    TSTypeReference 3739-3740
+      Identifier 3739-3740 name="T"
+  TSTypeAliasDeclaration 3741-3792
+    Identifier 3746-3764 name="ConditionalInUnion"
+    TSUnionType 3767-3792
+      TSTypeReference 3767-3768
+        Identifier 3767-3768 name="A"
+      TSConditionalType 3772-3791
+        TSTypeReference 3772-3773
+          Identifier 3772-3773 name="B"
+        TSTypeReference 3782-3783
+          Identifier 3782-3783 name="C"
+        TSTypeReference 3786-3787
+          Identifier 3786-3787 name="D"
+        TSTypeReference 3790-3791
+          Identifier 3790-3791 name="E"
+  TSTypeAliasDeclaration 3793-3839
+    Identifier 3798-3811 name="ReadonlyTuple"
+    TSTypeOperator 3814-3839 operator="readonly"
+      TSTupleType 3823-3839
+        TSStringKeyword 3824-3830
+        TSNumberKeyword 3832-3838
+  TSTypeAliasDeclaration 3840-3877
+    Identifier 3845-3856 name="KeyofTypeof"
+    TSTypeOperator 3859-3877 operator="keyof"
+      TSTypeQuery 3865-3877
+        Identifier 3872-3877 name="value"
+  TSTypeAliasDeclaration 3878-3924
+    Identifier 3883-3894 name="IndexAccess"
+    TSIndexedAccessType 3897-3924
+      TSTypeReference 3897-3919
+        Identifier 3897-3903 name="Record"
+        TSTypeParameterInstantiation 3903-3919
+          TSStringKeyword 3904-3910
+          TSNumberKeyword 3912-3918
+      TSLiteralType 3920-3923
+        Literal 3920-3923 raw="'x'"
+  TSTypeAliasDeclaration 3925-3987
+    Identifier 3930-3944 name="NestedGenerics"
+    TSTypeReference 3947-3987
+      Identifier 3947-3954 name="Promise"
+      TSTypeParameterInstantiation 3954-3987
+        TSTypeReference 3955-3986
+          Identifier 3955-3960 name="Array"
+          TSTypeParameterInstantiation 3960-3986
+            TSTypeReference 3961-3985
+              Identifier 3961-3964 name="Map"
+              TSTypeParameterInstantiation 3964-3985
+                TSStringKeyword 3965-3971
+                TSTypeReference 3973-3984
+                  Identifier 3973-3976 name="Set"
+                  TSTypeParameterInstantiation 3976-3984
+                    TSNumberKeyword 3977-3983
+  TSTypeAliasDeclaration 3988-4026
+    Identifier 3993-4001 name="Abstract"
+    TSTypeQuery 4004-4026
+      Identifier 4011-4026 name="AmbientAbstract"
+  TSTypeAliasDeclaration 4027-4054
+    Identifier 4032-4045 name="ObjectKeyword"
+    TSObjectKeyword 4048-4054
+  TSTypeAliasDeclaration 4055-4099
+    Identifier 4060-4075 name="FunctionInUnion"
+    TSUnionType 4078-4099
+      TSFunctionType 4079-4089
+        TSTypeAnnotation 4082-4089
+          TSVoidKeyword 4085-4089
+      TSStringKeyword 4093-4099
+  TSTypeAliasDeclaration 4100-4169
+    Identifier 4105-4120 name="InferConstraint"
+    TSConditionalType 4123-4169
+      TSTypeReference 4123-4124
+        Identifier 4123-4124 name="T"
+      TSTupleType 4133-4157
+        TSInferType 4134-4156
+          TSTypeParameter 4140-4156
+            Identifier 4140-4141 name="U"
+            TSStringKeyword 4150-4156
+      TSTypeReference 4160-4161
+        Identifier 4160-4161 name="U"
+      TSNeverKeyword 4164-4169
+  TSTypeAliasDeclaration 4170-4226
+    Identifier 4175-4192 name="InferNoConstraint"
+    TSConditionalType 4195-4226
+      TSTypeReference 4195-4196
+        Identifier 4195-4196 name="T"
+      TSTupleType 4205-4214
+        TSInferType 4206-4213
+          TSTypeParameter 4212-4213
+            Identifier 4212-4213 name="U"
+      TSTypeReference 4217-4218
+        Identifier 4217-4218 name="U"
+      TSNeverKeyword 4221-4226
+  TSTypeAliasDeclaration 4227-4253
+    Identifier 4232-4241 name="Intrinsic"
+    TSIntrinsicKeyword 4244-4253
+  ClassDeclaration 4254-4333 abstract=true
+    Identifier 4269-4282 name="WithOverloads"
+    ClassBody 4283-4333
+      MethodDefinition 4287-4301 kind=method
+        Identifier 4287-4293 name="method"
+        TSEmptyBodyFunctionExpression 4293-4301
+          TSTypeAnnotation 4295-4301
+            TSVoidKeyword 4297-4301
+      MethodDefinition 4304-4331 kind=method
+        Identifier 4304-4310 name="method"
+        FunctionExpression 4310-4331
+          Identifier 4311-4321 name="x" optional=true
+            TSTypeAnnotation 4313-4321
+              TSNumberKeyword 4315-4321
+          TSTypeAnnotation 4322-4328
+            TSVoidKeyword 4324-4328
+          BlockStatement 4329-4331
+  VariableDeclaration 4334-4369 kind=let
+    VariableDeclarator 4338-4369
+      Identifier 4338-4345 name="generic"
+      CallExpression 4348-4369
+        Identifier 4348-4350 name="fn"
+        TSTypeParameterInstantiation 4350-4366
+          TSStringKeyword 4351-4357
+          TSNumberKeyword 4359-4365
+        Identifier 4367-4368 name="a"
+  VariableDeclaration 4370-4400 kind=let
+    VariableDeclarator 4374-4400
+      Identifier 4374-4387 name="instantiation"
+      TSInstantiationExpression 4390-4400
+        Identifier 4390-4392 name="fn"
+        TSTypeParameterInstantiation 4392-4400
+          TSStringKeyword 4393-4399
+  VariableDeclaration 4401-4439 kind=let
+    VariableDeclarator 4405-4439
+      Identifier 4405-4421 name="callWithTypeArgs"
+      CallExpression 4424-4439
+        MemberExpression 4424-4434
+          Identifier 4424-4427 name="obj"
+          Identifier 4428-4434 name="method"
+        TSTypeParameterInstantiation 4434-4437
+          TSTypeReference 4435-4436
+            Identifier 4435-4436 name="T"
+  VariableDeclaration 4440-4485 kind=let
+    VariableDeclarator 4444-4485
+      Identifier 4444-4459 name="newWithTypeArgs"
+      NewExpression 4462-4485
+        Identifier 4466-4475 name="Container"
+        TSTypeParameterInstantiation 4475-4483
+          TSStringKeyword 4476-4482
+  VariableDeclaration 4486-4530 kind=let
+    VariableDeclarator 4490-4530
+      Identifier 4490-4510 name="optionalCallTypeArgs"
+      ChainExpression 4513-4530
+        CallExpression 4513-4530
+          MemberExpression 4513-4524 optional=true
+            Identifier 4513-4516 name="obj"
+            Identifier 4518-4524 name="method"
+          TSTypeParameterInstantiation 4524-4527
+            TSTypeReference 4525-4526
+              Identifier 4525-4526 name="T"
+          Identifier 4528-4529 name="a"
+  VariableDeclaration 4531-4558 kind=let
+    VariableDeclarator 4535-4558
+      Identifier 4535-4541 name="tagged"
+      TaggedTemplateExpression 4544-4558
+        Identifier 4544-4547 name="tag"
+        TSTypeParameterInstantiation 4547-4555
+          TSStringKeyword 4548-4554
+        TemplateLiteral 4555-4558
+          TemplateElement 4555-4558 tail=true raw="x"
+  VariableDeclaration 4559-4590 kind=let
+    VariableDeclarator 4563-4590
+      Identifier 4563-4573 name="comparison"
+      LogicalExpression 4576-4590 operator="&&"
+        BinaryExpression 4576-4581 operator="<"
+          Identifier 4576-4577 name="a"
+          Identifier 4580-4581 name="b"
+        BinaryExpression 4585-4590 operator=">"
+          Identifier 4585-4586 name="c"
+          Identifier 4589-4590 name="d"
+  VariableDeclaration 4591-4615 kind=let
+    VariableDeclarator 4595-4615
+      Identifier 4595-4600 name="shift"
+      BinaryExpression 4603-4615 operator=">>>"
+        BinaryExpression 4603-4609 operator=">>"
+          Identifier 4603-4604 name="a"
+          Identifier 4608-4609 name="b"
+        Identifier 4614-4615 name="c"
+  VariableDeclaration 4616-4642 kind=let
+    VariableDeclarator 4620-4642
+      Identifier 4620-4628 name="generics"
+      BinaryExpression 4631-4642 operator="<"
+        Identifier 4631-4632 name="a"
+        BinaryExpression 4636-4641 operator=">"
+          Identifier 4636-4637 name="b"
+          Identifier 4640-4641 name="c"
+  TSTypeAliasDeclaration 4643-4709
+    Identifier 4648-4662 name="InferInExtends"
+    TSConditionalType 4665-4709
+      TSTypeReference 4665-4666
+        Identifier 4665-4666 name="T"
+      TSInferType 4675-4697
+        TSTypeParameter 4681-4697
+          Identifier 4681-4682 name="U"
+          TSStringKeyword 4691-4697
+      TSTypeReference 4700-4701
+        Identifier 4700-4701 name="U"
+      TSNeverKeyword 4704-4709
+  TSTypeAliasDeclaration 4710-4788
+    Identifier 4715-4725 name="InferTuple"
+    TSConditionalType 4728-4788
+      TSTypeReference 4728-4729
+        Identifier 4728-4729 name="T"
+      TSTupleType 4738-4771
+        TSInferType 4739-4761
+          TSTypeParameter 4745-4761
+            Identifier 4745-4746 name="U"
+            TSStringKeyword 4755-4761
+        TSInferType 4763-4770
+          TSTypeParameter 4769-4770
+            Identifier 4769-4770 name="V"
+      TSTupleType 4774-4780
+        TSTypeReference 4775-4776
+          Identifier 4775-4776 name="U"
+        TSTypeReference 4778-4779
+          Identifier 4778-4779 name="V"
+      TSNeverKeyword 4783-4788
+  TSTypeAliasDeclaration 4789-4828
+    Identifier 4794-4812 name="ParenthesisedKeyof"
+    TSTypeOperator 4815-4828 operator="keyof"
+      TSUnionType 4822-4827
+        TSTypeReference 4822-4823
+          Identifier 4822-4823 name="A"
+        TSTypeReference 4826-4827
+          Identifier 4826-4827 name="B"
+  TSTypeAliasDeclaration 4829-4862
+    Identifier 4834-4851 name="AbstractReference"
+    TSTypeReference 4854-4862
+      Identifier 4854-4862 name="abstract"
+  VariableDeclaration 4863-4903 kind=let
+    VariableDeclarator 4867-4903
+      Identifier 4867-4885 name="constAssertedTuple"
+      TSAsExpression 4888-4903
+        ArrayExpression 4888-4894
+          Literal 4889-4890 raw="1"
+          Literal 4892-4893 raw="2"
+        TSTypeReference 4898-4903
+          Identifier 4898-4903 name="const"
+  TSTypeAliasDeclaration 4904-4924
+    Identifier 4909-4913 name="Bare"
+    TSTypeLiteral 4916-4924
+      TSPropertySignature 4918-4920
+        Identifier 4918-4919 name="a"
+      TSPropertySignature 4921-4922
+        Identifier 4921-4922 name="b"
+  TSTypeAliasDeclaration 4925-4973
+    Identifier 4930-4940 name="Signatures"
+    TSTypeLiteral 4943-4973
+      TSMethodSignature 4945-4954 kind=method
+        Identifier 4945-4951 name="method"
+      TSMethodSignature 4955-4971 kind=method
+        Identifier 4955-4962 name="generic"
+        TSTypeParameterDeclaration 4962-4965
+          TSTypeParameter 4963-4964
+            Identifier 4963-4964 name="T"
+        Identifier 4966-4970 name="x"
+          TSTypeAnnotation 4967-4970
+            TSTypeReference 4969-4970
+              Identifier 4969-4970 name="T"
+  TSTypeAliasDeclaration 4974-5028
+    Identifier 4979-4991 name="InferOutside"
+    TSConditionalType 4994-5028
+      TSInferType 4994-5001
+        TSTypeParameter 5000-5001
+          Identifier 5000-5001 name="U"
+      TSStringKeyword 5010-5016
+      TSTypeReference 5019-5020
+        Identifier 5019-5020 name="U"
+      TSNeverKeyword 5023-5028
+  TSInterfaceDeclaration 5029-5085
+    Identifier 5039-5046 name="Indexed"
+    TSInterfaceBody 5047-5085
+      TSIndexSignature 5051-5074
+        Identifier 5052-5063 name="key"
+          TSTypeAnnotation 5055-5063
+            TSStringKeyword 5057-5063
+        TSTypeAnnotation 5064-5073
+          TSUnknownKeyword 5066-5073
+      TSPropertySignature 5075-5083 computed=true
+        Literal 5076-5079 raw="'c'"
+        TSTypeAnnotation 5080-5083
+          TSLiteralType 5082-5083
+            Literal 5082-5083 raw="1"
+  TSInterfaceDeclaration 5086-5141
+    Identifier 5096-5102 name="Listed"
+    TSInterfaceBody 5103-5141
+      TSIndexSignature 5107-5130
+        Identifier 5108-5119 name="key"
+          TSTypeAnnotation 5111-5119
+            TSNumberKeyword 5113-5119
+        TSTypeAnnotation 5120-5129
+          TSUnknownKeyword 5122-5129
+      TSPropertySignature 5131-5139 computed=true
+        Literal 5132-5135 raw="'d'"
+        TSTypeAnnotation 5136-5139
+          TSLiteralType 5138-5139
+            Literal 5138-5139 raw="2"
+`,
+}

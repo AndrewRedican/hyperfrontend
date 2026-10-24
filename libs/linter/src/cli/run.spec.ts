@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeConfigModules } from '../config/__test-utils__/config-modules'
 import { run } from './run'
 
-const FIXTURES = join(import.meta.dirname, '..', 'config', '__fixtures__')
+/** The configuration modules the command is pointed at. */
+const FIXTURES = writeConfigModules()
 
 // why: the JSON report carries native absolute paths, which escape their backslashes on Windows, so the paths are read back rather than searched for.
 const reportedFiles = (out: readonly string[]): string[] => (parse(out.join('')) as { filePath: string }[]).map((result) => result.filePath)
@@ -196,15 +198,16 @@ describe('run', () => {
     expect(captured.out.join('')).toContain('"message":"Unexpected \'debugger\' statement."')
   })
 
-  it('leaves no temporary trees behind', () => {
-    rmSync(TREE, { recursive: true, force: true })
-    rmSync(PLAIN, { recursive: true, force: true })
-    expect([existsSync(TREE), existsSync(PLAIN)]).toEqual([false, false])
-  })
-
   it('prints an empty JSON report for a clean run', async () => {
     const captured = capture(import.meta.dirname, '{}')
     await run(['--config', join(FIXTURES, 'empty.ts'), '--format', 'json', '--stdin', '--stdin-filename', 'a.json'], captured.environment)
     expect(captured.out.join('')).toContain('"messages":[]')
+  })
+
+  it('leaves no temporary trees behind', () => {
+    rmSync(TREE, { recursive: true, force: true })
+    rmSync(PLAIN, { recursive: true, force: true })
+    rmSync(FIXTURES, { recursive: true, force: true })
+    expect([existsSync(TREE), existsSync(PLAIN), existsSync(FIXTURES)]).toEqual([false, false, false])
   })
 })

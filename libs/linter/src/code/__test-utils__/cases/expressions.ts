@@ -1,0 +1,721 @@
+/**
+ * The `expressions.ts` source the parser specs read, and the tree the reference parser builds from it.
+ *
+ * @module code/__test-utils__/cases/expressions
+ */
+
+export const EXPRESSIONS = {
+  name: 'expressions.ts',
+  source: `const numbers = [0, 1.5, .5, 5., 1e3, 1E-3, 0xFF, 0o17, 0b101, 1_000_000, 10n, 0xffn]
+const strings = ['\\u0041', 'a', "b", 'c\\n\\t\\r\\b\\f\\v\\0', 'd\\x41B\\u{1F600}', 'line\\
+continued', '\\'', "\\"", '\\z', '\\0']
+const templates = [tag\`\\1 \${a} \\xZZ \\u{110000} \\u12\`, \`plain\`, \`with \${a} and \${\`nested \${b}\`}\`, \`\\\${escaped}\`, \`\${a}\${b}\`, tag\`tagged \${a}\`, tag<string>\`typed\`]
+const regexes = [/ab+c/gi, /[/\\]]+/u, /\\//, /a/ as RegExp]
+const unary = [-a, +a, !a, ~a, typeof a, void 0, delete a.b, ++a, --a, a++, a--]
+const binary = a + b - c * d / e % f ** g ** h
+const comparison = a < b && c > d || e <= f && g >= h || a == b || a != b || a === b || a !== b
+const bitwise = (a & b) | (c ^ d) | (e << f) | (g >> h) | (i >>> j)
+const nullish = a ?? b
+const assignments = [(a = 1), (a += 1), (a -= 1), (a *= 1), (a /= 1), (a %= 1), (a **= 1), (a <<= 1), (a >>= 1), (a >>>= 1), (a &= 1), (a |= 1), (a ^= 1), (a &&= 1), (a ||= 1), (a ??= 1)]
+const destructured = [([a, b] = [1, 2]), ({ c, d: [e] } = {})]
+const inOperator = 'x' in obj && obj instanceof Object && #priv in obj
+const chain = obj?.a?.[b]?.(c).d!.e?.()
+const calls = fn(a, ...rest)(b)(...c)
+const members = obj.a[b].c['d']
+const constructed = [new Target(), new Target, new Target<string>(a), new a.b.C(), new (fn())(), new new Outer()()]
+const meta = [new.target, import.meta.url]
+const dynamic = [import('x'), import('y', { with: { type: 'json' } })]
+const sequence = (a, b, c)
+const conditional = a ? b : c ? d : e
+const arrows = [(x) => x, x => x * 2, (x, y) => ({ x, y }), async (x) => await x, async x => x, () => {}, (x: number): number => x, <T,>(x: T) => x, async () => {}, (...args) => args, ([a], { b }) => a]
+const functions = [function () {}, function named() {}, async function () {}, function* () {}, async function* gen() {}]
+const classes = [class {}, class Named extends Base {}, @decorated class {}]
+const objects = {
+  a,
+  b: 1,
+  'c': 2,
+  3: 3,
+  [d]: 4,
+  method() {},
+  async asyncMethod() {},
+  *generatorMethod() {},
+  async *both() {},
+  get getter() {
+    return 1
+  },
+  set setter(value) {},
+  ...spread,
+  get: 1,
+  set: 2,
+  async: 3,
+  nested: { deep: { deeper: true } },
+}
+const arrays = [, 1, , ...spread, [nested]]
+const asserted = [a as string, a as const, a satisfies string, <string>a, a!, a as unknown as number]
+const instantiated = fn<string>
+const parenthesised = ((a))
+const awaited = async () => { await (a, b) }
+const privateName = class { #x = 1; has(o) { return #x in o } }
+const yieldInGenerator = function* () { const v = yield* other(); yield (a, b) }
+let implicitGlobal
+implicitGlobal = 1
+const nullish2 = null
+const taggedTyped = tag<string>\`a \${b}\`
+`,
+  tree: `Program 0-2653 sourceType="module"
+  VariableDeclaration 0-85 kind=const
+    VariableDeclarator 6-85
+      Identifier 6-13 name="numbers"
+      ArrayExpression 16-85
+        Literal 17-18 raw="0"
+        Literal 20-23 raw="1.5"
+        Literal 25-27 raw=".5"
+        Literal 29-31 raw="5."
+        Literal 33-36 raw="1e3"
+        Literal 38-42 raw="1E-3"
+        Literal 44-48 raw="0xFF"
+        Literal 50-54 raw="0o17"
+        Literal 56-61 raw="0b101"
+        Literal 63-72 raw="1_000_000"
+        Literal 74-77 raw="10n"
+        Literal 79-84 raw="0xffn"
+  VariableDeclaration 86-203 kind=const
+    VariableDeclarator 92-203
+      Identifier 92-99 name="strings"
+      ArrayExpression 102-203
+        Literal 103-111 raw="'\\\\u0041'"
+        Literal 113-116 raw="'a'"
+        Literal 118-121 raw="\\"b\\""
+        Literal 123-140 raw="'c\\\\n\\\\t\\\\r\\\\b\\\\f\\\\v\\\\0'"
+        Literal 142-159 raw="'d\\\\x41B\\\\u{1F600}'"
+        Literal 161-178 raw="'line\\\\\\ncontinued'"
+        Literal 180-184 raw="'\\\\''"
+        Literal 186-190 raw="\\"\\\\\\"\\""
+        Literal 192-196 raw="'\\\\z'"
+        Literal 198-202 raw="'\\\\0'"
+  VariableDeclaration 204-365 kind=const
+    VariableDeclarator 210-365
+      Identifier 210-219 name="templates"
+      ArrayExpression 222-365
+        TaggedTemplateExpression 223-256
+          Identifier 223-226 name="tag"
+          TemplateLiteral 226-256
+            TemplateElement 226-232 raw="\\\\1 "
+            TemplateElement 233-256 tail=true raw=" \\\\xZZ \\\\u{110000} \\\\u12"
+            Identifier 232-233 name="a"
+        TemplateLiteral 258-265
+          TemplateElement 258-265 tail=true raw="plain"
+        TemplateLiteral 267-299
+          TemplateElement 267-275 raw="with "
+          TemplateElement 276-284 raw=" and "
+          TemplateElement 297-299 tail=true raw=""
+          Identifier 275-276 name="a"
+          TemplateLiteral 284-297
+            TemplateElement 284-294 raw="nested "
+            TemplateElement 295-297 tail=true raw=""
+            Identifier 294-295 name="b"
+        TemplateLiteral 301-314
+          TemplateElement 301-314 tail=true raw="\\\\\${escaped}"
+        TemplateLiteral 316-326
+          TemplateElement 316-319 raw=""
+          TemplateElement 320-323 raw=""
+          TemplateElement 324-326 tail=true raw=""
+          Identifier 319-320 name="a"
+          Identifier 323-324 name="b"
+        TaggedTemplateExpression 328-344
+          Identifier 328-331 name="tag"
+          TemplateLiteral 331-344
+            TemplateElement 331-341 raw="tagged "
+            TemplateElement 342-344 tail=true raw=""
+            Identifier 341-342 name="a"
+        TaggedTemplateExpression 346-364
+          Identifier 346-349 name="tag"
+          TSTypeParameterInstantiation 349-357
+            TSStringKeyword 350-356
+          TemplateLiteral 357-364
+            TemplateElement 357-364 tail=true raw="typed"
+  VariableDeclaration 366-424 kind=const
+    VariableDeclarator 372-424
+      Identifier 372-379 name="regexes"
+      ArrayExpression 382-424
+        Literal 383-391 raw="/ab+c/gi"
+        Literal 393-402 raw="/[/\\\\]]+/u"
+        Literal 404-408 raw="/\\\\//"
+        TSAsExpression 410-423
+          Literal 410-413 raw="/a/"
+          TSTypeReference 417-423
+            Identifier 417-423 name="RegExp"
+  VariableDeclaration 425-505 kind=const
+    VariableDeclarator 431-505
+      Identifier 431-436 name="unary"
+      ArrayExpression 439-505
+        UnaryExpression 440-442 operator="-" prefix=true
+          Identifier 441-442 name="a"
+        UnaryExpression 444-446 operator="+" prefix=true
+          Identifier 445-446 name="a"
+        UnaryExpression 448-450 operator="!" prefix=true
+          Identifier 449-450 name="a"
+        UnaryExpression 452-454 operator="~" prefix=true
+          Identifier 453-454 name="a"
+        UnaryExpression 456-464 operator="typeof" prefix=true
+          Identifier 463-464 name="a"
+        UnaryExpression 466-472 operator="void" prefix=true
+          Literal 471-472 raw="0"
+        UnaryExpression 474-484 operator="delete" prefix=true
+          MemberExpression 481-484
+            Identifier 481-482 name="a"
+            Identifier 483-484 name="b"
+        UpdateExpression 486-489 operator="++" prefix=true
+          Identifier 488-489 name="a"
+        UpdateExpression 491-494 operator="--" prefix=true
+          Identifier 493-494 name="a"
+        UpdateExpression 496-499 operator="++"
+          Identifier 496-497 name="a"
+        UpdateExpression 501-504 operator="--"
+          Identifier 501-502 name="a"
+  VariableDeclaration 506-552 kind=const
+    VariableDeclarator 512-552
+      Identifier 512-518 name="binary"
+      BinaryExpression 521-552 operator="-"
+        BinaryExpression 521-526 operator="+"
+          Identifier 521-522 name="a"
+          Identifier 525-526 name="b"
+        BinaryExpression 529-552 operator="%"
+          BinaryExpression 529-538 operator="/"
+            BinaryExpression 529-534 operator="*"
+              Identifier 529-530 name="c"
+              Identifier 533-534 name="d"
+            Identifier 537-538 name="e"
+          BinaryExpression 541-552 operator="**"
+            Identifier 541-542 name="f"
+            BinaryExpression 546-552 operator="**"
+              Identifier 546-547 name="g"
+              Identifier 551-552 name="h"
+  VariableDeclaration 553-648 kind=const
+    VariableDeclarator 559-648
+      Identifier 559-569 name="comparison"
+      LogicalExpression 572-648 operator="||"
+        LogicalExpression 572-637 operator="||"
+          LogicalExpression 572-626 operator="||"
+            LogicalExpression 572-616 operator="||"
+              LogicalExpression 572-606 operator="||"
+                LogicalExpression 572-586 operator="&&"
+                  BinaryExpression 572-577 operator="<"
+                    Identifier 572-573 name="a"
+                    Identifier 576-577 name="b"
+                  BinaryExpression 581-586 operator=">"
+                    Identifier 581-582 name="c"
+                    Identifier 585-586 name="d"
+                LogicalExpression 590-606 operator="&&"
+                  BinaryExpression 590-596 operator="<="
+                    Identifier 590-591 name="e"
+                    Identifier 595-596 name="f"
+                  BinaryExpression 600-606 operator=">="
+                    Identifier 600-601 name="g"
+                    Identifier 605-606 name="h"
+              BinaryExpression 610-616 operator="=="
+                Identifier 610-611 name="a"
+                Identifier 615-616 name="b"
+            BinaryExpression 620-626 operator="!="
+              Identifier 620-621 name="a"
+              Identifier 625-626 name="b"
+          BinaryExpression 630-637 operator="==="
+            Identifier 630-631 name="a"
+            Identifier 636-637 name="b"
+        BinaryExpression 641-648 operator="!=="
+          Identifier 641-642 name="a"
+          Identifier 647-648 name="b"
+  VariableDeclaration 649-716 kind=const
+    VariableDeclarator 655-716
+      Identifier 655-662 name="bitwise"
+      BinaryExpression 665-716 operator="|"
+        BinaryExpression 665-704 operator="|"
+          BinaryExpression 665-693 operator="|"
+            BinaryExpression 665-682 operator="|"
+              BinaryExpression 666-671 operator="&"
+                Identifier 666-667 name="a"
+                Identifier 670-671 name="b"
+              BinaryExpression 676-681 operator="^"
+                Identifier 676-677 name="c"
+                Identifier 680-681 name="d"
+            BinaryExpression 686-692 operator="<<"
+              Identifier 686-687 name="e"
+              Identifier 691-692 name="f"
+          BinaryExpression 697-703 operator=">>"
+            Identifier 697-698 name="g"
+            Identifier 702-703 name="h"
+        BinaryExpression 708-715 operator=">>>"
+          Identifier 708-709 name="i"
+          Identifier 714-715 name="j"
+  VariableDeclaration 717-739 kind=const
+    VariableDeclarator 723-739
+      Identifier 723-730 name="nullish"
+      LogicalExpression 733-739 operator="??"
+        Identifier 733-734 name="a"
+        Identifier 738-739 name="b"
+  VariableDeclaration 740-927 kind=const
+    VariableDeclarator 746-927
+      Identifier 746-757 name="assignments"
+      ArrayExpression 760-927
+        AssignmentExpression 762-767 operator="="
+          Identifier 762-763 name="a"
+          Literal 766-767 raw="1"
+        AssignmentExpression 771-777 operator="+="
+          Identifier 771-772 name="a"
+          Literal 776-777 raw="1"
+        AssignmentExpression 781-787 operator="-="
+          Identifier 781-782 name="a"
+          Literal 786-787 raw="1"
+        AssignmentExpression 791-797 operator="*="
+          Identifier 791-792 name="a"
+          Literal 796-797 raw="1"
+        AssignmentExpression 801-807 operator="/="
+          Identifier 801-802 name="a"
+          Literal 806-807 raw="1"
+        AssignmentExpression 811-817 operator="%="
+          Identifier 811-812 name="a"
+          Literal 816-817 raw="1"
+        AssignmentExpression 821-828 operator="**="
+          Identifier 821-822 name="a"
+          Literal 827-828 raw="1"
+        AssignmentExpression 832-839 operator="<<="
+          Identifier 832-833 name="a"
+          Literal 838-839 raw="1"
+        AssignmentExpression 843-850 operator=">>="
+          Identifier 843-844 name="a"
+          Literal 849-850 raw="1"
+        AssignmentExpression 854-862 operator=">>>="
+          Identifier 854-855 name="a"
+          Literal 861-862 raw="1"
+        AssignmentExpression 866-872 operator="&="
+          Identifier 866-867 name="a"
+          Literal 871-872 raw="1"
+        AssignmentExpression 876-882 operator="|="
+          Identifier 876-877 name="a"
+          Literal 881-882 raw="1"
+        AssignmentExpression 886-892 operator="^="
+          Identifier 886-887 name="a"
+          Literal 891-892 raw="1"
+        AssignmentExpression 896-903 operator="&&="
+          Identifier 896-897 name="a"
+          Literal 902-903 raw="1"
+        AssignmentExpression 907-914 operator="||="
+          Identifier 907-908 name="a"
+          Literal 913-914 raw="1"
+        AssignmentExpression 918-925 operator="??="
+          Identifier 918-919 name="a"
+          Literal 924-925 raw="1"
+  VariableDeclaration 928-990 kind=const
+    VariableDeclarator 934-990
+      Identifier 934-946 name="destructured"
+      ArrayExpression 949-990
+        AssignmentExpression 951-966 operator="="
+          ArrayPattern 951-957
+            Identifier 952-953 name="a"
+            Identifier 955-956 name="b"
+          ArrayExpression 960-966
+            Literal 961-962 raw="1"
+            Literal 964-965 raw="2"
+        AssignmentExpression 970-988 operator="="
+          ObjectPattern 970-983
+            Property 972-973 kind=init shorthand=true
+              Identifier 972-973 name="c"
+              Identifier 972-973 name="c"
+            Property 975-981 kind=init
+              Identifier 975-976 name="d"
+              ArrayPattern 978-981
+                Identifier 979-980 name="e"
+          ObjectExpression 986-988
+  VariableDeclaration 991-1061 kind=const
+    VariableDeclarator 997-1061
+      Identifier 997-1007 name="inOperator"
+      LogicalExpression 1010-1061 operator="&&"
+        LogicalExpression 1010-1045 operator="&&"
+          BinaryExpression 1010-1020 operator="in"
+            Literal 1010-1013 raw="'x'"
+            Identifier 1017-1020 name="obj"
+          BinaryExpression 1024-1045 operator="instanceof"
+            Identifier 1024-1027 name="obj"
+            Identifier 1039-1045 name="Object"
+        BinaryExpression 1049-1061 operator="in"
+          PrivateIdentifier 1049-1054 name="priv"
+          Identifier 1058-1061 name="obj"
+  VariableDeclaration 1062-1101 kind=const
+    VariableDeclarator 1068-1101
+      Identifier 1068-1073 name="chain"
+      ChainExpression 1076-1101
+        CallExpression 1076-1101 optional=true
+          MemberExpression 1076-1097
+            TSNonNullExpression 1076-1095
+              MemberExpression 1076-1094
+                CallExpression 1076-1092 optional=true
+                  MemberExpression 1076-1087 computed=true optional=true
+                    MemberExpression 1076-1082 optional=true
+                      Identifier 1076-1079 name="obj"
+                      Identifier 1081-1082 name="a"
+                    Identifier 1085-1086 name="b"
+                  Identifier 1090-1091 name="c"
+                Identifier 1093-1094 name="d"
+            Identifier 1096-1097 name="e"
+  VariableDeclaration 1102-1139 kind=const
+    VariableDeclarator 1108-1139
+      Identifier 1108-1113 name="calls"
+      CallExpression 1116-1139
+        CallExpression 1116-1133
+          CallExpression 1116-1130
+            Identifier 1116-1118 name="fn"
+            Identifier 1119-1120 name="a"
+            SpreadElement 1122-1129
+              Identifier 1125-1129 name="rest"
+          Identifier 1131-1132 name="b"
+        SpreadElement 1134-1138
+          Identifier 1137-1138 name="c"
+  VariableDeclaration 1140-1171 kind=const
+    VariableDeclarator 1146-1171
+      Identifier 1146-1153 name="members"
+      MemberExpression 1156-1171 computed=true
+        MemberExpression 1156-1166
+          MemberExpression 1156-1164 computed=true
+            MemberExpression 1156-1161
+              Identifier 1156-1159 name="obj"
+              Identifier 1160-1161 name="a"
+            Identifier 1162-1163 name="b"
+          Identifier 1165-1166 name="c"
+        Literal 1167-1170 raw="'d'"
+  VariableDeclaration 1172-1287 kind=const
+    VariableDeclarator 1178-1287
+      Identifier 1178-1189 name="constructed"
+      ArrayExpression 1192-1287
+        NewExpression 1193-1205
+          Identifier 1197-1203 name="Target"
+        NewExpression 1207-1217
+          Identifier 1211-1217 name="Target"
+        NewExpression 1219-1240
+          Identifier 1223-1229 name="Target"
+          TSTypeParameterInstantiation 1229-1237
+            TSStringKeyword 1230-1236
+          Identifier 1238-1239 name="a"
+        NewExpression 1242-1253
+          MemberExpression 1246-1251
+            MemberExpression 1246-1249
+              Identifier 1246-1247 name="a"
+              Identifier 1248-1249 name="b"
+            Identifier 1250-1251 name="C"
+        NewExpression 1255-1267
+          CallExpression 1260-1264
+            Identifier 1260-1262 name="fn"
+        NewExpression 1269-1286
+          NewExpression 1273-1284
+            Identifier 1277-1282 name="Outer"
+  VariableDeclaration 1288-1330 kind=const
+    VariableDeclarator 1294-1330
+      Identifier 1294-1298 name="meta"
+      ArrayExpression 1301-1330
+        MetaProperty 1302-1312
+          Identifier 1302-1305 name="new"
+          Identifier 1306-1312 name="target"
+        MemberExpression 1314-1329
+          MetaProperty 1314-1325
+            Identifier 1314-1320 name="import"
+            Identifier 1321-1325 name="meta"
+          Identifier 1326-1329 name="url"
+  VariableDeclaration 1331-1401 kind=const
+    VariableDeclarator 1337-1401
+      Identifier 1337-1344 name="dynamic"
+      ArrayExpression 1347-1401
+        ImportExpression 1348-1359
+          Literal 1355-1358 raw="'x'"
+        ImportExpression 1361-1400
+          Literal 1368-1371 raw="'y'"
+          ObjectExpression 1373-1399
+            Property 1375-1397 kind=init
+              Identifier 1375-1379 name="with"
+              ObjectExpression 1381-1397
+                Property 1383-1395 kind=init
+                  Identifier 1383-1387 name="type"
+                  Literal 1389-1395 raw="'json'"
+  VariableDeclaration 1402-1428 kind=const
+    VariableDeclarator 1408-1428
+      Identifier 1408-1416 name="sequence"
+      SequenceExpression 1420-1427
+        Identifier 1420-1421 name="a"
+        Identifier 1423-1424 name="b"
+        Identifier 1426-1427 name="c"
+  VariableDeclaration 1429-1466 kind=const
+    VariableDeclarator 1435-1466
+      Identifier 1435-1446 name="conditional"
+      ConditionalExpression 1449-1466
+        Identifier 1449-1450 name="a"
+        Identifier 1453-1454 name="b"
+        ConditionalExpression 1457-1466
+          Identifier 1457-1458 name="c"
+          Identifier 1461-1462 name="d"
+          Identifier 1465-1466 name="e"
+  VariableDeclaration 1467-1669 kind=const
+    VariableDeclarator 1473-1669
+      Identifier 1473-1479 name="arrows"
+      ArrayExpression 1482-1669
+        ArrowFunctionExpression 1483-1491 expression=true
+          Identifier 1484-1485 name="x"
+          Identifier 1490-1491 name="x"
+        ArrowFunctionExpression 1493-1503 expression=true
+          Identifier 1493-1494 name="x"
+          BinaryExpression 1498-1503 operator="*"
+            Identifier 1498-1499 name="x"
+            Literal 1502-1503 raw="2"
+        ArrowFunctionExpression 1505-1525 expression=true
+          Identifier 1506-1507 name="x"
+          Identifier 1509-1510 name="y"
+          ObjectExpression 1516-1524
+            Property 1518-1519 kind=init shorthand=true
+              Identifier 1518-1519 name="x"
+              Identifier 1518-1519 name="x"
+            Property 1521-1522 kind=init shorthand=true
+              Identifier 1521-1522 name="y"
+              Identifier 1521-1522 name="y"
+        ArrowFunctionExpression 1527-1547 async=true expression=true
+          Identifier 1534-1535 name="x"
+          AwaitExpression 1540-1547
+            Identifier 1546-1547 name="x"
+        ArrowFunctionExpression 1549-1561 async=true expression=true
+          Identifier 1555-1556 name="x"
+          Identifier 1560-1561 name="x"
+        ArrowFunctionExpression 1563-1571
+          BlockStatement 1569-1571
+        ArrowFunctionExpression 1573-1597 expression=true
+          Identifier 1574-1583 name="x"
+            TSTypeAnnotation 1575-1583
+              TSNumberKeyword 1577-1583
+          TSTypeAnnotation 1584-1592
+            TSNumberKeyword 1586-1592
+          Identifier 1596-1597 name="x"
+        ArrowFunctionExpression 1599-1614 expression=true
+          TSTypeParameterDeclaration 1599-1603
+            TSTypeParameter 1600-1601
+              Identifier 1600-1601 name="T"
+          Identifier 1604-1608 name="x"
+            TSTypeAnnotation 1605-1608
+              TSTypeReference 1607-1608
+                Identifier 1607-1608 name="T"
+          Identifier 1613-1614 name="x"
+        ArrowFunctionExpression 1616-1630 async=true
+          BlockStatement 1628-1630
+        ArrowFunctionExpression 1632-1649 expression=true
+          RestElement 1633-1640
+            Identifier 1636-1640 name="args"
+          Identifier 1645-1649 name="args"
+        ArrowFunctionExpression 1651-1668 expression=true
+          ArrayPattern 1652-1655
+            Identifier 1653-1654 name="a"
+          ObjectPattern 1657-1662
+            Property 1659-1660 kind=init shorthand=true
+              Identifier 1659-1660 name="b"
+              Identifier 1659-1660 name="b"
+          Identifier 1667-1668 name="a"
+  VariableDeclaration 1670-1790 kind=const
+    VariableDeclarator 1676-1790
+      Identifier 1676-1685 name="functions"
+      ArrayExpression 1688-1790
+        FunctionExpression 1689-1703
+          BlockStatement 1701-1703
+        FunctionExpression 1705-1724
+          Identifier 1714-1719 name="named"
+          BlockStatement 1722-1724
+        FunctionExpression 1726-1746 async=true
+          BlockStatement 1744-1746
+        FunctionExpression 1748-1763 generator=true
+          BlockStatement 1761-1763
+        FunctionExpression 1765-1789 async=true generator=true
+          Identifier 1781-1784 name="gen"
+          BlockStatement 1787-1789
+  VariableDeclaration 1791-1867 kind=const
+    VariableDeclarator 1797-1867
+      Identifier 1797-1804 name="classes"
+      ArrayExpression 1807-1867
+        ClassExpression 1808-1816
+          ClassBody 1814-1816
+        ClassExpression 1818-1845
+          Identifier 1824-1829 name="Named"
+          Identifier 1838-1842 name="Base"
+          ClassBody 1843-1845
+        ClassExpression 1847-1866
+          Decorator 1847-1857
+            Identifier 1848-1857 name="decorated"
+          ClassBody 1864-1866
+  VariableDeclaration 1868-2156 kind=const
+    VariableDeclarator 1874-2156
+      Identifier 1874-1881 name="objects"
+      ObjectExpression 1884-2156
+        Property 1888-1889 kind=init shorthand=true
+          Identifier 1888-1889 name="a"
+          Identifier 1888-1889 name="a"
+        Property 1893-1897 kind=init
+          Identifier 1893-1894 name="b"
+          Literal 1896-1897 raw="1"
+        Property 1901-1907 kind=init
+          Literal 1901-1904 raw="'c'"
+          Literal 1906-1907 raw="2"
+        Property 1911-1915 kind=init
+          Literal 1911-1912 raw="3"
+          Literal 1914-1915 raw="3"
+        Property 1919-1925 kind=init computed=true
+          Identifier 1920-1921 name="d"
+          Literal 1924-1925 raw="4"
+        Property 1929-1940 kind=init method=true
+          Identifier 1929-1935 name="method"
+          FunctionExpression 1935-1940
+            BlockStatement 1938-1940
+        Property 1944-1966 kind=init method=true
+          Identifier 1950-1961 name="asyncMethod"
+          FunctionExpression 1961-1966 async=true
+            BlockStatement 1964-1966
+        Property 1970-1991 kind=init method=true
+          Identifier 1971-1986 name="generatorMethod"
+          FunctionExpression 1986-1991 generator=true
+            BlockStatement 1989-1991
+        Property 1995-2011 kind=init method=true
+          Identifier 2002-2006 name="both"
+          FunctionExpression 2006-2011 async=true generator=true
+            BlockStatement 2009-2011
+        Property 2015-2046 kind=get
+          Identifier 2019-2025 name="getter"
+          FunctionExpression 2025-2046
+            BlockStatement 2028-2046
+              ReturnStatement 2034-2042
+                Literal 2041-2042 raw="1"
+        Property 2050-2070 kind=set
+          Identifier 2054-2060 name="setter"
+          FunctionExpression 2060-2070
+            Identifier 2061-2066 name="value"
+            BlockStatement 2068-2070
+        SpreadElement 2074-2083
+          Identifier 2077-2083 name="spread"
+        Property 2087-2093 kind=init
+          Identifier 2087-2090 name="get"
+          Literal 2092-2093 raw="1"
+        Property 2097-2103 kind=init
+          Identifier 2097-2100 name="set"
+          Literal 2102-2103 raw="2"
+        Property 2107-2115 kind=init
+          Identifier 2107-2112 name="async"
+          Literal 2114-2115 raw="3"
+        Property 2119-2153 kind=init
+          Identifier 2119-2125 name="nested"
+          ObjectExpression 2127-2153
+            Property 2129-2151 kind=init
+              Identifier 2129-2133 name="deep"
+              ObjectExpression 2135-2151
+                Property 2137-2149 kind=init
+                  Identifier 2137-2143 name="deeper"
+                  Literal 2145-2149 raw="true"
+  VariableDeclaration 2157-2200 kind=const
+    VariableDeclarator 2163-2200
+      Identifier 2163-2169 name="arrays"
+      ArrayExpression 2172-2200
+        Literal 2175-2176 raw="1"
+        SpreadElement 2180-2189
+          Identifier 2183-2189 name="spread"
+        ArrayExpression 2191-2199
+          Identifier 2192-2198 name="nested"
+  VariableDeclaration 2201-2302 kind=const
+    VariableDeclarator 2207-2302
+      Identifier 2207-2215 name="asserted"
+      ArrayExpression 2218-2302
+        TSAsExpression 2219-2230
+          Identifier 2219-2220 name="a"
+          TSStringKeyword 2224-2230
+        TSAsExpression 2232-2242
+          Identifier 2232-2233 name="a"
+          TSTypeReference 2237-2242
+            Identifier 2237-2242 name="const"
+        TSSatisfiesExpression 2244-2262
+          Identifier 2244-2245 name="a"
+          TSStringKeyword 2256-2262
+        TSTypeAssertion 2264-2273
+          TSStringKeyword 2265-2271
+          Identifier 2272-2273 name="a"
+        TSNonNullExpression 2275-2277
+          Identifier 2275-2276 name="a"
+        TSAsExpression 2279-2301
+          TSAsExpression 2279-2291
+            Identifier 2279-2280 name="a"
+            TSUnknownKeyword 2284-2291
+          TSNumberKeyword 2295-2301
+  VariableDeclaration 2303-2334 kind=const
+    VariableDeclarator 2309-2334
+      Identifier 2309-2321 name="instantiated"
+      TSInstantiationExpression 2324-2334
+        Identifier 2324-2326 name="fn"
+        TSTypeParameterInstantiation 2326-2334
+          TSStringKeyword 2327-2333
+  VariableDeclaration 2335-2362 kind=const
+    VariableDeclarator 2341-2362
+      Identifier 2341-2354 name="parenthesised"
+      Identifier 2359-2360 name="a"
+  VariableDeclaration 2363-2407 kind=const
+    VariableDeclarator 2369-2407
+      Identifier 2369-2376 name="awaited"
+      ArrowFunctionExpression 2379-2407 async=true
+        BlockStatement 2391-2407
+          ExpressionStatement 2393-2405
+            AwaitExpression 2393-2405
+              SequenceExpression 2400-2404
+                Identifier 2400-2401 name="a"
+                Identifier 2403-2404 name="b"
+  VariableDeclaration 2408-2471 kind=const
+    VariableDeclarator 2414-2471
+      Identifier 2414-2425 name="privateName"
+      ClassExpression 2428-2471
+        ClassBody 2434-2471
+          PropertyDefinition 2436-2443
+            PrivateIdentifier 2436-2438 name="x"
+            Literal 2441-2442 raw="1"
+          MethodDefinition 2444-2469 kind=method
+            Identifier 2444-2447 name="has"
+            FunctionExpression 2447-2469
+              Identifier 2448-2449 name="o"
+              BlockStatement 2451-2469
+                ReturnStatement 2453-2467
+                  BinaryExpression 2460-2467 operator="in"
+                    PrivateIdentifier 2460-2462 name="x"
+                    Identifier 2466-2467 name="o"
+  VariableDeclaration 2472-2552 kind=const
+    VariableDeclarator 2478-2552
+      Identifier 2478-2494 name="yieldInGenerator"
+      FunctionExpression 2497-2552 generator=true
+        BlockStatement 2510-2552
+          VariableDeclaration 2512-2537 kind=const
+            VariableDeclarator 2518-2536
+              Identifier 2518-2519 name="v"
+              YieldExpression 2522-2536 delegate=true
+                CallExpression 2529-2536
+                  Identifier 2529-2534 name="other"
+          ExpressionStatement 2538-2550
+            YieldExpression 2538-2550
+              SequenceExpression 2545-2549
+                Identifier 2545-2546 name="a"
+                Identifier 2548-2549 name="b"
+  VariableDeclaration 2553-2571 kind=let
+    VariableDeclarator 2557-2571
+      Identifier 2557-2571 name="implicitGlobal"
+  ExpressionStatement 2572-2590
+    AssignmentExpression 2572-2590 operator="="
+      Identifier 2572-2586 name="implicitGlobal"
+      Literal 2589-2590 raw="1"
+  VariableDeclaration 2591-2612 kind=const
+    VariableDeclarator 2597-2612
+      Identifier 2597-2605 name="nullish2"
+      Literal 2608-2612 raw="null"
+  VariableDeclaration 2613-2652 kind=const
+    VariableDeclarator 2619-2652
+      Identifier 2619-2630 name="taggedTyped"
+      TaggedTemplateExpression 2633-2652
+        Identifier 2633-2636 name="tag"
+        TSTypeParameterInstantiation 2636-2644
+          TSStringKeyword 2637-2643
+        TemplateLiteral 2644-2652
+          TemplateElement 2644-2649 raw="a "
+          TemplateElement 2650-2652 tail=true raw=""
+          Identifier 2649-2650 name="b"
+`,
+}

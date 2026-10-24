@@ -1,5 +1,0 @@
-Program 0-21 sourceType="module"
-  ExportDefaultDeclaration 0-20 exportKind="value"
-    BinaryExpression 15-20 operator="+"
-      Identifier 15-16 name="a"
-      Identifier 19-20 name="b"

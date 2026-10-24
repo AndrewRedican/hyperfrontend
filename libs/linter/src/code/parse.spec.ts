@@ -1,17 +1,15 @@
 import type { Node } from './model'
-import { readdirSync, readFileSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { extname } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { serialise } from './__fixtures__/serialise'
+import { PARSE_CASES } from './__test-utils__/parse-cases'
+import { serialise } from './__test-utils__/serialise'
 import { parseCode, scan } from './parse'
 
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
-
 describe('parseCode', () => {
-  for (const name of readdirSync(FIXTURES).filter((file) => /\.(ts|tsx|js|mjs|cjs)$/.test(file) && file !== 'serialise.ts')) {
+  for (const { name, source, tree } of PARSE_CASES) {
     it(`parses ${name} as the reference parser does`, () => {
-      const expected = readFileSync(join(FIXTURES, name.replace(/\.[a-z]+$/, '.tree')), 'utf8').trimEnd()
-      const parsed = parseCode(readFileSync(join(FIXTURES, name), 'utf8'), extname(name))
+      const expected = tree.trimEnd()
+      const parsed = parseCode(source, extname(name))
       expect(parsed.tree === null ? `error ${parsed.error?.message ?? ''}` : serialise(parsed.tree).join('\n')).toBe(expected)
     })
   }
