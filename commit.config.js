@@ -23,7 +23,6 @@ module.exports = {
 
   scopeOptional: false,
   scopeMulti: false,
-  scopeFilter: ({ path }) => !path.includes('/libs/project-scope/__fixtures__/'),
 
   headerMaxLength: 72,
 
