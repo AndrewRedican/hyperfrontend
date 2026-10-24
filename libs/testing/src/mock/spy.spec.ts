@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { createSpy, restoreAllMocks } from './spy'
+import { restoreAllMocks } from './registry'
+import { createSpy } from './spy'
 import { isMockFunction } from './types'
 
 describe('createSpy on methods', () => {

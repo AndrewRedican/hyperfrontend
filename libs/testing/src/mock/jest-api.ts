@@ -4,8 +4,9 @@ import type { MockedValue, MockFn } from './types'
 import { createRequire } from 'node:module'
 import { advanceGeneration } from '../hooks/generation'
 import { mockContext, registerRuntimeMock, resolveActualUrl } from '../hooks/mock-registry'
-import { clearAllMocks, createMockFn, resetAllMocks } from './mock-fn'
-import { createSpy, restoreAllMocks } from './spy'
+import { createMockFn } from './mock-fn'
+import { clearAllMocks, resetAllMocks, restoreAllMocks } from './registry'
+import { createSpy } from './spy'
 import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
 
 /**

@@ -1,30 +1,11 @@
 import type { MockFn } from './types'
 import { createMockFn } from './mock-fn'
+import { installedSpies } from './registry'
 
 /**
  * Which flavour of property a spy replaces.
  */
 export type AccessType = 'get' | 'set'
-
-/**
- * Every spy still holding a replaced property, so `jest.restoreAllMocks` can put them all
- * back without the test naming each one.
- */
-const installed = new Set<MockFn>()
-
-/**
- * Restores every property replaced by a spy in this process.
- *
- * @example Putting every spied property back
- * ```ts
- * const spy = createSpy(console, 'warn').mockImplementation(() => undefined)
- * restoreAllMocks()
- * console.warn === spy // => false, the original is back
- * ```
- */
-export function restoreAllMocks(): void {
-  for (const spy of [...installed]) spy.mockRestore()
-}
 
 /**
  * Finds a property descriptor on an object or anywhere up its prototype chain.
@@ -82,13 +63,13 @@ export function createSpy(target: object, key: PropertyKey, accessType?: AccessT
     // why: the property may have been inherited, in which case deleting restores the prototype's version.
     if (ownDescriptor) Object.defineProperty(target, key, ownDescriptor)
     else delete (target as Record<PropertyKey, unknown>)[key]
-    installed.delete(spy)
+    installedSpies.delete(spy)
     return spy
   }
 
   if (accessType) Object.defineProperty(target, key, { ...descriptor, [accessType]: spy, configurable: true })
   else Object.defineProperty(target, key, { ...descriptor, value: spy, configurable: true, writable: true })
 
-  installed.add(spy)
+  installedSpies.add(spy)
   return spy
 }

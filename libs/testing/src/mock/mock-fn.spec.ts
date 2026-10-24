@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { clearAllMocks, createMockFn, resetAllMocks } from './mock-fn'
+import { createMockFn } from './mock-fn'
+import { clearAllMocks, resetAllMocks } from './registry'
 import { isMockFunction } from './types'
 
 describe('createMockFn call recording', () => {

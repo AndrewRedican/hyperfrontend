@@ -1,11 +1,6 @@
 import type { MockFn, MockState } from './types'
+import { createdMocks } from './registry'
 import { MOCK_MARKER } from './types'
-
-/**
- * Every mock created in this process, so `jest.clearAllMocks` and `jest.resetAllMocks`
- * can reach mocks the test never named.
- */
-const created = new Set<MockFn>()
 
 /**
  * A process-wide call counter backing `mock.invocationCallOrder`, which specs use to
@@ -24,37 +19,7 @@ const ordering = { next: 0 }
  * ```
  */
 export function trackMock(mock: MockFn): void {
-  created.add(mock)
-}
-
-/**
- * Clears recorded calls on every mock created in this process.
- *
- * @example Clearing call history while keeping implementations
- * ```ts
- * const fetchUser = createMockFn().mockReturnValue({ id: 1 })
- * fetchUser()
- * clearAllMocks()
- * fetchUser.mock.calls // => []
- * fetchUser() // => { id: 1 }, the implementation survives a clear
- * ```
- */
-export function clearAllMocks(): void {
-  for (const mock of created) mock.mockClear()
-}
-
-/**
- * Clears calls and drops implementations on every mock created in this process.
- *
- * @example Dropping implementations as well
- * ```ts
- * const fetchUser = createMockFn().mockReturnValue({ id: 1 })
- * resetAllMocks()
- * fetchUser() // => undefined
- * ```
- */
-export function resetAllMocks(): void {
-  for (const mock of created) mock.mockReset()
+  createdMocks.add(mock)
 }
 
 /**
