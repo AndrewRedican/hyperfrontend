@@ -1,10 +1,9 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join, posix } from 'node:path'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import { posix } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
-const created: string[] = []
+const created: TempDir[] = []
 
 /**
  * Writes a set of files into a fresh temporary workspace.
@@ -13,22 +12,16 @@ const created: string[] = []
  * @returns The absolute path to the workspace root.
  */
 function plantWorkspace(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), 'compatibility-matrix-'))
-  created.push(root)
-  for (const [path, content] of entries(files)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), content)
-  }
-  return root
+  const directory = createTempDir({ prefix: 'compatibility-matrix-', tree: files })
+  created.push(directory)
+  return directory.path
 }
 
 /**
  * Removes every workspace planted so far.
  */
 export function cleanupWorkspaces(): void {
-  for (const root of created.splice(0)) {
-    rmSync(root, { recursive: true, force: true })
-  }
+  for (const directory of created.splice(0)) directory.remove()
 }
 
 /**
