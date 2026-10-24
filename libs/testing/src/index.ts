@@ -4,6 +4,8 @@
  *
  * @module @hyperfrontend/testing
  */
+export type { Deferred } from './async/deferred'
+export type { WaitOptions } from './async/wait-for'
 export type { DescribeApi, ItApi, SuiteBody, TestBody } from './blocks/blocks'
 export type { AsymmetricMatcher } from './expect/asymmetric'
 export type { EqualityMode } from './expect/equality'
@@ -15,6 +17,9 @@ export type { ReplacedProperty } from './mock/replace'
 export type { AccessType } from './mock/spy'
 export type { FakeTimerOptions } from './mock/timers'
 export type { Mock, Mocked, MockedFunction, MockedValue, MockFn, MockResult, MockState } from './mock/types'
+export { createDeferred } from './async/deferred'
+export { flushPromises, sleep } from './async/real-timers'
+export { waitFor, waitUntil } from './async/wait-for'
 export { describe, it } from './blocks/blocks'
 export { equals, matchesSubset } from './expect/equality'
 export { expect } from './expect/expect'

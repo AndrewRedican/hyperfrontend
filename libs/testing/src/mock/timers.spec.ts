@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, describe, it } from 'node:test'
 import { createMockFn } from './mock-fn'
-import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
+import { advanceTimersByTime, clearAllTimers, isFakeClock, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
 
 describe('fake timers', () => {
   afterEach(() => {
@@ -180,5 +180,16 @@ describe('fake timers', () => {
   it('leaves the schedulers alone when they were excluded from faking', () => {
     useFakeTimers({ doNotFake: ['setTimeout', 'setInterval'] })
     assert.equal(typeof setTimeout, 'function')
+  })
+
+  it('reports the fake clock as installed after useFakeTimers', () => {
+    useFakeTimers()
+    assert.equal(isFakeClock(), true)
+  })
+
+  it('reports the fake clock as gone after useRealTimers', () => {
+    useFakeTimers()
+    useRealTimers()
+    assert.equal(isFakeClock(), false)
   })
 })
