@@ -11,6 +11,8 @@ export default [
       'workspace/no-unsafe-builtin-methods': 'off',
       // context: this is the replacement for @types/jest, whose own surface is `any`-typed; narrowing it here would reject the call sites it exists to type.
       'typescript/no-explicit-any': 'off',
+      // context: this package implements createTempDir and useTempDir, so its own specs exercise the fs calls beneath them.
+      'workspace/no-mkdtemp-in-tests': 'off',
     },
   },
   {
