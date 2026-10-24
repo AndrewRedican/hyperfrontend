@@ -1,13 +1,13 @@
-import type { FixtureTree } from './fixtures/tree'
+import type { FixtureTree } from './sample-projects/tree'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { after } from 'node:test'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { FRAMEWORK_FIXTURES } from './fixtures/frameworks'
-import { PROJECT_FIXTURES } from './fixtures/projects'
-import { TOOLING_FIXTURES } from './fixtures/tooling'
-import { WORKSPACE_FIXTURES } from './fixtures/workspaces'
+import { FRAMEWORK_FIXTURES } from './sample-projects/frameworks'
+import { PROJECT_FIXTURES } from './sample-projects/projects'
+import { TOOLING_FIXTURES } from './sample-projects/tooling'
+import { WORKSPACE_FIXTURES } from './sample-projects/workspaces'
 
 /** Every sample project the suites analyse, keyed by the directory it is written to. */
 const FIXTURES: Readonly<Record<string, FixtureTree>> = {
