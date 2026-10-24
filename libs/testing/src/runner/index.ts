@@ -7,6 +7,14 @@
 export type { RunPlan } from './argv'
 export type { CoverageThresholds, TestConfig, TestEnvironment } from './config'
 export type { RunContext, RunOutcome } from './run'
-export { buildRunPlan, moduleUrl, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
+export {
+  buildRunPlan,
+  moduleUrl,
+  selectSpecFiles,
+  serialiseMockLifecycle,
+  serialiseModuleMap,
+  serialiseSetupFiles,
+  setupPaths,
+} from './argv'
 export { BASELINE_COVERAGE_EXCLUDE, withDefaults } from './config'
 export { runProjectTests } from './run'

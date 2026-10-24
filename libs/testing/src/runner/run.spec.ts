@@ -391,4 +391,28 @@ it('reaches the document', () => {
       true
     )
   })
+
+  it('clears every mock before each test when the project sets clearMocks', () => {
+    const fixture = createFixture({
+      'src/subject.ts': 'export const noop = (): void => undefined\n',
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { jest } from '@hyperfrontend/testing'
+import { noop } from './subject'
+
+const mock = jest.fn(noop)
+
+it('calls the mock', () => {
+  mock()
+  assert.equal(mock.mock.calls.length, 1)
+})
+
+it('starts the next test with no recorded calls', () => {
+  assert.equal(mock.mock.calls.length, 0)
+})
+`,
+    })
+
+    assert.equal(run(fixture, { coverageInclude: ['src/subject.ts'], clearMocks: true }).success, true)
+  })
 })

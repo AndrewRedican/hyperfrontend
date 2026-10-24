@@ -5,7 +5,15 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { buildRunPlan, moduleUrl, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
+import {
+  buildRunPlan,
+  moduleUrl,
+  selectSpecFiles,
+  serialiseMockLifecycle,
+  serialiseModuleMap,
+  serialiseSetupFiles,
+  setupPaths,
+} from './argv'
 import { BASELINE_COVERAGE_EXCLUDE, withDefaults } from './config'
 
 const PROJECT = '/workspace/libs/example'
@@ -246,6 +254,16 @@ describe('serialiseSetupFiles', () => {
       serialiseSetupFiles({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT),
       JSON.stringify([resolve(PROJECT, 'test.setup.ts')])
     )
+  })
+})
+
+describe('serialiseMockLifecycle', () => {
+  it('returns undefined when no lifecycle option is enabled', () => {
+    assert.equal(serialiseMockLifecycle({ ...SINGLE, clearMocks: false }), undefined)
+  })
+
+  it('lists every enabled step in a fixed order', () => {
+    assert.equal(serialiseMockLifecycle({ ...SINGLE, restoreMocks: true, resetMocks: true, clearMocks: true }), 'clear,reset,restore')
   })
 })
 
