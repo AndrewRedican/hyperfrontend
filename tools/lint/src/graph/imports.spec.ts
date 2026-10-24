@@ -3,7 +3,7 @@ import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:
 import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__fixtures__/workspace.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace.ts'
 import { importsOfFiles, importsOfText, isCodeFile } from './imports.ts'
 
 const root = createGraphWorkspace()

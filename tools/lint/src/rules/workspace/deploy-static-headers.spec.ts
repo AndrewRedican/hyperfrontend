@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './deploy-static-headers.ts'
 
-const fixture = (name: string): string => join(import.meta.dirname, '__fixtures__', name, 'project.json')
+const projects = createProjectTrees()
+const fixture = (name: string): string => projects.file(name, 'project.json')
 const STATIC = '{\n  "name": "demo",\n  "metadata": { "deploy": { "kind": "static" } }\n}\n'
 
 testRule(rule, {
@@ -22,7 +25,7 @@ testRule(rule, {
     { name: 'a project whose metadata is no object', path: fixture('deploy-missing'), text: '{ "metadata": 1 }' },
     {
       name: 'a file that is no project file',
-      path: join(import.meta.dirname, '__fixtures__', 'deploy-missing', 'other.json'),
+      path: projects.file('deploy-missing', 'other.json'),
       text: STATIC,
     },
     { name: 'a document that is no object', path: fixture('deploy-missing'), text: '[]' },
@@ -95,4 +98,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

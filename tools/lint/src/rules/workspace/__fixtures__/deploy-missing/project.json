@@ -1,5 +1,0 @@
-{
-  "name": "demo-deploy-missing",
-  "projectType": "application",
-  "metadata": { "deploy": { "kind": "static" } }
-}

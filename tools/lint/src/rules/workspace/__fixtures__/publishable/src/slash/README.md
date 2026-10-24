@@ -1,3 +1,0 @@
-# slash/
-
-Desc.

@@ -2,7 +2,7 @@
  * A disposable workspace for the Markdown rule specs: a root, a publishable library with a
  * nested README, an internal library, an application and a documentation directory.
  *
- * @module rules/workspace/__fixtures__/markdown-workspace
+ * @module rules/workspace/__test-utils__/markdown-workspace
  */
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'

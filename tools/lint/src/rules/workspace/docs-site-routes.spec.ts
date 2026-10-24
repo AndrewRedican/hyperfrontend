@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { CONTENT, LISTING, createSiteWorkspaces } from './__fixtures__/site-workspace.ts'
+import { CONTENT, LISTING, createSiteWorkspaces } from './__test-utils__/site-workspace.ts'
 import rule from './docs-site-routes.ts'
 
 const workspaces = createSiteWorkspaces()

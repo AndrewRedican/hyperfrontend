@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './project-lifecycle-policy.ts'
 
-const fixture = (name: string, file: string): string => join(import.meta.dirname, '__fixtures__', name, file)
+const projects = createProjectTrees()
+const fixture = (name: string, file: string): string => projects.file(name, file)
 const FROZEN = {
   forbiddenTargets: ['lint', 'test', 'e2e'],
   forbiddenScripts: ['lint', 'lint:*', 'test', 'test:*'],
@@ -214,4 +217,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

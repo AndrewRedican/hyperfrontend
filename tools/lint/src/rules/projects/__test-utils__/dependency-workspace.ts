@@ -3,30 +3,32 @@
  * package, a buildable and an unbuildable workspace library, a missing package, a nested install,
  * a library pinning a prerelease beside a package installed at no version, and the root project.
  *
- * @module rules/projects/__fixtures__/dependency-workspace
+ * @module rules/projects/__test-utils__/dependency-workspace
  */
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** The files of the workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
   '.gitignore': 'node_modules\n',
-  'package.json': JSON.stringify({
+  'package.json': stringify({
     name: '@ws/root',
     private: true,
     dependencies: { 'left-pad': '1.3.0' },
     devDependencies: { typescript: '5.0.0' },
   }),
-  'project.json': JSON.stringify({ name: 'root' }),
+  'project.json': stringify({ name: 'root' }),
   'root-file.ts': 'export const root = 1\n',
-  'nx.json': JSON.stringify({
+  'nx.json': stringify({
     namedInputs: { default: ['{projectRoot}/**/*', 'sharedGlobals'], sharedGlobals: ['{workspaceRoot}/patches/**'] },
     targetDefaults: { build: { inputs: ['default', '^default', { projects: ['other'], input: 'default' }] } },
   }),
-  'tsconfig.base.json': JSON.stringify({
+  'tsconfig.base.json': stringify({
     compilerOptions: {
       paths: {
         '@ws/dep': ['libs/dep/src/index.ts'],
@@ -36,7 +38,7 @@ const FILES: Readonly<Record<string, string>> = {
       },
     },
   }),
-  'package-lock.json': JSON.stringify({
+  'package-lock.json': stringify({
     packages: {
       '': {},
       'node_modules/left-pad': { version: '1.3.0' },
@@ -47,30 +49,30 @@ const FILES: Readonly<Record<string, string>> = {
       'node_modules/oddball': { version: 'next' },
     },
   }),
-  'node_modules/left-pad/package.json': JSON.stringify({ name: 'left-pad', version: '1.3.0' }),
-  'libs/lib/project.json': JSON.stringify({ name: 'lib', targets: { build: { executor: 'x:build' } } }),
+  'node_modules/left-pad/package.json': stringify({ name: 'left-pad', version: '1.3.0' }),
+  'libs/lib/project.json': stringify({ name: 'lib', targets: { build: { executor: 'x:build' } } }),
   'libs/lib/src/index.ts': "import 'left-pad'\nimport 'node:fs'\nimport 'unknown-package'\nimport '@ws/lib'\nimport '../../../root-file'\n",
   'libs/lib/src/dep-user.ts': "import { dep } from '@ws/dep'\nimport { nobuild } from '@ws/nobuild'\nexport const both = [dep, nobuild]\n",
   'libs/lib/src/nested/use.ts': "import 'inner'\nimport 'hoisted'\nimport 'versionless'\n",
-  'libs/lib/src/nested/node_modules/inner/package.json': JSON.stringify({ name: 'inner', version: '0.0.1' }),
-  'libs/lib/src/nested/node_modules/hoisted/package.json': JSON.stringify({ name: 'hoisted', version: '9.9.9' }),
-  'libs/lib/src/nested/node_modules/versionless/package.json': JSON.stringify({ name: 'versionless' }),
+  'libs/lib/src/nested/node_modules/inner/package.json': stringify({ name: 'inner', version: '0.0.1' }),
+  'libs/lib/src/nested/node_modules/hoisted/package.json': stringify({ name: 'hoisted', version: '9.9.9' }),
+  'libs/lib/src/nested/node_modules/versionless/package.json': stringify({ name: 'versionless' }),
   'libs/lib/README.md': '# lib\n',
-  'libs/dep/project.json': JSON.stringify({ name: 'dep', targets: { build: { executor: 'x:build' } } }),
-  'libs/dep/package.json': JSON.stringify({ name: '@ws/dep', version: '2.0.0' }),
+  'libs/dep/project.json': stringify({ name: 'dep', targets: { build: { executor: 'x:build' } } }),
+  'libs/dep/package.json': stringify({ name: '@ws/dep', version: '2.0.0' }),
   'libs/dep/src/index.ts': 'export const dep = 1\n',
-  'libs/unversioned/project.json': JSON.stringify({ name: 'unversioned', targets: { build: { executor: 'x:build' } } }),
-  'libs/unversioned/package.json': JSON.stringify({ name: '@ws/unversioned' }),
-  'libs/nobuild/project.json': JSON.stringify({ name: 'nobuild' }),
-  'libs/nobuild/package.json': JSON.stringify({ name: '@ws/nobuild', version: '1.0.0' }),
+  'libs/unversioned/project.json': stringify({ name: 'unversioned', targets: { build: { executor: 'x:build' } } }),
+  'libs/unversioned/package.json': stringify({ name: '@ws/unversioned' }),
+  'libs/nobuild/project.json': stringify({ name: 'nobuild' }),
+  'libs/nobuild/package.json': stringify({ name: '@ws/nobuild', version: '1.0.0' }),
   'libs/nobuild/src/index.ts': 'export const nobuild = 1\n',
-  'libs/quiet/project.json': JSON.stringify({ name: 'quiet', targets: { build: { executor: 'x:build' } } }),
+  'libs/quiet/project.json': stringify({ name: 'quiet', targets: { build: { executor: 'x:build' } } }),
   'libs/quiet/src/index.ts': 'export const quiet = 1\n',
-  'libs/user/project.json': JSON.stringify({ name: 'user', targets: { build: { executor: 'x:build', inputs: ['{projectRoot}/**/*'] } } }),
+  'libs/user/project.json': stringify({ name: 'user', targets: { build: { executor: 'x:build', inputs: ['{projectRoot}/**/*'] } } }),
   'libs/user/src/index.ts': "import '@ws/unversioned'\n",
-  'node_modules/prerelease/package.json': JSON.stringify({ name: 'prerelease', version: '1.0.0-alpha.6' }),
-  'libs/pre/project.json': JSON.stringify({ name: 'pre', targets: { build: { executor: 'x:build' } } }),
-  'node_modules/oddball/package.json': JSON.stringify({ name: 'oddball', version: 'next' }),
+  'node_modules/prerelease/package.json': stringify({ name: 'prerelease', version: '1.0.0-alpha.6' }),
+  'libs/pre/project.json': stringify({ name: 'pre', targets: { build: { executor: 'x:build' } } }),
+  'node_modules/oddball/package.json': stringify({ name: 'oddball', version: 'next' }),
   'libs/pre/src/index.ts': "import 'prerelease'\nimport 'oddball'\n",
 }
 
@@ -81,7 +83,7 @@ const FILES: Readonly<Record<string, string>> = {
  */
 export function createDependencyWorkspace(): string {
   const root = mkdtempSync(join(tmpdir(), 'lint-dependencies-'))
-  for (const [path, text] of Object.entries(FILES)) {
+  for (const [path, text] of entries(FILES)) {
     mkdirSync(dirname(join(root, path)), { recursive: true })
     writeFileSync(join(root, path), text)
   }

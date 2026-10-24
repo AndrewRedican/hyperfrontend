@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createDependencyWorkspace } from './__fixtures__/dependency-workspace.ts'
+import { createDependencyWorkspace } from './__test-utils__/dependency-workspace.ts'
 import rule from './dependency-checks.ts'
 
 const ROOT = createDependencyWorkspace()

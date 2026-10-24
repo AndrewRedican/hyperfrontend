@@ -2,13 +2,14 @@
  * A disposable git workspace for the graph specs: a root project, two libraries, an
  * application, an aliased package, an installed package and an ignored directory.
  *
- * @module graph/__fixtures__/workspace
+ * @module graph/__test-utils__/workspace
  */
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** The files of the fixture workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
@@ -48,7 +49,7 @@ const FILES: Readonly<Record<string, string>> = {
  */
 export function createGraphWorkspace(): string {
   const root = mkdtempSync(join(tmpdir(), 'lint-graph-'))
-  for (const [path, text] of Object.entries(FILES)) {
+  for (const [path, text] of entries(FILES)) {
     mkdirSync(dirname(join(root, path)), { recursive: true })
     writeFileSync(join(root, path), text)
   }

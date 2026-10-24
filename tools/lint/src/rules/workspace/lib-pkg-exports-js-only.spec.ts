@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-pkg-exports-js-only.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'package.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'package.json')
 
 testRule(rule, {
   valid: [
@@ -66,4 +69,11 @@ testRule(rule, {
       output: '{ "exports": { ".": "./src/index.js" } }',
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

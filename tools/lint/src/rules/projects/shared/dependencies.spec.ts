@@ -2,7 +2,7 @@ import type { ProjectRecord } from '../../../graph/model.ts'
 import { existsSync, rmSync } from 'node:fs'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { buildGraph } from '../../../graph/build.ts'
-import { createDependencyWorkspace } from '../__fixtures__/dependency-workspace.ts'
+import { createDependencyWorkspace } from '../__test-utils__/dependency-workspace.ts'
 import { inputFiles, installedVersion, selfInputs, usedPackages } from './dependencies.ts'
 
 const root = createDependencyWorkspace()

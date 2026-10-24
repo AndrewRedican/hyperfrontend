@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createDocsWorkspace } from '../__fixtures__/docs-workspace.ts'
+import { createDocsWorkspace } from '../__test-utils__/docs-workspace.ts'
 import {
   docsIndex,
   entryOfFile,

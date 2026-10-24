@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createDocsWorkspace } from './__fixtures__/docs-workspace.ts'
+import { createDocsWorkspace } from './__test-utils__/docs-workspace.ts'
 import rule from './lib-inline-code-links.ts'
 
 const root = createDocsWorkspace()

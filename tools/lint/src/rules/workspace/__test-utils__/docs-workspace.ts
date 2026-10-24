@@ -3,15 +3,17 @@
  * entries, symbols, members and bundle globals, a utilities library, the site's pages, a guide,
  * an article, a root document and committed media.
  *
- * @module rules/workspace/__fixtures__/docs-workspace
+ * @module rules/workspace/__test-utils__/docs-workspace
  */
 
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** A publishable library's project file, with bundle globals. */
-const PUBLISHABLE = JSON.stringify({
+const PUBLISHABLE = stringify({
   projectType: 'library',
   targets: {
     build: {
@@ -35,10 +37,10 @@ const APP = 'apps/docs-site/src/app'
 /** The files of the workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
   'nx.json': '{}',
-  'package.json': JSON.stringify({ name: 'ws', repository: { url: 'git+https://github.com/org/repo.git' } }),
+  'package.json': stringify({ name: 'ws', repository: { url: 'git+https://github.com/org/repo.git' } }),
   'ARCHITECTURE.md': '# Architecture\n\n## Layers\n',
   'libs/alpha/project.json': PUBLISHABLE,
-  'libs/alpha/package.json': JSON.stringify({
+  'libs/alpha/package.json': stringify({
     name: '@ws/alpha',
     exports: {
       '.': './src/index.js',
@@ -95,15 +97,15 @@ const FILES: Readonly<Record<string, string>> = {
   'libs/alpha/src/.hidden/x.ts': 'function inHidden() {}\n',
   'libs/alpha/src/view.tsx': 'function inTsx() {}\n',
   'libs/alpha/src/broken.ts': 'const = \n',
-  'libs/utils/beta/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
-  'libs/utils/beta/package.json': JSON.stringify({ name: '@ws/beta-utils', exports: { '.': './src/index.js' } }),
+  'libs/utils/beta/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'libs/utils/beta/package.json': stringify({ name: '@ws/beta-utils', exports: { '.': './src/index.js' } }),
   'libs/utils/beta/src/index.ts':
     'export function betaOnly() {}\nexport function sharedName() {}\nexport const settings = { level: 1 }\nexport interface Options { level: number }\nexport interface BetaOpts { betaKey: string }\n',
   'libs/utils/beta/README.md': '# Beta\n',
-  'libs/nameless/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'libs/nameless/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
   'libs/nameless/package.json': '{}',
-  'plugins/plug/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
-  'plugins/plug/package.json': JSON.stringify({ name: '@ws/plug' }),
+  'plugins/plug/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'plugins/plug/package.json': stringify({ name: '@ws/plug' }),
   [`${APP}/docs/libraries/alpha/page.tsx`]: '',
   [`${APP}/docs/libraries/alpha/sub/page.tsx`]: '',
   [`${APP}/docs/libraries/alpha/extra/page.tsx`]: '',
@@ -114,13 +116,13 @@ const FILES: Readonly<Record<string, string>> = {
   [`${APP}/docs/contributing/page.tsx`]: '',
   'apps/docs-site/content/guides/start/guide.md': '# Start\n\n## Install\n',
   'apps/docs-site/content/articles/story.md': '# Story\n',
-  'libs/gamma/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
-  'libs/gamma/package.json': JSON.stringify({ name: '@hyperfrontend/gamma', exports: { '.': './src/index.js' } }),
+  'libs/gamma/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'libs/gamma/package.json': stringify({ name: '@hyperfrontend/gamma', exports: { '.': './src/index.js' } }),
   'libs/gamma/src/index.ts': 'export const gamma = 1\n',
   'libs/gamma/README.md': '# Gamma\n\n## Compatibility\n',
-  'libs/delta/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
-  'libs/delta/package.json': JSON.stringify({ name: '@hyperfrontend/delta' }),
-  'libs/epsilon/project.json': JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'libs/delta/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
+  'libs/delta/package.json': stringify({ name: '@hyperfrontend/delta' }),
+  'libs/epsilon/project.json': stringify({ projectType: 'library', targets: { build: {}, publish: {} } }),
   [`${APP}/docs/libraries/gamma/page.tsx`]: '',
   'assets/media/banner-gamma/banner.png': '',
   'assets/media/runtimes-gamma/runtimes.gif': '',
@@ -136,7 +138,7 @@ const FILES: Readonly<Record<string, string>> = {
  */
 export function createDocsWorkspace(): string {
   const root = mkdtempSync(join(tmpdir(), 'lint-docs-'))
-  for (const [path, text] of Object.entries(FILES)) {
+  for (const [path, text] of entries(FILES)) {
     mkdirSync(dirname(join(root, path)), { recursive: true })
     writeFileSync(join(root, path), text)
   }

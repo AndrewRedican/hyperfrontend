@@ -2,12 +2,14 @@
  * A disposable workspace for the documentation-site rules: a library with documents at every
  * depth and secondary entries, a plugin, the site's navigation and generator, and some pages.
  *
- * @module rules/workspace/__fixtures__/site-workspace
+ * @module rules/workspace/__test-utils__/site-workspace
  */
 
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** The site's pages directory, workspace-relative. */
 const PAGES = 'apps/docs-site/src/app/docs'
@@ -30,7 +32,7 @@ const FILES: Readonly<Record<string, string>> = {
   'libs/alpha/lib/x/README.md': '# top lib x\n',
   'libs/alpha/node_modules/x/README.md': '# skipped\n',
   'libs/alpha/notes.txt': 'not markdown\n',
-  'libs/alpha/package.json': JSON.stringify({
+  'libs/alpha/package.json': stringify({
     name: '@ws/alpha',
     exports: {
       '.': './src/index.js',
@@ -41,7 +43,7 @@ const FILES: Readonly<Record<string, string>> = {
       bare: './y.js',
     },
   }),
-  'libs/beta/package.json': JSON.stringify({ name: '@ws/beta', exports: './index.js' }),
+  'libs/beta/package.json': stringify({ name: '@ws/beta', exports: './index.js' }),
   'plugins/plug/README.md': '# plug\n',
   [`${PAGES}/libraries/alpha/page.tsx`]: '',
   [`${PAGES}/libraries/alpha/guide/page.tsx`]: '',
@@ -67,7 +69,7 @@ export interface SiteWorkspaces {
  */
 function write(files: Readonly<Record<string, string>>): string {
   const root = mkdtempSync(join(tmpdir(), 'lint-site-'))
-  for (const [path, text] of Object.entries(files)) {
+  for (const [path, text] of entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true })
     writeFileSync(join(root, path), text)
   }

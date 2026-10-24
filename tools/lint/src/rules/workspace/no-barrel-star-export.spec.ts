@@ -1,7 +1,8 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import rule from './no-barrel-star-export.ts'
 
 // why: every recorded case names a file in a temporary workspace; the hermetic cases below cover the same behaviours.
@@ -105,4 +106,11 @@ testRule(rule, {
       errors: [{ message: star('./foo'), line: 1, column: 1, endLine: 1, endColumn: 22 }],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    rmSync(ROOT, { recursive: true, force: true })
+    expect(existsSync(ROOT)).toBe(false)
+  })
 })

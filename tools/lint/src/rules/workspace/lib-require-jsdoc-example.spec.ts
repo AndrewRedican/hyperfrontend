@@ -2,7 +2,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createLibraryWorkspace } from './__fixtures__/library-workspace.ts'
+import { createLibraryWorkspace } from './__test-utils__/library-workspace.ts'
 import rule from './lib-require-jsdoc-example.ts'
 
 const workspace = createLibraryWorkspace()

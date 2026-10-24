@@ -15,7 +15,7 @@ const message = (path: string, configFile = '.devcontainer/devcontainer.json'): 
 
 testRule(rule, {
   valid: [
-    { name: 'a manifest outside the workspace root', path: join(import.meta.dirname, '__fixtures__', 'plain', 'package.json'), text: '{}' },
+    { name: 'a manifest outside the workspace root', path: join(ROOT, 'sub', 'package.json'), text: '{}' },
     { name: 'a file that is no manifest at the workspace root', path: join(ROOT, 'nx.json'), text: '{}' },
   ],
   invalid: [

@@ -1,5 +1,0 @@
-{
-  "name": "demo-deploy-good",
-  "projectType": "application",
-  "metadata": { "deploy": { "kind": "static" } }
-}
