@@ -1,11 +1,10 @@
 /* lint-disable typescript/no-explicit-any */
 import type { MessageHandler } from '../model'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { createQueue } from './create-queue'
 
-// why: the queue advances on promise settlement alone, so one macrotask hop runs after every microtask its chain queued and lands on a state nothing changes until the test acts again.
-const settle = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
+// why: the queue advances on promise settlement alone, so flushPromises, one macrotask hop, runs after every microtask its chain queued and lands on a state nothing changes until the test acts again.
 
 describe('createQueue', () => {
   let processedMessages: any[] = []
@@ -21,7 +20,7 @@ describe('createQueue', () => {
     const open = gates.shift()
     if (!open) throw new Error('no handler call is waiting at a gate')
     open()
-    await settle()
+    await flushPromises()
   }
 
   const drain = async (count: number): Promise<void> => {
@@ -82,7 +81,7 @@ describe('createQueue', () => {
   it('does not process when queue is empty', async () => {
     createQueue(messageProcessor)
 
-    await settle()
+    await flushPromises()
 
     expect(messageProcessor).not.toHaveBeenCalled()
   })
@@ -236,7 +235,7 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 'boom' })
     messageHandler.addMessage({ id: 'c' })
 
-    await settle()
+    await flushPromises()
 
     expect(processedMessages).toEqual([{ id: 'a' }, { id: 'c' }])
   })
@@ -245,7 +244,7 @@ describe('createQueue', () => {
     const messageHandler = createQueue(rejectOnBoom)
     messageHandler.addMessage({ id: 'boom' })
 
-    await settle()
+    await flushPromises()
 
     expect({ isRunning: messageHandler.isRunning(), currentMessage: messageHandler.currentMessage(), size: messageHandler.size() }).toEqual(
       {
@@ -260,11 +259,11 @@ describe('createQueue', () => {
     const messageHandler = createQueue(rejectOnBoom, false)
     messageHandler.addMessage({ id: 'boom' })
     messageHandler.resume()
-    await settle()
+    await flushPromises()
 
     messageHandler.addMessage({ id: 'c' })
     messageHandler.resume()
-    await settle()
+    await flushPromises()
 
     expect(processedMessages).toEqual([{ id: 'c' }])
   })
