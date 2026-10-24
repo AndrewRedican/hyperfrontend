@@ -1,3 +1,4 @@
+import type { ReplacedProperty } from './replace'
 import type { AccessType } from './spy'
 import type { FakeTimerOptions } from './timers'
 import type { MockedValue, MockFn } from './types'
@@ -6,6 +7,7 @@ import { advanceGeneration } from '../hooks/generation'
 import { mockContext, registerRuntimeMock, resolveActualUrl } from '../hooks/mock-registry'
 import { createMockFn } from './mock-fn'
 import { clearAllMocks, resetAllMocks, restoreAllMocks } from './registry'
+import { replaceProperty, stubEnv, stubGlobal } from './replace'
 import { createSpy } from './spy'
 import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
 
@@ -28,8 +30,18 @@ export type JestApi = {
   clearAllMocks(): JestApi
   /** Clears calls and drops implementations on every mock. */
   resetAllMocks(): JestApi
-  /** Restores every property replaced by a spy. */
+  /** Restores every property replaced by a spy, `replaceProperty`, `stubEnv` or `stubGlobal`. */
   restoreAllMocks(): JestApi
+  /** Gives an existing property a value until restored, without spying on it. */
+  replaceProperty<TTarget extends object, TKey extends keyof TTarget>(
+    target: TTarget,
+    key: TKey,
+    value: TTarget[TKey]
+  ): ReplacedProperty<TTarget[TKey]>
+  /** Sets an environment variable, or removes it when given `undefined`, until restored. */
+  stubEnv(name: string, value: string | undefined): JestApi
+  /** Puts a value on the global object until restored, whether or not the global existed. */
+  stubGlobal(name: string, value: unknown): JestApi
   /** Installs a fake clock. */
   useFakeTimers(options?: FakeTimerOptions): JestApi
   /** Uninstalls the fake clock. */
@@ -77,6 +89,15 @@ export const jest: JestApi = {
   },
   restoreAllMocks: () => {
     restoreAllMocks()
+    return jest
+  },
+  replaceProperty,
+  stubEnv: (name, value) => {
+    stubEnv(name, value)
+    return jest
+  },
+  stubGlobal: (name, value) => {
+    stubGlobal(name, value)
     return jest
   },
   useFakeTimers: (options) => {

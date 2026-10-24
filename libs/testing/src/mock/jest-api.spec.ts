@@ -56,6 +56,25 @@ describe('jest mock helpers', () => {
   it('returns the namespace from restoreAllMocks so calls can chain', () => {
     assert.equal(jest.restoreAllMocks(), jest)
   })
+
+  it('replaces a property until restoreAllMocks', () => {
+    const settings = { mode: 'light' }
+    jest.replaceProperty(settings, 'mode', 'dark')
+    jest.restoreAllMocks()
+    assert.equal(settings.mode, 'light')
+  })
+
+  it('returns the namespace from stubEnv so calls can chain', () => {
+    const returned = jest.stubEnv('HF_SPEC_JEST_STUB', 'on')
+    jest.restoreAllMocks()
+    assert.equal(returned, jest)
+  })
+
+  it('returns the namespace from stubGlobal so calls can chain', () => {
+    const returned = jest.stubGlobal('hfSpecJestStub', 1)
+    jest.restoreAllMocks()
+    assert.equal(returned, jest)
+  })
 })
 
 describe('jest timer helpers', () => {
