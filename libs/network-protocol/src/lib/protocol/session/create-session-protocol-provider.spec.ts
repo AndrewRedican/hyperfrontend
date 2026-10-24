@@ -1,7 +1,7 @@
 /* lint-disable typescript/no-explicit-any */
 import type { UnencryptedPacket } from '../../packet/model'
 import { before as beforeAll } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, it, sleep } from '@hyperfrontend/testing'
 import { data } from '../../data/creators/mocks'
 import { createSessionProtocolProvider } from './create-session-protocol-provider'
 import { V3 } from './create-v3-protocol-factory'
@@ -191,7 +191,7 @@ describe('createSessionProtocolProvider', () => {
       const protocol = provider(noop, noop, sessions('v3').initiator)
       let settled = false
       const sealing = protocol.seal(packet).then(() => (settled = true))
-      await new Promise((resolve) => setTimeout(resolve, 30))
+      await sleep(30)
       const held = settled
       protocol.acceptHello(await provider(noop, noop, sessions('v3').responder).hello())
       await sealing

@@ -1,6 +1,6 @@
 /* lint-disable typescript/no-explicit-any */
 import { getType } from '@hyperfrontend/data-utils'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it, jest, waitFor } from '@hyperfrontend/testing'
 import { unencryptedPacket } from '../../packet/creators/mocks'
 import { protocol } from '../mocks'
 import { label, mockCreateChannel as createChannel, options } from './mocks'
@@ -98,16 +98,14 @@ describe('createChannel', () => {
     channel.stop()
     channel.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
     channel.resume()
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(channel.outbound.queue.size).toBe(0)
+    await waitFor(() => expect(channel.outbound.queue.size).toBe(0))
   })
 
   it('reports an inbound frame the pipeline rejects through onDrop', async () => {
     const onDrop = jest.fn()
     const channel = createChannel(label, { ...options, onDrop })
     channel.receive({ not: 'bytes' } as any)
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ direction: 'inbound', stage: 'open' }))
+    await waitFor(() => expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ direction: 'inbound', stage: 'open' })))
   })
 
   it('reports an outbound packet the pipeline rejects through onDrop', async () => {
@@ -117,9 +115,10 @@ describe('createChannel', () => {
     }
     const channel = createChannel(label, { ...options, protocolProvider: () => ({ ...protocol, seal: rejectingSeal }), onDrop })
     channel.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(onDrop).toHaveBeenCalledWith(
-      expect.objectContaining({ direction: 'outbound', stage: 'seal', reason: 'Cannot seal packet', cause: expect.any(Error) })
+    await waitFor(() =>
+      expect(onDrop).toHaveBeenCalledWith(
+        expect.objectContaining({ direction: 'outbound', stage: 'seal', reason: 'Cannot seal packet', cause: expect.any(Error) })
+      )
     )
   })
 })
