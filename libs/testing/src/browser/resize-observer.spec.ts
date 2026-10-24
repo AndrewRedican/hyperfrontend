@@ -58,6 +58,25 @@ describe('installResizeObserver', () => {
     assert.equal(observers.isObserved(PANEL), false)
   })
 
+  it('delivers a late resize to an observer that has since disconnected', () => {
+    const observers = installResizeObserver()
+    let calls = 0
+    const observer = new ResizeObserver(() => calls++)
+    observer.observe(PANEL)
+    observer.disconnect()
+    observers.resize(PANEL, { width: 1, height: 1 })
+    observers.resizeLate(PANEL, { width: 1, height: 1 })
+    assert.equal(calls, 1)
+  })
+
+  it('delivers a late resize only to observers that once watched the element', () => {
+    const observers = installResizeObserver()
+    let calls = 0
+    new ResizeObserver(() => calls++).observe(PANEL)
+    observers.resizeLate(SIDEBAR, { width: 1, height: 1 })
+    assert.equal(calls, 0)
+  })
+
   it('reports an observed element as observed', () => {
     const observers = installResizeObserver()
     new ResizeObserver(() => undefined).observe(PANEL)

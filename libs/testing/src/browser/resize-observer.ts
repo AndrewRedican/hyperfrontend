@@ -16,6 +16,8 @@ export type ObservedSize = {
 export type ResizeObserverController = {
   /** Reports a new size for an element to every observer watching it, as one entry each. */
   resize(target: Element, size: ObservedSize): void
+  /** Reports a new size to every observer that ever watched the element, including ones that have since unobserved it or disconnected. */
+  resizeLate(target: Element, size: ObservedSize): void
   /** Reports whether any live observer is watching an element. */
   isObserved(target: Element): boolean
   /** How many observers have been created and not disconnected. */
@@ -34,6 +36,8 @@ type ObserverRecord = {
   observer: ResizeObserver
   /** The elements being watched. */
   targets: Set<Element>
+  /** Every element the observer has watched, including ones it no longer watches. */
+  watched: Set<Element>
 }
 
 /**
@@ -67,7 +71,9 @@ function entryFor(target: Element, size: ObservedSize): ResizeObserverEntry {
  * jsdom has no layout engine and so no `ResizeObserver`. Observers created through this one
  * behave like the real constructor's, observing, unobserving and disconnecting, but a
  * callback runs only when the test calls `resize`, never on its own: not even the initial
- * notification a browser sends after `observe`. The stub is installed like a stubbed global,
+ * notification a browser sends after `observe`. `resizeLate` delivers to observers that have
+ * stopped watching the element too, the way a notification already queued when observation
+ * stopped still arrives, for code that must ignore one. The stub is installed like a stubbed global,
  * so `jest.restoreAllMocks` and the runner's `restoreMocks` option remove it.
  *
  * @returns The controller.
@@ -81,6 +87,7 @@ function entryFor(target: Element, size: ObservedSize): ResizeObserverEntry {
  */
 export function installResizeObserver(): ResizeObserverController {
   const records = new Set<ObserverRecord>()
+  const everCreated = new Set<ObserverRecord>()
 
   class StubResizeObserver {
     /** What this observer watches and calls. */
@@ -92,8 +99,9 @@ export function installResizeObserver(): ResizeObserverController {
      * @param callback - Called with the entries for each `resize` of a watched element.
      */
     constructor(callback: ResizeObserverCallback) {
-      this.record = { callback, observer: this as unknown as ResizeObserver, targets: new Set() }
+      this.record = { callback, observer: this as unknown as ResizeObserver, targets: new Set(), watched: new Set() }
       records.add(this.record)
+      everCreated.add(this.record)
     }
 
     /**
@@ -103,6 +111,7 @@ export function installResizeObserver(): ResizeObserverController {
      */
     observe(target: Element): void {
       this.record.targets.add(target)
+      this.record.watched.add(target)
     }
 
     /**
@@ -128,6 +137,9 @@ export function installResizeObserver(): ResizeObserverController {
   return {
     resize: (target, size) => {
       for (const record of [...records]) if (record.targets.has(target)) record.callback([entryFor(target, size)], record.observer)
+    },
+    resizeLate: (target, size) => {
+      for (const record of [...everCreated]) if (record.watched.has(target)) record.callback([entryFor(target, size)], record.observer)
     },
     isObserved: (target) => [...records].some((record) => record.targets.has(target)),
     observerCount: () => records.size,
