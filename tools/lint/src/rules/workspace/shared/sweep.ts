@@ -23,7 +23,7 @@ export interface SweptEntry {
 }
 
 /**
- * Visits every file and directory below a root, depth first in directory order, never entering a skipped directory.
+ * Visits every file and directory below a root, depth first in code-unit order of names, never entering a skipped directory.
  *
  * @param root - The directory to start from
  * @param visit - Called once per entry; answering `false` for a directory keeps the sweep out of it
@@ -40,7 +40,9 @@ export interface SweptEntry {
  */
 export function sweep(root: string, visit: (entry: SweptEntry) => boolean): void {
   const walk = (directory: string, parents: readonly string[]): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    // why: readdirSync sorts by byte on POSIX but returns NTFS's case-insensitive order on Windows, so the walk sorts for itself.
+    const entries = readdirSync(directory, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))
+    for (const entry of entries) {
       const segments = [...parents, entry.name]
       const directoryEntry = entry.isDirectory()
       if (
