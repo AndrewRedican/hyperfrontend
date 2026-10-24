@@ -161,28 +161,23 @@ describe('dispatchRollupWorker', () => {
   })
 
   it('prepends --experimental-global-webcrypto when the running Node has no crypto global', async () => {
-    const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto') as PropertyDescriptor
-    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true })
-    try {
-      const records: SpawnRecord[] = []
-      captureSpawn(records)
-      const promise = dispatchRollupWorker(baseDescriptor(), {
-        workerPath: '/abs/worker.cjs',
-        execArgv: ['--require', '@swc-node/register'],
-      })
-      await flushPromises()
-      expect((records[0] as SpawnRecord).args.slice(0, 4)).toEqual([
-        '--experimental-global-webcrypto',
-        '--require',
-        '@swc-node/register',
-        '/abs/worker.cjs',
-      ])
-      writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-      ;(records[0] as SpawnRecord).child.exit(0)
-      await promise
-    } finally {
-      Object.defineProperty(globalThis, 'crypto', original)
-    }
+    jest.stubGlobal('crypto', undefined)
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const promise = dispatchRollupWorker(baseDescriptor(), {
+      workerPath: '/abs/worker.cjs',
+      execArgv: ['--require', '@swc-node/register'],
+    })
+    await flushPromises()
+    expect((records[0] as SpawnRecord).args.slice(0, 4)).toEqual([
+      '--experimental-global-webcrypto',
+      '--require',
+      '@swc-node/register',
+      '/abs/worker.cjs',
+    ])
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.exit(0)
+    await promise
   })
 
   it('invokes the optional memory monitor before and after the dispatched job using the supplied label', async () => {
