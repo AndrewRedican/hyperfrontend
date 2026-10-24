@@ -325,6 +325,10 @@ expect(validate(manifest)).toEqual({ ok: true, errors: [] })
 
 Splitting grows spec files. Respect the project's `max-file-lines` limit by moving cohesive groups of tests into sibling spec files named for what they cover; never raise the limit for a migration.
 
+### Scaffolding — reuse the testing helpers first
+
+Before hand-writing test scaffolding, check whether `@hyperfrontend/testing` already provides it: `createMock`, `waitFor`/`flushPromises`/`sleep`, `createDeferred`, `jest.stubGlobal`/`stubEnv` (root); `useTempDir`/`createTempDir`/`writeTree` (`/fs`, required over `mkdtemp` by `workspace/no-mkdtemp-in-tests`); terminal, stdio and child-process stand-ins (`/process`); fake windows and `ResizeObserver` (`/browser`). Hand-roll only when the helper would hide what the test is about.
+
 ### Branching — no unnecessary or unreachable code
 
 Do not add branches that cannot be reached, and avoid defensive branching that adds complexity without observable behaviour. Every new branch **requires** a corresponding unit test; if the test cannot be written, the branch should not exist.
@@ -371,4 +375,5 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] One assertion per test body (`one-assertion-per-test`): split independent behaviours into titled tests, fold one indivisible behaviour into one composite or asymmetric matcher; never weaken, delete, skip, suppress or hide assertions in helpers
 - [ ] Spec assertions describe whole shapes with asymmetric matchers (`objectContaining`, `arrayContaining`, etc.) — no property-by-property checks
 - [ ] No unreachable or unexercised branches
+- [ ] Test scaffolding reuses `@hyperfrontend/testing` helpers where one fits
 - [ ] Validated: `test` → `lint --fix` → `typecheck` → `format:write` (targeted)
