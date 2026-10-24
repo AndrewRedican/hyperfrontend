@@ -117,11 +117,6 @@ export default [
   { files: ['**/*.spec.ts'], rules: on('assertive-test-names jest-mock-after-imports') },
   { files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'], rules: { 'one-assertion-per-test': 'error' } },
   {
-    // why: the fixture suites under the testing package's e2e project are inputs the suite executes and counts, and one of them must assert twice to exercise expect.assertions(2); their shape is the thing under test, not a test of this workspace.
-    files: ['apps/package-e2e/testing/src/fixtures/**'],
-    rules: { 'one-assertion-per-test': 'off' },
-  },
-  {
     files: ['**/*.ts'],
     ignores: ['**/*.spec.ts', '**/test.setup.ts', '**/*.types.ts'],
     rules: on(
