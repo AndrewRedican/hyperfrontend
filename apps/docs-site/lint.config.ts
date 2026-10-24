@@ -149,4 +149,11 @@ export default [
       ],
     },
   },
+  {
+    // context: the site's specs run under Vitest, outside @hyperfrontend/testing, so its temporary-directory helpers are not theirs to use.
+    files: ['**/*.spec.ts'],
+    rules: {
+      'workspace/no-mkdtemp-in-tests': 'off',
+    },
+  },
 ]
