@@ -11,7 +11,11 @@ const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 const { after } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
-const { PROJECT_DIR, fixtureDir, installedPath, installedUrl, withoutHarnessEnvironment } = require('./support/installed-package')
+const { writeConsumerProjects } = require('./support/consumer-projects')
+const { PROJECT_DIR, installedPath, installedUrl, withoutHarnessEnvironment } = require('./support/installed-package')
+
+const consumers = writeConsumerProjects()
+after(() => consumers.remove())
 
 const MAIN_EXPORTS = ['describe', 'equals', 'expect', 'it', 'jest', 'matchesSubset']
 const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
@@ -172,7 +176,7 @@ describe('@hyperfrontend/testing CJS', () => {
       const coverageDir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-cjs-'))
       coverageDirs.push(coverageDir)
       const outcome = withoutHarnessEnvironment(() =>
-        runProjectTests(config, { workspaceRoot: PROJECT_DIR, projectRoot: fixtureDir('project'), coverageDir, silent: true })
+        runProjectTests(config, { workspaceRoot: PROJECT_DIR, projectRoot: consumers.dir('project'), coverageDir, silent: true })
       )
       return { ...outcome, coverageDir }
     }
@@ -201,7 +205,7 @@ describe('@hyperfrontend/testing CJS', () => {
         environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true }],
         coverageInclude: ['src/**/*.ts'],
       })
-      const plan = buildRunPlan(config, config.environments[0], fixtureDir('project'), join(tmpdir(), 'unused'))
+      const plan = buildRunPlan(config, config.environments[0], consumers.dir('project'), join(tmpdir(), 'unused'))
       expect(plan.argv).toEqual(
         expect.arrayContaining([
           installedUrl('hooks', 'index.mjs'),
@@ -223,7 +227,9 @@ describe('@hyperfrontend/testing CJS', () => {
 
     it('writes the merged lcov.info naming the file from the workspace root', () => {
       const outcome = run(passingMathConfig())
-      expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain('SF:src/fixtures/project/src/math.ts\n')
+      expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain(
+        `SF:${consumers.workspacePath('project')}/src/math.ts\n`
+      )
     })
 
     it('fails a run whose coverage misses a declared threshold', () => {
