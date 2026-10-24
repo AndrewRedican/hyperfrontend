@@ -20,14 +20,14 @@ describe('registerMockLifecycle with clear', () => {
 
 describe('registerMockLifecycle with reset', () => {
   registerMockLifecycle('reset,clear')
-  const mock = createMockFn(() => 'dropped')
+  const mock = createMockFn().mockReturnValue('dropped')
 
   it('lets a test record calls', () => {
     mock()
     assert.equal(mock.mock.calls.length, 1)
   })
 
-  it('drops calls and the implementation before the next test', () => {
+  it('drops calls and the implementation set since creation before the next test', () => {
     assert.deepEqual({ calls: mock.mock.calls.length, returned: mock() }, { calls: 0, returned: undefined })
   })
 })

@@ -114,7 +114,8 @@ export function createMockFn<TArgs extends unknown[] = any[], TReturn = any>(
   mock.mockReset = () => {
     mock.mockClear()
     queued.length = 0
-    current = undefined
+    // why: the implementation a mock was created with is part of what it is, so a reset returns to it rather than to nothing, which is what keeps stand-ins built on mocks working through `jest.resetAllMocks` and the `resetMocks` option.
+    current = implementation
     return mock
   }
   // why: a plain mock has no original to put back, so restoring is just a reset. `createSpy` overrides this.

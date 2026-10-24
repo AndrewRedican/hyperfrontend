@@ -66,7 +66,9 @@ export function clearAllMocks(): void {
 }
 
 /**
- * Clears calls and drops implementations on every mock created in this process.
+ * Clears calls on every mock created in this process and drops the implementations set since,
+ * returning each to the implementation it was created with: none for a bare mock, the original
+ * for a spy.
  *
  * @example Dropping implementations as well
  * ```ts

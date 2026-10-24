@@ -30,6 +30,13 @@ describe('createSpy on methods', () => {
     assert.equal(host.greet(), 'fake')
   })
 
+  it('calls through to the original again after a reset', () => {
+    const host = { greet: () => 'real' }
+    const spy = createSpy(host, 'greet').mockReturnValue('fake')
+    spy.mockReset()
+    assert.equal(host.greet(), 'real')
+  })
+
   it('restores the original implementation', () => {
     const host = { greet: () => 'real' }
     const spy = createSpy(host, 'greet')
