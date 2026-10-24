@@ -1,27 +1,23 @@
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { createFsTree } from './fs-tree'
 
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_fstree_symlinks__')
-
 describe('vfs/FsTree - symlink security', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(join(TEST_DIR, 'src'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test' }))
-  })
+  const tempDir = useTempDir({ prefix: 'fstree-symlinks-test-', scope: 'all' })
 
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
+  beforeAll(() => {
+    mkdirSync(join(tempDir.path, 'src'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test' }))
   })
 
   describe('isSymlink', () => {
     it('detects symlinks using lstat', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'real.txt')
-      const linkPath = join(TEST_DIR, 'link.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'real.txt')
+      const linkPath = join(tempDir.path, 'link.txt')
 
       writeFileSync(targetPath, 'real content')
       symlinkSync(targetPath, linkPath)
@@ -34,26 +30,26 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('returns false for non-existent paths', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       expect(tree.isSymlink('non-existent.txt')).toBe(false)
     })
 
     it('returns false for regular files', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       expect(tree.isSymlink('package.json')).toBe(false)
     })
 
     it('returns false for directories', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       expect(tree.isSymlink('src')).toBe(false)
     })
   })
 
   describe('symlink validation with followSymlinks: true (default)', () => {
     it('allows reading symlinks that point within root', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'target.txt')
-      const linkPath = join(TEST_DIR, 'link.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'target.txt')
+      const linkPath = join(tempDir.path, 'link.txt')
 
       writeFileSync(targetPath, 'target content')
       symlinkSync(targetPath, linkPath)
@@ -66,9 +62,9 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('allows reading relative symlinks within root', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'src', 'target.txt')
-      const linkPath = join(TEST_DIR, 'link.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'src', 'target.txt')
+      const linkPath = join(tempDir.path, 'link.txt')
 
       writeFileSync(targetPath, 'relative target')
       symlinkSync('./src/target.txt', linkPath)
@@ -81,8 +77,8 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('throws when symlink points outside root (absolute)', () => {
-      const tree = createFsTree(TEST_DIR)
-      const linkPath = join(TEST_DIR, 'evil-link')
+      const tree = createFsTree(tempDir.path)
+      const linkPath = join(tempDir.path, 'evil-link')
 
       symlinkSync('/etc/passwd', linkPath)
 
@@ -92,8 +88,8 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('throws when symlink points outside root (relative)', () => {
-      const tree = createFsTree(TEST_DIR)
-      const linkPath = join(TEST_DIR, 'evil-relative-link')
+      const tree = createFsTree(tempDir.path)
+      const linkPath = join(tempDir.path, 'evil-relative-link')
 
       symlinkSync('../../../etc/passwd', linkPath)
 
@@ -103,8 +99,8 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('validates symlinks in nested directories', () => {
-      const tree = createFsTree(TEST_DIR)
-      const nestedDir = join(TEST_DIR, 'nested', 'deep')
+      const tree = createFsTree(tempDir.path)
+      const nestedDir = join(tempDir.path, 'nested', 'deep')
       const linkPath = join(nestedDir, 'link.txt')
 
       mkdirSync(nestedDir, { recursive: true })
@@ -112,15 +108,15 @@ describe('vfs/FsTree - symlink security', () => {
 
       expect(() => tree.read('nested/deep/link.txt')).toThrow('Symlink target escapes tree root')
 
-      rmSync(join(TEST_DIR, 'nested'), { recursive: true, force: true })
+      rmSync(join(tempDir.path, 'nested'), { recursive: true, force: true })
     })
   })
 
   describe('symlink validation with followSymlinks: false', () => {
     it('throws when attempting to read any symlink', () => {
-      const tree = createFsTree(TEST_DIR, { followSymlinks: false })
-      const targetPath = join(TEST_DIR, 'safe-target.txt')
-      const linkPath = join(TEST_DIR, 'safe-link.txt')
+      const tree = createFsTree(tempDir.path, { followSymlinks: false })
+      const targetPath = join(tempDir.path, 'safe-target.txt')
+      const linkPath = join(tempDir.path, 'safe-link.txt')
 
       writeFileSync(targetPath, 'safe content')
       symlinkSync(targetPath, linkPath)
@@ -132,15 +128,15 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('allows reading regular files', () => {
-      const tree = createFsTree(TEST_DIR, { followSymlinks: false })
+      const tree = createFsTree(tempDir.path, { followSymlinks: false })
       const content = tree.read('package.json', 'utf-8')
       expect(content).toContain('test')
     })
 
     it('throws when symlink is in buffered change path', () => {
-      const tree = createFsTree(TEST_DIR, { followSymlinks: false })
-      const targetPath = join(TEST_DIR, 'existing.txt')
-      const linkPath = join(TEST_DIR, 'existing-link.txt')
+      const tree = createFsTree(tempDir.path, { followSymlinks: false })
+      const targetPath = join(tempDir.path, 'existing.txt')
+      const linkPath = join(tempDir.path, 'existing-link.txt')
 
       writeFileSync(targetPath, 'existing')
       symlinkSync(targetPath, linkPath)
@@ -154,10 +150,10 @@ describe('vfs/FsTree - symlink security', () => {
 
   describe('symlink edge cases', () => {
     it('handles symlink chains within root', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'final-target.txt')
-      const link1Path = join(TEST_DIR, 'link1.txt')
-      const link2Path = join(TEST_DIR, 'link2.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'final-target.txt')
+      const link1Path = join(tempDir.path, 'link1.txt')
+      const link2Path = join(tempDir.path, 'link2.txt')
 
       writeFileSync(targetPath, 'chain content')
       symlinkSync(targetPath, link1Path)
@@ -172,12 +168,12 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('reports a directory symlink within root as a symlink', () => {
-      const tree = createFsTree(TEST_DIR)
-      const linkPath = join(TEST_DIR, 'src-link')
+      const tree = createFsTree(tempDir.path)
+      const linkPath = join(tempDir.path, 'src-link')
 
       rmSync(linkPath, { recursive: true, force: true })
 
-      symlinkSync(join(TEST_DIR, 'src'), linkPath, 'dir')
+      symlinkSync(join(tempDir.path, 'src'), linkPath, 'dir')
 
       expect(tree.isSymlink('src-link')).toBe(true)
 
@@ -185,12 +181,12 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('classifies a directory symlink within root as a directory', () => {
-      const tree = createFsTree(TEST_DIR)
-      const linkPath = join(TEST_DIR, 'src-link')
+      const tree = createFsTree(tempDir.path)
+      const linkPath = join(tempDir.path, 'src-link')
 
       rmSync(linkPath, { recursive: true, force: true })
 
-      symlinkSync(join(TEST_DIR, 'src'), linkPath, 'dir')
+      symlinkSync(join(tempDir.path, 'src'), linkPath, 'dir')
 
       expect(tree.isDirectory('src-link')).toBe(true)
 
@@ -198,9 +194,9 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('validates when reading from disk after update', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'update-target.txt')
-      const linkPath = join(TEST_DIR, 'update-link.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'update-target.txt')
+      const linkPath = join(tempDir.path, 'update-link.txt')
 
       writeFileSync(targetPath, 'original')
       symlinkSync('/etc/passwd', linkPath)
@@ -214,9 +210,9 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('handles symlink with absolute target within root', () => {
-      const tree = createFsTree(TEST_DIR)
-      const targetPath = join(TEST_DIR, 'absolute-target.txt')
-      const linkPath = join(TEST_DIR, 'absolute-link.txt')
+      const tree = createFsTree(tempDir.path)
+      const targetPath = join(tempDir.path, 'absolute-target.txt')
+      const linkPath = join(tempDir.path, 'absolute-link.txt')
 
       writeFileSync(targetPath, 'absolute target content')
 
@@ -230,8 +226,8 @@ describe('vfs/FsTree - symlink security', () => {
     })
 
     it('returns null when reading a symlink whose in-root target does not exist', () => {
-      const tree = createFsTree(TEST_DIR)
-      const linkPath = join(TEST_DIR, 'broken-symlink.txt')
+      const tree = createFsTree(tempDir.path)
+      const linkPath = join(tempDir.path, 'broken-symlink.txt')
 
       symlinkSync('non-existent-target.txt', linkPath)
 

@@ -1,38 +1,29 @@
-import { readFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { after as afterAll, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { writeFileContent, writeFileBuffer, writeJsonFile, ensureDir } from './write'
 
-const TEST_DIR = join(import.meta.dirname, '__test_write_fixtures__')
-
 describe('core/fs/write', () => {
-  beforeEach(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'write-test-' })
 
   describe('ensureDir', () => {
     it('creates directory if not exists', () => {
-      const dirPath = join(TEST_DIR, 'new-dir')
+      const dirPath = join(tempDir.path, 'new-dir')
       const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
       expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: false, after: true })
     })
 
     it('creates nested directories', () => {
-      const dirPath = join(TEST_DIR, 'a', 'b', 'c')
+      const dirPath = join(tempDir.path, 'a', 'b', 'c')
       const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
       expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: false, after: true })
     })
 
     it('does nothing if directory exists', () => {
-      const dirPath = join(TEST_DIR, 'existing-dir')
+      const dirPath = join(tempDir.path, 'existing-dir')
       mkdirSync(dirPath)
       const existedBefore = existsSync(dirPath)
       ensureDir(dirPath)
@@ -42,34 +33,34 @@ describe('core/fs/write', () => {
 
   describe('writeFileContent', () => {
     it('writes string content to file', () => {
-      const filePath = join(TEST_DIR, 'test.txt')
+      const filePath = join(tempDir.path, 'test.txt')
       writeFileContent(filePath, 'Hello, World!')
       const content = readFileSync(filePath, 'utf-8')
       expect(content).toBe('Hello, World!')
     })
 
     it('creates parent directories', () => {
-      const filePath = join(TEST_DIR, 'nested', 'dir', 'test.txt')
-      const parentExistedBefore = existsSync(join(TEST_DIR, 'nested'))
+      const filePath = join(tempDir.path, 'nested', 'dir', 'test.txt')
+      const parentExistedBefore = existsSync(join(tempDir.path, 'nested'))
       writeFileContent(filePath, 'Hello!')
       expect({ parentExistedBefore, content: readFileSync(filePath, 'utf-8') }).toEqual({ parentExistedBefore: false, content: 'Hello!' })
     })
 
     it('overwrites existing file', () => {
-      const filePath = join(TEST_DIR, 'overwrite.txt')
+      const filePath = join(tempDir.path, 'overwrite.txt')
       writeFileContent(filePath, 'First')
       writeFileContent(filePath, 'Second')
       expect(readFileSync(filePath, 'utf-8')).toBe('Second')
     })
 
     it('writes with custom encoding', () => {
-      const filePath = join(TEST_DIR, 'encoded.txt')
+      const filePath = join(tempDir.path, 'encoded.txt')
       writeFileContent(filePath, 'Test content', { encoding: 'utf-8' })
       expect(readFileSync(filePath, 'utf-8')).toBe('Test content')
     })
 
     it('throws error when write fails', () => {
-      const dirPath = join(TEST_DIR, 'conflicting-dir')
+      const dirPath = join(tempDir.path, 'conflicting-dir')
       mkdirSync(dirPath)
       const filePath = join(dirPath, '.', '.')
 
@@ -79,7 +70,7 @@ describe('core/fs/write', () => {
 
   describe('writeFileBuffer', () => {
     it('writes buffer to file', () => {
-      const filePath = join(TEST_DIR, 'buffer.bin')
+      const filePath = join(tempDir.path, 'buffer.bin')
       const buffer = Buffer.from([0x00, 0x01, 0x02, 0x03])
       writeFileBuffer(filePath, buffer)
       const content = readFileSync(filePath)
@@ -87,14 +78,14 @@ describe('core/fs/write', () => {
     })
 
     it('creates parent directories', () => {
-      const filePath = join(TEST_DIR, 'nested', 'buffer.bin')
+      const filePath = join(tempDir.path, 'nested', 'buffer.bin')
       const buffer = Buffer.from('test')
       writeFileBuffer(filePath, buffer)
       expect(existsSync(filePath)).toBe(true)
     })
 
     it('throws error when buffer write fails', () => {
-      const dirPath = join(TEST_DIR, 'buffer-conflict')
+      const dirPath = join(tempDir.path, 'buffer-conflict')
       mkdirSync(dirPath)
       const filePath = join(dirPath, '.', '.')
 
@@ -104,26 +95,26 @@ describe('core/fs/write', () => {
 
   describe('writeJsonFile', () => {
     it('writes formatted JSON', () => {
-      const filePath = join(TEST_DIR, 'config.json')
+      const filePath = join(tempDir.path, 'config.json')
       writeJsonFile(filePath, { name: 'test', version: '1.0.0' })
       expect(readFileSync(filePath, 'utf-8')).toBe('{\n  "name": "test",\n  "version": "1.0.0"\n}\n')
     })
 
     it('respects indent option', () => {
-      const filePath = join(TEST_DIR, 'indent.json')
+      const filePath = join(tempDir.path, 'indent.json')
       writeJsonFile(filePath, { a: 1 }, { indent: 4 })
       const content = readFileSync(filePath, 'utf-8')
       expect(content).toBe('{\n    "a": 1\n}\n')
     })
 
     it('creates parent directories', () => {
-      const filePath = join(TEST_DIR, 'nested', 'config.json')
+      const filePath = join(tempDir.path, 'nested', 'config.json')
       writeJsonFile(filePath, { value: true })
       expect(existsSync(filePath)).toBe(true)
     })
 
     it('throws error when JSON write fails', () => {
-      const dirPath = join(TEST_DIR, 'json-conflict')
+      const dirPath = join(tempDir.path, 'json-conflict')
       mkdirSync(dirPath)
       const filePath = join(dirPath, '.', '.')
 
@@ -131,7 +122,7 @@ describe('core/fs/write', () => {
     })
 
     it('handles circular reference error from stringify', () => {
-      const filePath = join(TEST_DIR, 'circular.json')
+      const filePath = join(tempDir.path, 'circular.json')
       const circular: Record<string, unknown> = { name: 'test' }
       circular['self'] = circular
 
@@ -139,7 +130,7 @@ describe('core/fs/write', () => {
     })
 
     it('re-throws FS_WRITE_ERROR without wrapping', () => {
-      const dirPath = join(TEST_DIR, 'rethrow-conflict')
+      const dirPath = join(tempDir.path, 'rethrow-conflict')
       mkdirSync(dirPath)
       const filePath = join(dirPath, '.', '.')
 

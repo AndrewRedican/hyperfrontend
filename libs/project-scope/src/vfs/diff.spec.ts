@@ -1,12 +1,11 @@
 import type { FileChange, FileDiff } from './types'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { after as afterAll, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { generateDiff, formatUnifiedDiff, generateAllDiffs } from './diff'
 import { createFsTree } from './fs-tree'
-
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_diff__')
 
 describe('vfs/diff', () => {
   describe('generateDiff', () => {
@@ -202,18 +201,14 @@ describe('vfs/diff', () => {
   })
 
   describe('generateAllDiffs', () => {
-    beforeEach(() => {
-      rmSync(TEST_DIR, { recursive: true, force: true })
-      mkdirSync(TEST_DIR, { recursive: true })
-      writeFileSync(join(TEST_DIR, 'existing.txt'), 'original content\n')
-    })
+    const tempDir = useTempDir({ prefix: 'diff-test-' })
 
-    afterAll(() => {
-      rmSync(TEST_DIR, { recursive: true, force: true })
+    beforeEach(() => {
+      writeFileSync(join(tempDir.path, 'existing.txt'), 'original content\n')
     })
 
     it('generates diffs for all changes in tree', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       tree.write('new.txt', 'new file content')
       tree.write('existing.txt', 'modified content')
 
@@ -225,13 +220,13 @@ describe('vfs/diff', () => {
     })
 
     it('returns empty array for tree with no changes', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       const diffs = generateAllDiffs(tree)
       expect(diffs).toEqual([])
     })
 
     it.each([5, 0])('generates one diff per change with %s context lines', (contextLines) => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       tree.write('new.txt', '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n')
 
       expect(generateAllDiffs(tree, { contextLines })).toHaveLength(1)
@@ -239,19 +234,15 @@ describe('vfs/diff', () => {
   })
 
   describe('integration', () => {
-    beforeEach(() => {
-      rmSync(TEST_DIR, { recursive: true, force: true })
-      mkdirSync(TEST_DIR, { recursive: true })
-      mkdirSync(join(TEST_DIR, 'src'), { recursive: true })
-      writeFileSync(join(TEST_DIR, 'src', 'index.ts'), 'export const x = 1;\n')
-    })
+    const tempDir = useTempDir({ prefix: 'diff-test-' })
 
-    afterAll(() => {
-      rmSync(TEST_DIR, { recursive: true, force: true })
+    beforeEach(() => {
+      mkdirSync(join(tempDir.path, 'src'), { recursive: true })
+      writeFileSync(join(tempDir.path, 'src', 'index.ts'), 'export const x = 1;\n')
     })
 
     it('generates and formats complete diff workflow', () => {
-      const tree = createFsTree(TEST_DIR)
+      const tree = createFsTree(tempDir.path)
       tree.write('src/index.ts', 'export const x = 2;\nexport const y = 3;\n')
       tree.write('README.md', '# Project\n')
       tree.delete('src/index.ts')

@@ -1,32 +1,27 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { join, sep } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { normalizePath } from '../core/path'
 import { createTree, createTreeFromDisk } from './factory'
 
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_factory__')
-
 describe('vfs/factory', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-    writeFileSync(join(TEST_DIR, 'file.txt'), 'content')
-  })
+  const tempDir = useTempDir({ prefix: 'factory-test-', scope: 'all' })
 
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
+  beforeAll(() => {
+    writeFileSync(join(tempDir.path, 'file.txt'), 'content')
   })
 
   describe('createTree', () => {
     it('creates a Tree instance', () => {
-      const tree = createTree(TEST_DIR)
+      const tree = createTree(tempDir.path)
       expect(tree).toEqual(expect.objectContaining({ root: expect.any(String), read: expect.any(Function), write: expect.any(Function) }))
     })
 
     it('sets root correctly', () => {
-      const tree = createTree(TEST_DIR)
-      expect(tree.root).toBe(normalizePath(TEST_DIR))
+      const tree = createTree(tempDir.path)
+      expect(tree.root).toBe(normalizePath(tempDir.path))
     })
 
     it('throws for non-existent directory', () => {
@@ -34,58 +29,58 @@ describe('vfs/factory', () => {
     })
 
     it('throws for file path', () => {
-      expect(() => createTree(join(TEST_DIR, 'file.txt'))).toThrow(/not a directory/)
+      expect(() => createTree(join(tempDir.path, 'file.txt'))).toThrow(/not a directory/)
     })
 
     it('respects verbose option', () => {
-      const tree = createTree(TEST_DIR, { verbose: true })
+      const tree = createTree(tempDir.path, { verbose: true })
       expect(tree).toEqual(expect.objectContaining({ root: expect.any(String), read: expect.any(Function) }))
     })
 
     it('normalizes path with trailing slash', () => {
-      const tree = createTree(TEST_DIR + sep)
-      expect(tree.root).toBe(normalizePath(TEST_DIR))
+      const tree = createTree(tempDir.path + sep)
+      expect(tree.root).toBe(normalizePath(tempDir.path))
     })
   })
 
   describe('createTreeFromDisk', () => {
     it('creates a Tree instance', () => {
-      const tree = createTreeFromDisk(TEST_DIR)
+      const tree = createTreeFromDisk(tempDir.path)
       expect(tree).toEqual(expect.objectContaining({ root: expect.any(String), read: expect.any(Function) }))
     })
 
     it('is an alias for createTree', () => {
-      const tree1 = createTree(TEST_DIR)
-      const tree2 = createTreeFromDisk(TEST_DIR)
+      const tree1 = createTree(tempDir.path)
+      const tree2 = createTreeFromDisk(tempDir.path)
       expect(tree1.root).toBe(tree2.root)
     })
 
     it('respects options', () => {
-      const tree = createTreeFromDisk(TEST_DIR, { verbose: true })
+      const tree = createTreeFromDisk(tempDir.path, { verbose: true })
       expect(tree).toEqual(expect.objectContaining({ root: expect.any(String), read: expect.any(Function) }))
     })
   })
 
   describe('tree functionality', () => {
     it('can read existing files', () => {
-      const tree = createTree(TEST_DIR)
+      const tree = createTree(tempDir.path)
       const content = tree.read('file.txt', 'utf-8')
       expect(content).toBe('content')
     })
 
     it('can write new files', () => {
-      const tree = createTree(TEST_DIR)
+      const tree = createTree(tempDir.path)
       tree.write('new.txt', 'new content')
       expect(tree.read('new.txt', 'utf-8')).toBe('new content')
     })
 
     it('reports an existing file as present', () => {
-      const tree = createTree(TEST_DIR)
+      const tree = createTree(tempDir.path)
       expect(tree.exists('file.txt')).toBe(true)
     })
 
     it('reports a missing file as absent', () => {
-      const tree = createTree(TEST_DIR)
+      const tree = createTree(tempDir.path)
       expect(tree.exists('missing.txt')).toBe(false)
     })
   })

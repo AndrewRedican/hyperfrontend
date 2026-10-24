@@ -1,13 +1,12 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { readPackageJson, readPackageJsonIfExists, findNearestPackageJson } from './read'
 
 const FIXTURES_DIR = writeFixtures()
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_read__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 
@@ -106,190 +105,176 @@ describe('findNearestPackageJson', () => {
 })
 
 describe('readPackageJson - validation edge cases', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'read-package-test-', scope: 'all' })
 
   it('throws error for malformed JSON', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), '{invalid json}')
-    expect(() => readPackageJson(TEST_DIR)).toThrow()
+    writeFileSync(join(tempDir.path, 'package.json'), '{invalid json}')
+    expect(() => readPackageJson(tempDir.path)).toThrow()
   })
 
   it('throws error for package.json that is not an object', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), '"string value"')
-    expect(() => readPackageJson(TEST_DIR)).toThrow()
+    writeFileSync(join(tempDir.path, 'package.json'), '"string value"')
+    expect(() => readPackageJson(tempDir.path)).toThrow()
   })
 
   it('throws error for package.json that is null', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), 'null')
-    expect(() => readPackageJson(TEST_DIR)).toThrow()
+    writeFileSync(join(tempDir.path, 'package.json'), 'null')
+    expect(() => readPackageJson(tempDir.path)).toThrow()
   })
 
   it('handles package.json that is an array by preserving array properties', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), '[]')
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), '[]')
+    const pkg = readPackageJson(tempDir.path)
     expect(pkg).toEqual(expect.objectContaining({ name: undefined, version: undefined }))
   })
 
   it('handles package.json with missing name field', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ version: '1.0.0' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ version: '1.0.0' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg).toEqual(expect.objectContaining({ name: undefined, version: '1.0.0' }))
   })
 
   it('handles package.json with non-string name field', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 123, version: '1.0.0' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 123, version: '1.0.0' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['name']).toBe(123)
   })
 
   it('handles package.json with non-string version field', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', version: 123 }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', version: 123 }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['version']).toBe(123)
   })
 
   it('handles scoped package names', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: '@org/pkg', version: '1.0.0' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: '@org/pkg', version: '1.0.0' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.name).toBe('@org/pkg')
   })
 
   it('handles unicode in package name', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test-日本語', version: '1.0.0' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test-日本語', version: '1.0.0' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.name).toBe('test-日本語')
   })
 
   it('handles bin field as string', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: './cli.js' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', bin: './cli.js' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.bin).toBe('./cli.js')
   })
 
   it('handles bin field as object', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: { cli: './cli.js' } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', bin: { cli: './cli.js' } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.bin).toEqual({ cli: './cli.js' })
   })
 
   it('handles invalid bin field type', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: 123 }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', bin: 123 }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['bin']).toBe(123)
   })
 
   it('handles invalid bin field object with non-string values', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: { cli: 123 } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', bin: { cli: 123 } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['bin']).toEqual({ cli: 123 })
   })
 
   it('handles scripts with non-string values', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', scripts: { test: 123 } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', scripts: { test: 123 } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['scripts']).toEqual({ test: 123 })
   })
 
   it('handles dependencies with non-string values', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', dependencies: { lodash: 123 } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', dependencies: { lodash: 123 } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['dependencies']).toEqual({ lodash: 123 })
   })
 
   it('handles workspaces as array', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: ['packages/*'] }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', workspaces: ['packages/*'] }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.workspaces).toEqual(['packages/*'])
   })
 
   it('handles workspaces as object with packages', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: { packages: ['packages/*'] } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', workspaces: { packages: ['packages/*'] } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.workspaces).toEqual({ packages: ['packages/*'] })
   })
 
   it('handles workspaces as object without packages array', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: { nopackages: true } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', workspaces: { nopackages: true } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['workspaces']).toEqual({ nopackages: true })
   })
 
   it('handles workspaces as array with non-string values', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: [123, 'packages/*'] }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', workspaces: [123, 'packages/*'] }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['workspaces']).toEqual([123, 'packages/*'])
   })
 
   it('handles engines field', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', engines: { node: '>=18' } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', engines: { node: '>=18' } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.engines).toEqual({ node: '>=18' })
   })
 
   it('handles exports field', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', exports: { '.': './index.js' } }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', exports: { '.': './index.js' } }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg.exports).toEqual({ '.': './index.js' })
   })
 
   it('preserves extra custom fields', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', customField: 'value' }))
-    const pkg = readPackageJson(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'test', customField: 'value' }))
+    const pkg = readPackageJson(tempDir.path)
 
     expect(pkg['customField']).toBe('value')
   })
 })
 
 describe('readPackageJsonIfExists - error handling', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'read-package-test-', scope: 'all' })
 
   it('returns null for malformed JSON', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), '{invalid json}')
-    const pkg = readPackageJsonIfExists(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), '{invalid json}')
+    const pkg = readPackageJsonIfExists(tempDir.path)
 
     expect(pkg).toBeNull()
   })
 
   it('returns null for package.json that is not an object', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), '"string"')
-    const pkg = readPackageJsonIfExists(TEST_DIR)
+    writeFileSync(join(tempDir.path, 'package.json'), '"string"')
+    const pkg = readPackageJsonIfExists(tempDir.path)
 
     expect(pkg).toBeNull()
   })
 
   it('handles reading from direct path to package.json', () => {
-    writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'direct-path' }))
-    const pkg = readPackageJsonIfExists(join(TEST_DIR, 'package.json'))
+    writeFileSync(join(tempDir.path, 'package.json'), JSON.stringify({ name: 'direct-path' }))
+    const pkg = readPackageJsonIfExists(join(tempDir.path, 'package.json'))
 
     expect(pkg?.name).toBe('direct-path')
   })

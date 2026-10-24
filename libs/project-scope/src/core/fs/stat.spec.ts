@@ -1,95 +1,90 @@
-import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdirSync, writeFileSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { getFileStat, isFile, isDirectory, isSymlink, exists } from './stat'
 
-const TEST_DIR = join(import.meta.dirname, '__test_stat_fixtures__')
-
 describe('core/fs/stat', () => {
+  const tempDir = useTempDir({ prefix: 'stat-test-', scope: 'all' })
+
   beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-    mkdirSync(join(TEST_DIR, 'subdir'))
-    writeFileSync(join(TEST_DIR, 'file.txt'), 'content')
+    mkdirSync(join(tempDir.path, 'subdir'))
+    writeFileSync(join(tempDir.path, 'file.txt'), 'content')
     try {
-      symlinkSync(join(TEST_DIR, 'file.txt'), join(TEST_DIR, 'link.txt'))
+      symlinkSync(join(tempDir.path, 'file.txt'), join(tempDir.path, 'link.txt'))
     } catch {
       // Symlinks may not be supported on all platforms
     }
   })
 
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
-
   describe('getFileStat', () => {
     it('returns stats for file', () => {
-      const stats = getFileStat(join(TEST_DIR, 'file.txt'))
+      const stats = getFileStat(join(tempDir.path, 'file.txt'))
       expect(stats).toEqual(expect.objectContaining({ isFile: true, isDirectory: false, size: 7, modified: expect.any(Date) }))
     })
 
     it('returns stats for directory', () => {
-      const stats = getFileStat(join(TEST_DIR, 'subdir'))
+      const stats = getFileStat(join(tempDir.path, 'subdir'))
       expect(stats).toEqual(expect.objectContaining({ isFile: false, isDirectory: true }))
     })
 
     it('returns null for non-existent path', () => {
-      const stats = getFileStat(join(TEST_DIR, 'missing.txt'))
+      const stats = getFileStat(join(tempDir.path, 'missing.txt'))
       expect(stats).toBeNull()
     })
   })
 
   describe('isFile', () => {
     it('returns true for file', () => {
-      expect(isFile(join(TEST_DIR, 'file.txt'))).toBe(true)
+      expect(isFile(join(tempDir.path, 'file.txt'))).toBe(true)
     })
 
     it('returns false for directory', () => {
-      expect(isFile(join(TEST_DIR, 'subdir'))).toBe(false)
+      expect(isFile(join(tempDir.path, 'subdir'))).toBe(false)
     })
 
     it('returns false for non-existent path', () => {
-      expect(isFile(join(TEST_DIR, 'missing.txt'))).toBe(false)
+      expect(isFile(join(tempDir.path, 'missing.txt'))).toBe(false)
     })
   })
 
   describe('isDirectory', () => {
     it('returns true for directory', () => {
-      expect(isDirectory(join(TEST_DIR, 'subdir'))).toBe(true)
+      expect(isDirectory(join(tempDir.path, 'subdir'))).toBe(true)
     })
 
     it('returns false for file', () => {
-      expect(isDirectory(join(TEST_DIR, 'file.txt'))).toBe(false)
+      expect(isDirectory(join(tempDir.path, 'file.txt'))).toBe(false)
     })
 
     it('returns false for non-existent path', () => {
-      expect(isDirectory(join(TEST_DIR, 'missing'))).toBe(false)
+      expect(isDirectory(join(tempDir.path, 'missing'))).toBe(false)
     })
   })
 
   describe('isSymlink', () => {
     it('returns false for regular file', () => {
-      expect(isSymlink(join(TEST_DIR, 'file.txt'))).toBe(false)
+      expect(isSymlink(join(tempDir.path, 'file.txt'))).toBe(false)
     })
 
     it('returns false for directory', () => {
-      expect(isSymlink(join(TEST_DIR, 'subdir'))).toBe(false)
+      expect(isSymlink(join(tempDir.path, 'subdir'))).toBe(false)
     })
 
     it('returns false for non-existent path', () => {
-      expect(isSymlink(join(TEST_DIR, 'missing'))).toBe(false)
+      expect(isSymlink(join(tempDir.path, 'missing'))).toBe(false)
     })
   })
 
   describe('getFileStat - followSymlinks option', () => {
     it('uses lstatSync when followSymlinks is false', () => {
-      const stats = getFileStat(join(TEST_DIR, 'file.txt'), false)
+      const stats = getFileStat(join(tempDir.path, 'file.txt'), false)
       expect(stats).toEqual(expect.objectContaining({ isFile: true }))
     })
 
     it('detects symlink as symlink when followSymlinks is false', () => {
-      const stats = getFileStat(join(TEST_DIR, 'link.txt'), false)
+      const stats = getFileStat(join(tempDir.path, 'link.txt'), false)
       const isSymlinkDetected = stats?.isSymlink === true
       const isNullOrSymlink = stats === null || isSymlinkDetected
       expect(isNullOrSymlink).toBe(true)
@@ -98,15 +93,15 @@ describe('core/fs/stat', () => {
 
   describe('exists', () => {
     it('returns true for existing file', () => {
-      expect(exists(join(TEST_DIR, 'file.txt'))).toBe(true)
+      expect(exists(join(tempDir.path, 'file.txt'))).toBe(true)
     })
 
     it('returns true for existing directory', () => {
-      expect(exists(join(TEST_DIR, 'subdir'))).toBe(true)
+      expect(exists(join(tempDir.path, 'subdir'))).toBe(true)
     })
 
     it('returns false for non-existent path', () => {
-      expect(exists(join(TEST_DIR, 'missing'))).toBe(false)
+      expect(exists(join(tempDir.path, 'missing'))).toBe(false)
     })
   })
 
