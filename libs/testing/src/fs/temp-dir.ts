@@ -30,7 +30,7 @@ export interface UseTempDirOptions extends TempDirOptions {
  * to the directory.
  */
 export type TempDir = {
-  /** Absolute path of the directory, with symbolic links resolved. */
+  /** Absolute path of the directory, with symbolic links and Windows short names resolved, so it need not begin with the `parent` given. */
   readonly path: string
   /** Joins segments onto the directory's path. */
   resolve(...segments: string[]): string
