@@ -1,6 +1,0 @@
-// Biome configuration with comments
-{
-  "organizeImports": {
-    "enabled": true
-  }
-}

@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import * as fsModule from '../../core/fs'
 import { buildDependencyGraph, findCircularDependencies, getProjectDependencies } from './analyze'
 
@@ -12,7 +13,7 @@ jest.mock('../../core/fs', () => {
   return { ...actual, exists: jest.fn(actual.exists) }
 })
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 

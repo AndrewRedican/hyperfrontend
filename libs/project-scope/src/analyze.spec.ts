@@ -1,8 +1,9 @@
 import { resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeNestedFixtures } from './__test-utils__/write-fixtures'
 import { analyzeProject } from './analyze'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../__fixtures__')
+const { fixtures: FIXTURES_DIR } = writeNestedFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 
@@ -207,7 +208,7 @@ describe('analyzeProject', () => {
   })
 
   describe('workspace type detection', () => {
-    // Note: These fixtures are inside the hyperfrontend NX workspace, so they detect as 'nx'
+    // Note: These fixtures are written inside an Nx workspace, so they detect as 'nx'
 
     it('detects nx workspace type (fixtures inherit parent workspace)', () => {
       const turborepoDir = resolve(FIXTURES_DIR, 'turborepo-workspace')

@@ -1,9 +1,10 @@
 import { resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { writeFixtures } from '../__test-utils__/write-fixtures'
 import { run } from './run'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 describe('run', () => {

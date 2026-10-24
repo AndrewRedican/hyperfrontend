@@ -4,10 +4,11 @@ import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join, posix, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { createTree } from '../../vfs'
 import { walkDirectory, walkTree } from './walk'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const TEST_DIR = join(import.meta.dirname, '__test_fixtures_walk__')

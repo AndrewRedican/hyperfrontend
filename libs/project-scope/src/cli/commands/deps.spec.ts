@@ -1,8 +1,9 @@
 import { resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { depsCommand, depsCommandDef } from './deps'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const PRODUCTION_SECTION = ['Production (1):', `  ${'lodash'.padEnd(30)} ^4.17.21`]
 const DEVELOPMENT_SECTION = ['Development (2):', `  ${'jest'.padEnd(30)} ^29.0.0`, `  ${'typescript'.padEnd(30)} ^5.0.0`]

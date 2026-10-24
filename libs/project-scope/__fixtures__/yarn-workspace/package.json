@@ -1,5 +1,0 @@
-{
-  "name": "yarn-workspace-test",
-  "version": "1.0.0",
-  "workspaces": ["packages/*"]
-}

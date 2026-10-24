@@ -22,8 +22,7 @@
       "executor": "@hyperfrontend/package:build",
       "options": {
         "esm": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
-        "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
-        "exclude": ["**/__fixtures__/**"]
+        "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true }
       }
     },
     "publish": {},

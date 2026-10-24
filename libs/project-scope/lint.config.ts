@@ -3,9 +3,6 @@ import baseConfig from '../../lint.base.config.ts'
 export default [
   ...baseConfig,
   {
-    ignores: ['**/__fixtures__/**'],
-  },
-  {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'max-file-lines': [
@@ -32,7 +29,7 @@ export default [
   // Enforce use of core/fs wrappers instead of direct node:fs imports
   {
     files: ['src/**/*.ts'],
-    ignores: ['src/**/*.spec.ts', 'src/core/**/*.ts', 'src/vfs/**/*.ts'],
+    ignores: ['src/**/*.spec.ts', 'src/**/__test-utils__/**', 'src/core/**/*.ts', 'src/vfs/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
