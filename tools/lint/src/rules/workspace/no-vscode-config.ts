@@ -7,19 +7,17 @@
  */
 
 import type { JsonTreeNode } from '@hyperfrontend/linter'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { wholeDocument } from '@hyperfrontend/linter/helpers'
+import { sweep } from './shared/sweep.ts'
 
 /** The rule's options. */
 interface Options {
   /** The file that owns the configuration, named in the message. */
   readonly configFile?: string
 }
-
-/** Directories never descended into. */
-const SKIPPED = ['node_modules', '.git', 'dist', 'coverage', 'tmp', 'out', '.next', '.nx', '.angular', '.verdaccio', '.claude', '_']
 
 /**
  * Every `.vscode` directory under a root, as POSIX paths relative to it.
@@ -29,15 +27,12 @@ const SKIPPED = ['node_modules', '.git', 'dist', 'coverage', 'tmp', 'out', '.nex
  */
 function vscodeDirectories(root: string): string[] {
   const found: string[] = []
-  const walk = (directory: string, prefix: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue
-      const path = prefix === '' ? entry.name : `${prefix}/${entry.name}`
-      if (entry.name === '.vscode') found.push(path)
-      else if (!SKIPPED.includes(entry.name)) walk(join(directory, entry.name), path)
-    }
-  }
-  walk(root, '')
+  sweep(root, (entry) => {
+    if (!entry.directory) return false
+    if (entry.name !== '.vscode') return true
+    found.push(entry.path)
+    return false
+  })
   return found
 }
 
