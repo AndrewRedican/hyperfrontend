@@ -18,8 +18,21 @@ import { PROJECT_DIR, installedPath, installedUrl, runChildSuite, tapCount, with
 const consumers = writeConsumerProjects()
 after(() => consumers.remove())
 
-const ENTRIES = ['', 'coverage', 'dom', 'hooks', 'reporter', 'runner']
-const MAIN_EXPORTS = ['describe', 'equals', 'expect', 'it', 'jest', 'matchesSubset']
+const ENTRIES = ['', 'coverage', 'dom', 'fs', 'hooks', 'process', 'reporter', 'runner']
+const MAIN_EXPORTS = [
+  'createDeferred',
+  'createMock',
+  'describe',
+  'equals',
+  'expect',
+  'flushPromises',
+  'it',
+  'jest',
+  'matchesSubset',
+  'sleep',
+  'waitFor',
+  'waitUntil',
+]
 const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
 const DESCRIBE_MODIFIERS = ['each', 'only', 'skip']
 const EXPECT_STATICS = [
@@ -41,6 +54,9 @@ const JEST_METHODS = [
   'clearAllMocks',
   'resetAllMocks',
   'restoreAllMocks',
+  'replaceProperty',
+  'stubEnv',
+  'stubGlobal',
   'useFakeTimers',
   'useRealTimers',
   'advanceTimersByTime',
@@ -55,6 +71,16 @@ const JEST_METHODS = [
   'doMock',
   'requireActual',
   'requireMock',
+]
+const FS_EXPORTS = ['createTempDir', 'useTempDir', 'writeFile', 'writeTree']
+const PROCESS_EXPORTS = [
+  'Keys',
+  'captureStdio',
+  'createCapturedOutput',
+  'createFakeChildProcess',
+  'createTtyInput',
+  'readAll',
+  'spawnSyncResult',
 ]
 const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']
 const BASELINE_EXCLUDE = ['**/*.spec.ts', '**/*.spec.tsx', '**/*.d.ts', 'test.config.ts']
@@ -112,13 +138,15 @@ describe('@hyperfrontend/testing ESM', () => {
   describe('package layout', () => {
     const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
 
-    it('maps the six entries and the manifest in exports', () => {
+    it('maps the eight entries and the manifest in exports', () => {
       expect(Object.keys(manifest.exports).sort()).toEqual([
         '.',
         './coverage',
         './dom',
+        './fs',
         './hooks',
         './package.json',
+        './process',
         './reporter',
         './runner',
       ])
@@ -549,6 +577,35 @@ describe('@hyperfrontend/testing ESM', () => {
     it('measures the stub a moduleNameMapper redirect loaded', async () => {
       const outcome = await run(mappedStubConfig())
       expect(outcome.coverageTable.some((row) => row.startsWith('src/stub.ts'))).toBe(true)
+    })
+  })
+
+  describe('installed fs entry', () => {
+    it('exports the temporary directory helpers', async () => {
+      expect(Object.keys(await import(installedUrl('fs', 'index.mjs'))).sort()).toEqual(FS_EXPORTS)
+    })
+
+    it('writes a tree into a temporary directory and removes it', async () => {
+      const { createTempDir } = await import(installedUrl('fs', 'index.mjs'))
+      const dir = createTempDir({ tree: { 'package.json': { name: 'app' } } })
+      const manifest = dir.readJson('package.json')
+      dir.remove()
+      expect({ manifest, removed: !existsSync(dir.path) }).toEqual({ manifest: { name: 'app' }, removed: true })
+    })
+  })
+
+  describe('installed process entry', () => {
+    it('exports the process stand-ins', async () => {
+      expect(Object.keys(await import(installedUrl('process', 'index.mjs'))).sort()).toEqual(PROCESS_EXPORTS)
+    })
+
+    it('types keys into a terminal input one chunk at a time', async () => {
+      const { Keys, createTtyInput } = await import(installedUrl('process', 'index.mjs'))
+      const input = createTtyInput()
+      const chunks: string[] = []
+      input.on('data', (chunk: Buffer) => chunks.push(chunk.toString()))
+      await input.sendKeys('y', Keys.Enter)
+      expect(chunks).toEqual(['y', '\r'])
     })
   })
 

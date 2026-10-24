@@ -17,7 +17,20 @@ const { PROJECT_DIR, installedPath, installedUrl, withoutHarnessEnvironment } = 
 const consumers = writeConsumerProjects()
 after(() => consumers.remove())
 
-const MAIN_EXPORTS = ['describe', 'equals', 'expect', 'it', 'jest', 'matchesSubset']
+const MAIN_EXPORTS = [
+  'createDeferred',
+  'createMock',
+  'describe',
+  'equals',
+  'expect',
+  'flushPromises',
+  'it',
+  'jest',
+  'matchesSubset',
+  'sleep',
+  'waitFor',
+  'waitUntil',
+]
 const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
 const EXPECT_STATICS = [
   'any',
@@ -37,6 +50,9 @@ const JEST_METHODS = [
   'clearAllMocks',
   'resetAllMocks',
   'restoreAllMocks',
+  'replaceProperty',
+  'stubEnv',
+  'stubGlobal',
   'useFakeTimers',
   'useRealTimers',
   'advanceTimersByTime',
@@ -94,7 +110,7 @@ describe('@hyperfrontend/testing CJS', () => {
     })
 
     it('resolves the require condition of every entry to a CommonJS file', () => {
-      const entries = ['.', './coverage', './dom', './hooks', './reporter', './runner']
+      const entries = ['.', './coverage', './dom', './fs', './hooks', './process', './reporter', './runner']
       const resolved = entries.map((entry) => {
         const target = manifest.exports[entry].require
         return { entry, target, exists: typeof target === 'string' && existsSync(installedPath(target)) }
@@ -132,6 +148,21 @@ describe('@hyperfrontend/testing CJS', () => {
     it('carries the jest namespace', () => {
       const packed = require(installedPath('index.cjs'))
       for (const name of JEST_METHODS) expect(typeof packed.jest[name]).toBe('function')
+    })
+  })
+
+  describe('fs and process entries', () => {
+    it('writes a tree into a temporary directory and removes it', () => {
+      const { createTempDir } = require(installedPath('fs', 'index.cjs'))
+      const dir = createTempDir({ tree: { 'a.txt': 'a' } })
+      const text = dir.read('a.txt')
+      dir.remove()
+      expect({ text, removed: !existsSync(dir.path) }).toEqual({ text: 'a', removed: true })
+    })
+
+    it('builds a spawnSync result', () => {
+      const { spawnSyncResult } = require(installedPath('process', 'index.cjs'))
+      expect(spawnSyncResult({ stdout: 'ok' })).toEqual(expect.objectContaining({ status: 0, stdout: 'ok' }))
     })
   })
 
