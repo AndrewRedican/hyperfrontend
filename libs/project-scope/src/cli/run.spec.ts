@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { captureStdio } from '@hyperfrontend/testing/process'
 import { writeFixtures } from '../__test-utils__/write-fixtures'
 import { run } from './run'
 
@@ -9,8 +10,7 @@ const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 describe('run', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation()
-    jest.spyOn(console, 'error').mockImplementation()
+    captureStdio()
   })
 
   afterEach(() => {

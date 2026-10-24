@@ -1,32 +1,21 @@
-import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { basename, join, parse } from 'node:path'
-import { beforeEach, afterEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { traverseUpward, locateByMarkers, findUpwardWhere } from './traversal'
 
 describe('core/fs/traversal', () => {
-  let tempDir: string
+  const tempDir = useTempDir({ prefix: 'traversal-test-' })
   let deepDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'traversal-test-'))
-    const level1 = join(tempDir, 'level1')
-    const level2 = join(level1, 'level2')
-    deepDir = join(level2, 'level3')
-    mkdirSync(level1)
-    mkdirSync(level2)
-    mkdirSync(deepDir)
-  })
-
-  afterEach(() => {
-    rmSync(tempDir, { recursive: true, force: true })
+    deepDir = tempDir.mkdir('level1/level2/level3')
   })
 
   describe('traverseUpward', () => {
     it('finds directory matching predicate', () => {
-      const markerPath = join(tempDir, 'level1', 'marker.txt')
-      writeFileSync(markerPath, '')
+      tempDir.write('level1/marker.txt', '')
 
       const result = traverseUpward(deepDir, (dir) => {
         try {
@@ -36,7 +25,7 @@ describe('core/fs/traversal', () => {
         }
       })
 
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
 
     it('returns null when no directory matches', () => {
@@ -46,13 +35,13 @@ describe('core/fs/traversal', () => {
 
     it('checks root directory', () => {
       // why: the temp root is spelled differently per platform (Temp on Windows), so the predicate recognises the fixture directory by its own name
-      const result = traverseUpward(tempDir, (dir) => basename(dir).startsWith('traversal-test-'))
-      expect(result).toBe(tempDir)
+      const result = traverseUpward(tempDir.path, (dir) => basename(dir).startsWith('traversal-test-'))
+      expect(result).toBe(tempDir.path)
     })
 
     it('stops at first match', () => {
-      writeFileSync(join(tempDir, 'level1', 'marker.txt'), '')
-      writeFileSync(join(tempDir, 'marker.txt'), '')
+      tempDir.write('level1/marker.txt', '')
+      tempDir.write('marker.txt', '')
 
       const result = traverseUpward(deepDir, (dir) => {
         try {
@@ -62,25 +51,23 @@ describe('core/fs/traversal', () => {
         }
       })
 
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
   })
 
   describe('locateByMarkers', () => {
     it('finds directory with marker file', () => {
-      const markerPath = join(tempDir, 'level1', 'package.json')
-      writeFileSync(markerPath, '{}')
+      tempDir.write('level1/package.json', '{}')
 
       const result = locateByMarkers(deepDir, ['package.json'])
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
 
     it('finds directory with any of multiple markers', () => {
-      const markerPath = join(tempDir, 'level1', '.git')
-      writeFileSync(markerPath, '')
+      tempDir.write('level1/.git', '')
 
       const result = locateByMarkers(deepDir, ['package.json', '.git', 'pnpm-workspace.yaml'])
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
 
     it('returns null when no markers found', () => {
@@ -96,7 +83,7 @@ describe('core/fs/traversal', () => {
 
   describe('findUpwardWhere', () => {
     it('finds directory matching test', () => {
-      writeFileSync(join(tempDir, 'level1', 'test.txt'), '')
+      tempDir.write('level1/test.txt', '')
 
       const result = findUpwardWhere(deepDir, (dir) => {
         try {
@@ -106,7 +93,7 @@ describe('core/fs/traversal', () => {
         }
       })
 
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
 
     it('returns null when test never passes', () => {
@@ -118,7 +105,7 @@ describe('core/fs/traversal', () => {
       const result = findUpwardWhere(deepDir, (dir) => {
         return basename(dir) === 'level1'
       })
-      expect(result).toBe(join(tempDir, 'level1'))
+      expect(result).toBe(tempDir.resolve('level1'))
     })
   })
 

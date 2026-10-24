@@ -1,9 +1,8 @@
 import type { FixtureTree } from './sample-projects/tree'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
 import { after } from 'node:test'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir, writeTree } from '@hyperfrontend/testing/fs'
 import { FRAMEWORK_FIXTURES } from './sample-projects/frameworks'
 import { PROJECT_FIXTURES } from './sample-projects/projects'
 import { TOOLING_FIXTURES } from './sample-projects/tooling'
@@ -32,17 +31,10 @@ const FIXTURES: Readonly<Record<string, FixtureTree>> = {
  * ```
  */
 export function writeFixtures(parent: string = tmpdir()): string {
-  const root = mkdtempSync(join(parent, 'project-scope-fixtures-'))
-  for (const [name, tree] of entries(FIXTURES)) {
-    mkdirSync(join(root, name), { recursive: true })
-    for (const [path, text] of entries(tree)) {
-      const file = join(root, name, path)
-      mkdirSync(dirname(file), { recursive: true })
-      writeFileSync(file, text)
-    }
-  }
-  after(() => rmSync(root, { recursive: true, force: true }))
-  return root
+  const root = createTempDir({ parent, prefix: 'project-scope-fixtures-' })
+  for (const [name, tree] of entries(FIXTURES)) writeTree(root.mkdir(name), tree)
+  after(() => root.remove())
+  return root.path
 }
 
 /** Where {@link writeNestedFixtures} put the sample projects and the workspace around them. */
@@ -67,9 +59,8 @@ export interface NestedFixtures {
  * ```
  */
 export function writeNestedFixtures(): NestedFixtures {
-  const workspace = mkdtempSync(join(tmpdir(), 'project-scope-workspace-'))
-  mkdirSync(join(workspace, '.git'))
-  writeFileSync(join(workspace, 'nx.json'), '{}\n')
-  after(() => rmSync(workspace, { recursive: true, force: true }))
-  return { workspace, fixtures: writeFixtures(workspace) }
+  const workspace = createTempDir({ prefix: 'project-scope-workspace-', tree: { 'nx.json': '{}\n' } })
+  workspace.mkdir('.git')
+  after(() => workspace.remove())
+  return { workspace: workspace.path, fixtures: writeFixtures(workspace.path) }
 }

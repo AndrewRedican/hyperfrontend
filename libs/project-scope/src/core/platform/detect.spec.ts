@@ -1,8 +1,6 @@
-import { after as afterAll, beforeEach } from 'node:test'
+import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { detectPlatform, getPlatformInfo, detectCaseSensitivity, isCaseSensitiveFs, isWindows, isMac, isLinux } from './detect'
-
-const originalPlatform = process.platform
 
 describe('core/platform/detect', () => {
   describe('detectPlatform', () => {
@@ -85,13 +83,13 @@ describe('core/platform/detect with mocked platforms', () => {
     jest.resetModules()
   })
 
-  afterAll(() => {
-    Object.defineProperty(process, 'platform', { value: originalPlatform })
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   describe('detectCaseSensitivity on win32', () => {
     it('returns false for Windows platform', async () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' })
+      jest.replaceProperty(process, 'platform', 'win32')
       const { detectCaseSensitivity: detect } = await import('./detect')
       expect(detect()).toBe(false)
     })
@@ -99,7 +97,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('detectCaseSensitivity on darwin', () => {
     it('returns false for macOS platform (default HFS+/APFS)', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
+      jest.replaceProperty(process, 'platform', 'darwin')
       const { detectCaseSensitivity: detect } = await import('./detect')
       expect(detect()).toBe(false)
     })
@@ -107,7 +105,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('detectCaseSensitivity on linux with fs error', () => {
     it('returns true when file write fails', async () => {
-      Object.defineProperty(process, 'platform', { value: 'linux' })
+      jest.replaceProperty(process, 'platform', 'linux')
       jest.doMock('node:fs', () => ({
         writeFileSync: jest.fn(() => {
           throw new Error('EACCES: permission denied')
@@ -122,7 +120,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for win32', () => {
     it('returns Windows-specific platform info', async () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' })
+      jest.replaceProperty(process, 'platform', 'win32')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'win32'),
         arch: jest.fn(() => 'x64'),
@@ -137,7 +135,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for darwin', () => {
     it('returns macOS-specific platform info', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
+      jest.replaceProperty(process, 'platform', 'darwin')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'darwin'),
         arch: jest.fn(() => 'arm64'),
@@ -152,7 +150,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for freebsd', () => {
     it('returns freebsd platform info', async () => {
-      Object.defineProperty(process, 'platform', { value: 'freebsd' })
+      jest.replaceProperty(process, 'platform', 'freebsd')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'freebsd'),
         arch: jest.fn(() => 'x64'),
@@ -167,7 +165,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for sunos', () => {
     it('returns sunos platform info', async () => {
-      Object.defineProperty(process, 'platform', { value: 'sunos' })
+      jest.replaceProperty(process, 'platform', 'sunos')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'sunos'),
         arch: jest.fn(() => 'x64'),
@@ -180,7 +178,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for aix', () => {
     it('returns aix platform info', async () => {
-      Object.defineProperty(process, 'platform', { value: 'aix' })
+      jest.replaceProperty(process, 'platform', 'aix')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'aix'),
         arch: jest.fn(() => 'ppc64'),
@@ -193,7 +191,7 @@ describe('core/platform/detect with mocked platforms', () => {
 
   describe('getPlatformInfo for unknown platform', () => {
     it('returns other for unrecognized platforms', async () => {
-      Object.defineProperty(process, 'platform', { value: 'haiku' })
+      jest.replaceProperty(process, 'platform', 'haiku')
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'haiku' as NodeJS.Platform),
         arch: jest.fn(() => 'x64'),

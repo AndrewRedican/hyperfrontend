@@ -1,8 +1,7 @@
-import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir, useTempDir } from '@hyperfrontend/testing/fs'
 import { writeNestedFixtures } from '../../__test-utils__/write-fixtures'
 import { findNearestPackageJson } from '../package'
 import { findProjectRoot, findWorkspaceRoot, findRootDirectory, findGitRoot, ROOT_MARKERS, WORKSPACE_MARKERS } from './detect'
@@ -137,36 +136,28 @@ describe('findWorkspaceRoot', () => {
 })
 
 describe('findWorkspaceRoot with isolated temp directories', () => {
-  let TEMP_WORKSPACE: string
-
-  beforeAll(() => {
-    TEMP_WORKSPACE = mkdtempSync(join(tmpdir(), 'test-workspace-detection-'))
-
-    mkdirSync(join(TEMP_WORKSPACE, 'packages', 'app', 'src'), { recursive: true })
-    writeFileSync(join(TEMP_WORKSPACE, 'package.json'), JSON.stringify({ name: 'test-workspace', workspaces: ['packages/*'] }))
-    writeFileSync(join(TEMP_WORKSPACE, 'packages', 'app', 'package.json'), JSON.stringify({ name: 'test-app' }))
-  })
-
-  afterAll(() => {
-    rmSync(TEMP_WORKSPACE, { recursive: true, force: true })
+  const workspace = useTempDir({
+    scope: 'all',
+    prefix: 'test-workspace-detection-',
+    tree: {
+      'package.json': { name: 'test-workspace', workspaces: ['packages/*'] },
+      'packages/app/package.json': { name: 'test-app' },
+    },
   })
 
   it('finds workspace root by workspaces field when no workspace markers exist', () => {
-    const result = findWorkspaceRoot(join(TEMP_WORKSPACE, 'packages', 'app', 'src'))
+    const result = findWorkspaceRoot(workspace.mkdir('packages/app/src'))
 
-    expect(result).toBe(TEMP_WORKSPACE)
+    expect(result).toBe(workspace.path)
   })
 
   it('falls back to nearest package.json for deeply nested project without workspaces', () => {
-    const DEEP_PROJECT = mkdtempSync(join(tmpdir(), 'test-deep-project-'))
-    mkdirSync(join(DEEP_PROJECT, 'level1', 'level2', 'level3', 'src'), { recursive: true })
-    writeFileSync(join(DEEP_PROJECT, 'package.json'), JSON.stringify({ name: 'deep-project' }))
-
-    const result = findWorkspaceRoot(join(DEEP_PROJECT, 'level1', 'level2', 'level3', 'src'))
-
-    expect(result).toBe(DEEP_PROJECT)
-
-    rmSync(DEEP_PROJECT, { recursive: true, force: true })
+    const project = createTempDir({ prefix: 'test-deep-project-', tree: { 'package.json': { name: 'deep-project' } } })
+    try {
+      expect(findWorkspaceRoot(project.mkdir('level1/level2/level3/src'))).toBe(project.path)
+    } finally {
+      project.remove()
+    }
   })
 })
 

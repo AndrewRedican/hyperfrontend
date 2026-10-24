@@ -1,14 +1,12 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { after } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { diskStore } from './store'
 
-const ROOT = mkdtempSync(join(tmpdir(), 'project-scope-store-'))
-const FILE = join(ROOT, 'file.txt')
-writeFileSync(FILE, 'text')
-after(() => rmSync(ROOT, { recursive: true, force: true }))
+const DIR = createTempDir({ prefix: 'project-scope-store-', tree: { 'file.txt': 'text' } })
+const ROOT = DIR.path
+const FILE = DIR.resolve('file.txt')
+after(() => DIR.remove())
 
 describe('diskStore', () => {
   it('reads a file', () => {
@@ -28,6 +26,6 @@ describe('diskStore', () => {
   })
 
   it('reports a missing path as no symbolic link', () => {
-    expect(diskStore.isSymlink(join(ROOT, 'missing'))).toBe(false)
+    expect(diskStore.isSymlink(DIR.resolve('missing'))).toBe(false)
   })
 })
