@@ -7,10 +7,7 @@
  * @module rules/workspace/__test-utils__/project-trees
  */
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The files of the projects, by path below the directory that holds them. */
 const FILES: Readonly<Record<string, string>> = {
@@ -163,14 +160,10 @@ export interface ProjectTrees {
  * @returns Their paths
  */
 export function createProjectTrees(): ProjectTrees {
-  const root = mkdtempSync(join(tmpdir(), 'lint-projects-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
+  const directory = createTempDir({ prefix: 'lint-projects-', tree: FILES })
   return {
-    root,
-    file: (project, name) => join(root, project, name),
-    remove: () => rmSync(root, { recursive: true, force: true }),
+    root: directory.path,
+    file: (project, name) => directory.resolve(project, name),
+    remove: directory.remove,
   }
 }

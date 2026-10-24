@@ -1,14 +1,15 @@
 import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { MainReexportsOptions } from './lib-pkg-main-reexports.ts'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './lib-pkg-main-reexports.ts'
 
 // why: the rule reads each library's manifest, so every case lints a library of its own in a disposable workspace.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-reexports-'))
+const DIR = createTempDir({ prefix: 'lint-reexports-' })
+const ROOT = DIR.path
 let count = 0
 
 /**
@@ -21,14 +22,13 @@ let count = 0
  */
 function library(exports: unknown, publishable = true, manifest = true): string {
   count += 1
-  const root = join(ROOT, `lib${count}`)
-  mkdirSync(root, { recursive: true })
-  writeFileSync(
-    join(root, 'project.json'),
+  const name = `lib${count}`
+  DIR.write(
+    `${name}/project.json`,
     JSON.stringify({ projectType: 'library', targets: publishable ? { build: {}, publish: {} } : { build: {} } })
   )
-  if (manifest) writeFileSync(join(root, 'package.json'), JSON.stringify(exports === undefined ? { name: 'x' } : { name: 'x', exports }))
-  return root
+  if (manifest) DIR.write(`${name}/package.json`, JSON.stringify(exports === undefined ? { name: 'x' } : { name: 'x', exports }))
+  return DIR.resolve(name)
 }
 
 /** A barrel library's exports. */
@@ -137,7 +137,7 @@ testRule(rule, {
 
 describe('the disposable workspace', () => {
   it('is removed at the end', () => {
-    rmSync(ROOT, { recursive: true, force: true })
+    DIR.remove()
     expect(existsSync(ROOT)).toBe(false)
   })
 })

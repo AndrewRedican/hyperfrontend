@@ -1,23 +1,24 @@
 import type { ExpectedError } from '@hyperfrontend/linter/testing'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createDocsWorkspace } from './__test-utils__/docs-workspace.ts'
 import rule from './lib-inline-code-links.ts'
 
 const root = createDocsWorkspace()
 // why: a workspace whose manifest names no repository links nothing into one.
-const BARE = mkdtempSync(join(tmpdir(), 'lint-docs-bare-'))
-for (const [path, text] of Object.entries({
-  'nx.json': '{}',
-  'libs/x/project.json': '{"projectType":"library","targets":{"build":{},"publish":{}}}',
-  'libs/x/package.json': '{"name":"@ws/x"}',
-})) {
-  mkdirSync(dirname(join(BARE, path)), { recursive: true })
-  writeFileSync(join(BARE, path), text)
-}
+const BARE_DIR = createTempDir({
+  prefix: 'lint-docs-bare-',
+  tree: {
+    'nx.json': '{}',
+    'libs/x/project.json': '{"projectType":"library","targets":{"build":{},"publish":{}}}',
+    'libs/x/package.json': '{"name":"@ws/x"}',
+  },
+})
+const BARE = BARE_DIR.path
 const README = join(root, 'libs/alpha/README.md')
 const ALPHA = 'https://www.hyperfrontend.dev/docs/libraries/alpha/'
 const REPO = 'https://github.com/org/repo/blob/main/libs/alpha/src'
@@ -113,7 +114,7 @@ testRule(rule, {
 describe('the disposable workspace', () => {
   it('is removed at the end', () => {
     rmSync(root, { recursive: true, force: true })
-    rmSync(BARE, { recursive: true, force: true })
+    BARE_DIR.remove()
     expect(existsSync(root) || existsSync(BARE)).toBe(false)
   })
 })

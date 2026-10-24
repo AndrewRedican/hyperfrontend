@@ -1,45 +1,42 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './lib-tsconfig-paths.ts'
 
 // why: the rule scans the workspace below the configuration file, so the fixture is a disposable workspace in the temporary directory.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-paths-'))
-const write = (path: string, text: string): void => {
-  mkdirSync(join(ROOT, path, '..'), { recursive: true })
-  writeFileSync(join(ROOT, path), text)
-}
-write('libs/a/project.json', '{ "name": "lib-a", "projectType": "library" }')
-write(
+const DIR = createTempDir({ prefix: 'lint-paths-' })
+const ROOT = DIR.path
+DIR.write('libs/a/project.json', '{ "name": "lib-a", "projectType": "library" }')
+DIR.write(
   'libs/a/package.json',
   '{ "name": "@s/a", "exports": { ".": "./src/index.js", "./sub": { "import": "./src/sub/index.mjs" }, "./gone": "./src/gone/index.js", "./package.json": "./package.json" } }'
 )
-write('libs/a/src/index.ts', '')
-write('libs/a/src/sub/index.mts', '')
-write('libs/b/project.json', '{ "name": "lib-b", "projectType": "library" }')
-write(
+DIR.write('libs/a/src/index.ts', '')
+DIR.write('libs/a/src/sub/index.mts', '')
+DIR.write('libs/b/project.json', '{ "name": "lib-b", "projectType": "library" }')
+DIR.write(
   'libs/b/package.json',
   '{ "name": "@s/b", "exports": { ".": "./src/index.cjs", "./x": { "default": "./src/x/index.js" }, "./y": { "types": "./src/y/index.js" }, "./w": "src/w/index.js", "./z": 1 } }'
 )
-write('libs/b/src/index.cts', '')
-write('libs/b/src/w/index.ts', '')
-write('libs/b/src/x/index.ts', '')
-write('libs/b/src/y/index.ts', '')
-write('libs/app/project.json', '{ "name": "app", "projectType": "application" }')
-write('libs/app/package.json', '{ "name": "@s/app", "exports": { ".": "./src/index.js" } }')
-write('libs/__fixtures__/c/project.json', '{ "name": "lib-c", "projectType": "library" }')
-write('libs/__fixtures__/c/package.json', '{ "name": "@s/c", "exports": { ".": "./src/index.js" } }')
-write('libs/__fixtures__/c/src/index.ts', '')
-write('libs/noname/project.json', '{ "name": "lib-noname", "projectType": "library" }')
-write('libs/noname/package.json', '{ "exports": { ".": "./src/index.js" } }')
-write('libs/nomanifest/project.json', '{ "name": "lib-nomanifest", "projectType": "library" }')
-write('tools/t/project.json', '{ "name": "tool", "projectType": "library" }')
-write('tools/t/package.json', '{ "name": "@s/t", "exports": "./src/index.js" }')
-write('plain/index.ts', '')
-mkdirSync(join(ROOT, 'libs', 'node_modules', 'skipped'), { recursive: true })
-write('libs/node_modules/skipped/project.json', '{ "projectType": "library" }')
+DIR.write('libs/b/src/index.cts', '')
+DIR.write('libs/b/src/w/index.ts', '')
+DIR.write('libs/b/src/x/index.ts', '')
+DIR.write('libs/b/src/y/index.ts', '')
+DIR.write('libs/app/project.json', '{ "name": "app", "projectType": "application" }')
+DIR.write('libs/app/package.json', '{ "name": "@s/app", "exports": { ".": "./src/index.js" } }')
+DIR.write('libs/__fixtures__/c/project.json', '{ "name": "lib-c", "projectType": "library" }')
+DIR.write('libs/__fixtures__/c/package.json', '{ "name": "@s/c", "exports": { ".": "./src/index.js" } }')
+DIR.write('libs/__fixtures__/c/src/index.ts', '')
+DIR.write('libs/noname/project.json', '{ "name": "lib-noname", "projectType": "library" }')
+DIR.write('libs/noname/package.json', '{ "exports": { ".": "./src/index.js" } }')
+DIR.write('libs/nomanifest/project.json', '{ "name": "lib-nomanifest", "projectType": "library" }')
+DIR.write('tools/t/project.json', '{ "name": "tool", "projectType": "library" }')
+DIR.write('tools/t/package.json', '{ "name": "@s/t", "exports": "./src/index.js" }')
+DIR.write('plain/index.ts', '')
+DIR.mkdir('libs/node_modules/skipped')
+DIR.write('libs/node_modules/skipped/project.json', '{ "projectType": "library" }')
 
 const CONFIG = join(ROOT, 'tsconfig.base.json')
 const OPTIONS = { libraryDirectories: ['libs', 'tools', 'missing'], excludePatterns: ['__fixtures__'] }
@@ -230,7 +227,7 @@ testRule(rule, {
 
 describe('the disposable workspace', () => {
   it('is removed once the cases have run', () => {
-    rmSync(ROOT, { recursive: true })
+    DIR.remove()
     expect(existsSync(ROOT)).toBe(false)
   })
 })

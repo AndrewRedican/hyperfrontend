@@ -6,11 +6,9 @@
  * @module rules/workspace/__test-utils__/library-workspace
  */
 
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The project file of a publishable library. */
 const PUBLISHABLE = stringify({ name: 'test-lib', projectType: 'library', targets: { build: {}, publish: {} } })
@@ -60,10 +58,6 @@ export interface LibraryWorkspace {
  * @returns The roots
  */
 export function createLibraryWorkspace(): LibraryWorkspace {
-  const root = mkdtempSync(join(tmpdir(), 'lint-libraries-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
+  const root = createTempDir({ prefix: 'lint-libraries-', tree: FILES }).path
   return { root, publishable: join(root, 'pub'), internal: join(root, 'internal'), bare: join(root, 'nopkg'), plain: join(root, 'plain') }
 }

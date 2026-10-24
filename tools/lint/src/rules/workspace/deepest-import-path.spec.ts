@@ -1,19 +1,18 @@
 import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './deepest-import-path.ts'
 
 // why: the rule reads the base configuration and the entry sources, so the fixture is a disposable workspace holding every entry the recorded cases import from.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-deepest-'))
-const EMPTY = mkdtempSync(join(tmpdir(), 'lint-deepest-empty-'))
-const ORPHAN = mkdtempSync(join(tmpdir(), 'lint-deepest-orphan-'))
-const write = (root: string, path: string, text: string): void => {
-  mkdirSync(dirname(join(root, path)), { recursive: true })
-  writeFileSync(join(root, path), text)
-}
+const ROOT_DIR = createTempDir({ prefix: 'lint-deepest-' })
+const ROOT = ROOT_DIR.path
+const EMPTY_DIR = createTempDir({ prefix: 'lint-deepest-empty-' })
+const EMPTY = EMPTY_DIR.path
+const ORPHAN_DIR = createTempDir({ prefix: 'lint-deepest-orphan-' })
+const ORPHAN = ORPHAN_DIR.path
 
 const PATHS: Record<string, unknown> = {
   '@hyperfrontend/project-scope': ['libs/project-scope/src/index.ts'],
@@ -50,9 +49,8 @@ const PATHS: Record<string, unknown> = {
   mylib: ['libs/mylib/src/index.ts'],
   'mylib/utils': ['libs/mylib/src/utils/index.ts'],
 }
-write(ROOT, 'tsconfig.base.json', JSON.stringify({ compilerOptions: { baseUrl: '.', paths: PATHS } }))
-write(
-  ROOT,
+ROOT_DIR.write('tsconfig.base.json', JSON.stringify({ compilerOptions: { baseUrl: '.', paths: PATHS } }))
+ROOT_DIR.write(
   'libs/project-scope/src/index.ts',
   [
     "export const uniqueSymbol = 'unique'",
@@ -68,26 +66,23 @@ write(
     'export default {}',
   ].join('\n')
 )
-write(
-  ROOT,
+ROOT_DIR.write(
   'libs/project-scope/src/cli/index.ts',
   'export function runCli() {}\nexport function parseArgs() {}\nexport type CliConfig = { verbose: boolean }'
 )
-write(ROOT, 'libs/project-scope/src/config/index.ts', 'export function parseConfig() {}')
-write(ROOT, 'libs/project-scope/src/core/index.ts', "export * from './deep'")
-write(ROOT, 'libs/project-scope/src/core/deep/index.ts', 'export function deepFunction() {}')
-write(ROOT, 'libs/project-scope/src/constants/index.ts', "export const MY_CONSTANT = 'value'")
-write(ROOT, 'libs/project-scope/src/classes/index.ts', 'export class MyClass {}')
-write(ROOT, 'libs/project-scope/src/types/index.ts', 'export type MyType = { id: number }')
-write(ROOT, 'libs/project-scope/src/interfaces/index.ts', 'export interface MyInterface { id: number }')
-write(ROOT, 'libs/project-scope/src/enums/index.ts', 'export enum MyEnum { A, B, C }')
-write(
-  ROOT,
+ROOT_DIR.write('libs/project-scope/src/config/index.ts', 'export function parseConfig() {}')
+ROOT_DIR.write('libs/project-scope/src/core/index.ts', "export * from './deep'")
+ROOT_DIR.write('libs/project-scope/src/core/deep/index.ts', 'export function deepFunction() {}')
+ROOT_DIR.write('libs/project-scope/src/constants/index.ts', "export const MY_CONSTANT = 'value'")
+ROOT_DIR.write('libs/project-scope/src/classes/index.ts', 'export class MyClass {}')
+ROOT_DIR.write('libs/project-scope/src/types/index.ts', 'export type MyType = { id: number }')
+ROOT_DIR.write('libs/project-scope/src/interfaces/index.ts', 'export interface MyInterface { id: number }')
+ROOT_DIR.write('libs/project-scope/src/enums/index.ts', 'export enum MyEnum { A, B, C }')
+ROOT_DIR.write(
   'libs/project-scope/src/utils/index.ts',
   "export { internalFn as aliasedFn } from './internal'\nexport function internalFn() {}"
 )
-write(
-  ROOT,
+ROOT_DIR.write(
   'libs/package/src/index.ts',
   [
     "export * from './utils'",
@@ -102,35 +97,33 @@ write(
     'export let counter = 0',
   ].join('\n')
 )
-write(
-  ROOT,
+ROOT_DIR.write(
   'libs/package/src/utils/index.ts',
   'const _funcA = () => {}\nconst _funcB = () => {}\nexport { _funcA as funcA, _funcB as funcB }\nexport function barrelFn() {}'
 )
-write(
-  ROOT,
+ROOT_DIR.write(
   'libs/package/src/types/index.ts',
   'type _TypeA = string\ntype _TypeB = number\nexport type { _TypeA as TypeA, _TypeB as TypeB }'
 )
-write(ROOT, 'libs/package/src/helpers/index.ts', 'export function myFunction() { return 42 }')
-write(ROOT, 'libs/package/src/vars/index.ts', "export var myVar = 'test'")
-write(ROOT, 'libs/package/src/a/index.ts', "export * from '../b'\nexport function circularFn() {}")
-write(ROOT, 'libs/package/src/b/index.ts', "export * from '../a'")
-write(ROOT, 'libs/package/src/core/index.ts', "export * from './deep'")
-write(ROOT, 'libs/package/src/core/deep/index.ts', 'export function deepFn() {}')
-write(ROOT, 'libs/package/src/mixed/index.ts', "export * from './helpers'\nexport const directExport = 42")
-write(ROOT, 'libs/package/src/mixed/helpers.ts', 'export function reExported() {}')
-write(ROOT, 'libs/package/src/combined/index.ts', "export * from './a'\nexport * from './b'")
-write(ROOT, 'libs/package/src/combined/a.ts', 'export function fromA() {}')
-write(ROOT, 'libs/package/src/combined/b.ts', 'export function fromB() {}')
-write(ROOT, 'libs/package/src/sub/index.ts', "export * from './impl'")
-write(ROOT, 'libs/package/src/sub/impl.ts', 'export function noExtFn() {}')
-write(ROOT, 'libs/polyfill/src/index.ts', '// side effects only')
-write(ROOT, 'libs/myorg/src/index.ts', "export * from './sub'")
-write(ROOT, 'libs/myorg/src/sub/index.ts', "export const foo = 'bar'")
-write(ROOT, 'libs/mylib/src/index.ts', "export * from './utils'")
-write(ROOT, 'libs/mylib/src/utils/index.ts', 'export function helper() {}')
-write(EMPTY, 'tsconfig.base.json', JSON.stringify({ compilerOptions: { paths: {} } }))
+ROOT_DIR.write('libs/package/src/helpers/index.ts', 'export function myFunction() { return 42 }')
+ROOT_DIR.write('libs/package/src/vars/index.ts', "export var myVar = 'test'")
+ROOT_DIR.write('libs/package/src/a/index.ts', "export * from '../b'\nexport function circularFn() {}")
+ROOT_DIR.write('libs/package/src/b/index.ts', "export * from '../a'")
+ROOT_DIR.write('libs/package/src/core/index.ts', "export * from './deep'")
+ROOT_DIR.write('libs/package/src/core/deep/index.ts', 'export function deepFn() {}')
+ROOT_DIR.write('libs/package/src/mixed/index.ts', "export * from './helpers'\nexport const directExport = 42")
+ROOT_DIR.write('libs/package/src/mixed/helpers.ts', 'export function reExported() {}')
+ROOT_DIR.write('libs/package/src/combined/index.ts', "export * from './a'\nexport * from './b'")
+ROOT_DIR.write('libs/package/src/combined/a.ts', 'export function fromA() {}')
+ROOT_DIR.write('libs/package/src/combined/b.ts', 'export function fromB() {}')
+ROOT_DIR.write('libs/package/src/sub/index.ts', "export * from './impl'")
+ROOT_DIR.write('libs/package/src/sub/impl.ts', 'export function noExtFn() {}')
+ROOT_DIR.write('libs/polyfill/src/index.ts', '// side effects only')
+ROOT_DIR.write('libs/myorg/src/index.ts', "export * from './sub'")
+ROOT_DIR.write('libs/myorg/src/sub/index.ts', "export const foo = 'bar'")
+ROOT_DIR.write('libs/mylib/src/index.ts', "export * from './utils'")
+ROOT_DIR.write('libs/mylib/src/utils/index.ts', 'export function helper() {}')
+EMPTY_DIR.write('tsconfig.base.json', JSON.stringify({ compilerOptions: { paths: {} } }))
 
 const FILE = join(ROOT, 'src', 'test.ts')
 
@@ -248,7 +241,7 @@ testRule(rule, {
 
 describe('the disposable workspaces', () => {
   it('are removed once the cases have run', () => {
-    for (const root of [ROOT, EMPTY, ORPHAN]) rmSync(root, { recursive: true })
+    for (const directory of [ROOT_DIR, EMPTY_DIR, ORPHAN_DIR]) directory.remove()
     expect([ROOT, EMPTY, ORPHAN].some(existsSync)).toBe(false)
   })
 })

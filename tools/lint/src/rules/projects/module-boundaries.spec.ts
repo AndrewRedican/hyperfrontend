@@ -1,31 +1,30 @@
 import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { ModuleBoundariesOptions } from './module-boundaries.ts'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, posix } from 'node:path'
+import { join, posix } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule, { allows } from './module-boundaries.ts'
 
 // why: the rule reads the project graph the workspace's files draw, so the fixture is a disposable git workspace whose projects exercise each boundary.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-boundaries-'))
-const BARE = mkdtempSync(join(tmpdir(), 'lint-boundaries-bare-'))
-const write = (path: string, text: string, root = ROOT): void => {
-  mkdirSync(dirname(join(root, path)), { recursive: true })
-  writeFileSync(join(root, path), text)
-}
-const project = (root: string, name: string, tags: readonly string[], buildable: boolean, type = 'library'): void =>
-  write(
+const ROOT_DIR = createTempDir({ prefix: 'lint-boundaries-' })
+const ROOT = ROOT_DIR.path
+const BARE_DIR = createTempDir({ prefix: 'lint-boundaries-bare-' })
+const BARE = BARE_DIR.path
+const project = (root: string, name: string, tags: readonly string[], buildable: boolean, type = 'library'): string =>
+  ROOT_DIR.write(
     posix.join(root, 'project.json'),
     JSON.stringify({ name, projectType: type, tags, targets: buildable ? { build: { executor: 'x:build' } } : {} })
   )
 
-write('.gitignore', 'node_modules\n')
-write('package.json', JSON.stringify({ name: '@ws/root', private: true, workspaces: ['libs/*'] }))
-write('project.json', JSON.stringify({ name: 'root', tags: [] }))
-write('lint.config.ts', 'export default []\n')
-write(
+ROOT_DIR.write('.gitignore', 'node_modules\n')
+ROOT_DIR.write('package.json', JSON.stringify({ name: '@ws/root', private: true, workspaces: ['libs/*'] }))
+ROOT_DIR.write('project.json', JSON.stringify({ name: 'root', tags: [] }))
+ROOT_DIR.write('lint.config.ts', 'export default []\n')
+ROOT_DIR.write(
   'tsconfig.base.json',
   JSON.stringify({
     compilerOptions: {
@@ -48,40 +47,40 @@ write(
   })
 )
 project('libs/core', 'core', ['type:core'], true)
-write(
+ROOT_DIR.write(
   'libs/core/package.json',
   JSON.stringify({ name: '@ws/core', exports: { '.': './src/index.ts', './deep': { import: './src/deep.ts' }, './x': null } })
 )
-write('libs/core/src/index.ts', "export { deep } from './deep'\nexport { why } from './sub/y'\nexport const core = 1\n")
-write('libs/core/src/sub/y.ts', 'export const why = 4\n')
-write('libs/core/src/deep.ts', 'export const deep = 2\n')
-write('libs/core/src/inner.ts', 'export const inner = 3\n')
+ROOT_DIR.write('libs/core/src/index.ts', "export { deep } from './deep'\nexport { why } from './sub/y'\nexport const core = 1\n")
+ROOT_DIR.write('libs/core/src/sub/y.ts', 'export const why = 4\n')
+ROOT_DIR.write('libs/core/src/deep.ts', 'export const deep = 2\n')
+ROOT_DIR.write('libs/core/src/inner.ts', 'export const inner = 3\n')
 project('libs/util', 'util', ['type:util'], true)
-write('libs/util/src/index.ts', 'export const util = 1\n')
+ROOT_DIR.write('libs/util/src/index.ts', 'export const util = 1\n')
 project('libs/plain', 'plain', ['type:util'], false)
-write('libs/plain/src/index.ts', 'export const plain = 1\n')
-write('libs/plain/package.json', JSON.stringify({ name: '@ws/plain-package' }))
+ROOT_DIR.write('libs/plain/src/index.ts', 'export const plain = 1\n')
+ROOT_DIR.write('libs/plain/package.json', JSON.stringify({ name: '@ws/plain-package' }))
 project('libs/untagged', 'untagged', [], true)
-write('libs/untagged/src/index.ts', 'export const untagged = 1\n')
+ROOT_DIR.write('libs/untagged/src/index.ts', 'export const untagged = 1\n')
 project('libs/a', 'a', ['type:util'], true)
-write('libs/a/src/index.ts', "import { b } from '@ws/b'\nexport const a = b\nexport const later = () => import('@ws/b')\n")
-write('libs/a/src/other.ts', "import { b } from '@ws/b'\nimport { core } from '@ws/core'\nexport const other = b + core\n")
+ROOT_DIR.write('libs/a/src/index.ts', "import { b } from '@ws/b'\nexport const a = b\nexport const later = () => import('@ws/b')\n")
+ROOT_DIR.write('libs/a/src/other.ts', "import { b } from '@ws/b'\nimport { core } from '@ws/core'\nexport const other = b + core\n")
 project('libs/b', 'b', ['type:util'], true)
-write('libs/b/src/index.ts', "import { a } from '@ws/a'\nexport const b = 1\n")
+ROOT_DIR.write('libs/b/src/index.ts', "import { a } from '@ws/a'\nexport const b = 1\n")
 project('apps/app', 'app', ['type:app'], false, 'application')
-write('apps/app/src/main.ts', 'export const main = 1\n')
+ROOT_DIR.write('apps/app/src/main.ts', 'export const main = 1\n')
 project('libs/lazy', 'lazy', ['type:util'], true)
-write('libs/lazy/src/index.ts', "export const load = () => import('@ws/util')\nexport const loop = () => import('@ws/loop')\n")
+ROOT_DIR.write('libs/lazy/src/index.ts', "export const load = () => import('@ws/util')\nexport const loop = () => import('@ws/loop')\n")
 project('libs/loop', 'loop', ['type:util'], true)
-write('libs/loop/src/index.ts', "export const back = () => import('@ws/lazy')\n")
+ROOT_DIR.write('libs/loop/src/index.ts', "export const back = () => import('@ws/lazy')\n")
 project('libs/wild', 'wild', ['type:util'], true)
-write('libs/wild/src/thing.ts', 'export const thing = 1\n')
+ROOT_DIR.write('libs/wild/src/thing.ts', 'export const thing = 1\n')
 project('libs/feature', 'feature', ['type:feature'], true)
-write('libs/feature/src/index.ts', 'export const feature = 1\n')
+ROOT_DIR.write('libs/feature/src/index.ts', 'export const feature = 1\n')
 execFileSync('git', ['init', '-q'], { cwd: ROOT })
-write('tsconfig.base.json', '{}', BARE)
-write('libs/only/project.json', JSON.stringify({ name: 'only', tags: [] }), BARE)
-write('libs/only/src/index.ts', 'export const only = 1\n', BARE)
+BARE_DIR.write('tsconfig.base.json', '{}')
+BARE_DIR.write('libs/only/project.json', JSON.stringify({ name: 'only', tags: [] }))
+BARE_DIR.write('libs/only/src/index.ts', 'export const only = 1\n')
 execFileSync('git', ['init', '-q'], { cwd: BARE })
 
 /** The options the workspace configures. */
@@ -315,8 +314,8 @@ describe('allows', () => {
 
 describe('the disposable workspace', () => {
   it('is removed at the end', () => {
-    rmSync(ROOT, { recursive: true, force: true })
-    rmSync(BARE, { recursive: true, force: true })
+    ROOT_DIR.remove()
+    BARE_DIR.remove()
     expect(existsSync(ROOT) || existsSync(BARE)).toBe(false)
   })
 })

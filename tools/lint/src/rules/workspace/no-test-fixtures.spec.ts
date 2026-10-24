@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import { existsSync } from 'node:fs'
+import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './no-test-fixtures.ts'
 
 /**
@@ -12,13 +13,8 @@ import rule from './no-test-fixtures.ts'
  * @param files - POSIX paths relative to the root
  * @returns The root
  */
-function workspace(prefix: string, files: readonly string[]): string {
-  const root = mkdtempSync(join(tmpdir(), prefix))
-  for (const file of files) {
-    mkdirSync(dirname(join(root, file)), { recursive: true })
-    writeFileSync(join(root, file), '')
-  }
-  return root
+function workspace(prefix: string, files: readonly string[]): TempDir {
+  return createTempDir({ prefix, tree: fromEntries(files.map((file) => [file, ''])) })
 }
 
 // why: the rule walks the whole directory tree below the manifest, so each case is a disposable workspace root in the temporary directory rather than a tree inside this one.
@@ -63,18 +59,18 @@ const named = (path: string): { message: string; line: number; column: number } 
 
 testRule(rule, {
   valid: [
-    { name: 'a manifest outside the workspace root', path: join(OUTSIDE, 'package.json'), text: '{}' },
-    { name: 'a file that is no manifest at the workspace root', path: join(DIRTY, 'nx.json'), text: '{}' },
+    { name: 'a manifest outside the workspace root', path: OUTSIDE.resolve('package.json'), text: '{}' },
+    { name: 'a file that is no manifest at the workspace root', path: DIRTY.resolve('nx.json'), text: '{}' },
     {
       name: 'a root whose test data is code under __test-utils__, with fixture-like names only on code modules and skipped trees',
-      path: join(CLEAN, 'package.json'),
+      path: CLEAN.resolve('package.json'),
       text: '{}',
     },
   ],
   invalid: [
     {
       name: 'the root manifest, once per directory or file of test material, never inside a reported directory',
-      path: join(DIRTY, 'package.json'),
+      path: DIRTY.resolve('package.json'),
       text: '{}\n',
       errors: [
         named('a.snap'),
@@ -97,7 +93,7 @@ testRule(rule, {
 
 describe('the disposable workspace roots', () => {
   it('are removed once the cases have run', () => {
-    for (const root of [CLEAN, DIRTY, OUTSIDE]) rmSync(root, { recursive: true })
-    expect([CLEAN, DIRTY, OUTSIDE].some(existsSync)).toBe(false)
+    for (const root of [CLEAN, DIRTY, OUTSIDE]) root.remove()
+    expect([CLEAN, DIRTY, OUTSIDE].some((root) => existsSync(root.path))).toBe(false)
   })
 })

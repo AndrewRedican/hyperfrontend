@@ -1,20 +1,17 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { BASE_CONFIG, baseConfigRootOf, pathAliases } from './aliases.ts'
 
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-aliases-'))
-const write = (name: string, text: string): void => {
-  mkdirSync(join(ROOT, name), { recursive: true })
-  writeFileSync(join(ROOT, name, BASE_CONFIG), text)
-}
+const DIR = createTempDir({ prefix: 'lint-aliases-' })
+const ROOT = DIR.path
+const write = (name: string, text: string): string => DIR.write(join(name, BASE_CONFIG), text)
 write('good', JSON.stringify({ compilerOptions: { paths: { a: ['src/a.ts'], b: [], c: 'src/c.ts', d: [1] } } }))
 write('broken', '{')
 write('nopaths', JSON.stringify({ compilerOptions: {} }))
 write('listpaths', JSON.stringify({ compilerOptions: { paths: ['x'] } }))
-mkdirSync(join(ROOT, 'good', 'src', 'deep'), { recursive: true })
-mkdirSync(join(ROOT, 'none'), { recursive: true })
+DIR.mkdir('good/src/deep')
+DIR.mkdir('none')
 
 describe('baseConfigRootOf', () => {
   it('finds the configuration above a nested directory', () => {
@@ -63,7 +60,7 @@ describe('pathAliases', () => {
 
 describe('the disposable directory', () => {
   it('is removed once the cases have run', () => {
-    rmSync(ROOT, { recursive: true })
+    DIR.remove()
     expect(baseConfigRootOf(join(ROOT, 'gone'))).toBe(null)
   })
 })

@@ -1,23 +1,23 @@
 import type { ExpectedError, InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { existsSync, rmSync } from 'node:fs'
+import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createDocsWorkspace } from './__test-utils__/docs-workspace.ts'
 import rule from './lib-readme-media-regions.ts'
 
 const root = createDocsWorkspace()
 // why: a package outside the scope, in a workspace naming no repository, keeps its full name in the scenes it expects.
-const BARE = mkdtempSync(join(tmpdir(), 'lint-media-bare-'))
-for (const [path, text] of Object.entries({
-  'nx.json': '{}',
-  'libs/x/project.json': '{"projectType":"library","targets":{"build":{},"publish":{}}}',
-  'libs/x/package.json': '{"name":"@ws/x"}',
-})) {
-  mkdirSync(dirname(join(BARE, path)), { recursive: true })
-  writeFileSync(join(BARE, path), text)
-}
+const BARE_DIR = createTempDir({
+  prefix: 'lint-media-bare-',
+  tree: {
+    'nx.json': '{}',
+    'libs/x/project.json': '{"projectType":"library","targets":{"build":{},"publish":{}}}',
+    'libs/x/package.json': '{"name":"@ws/x"}',
+  },
+})
+const BARE = BARE_DIR.path
 const GAMMA = join(root, 'libs/gamma/README.md')
 
 /**
@@ -181,7 +181,7 @@ testRule(rule, {
 describe('the disposable workspace', () => {
   it('is removed at the end', () => {
     rmSync(root, { recursive: true, force: true })
-    rmSync(BARE, { recursive: true, force: true })
+    BARE_DIR.remove()
     expect(existsSync(root) || existsSync(BARE)).toBe(false)
   })
 })

@@ -6,11 +6,8 @@
  * @module rules/workspace/__test-utils__/docs-workspace
  */
 
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** A publishable library's project file, with bundle globals. */
 const PUBLISHABLE = stringify({
@@ -137,10 +134,5 @@ const FILES: Readonly<Record<string, string>> = {
  * @returns The root
  */
 export function createDocsWorkspace(): string {
-  const root = mkdtempSync(join(tmpdir(), 'lint-docs-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
-  return root
+  return createTempDir({ prefix: 'lint-docs-', tree: FILES }).path
 }

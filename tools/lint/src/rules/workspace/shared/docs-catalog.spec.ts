@@ -1,9 +1,9 @@
 import type { DocsPackage } from './docs-catalog.ts'
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createDocsWorkspace } from '../__test-utils__/docs-workspace.ts'
 import {
   docsIndex,
@@ -149,13 +149,13 @@ describe('repositoryUrl', () => {
   })
 
   it('answers null without a manifest, a repository or a string', () => {
-    const bare = mkdtempSync(join(tmpdir(), 'lint-docs-repo-'))
-    const answers = [repositoryUrl(bare)]
+    const bare = createTempDir({ prefix: 'lint-docs-repo-' })
+    const answers = [repositoryUrl(bare.path)]
     for (const manifest of ['{}', '{"repository":""}', '{"repository":"https://example.com/x.git/"}']) {
-      writeFileSync(join(bare, 'package.json'), manifest)
-      answers.push(repositoryUrl(bare))
+      bare.write('package.json', manifest)
+      answers.push(repositoryUrl(bare.path))
     }
-    rmSync(bare, { recursive: true, force: true })
+    bare.remove()
     expect(answers).toEqual([null, null, null, 'https://example.com/x.git'])
   })
 })

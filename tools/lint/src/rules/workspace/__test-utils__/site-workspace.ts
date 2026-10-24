@@ -5,11 +5,8 @@
  * @module rules/workspace/__test-utils__/site-workspace
  */
 
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The site's pages directory, workspace-relative. */
 const PAGES = 'apps/docs-site/src/app/docs'
@@ -68,12 +65,7 @@ export interface SiteWorkspaces {
  * @returns The directory
  */
 function write(files: Readonly<Record<string, string>>): string {
-  const root = mkdtempSync(join(tmpdir(), 'lint-site-'))
-  for (const [path, text] of entries(files)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
-  return root
+  return createTempDir({ prefix: 'lint-site-', tree: files }).path
 }
 
 /**

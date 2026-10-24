@@ -1,9 +1,10 @@
 import type { ExpectedError, RuleCase } from '@hyperfrontend/linter/testing'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './docs-site-libraries.ts'
 
 /** A publishable library's project file. */
@@ -15,13 +16,8 @@ const PUBLISHABLE = JSON.stringify({ projectType: 'library', targets: { build: {
  * @param files - Its files, by workspace-relative path
  * @returns The root
  */
-function workspace(files: Readonly<Record<string, string>>): string {
-  const root = mkdtempSync(join(tmpdir(), 'lint-docs-libraries-'))
-  for (const [path, text] of Object.entries({ 'nx.json': '{}', ...files })) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
-  return root
+function workspace(files: Readonly<Record<string, string>>): TempDir {
+  return createTempDir({ prefix: 'lint-docs-libraries-', tree: { 'nx.json': '{}', ...files } })
 }
 
 const PLACED = workspace({
@@ -43,7 +39,7 @@ const BARE = workspace({
   'libs/logging/project.json': PUBLISHABLE,
   'libs/logging/package.json': JSON.stringify({ name: '@hyperfrontend/logging' }),
 })
-const OUTSIDE = mkdtempSync(join(tmpdir(), 'lint-docs-libraries-outside-'))
+const OUTSIDE = createTempDir({ prefix: 'lint-docs-libraries-outside-' })
 
 /**
  * A case linting a site file.
@@ -82,48 +78,48 @@ testRule(rule, {
   valid: [
     site(
       'a content file listing and placing every library',
-      PLACED,
+      PLACED.path,
       CONTENT,
       LISTED.replace('[{', "[{ packageName: '@hyperfrontend/json-utils' }, {")
     ),
-    site('an array that is not exported from the content', PLACED, CONTENT, 'const LIBRARIES = []'),
-    site('an array declared with let', PLACED, CONTENT, 'export let LIBRARIES = []'),
-    site('a value that is not an array', PLACED, CONTENT, 'export const LIBRARIES = {}'),
-    site('another array', PLACED, CONTENT, 'export const OTHER = []'),
-    site('a file of the same name elsewhere', PLACED, 'src/lib/content.ts', EMPTY),
-    site('another file of the site', PLACED, 'apps/docs-site/src/lib/other.ts', EMPTY),
+    site('an array that is not exported from the content', PLACED.path, CONTENT, 'const LIBRARIES = []'),
+    site('an array declared with let', PLACED.path, CONTENT, 'export let LIBRARIES = []'),
+    site('a value that is not an array', PLACED.path, CONTENT, 'export const LIBRARIES = {}'),
+    site('another array', PLACED.path, CONTENT, 'export const OTHER = []'),
+    site('a file of the same name elsewhere', PLACED.path, 'src/lib/content.ts', EMPTY),
+    site('another file of the site', PLACED.path, 'apps/docs-site/src/lib/other.ts', EMPTY),
     site(
       'a generator listing every library, the hierarchy unread',
-      PLACED,
+      PLACED.path,
       'apps/docs-site/scripts/generate-docs.ts',
       'const LIBRARIES = [{ packageName: "@hyperfrontend/logging" }, { packageName: "@hyperfrontend/json-utils" }]'
     ),
-    site('a site outside any workspace', OUTSIDE, CONTENT, EMPTY),
+    site('a site outside any workspace', OUTSIDE.path, CONTENT, EMPTY),
   ],
   invalid: [
     {
-      ...site('a library missing from the content and the hierarchy', PLACED, CONTENT, EMPTY),
+      ...site('a library missing from the content and the hierarchy', PLACED.path, CONTENT, EMPTY),
       errors: onDeclarator(EMPTY, [
         missing('@hyperfrontend/json-utils', 'libs/utils/json'),
         missing('@hyperfrontend/logging', 'libs/logging'),
       ]),
     },
     {
-      ...site('a navigation file missing a library', PLACED, 'apps/docs-site/src/lib/navigation.ts', 'const LIBRARIES = []'),
+      ...site('a navigation file missing a library', PLACED.path, 'apps/docs-site/src/lib/navigation.ts', 'const LIBRARIES = []'),
       errors: onDeclarator('const LIBRARIES = []', [
         missing('@hyperfrontend/json-utils', 'libs/utils/json'),
         missing('@hyperfrontend/logging', 'libs/logging'),
       ]),
     },
     {
-      ...site('a library the hierarchy does not place', UNPLACED, CONTENT, EMPTY),
+      ...site('a library the hierarchy does not place', UNPLACED.path, CONTENT, EMPTY),
       errors: onDeclarator(EMPTY, [
         missing('@hyperfrontend/features', 'plugins/features'),
         unplaced('@hyperfrontend/features', 'plugins/features'),
       ]),
     },
     {
-      ...site('a workspace without a hierarchy file', BARE, CONTENT, EMPTY),
+      ...site('a workspace without a hierarchy file', BARE.path, CONTENT, EMPTY),
       errors: onDeclarator(EMPTY, [missing('@hyperfrontend/logging', 'libs/logging')]),
     },
   ],
@@ -131,7 +127,7 @@ testRule(rule, {
 
 describe('the disposable workspaces', () => {
   it('are removed at the end', () => {
-    for (const root of [PLACED, UNPLACED, BARE, OUTSIDE]) rmSync(root, { recursive: true, force: true })
-    expect([PLACED, UNPLACED, BARE, OUTSIDE].some((root) => existsSync(root))).toBe(false)
+    for (const root of [PLACED, UNPLACED, BARE, OUTSIDE]) root.remove()
+    expect([PLACED, UNPLACED, BARE, OUTSIDE].some((root) => existsSync(root.path))).toBe(false)
   })
 })

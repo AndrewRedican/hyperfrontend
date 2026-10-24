@@ -8,11 +8,10 @@
  * @module rules/workspace/__test-utils__/cross-platform-workspace
  */
 
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** A runtime source importing a `node:` module. */
 const NODE_IMPORT = "import { join } from 'node:path'\n"
@@ -73,11 +72,7 @@ export interface CrossPlatformWorkspace {
  * @returns Their roots
  */
 export function createCrossPlatformWorkspace(): CrossPlatformWorkspace {
-  const root = mkdtempSync(join(tmpdir(), 'lint-cross-platform-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
+  const root = createTempDir({ prefix: 'lint-cross-platform-', tree: FILES }).path
   return {
     root,
     node: join(root, 'node'),

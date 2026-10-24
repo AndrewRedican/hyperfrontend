@@ -5,9 +5,8 @@
  * @module rules/workspace/__test-utils__/markdown-workspace
  */
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The paths the specs lint as. */
 export interface MarkdownWorkspace {
@@ -40,17 +39,18 @@ const INTERNAL = '{ "name": "lib-internal", "projectType": "library", "targets":
  * @returns Its paths
  */
 export function createMarkdownWorkspace(): MarkdownWorkspace {
-  const root = mkdtempSync(join(tmpdir(), 'lint-md-'))
-  const write = (path: string, text: string): void => {
-    mkdirSync(join(root, path, '..'), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
-  write('nx.json', '{}')
-  write('libs/pub/project.json', PUBLISHABLE)
-  write('libs/pub/src/host/.keep', '')
-  write('libs/internal/project.json', INTERNAL)
-  write('apps/site/project.json', '{ "name": "site", "projectType": "application" }')
-  write('docs/.keep', '')
+  const directory = createTempDir({
+    prefix: 'lint-md-',
+    tree: {
+      'nx.json': '{}',
+      'libs/pub/project.json': PUBLISHABLE,
+      'libs/pub/src/host/.keep': '',
+      'libs/internal/project.json': INTERNAL,
+      'apps/site/project.json': '{ "name": "site", "projectType": "application" }',
+      'docs/.keep': '',
+    },
+  })
+  const root = directory.path
   return {
     root,
     rootFile: (name) => join(root, name),
@@ -59,7 +59,9 @@ export function createMarkdownWorkspace(): MarkdownWorkspace {
     internalFile: (name) => join(root, 'libs', 'internal', name),
     appFile: (name) => join(root, 'apps', 'site', name),
     docsFile: (name) => join(root, 'docs', name),
-    write,
-    remove: () => rmSync(root, { recursive: true }),
+    write: (path, text) => {
+      directory.write(path, text)
+    },
+    remove: directory.remove,
   }
 }

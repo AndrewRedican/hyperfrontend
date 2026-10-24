@@ -7,11 +7,8 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The files of the workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
@@ -82,11 +79,7 @@ const FILES: Readonly<Record<string, string>> = {
  * @returns The absolute root
  */
 export function createDependencyWorkspace(): string {
-  const root = mkdtempSync(join(tmpdir(), 'lint-dependencies-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
+  const root = createTempDir({ prefix: 'lint-dependencies-', tree: FILES }).path
   execFileSync('git', ['init', '-q'], { cwd: root })
   return root
 }
