@@ -1,9 +1,6 @@
 import type { BuildContext, EntryPoint, EntryPointDiscovery, FormatOutputs, PackageJson, UmdConfig } from '../../models'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { synthesizePackageJson } from './synthesize'
 
 const ROOT: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }
@@ -42,15 +39,7 @@ const makeContext = (discovery: EntryPointDiscovery = baseDiscovery()): BuildCon
 })
 
 describe('synthesizePackageJson', () => {
-  let workspaceRoot: string
-
-  beforeEach(() => {
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'builder-synth-'))
-  })
-
-  afterEach(() => {
-    rmSync(workspaceRoot, { recursive: true, force: true })
-  })
+  const workspace = useTempDir({ prefix: 'builder-synth-' })
 
   it('always sets sideEffects:false on the synthesized output', () => {
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
@@ -132,8 +121,7 @@ describe('synthesizePackageJson', () => {
   })
 
   it('inherits the requested fields from the configured source package.json', () => {
-    const sourcePath = join(workspaceRoot, 'package.json')
-    writeFileSync(sourcePath, JSON.stringify({ repository: { type: 'git', url: 'https://example.com/x.git' } }))
+    const sourcePath = workspace.write('package.json', { repository: { type: 'git', url: 'https://example.com/x.git' } })
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
       inheritFieldsFrom: { from: sourcePath, fields: ['repository'] },
@@ -163,8 +151,7 @@ describe('synthesizePackageJson', () => {
   })
 
   it('keeps a stripped field when inheritFieldsFrom names it explicitly', () => {
-    const sourcePath = join(workspaceRoot, 'package.json')
-    writeFileSync(sourcePath, JSON.stringify({ packageManager: 'npm@11.0.0' }))
+    const sourcePath = workspace.write('package.json', { packageManager: 'npm@11.0.0' })
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo', packageManager: 'pnpm@9.0.0' }, makeContext(), formats, {
       inheritFieldsFrom: { from: sourcePath, fields: ['packageManager'] },

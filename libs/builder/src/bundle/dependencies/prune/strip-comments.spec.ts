@@ -1,8 +1,6 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { stripComments, stripCommentsPass } from './strip-comments'
 
 describe('stripComments', () => {
@@ -137,25 +135,13 @@ describe('stripComments', () => {
 })
 
 describe('stripCommentsPass', () => {
-  let depsParent: string
+  const depsParent = useTempDir({ prefix: 'builder-comment-strip-' })
 
-  beforeEach(() => {
-    depsParent = mkdtempSync(join(tmpdir(), 'builder-comment-strip-'))
-  })
+  const depsRoot = (): string => depsParent.resolve('_dependencies')
 
-  afterEach(() => {
-    rmSync(depsParent, { recursive: true, force: true })
-  })
+  const write = (relPath: string, content: string): string => depsParent.write(join('_dependencies', relPath), content)
 
-  const depsRoot = (): string => join(depsParent, '_dependencies')
-
-  const write = (relPath: string, content: string): void => {
-    const abs = join(depsRoot(), relPath)
-    mkdirSync(join(abs, '..'), { recursive: true })
-    writeFileSync(abs, content)
-  }
-
-  const read = (relPath: string): string => readFileSync(join(depsRoot(), relPath), 'utf8')
+  const read = (relPath: string): string => depsParent.read(join('_dependencies', relPath))
 
   it('returns zero bytes when there is no _dependencies directory', () => {
     expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })

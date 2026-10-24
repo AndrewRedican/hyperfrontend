@@ -1,29 +1,20 @@
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
 import { join, sep } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { shimCjsGlobalsPass } from './cjs-globals-pass'
 
 describe('shimCjsGlobalsPass', () => {
+  const dir = useTempDir({ prefix: 'builder-cjs-globals-' })
   let depsRoot: string
 
   beforeEach(() => {
-    depsRoot = join(mkdtempSync(join(tmpdir(), 'builder-cjs-globals-')), '_dependencies')
-    mkdirSync(depsRoot, { recursive: true })
+    depsRoot = dir.mkdir('_dependencies')
   })
 
-  afterEach(() => {
-    rmSync(join(depsRoot, '..'), { recursive: true, force: true })
-  })
-
-  const write = (relPath: string, content: string): string => {
-    const abs = join(depsRoot, relPath)
-    mkdirSync(join(abs, '..'), { recursive: true })
-    writeFileSync(abs, content)
-    return abs
-  }
+  const write = (relPath: string, content: string): string => dir.write(join('_dependencies', relPath), content)
 
   it('returns a zero count when the deps root does not exist', () => {
     expect(shimCjsGlobalsPass(join(depsRoot, 'absent'))).toEqual({ chunksShimmed: 0 })

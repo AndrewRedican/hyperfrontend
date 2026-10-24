@@ -1,28 +1,19 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { collectReachableSources } from './source-reachability'
 
 describe('collectReachableSources', () => {
+  const dir = useTempDir({ prefix: 'builder-source-reachability-' })
   let srcRoot: string
 
   beforeEach(() => {
-    srcRoot = join(mkdtempSync(join(tmpdir(), 'builder-source-reachability-')), 'src')
-    mkdirSync(srcRoot, { recursive: true })
+    srcRoot = dir.mkdir('src')
   })
 
-  afterEach(() => {
-    rmSync(join(srcRoot, '..'), { recursive: true, force: true })
-  })
-
-  const write = (relPath: string, content: string): string => {
-    const abs = join(srcRoot, relPath)
-    mkdirSync(join(abs, '..'), { recursive: true })
-    writeFileSync(abs, content)
-    return abs
-  }
+  const write = (relPath: string, content: string): string => dir.write(join('src', relPath), content)
 
   const reachable = (entries: string[]): string[] => collectReachableSources(entries, srcRoot).sort()
 

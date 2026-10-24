@@ -1,10 +1,10 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { BuildContext } from '../../models'
 import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
 import { beforeEach } from 'node:test'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeChildProcess } from '@hyperfrontend/testing/process'
 import { flattenDeclarationPaths } from './flatten-paths'
 import { generateDeclarations } from './generate-declarations'
 import { resolveTscScript } from './resolve-tsc-script'
@@ -25,20 +25,6 @@ jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
 jest.mock('./resolve-tsc-script', () => ({ resolveTscScript: jest.fn() }))
 jest.mock('./flatten-paths', () => ({ flattenDeclarationPaths: jest.fn() }))
 
-interface FakeChild extends EventEmitter {
-  stdout: EventEmitter
-  stderr: EventEmitter
-  pid?: number
-}
-
-const makeFakeChild = (pid = 12345): FakeChild => {
-  const child = new EventEmitter() as FakeChild
-  child.stdout = new EventEmitter()
-  child.stderr = new EventEmitter()
-  child.pid = pid
-  return child
-}
-
 const makeContext = (): BuildContext => ({
   projectRoot: '/abs/libs/foo',
   workspaceRoot: '/abs/repo',
@@ -55,8 +41,6 @@ const makeContext = (): BuildContext => ({
 })
 
 const TSC_SCRIPT = '/abs/repo/node_modules/typescript/bin/tsc'
-
-const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
 
 const mockChannel = jest.requireMock<{
   __mockChannel: {
@@ -83,11 +67,11 @@ beforeEach(() => {
 
 describe('generateDeclarations', () => {
   it('runs the workspace-local tsc entry script on the current node binary with the declaration emission flags', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(spawn).toHaveBeenCalledWith(
       process.execPath,
@@ -108,21 +92,21 @@ describe('generateDeclarations', () => {
   })
 
   it('resolves the tsc entry script from the workspace root rather than a node_modules/.bin shim', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(resolveTscScript).toHaveBeenCalledWith('/abs/repo')
   })
 
   it('spawns without a shell so arguments containing spaces stay intact', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect((spawn as Mock).mock.calls[0]?.[2]).not.toHaveProperty('shell')
   })
@@ -144,220 +128,220 @@ describe('generateDeclarations', () => {
   })
 
   it('flattens declaration paths after a successful tsc run', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const ctx = makeContext()
     const promise = generateDeclarations(ctx)
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(flattenDeclarationPaths).toHaveBeenCalledWith(ctx)
   })
 
   it('resolves with the streamed stdout and stderr concatenated', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.stdout.emit('data', Buffer.from('compiled.\n'))
-    child.stderr.emit('data', Buffer.from('warn1\n'))
-    child.emit('close', 0)
+    await flushPromises()
+    child.writeStdout('compiled.\n')
+    child.writeStderr('warn1\n')
+    child.exit(0)
     const result = await promise
     expect(result).toEqual({ success: true, stdout: 'compiled.\n', stderr: 'warn1\n' })
   })
 
   it('forwards stdout chunks to log.debug as they stream in', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.stdout.emit('data', Buffer.from('chunk-a\n'))
-    child.stdout.emit('data', 'chunk-b\n')
-    child.emit('close', 0)
+    await flushPromises()
+    child.writeStdout('chunk-a\n')
+    child.writeStdout('chunk-b\n')
+    child.exit(0)
     await promise
     expect(mockChannel.debug.mock.calls.map(([line]) => line)).toEqual(expect.arrayContaining(['chunk-a', 'chunk-b']))
   })
 
   it('forwards stderr chunks to log.warn as they stream in', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.stderr.emit('data', Buffer.from('boom\n'))
-    child.emit('close', 0)
+    await flushPromises()
+    child.writeStderr('boom\n')
+    child.exit(0)
     await promise
     expect(mockChannel.warn).toHaveBeenCalledWith('boom')
   })
 
   it('rejects with the original error when the child emits an error event', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
+    await flushPromises()
     const spawnError = new Error('spawn failed')
-    child.emit('error', spawnError)
+    child.fail(spawnError)
     await expect(promise).rejects.toBe(spawnError)
   })
 
   it('logs the spawn error when the child emits an error event', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('error', new Error('spawn failed'))
+    await flushPromises()
+    child.fail(new Error('spawn failed'))
     await promise.catch(() => undefined)
     expect(mockChannel.error).toHaveBeenCalledWith('tsc spawn error: spawn failed')
   })
 
   it('skips the flatten when the child emits an error event', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('error', new Error('spawn failed'))
+    await flushPromises()
+    child.fail(new Error('spawn failed'))
     await promise.catch(() => undefined)
     expect(flattenDeclarationPaths).not.toHaveBeenCalled()
   })
 
   it('rejects with a descriptive error when tsc closes with a non-zero exit code', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 2)
+    await flushPromises()
+    child.exit(2)
     await expect(promise).rejects.toThrow(/tsc failed with exit code 2/)
   })
 
   it('skips the flatten when tsc closes with a non-zero exit code', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 2)
+    await flushPromises()
+    child.exit(2)
     await promise.catch(() => undefined)
     expect(flattenDeclarationPaths).not.toHaveBeenCalled()
   })
 
   it('logs the exit code and elapsed time when tsc closes with a non-zero exit code', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 2)
+    await flushPromises()
+    child.exit(2)
     await promise.catch(() => undefined)
     expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^tsc failed with exit code 2 after \d+ms$/))
   })
 
   it('resolves with empty stdout and stderr when tsc emits no output', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     expect(await promise).toEqual({ success: true, stdout: '', stderr: '' })
   })
 
   it('logs a pre-tsc memory snapshot before spawning', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^pre-tsc memory: parent heap=[\d.]+MB rss=[\d.]+MB$/))
   })
 
   it('logs the tsc pid at info level after spawning', async () => {
-    const child = makeFakeChild(54321)
+    const child = createFakeChildProcess({ pid: 54321 })
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(mockChannel.info).toHaveBeenCalledWith('tsc spawned: pid=54321')
   })
 
   it('falls back to "unknown" when the child has no pid', async () => {
-    const child = makeFakeChild()
-    delete child.pid
+    const child = createFakeChildProcess()
+    child.pid = undefined
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(mockChannel.info).toHaveBeenCalledWith('tsc spawned: pid=unknown')
   })
 
   it('logs the full tsc args at debug level', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(mockChannel.debug).toHaveBeenCalledWith(expect.stringMatching(/^tsc args: .*--emitDeclarationOnly/))
   })
 
   it('starts a 5s heartbeat interval on spawn', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
+    await flushPromises()
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
-    child.emit('close', 0)
+    child.exit(0)
     await promise
   })
 
   it('clears the heartbeat interval on close', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
   })
 
   it('clears the heartbeat interval on tsc spawn error', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('error', new Error('boom'))
+    await flushPromises()
+    child.fail(new Error('boom'))
     await promise.catch(() => undefined)
     expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
   })
 
   it('emits a heartbeat info line with parent heap and rss when the interval fires', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
+    await flushPromises()
     const heartbeatFn = (setInterval as Mock).mock.calls[0]?.[0] as () => void
     heartbeatFn()
     expect(mockChannel.info).toHaveBeenCalledWith(
       expect.stringMatching(/^tsc still running: elapsed=[\d.]+s parent heap=[\d.]+MB rss=[\d.]+MB$/)
     )
-    child.emit('close', 0)
+    child.exit(0)
     await promise
   })
 
   it('logs the tsc duration at info level on success', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^tsc exited 0 in \d+ms$/))
   })
 
   it('logs the flatten phase boundaries at info level', async () => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
-    await tick()
-    child.emit('close', 0)
+    await flushPromises()
+    child.exit(0)
     await promise
     const flattenLines = mockChannel.info.mock.calls.map(([line]) => line as string).filter((line) => line.startsWith('flatten'))
     expect(flattenLines).toEqual(['flattening declaration paths', expect.stringMatching(/^flatten complete in \d+ms$/)])

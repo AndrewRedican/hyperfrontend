@@ -1,9 +1,9 @@
 import type { BuildContext, EntryPointDiscovery } from '../../models'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { flattenDeclarationPaths } from './flatten-paths'
 
 const writeFile = (path: string, content = ''): void => {
@@ -20,25 +20,20 @@ const makeDiscovery = (entries: EntryPointDiscovery['entryPoints']): EntryPointD
 })
 
 describe('flattenDeclarationPaths', () => {
-  let workspaceRoot: string
+  const workspace = useTempDir({ prefix: 'builder-flat-' })
   let projectRoot: string
   let outputPath: string
 
   beforeEach(() => {
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'builder-flat-'))
-    projectRoot = join(workspaceRoot, 'libs', 'foo')
-    outputPath = join(workspaceRoot, 'dist', 'libs', 'foo')
+    projectRoot = workspace.resolve('libs', 'foo')
+    outputPath = workspace.resolve('dist', 'libs', 'foo')
     mkdirSync(projectRoot, { recursive: true })
     mkdirSync(outputPath, { recursive: true })
   })
 
-  afterEach(() => {
-    rmSync(workspaceRoot, { recursive: true, force: true })
-  })
-
   const makeContext = (discovery: EntryPointDiscovery): BuildContext => ({
     projectRoot,
-    workspaceRoot,
+    workspaceRoot: workspace.path,
     projectRelativePath: 'libs/foo',
     outputPath,
     tsConfigPath: join(projectRoot, 'tsconfig.lib.json'),

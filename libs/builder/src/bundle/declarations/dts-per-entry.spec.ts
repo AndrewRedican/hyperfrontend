@@ -1,9 +1,10 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
 import { beforeEach } from 'node:test'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { runDtsPerEntry } from './dts-per-entry'
 jest.mock('../dependencies/pre-pass', () => ({
@@ -127,14 +128,14 @@ describe('runDtsPerEntry', () => {
   })
 
   it('threads the optional memory monitor through to runPrePass', async () => {
-    const monitor = { check: jest.fn() }
-    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
+    const monitor = createMock<MemoryMonitor>()
+    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor)
     expect((runPrePass as Mock).mock.calls[0][1].monitor).toBe(monitor)
   })
 
   it('checkpoints the monitor at the start and end of the per-entry pass', async () => {
-    const monitor = { check: jest.fn() }
-    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
+    const monitor = createMock<MemoryMonitor>()
+    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor)
     expect(monitor.check.mock.calls).toEqual([['bundle:declarations:dts-perentry:start'], ['bundle:declarations:dts-perentry:end']])
   })
 

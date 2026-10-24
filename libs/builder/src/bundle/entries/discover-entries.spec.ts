@@ -1,29 +1,16 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { discoverEntries } from './discover-entries'
 
-const makeFixture = (): string => mkdtempSync(join(tmpdir(), 'builder-discover-'))
-
-const writeEntry = (root: string, srcPath: string): void => {
-  const dir = srcPath ? join(root, 'src', srcPath) : join(root, 'src')
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, 'index.ts'), 'export {}\n')
-}
-
 describe('discoverEntries', () => {
-  let root: string
+  const root = useTempDir({ prefix: 'builder-discover-' })
 
-  afterEach(() => {
-    if (root) rmSync(root, { recursive: true, force: true })
-  })
+  const writeEntry = (srcPath: string): string => root.write(join('src', srcPath, 'index.ts'), 'export {}\n')
 
   it('classifies a single root entry as the root category', () => {
-    root = makeFixture()
-    writeEntry(root, '')
-    expect(discoverEntries(root)).toEqual(
+    writeEntry('')
+    expect(discoverEntries(root.path)).toEqual(
       expect.objectContaining({
         category: 'root',
         hasRootEntry: true,
@@ -33,10 +20,9 @@ describe('discoverEntries', () => {
   })
 
   it('classifies browser/node only layouts as the platform category', () => {
-    root = makeFixture()
-    writeEntry(root, 'browser')
-    writeEntry(root, 'node')
-    expect(discoverEntries(root)).toEqual(
+    writeEntry('browser')
+    writeEntry('node')
+    expect(discoverEntries(root.path)).toEqual(
       expect.objectContaining({
         category: 'platform',
         hasRootEntry: false,
@@ -49,17 +35,15 @@ describe('discoverEntries', () => {
   })
 
   it('classifies feature-only layouts as the feature category', () => {
-    root = makeFixture()
-    writeEntry(root, 'actions')
-    writeEntry(root, 'events')
-    expect(discoverEntries(root).category).toBe('feature')
+    writeEntry('actions')
+    writeEntry('events')
+    expect(discoverEntries(root.path).category).toBe('feature')
   })
 
   it('classifies nested platform layouts as the complex category', () => {
-    root = makeFixture()
-    writeEntry(root, 'browser')
-    writeEntry(root, 'browser/channel')
-    expect(discoverEntries(root)).toEqual(
+    writeEntry('browser')
+    writeEntry('browser/channel')
+    expect(discoverEntries(root.path)).toEqual(
       expect.objectContaining({
         category: 'complex',
         platformEntries: expect.arrayContaining([expect.objectContaining({ exportPath: './browser/channel', platform: 'browser' })]),
@@ -68,39 +52,33 @@ describe('discoverEntries', () => {
   })
 
   it('classifies mixed root + feature layouts as the hybrid category', () => {
-    root = makeFixture()
-    writeEntry(root, '')
-    writeEntry(root, 'actions')
-    expect(discoverEntries(root).category).toBe('hybrid')
+    writeEntry('')
+    writeEntry('actions')
+    expect(discoverEntries(root.path).category).toBe('hybrid')
   })
 
   it('returns an empty discovery for projects without a src directory', () => {
-    root = makeFixture()
-    expect(discoverEntries(root)).toEqual(expect.objectContaining({ entryPoints: [], hasRootEntry: false, category: 'hybrid' }))
+    expect(discoverEntries(root.path)).toEqual(expect.objectContaining({ entryPoints: [], hasRootEntry: false, category: 'hybrid' }))
   })
 
   it('skips directories whose names start with a dot', () => {
-    root = makeFixture()
-    writeEntry(root, '.hidden')
-    writeEntry(root, 'actions')
-    expect(discoverEntries(root).entryPoints.map((e) => e.exportPath)).toEqual(['./actions'])
+    writeEntry('.hidden')
+    writeEntry('actions')
+    expect(discoverEntries(root.path).entryPoints.map((e) => e.exportPath)).toEqual(['./actions'])
   })
 
   it('skips subdirectories that do not contain an index.ts', () => {
-    root = makeFixture()
-    mkdirSync(join(root, 'src', 'empty'), { recursive: true })
-    expect(discoverEntries(root).entryPoints).toEqual([])
+    root.mkdir('src/empty')
+    expect(discoverEntries(root.path).entryPoints).toEqual([])
   })
 
   it('treats a non-directory at the src path as an empty layout', () => {
-    root = makeFixture()
-    writeFileSync(join(root, 'src'), '')
-    expect(discoverEntries(root).entryPoints).toEqual([])
+    root.write('src', '')
+    expect(discoverEntries(root.path).entryPoints).toEqual([])
   })
 
   it('caps recursion at three levels deep', () => {
-    root = makeFixture()
-    writeEntry(root, 'a/b/c/d')
-    expect(discoverEntries(root).entryPoints.map((e) => e.exportPath)).not.toContain('./a/b/c/d')
+    writeEntry('a/b/c/d')
+    expect(discoverEntries(root.path).entryPoints.map((e) => e.exportPath)).not.toContain('./a/b/c/d')
   })
 })

@@ -1,13 +1,14 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { FakeChildProcess } from '@hyperfrontend/testing/process'
 import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
 import type { PrePassJob, PrePassResult } from './pre-pass'
 import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { existsSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { captureStdio, createFakeChildProcess } from '@hyperfrontend/testing/process'
 import { resolveDefaultWorkerPath, runPrePass } from './pre-pass'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
@@ -20,20 +21,16 @@ jest.mock('@hyperfrontend/logging', () => {
 })
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
 
-const tick = (): Promise<void> => new Promise<void>((resolve) => setImmediate(resolve))
-
-const makeFakeChild = (): EventEmitter => new EventEmitter()
-
 interface SpawnRecord {
   execPath: string
   args: string[]
   reportPath: string
-  child: EventEmitter
+  child: FakeChildProcess
 }
 
 const captureSpawn = (records: SpawnRecord[]): Mock => {
   return (spawn as Mock).mockImplementation((execPath: string, args: string[]) => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     const jobJson = args[args.length - 1] as string
     const job = JSON.parse(jobJson) as { reportPath: string }
     records.push({ execPath, args, reportPath: job.reportPath, child })
@@ -59,6 +56,10 @@ beforeEach(() => {
   ;(spawn as Mock).mockReset()
 })
 
+afterEach(() => {
+  jest.restoreAllMocks()
+})
+
 describe('runPrePass', () => {
   it('returns an empty list when no jobs are supplied', async () => {
     const results = await runPrePass([], { workerPath: '/abs/worker.cjs' })
@@ -76,14 +77,14 @@ describe('runPrePass', () => {
     const jobs = [baseJob({ dep: 'rollup' }), baseJob({ dep: 'postject', otherDeps: ['rollup'] })]
     const promise = runPrePass(jobs, { workerPath: '/abs/worker.cjs' })
     const spawnCounts: number[] = []
-    await tick()
+    await flushPromises()
     spawnCounts.push(records.length)
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
-    await tick()
+    ;(records[0] as SpawnRecord).child.exit(0)
+    await flushPromises()
     spawnCounts.push(records.length)
     writeReport((records[1] as SpawnRecord).reportPath, { outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30 })
-    ;(records[1] as SpawnRecord).child.emit('exit', 0)
+    ;(records[1] as SpawnRecord).child.exit(0)
     const results = await promise
     return { spawnCounts, jobs, results }
   }
@@ -105,8 +106,8 @@ describe('runPrePass', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('exit', 1)
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.exit(1)
     await expect(promise).rejects.toThrow(/pre-pass worker for rollup .*exited with code 1/)
   })
 
@@ -114,8 +115,8 @@ describe('runPrePass', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('error', new Error('ENOENT'))
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.fail(new Error('ENOENT'))
     await expect(promise).rejects.toThrow(/failed to spawn: ENOENT/)
   })
 
@@ -123,8 +124,8 @@ describe('runPrePass', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.exit(0)
     await expect(promise).rejects.toThrow(/did not write a report/)
   })
 
@@ -136,13 +137,13 @@ describe('runPrePass', () => {
       execPath: '/usr/bin/custom-node',
       execArgv: ['--require', '@swc-node/register'],
     })
-    await tick()
+    await flushPromises()
     expect({ execPath: (records[0] as SpawnRecord).execPath, leadingArgs: (records[0] as SpawnRecord).args.slice(0, 3) }).toEqual({
       execPath: '/usr/bin/custom-node',
       leadingArgs: ['--require', '@swc-node/register', '/abs/worker.cjs'],
     })
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
   })
 
@@ -161,9 +162,9 @@ describe('runPrePass', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs', monitor })
-    await tick()
+    await flushPromises()
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 10, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
     expect(checks).toEqual(['bundle:dependencies:prepass:1/1:rollup:js:esm:start', 'bundle:dependencies:prepass:1/1:rollup:js:esm:end'])
   })
@@ -172,34 +173,63 @@ describe('runPrePass', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
-    ;(records[0] as SpawnRecord).child.emit('exit', 2)
+    ;(records[0] as SpawnRecord).child.exit(2)
     await promise.catch(() => undefined)
     expect(existsSync(reportDir)).toBe(false)
+  })
+
+  it('includes the captured stderr tail when a worker exits with a non-zero code', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    captureStdio({ stdout: false })
+    const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs' })
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.writeStderr('boom oh no\n')
+    ;(records[0] as SpawnRecord).child.exit(1)
+    await expect(promise).rejects.toThrow(/exited with code 1[\s\S]*boom oh no/)
+  })
+
+  it('passes stdout chunks through to the parent stdout', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const stdio = captureStdio({ stderr: false })
+    const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs' })
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.writeStdout('child output\n')
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.exit(0)
+    await promise
+    stdio.restore()
+    expect(stdio.stdout()).toBe('child output\n')
+  })
+
+  it('passes stderr string chunks through to the parent stderr', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const stdio = captureStdio({ stdout: false })
+    const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs' })
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.stderr.setEncoding('utf8')
+    ;(records[0] as SpawnRecord).child.writeStderr('string chunk\n')
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.exit(0)
+    await promise
+    stdio.restore()
+    expect(stdio.stderr()).toBe('string chunk\n')
   })
 })
 
 describe('resolveDefaultWorkerPath', () => {
-  let root: string
-
-  beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-prepass-resolver-'))
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
+  const dir = useTempDir({ prefix: 'builder-prepass-resolver-' })
 
   it('resolves the worker at the bundle/dependencies/worker offset beside the builder', () => {
-    const targetDir = join(root, 'bundle', 'dependencies', 'worker')
-    mkdirSync(targetDir, { recursive: true })
-    const path = join(targetDir, 'index.cjs')
-    writeFileSync(path, '/* fake worker */', { flag: 'w' })
-    expect(resolveDefaultWorkerPath(root)).toEqual({ path, execArgv: [] })
+    const path = dir.write('bundle/dependencies/worker/index.cjs', '/* fake worker */')
+    expect(resolveDefaultWorkerPath(dir.path)).toEqual({ path, execArgv: [] })
   })
 
   it('returns undefined when no pre-pass worker exists under any ancestor', () => {
-    expect(resolveDefaultWorkerPath(root)).toBeUndefined()
+    expect(resolveDefaultWorkerPath(dir.path)).toBeUndefined()
   })
 })

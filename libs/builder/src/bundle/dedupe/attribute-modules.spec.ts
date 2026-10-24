@@ -1,10 +1,7 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { attribute, baseName, chunkFileName, fingerprintOf, indexOwners, parseEntry, sharedDirFor } from './attribute-modules'
 
 describe('baseName', () => {
@@ -161,54 +158,40 @@ describe('attribute', () => {
 })
 
 describe('indexOwners', () => {
-  let src: string
-
-  const writeSrc = (relPath: string, content: string): void => {
-    const abs = join(src, relPath)
-    mkdirSync(dirname(abs), { recursive: true })
-    writeFileSync(abs, content)
-  }
-
-  beforeEach(() => {
-    src = mkdtempSync(join(tmpdir(), 'builder-owners-'))
-  })
-
-  afterEach(() => {
-    rmSync(src, { recursive: true, force: true })
-  })
+  const srcDir = useTempDir({ prefix: 'builder-owners-' })
 
   it('maps an exported runtime symbol to its module key', () => {
-    writeSrc('store/store.ts', 'export class Store {}\n')
-    expect(indexOwners(src).ownerOf.get('Store')).toBe('store/store')
+    srcDir.write('store/store.ts', 'export class Store {}\n')
+    expect(indexOwners(srcDir.path).ownerOf.get('Store')).toBe('store/store')
   })
 
   it('omits a symbol exported by two different modules', () => {
-    writeSrc('a/a.ts', 'export const dup = 1\n')
-    writeSrc('b/b.ts', 'export const dup = 2\n')
-    expect(indexOwners(src).ownerOf.has('dup')).toBe(false)
+    srcDir.write('a/a.ts', 'export const dup = 1\n')
+    srcDir.write('b/b.ts', 'export const dup = 2\n')
+    expect(indexOwners(srcDir.path).ownerOf.has('dup')).toBe(false)
   })
 
   it('attributes a private top-level helper to its module', () => {
-    writeSrc('a/a.ts', 'const helper = 1\nexport const shown = helper\n')
-    expect(indexOwners(src).ownerOf.get('helper')).toBe('a/a')
+    srcDir.write('a/a.ts', 'const helper = 1\nexport const shown = helper\n')
+    expect(indexOwners(srcDir.path).ownerOf.get('helper')).toBe('a/a')
   })
 
   it('skips declaration files and spec files', () => {
-    writeSrc('a/a.d.ts', 'export declare const typed: number\n')
-    writeSrc('a/a.spec.ts', 'export const fromSpec = 1\n')
-    expect(indexOwners(src).ownerOf.size).toBe(0)
+    srcDir.write('a/a.d.ts', 'export declare const typed: number\n')
+    srcDir.write('a/a.spec.ts', 'export const fromSpec = 1\n')
+    expect(indexOwners(srcDir.path).ownerOf.size).toBe(0)
   })
 
   it('indexes an entry-reachable module when entry files are given', () => {
-    writeSrc('index.ts', "export * from './used/used'\n")
-    writeSrc('used/used.ts', 'export const used = 1\n')
-    writeSrc('creators/mocks.ts', 'export const id = 1\n')
-    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.get('used')).toBe('used/used')
+    srcDir.write('index.ts', "export * from './used/used'\n")
+    srcDir.write('used/used.ts', 'export const used = 1\n')
+    srcDir.write('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(srcDir.path, [srcDir.resolve('index.ts')]).ownerOf.get('used')).toBe('used/used')
   })
 
   it('keeps a name unowned when its only declarer is unreachable', () => {
-    writeSrc('index.ts', 'export const rooted = 1\n')
-    writeSrc('creators/mocks.ts', 'export const id = 1\n')
-    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.has('id')).toBe(false)
+    srcDir.write('index.ts', 'export const rooted = 1\n')
+    srcDir.write('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(srcDir.path, [srcDir.resolve('index.ts')]).ownerOf.has('id')).toBe(false)
   })
 })

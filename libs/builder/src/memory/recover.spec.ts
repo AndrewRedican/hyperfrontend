@@ -2,17 +2,13 @@ import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { recover } from './recover'
 
-interface GlobalWithGc {
-  gc?: () => void
-}
-
 describe('recover', () => {
   beforeEach(() => {
-    delete (globalThis as GlobalWithGc).gc
+    jest.stubGlobal('gc', undefined)
   })
 
   afterEach(() => {
-    delete (globalThis as GlobalWithGc).gc
+    jest.restoreAllMocks()
   })
 
   it('resolves after yielding when globalThis.gc is absent', async () => {
@@ -21,7 +17,7 @@ describe('recover', () => {
 
   it('invokes globalThis.gc when present', async () => {
     const gcMock = jest.fn()
-    ;(globalThis as GlobalWithGc).gc = gcMock
+    jest.stubGlobal('gc', gcMock)
     await recover()
     expect(gcMock).toHaveBeenCalledTimes(1)
   })

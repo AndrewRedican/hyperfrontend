@@ -1,9 +1,9 @@
 import type { AssetSpec, PackageJson } from '../../models'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { copyAssets } from './copy-assets'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
@@ -16,20 +16,15 @@ jest.mock('@hyperfrontend/logging', () => {
 const PKG: PackageJson = { name: 'foo' }
 
 describe('copyAssets', () => {
-  let root: string
+  const dir = useTempDir({ prefix: 'builder-assets-' })
   let from: string
   let outputPath: string
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-assets-'))
-    from = join(root, 'src')
-    outputPath = join(root, 'out')
+    from = dir.resolve('src')
+    outputPath = dir.resolve('out')
     mkdirSync(from, { recursive: true })
     mkdirSync(outputPath, { recursive: true })
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
   })
 
   it('copies an explicit list of files into the dist root by default', () => {
@@ -88,7 +83,7 @@ describe('copyAssets', () => {
   })
 
   it('skips a spec whose source directory does not exist', () => {
-    copyAssets([{ from: join(root, 'missing'), files: ['x.md'] }], outputPath, PKG)
+    copyAssets([{ from: dir.resolve('missing'), files: ['x.md'] }], outputPath, PKG)
     expect(existsSync(join(outputPath, 'x.md'))).toBe(false)
   })
 
@@ -99,7 +94,7 @@ describe('copyAssets', () => {
   })
 
   it('processes multiple specs in declaration order', () => {
-    const second = join(root, 'second')
+    const second = dir.resolve('second')
     mkdirSync(second, { recursive: true })
     writeFileSync(join(from, 'a.md'), 'a')
     writeFileSync(join(second, 'b.md'), 'b')

@@ -1,8 +1,7 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { reflectFilesAllowlist } from './reflect-files-allowlist'
 
 const writeTree = (root: string, relPaths: string[]): void => {
@@ -14,18 +13,10 @@ const writeTree = (root: string, relPaths: string[]): void => {
 }
 
 describe('reflectFilesAllowlist', () => {
-  let outputPath: string
-
-  beforeEach(() => {
-    outputPath = mkdtempSync(join(tmpdir(), 'builder-reflect-'))
-  })
-
-  afterEach(() => {
-    rmSync(outputPath, { recursive: true, force: true })
-  })
+  const outputDir = useTempDir({ prefix: 'builder-reflect-' })
 
   it('reflects the exact sorted allowlist from a materialized output tree', () => {
-    writeTree(outputPath, [
+    writeTree(outputDir.path, [
       'package.json',
       'index.cjs',
       'index.mjs',
@@ -43,7 +34,7 @@ describe('reflectFilesAllowlist', () => {
       'LICENSE.md',
       'THIRD_PARTY_LICENSES.md',
     ])
-    expect(reflectFilesAllowlist(outputPath)).toEqual([
+    expect(reflectFilesAllowlist(outputDir.path)).toEqual([
       '**/index.*',
       '**/index.d.ts',
       'LICENSE.md',
@@ -61,41 +52,41 @@ describe('reflectFilesAllowlist', () => {
   })
 
   it('covers index files at any depth with the glob rather than naming them', () => {
-    writeTree(outputPath, ['index.mjs', 'sub/index.d.ts', '_dependencies/@scope/pkg/index.d.ts', 'bundle/index.umd.min.js'])
-    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
+    writeTree(outputDir.path, ['index.mjs', 'sub/index.d.ts', '_dependencies/@scope/pkg/index.d.ts', 'bundle/index.umd.min.js'])
+    expect(reflectFilesAllowlist(outputDir.path)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
   })
 
   it("never names an index file's JS sourcemap sibling and subtracts it via the trailing negation", () => {
-    writeTree(outputPath, ['index.mjs', 'index.mjs.map'])
-    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
+    writeTree(outputDir.path, ['index.mjs', 'index.mjs.map'])
+    expect(reflectFilesAllowlist(outputDir.path)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
   })
 
   it('leaves a d.ts.map (declarationMap) untouched — JS-only exclusion does not subtract it', () => {
-    writeTree(outputPath, ['index.d.ts', 'models.d.ts.map'])
-    expect(reflectFilesAllowlist(outputPath)).toContain('models.d.ts.map')
+    writeTree(outputDir.path, ['index.d.ts', 'models.d.ts.map'])
+    expect(reflectFilesAllowlist(outputDir.path)).toContain('models.d.ts.map')
   })
 
   it('names a root-level non-index survivor explicitly', () => {
-    writeTree(outputPath, ['index.d.ts', 'models.d.ts'])
-    expect(reflectFilesAllowlist(outputPath)).toContain('models.d.ts')
+    writeTree(outputDir.path, ['index.d.ts', 'models.d.ts'])
+    expect(reflectFilesAllowlist(outputDir.path)).toContain('models.d.ts')
   })
 
   it('never emits a bare directory bucket', () => {
-    writeTree(outputPath, ['models/models.d.ts', 'actions/actions.d.ts', 'bin/hf-build.js'])
-    expect(reflectFilesAllowlist(outputPath).some((entry) => entry.endsWith('/'))).toBe(false)
+    writeTree(outputDir.path, ['models/models.d.ts', 'actions/actions.d.ts', 'bin/hf-build.js'])
+    expect(reflectFilesAllowlist(outputDir.path).some((entry) => entry.endsWith('/'))).toBe(false)
   })
 
   it('skips the root package.json', () => {
-    writeTree(outputPath, ['package.json', 'index.d.ts'])
-    expect(reflectFilesAllowlist(outputPath)).not.toContain('package.json')
+    writeTree(outputDir.path, ['package.json', 'index.d.ts'])
+    expect(reflectFilesAllowlist(outputDir.path)).not.toContain('package.json')
   })
 
   it('emits only the index globs and the JS-map exclusion for an empty output tree', () => {
-    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
+    expect(reflectFilesAllowlist(outputDir.path)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
   })
 
   it('emits only the index globs and the JS-map exclusion when the output path does not exist', () => {
-    expect(reflectFilesAllowlist(join(outputPath, 'missing'))).toEqual([
+    expect(reflectFilesAllowlist(outputDir.resolve('missing'))).toEqual([
       '**/index.*',
       '**/index.d.ts',
       '!**/*.js.map',
