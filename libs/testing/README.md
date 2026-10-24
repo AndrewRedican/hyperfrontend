@@ -58,7 +58,7 @@ It is not [Jest](https://jestjs.io/), which remains the fuller tool. It is for p
 - **[A coverage gate you can trust](https://www.hyperfrontend.dev/docs/libraries/testing/coverage/)** - A source file no test loaded fails the run instead of quietly vanishing from the report
 - **[Optional DOM](https://www.hyperfrontend.dev/docs/libraries/testing/dom/)** - One preload gives browser-facing suites a jsdom window; suites that do not need it never install it
 - **TypeScript specs as written** - Node's own type stripping runs them, with extensionless imports and tsconfig path aliases resolved
-- **[The helpers suites keep rewriting](https://www.hyperfrontend.dev/docs/libraries/testing/#api-createMock)** - Typed object mocks, condition waits, self-cleaning temporary directories, and stand-ins for a terminal, the standard streams and child processes
+- **[The helpers suites keep rewriting](https://www.hyperfrontend.dev/docs/libraries/testing/#api-createMock)** - Typed object mocks, condition waits, self-cleaning temporary directories, linked windows, and stand-ins for a terminal, the standard streams and child processes
 
 ### Architecture Highlights
 
@@ -122,16 +122,17 @@ For several environments, setup files and a coverage gate, declare a `test.confi
 
 ## API Overview
 
-| Entry                                                                             | What it is                                                     |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/) | What a spec imports                                            |
-| [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/)           | The `node --import` preload: TypeScript resolution and mocks   |
-| [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/)               | The preload that puts a jsdom window on the global             |
-| [`/fs`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/)                 | Temporary directories and fixture trees written from data      |
-| [`/process`](https://www.hyperfrontend.dev/docs/libraries/testing/process/)       | Terminal, standard stream and child process stand-ins          |
-| [`/runner`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/)         | The config-driven runner, one `node --test` per environment    |
-| [`/coverage`](https://www.hyperfrontend.dev/docs/libraries/testing/coverage/)     | The lcov merge and the threshold gate                          |
-| [`/reporter`](https://www.hyperfrontend.dev/docs/libraries/testing/reporter/)     | Node's spec reporter without the per-evaluation coverage noise |
+| Entry                                                                             | What it is                                                         |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/) | What a spec imports                                                |
+| [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/)           | The `node --import` preload: TypeScript resolution and mocks       |
+| [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/)               | The preload that puts a jsdom window on the global                 |
+| [`/browser`](https://www.hyperfrontend.dev/docs/libraries/testing/browser/)       | Linked windows for cross-origin messaging, a driven ResizeObserver |
+| [`/fs`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/)                 | Temporary directories and fixture trees written from data          |
+| [`/process`](https://www.hyperfrontend.dev/docs/libraries/testing/process/)       | Terminal, standard stream and child process stand-ins              |
+| [`/runner`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/)         | The config-driven runner, one `node --test` per environment        |
+| [`/coverage`](https://www.hyperfrontend.dev/docs/libraries/testing/coverage/)     | The lcov merge and the threshold gate                              |
+| [`/reporter`](https://www.hyperfrontend.dev/docs/libraries/testing/reporter/)     | Node's spec reporter without the per-evaluation coverage noise     |
 
 Every matcher, option and signature is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/testing/#api-reference).
 
