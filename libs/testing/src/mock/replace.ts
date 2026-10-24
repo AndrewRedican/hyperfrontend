@@ -113,6 +113,7 @@ export function stubEnv(name: string, value: string | undefined): void {
  *
  * @param name - The global to set.
  * @param value - Its value until restored.
+ * @returns A handle that restores this one global.
  * @example Giving a suite a WebSocket the runtime lacks
  * ```ts
  * stubGlobal('WebSocket', FakeWebSocket)
@@ -120,10 +121,10 @@ export function stubEnv(name: string, value: string | undefined): void {
  * restoreAllMocks()
  * ```
  */
-export function stubGlobal(name: string, value: unknown): void {
+export function stubGlobal(name: string, value: unknown): Restorable {
   const own = Object.getOwnPropertyDescriptor(globalThis, name)
   Object.defineProperty(globalThis, name, { value, writable: true, configurable: true, enumerable: own?.enumerable ?? false })
-  track(() => {
+  return track(() => {
     if (own) Object.defineProperty(globalThis, name, own)
     else delete (globalThis as Record<string, unknown>)[name]
   })

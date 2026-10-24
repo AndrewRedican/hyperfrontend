@@ -10,6 +10,7 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./browser": "./src/browser/index.js",
     "./coverage": "./src/coverage/index.js",
     "./dom": "./src/dom/index.js",
     "./fs": "./src/fs/index.js",
