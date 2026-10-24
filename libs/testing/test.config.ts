@@ -17,6 +17,7 @@ const config: TestConfig = {
     'src/index.ts',
     'src/coverage/index.ts',
     'src/fs/index.ts',
+    'src/process/index.ts',
     'src/runner/index.ts',
   ],
   /**

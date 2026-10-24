@@ -14,6 +14,7 @@
     "./dom": "./src/dom/index.js",
     "./fs": "./src/fs/index.js",
     "./hooks": "./src/hooks/index.js",
+    "./process": "./src/process/index.js",
     "./reporter": "./src/reporter/index.js",
     "./runner": "./src/runner/index.js",
     "./package.json": "./package.json"
