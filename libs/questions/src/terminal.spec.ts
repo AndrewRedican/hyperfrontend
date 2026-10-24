@@ -1,43 +1,11 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { Terminal } from './terminal'
 import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { Key, Ansi, createTerminal } from './terminal'
 import { TokenType } from './token-parser'
-
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support
- */
-function createMockInput(): PassThrough & { isRaw: boolean; setRawMode: (mode: boolean) => void } {
-  const input = new PassThrough() as PassThrough & { isRaw: boolean; setRawMode: (mode: boolean) => void }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
 
 describe('Key', () => {
   it('contains Up arrow key code', () => {
@@ -176,14 +144,13 @@ describe('Ansi', () => {
 })
 
 describe('createTerminal', () => {
-  // why: need to cast streams for terminals
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
   let terminal: Terminal
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput()
     terminal = createTerminal({
       input: input as unknown as NodeJS.ReadStream,
       output: output as unknown as NodeJS.WriteStream,
@@ -200,14 +167,14 @@ describe('createTerminal', () => {
     it('writes text to output stream', () => {
       terminal.write('Hello')
 
-      expect(output.getWrittenData()).toContain('Hello')
+      expect(output.text()).toContain('Hello')
     })
 
     it('writes multiple times', () => {
       terminal.write('First ')
       terminal.write('Second')
 
-      expect(output.getWrittenData()).toContain('First Second')
+      expect(output.text()).toContain('First Second')
     })
   })
 
@@ -408,7 +375,7 @@ describe('createTerminal', () => {
       input.emit('data', Buffer.from('x'))
       await keyPromise
 
-      expect(output.getWrittenData()).toContain(Ansi.BracketedPasteOn)
+      expect(output.text()).toContain(Ansi.BracketedPasteOn)
     })
 
     it('disables bracketed paste on close', async () => {
@@ -418,7 +385,7 @@ describe('createTerminal', () => {
 
       terminal.close()
 
-      expect(output.getWrittenData()).toContain(Ansi.BracketedPasteOff)
+      expect(output.text()).toContain(Ansi.BracketedPasteOff)
     })
   })
 
@@ -427,7 +394,7 @@ describe('createTerminal', () => {
       const linePromise = terminal.readLine()
 
       // why: need tick for readline to be set up
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
       input.write('hello\n')
 
@@ -442,7 +409,7 @@ describe('createTerminal', () => {
       const linePromise = terminal.readLine()
 
       // why: need tick for readline to be set up
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
       input.end()
 
@@ -458,20 +425,20 @@ describe('createTerminal', () => {
       terminal.clearLines(-1)
 
       // why: no clear codes should be written for 0 or negative counts
-      expect(output.getWrittenData()).not.toContain(Ansi.ClearLine)
+      expect(output.text()).not.toContain(Ansi.ClearLine)
     })
 
     it('clears single line', () => {
       terminal.clearLines(1)
 
       // why: clearing a line returns to its start, then erases it
-      expect(output.getWrittenData()).toContain(Ansi.CursorStart + Ansi.ClearLine)
+      expect(output.text()).toContain(Ansi.CursorStart + Ansi.ClearLine)
     })
 
     it('clears multiple lines', () => {
       terminal.clearLines(3)
 
-      const data = output.getWrittenData()
+      const data = output.text()
       // why: should clear 3 lines and move cursor up 2 times
       const clearCount = data.split(Ansi.ClearLine).length - 1
 
@@ -485,8 +452,7 @@ describe('createTerminal', () => {
     })
 
     it('reports the output size when available', () => {
-      output.columns = 120
-      output.rows = 40
+      output.resize(120, 40)
 
       expect(terminal.getSize()).toEqual({ columns: 120, rows: 40 })
     })
@@ -496,14 +462,14 @@ describe('createTerminal', () => {
     it('shows cursor after close', () => {
       terminal.close()
 
-      expect(output.getWrittenData()).toContain(Ansi.ShowCursor)
+      expect(output.text()).toContain(Ansi.ShowCursor)
     })
 
     it('is idempotent when called multiple times', () => {
       terminal.close()
       terminal.close()
 
-      const shows = output.getWrittenData().split(Ansi.ShowCursor).length - 1
+      const shows = output.text().split(Ansi.ShowCursor).length - 1
 
       expect(shows).toBe(1)
     })
@@ -523,7 +489,7 @@ describe('createTerminal', () => {
       const linePromise = terminal.readLine()
 
       // why: need tick for readline to be set up
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
       // why: close the terminal which should close the readline interface
       terminal.close()
@@ -534,7 +500,7 @@ describe('createTerminal', () => {
       await linePromise
 
       // why: verify cursor was shown
-      expect(output.getWrittenData()).toContain(Ansi.ShowCursor)
+      expect(output.text()).toContain(Ansi.ShowCursor)
     })
   })
 
@@ -574,7 +540,7 @@ describe('createTerminal', () => {
     it('works when setRawMode is not available', async () => {
       const simpleInput = new PassThrough() as PassThrough & { isRaw?: boolean }
       // why: no setRawMode method, simulating non-TTY input
-      const simpleOutput = createMockOutput()
+      const simpleOutput = createCapturedOutput()
       const term = createTerminal({
         input: simpleInput as unknown as NodeJS.ReadStream,
         output: simpleOutput as unknown as NodeJS.WriteStream,
@@ -595,7 +561,7 @@ describe('createTerminal', () => {
 
     it('skips bracketed paste sequences for non-TTY input', async () => {
       const simpleInput = new PassThrough()
-      const simpleOutput = createMockOutput()
+      const simpleOutput = createCapturedOutput()
       const term = createTerminal({
         input: simpleInput as unknown as NodeJS.ReadStream,
         output: simpleOutput as unknown as NodeJS.WriteStream,
@@ -607,7 +573,7 @@ describe('createTerminal', () => {
 
       term.close()
 
-      expect(simpleOutput.getWrittenData()).not.toContain('\x1B[?2004')
+      expect(simpleOutput.text()).not.toContain('\x1B[?2004')
 
       simpleInput.destroy()
       simpleOutput.destroy()

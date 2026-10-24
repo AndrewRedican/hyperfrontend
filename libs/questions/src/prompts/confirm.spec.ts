@@ -1,83 +1,19 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { ConfirmConfig } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { confirm } from './confirm'
 
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
-
 describe('confirm', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -97,7 +33,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
 
       const result = await promise
 
@@ -108,7 +44,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['Y'])
+      await input.sendKeys('Y')
 
       const result = await promise
 
@@ -121,7 +57,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['n'])
+      await input.sendKeys('n')
 
       const result = await promise
 
@@ -132,7 +68,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['N'])
+      await input.sendKeys('N')
 
       const result = await promise
 
@@ -145,7 +81,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
 
       const result = await promise
 
@@ -158,7 +94,7 @@ describe('confirm', () => {
       const config = createConfig({ initial: true })
       const promise = confirm(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -169,7 +105,7 @@ describe('confirm', () => {
       const config = createConfig({ initial: false })
       const promise = confirm(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -181,7 +117,7 @@ describe('confirm', () => {
       const promise = confirm(config)
 
       // why: Enter is ignored, then y is pressed
-      input.enqueueKeys([Key.Enter, 'y'])
+      await input.sendKeys(Key.Enter, 'y')
 
       const result = await promise
 
@@ -194,7 +130,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['x', 'z', '1', 'y'])
+      await input.sendKeys('x', 'z', '1', 'y')
 
       const result = await promise
 
@@ -205,7 +141,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys([Key.Up, Key.Down, Key.Left, Key.Right, 'n'])
+      await input.sendKeys(Key.Up, Key.Down, Key.Left, Key.Right, 'n')
 
       const result = await promise
 
@@ -218,7 +154,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['\x1B[200~yes\n\x1B[201~'])
+      await input.sendKeys('\x1B[200~yes\n\x1B[201~')
 
       const result = await promise
 
@@ -229,7 +165,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['\x1B[200~ NO \x1B[201~'])
+      await input.sendKeys('\x1B[200~ NO \x1B[201~')
 
       const result = await promise
 
@@ -241,7 +177,7 @@ describe('confirm', () => {
       const promise = confirm(config)
 
       // why: a multi-character chunk is a paste from a non-bracketed-paste terminal
-      input.enqueueKeys(['yes'])
+      await input.sendKeys('yes')
 
       const result = await promise
 
@@ -252,7 +188,7 @@ describe('confirm', () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['\x1B[200~maybe\x1B[201~', 'y'])
+      await input.sendKeys('\x1B[200~maybe\x1B[201~', 'y')
 
       const result = await promise
 
@@ -265,13 +201,13 @@ describe('confirm', () => {
       const config = createConfig({ message: 'Proceed?' })
       const promise = confirm(config)
 
-      await new Promise((resolve) => setImmediate(resolve))
-      const before = output.getWrittenData().length
+      await flushPromises()
+      const before = output.text().length
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
-      const repaint = output.getWrittenData().slice(before)
+      await flushPromises()
+      const repaint = output.text().slice(before)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
       await promise
 
       expect(repaint).toContain('Proceed?')
@@ -281,11 +217,11 @@ describe('confirm', () => {
       const config = createConfig({ message: 'Proceed?' })
       const promise = confirm(config)
 
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
 
       const result = await promise
 
@@ -298,70 +234,70 @@ describe('confirm', () => {
       const config = createConfig({ message: 'Proceed?' })
       const promise = confirm(config)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
       await promise
 
-      expect(output.getWrittenData()).toContain('Proceed?')
+      expect(output.text()).toContain('Proceed?')
     })
 
     it('shows Y/n when initial is true', async () => {
       const config = createConfig({ initial: true })
       const promise = confirm(config)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
       await promise
 
-      expect(output.getWrittenData()).toContain('Y/n')
+      expect(output.text()).toContain('Y/n')
     })
 
     it('shows y/N when initial is false', async () => {
       const config = createConfig({ initial: false })
       const promise = confirm(config)
 
-      input.enqueueKeys(['n'])
+      await input.sendKeys('n')
       await promise
 
-      expect(output.getWrittenData()).toContain('y/N')
+      expect(output.text()).toContain('y/N')
     })
 
     it('shows y/n when no initial provided', async () => {
       const config = createConfig({ initial: undefined })
       const promise = confirm(config)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
       await promise
 
-      expect(output.getWrittenData()).toContain('y/n')
+      expect(output.text()).toContain('y/n')
     })
 
     it('shows Yes when confirmed', async () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['y'])
+      await input.sendKeys('y')
       await promise
 
-      expect(output.getWrittenData()).toContain('Yes')
+      expect(output.text()).toContain('Yes')
     })
 
     it('shows No when declined', async () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys(['n'])
+      await input.sendKeys('n')
       await promise
 
-      expect(output.getWrittenData()).toContain('No')
+      expect(output.text()).toContain('No')
     })
 
     it('shows cancelled when cancelled', async () => {
       const config = createConfig()
       const promise = confirm(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('cancelled')
+      expect(output.text()).toContain('cancelled')
     })
   })
 })
