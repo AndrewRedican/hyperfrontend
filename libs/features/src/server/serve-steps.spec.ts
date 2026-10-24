@@ -2,12 +2,12 @@ import type { FileStats } from '@hyperfrontend/project-scope/core/fs'
 import type { ResolvedServeConfig } from './serve-config'
 import type { ServeStep, StaticRequest, StaticResponse } from './serve-pipeline'
 import type { ServeStepDeps } from './serve-steps'
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { negotiateEncoding } from './serve-compression'
 import { runSteps } from './serve-pipeline'
 import { buildServeSteps } from './serve-steps'
@@ -564,28 +564,22 @@ describe('serve file step', () => {
 })
 
 describe('default file system', () => {
-  let dir: string
+  const tmp = useTempDir({ prefix: 'hf-serve-steps-' })
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-serve-steps-'))
-    writeFileSync(join(dir, 'index.html'), '<html>DISK</html>')
-    writeFileSync(join(dir, 'app.css'), 'body{}')
-    mkdirSync(join(dir, 'sub'))
-    writeFileSync(join(dir, 'sub', 'index.html'), 'SUB')
-  })
-
-  afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
+    tmp.write('index.html', '<html>DISK</html>')
+    tmp.write('app.css', 'body{}')
+    tmp.write('sub/index.html', 'SUB')
   })
 
   it('serves the index from disk when no deps are given', () => {
-    const config = makeConfig({ root: dir })
+    const config = makeConfig({ root: tmp.path })
     const response = runSteps(buildServeSteps(config), get('/'), { config })
     expect({ status: response.status, body: response.body?.toString() }).toEqual({ status: 200, body: '<html>DISK</html>' })
   })
 
   it('serves an asset with its type and length from disk', () => {
-    const config = makeConfig({ root: dir })
+    const config = makeConfig({ root: tmp.path })
     const response = runSteps(buildServeSteps(config), get('/app.css'), { config })
     expect({
       status: response.status,
@@ -601,18 +595,18 @@ describe('default file system', () => {
   })
 
   it('redirects an unslashed directory from disk', () => {
-    const config = makeConfig({ root: dir })
+    const config = makeConfig({ root: tmp.path })
     const response = runSteps(buildServeSteps(config), get('/sub'), { config })
     expect({ status: response.status, location: response.headers['Location'] }).toEqual({ status: 301, location: '/sub/' })
   })
 
   it('answers 404 for a symlink inside the root', () => {
     // why: The confinement check is textual, so a link pointing outside the site is the one way past it — symlinked paths are refused outright, matching the serve package's default.
-    const outside = join(dir, '..', `outside-${Date.now()}.txt`)
+    const outside = tmp.resolve('..', `outside-${Date.now()}.txt`)
     writeFileSync(outside, 'secret')
-    symlinkSync(outside, join(dir, 'leak.txt'))
+    symlinkSync(outside, tmp.resolve('leak.txt'))
     try {
-      const config = makeConfig({ root: dir })
+      const config = makeConfig({ root: tmp.path })
       const response = runSteps(buildServeSteps(config), get('/leak.txt'), { config })
       expect(response.status).toBe(404)
     } finally {
@@ -621,7 +615,7 @@ describe('default file system', () => {
   })
 
   it('answers 304 for the etag the first response advertised', () => {
-    const config = makeConfig({ root: dir })
+    const config = makeConfig({ root: tmp.path })
     const steps = buildServeSteps(config)
     const first = runSteps(steps, get('/'), { config })
     const etag = first.headers['ETag'] as string
@@ -630,7 +624,7 @@ describe('default file system', () => {
   })
 
   it('reports a missing file from disk', () => {
-    const config = makeConfig({ root: dir })
+    const config = makeConfig({ root: tmp.path })
     const response = runSteps(buildServeSteps(config), get('/missing.js'), { config })
     expect(response.status).toBe(404)
   })

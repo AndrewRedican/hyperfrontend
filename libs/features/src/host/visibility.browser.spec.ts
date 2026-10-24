@@ -3,12 +3,12 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { observePageVisibility } from './visibility'
 
 function setVisibilityState(value: 'visible' | 'hidden'): void {
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value })
+  jest.replaceProperty(document, 'visibilityState', value)
 }
 
 describe('observePageVisibility', () => {
   afterEach(() => {
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('reports the current state immediately', () => {

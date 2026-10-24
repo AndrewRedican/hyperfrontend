@@ -2,13 +2,13 @@ import type { CreateShellOptions } from './create-shell'
 import type { MountResult, ShellHandle } from './types'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { installResizeObserverStub } from '../testing/resize-observer-stub'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { createShell, deriveShellName } from './create-shell'
 import { mountEmbedded } from './display-modes/embedded'
 import { builtInDisplayModes } from './display-modes/registry'
 
 beforeEach(() => {
-  installResizeObserverStub()
+  installResizeObserver()
 })
 
 describe('deriveShellName', () => {

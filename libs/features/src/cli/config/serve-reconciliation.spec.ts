@@ -1,22 +1,11 @@
 import type { ResolvedFeatureConfig } from '../../shared/types'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { reconcileServeIsolation } from './serve-reconciliation'
 
 const FEATURE: ResolvedFeatureConfig = { name: 'probe', version: '1.0.0', contract: './probe.contract.json', url: '/' }
 
-let dir: string
-
-beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'hf-reconcile-'))
-})
-
-afterEach(() => {
-  rmSync(dir, { recursive: true, force: true })
-})
+const tmp = useTempDir({ prefix: 'hf-reconcile-' })
 
 /**
  * Writes a serve config into the project, in `public/` unless told otherwise.
@@ -26,12 +15,8 @@ afterEach(() => {
  * @returns The feature config path the reconciliation is given.
  */
 function withServeConfig(serve: unknown, beside = false): string {
-  const target = beside ? dir : join(dir, 'public')
-  if (!beside) {
-    mkdirSync(target, { recursive: true })
-  }
-  writeFileSync(join(target, 'hf-serve.config.json'), JSON.stringify(serve))
-  return join(dir, 'feature.config.ts')
+  tmp.write(beside ? 'hf-serve.config.json' : 'public/hf-serve.config.json', JSON.stringify(serve))
+  return tmp.resolve('feature.config.ts')
 }
 
 describe('reconcileServeIsolation', () => {
@@ -45,7 +30,7 @@ describe('reconcileServeIsolation', () => {
   })
 
   it('stays silent when the project has no serve config', () => {
-    expect(reconcileServeIsolation(FEATURE, join(dir, 'feature.config.ts'))).toBeNull()
+    expect(reconcileServeIsolation(FEATURE, tmp.resolve('feature.config.ts'))).toBeNull()
   })
 
   it('stays silent when the served origin sets no opener policy', () => {

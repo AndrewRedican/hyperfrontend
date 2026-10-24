@@ -25,7 +25,7 @@ const teardowns: (() => void)[] = []
  * @param value - The state `document.visibilityState` should report.
  */
 function setVisibilityState(value: 'visible' | 'hidden'): void {
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value })
+  jest.replaceProperty(document, 'visibilityState', value)
 }
 
 /**
@@ -59,7 +59,7 @@ describe('watchPageVisibility', () => {
       stop()
     }
     jest.useRealTimers()
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('reports the current state immediately', () => {

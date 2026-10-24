@@ -1,15 +1,15 @@
 import { afterEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolvePopupDefaults } from './defaults'
 
 function setViewport(width: number, height: number) {
-  Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true })
-  Object.defineProperty(window, 'innerHeight', { value: height, configurable: true, writable: true })
+  jest.replaceProperty(window, 'innerWidth', width)
+  jest.replaceProperty(window, 'innerHeight', height)
 }
 
 describe('resolvePopupDefaults', () => {
   afterEach(() => {
-    setViewport(1024, 768)
+    jest.restoreAllMocks()
   })
 
   it('derives height from the viewport coverage', () => {

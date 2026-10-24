@@ -1,44 +1,16 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions, UnresponsivePolicy } from '../shared/types'
 import type { MountResult } from './types'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createHeartbeatMonitor } from './heartbeat'
 import { createShellHandle } from './lifecycle'
 import { observePageVisibility } from './visibility'
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 /**
  * Drives this page's reported visibility, the way a phone backgrounding the tab does.
@@ -46,7 +18,7 @@ const TARGET = { name: 'target' } as unknown as Window
  * @param value - The state `document.visibilityState` should report.
  */
 function setPageVisibility(value: 'visible' | 'hidden'): void {
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value })
+  jest.replaceProperty(document, 'visibilityState', value)
   document.dispatchEvent(new Event('visibilitychange'))
 }
 
@@ -60,7 +32,7 @@ function setPageVisibility(value: 'visible' | 'hidden'): void {
  */
 function setup(onUnresponsive?: UnresponsivePolicy, concealUnresponsive?: boolean) {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const frame = document.createElement('iframe')
   const mount = jest.fn(
     (): MountResult => ({
@@ -103,7 +75,7 @@ describe('a feature frame killed while the tab was in the background', () => {
 
   afterEach(() => {
     jest.useRealTimers()
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('is declared unresponsive once the tab comes back', () => {
@@ -145,7 +117,7 @@ describe('a feature frame that survives the tab going away', () => {
 
   afterEach(() => {
     jest.useRealTimers()
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('earns healthy back on its first beat and is never suspected', () => {
@@ -185,7 +157,7 @@ describe('a killed feature frame under the reopen policy', () => {
 
   afterEach(() => {
     jest.useRealTimers()
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('is replaced once the verdict outlasts the grace after the tab comes back', () => {

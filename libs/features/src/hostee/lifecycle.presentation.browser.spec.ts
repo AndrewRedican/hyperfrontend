@@ -2,62 +2,25 @@ import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow, installResizeObserver } from '@hyperfrontend/testing/browser'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
-import { installResizeObserverStub } from '../testing/resize-observer-stub'
+import { createMockChannel } from '../testing/mock-channel'
 import { createFeatureHandle } from './lifecycle'
 
 beforeEach(() => {
   jest.clearAllMocks()
-  installResizeObserverStub()
+  installResizeObserver()
 })
-
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-  send: Mock
-  disconnect: Mock
-  connect: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const send = jest.fn()
-  const disconnect = jest.fn()
-  const connect = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send,
-    disconnect,
-    connect,
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-    send,
-    disconnect,
-    connect,
-  }
-}
 
 function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: Mock } {
   const addChannel = jest.fn(() => channel)
-  return { broker: { addChannel, registerProtocol: jest.fn(), logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel }
+  return { broker: createMock<BrokerHandle>({ addChannel }), addChannel }
 }
 
 describe('createFeatureHandle presentation', () => {
-  const hostWindow = { name: 'host' } as unknown as Window
+  const hostWindow = createFakeWindow()
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
 
   function styleTexts(): string[] {

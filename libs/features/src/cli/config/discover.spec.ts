@@ -1,28 +1,17 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 
 describe('discoverConfigFile', () => {
-  let dir: string
-
-  beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-discover-'))
-  })
-
-  afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
-  })
+  const tmp = useTempDir({ prefix: 'hf-discover-' })
 
   it('prefers the JSON config over a JS sibling', () => {
-    writeFileSync(join(dir, `${FEATURE_CONFIG_BASENAME}.js`), 'export default {}')
-    writeFileSync(join(dir, `${FEATURE_CONFIG_BASENAME}.json`), '{}')
-    expect(discoverConfigFile(dir, FEATURE_CONFIG_BASENAME)).toBe(join(dir, `${FEATURE_CONFIG_BASENAME}.json`))
+    tmp.write(`${FEATURE_CONFIG_BASENAME}.js`, 'export default {}')
+    tmp.write(`${FEATURE_CONFIG_BASENAME}.json`, '{}')
+    expect(discoverConfigFile(tmp.path, FEATURE_CONFIG_BASENAME)).toBe(tmp.resolve(`${FEATURE_CONFIG_BASENAME}.json`))
   })
 
   it('returns null when no config file exists', () => {
-    expect(discoverConfigFile(dir, FEATURE_CONFIG_BASENAME)).toBeNull()
+    expect(discoverConfigFile(tmp.path, FEATURE_CONFIG_BASENAME)).toBeNull()
   })
 })

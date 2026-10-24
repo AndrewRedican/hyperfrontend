@@ -1,10 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { confineDecodedPath, createStaticHandler, decodeRequestPath, requestPath, serveFile } from './static-handler'
 
 interface FakeResponse {
@@ -262,42 +261,35 @@ describe('createStaticHandler', () => {
 })
 
 describe('default file system', () => {
-  let dir: string
+  const tmp = useTempDir({ prefix: 'hf-static-' })
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-static-'))
-    writeFileSync(join(dir, 'index.html'), 'DISK')
-  })
-
-  afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
+    tmp.write('index.html', 'DISK')
   })
 
   it('serves a file from disk when no overrides are given', () => {
     const out = fakeRes()
-    serveFile(dir, '/', out.res)
+    serveFile(tmp.path, '/', out.res)
     expect(out.body).toBe('DISK')
   })
 
   it('serves a nested directory index from disk when no overrides are given', () => {
-    mkdirSync(join(dir, 'host'))
-    writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
+    tmp.write('host/index.html', 'HOST')
     const out = fakeRes()
-    createStaticHandler(dir)({ url: '/host/' } as IncomingMessage, out.res)
+    createStaticHandler(tmp.path)({ url: '/host/' } as IncomingMessage, out.res)
     expect(out.body).toBe('HOST')
   })
 
   it('redirects an unslashed directory from disk when no overrides are given', () => {
-    mkdirSync(join(dir, 'host'))
-    writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
+    tmp.write('host/index.html', 'HOST')
     const out = fakeRes()
-    createStaticHandler(dir)({ url: '/host' } as IncomingMessage, out.res)
+    createStaticHandler(tmp.path)({ url: '/host' } as IncomingMessage, out.res)
     expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
   })
 
   it('reports a missing file from disk when no overrides are given', () => {
     const out = fakeRes()
-    createStaticHandler(dir)({ url: '/missing.js' } as IncomingMessage, out.res)
+    createStaticHandler(tmp.path)({ url: '/missing.js' } as IncomingMessage, out.res)
     expect(out.statusCode).toBe(404)
   })
 })

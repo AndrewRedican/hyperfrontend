@@ -1,10 +1,9 @@
 import type { CliFlags } from '../cli/args'
 import type { ResolveServeConfigOptions } from './serve-config'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { resolveServeConfig, validateHeaderRule, validateServeConfig } from './serve-config'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
@@ -249,40 +248,35 @@ describe('resolveServeConfig', () => {
 })
 
 describe('default file system', () => {
-  let dir: string
-  let previousPort: string | undefined
+  const tmp = useTempDir({ prefix: 'hf-serve-config-' })
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-serve-config-'))
     // why: These tests exercise the real process.env default, so a PORT from the surrounding shell is parked and restored.
-    previousPort = process.env['PORT']
-    delete process.env['PORT']
+    jest.stubEnv('PORT', undefined)
   })
 
   afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
-    if (previousPort === undefined) {
-      delete process.env['PORT']
-    } else {
-      process.env['PORT'] = previousPort
-    }
+    jest.restoreAllMocks()
   })
 
   it('serves pure defaults when no config exists on disk', async () => {
-    const resolved = await resolveServeConfig({ cwd: dir, flags: mkFlags({}) })
-    expect(resolved).toEqual({ root: dir, port: 4284, headers: [], log: true })
+    const resolved = await resolveServeConfig({ cwd: tmp.path, flags: mkFlags({}) })
+    expect(resolved).toEqual({ root: tmp.path, port: 4284, headers: [], log: true })
   })
 
   it('discovers and loads a JSON config from disk when no overrides are given', async () => {
-    writeFileSync(join(dir, 'hf-serve.config.json'), '{ "port": 5150 }')
-    const resolved = await resolveServeConfig({ cwd: dir, flags: mkFlags({}) })
-    expect({ port: resolved.port, sourcePath: resolved.sourcePath }).toEqual({ port: 5150, sourcePath: join(dir, 'hf-serve.config.json') })
+    tmp.write('hf-serve.config.json', '{ "port": 5150 }')
+    const resolved = await resolveServeConfig({ cwd: tmp.path, flags: mkFlags({}) })
+    expect({ port: resolved.port, sourcePath: resolved.sourcePath }).toEqual({
+      port: 5150,
+      sourcePath: tmp.resolve('hf-serve.config.json'),
+    })
   })
 
   it('reads the platform PORT from the real environment by default', async () => {
-    writeFileSync(join(dir, 'hf-serve.config.json'), '{ "port": 5150 }')
-    process.env['PORT'] = '6060'
-    const resolved = await resolveServeConfig({ cwd: dir, flags: mkFlags({}) })
+    tmp.write('hf-serve.config.json', '{ "port": 5150 }')
+    jest.stubEnv('PORT', '6060')
+    const resolved = await resolveServeConfig({ cwd: tmp.path, flags: mkFlags({}) })
     expect(resolved.port).toBe(6060)
   })
 })

@@ -1,12 +1,15 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
+import type { MockChannel } from '../testing/mock-channel'
 import type { FeatureHandleSettings } from './lifecycle'
 import type { FeatureHandle } from './types'
 import { beforeEach } from 'node:test'
-import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createMock, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createFeatureHandle } from './lifecycle'
 
 // note: Intervals run their callback once and hand back their own delay, so the heartbeat and visibility reporters an open starts never leave a live timer behind.
@@ -33,36 +36,16 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: () => () => undefined,
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return { channel, trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)) }
-}
-
 function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; registerProtocol: Mock } {
   const registerProtocol = jest.fn()
   return {
-    broker: { addChannel: jest.fn(() => channel), registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle,
+    broker: createMock<BrokerHandle>({ addChannel: jest.fn(() => channel), registerProtocol }),
     registerProtocol,
   }
 }
 
 describe('createFeatureHandle handshake', () => {
-  const hostWindow = { name: 'host' } as unknown as Window
+  const hostWindow = createFakeWindow()
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
   const sharedKey = 'a-key-of-sixteen-or-more'
 
@@ -79,12 +62,6 @@ describe('createFeatureHandle handshake', () => {
       () => 'resolved',
       (error: Error) => error.message
     )
-  }
-
-  function flush(): Promise<void> {
-    return createPromise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
   }
 
   describe('security selection', () => {
@@ -227,7 +204,7 @@ describe('createFeatureHandle handshake', () => {
       const settled = jest.fn()
       void createHandle(mock).ready().then(settled, settled)
       mock.trigger('cancel', { notify: false })
-      await flush()
+      await flushPromises()
       expect(settled).not.toHaveBeenCalled()
     })
 
@@ -236,7 +213,7 @@ describe('createFeatureHandle handshake', () => {
       const settled = jest.fn()
       void createHandle(mock).ready().then(settled, settled)
       mock.trigger('cancel')
-      await flush()
+      await flushPromises()
       expect(settled).not.toHaveBeenCalled()
     })
 

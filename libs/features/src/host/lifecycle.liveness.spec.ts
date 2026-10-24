@@ -1,41 +1,13 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 /** Stands in for the iframe an in-document mount reports back, whose visibility the browser slaves to this page's. */
 const FRAME = { tagName: 'IFRAME' } as unknown as HTMLElement
@@ -48,7 +20,7 @@ interface LivenessSetupOptions {
 
 function setup(options: LivenessSetupOptions = {}) {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const mount = jest.fn(
     (): MountResult => ({
       target: TARGET,

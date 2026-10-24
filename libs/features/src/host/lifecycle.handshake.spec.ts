@@ -1,48 +1,19 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
-import type { Mock } from '@hyperfrontend/testing'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
 // note: Covers the handshake outcomes that never reach open: a deny and a counterpart cancel both end the mount early instead of waiting out the open timeout. The open timeout itself lives in lifecycle.timeout.spec.ts; the broader shell lifecycle in lifecycle.spec.ts.
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  destroy: Mock
-  connect: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const destroy = jest.fn()
-  const connect = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: () => () => undefined,
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy,
-    connect,
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    destroy,
-    connect,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 function setup(config: { whenReady?: (begin: () => void) => () => void } = {}) {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const cleanup = jest.fn()
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, whenReady: config.whenReady, cleanup }))
   const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn(), setObservable: jest.fn(), getStatus: jest.fn() }

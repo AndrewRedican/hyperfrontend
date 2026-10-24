@@ -3,13 +3,12 @@ import type { FileStats } from '@hyperfrontend/project-scope/core/fs'
 import type { ResolvedServeConfig } from './serve-config'
 import type { ServeStep } from './serve-pipeline'
 import type { StaticServeDeps, StaticServerHandle } from './static-serve'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, get } from 'node:http'
-import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { createServeListener, startStaticServer } from './static-serve'
 
 interface FakeResponse {
@@ -239,26 +238,21 @@ describe('createServeListener', () => {
 })
 
 describe('default file system', () => {
-  let dir: string
+  const tmp = useTempDir({ prefix: 'hf-serve-' })
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-serve-'))
-    writeFileSync(join(dir, 'index.html'), 'DISK')
-  })
-
-  afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
+    tmp.write('index.html', 'DISK')
   })
 
   it('serves a file from disk when no deps are given', () => {
     const out = fakeRes()
-    createServeListener(config({ root: dir }))(fakeReq({ method: 'GET', url: '/' }), out.res)
+    createServeListener(config({ root: tmp.path }))(fakeReq({ method: 'GET', url: '/' }), out.res)
     expect({ status: out.statusCode, body: out.body }).toEqual({ status: 200, body: 'DISK' })
   })
 })
 
 describe('startStaticServer', () => {
-  let dir: string
+  const tmp = useTempDir({ prefix: 'hf-serve-site-' })
   let handle: StaticServerHandle | undefined
 
   const bigAsset = `export const filler = "${'a'.repeat(2048)}"\n`
@@ -276,19 +270,17 @@ describe('startStaticServer', () => {
     })
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-serve-site-'))
-    writeFileSync(join(dir, 'index.html'), 'DISK')
-    writeFileSync(join(dir, 'big.js'), bigAsset)
+    tmp.write('index.html', 'DISK')
+    tmp.write('big.js', bigAsset)
   })
 
   afterEach(async () => {
     await handle?.close()
     handle = undefined
-    rmSync(dir, { recursive: true, force: true })
   })
 
   it('serves the site over a real socket on an OS-assigned port', async () => {
-    handle = await startStaticServer(config({ root: dir }))
+    handle = await startStaticServer(config({ root: tmp.path }))
     const response = await fetchRaw(handle.url)
     expect({ url: handle.url, status: response.status, body: response.body.toString() }).toEqual({
       url: `http://localhost:${handle.port}/`,
@@ -298,22 +290,22 @@ describe('startStaticServer', () => {
   })
 
   it('reports the configured host in the handle url', async () => {
-    handle = await startStaticServer(config({ root: dir, host: '127.0.0.1' }))
+    handle = await startStaticServer(config({ root: tmp.path, host: '127.0.0.1' }))
     expect(handle.url).toBe(`http://127.0.0.1:${handle.port}/`)
   })
 
   it('binds the configured host', async () => {
-    handle = await startStaticServer(config({ root: dir, host: '127.0.0.1' }))
+    handle = await startStaticServer(config({ root: tmp.path, host: '127.0.0.1' }))
     await expect(fetchRaw(`http://127.0.0.1:${handle.port}/`)).resolves.toEqual(expect.objectContaining({ status: 200 }))
   })
 
   it('reports localhost for a wildcard bind', async () => {
-    handle = await startStaticServer(config({ root: dir, host: '0.0.0.0' }))
+    handle = await startStaticServer(config({ root: tmp.path, host: '0.0.0.0' }))
     expect(handle.url).toBe(`http://localhost:${handle.port}/`)
   })
 
   it('compresses a large asset end-to-end for a gzip client', async () => {
-    handle = await startStaticServer(config({ root: dir }))
+    handle = await startStaticServer(config({ root: tmp.path }))
     const response = await fetchRaw(`${handle.url}big.js`, { 'accept-encoding': 'gzip' })
     expect({
       status: response.status,
@@ -324,12 +316,12 @@ describe('startStaticServer', () => {
   })
 
   it('uses an injected server factory', async () => {
-    handle = await startStaticServer(config({ root: dir }), { createServer: (handler) => createServer(handler) })
+    handle = await startStaticServer(config({ root: tmp.path }), { createServer: (handler) => createServer(handler) })
     await expect(fetchRaw(handle.url)).resolves.toEqual(expect.objectContaining({ status: 200 }))
   })
 
   it('stops serving after close', async () => {
-    handle = await startStaticServer(config({ root: dir }))
+    handle = await startStaticServer(config({ root: tmp.path }))
     const url = handle.url
     await handle.close()
     handle = undefined

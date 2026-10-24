@@ -1,8 +1,8 @@
 import type { Mock } from '@hyperfrontend/testing'
 import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise, promiseAllSettled, promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { promiseAllSettled, promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { ControlType } from './control'
 import { createRequestPeer } from './request'
 
@@ -43,12 +43,6 @@ function fireNextTimer(): void {
     throw createError('expected a scheduled timer')
   }
   timer.callback()
-}
-
-function flush() {
-  return createPromise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 function envelopeAt(send: Mock, index: number): Record<string, unknown> {
@@ -172,7 +166,7 @@ describe('createRequestPeer', () => {
       const peer = createRequestPeer('host', send)
       peer.handle('getTime', () => '12:00')
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(
         ControlType.Response,
         expect.objectContaining({ correlationId: 'feature-1', from: 'host', innerType: 'getTime', ok: true, payload: '12:00' })
@@ -184,7 +178,7 @@ describe('createRequestPeer', () => {
       const handler = jest.fn()
       peer.handle('getTime', handler)
       peer.dispatch(ControlType.Request, incoming('getTime', { tz: 'UTC' }))
-      await flush()
+      await flushPromises()
       expect(handler).toHaveBeenCalledWith({ tz: 'UTC' })
     })
 
@@ -193,7 +187,7 @@ describe('createRequestPeer', () => {
       const peer = createRequestPeer('host', send)
       peer.handle('getTime', () => promiseResolve('later'))
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(ControlType.Response, expect.objectContaining({ ok: true, payload: 'later' }))
     })
 
@@ -204,7 +198,7 @@ describe('createRequestPeer', () => {
         throw createError('clock offline')
       })
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(ControlType.Response, expect.objectContaining({ ok: false, error: 'clock offline' }))
     })
 
@@ -213,7 +207,7 @@ describe('createRequestPeer', () => {
       const peer = createRequestPeer('host', send)
       peer.handle('getTime', () => promiseReject(createError('clock offline')))
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(ControlType.Response, expect.objectContaining({ ok: false, error: 'clock offline' }))
     })
 
@@ -222,7 +216,7 @@ describe('createRequestPeer', () => {
       const peer = createRequestPeer('host', send)
       peer.handle('getTime', () => promiseReject('plain failure'))
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(ControlType.Response, expect.objectContaining({ ok: false, error: 'plain failure' }))
     })
 
@@ -230,7 +224,7 @@ describe('createRequestPeer', () => {
       const send = jest.fn()
       const peer = createRequestPeer('host', send)
       peer.dispatch(ControlType.Request, incoming('missing'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(
         ControlType.Response,
         expect.objectContaining({ ok: false, error: "No handler is registered for 'missing'." })
@@ -258,7 +252,7 @@ describe('createRequestPeer', () => {
       peer.handle('getTime', () => 'new')
       staleUnregister()
       peer.dispatch(ControlType.Request, incoming('getTime'))
-      await flush()
+      await flushPromises()
       expect(send).toHaveBeenCalledWith(ControlType.Response, expect.objectContaining({ ok: true, payload: 'new' }))
     })
   })
@@ -268,7 +262,7 @@ describe('createRequestPeer', () => {
       const send = jest.fn()
       const peer = createRequestPeer('host', send)
       peer.dispatch(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'getTime' })
-      await flush()
+      await flushPromises()
       expect(send).not.toHaveBeenCalled()
     })
 
@@ -286,7 +280,7 @@ describe('createRequestPeer', () => {
       const send = jest.fn()
       const peer = createRequestPeer('host', send)
       peer.dispatch(ControlType.Request, 'junk')
-      await flush()
+      await flushPromises()
       expect(send).not.toHaveBeenCalled()
     })
 
@@ -294,7 +288,7 @@ describe('createRequestPeer', () => {
       const send = jest.fn()
       const peer = createRequestPeer('host', send)
       peer.dispatch(ControlType.Request, null)
-      await flush()
+      await flushPromises()
       expect(send).not.toHaveBeenCalled()
     })
 
@@ -302,7 +296,7 @@ describe('createRequestPeer', () => {
       const send = jest.fn()
       const peer = createRequestPeer('host', send)
       peer.dispatch(ControlType.Beat, { from: 'feature' })
-      await flush()
+      await flushPromises()
       expect(send).not.toHaveBeenCalled()
     })
   })

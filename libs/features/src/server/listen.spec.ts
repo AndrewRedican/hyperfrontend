@@ -2,7 +2,7 @@ import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { addressPort, closeServer, listen } from './listen'
 
 interface FakeServer {
@@ -79,12 +79,10 @@ describe('addressPort', () => {
   })
 
   it('throws when the server reports no address', () => {
-    expect(() => addressPort({ address: () => null } as unknown as Server)).toThrow('failed to report a listening port')
+    expect(() => addressPort(createMock<Server>({ address: () => null }))).toThrow('failed to report a listening port')
   })
 
   it('throws when the server is bound to a pipe rather than a port', () => {
-    expect(() => addressPort({ address: () => join(tmpdir(), 'hf.sock') } as unknown as Server)).toThrow(
-      'failed to report a listening port'
-    )
+    expect(() => addressPort(createMock<Server>({ address: () => join(tmpdir(), 'hf.sock') }))).toThrow('failed to report a listening port')
   })
 })

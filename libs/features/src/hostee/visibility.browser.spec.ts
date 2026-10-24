@@ -4,12 +4,12 @@ import { ControlType } from '../shared/control'
 import { createVisibilityReporter } from './visibility'
 
 function setVisibilityState(value: 'visible' | 'hidden'): void {
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value })
+  jest.replaceProperty(document, 'visibilityState', value)
 }
 
 describe('createVisibilityReporter', () => {
   afterEach(() => {
-    Reflect.deleteProperty(document, 'visibilityState')
+    jest.restoreAllMocks()
   })
 
   it('sends the current visibility on start', () => {

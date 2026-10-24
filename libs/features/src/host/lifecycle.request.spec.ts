@@ -1,57 +1,19 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { Mock } from '@hyperfrontend/testing'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-  send: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const send = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send,
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-    send,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
-
-function flush() {
-  return createPromise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
+const TARGET = createFakeWindow()
 
 function setup() {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, createEventEmitter(), {
     // why: The '__hf:' envelope types carry schemas no envelope object satisfies, so every flow below fails if request/response traffic is ever routed through send or receive payload validation.
@@ -180,7 +142,7 @@ describe('createShellHandle request/response', () => {
     ctx.handle.open()
     ctx.handle.handle('getHostInfo', () => ({ name: 'host-app' }))
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'getHostInfo' })
-    await flush()
+    await flushPromises()
     expect(ctx.mock.send).toHaveBeenCalledWith(
       '__hf:response',
       expect.objectContaining({
@@ -198,7 +160,7 @@ describe('createShellHandle request/response', () => {
     ctx.handle.handle('getHostInfo', () => 'ready')
     ctx.handle.open()
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'getHostInfo' })
-    await flush()
+    await flushPromises()
     expect(ctx.mock.send).toHaveBeenCalledWith('__hf:response', expect.objectContaining({ ok: true, payload: 'ready' }))
   })
 
@@ -206,7 +168,7 @@ describe('createShellHandle request/response', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'missing' })
-    await flush()
+    await flushPromises()
     expect(ctx.mock.send).toHaveBeenCalledWith(
       '__hf:response',
       expect.objectContaining({ ok: false, error: "No handler is registered for 'missing'." })
@@ -219,7 +181,7 @@ describe('createShellHandle request/response', () => {
     const pending = ctx.handle.request('getTime')
     const envelope = sentEnvelope(ctx.mock.send)
     ctx.mock.triggerMessage('__hf:request', envelope)
-    await flush()
+    await flushPromises()
     expect(ctx.mock.send.mock.calls.filter((entry) => entry[0] === '__hf:response')).toEqual([])
     ctx.mock.triggerMessage('__hf:response', { correlationId: envelope['correlationId'], from: 'feature', ok: true })
     await pending
@@ -231,7 +193,7 @@ describe('createShellHandle request/response', () => {
     ctx.handle.on('__hf:request', handler)
     ctx.handle.open()
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'getHostInfo' })
-    await flush()
+    await flushPromises()
     expect(handler).not.toHaveBeenCalled()
   })
 

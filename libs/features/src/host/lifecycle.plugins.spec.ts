@@ -1,62 +1,20 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
-import type { Mock } from '@hyperfrontend/testing'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountContext, MountResult } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createDeferred, createMock, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
 // note: Experience-plugin wiring only; the rest of the shell handle behavior is covered by lifecycle.spec.ts and its siblings.
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  destroy: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const destroy = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: () => () => undefined,
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy,
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    destroy,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
-
-function createDeferred() {
-  const settle: { resolve(): void; reject(reason: unknown): void } = { resolve: () => undefined, reject: () => undefined }
-  const promise = createPromise<void>((resolve, reject) => {
-    settle.resolve = () => resolve()
-    settle.reject = reject
-  })
-  return { promise, ...settle }
-}
-
-function flush() {
-  return createPromise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
+const TARGET = createFakeWindow()
 
 function setup(config: { target?: Window | null; element?: HTMLElement } = {}) {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const cleanup = jest.fn()
   let context: MountContext | undefined
   const mount = jest.fn((ctx: MountContext): MountResult => {
@@ -187,7 +145,7 @@ describe('createShellHandle', () => {
       const onUnmount = jest.fn()
       ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(onUnmount).toHaveBeenCalledWith({ element, displayMode: 'embedded' })
     })
 
@@ -201,7 +159,7 @@ describe('createShellHandle', () => {
         ],
       })
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(calls).toEqual(['b', 'a'])
     })
 
@@ -215,14 +173,14 @@ describe('createShellHandle', () => {
         ],
       })
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(calls).toEqual(['b-unmount', 'b-teardown', 'a-teardown'])
     })
 
     it('defers mount cleanup until onUnmount resolves', async () => {
       const { ctx } = openWithDeferredUnmount()
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).not.toHaveBeenCalled()
     })
 
@@ -230,14 +188,14 @@ describe('createShellHandle', () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.handle.destroy()
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
 
     it('keeps the channel alive while onUnmount is pending', async () => {
       const { ctx } = openWithDeferredUnmount()
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(ctx.mock.destroy).not.toHaveBeenCalled()
     })
 
@@ -245,7 +203,7 @@ describe('createShellHandle', () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.handle.destroy()
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.mock.destroy).toHaveBeenCalledTimes(1)
     })
 
@@ -255,7 +213,7 @@ describe('createShellHandle', () => {
       ctx.handle.on('error', handler)
       ctx.handle.destroy()
       deferred.reject('exit animation failed')
-      await flush()
+      await flushPromises()
       expect(handler).toHaveBeenCalledWith('exit animation failed')
     })
 
@@ -263,7 +221,7 @@ describe('createShellHandle', () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.handle.destroy()
       deferred.reject('exit animation failed')
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
 
@@ -279,7 +237,7 @@ describe('createShellHandle', () => {
       })
       ctx.handle.destroy()
       deferred.reject('exit animation failed')
-      await flush()
+      await flushPromises()
       expect(onUnmount).toHaveBeenCalledTimes(1)
     })
 
@@ -289,7 +247,7 @@ describe('createShellHandle', () => {
       ctx.handle.on('error', handler)
       ctx.handle.open({ plugins: [{ name: 'bad', onMount: failingTeardown }] })
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(handler).toHaveBeenCalledWith(expect.any(Error))
     })
 
@@ -297,7 +255,7 @@ describe('createShellHandle', () => {
       const ctx = setup()
       ctx.handle.open({ plugins: [{ name: 'bad', onMount: failingTeardown }] })
       ctx.handle.destroy()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
 
@@ -311,7 +269,7 @@ describe('createShellHandle', () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.handle.open()
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.mount).toHaveBeenCalledTimes(2)
     })
 
@@ -320,7 +278,7 @@ describe('createShellHandle', () => {
       ctx.handle.open({ url: 'https://first.example' })
       ctx.handle.open({ url: 'https://last.example' })
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.getContext()?.options).toEqual(expect.objectContaining({ url: 'https://last.example' }))
     })
 
@@ -329,7 +287,7 @@ describe('createShellHandle', () => {
       ctx.handle.destroy()
       ctx.handle.destroy()
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
 
@@ -338,7 +296,7 @@ describe('createShellHandle', () => {
       ctx.handle.open()
       ctx.handle.destroy()
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.mount).toHaveBeenCalledTimes(1)
     })
 
@@ -347,14 +305,14 @@ describe('createShellHandle', () => {
       const onUnmount = jest.fn()
       ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })
       ctx.mock.trigger('close', { notify: false })
-      await flush()
+      await flushPromises()
       expect(onUnmount).toHaveBeenCalledTimes(1)
     })
 
     it('defers close-path cleanup until plugin onUnmount resolves', async () => {
       const { ctx } = openWithDeferredUnmount()
       ctx.mock.trigger('close', { notify: false })
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).not.toHaveBeenCalled()
     })
 
@@ -362,7 +320,7 @@ describe('createShellHandle', () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.mock.trigger('close', { notify: false })
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
 
@@ -371,7 +329,7 @@ describe('createShellHandle', () => {
       ctx.handle.destroy()
       ctx.mock.trigger('close', { notify: false })
       deferred.resolve()
-      await flush()
+      await flushPromises()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
     })
   })
