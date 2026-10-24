@@ -26,7 +26,7 @@ describe('loadConfig', () => {
 })
 ```
 
-Pass `scope: 'all'` to share one directory across the suite instead. For a directory a single test owns, [`createTempDir`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-createTempDir) creates it straight away and leaves removal to the caller, typically in the test context's [`after`](https://nodejs.org/api/test.html#contextafterfn-options) hook. [`writeTree`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-writeTree) and [`writeFile`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-writeFile) write into any directory you already have.
+Pass `scope: 'all'` to share one directory across the suite instead. For a directory a single test owns, [`createTempDir`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-createTempDir) creates it straight away and leaves removal to the caller: a matching [`after`](https://nodejs.org/api/test.html#afterfn-options) hook at module or suite scope, or a `finally` inside the one test that owns it. [`writeTree`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-writeTree) and [`writeFile`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/#api-writeFile) write into any directory you already have.
 
 ## File content
 

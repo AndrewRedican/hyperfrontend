@@ -104,18 +104,21 @@ function removeDirectory(path: string): void {
 /**
  * Creates a temporary directory now, for the caller to remove.
  *
- * Use it inside a single test, removing it in the test's own cleanup, or at module scope
- * with a matching `after`. For a directory every test in a suite gets, `useTempDir`
+ * Use it at module or suite scope with a matching `after`, or inside a single test with a
+ * `finally` that removes it. For a directory every test in a suite gets, `useTempDir`
  * registers the hooks itself.
  *
  * @param options - Name prefix, parent and initial files.
  * @returns The directory and its file operations.
  * @example A directory one test owns
  * ```ts
- * it('reads the manifest', (t) => {
+ * it('reads the manifest', () => {
  *   const dir = createTempDir({ tree: { 'package.json': { name: 'app' } } })
- *   t.after(() => dir.remove())
- *   expect(readManifest(dir.path).name).toBe('app')
+ *   try {
+ *     expect(readManifest(dir.path).name).toBe('app')
+ *   } finally {
+ *     dir.remove()
+ *   }
  * })
  * ```
  */
