@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { previewStep, PREVIEW_RESTART_STEP_ID } from './preview'
@@ -12,7 +13,7 @@ describe('previewStep', () => {
     ctx.draft = { type: 'feat', subject: 'hi' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys(['y'])
+    await term.input.sendKeys('y')
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -25,7 +26,7 @@ describe('previewStep', () => {
     ctx.draft = { type: 'feat', subject: 'hi' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Goto, gotoStepId: PREVIEW_RESTART_STEP_ID })
@@ -38,7 +39,7 @@ describe('previewStep', () => {
     ctx.draft = { type: 'feat', subject: 'hi' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })
@@ -51,7 +52,7 @@ describe('previewStep', () => {
     ctx.draft = { type: 'feat', subject: 'added login' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys(['y'])
+    await term.input.sendKeys('y')
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -64,7 +65,7 @@ describe('previewStep', () => {
     ctx.draft = { type: 'banana' as 'feat', subject: 'x' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys(['y'])
+    await term.input.sendKeys('y')
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -77,10 +78,10 @@ describe('previewStep', () => {
     ctx.draft = { type: 'feat', subject: 'added login' }
 
     const pending = previewStep.run(ctx)
-    term.input.enqueueKeys(['y'])
+    await term.input.sendKeys('y')
     await pending
 
-    const data = term.output.getWrittenData()
+    const data = term.output.text()
 
     // why: preview must reach stdout regardless of logger level so the user sees what's being committed
     expect(data).toMatch(/\nfeat: added login\n[\s\S]*warn\(imperative-mood\): /)

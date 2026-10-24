@@ -1,6 +1,7 @@
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { normalizeSubject, subjectStep } from './subject'
@@ -26,7 +27,7 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'feat' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['h', 'i', '.', TestKey.Enter])
+    await term.input.sendKeys('h', 'i', '.', Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -39,7 +40,7 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'feat' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['h', 'i', '.', TestKey.Enter])
+    await term.input.sendKeys('h', 'i', '.', Keys.Enter)
     await pending
 
     expect(ctx.draft.subject).toBe('hi')
@@ -51,7 +52,7 @@ describe('subjectStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })
@@ -63,7 +64,7 @@ describe('subjectStep', () => {
     const ctx = createSessionContext(createTestConfig({ headerMaxLength: null, input: term.input, output: term.output }))
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['x', TestKey.Enter])
+    await term.input.sendKeys('x', Keys.Enter)
     await pending
 
     expect(ctx.draft.subject).toBe('x')
@@ -77,7 +78,7 @@ describe('subjectStep', () => {
 
     const pending = subjectStep.run(ctx)
     // why: one chunk with many printable characters is a paste, not keystrokes
-    term.input.enqueueKeys(['add resize support', TestKey.Enter])
+    await term.input.sendKeys('add resize support', Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -91,7 +92,7 @@ describe('subjectStep', () => {
 
     const pending = subjectStep.run(ctx)
     // why: one chunk with many printable characters is a paste, not keystrokes
-    term.input.enqueueKeys(['add resize support', TestKey.Enter])
+    await term.input.sendKeys('add resize support', Keys.Enter)
     await pending
 
     expect(ctx.draft.subject).toBe('add resize support')
@@ -104,8 +105,8 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'fix' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueuePaste('handle wide\nterminals')
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.paste('handle wide\nterminals')
+    await term.input.sendKeys(Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -118,8 +119,8 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'fix' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueuePaste('handle wide\nterminals')
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.paste('handle wide\nterminals')
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.subject).toBe('handle wide terminals')
@@ -132,18 +133,18 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'feat' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['h'])
-    await new Promise((resolve) => setImmediate(resolve))
-    await new Promise((resolve) => setImmediate(resolve))
+    await term.input.sendKeys('h')
+    await flushPromises()
+    await flushPromises()
 
-    const before = term.output.getWrittenData().length
+    const before = term.output.text().length
     term.output.resize(40)
-    await new Promise((resolve) => setImmediate(resolve))
+    await flushPromises()
 
     // why: the resize repaint re-renders the label and the preserved value
-    expect(term.output.getWrittenData().slice(before)).toContain('Subject')
+    expect(term.output.text().slice(before)).toContain('Subject')
 
-    term.input.enqueueKeys(['i', TestKey.Enter])
+    await term.input.sendKeys('i', Keys.Enter)
     await pending
     term.destroy()
   })
@@ -154,14 +155,14 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'feat' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['h'])
-    await new Promise((resolve) => setImmediate(resolve))
-    await new Promise((resolve) => setImmediate(resolve))
+    await term.input.sendKeys('h')
+    await flushPromises()
+    await flushPromises()
 
     term.output.resize(40)
-    await new Promise((resolve) => setImmediate(resolve))
+    await flushPromises()
 
-    term.input.enqueueKeys(['i', TestKey.Enter])
+    await term.input.sendKeys('i', Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -174,14 +175,14 @@ describe('subjectStep', () => {
     ctx.draft = { type: 'feat' }
 
     const pending = subjectStep.run(ctx)
-    term.input.enqueueKeys(['h'])
-    await new Promise((resolve) => setImmediate(resolve))
-    await new Promise((resolve) => setImmediate(resolve))
+    await term.input.sendKeys('h')
+    await flushPromises()
+    await flushPromises()
 
     term.output.resize(40)
-    await new Promise((resolve) => setImmediate(resolve))
+    await flushPromises()
 
-    term.input.enqueueKeys(['i', TestKey.Enter])
+    await term.input.sendKeys('i', Keys.Enter)
     await pending
 
     expect(ctx.draft.subject).toBe('hi')

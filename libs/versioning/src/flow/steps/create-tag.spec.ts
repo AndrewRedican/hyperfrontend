@@ -1,124 +1,41 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { ChangelogEntry } from '../../changelog/models/entry'
 import type { GitClient } from '../../git/factory'
+import type { CreateTagOptions } from '../../git/operations/manage-tags'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { createTagStep, createPushTagStep, CREATE_TAG_STEP_ID } from './create-tag'
-
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-function createMockTree(): Tree {
-  return {
-    root: '/workspace',
-    read: () => null,
-    write: jest.fn(),
-    exists: () => false,
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: () => false,
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
-
-function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
-}
 
 interface MockGitClientOptions {
   createTagFails?: boolean
   pushTagFails?: boolean
 }
 
+/**
+ * Builds a git client whose tag creation and push succeed, or throw when told to fail.
+ *
+ * @param options - Which tag operations throw
+ * @returns Git client recording every tag call
+ */
 function createMockGitClient(options: MockGitClientOptions = {}): GitClient {
   const { createTagFails = false, pushTagFails = false } = options
 
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn((name: string, opts?: { message?: string }) => {
+  return createMock<GitClient>({
+    createTag: (name: string, opts?: Omit<CreateTagOptions, 'cwd'>) => {
       if (createTagFails) {
         throw new Error('Mock tag creation failed')
       }
-      return {
-        name,
-        hash: 'abc123',
-        type: 'annotated' as const,
-        message: opts?.message ?? 'Release',
-        tagger: { name: 'Test', email: 'test@test.com', date: new Date() },
-      }
-    }),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: jest.fn(() => {
+      return { name, commitHash: 'abc123', type: 'annotated', message: opts?.message ?? 'Release' }
+    },
+    pushTag: () => {
       if (pushTagFails) {
         throw new Error('Mock push failed')
       }
       return true
-    }),
-    createCommit: jest.fn(),
-    stage: jest.fn(),
-    unstage: () => true,
-    stageAll: jest.fn(),
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
+    },
+  })
 }
 
 function createMockChangelogItem(description: string): {
@@ -156,10 +73,10 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: createMockTree(),
-    registry: createMockRegistry(),
+    tree: createMemoryTree(),
+    registry: createMock<Registry>(),
     git: createMockGitClient(),
-    logger: createMockLogger(),
+    logger: createMock<Logger>(),
     config: { preset: 'conventional', ...config },
     state: { ...state },
   }
@@ -362,7 +279,7 @@ describe('Create Tag Step', () => {
 
     it('logs tag creation', async () => {
       const step = createTagStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         logger,
@@ -392,12 +309,11 @@ describe('Create Tag Step', () => {
 
     it('wraps non-Error throws in Error objects', async () => {
       const step = createTagStep()
-      const git = {
-        ...createMockGitClient(),
-        createTag: jest.fn(() => {
+      const git = createMock<GitClient>({
+        createTag: () => {
           throw 'string error'
-        }),
-      } as unknown as GitClient
+        },
+      })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         git,
@@ -511,7 +427,7 @@ describe('Push Tag Step', () => {
 
     it('logs push success', async () => {
       const step = createPushTagStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
       const ctx: FlowContext = {
         ...createMockContext({ tagName: 'v1.0.0' }),
         logger,
@@ -541,12 +457,11 @@ describe('Push Tag Step', () => {
 
     it('wraps non-Error throws in Error objects', async () => {
       const step = createPushTagStep()
-      const git = {
-        ...createMockGitClient(),
-        pushTag: jest.fn(() => {
+      const git = createMock<GitClient>({
+        pushTag: () => {
           throw 'string error'
-        }),
-      } as unknown as GitClient
+        },
+      })
       const ctx: FlowContext = {
         ...createMockContext({ tagName: 'v1.0.0' }),
         git,

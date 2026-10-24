@@ -1,9 +1,9 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../../git/factory'
 import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
-import { jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, jest } from '@hyperfrontend/testing'
 
 /** Raw commit record as the git client hands it to the analyze-commits step. */
 export interface MockCommit {
@@ -53,87 +53,6 @@ export interface MockContextOverrides {
   projectName?: string
   /** Published package name, defaults to `@test/pkg` */
   packageName?: string
-}
-
-/**
- * Builds a logger whose every method is a jest spy, so tests can assert on the
- * debug and warn lines the analyze-commits step emits.
- *
- * @returns Logger backed by jest mock functions
- *
- * @example Asserting the step logged a first-release notice
- * ```typescript
- * const logger = createMockLogger()
- * await step.execute(createMockContext({ logger }))
- * expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
- * ```
- */
-export function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-/**
- * Builds an inert virtual file tree rooted at `/workspace`. The analyze-commits
- * step never reads from it, so every query answers empty.
- *
- * @returns Tree that reports no files and records writes on jest spies
- *
- * @example Attaching the tree to a hand-rolled context
- * ```typescript
- * const context = { ...createMockContext(), tree: createMockTree() }
- * ```
- */
-export function createMockTree(): Tree {
-  return {
-    root: '/workspace',
-    read: () => null,
-    write: jest.fn(),
-    exists: () => false,
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: () => false,
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
-
-/**
- * Builds a registry that reports nothing published. Version lookups resolve to
- * `null` so the step treats the package as unreleased unless state says otherwise.
- *
- * @returns Registry whose queries all resolve empty
- *
- * @example Attaching the registry to a hand-rolled context
- * ```typescript
- * const context = { ...createMockContext(), registry: createMockRegistry() }
- * ```
- */
-export function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
 }
 
 /**
@@ -228,10 +147,10 @@ export function createMockContext(overrides?: MockContextOverrides): FlowContext
     projectName: overrides?.projectName ?? 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: overrides?.packageName ?? '@test/pkg',
-    tree: createMockTree(),
-    registry: createMockRegistry(),
+    tree: createMemoryTree(),
+    registry: createMock<Registry>(),
     git: overrides?.git ?? createMockGitClient(),
-    logger: overrides?.logger ?? createMockLogger(),
+    logger: overrides?.logger ?? createMock<Logger>(),
     config: {
       preset: 'conventional',
       releaseTypes: ['feat', 'fix', 'perf', 'revert'],

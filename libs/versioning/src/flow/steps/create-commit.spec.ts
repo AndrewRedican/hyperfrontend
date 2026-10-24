@@ -1,129 +1,46 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
+import type { GitCommit } from '../../git/models/commit'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { createGitCommitStep, CREATE_COMMIT_STEP_ID } from './create-commit'
-
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-function createMockTree(): Tree {
-  return {
-    root: '/workspace',
-    read: () => null,
-    write: jest.fn(),
-    exists: () => false,
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: () => false,
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
-
-function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
-}
 
 interface MockGitClientOptions {
   stageFails?: boolean
   commitFails?: boolean
 }
 
+/**
+ * Builds a git client whose staging and commit calls succeed, or throw when told to fail.
+ *
+ * @param options - Which git operations throw
+ * @returns Git client recording every staging and commit call
+ */
 function createMockGitClient(options: MockGitClientOptions = {}): GitClient {
   const { stageFails = false, commitFails = false } = options
 
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn((message: string) => {
+  return createMock<GitClient>({
+    createCommit: () => {
       if (commitFails) {
         throw new Error('Mock commit failed')
       }
-      return {
-        hash: 'abc123def456',
-        message,
-        author: 'Test User',
-        email: 'test@test.com',
-        date: new Date().toISOString(),
-        parents: [],
-      }
-    }),
-    stage: jest.fn(() => {
+      return createMock<GitCommit>({ hash: 'abc123def456' })
+    },
+    stage: () => {
       if (stageFails) {
         throw new Error('Mock stage failed')
       }
       return true
-    }),
-    unstage: () => true,
-    stageAll: jest.fn(() => {
+    },
+    stageAll: () => {
       if (stageFails) {
         throw new Error('Mock stage all failed')
       }
       return true
-    }),
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
+    },
+  })
 }
 
 function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowConfig> = {}): FlowContext {
@@ -132,10 +49,10 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: createMockTree(),
-    registry: createMockRegistry(),
+    tree: createMemoryTree(),
+    registry: createMock<Registry>(),
     git: createMockGitClient(),
-    logger: createMockLogger(),
+    logger: createMock<Logger>(),
     config: { preset: 'conventional', ...config },
     state: { ...state },
   }
@@ -348,7 +265,7 @@ describe('Create Commit Step', () => {
 
     it('logs commit creation', async () => {
       const step = createGitCommitStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         logger,
@@ -397,12 +314,11 @@ describe('Create Commit Step', () => {
 
     it('wraps non-Error throws in Error objects', async () => {
       const step = createGitCommitStep()
-      const git = {
-        ...createMockGitClient(),
-        stageAll: jest.fn(() => {
+      const git = createMock<GitClient>({
+        stageAll: () => {
           throw 'string error'
-        }),
-      } as unknown as GitClient
+        },
+      })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         git,

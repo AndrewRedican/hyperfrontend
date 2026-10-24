@@ -1,5 +1,3 @@
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
-import { posix } from 'node:path'
 import { beforeEach } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -8,6 +6,7 @@ import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { readPackageJson } from '@hyperfrontend/project-scope/project/package'
 import { findWorkspaceRoot } from '@hyperfrontend/project-scope/project/root'
 import { findFiles, findFilesInTree } from '@hyperfrontend/project-scope/project/traversal'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { discoverPackages, discoverProject, discoverProjectByName } from './packages'
 
@@ -406,35 +405,14 @@ describe('discoverPackages', () => {
 })
 
 describe('discoverPackages with VFS tree', () => {
-  const createMockTree = (files: Record<string, string>, root = '/workspace') => ({
-    root,
-    read: jest.fn((path: string, encoding?: string) => {
-      const content = files[path]
-      if (content === undefined) return null
-      return encoding ? content : Buffer.from(content)
-    }),
-    exists: jest.fn((path: string) => files[path] !== undefined),
-    isFile: jest.fn((path: string) => files[path] !== undefined && !path.endsWith(posix.sep)),
-    children: jest.fn(),
-    write: jest.fn(),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isDirectory: jest.fn(),
-    isSymlink: jest.fn(),
-    listChanges: jest.fn(() => []),
-    clearChanges: jest.fn(),
-    changePermissions: jest.fn(),
-    changeFile: jest.fn(),
-  })
-
   it('uses VFS tree for discovery when tree is provided', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
     discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
@@ -452,13 +430,13 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('discovers the packages found in the VFS tree', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
@@ -468,19 +446,20 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('reads package.json from tree instead of disk', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'from-tree', version: '2.0.0' }),
     })
+    const read = jest.spyOn(tree, 'read')
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
     discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
     })
 
-    const reads = { treeReads: tree.read.mock.calls, diskReads: jest.mocked(projectScope.readPackageJson).mock.calls }
+    const reads = { treeReads: read.mock.calls, diskReads: jest.mocked(projectScope.readPackageJson).mock.calls }
 
     expect(reads).toEqual({
       treeReads: expect.arrayContaining([['libs/lib-a/package.json', 'utf-8']]),
@@ -489,13 +468,13 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('builds projects from the package.json content in the tree', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'from-tree', version: '2.0.0' }),
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
@@ -505,32 +484,32 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('uses tree.root as workspace root when not explicitly provided', () => {
-    const tree = createMockTree(
+    const tree = createMemoryTree(
       {
         'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
       },
-      '/custom/root'
+      { root: '/custom/root' }
     )
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       includeChangelogs: false,
       trackDependencies: false,
     })
 
-    expect(result.workspaceRoot).toBe('/custom/root')
+    expect(result.workspaceRoot).toBe(tree.root)
   })
 
   it('discovers packages created in VFS but not on disk', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/existing/package.json': JSON.stringify({ name: 'existing', version: '1.0.0' }),
       'libs/new-package/package.json': JSON.stringify({ name: 'new-package', version: '0.0.1' }),
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/existing/package.json', 'libs/new-package/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
@@ -545,21 +524,13 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('skips packages with unreadable content in tree', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
-    })
-    tree.read.mockImplementation((path: string, encoding?: string) => {
-      if (path === 'libs/broken/package.json') return null
-      if (path === 'libs/lib-a/package.json') {
-        const content = JSON.stringify({ name: 'lib-a', version: '1.0.0' })
-        return encoding ? content : Buffer.from(content)
-      }
-      return null
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json', 'libs/broken/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,
@@ -569,14 +540,14 @@ describe('discoverPackages with VFS tree', () => {
   })
 
   it('skips packages with invalid JSON in tree', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
       'libs/invalid/package.json': 'not valid json {{{',
     })
     projectScope.findFilesInTree.mockReturnValue(['libs/lib-a/package.json', 'libs/invalid/package.json'])
 
     const result = discoverPackages({
-      tree: tree as Tree,
+      tree,
       workspaceRoot: '/workspace',
       includeChangelogs: false,
       trackDependencies: false,

@@ -1,14 +1,14 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import type { Registry } from '../../registry/models/registry'
 import type { FlowContext } from '../models/types'
-import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   createMockChangelogEntry,
   createMockChangelogItem,
   createMockContext,
   createMockGitClient,
-  createMockLogger,
-  createMockRegistry,
   createMockTree,
 } from './__test-utils__/generate-changelog-mocks'
 import { createWriteChangelogStep } from './generate-changelog'
@@ -224,24 +224,19 @@ describe('Write Changelog Step', () => {
   describe('execute - error handling', () => {
     it('handles read error gracefully and creates new changelog', async () => {
       const step = createWriteChangelogStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
 
-      const throwingTree = {
+      const throwingTree = createMock<Tree>({
         root: '/workspace',
-        read: jest.fn((path: string) => {
+        read: (path: string) => {
           if (path.includes('CHANGELOG.md')) {
             throw new Error('Read error')
           }
           return null
-        }),
-        write: jest.fn(),
+        },
         exists: () => false,
-        delete: jest.fn(),
-        rename: jest.fn(),
         isFile: () => false,
-        children: () => [],
-        listChanges: () => [],
-      } as unknown as Tree
+      })
 
       const ctx: FlowContext = {
         workspaceRoot: '/workspace',
@@ -249,7 +244,7 @@ describe('Write Changelog Step', () => {
         projectRoot: '/workspace/libs/test',
         packageName: '@test/pkg',
         tree: throwingTree,
-        registry: createMockRegistry(),
+        registry: createMock<Registry>(),
         git: createMockGitClient(),
         logger,
         config: { preset: 'conventional' },
@@ -267,24 +262,19 @@ describe('Write Changelog Step', () => {
 
     it('logs the missing changelog when the read fails', async () => {
       const step = createWriteChangelogStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
 
-      const throwingTree = {
+      const throwingTree = createMock<Tree>({
         root: '/workspace',
-        read: jest.fn((path: string) => {
+        read: (path: string) => {
           if (path.includes('CHANGELOG.md')) {
             throw new Error('Read error')
           }
           return null
-        }),
-        write: jest.fn(),
+        },
         exists: () => false,
-        delete: jest.fn(),
-        rename: jest.fn(),
         isFile: () => false,
-        children: () => [],
-        listChanges: () => [],
-      } as unknown as Tree
+      })
 
       const ctx: FlowContext = {
         workspaceRoot: '/workspace',
@@ -292,7 +282,7 @@ describe('Write Changelog Step', () => {
         projectRoot: '/workspace/libs/test',
         packageName: '@test/pkg',
         tree: throwingTree,
-        registry: createMockRegistry(),
+        registry: createMock<Registry>(),
         git: createMockGitClient(),
         logger,
         config: { preset: 'conventional' },
@@ -502,6 +492,8 @@ describe('Write Changelog Step', () => {
 `
       const step = createWriteChangelogStep()
       const tree = createMockTree({ files: { '/workspace/libs/test/CHANGELOG.md': existingChangelog } })
+      // why: a rename that leaves nothing at the backup path drives the step's fallback for an unreadable backup.
+      jest.mocked(tree.rename).mockImplementation(() => undefined)
       const ctx: FlowContext = {
         ...createMockContext(
           {
@@ -535,20 +527,7 @@ describe('Write Changelog Step', () => {
 - Existing feature
 `
       const step = createWriteChangelogStep()
-      const files: Record<string, string> = { '/workspace/libs/test/CHANGELOG.md': existingChangelog }
-      const tree = createMockTree({ files })
-      const originalExists = tree.exists.bind(tree)
-      tree.exists = jest.fn((path: string) => {
-        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') return true
-        return originalExists(path)
-      })
-      const originalRead = tree.read.bind(tree)
-      tree.read = jest.fn((path: string, encoding?: string) => {
-        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') {
-          return encoding ? existingChangelog : Buffer.from(existingChangelog)
-        }
-        return originalRead(path, encoding as BufferEncoding)
-      }) as typeof tree.read
+      const tree = createMockTree({ files: { '/workspace/libs/test/CHANGELOG.md': existingChangelog } })
       const ctx: FlowContext = {
         ...createMockContext(
           {
@@ -579,20 +558,7 @@ describe('Write Changelog Step', () => {
 - Existing feature
 `
       const step = createWriteChangelogStep()
-      const files: Record<string, string> = { '/workspace/libs/test/CHANGELOG.md': existingChangelog }
-      const tree = createMockTree({ files })
-      const originalExists = tree.exists.bind(tree)
-      tree.exists = jest.fn((path: string) => {
-        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') return true
-        return originalExists(path)
-      })
-      const originalRead = tree.read.bind(tree)
-      tree.read = jest.fn((path: string, encoding?: string) => {
-        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') {
-          return encoding ? existingChangelog : Buffer.from(existingChangelog)
-        }
-        return originalRead(path, encoding as BufferEncoding)
-      }) as typeof tree.read
+      const tree = createMockTree({ files: { '/workspace/libs/test/CHANGELOG.md': existingChangelog } })
       const ctx: FlowContext = {
         ...createMockContext(
           {

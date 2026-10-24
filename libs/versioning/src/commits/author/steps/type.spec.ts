@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { typeStep } from './type'
@@ -11,7 +12,7 @@ describe('typeStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = typeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -23,7 +24,7 @@ describe('typeStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = typeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.type).toBe('feat')
@@ -36,7 +37,7 @@ describe('typeStep', () => {
     ctx.draft = { type: 'fix' }
 
     const pending = typeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.type).toBe('fix')
@@ -48,7 +49,7 @@ describe('typeStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = typeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })

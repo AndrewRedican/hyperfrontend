@@ -1,133 +1,24 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-import type { Mock } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createUpdatePackageStep, createCascadeDependenciesStep, UPDATE_PACKAGES_STEP_ID } from './update-packages'
 
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-interface MockTreeOptions {
-  files?: Record<string, string>
-  readFails?: boolean
-}
-
-function createMockTree(options: MockTreeOptions = {}): Tree {
-  const { readFails = false } = options
-  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
-  const files = new Map(Object.entries(options.files ?? {}).map(([path, content]) => [normalizePath(path), content]))
-
-  const tree = {
-    root: '/workspace',
-    read(path: string, encoding?: string) {
-      if (readFails) {
-        throw new Error('Mock read failed')
-      }
-      const content = files.get(normalizePath(path))
-      if (content === undefined) {
-        return null
-      }
-      return encoding ? content : Buffer.from(content)
-    },
-    write: jest.fn((path: string, content: string) => {
-      files.set(normalizePath(path), content)
-    }),
-    exists: (path: string) => files.has(normalizePath(path)),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: (path: string) => files.has(normalizePath(path)),
-    children: () => [],
-    listChanges: () => [],
-    changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
-      const content = tree.read(path, undefined)
-      if (content === null) {
-        throw new Error(`File not found: ${path}`)
-      }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : (content as Buffer)
-      const result = transform(buffer)
-      tree.write(path, result.toString())
-    },
-  }
-
-  return tree as unknown as Tree
-}
-
-function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
-}
-
-function createMockGitClient(): GitClient {
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn(),
-    stage: jest.fn(),
-    unstage: () => true,
-    stageAll: jest.fn(),
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
+/**
+ * Builds an empty tree whose every read throws, standing in for an unreadable manifest.
+ *
+ * @returns Tree that fails each read with a simulated error
+ */
+function createUnreadableTree(): Tree {
+  const tree = createMemoryTree()
+  jest.spyOn(tree, 'read').mockImplementation(() => {
+    throw new Error('Mock read failed')
+  })
+  return tree
 }
 
 function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowConfig> = {}): FlowContext {
@@ -136,10 +27,10 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: createMockTree(),
-    registry: createMockRegistry(),
-    git: createMockGitClient(),
-    logger: createMockLogger(),
+    tree: createMemoryTree(),
+    registry: createMock<Registry>(),
+    git: createMock<GitClient>(),
+    logger: createMock<Logger>(),
     config: { preset: 'conventional', ...config },
     state: { ...state },
   }
@@ -187,7 +78,7 @@ describe('Update Packages Step', () => {
   describe('execute - package.json not found', () => {
     it('fails when package.json does not exist', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({ files: {} })
+      const tree = createMemoryTree()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         tree,
@@ -202,7 +93,7 @@ describe('Update Packages Step', () => {
 
     it('fails when reading package.json throws', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({ readFails: true })
+      const tree = createUnreadableTree()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
         tree,
@@ -219,10 +110,8 @@ describe('Update Packages Step', () => {
   describe('execute - invalid package.json', () => {
     it('fails when package.json is invalid JSON', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': 'not valid json {{{',
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': 'not valid json {{{',
       })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }),
@@ -240,13 +129,11 @@ describe('Update Packages Step', () => {
   describe('execute - success', () => {
     it('succeeds when updating the version in package.json', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({
-            name: '@test/pkg',
-            version: '1.0.0',
-          }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
       })
       const ctx: FlowContext = {
         ...createMockContext({
@@ -264,13 +151,11 @@ describe('Update Packages Step', () => {
 
     it('updates version in package.json', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({
-            name: '@test/pkg',
-            version: '1.0.0',
-          }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
       })
       const ctx: FlowContext = {
         ...createMockContext({
@@ -283,23 +168,18 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      expect(tree.write).toHaveBeenCalledWith(
-        normalizeToNative('/workspace/libs/test/package.json'),
-        expect.stringContaining('"version": "1.1.0"')
-      )
+      expect(tree.read('/workspace/libs/test/package.json', 'utf-8')).toContain('"version": "1.1.0"')
     })
 
     it('preserves other package.json fields', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({
-            name: '@test/pkg',
-            version: '1.0.0',
-            description: 'My package',
-            dependencies: { foo: '^1.0.0' },
-          }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+          description: 'My package',
+          dependencies: { foo: '^1.0.0' },
+        }),
       })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '2.0.0', bumpType: 'major' }),
@@ -308,18 +188,15 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      const writeCall = (tree.write as Mock).mock.calls[0]
-      const written = JSON.parse(writeCall[1])
+      const written = JSON.parse(tree.read('/workspace/libs/test/package.json', 'utf-8') ?? '')
 
       expect(written).toEqual(expect.objectContaining({ name: '@test/pkg', description: 'My package', dependencies: { foo: '^1.0.0' } }))
     })
 
     it('adds package.json to modified files', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
       })
       const ctx: FlowContext = {
         ...createMockContext({
@@ -337,10 +214,8 @@ describe('Update Packages Step', () => {
 
     it('preserves existing modified files', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
       })
       const ctx: FlowContext = {
         ...createMockContext({
@@ -360,11 +235,9 @@ describe('Update Packages Step', () => {
 
     it('logs version update', async () => {
       const step = createUpdatePackageStep()
-      const logger = createMockLogger()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
-        },
+      const logger = createMock<Logger>()
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
       })
       const ctx: FlowContext = {
         ...createMockContext({
@@ -383,10 +256,8 @@ describe('Update Packages Step', () => {
 
     it('includes version in success message', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg', version: '1.0.0' }),
       })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '2.0.0', bumpType: 'major' }),
@@ -402,10 +273,8 @@ describe('Update Packages Step', () => {
   describe('execute - JSON formatting', () => {
     it('outputs formatted JSON with 2-space indentation', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': '{"name":"@test/pkg","version":"1.0.0"}',
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': '{"name":"@test/pkg","version":"1.0.0"}',
       })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.1.0', bumpType: 'minor' }),
@@ -414,18 +283,15 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      const writeCall = (tree.write as Mock).mock.calls[0]
-      const written = writeCall[1]
+      const written = tree.read('/workspace/libs/test/package.json', 'utf-8')
 
       expect(written).toContain('  "')
     })
 
     it('ends the formatted JSON with a trailing newline', async () => {
       const step = createUpdatePackageStep()
-      const tree = createMockTree({
-        files: {
-          '/workspace/libs/test/package.json': '{"name":"@test/pkg","version":"1.0.0"}',
-        },
+      const tree = createMemoryTree({
+        '/workspace/libs/test/package.json': '{"name":"@test/pkg","version":"1.0.0"}',
       })
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.1.0', bumpType: 'minor' }),
@@ -434,8 +300,7 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      const writeCall = (tree.write as Mock).mock.calls[0]
-      const written = writeCall[1]
+      const written = tree.read('/workspace/libs/test/package.json', 'utf-8')
 
       expect(written).toMatch(/\n$/)
     })
@@ -500,7 +365,7 @@ describe('Cascade Dependencies Step', () => {
   describe('execute - success (placeholder)', () => {
     it('succeeds when enabled', async () => {
       const step = createCascadeDependenciesStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }, { trackDeps: true }),
         logger,
@@ -513,7 +378,7 @@ describe('Cascade Dependencies Step', () => {
 
     it('logs a not fully implemented warning when enabled', async () => {
       const step = createCascadeDependenciesStep()
-      const logger = createMockLogger()
+      const logger = createMock<Logger>()
       const ctx: FlowContext = {
         ...createMockContext({ nextVersion: '1.0.0', bumpType: 'minor' }, { trackDeps: true }),
         logger,

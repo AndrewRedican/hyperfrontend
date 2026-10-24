@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, it, sleep } from '@hyperfrontend/testing'
 import { createCache } from './cache'
 
 describe('createCache', () => {
@@ -18,7 +18,7 @@ describe('createCache', () => {
     cache.set('key', 'value')
     const beforeExpiry = cache.get('key')
 
-    await new Promise((r) => setTimeout(r, 20))
+    await sleep(20)
     const afterExpiry = cache.get('key')
 
     expect({ beforeExpiry, afterExpiry }).toEqual({ beforeExpiry: 'value', afterExpiry: undefined })

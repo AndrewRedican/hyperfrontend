@@ -4,21 +4,9 @@ import type { RunCzOptions } from './cz'
 import { PassThrough } from 'node:stream'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { readAll } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../commits/author/__test-utils__/base-config'
 import { EXIT_COMMITTED, EXIT_ERROR, EXIT_SIGINT, outcomeToExit, parseCzArgs, runCz } from './cz'
-
-/**
- * Extracts everything written to the mock stream as a single string.
- *
- * @param stream - Stream whose buffered content should be read
- * @returns Concatenated stream output decoded as UTF-8
- */
-function drain(stream: PassThrough): string {
-  const chunks: Buffer[] = []
-  let buf: Buffer | null
-  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
-  return Buffer.concat(chunks).toString('utf8')
-}
 
 describe('parseCzArgs', () => {
   it('returns an empty object when argv is empty', () => {
@@ -62,7 +50,7 @@ describe('outcomeToExit', () => {
   it('writes nothing to stderr for a committed outcome', () => {
     const stderr = new PassThrough()
     outcomeToExit({ status: 'committed', message: 'feat: x' }, stderr)
-    expect(drain(stderr)).toBe('')
+    expect(readAll(stderr)).toBe('')
   })
 
   it('returns 130 for a clean cancellation', () => {
@@ -72,7 +60,7 @@ describe('outcomeToExit', () => {
   it('writes nothing to stderr for a clean cancellation', () => {
     const stderr = new PassThrough()
     outcomeToExit({ status: 'cancelled' }, stderr)
-    expect(drain(stderr)).toBe('')
+    expect(readAll(stderr)).toBe('')
   })
 
   it('returns 1 for an error cancellation', () => {
@@ -82,7 +70,7 @@ describe('outcomeToExit', () => {
   it('writes the error message to stderr for an error cancellation', () => {
     const stderr = new PassThrough()
     outcomeToExit({ status: 'cancelled', error: createError('boom') }, stderr)
-    expect(drain(stderr)).toBe('boom\n')
+    expect(readAll(stderr)).toBe('boom\n')
   })
 })
 
@@ -124,7 +112,7 @@ describe('runCz', () => {
   async function runCzCapturing(options: Omit<RunCzOptions, 'stderr'>): Promise<{ code: number; stderr: string }> {
     const stderr = new PassThrough()
     const code = await runCz({ ...options, stderr })
-    return { code, stderr: drain(stderr) }
+    return { code, stderr: readAll(stderr) }
   }
 
   it('returns 0 when the session commits', async () => {

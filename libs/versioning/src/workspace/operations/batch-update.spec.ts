@@ -3,7 +3,9 @@ import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createProject } from '../models/project'
 import { createWorkspace, DEFAULT_WORKSPACE_CONFIG } from '../models/workspace'
 import {
@@ -15,47 +17,18 @@ import {
 } from './batch-update'
 
 /**
- * Creates a mock Tree for testing VFS operations.
+ * Collects the files a tree has written since it was created, keyed by path relative to its root.
  *
- * @param files - A record of file paths to their content (string or null for non-existent)
- * @returns A mock Tree instance with read/write capabilities
+ * @param tree - Tree whose pending writes to collect
+ * @returns Written file contents keyed by relative path
  */
-function createMockTree(files: Record<string, string | null>): Tree & { _getWrittenFiles: () => Record<string, string> } {
-  const writtenFiles: Record<string, string> = {}
-
-  const tree = {
-    read: (path: string, encoding?: string) => {
-      if (writtenFiles[path]) {
-        return encoding ? writtenFiles[path] : Buffer.from(writtenFiles[path])
-      }
-      const content = files[path]
-      if (content === null || content === undefined) return null
-      return encoding ? content : Buffer.from(content)
-    },
-    write: (path: string, content: string | Buffer) => {
-      writtenFiles[path] = typeof content === 'string' ? content : content.toString()
-    },
-    exists: (path: string) => (path in files && files[path] !== null) || path in writtenFiles,
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: (path: string) => (path in files && files[path] !== null) || path in writtenFiles,
-    children: jest.fn().mockReturnValue([]),
-    listChanges: jest.fn().mockReturnValue([]),
-    changePermissions: jest.fn(),
-    changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
-      const content = tree.read(path, undefined)
-      if (content === null) {
-        throw new Error(`File not found: ${path}`)
-      }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : content
-      const result = transform(buffer)
-      tree.write(path, result)
-    },
-    root: '/workspace',
-    _getWrittenFiles: () => writtenFiles,
-  }
-
-  return tree as unknown as Tree & { _getWrittenFiles: () => Record<string, string> }
+function writtenFiles(tree: Tree): Record<string, string> {
+  return fromEntries(
+    tree
+      .listChanges()
+      .filter((change) => change.type !== 'DELETE')
+      .map((change) => [change.path, change.content?.toString() ?? ''])
+  )
 }
 
 function createTestProject(
@@ -129,7 +102,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -158,15 +131,15 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps)
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-a/package.json']).toContain('"version": "1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-a/package.json']).toContain('"version": "1.1.0"')
   })
 
   it('handles multiple packages', () => {
@@ -188,7 +161,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
       '/workspace/packages/lib-b/package.json': '{"name": "lib-b", "version": "2.0.0"}',
       '/workspace/packages/lib-c/package.json': '{"name": "lib-c", "version": "3.0.0"}',
@@ -222,7 +195,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -246,7 +219,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({})
+    const tree = createMemoryTree({})
 
     const result = applyBumps(tree, workspace, [])
 
@@ -269,7 +242,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
       '/workspace/packages/lib-b/package.json': '{"name": "lib-b", "version": "2.0.0"}',
     })
@@ -288,7 +261,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -319,7 +292,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -341,7 +314,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -361,15 +334,15 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps)
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-a/package.json']).toBeDefined()
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-a/package.json']).toBeDefined()
   })
 
   it('reports one successful update after writing the version to the tree', () => {
@@ -380,7 +353,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
@@ -398,7 +371,7 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    const tree = createMockTree({})
+    const tree = createMemoryTree({})
 
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
@@ -426,7 +399,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -452,7 +425,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -460,8 +433,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('skips dependency reference updates when updateDependencyReferences is false', () => {
@@ -479,7 +452,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -487,10 +460,10 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: false })
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect({
-      corePackageJson: written['/workspace/packages/lib-core/package.json'],
-      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+      corePackageJson: written['packages/lib-core/package.json'],
+      appPackageJson: written['packages/lib-app/package.json'],
     }).toEqual({ corePackageJson: expect.stringContaining('"version": "1.1.0"'), appPackageJson: undefined })
   })
 
@@ -509,7 +482,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': 'invalid json {{{',
     })
@@ -535,7 +508,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -543,8 +516,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('preserves tilde prefix when updating dependencies', () => {
@@ -562,7 +535,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "~1.0.0"}}',
     })
@@ -570,8 +543,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "~1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "~1.1.0"')
   })
 
   it('preserves >= prefix when updating dependencies', () => {
@@ -589,7 +562,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": ">=1.0.0"}}',
     })
@@ -597,8 +570,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": ">=1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": ">=1.1.0"')
   })
 
   it('preserves > prefix when updating dependencies', () => {
@@ -616,7 +589,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": ">1.0.0"}}',
     })
@@ -624,8 +597,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": ">1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": ">1.1.0"')
   })
 
   it('preserves <= prefix when updating dependencies', () => {
@@ -643,7 +616,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "<=1.0.0"}}',
     })
@@ -651,8 +624,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "<=1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "<=1.1.0"')
   })
 
   it('preserves < prefix when updating dependencies', () => {
@@ -670,7 +643,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "<2.0.0"}}',
     })
@@ -678,8 +651,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "<1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "<1.1.0"')
   })
 
   it('preserves = prefix when updating dependencies', () => {
@@ -697,7 +670,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "=1.0.0"}}',
     })
@@ -705,8 +678,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "=1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "=1.1.0"')
   })
 
   it('uses exact version when no prefix exists', () => {
@@ -724,7 +697,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "1.0.0"}}',
     })
@@ -732,8 +705,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "1.1.0"')
   })
 
   it('updates devDependencies', () => {
@@ -751,7 +724,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "devDependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -759,8 +732,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('updates peerDependencies', () => {
@@ -778,7 +751,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "peerDependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -786,8 +759,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('updates optionalDependencies', () => {
@@ -805,7 +778,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "optionalDependencies": {"lib-core": "^1.0.0"}}',
     })
@@ -813,8 +786,8 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('does not write when no dependencies are modified', () => {
@@ -832,7 +805,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0", "dependencies": {"other-lib": "^1.0.0"}}',
     })
@@ -840,10 +813,10 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect({
-      corePackageJson: written['/workspace/packages/lib-core/package.json'],
-      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+      corePackageJson: written['packages/lib-core/package.json'],
+      appPackageJson: written['packages/lib-app/package.json'],
     }).toEqual({ corePackageJson: expect.anything(), appPackageJson: undefined })
   })
 
@@ -862,7 +835,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': '{"name": "lib-app", "version": "2.0.0"}',
     })
@@ -870,10 +843,10 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect({
-      corePackageJson: written['/workspace/packages/lib-core/package.json'],
-      appPackageJson: written['/workspace/packages/lib-app/package.json'],
+      corePackageJson: written['packages/lib-core/package.json'],
+      appPackageJson: written['packages/lib-app/package.json'],
     }).toEqual({ corePackageJson: expect.anything(), appPackageJson: undefined })
   })
 
@@ -892,7 +865,7 @@ describe('applyBumps', () => {
       ])
     )
 
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json':
         '{"name": "lib-app", "version": "2.0.0", "dependencies": {"lib-core": "^1.0.0"}, "peerDependencies": {"lib-core": ">=1.0.0"}}',
@@ -901,33 +874,33 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    const written = tree._getWrittenFiles()
-    expect(written['/workspace/packages/lib-app/package.json']).toMatch(/"lib-core": "\^1\.1\.0"[\s\S]*"lib-core": ">=1\.1\.0"/)
+    const written = writtenFiles(tree)
+    expect(written['packages/lib-app/package.json']).toMatch(/"lib-core": "\^1\.1\.0"[\s\S]*"lib-core": ">=1\.1\.0"/)
   })
 })
 
 describe('updatePackageVersionInTree', () => {
   it('updates version in package.json', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0"}',
     })
 
     updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     const raw = written['packages/lib-a/package.json']
     const content = JSON.parse(raw as string)
     expect(content.version).toBe('2.0.0')
   })
 
   it('preserves other package.json fields', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-a/package.json': '{"name": "lib-a", "version": "1.0.0", "description": "Test", "main": "index.js"}',
     })
 
     updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     const raw = written['packages/lib-a/package.json']
     const content = JSON.parse(raw as string)
     expect(content).toEqual(
@@ -941,15 +914,13 @@ describe('updatePackageVersionInTree', () => {
   })
 
   it('throws error when file does not exist', () => {
-    const tree = createMockTree({})
+    const tree = createMemoryTree({})
 
     expect(() => updatePackageVersionInTree(tree, 'nonexistent/package.json', '2.0.0')).toThrow('File not found: nonexistent/package.json')
   })
 
-  it('throws error when file content is null', () => {
-    const tree = createMockTree({
-      'packages/lib-a/package.json': null,
-    })
+  it('throws error when a nested manifest is missing', () => {
+    const tree = createMemoryTree({})
 
     expect(() => updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')).toThrow(
       'File not found: packages/lib-a/package.json'
@@ -957,13 +928,13 @@ describe('updatePackageVersionInTree', () => {
   })
 
   it('formats output with 2-space indentation and trailing newline', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-a/package.json': '{"name":"lib-a","version":"1.0.0"}',
     })
 
     updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     const content = written['packages/lib-a/package.json']
     expect(content).toBe('{\n  "name": "lib-a",\n  "version": "2.0.0"\n}\n')
   })
@@ -971,41 +942,41 @@ describe('updatePackageVersionInTree', () => {
 
 describe('updateDependencyReferencesInTree', () => {
   it('updates dependency version with caret prefix', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-app/package.json': '{"name": "lib-app", "version": "1.0.0", "dependencies": {"lib-core": "^1.0.0"}}',
     })
 
     const versionUpdates = createMap([['lib-core', '1.1.0']])
     updateDependencyReferencesInTree(tree, 'packages/lib-app/package.json', versionUpdates)
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect(written['packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
   })
 
   it('does not write when file does not exist', () => {
-    const tree = createMockTree({})
+    const tree = createMemoryTree({})
 
     const versionUpdates = createMap([['lib-core', '1.1.0']])
     updateDependencyReferencesInTree(tree, 'nonexistent/package.json', versionUpdates)
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect(Object.keys(written)).toHaveLength(0)
   })
 
   it('does not write when no matching dependencies found', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-app/package.json': '{"name": "lib-app", "version": "1.0.0", "dependencies": {"other-lib": "^1.0.0"}}',
     })
 
     const versionUpdates = createMap([['lib-core', '1.1.0']])
     updateDependencyReferencesInTree(tree, 'packages/lib-app/package.json', versionUpdates)
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect(written['packages/lib-app/package.json']).toBeUndefined()
   })
 
   it('updates multiple dependency types', () => {
-    const tree = createMockTree({
+    const tree = createMemoryTree({
       'packages/lib-app/package.json':
         '{"name": "lib-app", "version": "1.0.0", "dependencies": {"lib-core": "^1.0.0"}, "devDependencies": {"lib-core": "~1.0.0"}}',
     })
@@ -1013,7 +984,7 @@ describe('updateDependencyReferencesInTree', () => {
     const versionUpdates = createMap([['lib-core', '1.1.0']])
     updateDependencyReferencesInTree(tree, 'packages/lib-app/package.json', versionUpdates)
 
-    const written = tree._getWrittenFiles()
+    const written = writtenFiles(tree)
     expect(written['packages/lib-app/package.json']).toMatch(/"lib-core": "\^1\.1\.0"[\s\S]*"lib-core": "~1\.1\.0"/)
   })
 })

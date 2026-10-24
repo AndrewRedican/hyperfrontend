@@ -5,10 +5,8 @@ import type { ConventionalCommit } from '../../../commits/models/conventional'
 import type { GitClient } from '../../../git/factory'
 import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { normalizePath } from '@hyperfrontend/project-scope/core/path'
-import { jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, jest } from '@hyperfrontend/testing'
 
 /** Seed files for the in-memory tree the changelog steps read and write. */
 export interface MockTreeOptions {
@@ -17,32 +15,9 @@ export interface MockTreeOptions {
 }
 
 /**
- * Builds a logger whose every method is a jest spy, so tests can assert on the
- * info and debug lines the changelog steps emit.
- *
- * @returns Logger backed by jest mock functions
- *
- * @example Asserting the step logged the compare URL it generated
- * ```typescript
- * const logger = createMockLogger()
- * await step.execute({ ...createMockContext(), logger })
- * expect(logger.debug).toHaveBeenCalledWith('Compare URL: def4567...abc123')
- * ```
- */
-export function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-/**
- * Builds a virtual file tree rooted at `/workspace` backed by an in-memory map.
- * Writes land in the map and are recorded on a jest spy, so tests can assert on
- * both the written content and the path it went to.
+ * Builds an in-memory tree rooted at `/workspace` whose `write`, `delete` and
+ * `rename` are spies that still reach the tree, so tests can assert on both the
+ * call and the file it left behind.
  *
  * @param options - Seed files keyed by absolute path
  * @returns Tree preloaded with the supplied files
@@ -54,68 +29,18 @@ export function createMockLogger(): Logger {
  * ```
  */
 export function createMockTree(options: MockTreeOptions = {}): Tree {
-  // why: the real tree keys every path portably, so the native joins the steps hand it must land on the POSIX seeds.
-  const files = createMap<string, string>(entries(options.files ?? {}).map(([path, content]) => [normalizePath(path), content] as const))
-
-  return {
-    root: '/workspace',
-    read(path: string, encoding?: string) {
-      const content = files.get(normalizePath(path))
-      if (content === undefined) {
-        return null
-      }
-      return encoding ? content : Buffer.from(content)
-    },
-    write: jest.fn((path: string, content: string) => {
-      files.set(normalizePath(path), content)
-    }),
-    exists: (path: string) => files.has(normalizePath(path)),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: (path: string) => files.has(normalizePath(path)),
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
-
-/**
- * Builds a registry that reports nothing published. The changelog steps never
- * query it, so every lookup resolves empty.
- *
- * @returns Registry whose queries all resolve empty
- *
- * @example Attaching the registry to a hand-rolled context
- * ```typescript
- * const context = { ...createMockContext(), registry: createMockRegistry() }
- * ```
- */
-export function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
+  const tree = createMemoryTree(options.files)
+  jest.spyOn(tree, 'write')
+  jest.spyOn(tree, 'delete')
+  jest.spyOn(tree, 'rename')
+  return tree
 }
 
 /**
  * Builds a git client whose head resolves to `abc123`, which is the hash the
  * compare URL assertions expect on the right-hand side of every range.
  *
- * @returns Git client answering with benign constants
+ * @returns Git client answering `getHeadHash` with `abc123`
  *
  * @example Attaching the client to a hand-rolled context
  * ```typescript
@@ -123,48 +48,7 @@ export function createMockRegistry(): Registry {
  * ```
  */
 export function createMockGitClient(): GitClient {
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn(),
-    stage: jest.fn(),
-    unstage: () => true,
-    stageAll: jest.fn(),
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
+  return createMock<GitClient>({ getHeadHash: () => 'abc123' })
 }
 
 /**
@@ -258,9 +142,9 @@ export function createMockContext(state: Partial<FlowState> = {}, config: Partia
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
     tree: createMockTree(),
-    registry: createMockRegistry(),
+    registry: createMock<Registry>(),
     git: createMockGitClient(),
-    logger: createMockLogger(),
+    logger: createMock<Logger>(),
     config: { preset: 'conventional', ...config },
     state: { ...state },
   }

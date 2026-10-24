@@ -3,44 +3,21 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { normalizePath } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFetchRegistryStep, FETCH_REGISTRY_STEP_ID } from './fetch-registry'
 
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-function createMockTree(files: Record<string, string> = {}, throwOnRead = false): Tree {
-  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
-  const fileSystem = new Map(Object.entries(files).map(([filePath, content]) => [normalizePath(filePath), content]))
-
-  return {
-    root: '/workspace',
-    read(filePath: string, encoding?: string) {
-      if (throwOnRead) {
-        throw new Error('Simulated read error')
-      }
-      const content = fileSystem.get(normalizePath(filePath))
-      if (content === undefined) {
-        return null
-      }
-      return encoding ? content : Buffer.from(content)
-    },
-    write: jest.fn(),
-    exists: (path: string) => fileSystem.has(normalizePath(path)),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: (path: string) => fileSystem.has(normalizePath(path)),
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
+/**
+ * Builds an empty tree whose every read throws, standing in for an unreadable manifest.
+ *
+ * @returns Tree that fails each read with a simulated error
+ */
+function createUnreadableTree(): Tree {
+  const tree = createMemoryTree()
+  jest.spyOn(tree, 'read').mockImplementation(() => {
+    throw new Error('Simulated read error')
+  })
+  return tree
 }
 
 function createMockRegistry(
@@ -88,51 +65,6 @@ function createMockRegistry(
   }
 }
 
-function createMockGitClient(): GitClient {
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn(),
-    stage: () => true,
-    unstage: () => true,
-    stageAll: () => true,
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
-}
-
 function createMockContext(overrides?: {
   tree?: Tree
   registry?: Registry
@@ -145,10 +77,10 @@ function createMockContext(overrides?: {
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: overrides?.tree ?? createMockTree(),
+    tree: overrides?.tree ?? createMemoryTree(),
     registry: overrides?.registry ?? createMockRegistry(),
-    git: createMockGitClient(),
-    logger: overrides?.logger ?? createMockLogger(),
+    git: createMock<GitClient>(),
+    logger: overrides?.logger ?? createMock<Logger>(),
     config: { preset: 'conventional', ...overrides?.config },
     state: overrides?.state ?? {},
   }
@@ -170,7 +102,7 @@ describe('fetch-registry step', () => {
 
     describe('execute', () => {
       it('reads current version from package.json', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             version: '1.2.3',
@@ -187,7 +119,7 @@ describe('fetch-registry step', () => {
       })
 
       it('defaults to 0.0.0 when package.json has no version', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
           }),
@@ -203,7 +135,7 @@ describe('fetch-registry step', () => {
       })
 
       it('defaults to 0.0.0 when package.json does not exist', async () => {
-        const tree = createMockTree({})
+        const tree = createMemoryTree({})
         const context = createMockContext({ tree })
         const step = createFetchRegistryStep()
 
@@ -215,7 +147,7 @@ describe('fetch-registry step', () => {
       })
 
       it('defaults to 0.0.0 when package.json read throws', async () => {
-        const tree = createMockTree({}, true)
+        const tree = createUnreadableTree()
         const context = createMockContext({ tree })
         const step = createFetchRegistryStep()
 
@@ -227,8 +159,8 @@ describe('fetch-registry step', () => {
       })
 
       it('logs a warning when package.json read throws', async () => {
-        const tree = createMockTree({}, true)
-        const logger = createMockLogger()
+        const tree = createUnreadableTree()
+        const logger = createMock<Logger>()
         const context = createMockContext({ tree, logger })
         const step = createFetchRegistryStep()
 
@@ -238,7 +170,7 @@ describe('fetch-registry step', () => {
       })
 
       it('fetches published version from registry', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             version: '1.0.0',
@@ -259,7 +191,7 @@ describe('fetch-registry step', () => {
       })
 
       it('handles first release when no published version exists', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             version: '0.0.0',
@@ -281,14 +213,14 @@ describe('fetch-registry step', () => {
       })
 
       it('surfaces a registry query failure instead of assuming a first release', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             version: '1.0.0',
           }),
         })
         const registry = createMockRegistry({ throwOnQuery: true })
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const context = createMockContext({ tree, registry, logger })
         const step = createFetchRegistryStep()
 
@@ -296,7 +228,7 @@ describe('fetch-registry step', () => {
       })
 
       it('returns appropriate message for published package', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             version: '2.0.0',
@@ -313,7 +245,7 @@ describe('fetch-registry step', () => {
 
       describe('publishedCommit extraction', () => {
         it('extracts gitHead as publishedCommit when available', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '1.0.0',
@@ -334,7 +266,7 @@ describe('fetch-registry step', () => {
         })
 
         it('logs the published commit when gitHead is available', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '1.0.0',
@@ -344,7 +276,7 @@ describe('fetch-registry step', () => {
             version: '1.0.0',
             gitHead: 'abc1234567890def',
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({ tree, registry, logger })
           const step = createFetchRegistryStep()
 
@@ -354,7 +286,7 @@ describe('fetch-registry step', () => {
         })
 
         it('sets publishedCommit to null when gitHead is missing', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '1.0.0',
@@ -375,7 +307,7 @@ describe('fetch-registry step', () => {
         })
 
         it('logs that the published version has no gitHead when it is missing', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '1.0.0',
@@ -385,7 +317,7 @@ describe('fetch-registry step', () => {
             version: '1.0.0',
             gitHead: null,
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({ tree, registry, logger })
           const step = createFetchRegistryStep()
 
@@ -395,7 +327,7 @@ describe('fetch-registry step', () => {
         })
 
         it('surfaces a version-info failure instead of releasing without a base commit', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '1.0.0',
@@ -405,7 +337,7 @@ describe('fetch-registry step', () => {
             version: '1.0.0',
             throwOnVersionInfo: true,
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({ tree, registry, logger })
           const step = createFetchRegistryStep()
 
@@ -413,7 +345,7 @@ describe('fetch-registry step', () => {
         })
 
         it('includes commit hash in message when available', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '2.0.0',
@@ -432,7 +364,7 @@ describe('fetch-registry step', () => {
         })
 
         it('sets publishedCommit to null for first release', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               version: '0.0.0',
