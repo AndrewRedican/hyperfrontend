@@ -16,14 +16,8 @@ const FILES: Readonly<Record<string, string>> = {
   'alpha/src/index.ts': 'export {}\n',
 }
 
-export function writeSampleWorkspace(): string {
-  const root = mkdtempSync(join(tmpdir(), 'sample-workspace-'))
-  for (const [path, text] of entries(FILES)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true })
-    writeFileSync(join(root, path), text)
-  }
-  after(() => rmSync(root, { recursive: true, force: true }))
-  return root
+export function writeSampleWorkspace(): TempDir {
+  return createTempDir({ prefix: 'sample-workspace-', tree: FILES })
 }
 ```
 
@@ -104,3 +98,5 @@ Enabled from the root `lint.config.ts`:
 
 - [no-vscode-config](./no-vscode-config.md): the other check that sweeps the workspace from its root
   manifest
+- [no-mkdtemp-in-tests](./no-mkdtemp-in-tests.md): the temporary directory comes from
+  `@hyperfrontend/testing/fs`
