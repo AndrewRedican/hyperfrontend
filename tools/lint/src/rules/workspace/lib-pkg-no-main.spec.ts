@@ -1,9 +1,12 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-pkg-no-main.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'package.json')
-const PLAIN = join(import.meta.dirname, '__fixtures__', 'plain', 'package.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'package.json')
+const PLAIN = projects.file('plain', 'package.json')
 const CONVERT = 'Do not use "main" field in publishable libraries. Use "exports" field instead: "exports": { ".": "./src/index.js" }'
 const REMOVE = 'Remove the "main" field. The "exports" field should be used instead for modern Node.js resolution.'
 
@@ -13,7 +16,7 @@ testRule(rule, {
     { name: 'a manifest of a project that is no publishable library', path: PLAIN, text: '{\n  "main": "./index.js"\n}\n' },
     {
       name: 'a file that is no manifest',
-      path: join(import.meta.dirname, '__fixtures__', 'publishable', 'other.json'),
+      path: projects.file('publishable', 'other.json'),
       text: '{ "main": "x" }',
     },
     { name: 'a document that is no object', path: PUBLISHABLE, text: '["main"]' },
@@ -48,4 +51,11 @@ testRule(rule, {
       output: '{ "exports": {\n   ".": "./src/index.js"\n } }',
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

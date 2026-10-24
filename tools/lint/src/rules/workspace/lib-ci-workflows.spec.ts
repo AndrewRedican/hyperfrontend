@@ -2,7 +2,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createMarkdownWorkspace } from './__fixtures__/markdown-workspace.ts'
+import { createMarkdownWorkspace } from './__test-utils__/markdown-workspace.ts'
 import rule from './lib-ci-workflows.ts'
 
 const workspace = createMarkdownWorkspace()

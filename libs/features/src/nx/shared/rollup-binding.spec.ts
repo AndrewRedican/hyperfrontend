@@ -1,7 +1,7 @@
 import type { Mock } from '@hyperfrontend/testing'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveSdkManifest } from '../../generators/metadata/sdk-version'
 import { warnIfRollupBindingMissing } from './rollup-binding'
 
@@ -39,7 +39,7 @@ describe('resolveSdkManifest', () => {
  * @returns The binding resolver and the stderr writer the warning went through.
  */
 function warnWithPrefixArchCandidates(): { resolveBinding: Mock; write: Mock } {
-  const stderr = { write: jest.fn() }
+  const stderr = createMock<NodeJS.WritableStream>()
   const resolveBinding = jest.fn(() => {
     throw new Error('not installed')
   })
@@ -51,7 +51,7 @@ function warnWithPrefixArchCandidates(): { resolveBinding: Mock; write: Mock } {
       },
     }),
     resolveBinding,
-    stderr: stderr as unknown as NodeJS.WritableStream,
+    stderr,
     pathExists: () => false,
   })
   return { resolveBinding, write: stderr.write }
@@ -74,31 +74,31 @@ describe('warnIfRollupBindingMissing', () => {
   })
 
   it('stays silent when the plugin manifest cannot be located', () => {
-    const stderr = { write: jest.fn() }
+    const stderr = createMock<NodeJS.WritableStream>()
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => {
         throw new Error('no manifest')
       },
-      stderr: stderr as unknown as NodeJS.WritableStream,
+      stderr,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
 
   it('stays silent when the manifest has no optionalDependencies object', () => {
-    const stderr = { write: jest.fn() }
-    warnIfRollupBindingMissing('/ws', { loadManifest: () => ({}), stderr: stderr as unknown as NodeJS.WritableStream })
+    const stderr = createMock<NodeJS.WritableStream>()
+    warnIfRollupBindingMissing('/ws', { loadManifest: () => ({}), stderr })
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: 'not an object' }),
-      stderr: stderr as unknown as NodeJS.WritableStream,
+      stderr,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
 
   it('stays silent when no optional dependency targets the running platform', () => {
-    const stderr = { write: jest.fn() }
+    const stderr = createMock<NodeJS.WritableStream>()
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: { '@rollup/rollup-other-platform': '9.9.9' } }),
-      stderr: stderr as unknown as NodeJS.WritableStream,
+      stderr,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
@@ -116,7 +116,7 @@ describe('warnIfRollupBindingMissing', () => {
   })
 
   it('stays silent when any candidate resolves from the workspace root', () => {
-    const stderr = { write: jest.fn() }
+    const stderr = createMock<NodeJS.WritableStream>()
     const resolveBinding = jest.fn((packageName: string) => {
       if (packageName === CANDIDATE) {
         throw new Error('not installed')
@@ -126,7 +126,7 @@ describe('warnIfRollupBindingMissing', () => {
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: { [CANDIDATE]: '9.9.9', [`${CANDIDATE}-musl`]: '9.9.9' } }),
       resolveBinding,
-      stderr: stderr as unknown as NodeJS.WritableStream,
+      stderr,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
@@ -141,7 +141,7 @@ describe('warnIfRollupBindingMissing', () => {
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: { [CANDIDATE]: '9.9.9', [`${CANDIDATE}-musl`]: '9.9.9' } }),
       resolveBinding,
-      stderr: { write: jest.fn() } as unknown as NodeJS.WritableStream,
+      stderr: createMock<NodeJS.WritableStream>(),
     })
     expect(resolveBinding).toHaveBeenCalledTimes(2)
   })
@@ -154,13 +154,13 @@ describe('warnIfRollupBindingMissing', () => {
   ] satisfies [string[], string][])(
     'warns once with the %j remediation when no candidate resolves',
     (lockfiles: string[], remediation: string) => {
-      const stderr = { write: jest.fn() }
+      const stderr = createMock<NodeJS.WritableStream>()
       warnIfRollupBindingMissing('/ws', {
         loadManifest: candidateManifest,
         resolveBinding: () => {
           throw new Error('not installed')
         },
-        stderr: stderr as unknown as NodeJS.WritableStream,
+        stderr,
         pathExists: (relativePath) => lockfiles.includes(relativePath),
       })
       expect(stderr.write.mock.calls).toEqual([[expectedWarning(remediation)]])

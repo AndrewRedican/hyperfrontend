@@ -1,23 +1,22 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IAction } from '../types/action'
 import type { IChannelSettings } from '../types/channel'
 import type { SecurityProtocolProviders } from '../types/security'
-import type { MockWindow, Party } from './test-utils'
+import type { Party } from './test-utils'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it, jest, waitUntil } from '@hyperfrontend/testing'
+import { createWindowPair } from '@hyperfrontend/testing/browser'
 import { ACTION_TYPES } from '../types/action'
 import {
   collectEvents,
   createContractPair,
-  createMockWindow,
   createParty,
   createV3Provider,
   createV4Provider,
   destroyParties,
-  linkMockWindows,
   plaintextFramesTo,
   plaintextTypesTo,
-  simulateMessage,
-  waitFor,
+  SESSION_WAIT,
 } from './test-utils'
 
 const SHARED_KEY = 'security-negotiation-spec-shared-key'
@@ -27,14 +26,12 @@ describe('Integration: Security Negotiation', () => {
   const v3Settings: Partial<IChannelSettings> = { security: { protocol: 'v3' } }
   const v4Settings: Partial<IChannelSettings> = { security: { protocol: 'v4' } }
 
-  let windowA: MockWindow
-  let windowB: MockWindow
+  let windowA: FakeWindow
+  let windowB: FakeWindow
   let parties: Party[]
 
   beforeEach(() => {
-    windowA = createMockWindow()
-    windowB = createMockWindow()
-    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+    ;[windowA, windowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
     parties = []
   })
 
@@ -83,7 +80,7 @@ describe('Integration: Security Negotiation', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       expect({ readyA, readyB }).toEqual({ readyA: readyOn('v3'), readyB: readyOn('v3') })
     })
@@ -107,7 +104,7 @@ describe('Integration: Security Negotiation', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       expect({ toB: plaintextTypesTo(windowB), toA: plaintextTypesTo(windowA) }).toEqual({
         toB: [ACTION_TYPES.REQUEST_CONNECTION, ACTION_TYPES.OPEN_CONNECTION],
@@ -125,7 +122,7 @@ describe('Integration: Security Negotiation', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       expect({ readyA, readyB, protocols: transportProtocols(a, b) }).toEqual({
         readyA: readyOn('v4'),
@@ -143,7 +140,7 @@ describe('Integration: Security Negotiation', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       expect(transportProtocols(a, b)).toEqual(['v4', 'v4'])
     })
@@ -218,8 +215,7 @@ describe('Integration: Security Negotiation', () => {
       const b = setupParty('b')
 
       a.channel.connect()
-      simulateMessage(
-        windowA,
+      windowA.receive(
         {
           type: ACTION_TYPES.ACCEPT_CONNECTION,
           processId: a.channel.getPendingProcessId() ?? '',
@@ -227,8 +223,7 @@ describe('Integration: Security Negotiation', () => {
           contract: contractB,
           security: { negotiated: 'v4' },
         } as IAction,
-        'http://host-b.com',
-        windowB
+        { origin: 'http://host-b.com', source: windowB }
       )
 
       expect({
@@ -290,7 +285,7 @@ describe('Integration: Security Negotiation', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       expect({ active: [a.channel.isActive(), b.channel.isActive()], protocols: transportProtocols(a, b) }).toEqual({
         active: [true, true],
@@ -304,8 +299,7 @@ describe('Integration: Security Negotiation', () => {
       const denies = collectEvents(a.channel, ['deny'])
 
       a.channel.connect()
-      simulateMessage(
-        windowA,
+      windowA.receive(
         {
           type: ACTION_TYPES.ACCEPT_CONNECTION,
           processId: a.channel.getPendingProcessId() ?? '',
@@ -313,8 +307,7 @@ describe('Integration: Security Negotiation', () => {
           contract: contractB,
           security: { negotiated: 'v4' },
         } as IAction,
-        'http://host-b.com',
-        windowB
+        { origin: 'http://host-b.com', source: windowB }
       )
 
       expect({ active: a.channel.isActive(), transport: a.channel.getSecurityTransport(), denies }).toEqual({
@@ -335,7 +328,7 @@ describe('Integration: Security Negotiation', () => {
       a.channel.connect()
       const transportWhileScheduled = b.channel.getSecurityTransport()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
 
       // note: a request nobody has answered yet costs no session material; the transport appears when connect() composes the ACCEPT.
       expect({ transportWhileScheduled, protocols: transportProtocols(a, b), readyA, readyB }).toEqual({
@@ -409,13 +402,13 @@ describe('Integration: Security Negotiation', () => {
       const opensB = collectEvents(b.channel, ['open'])
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => readyA.length === 1 && readyB.length === 1)
+      await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
       const transports = [a.channel.getSecurityTransport(), b.channel.getSecurityTransport()]
       const requestFrame = plaintextFramesTo(windowB)[0]
       windowA.postMessage.mockClear()
       windowB.postMessage.mockClear()
 
-      simulateMessage(windowB, requestFrame, 'http://host-a.com', windowA)
+      windowB.receive(requestFrame, { origin: 'http://host-a.com', source: windowA })
 
       expect({
         toA: plaintextFramesTo(windowA),
@@ -494,8 +487,7 @@ describe('Integration: Security Negotiation', () => {
       a.channel.connect()
       const requested = a.channel.getPendingProcessId()
 
-      simulateMessage(
-        windowA,
+      windowA.receive(
         {
           type: ACTION_TYPES.ACCEPT_CONNECTION,
           processId: 'forged-process',
@@ -503,8 +495,7 @@ describe('Integration: Security Negotiation', () => {
           contract: contractB,
           security: { negotiated: 'v3' },
         } as IAction,
-        'http://host-b.com',
-        windowB
+        { origin: 'http://host-b.com', source: windowB }
       )
 
       expect({ invalidA, active: a.channel.isActive(), stillPending: a.channel.getPendingProcessId() === requested }).toEqual({

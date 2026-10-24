@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__fixtures__/workspace.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace.ts'
 import { buildGraph, workspaceGraph } from './build.ts'
 
 const root = createGraphWorkspace()

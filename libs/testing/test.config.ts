@@ -15,7 +15,10 @@ const config: TestConfig = {
   coverageExclude: [
     // why: a re-export barrel has no behaviour of its own; every symbol it names is covered where it is defined.
     'src/index.ts',
+    'src/browser/index.ts',
     'src/coverage/index.ts',
+    'src/fs/index.ts',
+    'src/process/index.ts',
     'src/runner/index.ts',
   ],
   /**

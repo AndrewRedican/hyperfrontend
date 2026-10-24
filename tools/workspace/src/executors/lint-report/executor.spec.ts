@@ -1,18 +1,19 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { Mock } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { after as afterAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import lintReportExecutor from './executor'
 jest.mock('node:child_process', () => ({ execFileSync: jest.fn() }))
 jest.mock('../../lib/logger', () => ({ logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } }))
 
 const mockExec = execFileSync as Mock
 
-const root = mkdtempSync(join(tmpdir(), 'lint-report-'))
+const directory = createTempDir({ prefix: 'lint-report-' })
+const root = directory.path
 const context = {
   root,
   projectsConfigurations: {
@@ -51,7 +52,7 @@ const rerunCommands = (): string[] =>
 beforeEach(() => mockExec.mockReset())
 
 afterAll(() => {
-  rmSync(root, { recursive: true, force: true })
+  directory.remove()
 })
 
 describe('lintReportExecutor', () => {

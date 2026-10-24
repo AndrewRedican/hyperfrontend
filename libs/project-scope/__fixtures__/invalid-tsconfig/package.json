@@ -1,7 +1,0 @@
-{
-  "name": "invalid-tsconfig-project",
-  "version": "1.0.0",
-  "devDependencies": {
-    "typescript": "^5.0.0"
-  }
-}

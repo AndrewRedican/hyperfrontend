@@ -12,18 +12,27 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import {
-  PROJECT_DIR,
-  fixtureDir,
-  installedPath,
-  installedUrl,
-  runChildSuite,
-  tapCount,
-  withoutHarnessEnvironment,
-} from './support/installed-package'
+import { writeConsumerProjects } from './support/consumer-projects'
+import { PROJECT_DIR, installedPath, installedUrl, runChildSuite, tapCount, withoutHarnessEnvironment } from './support/installed-package'
 
-const ENTRIES = ['', 'coverage', 'dom', 'hooks', 'reporter', 'runner']
-const MAIN_EXPORTS = ['describe', 'equals', 'expect', 'it', 'jest', 'matchesSubset']
+const consumers = writeConsumerProjects()
+after(() => consumers.remove())
+
+const ENTRIES = ['', 'browser', 'coverage', 'dom', 'fs', 'hooks', 'process', 'reporter', 'runner']
+const MAIN_EXPORTS = [
+  'createDeferred',
+  'createMock',
+  'describe',
+  'equals',
+  'expect',
+  'flushPromises',
+  'it',
+  'jest',
+  'matchesSubset',
+  'sleep',
+  'waitFor',
+  'waitUntil',
+]
 const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
 const DESCRIBE_MODIFIERS = ['each', 'only', 'skip']
 const EXPECT_STATICS = [
@@ -45,6 +54,9 @@ const JEST_METHODS = [
   'clearAllMocks',
   'resetAllMocks',
   'restoreAllMocks',
+  'replaceProperty',
+  'stubEnv',
+  'stubGlobal',
   'useFakeTimers',
   'useRealTimers',
   'advanceTimersByTime',
@@ -60,6 +72,11 @@ const JEST_METHODS = [
   'requireActual',
   'requireMock',
 ]
+const HELPER_EXPORTS = {
+  browser: ['createFakeWindow', 'createWindowPair', 'installResizeObserver'],
+  fs: ['createTempDir', 'useTempDir', 'writeFile', 'writeTree'],
+  process: ['Keys', 'captureStdio', 'createCapturedOutput', 'createFakeChildProcess', 'createTtyInput', 'readAll', 'spawnSyncResult'],
+}
 const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']
 const BASELINE_EXCLUDE = ['**/*.spec.ts', '**/*.spec.tsx', '**/*.d.ts', 'test.config.ts']
 const COVERAGE_EXPORTS = [
@@ -116,13 +133,16 @@ describe('@hyperfrontend/testing ESM', () => {
   describe('package layout', () => {
     const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
 
-    it('maps the six entries and the manifest in exports', () => {
+    it('maps the nine entries and the manifest in exports', () => {
       expect(Object.keys(manifest.exports).sort()).toEqual([
         '.',
+        './browser',
         './coverage',
         './dom',
+        './fs',
         './hooks',
         './package.json',
+        './process',
         './reporter',
         './runner',
       ])
@@ -297,7 +317,7 @@ describe('@hyperfrontend/testing ESM', () => {
     let suite: ChildRun
 
     before(() => {
-      suite = runChildSuite(fixtureDir('jest-style'), [hooks], JEST_STYLE_SPECS)
+      suite = runChildSuite(consumers.dir('jest-style'), [hooks], JEST_STYLE_SPECS)
     })
 
     it('exits 0 after a Jest-style suite: module mocks, fake timers, it.each and assertion counts', () => {
@@ -326,7 +346,7 @@ describe('@hyperfrontend/testing ESM', () => {
       let failed: ChildRun
 
       before(() => {
-        failed = runChildSuite(fixtureDir('failing'), [hooks], ['src/failing.spec.ts'])
+        failed = runChildSuite(consumers.dir('failing'), [hooks], ['src/failing.spec.ts'])
       })
 
       it('exits non-zero, so a clean exit is not vacuous', () => {
@@ -352,7 +372,11 @@ describe('@hyperfrontend/testing ESM', () => {
     let domRun: ChildRun
 
     before(() => {
-      domRun = runChildSuite(fixtureDir('dom'), [installedUrl('hooks', 'index.mjs'), installedUrl('dom', 'index.mjs')], ['src/dom.spec.ts'])
+      domRun = runChildSuite(
+        consumers.dir('dom'),
+        [installedUrl('hooks', 'index.mjs'), installedUrl('dom', 'index.mjs')],
+        ['src/dom.spec.ts']
+      )
     })
 
     it('gives a suite a document and makes window the global object', () => {
@@ -377,11 +401,11 @@ describe('@hyperfrontend/testing ESM', () => {
     let printed: ChildRun
 
     before(() => {
-      reported = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
+      reported = runChildSuite(consumers.dir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
         reporter: installedUrl('reporter', 'index.mjs'),
         nodeArgs: COVERAGE_FLAGS,
       })
-      printed = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
+      printed = runChildSuite(consumers.dir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
         reporter: 'spec',
         nodeArgs: COVERAGE_FLAGS,
       })
@@ -420,7 +444,7 @@ describe('@hyperfrontend/testing ESM', () => {
       const coverageDir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-'))
       coverageDirs.push(coverageDir)
       const outcome: RunOutcome = withoutHarnessEnvironment(() =>
-        runProjectTests(config, { workspaceRoot: PROJECT_DIR, projectRoot: fixtureDir('project'), coverageDir, silent: true })
+        runProjectTests(config, { workspaceRoot: PROJECT_DIR, projectRoot: consumers.dir('project'), coverageDir, silent: true })
       )
       return { ...outcome, coverageDir }
     }
@@ -469,7 +493,7 @@ describe('@hyperfrontend/testing ESM', () => {
         environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true }],
         coverageInclude: ['src/**/*.ts'],
       })
-      const plan = buildRunPlan(config, config.environments[0], fixtureDir('project'), join(tmpdir(), 'unused'))
+      const plan = buildRunPlan(config, config.environments[0], consumers.dir('project'), join(tmpdir(), 'unused'))
       expect(plan.argv).toEqual(
         expect.arrayContaining([
           installedUrl('hooks', 'index.mjs'),
@@ -492,7 +516,9 @@ describe('@hyperfrontend/testing ESM', () => {
 
     it('writes the merged lcov.info naming the file from the workspace root', async () => {
       const outcome = await run({ environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }], coverageInclude: ['src/math.ts'] })
-      expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain('SF:src/fixtures/project/src/math.ts\n')
+      expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain(
+        `SF:${consumers.workspacePath('project')}/src/math.ts\n`
+      )
     })
 
     it('keeps the per-environment lcov.node.info beside the merged report', async () => {
@@ -547,6 +573,41 @@ describe('@hyperfrontend/testing ESM', () => {
     it('measures the stub a moduleNameMapper redirect loaded', async () => {
       const outcome = await run(mappedStubConfig())
       expect(outcome.coverageTable.some((row) => row.startsWith('src/stub.ts'))).toBe(true)
+    })
+  })
+
+  describe('installed helper entries', () => {
+    it('export the documented surfaces', async () => {
+      const surfaces = await Promise.all(
+        Object.keys(HELPER_EXPORTS).map(async (entry) => [entry, Object.keys(await import(installedUrl(entry, 'index.mjs'))).sort()])
+      )
+      expect(Object.fromEntries(surfaces)).toEqual(HELPER_EXPORTS)
+    })
+
+    it('delivers a post between a linked pair of windows', async () => {
+      const { createWindowPair } = await import(installedUrl('browser', 'index.mjs'))
+      const [host, frame] = createWindowPair({ delivery: 'sync' })
+      const received: unknown[] = []
+      frame.addEventListener('message', (event: MessageEvent) => received.push({ data: event.data, fromHost: event.source === host }))
+      frame.postMessage('PING', '*')
+      expect(received).toEqual([{ data: 'PING', fromHost: true }])
+    })
+
+    it('writes a tree into a temporary directory and removes it', async () => {
+      const { createTempDir } = await import(installedUrl('fs', 'index.mjs'))
+      const dir = createTempDir({ tree: { 'package.json': { name: 'app' } } })
+      const manifest = dir.readJson('package.json')
+      dir.remove()
+      expect({ manifest, removed: !existsSync(dir.path) }).toEqual({ manifest: { name: 'app' }, removed: true })
+    })
+
+    it('types keys into a terminal input one chunk at a time', async () => {
+      const { Keys, createTtyInput } = await import(installedUrl('process', 'index.mjs'))
+      const input = createTtyInput()
+      const chunks: string[] = []
+      input.on('data', (chunk: Buffer) => chunks.push(chunk.toString()))
+      await input.sendKeys('y', Keys.Enter)
+      expect(chunks).toEqual(['y', '\r'])
     })
   })
 
@@ -619,13 +680,13 @@ describe('@hyperfrontend/testing ESM', () => {
 
     it('lists the files a report never measured', async () => {
       const { findUnmeasuredFiles } = await import(installedUrl('coverage', 'index.mjs'))
-      const { missing, covered } = findUnmeasuredFiles([], fixtureDir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
+      const { missing, covered } = findUnmeasuredFiles([], consumers.dir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
       expect({ covered, missing }).toEqual({ covered: 0, missing: expect.arrayContaining(['src/orphan.ts']) })
     })
 
     it('leaves files matching an exclusion off the unmeasured list', async () => {
       const { findUnmeasuredFiles } = await import(installedUrl('coverage', 'index.mjs'))
-      const { missing } = findUnmeasuredFiles([], fixtureDir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
+      const { missing } = findUnmeasuredFiles([], consumers.dir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
       expect(missing.filter((file: string) => file.endsWith('.spec.ts'))).toEqual([])
     })
   })

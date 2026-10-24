@@ -4,8 +4,9 @@ import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
-import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -27,16 +28,12 @@ describe('handleDestroy', () => {
   let mockWindow: Window
   let routingContext: RoutingContext
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   beforeEach(() => {
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
     mockBrokerState = {
       id: 'broker-1',
@@ -55,9 +52,7 @@ describe('handleDestroy', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = {
-      postMessage: jest.fn(),
-    } as unknown as Window
+    mockWindow = createFakeWindow()
 
     routingContext = {
       state: mockBrokerState,
@@ -129,7 +124,7 @@ describe('handleDestroy', () => {
   it('destroy open channels', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
+    jest.replaceProperty(channel, 'isActive', () => true)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
 
@@ -151,7 +146,7 @@ describe('handleDestroy', () => {
   it('destroy closed channels', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    Object.defineProperty(channel, 'isActive', { value: () => false, writable: true })
+    jest.replaceProperty(channel, 'isActive', () => false)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
 
@@ -173,7 +168,7 @@ describe('handleDestroy', () => {
   it('handles multiple destroy requests independently', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
 
-    const window2 = { postMessage: jest.fn() } as unknown as Window
+    const window2: Window = createFakeWindow()
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
 
     const destroy1Spy = jest.spyOn(channel1, 'destroy')

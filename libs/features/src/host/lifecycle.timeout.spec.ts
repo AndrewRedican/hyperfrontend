@@ -1,46 +1,21 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
-import type { Mock } from '@hyperfrontend/testing'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
+import type { MockChannel } from '../testing/mock-channel'
 import type { MountResult } from './types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
 // note: Covers the channel-settings wiring around the wire handshake (origin pin, open deadline, contract compat); the broader shell lifecycle lives in lifecycle.spec.ts.
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  destroy: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const destroy = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: () => () => undefined,
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy,
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    destroy,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 function setup() {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
-  const broker = { addChannel } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel })
   const cleanup = jest.fn()
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup }))
   const emitter = createEventEmitter()
@@ -94,7 +69,7 @@ function setupWatched() {
 }
 
 function broker(mock: MockChannel): BrokerHandle {
-  return { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  return createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
 }
 
 describe('createShellHandle windowed-target watch', () => {

@@ -4,7 +4,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__fixtures__/workspace.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace.ts'
 import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve.ts'
 import { discoverProjects, listFiles } from './workspace.ts'
 

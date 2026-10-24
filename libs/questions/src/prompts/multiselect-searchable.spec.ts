@@ -1,76 +1,12 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { MultiselectConfig, Choice } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { stripAnsi } from '../ansi-text'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { multiselect } from './multiselect'
-
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
 
 const basicChoices: ReadonlyArray<Choice<string>> = [
   { label: 'Apple', value: 'apple' },
@@ -79,12 +15,12 @@ const basicChoices: ReadonlyArray<Choice<string>> = [
 ]
 
 describe('multiselect searchable mode', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -107,7 +43,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: type 'ban' to filter to Banana
-      input.enqueueKeys(['b', 'a', 'n', Key.Space, Key.Enter])
+      await input.sendKeys('b', 'a', 'n', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -118,10 +54,10 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys(['x', 'y', 'z', Key.CtrlC])
+      await input.sendKeys('x', 'y', 'z', Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('No matches')
+      expect(output.text()).toContain('No matches')
     })
 
     it('clears filter with backspace', async () => {
@@ -129,7 +65,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: type 'xy' (no matches), backspace twice, type 'a' to filter
-      input.enqueueKeys(['x', 'y', Key.Backspace, Key.Backspace, 'a', Key.Space, Key.Enter])
+      await input.sendKeys('x', 'y', Key.Backspace, Key.Backspace, 'a', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -141,10 +77,10 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('type to filter')
+      expect(output.text()).toContain('type to filter')
     })
 
     it('handles space in search correctly', async () => {
@@ -152,7 +88,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: space toggles selection, not adds to filter
-      input.enqueueKeys(['a', Key.Space, Key.Enter])
+      await input.sendKeys('a', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -163,7 +99,7 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Backspace, Key.Backspace, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -174,7 +110,7 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys(['x', '\b', 'a', Key.Space, Key.Enter])
+      await input.sendKeys('x', '\b', 'a', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -186,7 +122,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: typing doesn't filter when not searchable
-      input.enqueueKeys(['a', 'b', Key.Space, Key.Enter])
+      await input.sendKeys('a', 'b', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -198,7 +134,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: navigate down, then type to filter, cursor resets to 0
-      input.enqueueKeys([Key.Down, Key.Down, 'c', Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, 'c', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -213,7 +149,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: filter to no results, try navigation
-      input.enqueueKeys(['z', 'z', 'z', Key.Down, Key.Up, Key.Space, Key.CtrlC])
+      await input.sendKeys('z', 'z', 'z', Key.Down, Key.Up, Key.Space, Key.CtrlC)
 
       const result = await promise
 
@@ -225,7 +161,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: Filter to very few results then press space when filtered list is small
-      input.enqueueKeys(['z', 'z', Key.Space, Key.CtrlC])
+      await input.sendKeys('z', 'z', Key.Space, Key.CtrlC)
 
       const result = await promise
 
@@ -239,11 +175,11 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: Type some characters to show the search query display
-      input.enqueueKeys(['a', 'p', Key.Space, Key.Enter])
+      await input.sendKeys('a', 'p', Key.Space, Key.Enter)
       await promise
 
       // why: the header renders the query followed by the filter hint
-      expect(stripAnsi(output.getWrittenData())).toContain('ap (type to filter)')
+      expect(stripAnsi(output.text())).toContain('ap (type to filter)')
     })
 
     it('handles filter clearing empty query via alternate backspace', async () => {
@@ -251,7 +187,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: Test alternate backspace on empty query does nothing
-      input.enqueueKeys(['\b', '\b', Key.Space, Key.Enter])
+      await input.sendKeys('\b', '\b', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -265,7 +201,7 @@ describe('multiselect searchable mode', () => {
       const promise = multiselect(config)
 
       // why: the paste filters to Banana; Space still toggles the focused item
-      input.enqueueKeys(['\x1B[200~ban\nana\x1B[201~', Key.Space, Key.Enter])
+      await input.sendKeys('\x1B[200~ban\nana\x1B[201~', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -276,7 +212,7 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys(['che', Key.Space, Key.Enter])
+      await input.sendKeys('che', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -287,7 +223,7 @@ describe('multiselect searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = multiselect(config)
 
-      input.enqueueKeys(['\x1B[200~\nban\x1B[201~', Key.Space, Key.Enter])
+      await input.sendKeys('\x1B[200~\nban\x1B[201~', Key.Space, Key.Enter)
 
       const result = await promise
 

@@ -1,6 +1,0 @@
-{
-  "name": "@hyperfrontend/e2e-testing-fixture-dom",
-  "version": "0.0.0",
-  "private": true,
-  "description": "A suite run under the installed hooks and dom preloads, with jsdom installed as the optional peer"
-}

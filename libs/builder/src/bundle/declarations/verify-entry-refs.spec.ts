@@ -1,9 +1,7 @@
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { collectEntryRefs, collectExportedNames, findDanglingEntryRefs, verifyEntryTypeRefs } from './verify-entry-refs'
 
 const entryOf = (srcPath: string): EntryPoint => ({
@@ -111,30 +109,18 @@ describe('collectEntryRefs', () => {
 })
 
 describe('findDanglingEntryRefs', () => {
-  let outputPath: string
+  const outputDir = useTempDir({ prefix: 'builder-verify-refs-' })
 
-  const writeEntry = (srcPath: string, source: string): void => {
-    const file = join(outputPath, srcPath, 'index.d.ts')
-    mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(file, source)
-  }
-
-  beforeEach(() => {
-    outputPath = mkdtempSync(join(tmpdir(), 'builder-verify-refs-'))
-  })
-
-  afterEach(() => {
-    rmSync(outputPath, { recursive: true, force: true })
-  })
+  const writeEntry = (srcPath: string, source: string): string => outputDir.write(join(srcPath, 'index.d.ts'), source)
 
   it('reports names the target entry does not export', () => {
     writeEntry('', 'export declare const sdkInfo: string;')
     writeEntry('host', "import { EventHandler } from '..';\nexport declare const on: EventHandler;")
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host']))).toEqual([
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host']))).toEqual([
       {
-        source: join(outputPath, 'host', 'index.d.ts'),
+        source: outputDir.resolve('host', 'index.d.ts'),
         specifier: '..',
-        target: join(outputPath, 'index.d.ts'),
+        target: outputDir.resolve('index.d.ts'),
         missing: ['EventHandler'],
       },
     ])
@@ -143,13 +129,13 @@ describe('findDanglingEntryRefs', () => {
   it('accepts a reference the target entry exports', () => {
     writeEntry('', "export type { EventHandler } from './shared/event-emitter';")
     writeEntry('host', "import { EventHandler } from '..';\nexport declare const on: EventHandler;")
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host']))).toEqual([])
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host']))).toEqual([])
   })
 
   it('accepts a reference against an entry with an open export set', () => {
     writeEntry('', "export * from './everything';")
     writeEntry('host', "import { EventHandler } from '..';\nexport declare const on: EventHandler;")
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host']))).toEqual([])
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host']))).toEqual([])
   })
 
   it('ignores bare specifiers, self references, and paths outside the entry set', () => {
@@ -158,52 +144,40 @@ describe('findDanglingEntryRefs', () => {
       'host',
       ["import { Plugin } from 'rollup';", "import { Local } from '.';", "import { Helper } from './internal';"].join('\n')
     )
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host']))).toEqual([])
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host']))).toEqual([])
   })
 
   it('skips entries the build did not emit declarations for', () => {
     writeEntry('', 'export declare const sdkInfo: string;')
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host']))).toEqual([])
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host']))).toEqual([])
   })
 
   it('reuses one parse of a target referenced by several entries', () => {
     writeEntry('', 'export declare const sdkInfo: string;')
     writeEntry('host', "import { EventHandler } from '..';")
     writeEntry('hostee', "import { EventHandler } from '..';")
-    expect(findDanglingEntryRefs(makeContext(outputPath, ['', 'host', 'hostee'])).map((ref) => ref.source)).toEqual([
-      join(outputPath, 'host', 'index.d.ts'),
-      join(outputPath, 'hostee', 'index.d.ts'),
+    expect(findDanglingEntryRefs(makeContext(outputDir.path, ['', 'host', 'hostee'])).map((ref) => ref.source)).toEqual([
+      outputDir.resolve('host', 'index.d.ts'),
+      outputDir.resolve('hostee', 'index.d.ts'),
     ])
   })
 })
 
 describe('verifyEntryTypeRefs', () => {
-  let outputPath: string
+  const outputDir = useTempDir({ prefix: 'builder-verify-refs-' })
 
-  const writeEntry = (srcPath: string, source: string): void => {
-    const file = join(outputPath, srcPath, 'index.d.ts')
-    mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(file, source)
-  }
-
-  beforeEach(() => {
-    outputPath = mkdtempSync(join(tmpdir(), 'builder-verify-refs-'))
-  })
-
-  afterEach(() => {
-    rmSync(outputPath, { recursive: true, force: true })
-  })
+  const writeEntry = (srcPath: string, source: string): string => outputDir.write(join(srcPath, 'index.d.ts'), source)
 
   it('passes when every cross-entry reference resolves', () => {
     writeEntry('', "export type { EventHandler } from './shared/event-emitter';")
     writeEntry('host', "import { EventHandler } from '..';")
-    expect(() => verifyEntryTypeRefs(makeContext(outputPath, ['', 'host']))).not.toThrow()
+    expect(() => verifyEntryTypeRefs(makeContext(outputDir.path, ['', 'host']))).not.toThrow()
   })
 
   it('throws naming the entry, the specifier, and the missing symbols', () => {
     writeEntry('', 'export declare const sdkInfo: string;')
     writeEntry('host', "import { EventHandler, PresentPayload } from '..';")
-    expect(() => verifyEntryTypeRefs(makeContext(outputPath, ['', 'host']))).toThrow(
+    expect(() => verifyEntryTypeRefs(makeContext(outputDir.path, ['', 'host']))).toThrow(
       /1 cross-entry type reference\(s\)[\s\S]*host\/index\.d\.ts references EventHandler, PresentPayload from '\.\.', which index\.d\.ts does not export/
     )
   })

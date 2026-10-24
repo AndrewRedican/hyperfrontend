@@ -157,6 +157,20 @@ export function useRealTimers(): void {
 }
 
 /**
+ * Reports whether the fake clock is installed.
+ *
+ * @returns True between `useFakeTimers` and `useRealTimers`.
+ * @example Checking the clock before advancing it
+ * ```ts
+ * useFakeTimers()
+ * isFakeClock() // => true
+ * ```
+ */
+export function isFakeClock(): boolean {
+  return clock.faked
+}
+
+/**
  * Advances the fake clock, running everything scheduled within the window.
  *
  * @param milliseconds - How far to advance.

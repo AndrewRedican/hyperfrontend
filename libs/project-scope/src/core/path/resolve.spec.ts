@@ -1,7 +1,8 @@
-import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
+import { writeFileSync, symlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { normalizePath } from './normalize'
 import {
   resolvePath,
@@ -14,22 +15,16 @@ import {
   workspaceRelativePath,
 } from './resolve'
 
-const TEST_DIR = join(import.meta.dirname, '__test_resolve_fixtures__')
-
 describe('core/path/resolve', () => {
+  const tempDir = useTempDir({ prefix: 'resolve-test-', scope: 'all' })
+
   beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-    writeFileSync(join(TEST_DIR, 'file.txt'), 'content')
+    writeFileSync(join(tempDir.path, 'file.txt'), 'content')
     try {
-      symlinkSync(join(TEST_DIR, 'file.txt'), join(TEST_DIR, 'link.txt'))
+      symlinkSync(join(tempDir.path, 'file.txt'), join(tempDir.path, 'link.txt'))
     } catch {
       // Symlinks may not work on all platforms
     }
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
   describe('resolvePath', () => {
@@ -57,11 +52,11 @@ describe('core/path/resolve', () => {
 
   describe('resolveRealPath', () => {
     it('returns real path for existing file', () => {
-      expect(resolveRealPath(join(TEST_DIR, 'file.txt'))).toContain('file.txt')
+      expect(resolveRealPath(join(tempDir.path, 'file.txt'))).toContain('file.txt')
     })
 
     it('returns null for missing file', () => {
-      const result = resolveRealPath(join(TEST_DIR, 'missing.txt'))
+      const result = resolveRealPath(join(tempDir.path, 'missing.txt'))
       expect(result).toBeNull()
     })
   })

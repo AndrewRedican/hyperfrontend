@@ -2,9 +2,7 @@ import type { Channel, ProtocolProvider } from '../lib/channel/model'
 import type { Data } from '../lib/data/model'
 import type { PacketDrop } from '../lib/packet/model'
 import type { SessionRole } from '../lib/security/model'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createChannel } from '../browser/channel'
 import { createData } from '../browser/data'
@@ -113,25 +111,4 @@ export async function connectPair(
   responder.channel.acceptHello(initiatorHello)
   initiator.channel.acceptHello(responderHello)
   return { initiator, responder }
-}
-
-/**
- * Polls until a condition holds.
- *
- * @param condition - The condition to wait for
- * @param attempts - How many 25 ms polls to allow
- *
- * @example Waiting for delivery
- * ```typescript
- * await waitFor(() => responder.received.length === 1)
- * ```
- */
-export async function waitFor(condition: () => boolean, attempts = 200): Promise<void> {
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    if (condition()) {
-      return
-    }
-    await createPromise<void>((resolve) => setTimeout(resolve, 25))
-  }
-  throw createError('Timed out waiting for condition')
 }

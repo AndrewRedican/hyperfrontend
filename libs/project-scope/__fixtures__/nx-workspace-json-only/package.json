@@ -1,7 +1,0 @@
-{
-  "name": "nx-workspace-json-only",
-  "version": "1.0.0",
-  "devDependencies": {
-    "nx": "18.0.0"
-  }
-}

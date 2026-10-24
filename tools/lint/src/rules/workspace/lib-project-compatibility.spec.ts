@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-project-compatibility.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'project.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'project.json')
 const file = (compatibility: string, build = '"build": {}'): string =>
   `{\n  "name": "lib-x",\n  "metadata": { "compatibility": ${compatibility} },\n  "targets": { ${build}, "publish": {} }\n}\n`
 const ALL_FULL = '{ "environments": { "node": "full", "browser": "full", "webWorker": "full" } }'
@@ -228,4 +231,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

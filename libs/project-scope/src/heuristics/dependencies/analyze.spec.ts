@@ -1,8 +1,10 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import * as fsModule from '../../core/fs'
 import { buildDependencyGraph, findCircularDependencies, getProjectDependencies } from './analyze'
 
@@ -12,7 +14,7 @@ jest.mock('../../core/fs', () => {
   return { ...actual, exists: jest.fn(actual.exists) }
 })
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 
@@ -451,20 +453,15 @@ describe('resolveImportPath edge cases', () => {
 })
 
 describe('buildDependencyGraph path confinement', () => {
-  const ESCAPE_PROJECT = resolve(import.meta.dirname, '__escape_fixtures__')
+  const escapeProject = useTempDir({ prefix: 'escape-test-', scope: 'all' })
 
   beforeAll(() => {
-    rmSync(ESCAPE_PROJECT, { recursive: true, force: true })
-    mkdirSync(join(ESCAPE_PROJECT, 'src'), { recursive: true })
+    mkdirSync(join(escapeProject.path, 'src'), { recursive: true })
     // how: A hostile source file whose imports escape the project via absolute and parent-traversal paths.
     writeFileSync(
-      join(ESCAPE_PROJECT, 'src', 'index.ts'),
+      join(escapeProject.path, 'src', 'index.ts'),
       "import '/totally/outside/secret'\nimport x from '../../escape/up'\nexport const a = 1\n"
     )
-  })
-
-  afterAll(() => {
-    rmSync(ESCAPE_PROJECT, { recursive: true, force: true })
   })
 
   it('never stats a path outside the project root when an import escapes it', () => {
@@ -472,8 +469,8 @@ describe('buildDependencyGraph path confinement', () => {
     // why: the replacement stands for the whole file rather than this test, so the calls the earlier suites made have to be dropped before this one measures its own.
     spy.mockClear()
 
-    buildDependencyGraph(ESCAPE_PROJECT)
-    const outOfRoot = spy.mock.calls.map((call) => resolve(String(call[0]))).filter((path) => !path.startsWith(ESCAPE_PROJECT))
+    buildDependencyGraph(escapeProject.path)
+    const outOfRoot = spy.mock.calls.map((call) => resolve(String(call[0]))).filter((path) => !path.startsWith(escapeProject.path))
 
     expect(outOfRoot).toEqual([])
   })

@@ -1,8 +1,9 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext, EntryPointDiscovery } from '../../models'
 import { beforeEach } from 'node:test'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { runDtsPrePass } from './dts-pre-pass'
 jest.mock('../dependencies/pre-pass', () => ({
@@ -77,14 +78,14 @@ describe('runDtsPrePass', () => {
   })
 
   it('threads the optional memory monitor through to runPrePass', async () => {
-    const monitor = { check: jest.fn() }
-    await runDtsPrePass(makeContext(['rollup']), monitor as unknown as Parameters<typeof runDtsPrePass>[1])
+    const monitor = createMock<MemoryMonitor>()
+    await runDtsPrePass(makeContext(['rollup']), monitor)
     expect((runPrePass as Mock).mock.calls[0][1].monitor).toBe(monitor)
   })
 
   it('checkpoints the monitor at the start and end of the pre-pass', async () => {
-    const monitor = { check: jest.fn() }
-    await runDtsPrePass(makeContext(['rollup']), monitor as unknown as Parameters<typeof runDtsPrePass>[1])
+    const monitor = createMock<MemoryMonitor>()
+    await runDtsPrePass(makeContext(['rollup']), monitor)
     expect(monitor.check.mock.calls).toEqual([['bundle:declarations:dts-prepass:start'], ['bundle:declarations:dts-prepass:end']])
   })
 

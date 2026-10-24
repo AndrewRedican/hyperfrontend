@@ -7,12 +7,12 @@ import { createFeature } from './create-feature'
 describe('createFeature', () => {
   afterEach(() => {
     document.head.innerHTML = ''
-    Object.defineProperty(window, 'opener', { value: null, configurable: true, writable: true })
+    jest.restoreAllMocks()
   })
 
   function stubHostOpener(): { postMessage: Mock } {
     const opener = { postMessage: jest.fn(), addEventListener: jest.fn(), removeEventListener: jest.fn() }
-    Object.defineProperty(window, 'opener', { value: opener, configurable: true, writable: true })
+    jest.stubGlobal('opener', opener)
     return opener
   }
 

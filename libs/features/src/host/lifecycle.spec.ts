@@ -1,56 +1,16 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { Mock } from '@hyperfrontend/testing'
 import type { PresentPayload, ViewportPayload } from '../shared/presentation'
 import type { ShellOptions } from '../shared/types'
 import type { ViewportReporter } from './sizing'
 import type { MountContext, MountResult } from './types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-  send: Mock
-  disconnect: Mock
-  destroy: Mock
-  connect: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const send = jest.fn()
-  const disconnect = jest.fn()
-  const destroy = jest.fn()
-  const connect = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send,
-    disconnect,
-    destroy,
-    connect,
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-    send,
-    disconnect,
-    destroy,
-    connect,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 function setup(
   config: {
@@ -65,7 +25,7 @@ function setup(
 ) {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
-  const broker = { addChannel } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel })
   const cleanup = jest.fn()
   let context: MountContext | undefined
   const present = config.present ?? { mode: 'embedded' }

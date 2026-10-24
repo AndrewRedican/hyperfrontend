@@ -5,111 +5,19 @@ import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig } from '../../repository/models/repository-config'
 import type { RepositoryResolution } from '../../repository/models/resolution'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { createResolveRepositoryStep, RESOLVE_REPOSITORY_STEP_ID } from './resolve-repository'
 
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-function createMockTree(files: Record<string, string> = {}): Tree {
-  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
-  const fileSystem = new Map(Object.entries(files).map(([filePath, content]) => [normalizePath(filePath), content]))
-
-  return {
-    root: '/workspace',
-    read(filePath: string, encoding?: string) {
-      const content = fileSystem.get(normalizePath(filePath))
-      if (content === undefined) {
-        return null
-      }
-      return encoding ? content : Buffer.from(content)
-    },
-    write: jest.fn(),
-    exists: (path: string) => fileSystem.has(normalizePath(path)),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: (path: string) => fileSystem.has(normalizePath(path)),
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
-
-function createMockRegistry(): Registry {
-  return {
-    name: 'mock',
-    url: 'https://mock.registry.com',
-    async getLatestVersion() {
-      return null
-    },
-    async isVersionPublished() {
-      return false
-    },
-    async getPackageInfo() {
-      return null
-    },
-    async getVersionInfo() {
-      return null
-    },
-    async listVersions() {
-      return []
-    },
-  }
-}
-
-function createMockGitClient(options: { remoteUrl?: string | null } = {}): GitClient {
-  const { remoteUrl = null } = options
-
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn(),
-    stage: () => true,
-    unstage: () => true,
-    stageAll: () => true,
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-    getRemoteUrl: jest.fn().mockResolvedValue(remoteUrl),
-  } as unknown as GitClient
+/**
+ * Builds a git client whose `origin` remote resolves to the given URL; nothing else on it is used by the step.
+ *
+ * @param remoteUrl - Remote URL the client reports, null when the repository has no remote
+ * @returns Git client answering `getRemoteUrl` with the remote URL
+ */
+function createMockGitClient(remoteUrl: string | null = null): GitClient {
+  return createMock<GitClient>({ getRemoteUrl: () => remoteUrl })
 }
 
 function createMockContext(overrides?: {
@@ -125,10 +33,10 @@ function createMockContext(overrides?: {
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: overrides?.tree ?? createMockTree(),
-    registry: overrides?.registry ?? createMockRegistry(),
+    tree: overrides?.tree ?? createMemoryTree(),
+    registry: overrides?.registry ?? createMock<Registry>(),
     git: overrides?.git ?? createMockGitClient(),
-    logger: overrides?.logger ?? createMockLogger(),
+    logger: overrides?.logger ?? createMock<Logger>(),
     config: { preset: 'conventional', ...overrides?.config },
     state: overrides?.state ?? {},
   }
@@ -215,7 +123,7 @@ describe('resolve-repository step', () => {
 
     describe('when repository is "inferred"', () => {
       it('infers from package.json repository field', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
             repository: 'https://github.com/owner/repo',
@@ -241,15 +149,13 @@ describe('resolve-repository step', () => {
       })
 
       it('infers from git remote when package.json has no repository', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
           }),
         })
 
-        const git = createMockGitClient({
-          remoteUrl: 'https://github.com/git-owner/git-repo.git',
-        })
+        const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
         const ctx = createMockContext({
           tree,
@@ -271,13 +177,13 @@ describe('resolve-repository step', () => {
       })
 
       it('skips gracefully when neither source has repository info', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
           }),
         })
 
-        const git = createMockGitClient({ remoteUrl: null })
+        const git = createMockGitClient(null)
 
         const ctx = createMockContext({
           tree,
@@ -296,8 +202,8 @@ describe('resolve-repository step', () => {
       })
 
       it('skips gracefully when package.json does not exist', async () => {
-        const tree = createMockTree({})
-        const git = createMockGitClient({ remoteUrl: null })
+        const tree = createMemoryTree({})
+        const git = createMockGitClient(null)
 
         const ctx = createMockContext({
           tree,
@@ -377,16 +283,14 @@ describe('resolve-repository step', () => {
 
       describe('with mode "inferred"', () => {
         it('uses default inference order (package-json first)', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               repository: 'https://github.com/pkg-owner/pkg-repo',
             }),
           })
 
-          const git = createMockGitClient({
-            remoteUrl: 'https://github.com/git-owner/git-repo.git',
-          })
+          const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
           const resolution: RepositoryResolution = {
             mode: 'inferred',
@@ -405,16 +309,14 @@ describe('resolve-repository step', () => {
         })
 
         it('respects custom inference order', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
               repository: 'https://github.com/pkg-owner/pkg-repo',
             }),
           })
 
-          const git = createMockGitClient({
-            remoteUrl: 'https://github.com/git-owner/git-repo.git',
-          })
+          const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
           const resolution: RepositoryResolution = {
             mode: 'inferred',
@@ -434,15 +336,13 @@ describe('resolve-repository step', () => {
         })
 
         it('falls back to next source when first fails', async () => {
-          const tree = createMockTree({
+          const tree = createMemoryTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
             }),
           })
 
-          const git = createMockGitClient({
-            remoteUrl: 'https://github.com/git-owner/git-repo.git',
-          })
+          const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
           const resolution: RepositoryResolution = {
             mode: 'inferred',
@@ -473,7 +373,7 @@ describe('resolve-repository step', () => {
 
     describe('logger calls', () => {
       it('logs debug when repository is undefined', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const ctx = createMockContext({
           logger,
           config: { repository: undefined },
@@ -486,7 +386,7 @@ describe('resolve-repository step', () => {
       })
 
       it('logs debug when using explicit config', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const ctx = createMockContext({
           logger,
           config: {
@@ -504,11 +404,11 @@ describe('resolve-repository step', () => {
       })
 
       it('logs debug when inference fails', async () => {
-        const logger = createMockLogger()
-        const tree = createMockTree({
+        const logger = createMock<Logger>()
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
         })
-        const git = createMockGitClient({ remoteUrl: null })
+        const git = createMockGitClient(null)
 
         const ctx = createMockContext({
           logger,
@@ -524,9 +424,9 @@ describe('resolve-repository step', () => {
       })
 
       it('logs debug when package.json not found', async () => {
-        const logger = createMockLogger()
-        const tree = createMockTree({})
-        const git = createMockGitClient({ remoteUrl: 'https://github.com/owner/repo.git' })
+        const logger = createMock<Logger>()
+        const tree = createMemoryTree({})
+        const git = createMockGitClient('https://github.com/owner/repo.git')
 
         const ctx = createMockContext({
           logger,
@@ -544,8 +444,8 @@ describe('resolve-repository step', () => {
       })
 
       it('logs debug when successfully inferring from source', async () => {
-        const logger = createMockLogger()
-        const tree = createMockTree({
+        const logger = createMock<Logger>()
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             repository: 'https://github.com/owner/repo',
           }),
@@ -566,10 +466,10 @@ describe('resolve-repository step', () => {
 
     describe('RepositoryResolution with mode "inferred" graceful degradation', () => {
       it('skips when all inference sources fail', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
         })
-        const git = createMockGitClient({ remoteUrl: null })
+        const git = createMockGitClient(null)
 
         const resolution: RepositoryResolution = {
           mode: 'inferred',
@@ -607,21 +507,9 @@ describe('resolve-repository step', () => {
 
     describe('edge cases', () => {
       it('handles tree.read returning null for existing file', async () => {
-        const tree = {
-          root: '/workspace',
-          read: () => null,
-          write: jest.fn(),
-          exists: () => true,
-          delete: jest.fn(),
-          rename: jest.fn(),
-          isFile: () => true,
-          children: () => [],
-          listChanges: () => [],
-        } as unknown as Tree
+        const tree = createMock<Tree>({ root: '/workspace', read: () => null, exists: () => true, isFile: () => true })
 
-        const git = createMockGitClient({
-          remoteUrl: 'https://github.com/git-owner/git-repo.git',
-        })
+        const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
         const ctx = createMockContext({
           tree,
@@ -636,20 +524,10 @@ describe('resolve-repository step', () => {
       })
 
       it('logs debug when tree.read returns null', async () => {
-        const logger = createMockLogger()
-        const tree = {
-          root: '/workspace',
-          read: () => null,
-          write: jest.fn(),
-          exists: () => true,
-          delete: jest.fn(),
-          rename: jest.fn(),
-          isFile: () => true,
-          children: () => [],
-          listChanges: () => [],
-        } as unknown as Tree
+        const logger = createMock<Logger>()
+        const tree = createMock<Tree>({ root: '/workspace', read: () => null, exists: () => true, isFile: () => true })
 
-        const git = createMockGitClient({ remoteUrl: null })
+        const git = createMockGitClient(null)
 
         const ctx = createMockContext({
           logger,
@@ -665,13 +543,11 @@ describe('resolve-repository step', () => {
       })
 
       it('handles invalid JSON in package.json', async () => {
-        const tree = createMockTree({
+        const tree = createMemoryTree({
           '/workspace/libs/test/package.json': 'not valid json',
         })
 
-        const git = createMockGitClient({
-          remoteUrl: 'https://github.com/git-owner/git-repo.git',
-        })
+        const git = createMockGitClient('https://github.com/git-owner/git-repo.git')
 
         const ctx = createMockContext({
           tree,
@@ -686,7 +562,7 @@ describe('resolve-repository step', () => {
       })
 
       it('handles unknown repository configuration format', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const ctx = createMockContext({
           logger,
           config: { repository: { unknownKey: 'unknownValue' } as unknown as RepositoryConfig },
@@ -699,7 +575,7 @@ describe('resolve-repository step', () => {
       })
 
       it('warns about an unknown repository configuration format', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const ctx = createMockContext({
           logger,
           config: { repository: { unknownKey: 'unknownValue' } as unknown as RepositoryConfig },
@@ -712,7 +588,7 @@ describe('resolve-repository step', () => {
       })
 
       it('handles unknown inference source', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const resolution: RepositoryResolution = {
           mode: 'inferred',
           inferenceOrder: ['unknown-source' as 'package-json'],
@@ -730,7 +606,7 @@ describe('resolve-repository step', () => {
       })
 
       it('warns about the unknown inference source', async () => {
-        const logger = createMockLogger()
+        const logger = createMock<Logger>()
         const resolution: RepositoryResolution = {
           mode: 'inferred',
           inferenceOrder: ['unknown-source' as 'package-json'],

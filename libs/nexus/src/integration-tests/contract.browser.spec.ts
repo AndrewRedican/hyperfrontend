@@ -1,13 +1,13 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IChannelContract } from '../types/contract'
-import type { MockWindow } from './test-utils'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
 import { mergeContracts } from '../setup/merge-contracts'
-import { createMockWindow } from './test-utils'
 
 describe('Integration: Contract Validation', () => {
-  let mockWindow: MockWindow
+  let mockWindow: FakeWindow
 
   // why: the channels here connect towards windows nobody answers from, so the connect deadline must run on the fake clock or each run waits it out.
   beforeAll(() => {
@@ -19,7 +19,7 @@ describe('Integration: Contract Validation', () => {
   })
 
   beforeEach(() => {
-    mockWindow = createMockWindow()
+    mockWindow = createFakeWindow()
   })
 
   afterEach(() => {
@@ -243,7 +243,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', mockWindow)
       channel.connect()
 
       expect(() => {
@@ -263,7 +263,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', mockWindow)
       channel.connect()
 
       expect(() => {
@@ -284,10 +284,10 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const mockWindow2 = createMockWindow()
+      const mockWindow2 = createFakeWindow()
 
-      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', mockWindow)
+      const channel2 = broker.addChannel('channel-2', mockWindow2)
 
       channel1.connect()
       channel2.connect()
@@ -334,7 +334,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('bidirectional-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('bidirectional-channel', mockWindow)
       channel.connect()
 
       expect(() => {

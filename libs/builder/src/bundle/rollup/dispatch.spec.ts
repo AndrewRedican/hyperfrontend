@@ -1,13 +1,14 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { FakeChildProcess } from '@hyperfrontend/testing/process'
 import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
 import type { RollupBuildDescriptor } from './worker/types'
 import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { existsSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { captureStdio, createFakeChildProcess } from '@hyperfrontend/testing/process'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual<typeof import('@hyperfrontend/logging')>('@hyperfrontend/logging')
@@ -20,26 +21,17 @@ jest.mock('@hyperfrontend/logging', () => {
 })
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
 
-const tick = (): Promise<void> => new Promise<void>((resolve) => setImmediate(resolve))
-
 interface SpawnRecord {
   execPath: string
   args: string[]
   reportPath: string
-  child: EventEmitter & { stdout: EventEmitter; stderr: EventEmitter }
+  child: FakeChildProcess
   descriptor: RollupBuildDescriptor
-}
-
-const makeFakeChild = (): SpawnRecord['child'] => {
-  const child = new EventEmitter() as SpawnRecord['child']
-  child.stdout = new EventEmitter()
-  child.stderr = new EventEmitter()
-  return child
 }
 
 const captureSpawn = (records: SpawnRecord[]): Mock =>
   (spawn as Mock).mockImplementation((execPath: string, args: string[]) => {
-    const child = makeFakeChild()
+    const child = createFakeChildProcess()
     const descriptorJson = args[args.length - 1] as string
     const descriptor = JSON.parse(descriptorJson) as RollupBuildDescriptor
     records.push({ execPath, args, reportPath: descriptor.reportPath, child, descriptor })
@@ -72,14 +64,18 @@ beforeEach(() => {
   ;(spawn as Mock).mockReset()
 })
 
+afterEach(() => {
+  jest.restoreAllMocks()
+})
+
 describe('dispatchRollupWorker', () => {
   it('forks exactly one worker for a dispatch', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
     expect(records).toHaveLength(1)
   })
@@ -88,9 +84,9 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     expect(await promise).toEqual({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
   })
 
@@ -99,20 +95,21 @@ describe('dispatchRollupWorker', () => {
     captureSpawn(records)
     const descriptor = baseDescriptor({ reportPath: '/abs/orig.json' })
     const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     expect((records[0] as SpawnRecord).descriptor.reportPath).toContain('hf-builder-rollup-')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
   })
 
   it('rejects when the worker exits with a non-zero code and includes the captured stderr tail', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
+    captureStdio({ stdout: false })
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.stderr.emit('data', Buffer.from('boom oh no\n'))
-    ;(records[0] as SpawnRecord).child.emit('exit', 1)
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.writeStderr('boom oh no\n')
+    ;(records[0] as SpawnRecord).child.exit(1)
     await expect(promise).rejects.toThrow(/exited with code 1[\s\S]*boom oh no/)
   })
 
@@ -120,8 +117,8 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('error', new Error('ENOENT'))
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.fail(new Error('ENOENT'))
     await expect(promise).rejects.toThrow(/failed to spawn: ENOENT/)
   })
 
@@ -129,8 +126,8 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.exit(0)
     await expect(promise).rejects.toThrow(/did not write a report/)
   })
 
@@ -142,13 +139,13 @@ describe('dispatchRollupWorker', () => {
       execPath: '/usr/bin/custom-node',
       execArgv: ['--require', '@swc-node/register'],
     })
-    await tick()
+    await flushPromises()
     expect({ execPath: (records[0] as SpawnRecord).execPath, leadingArgs: (records[0] as SpawnRecord).args.slice(0, 3) }).toEqual({
       execPath: '/usr/bin/custom-node',
       leadingArgs: ['--require', '@swc-node/register', '/abs/worker.cjs'],
     })
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
   })
 
@@ -156,36 +153,31 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     expect((records[0] as SpawnRecord).args[0]).toBe('/abs/worker.cjs')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
   })
 
   it('prepends --experimental-global-webcrypto when the running Node has no crypto global', async () => {
-    const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto') as PropertyDescriptor
-    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true })
-    try {
-      const records: SpawnRecord[] = []
-      captureSpawn(records)
-      const promise = dispatchRollupWorker(baseDescriptor(), {
-        workerPath: '/abs/worker.cjs',
-        execArgv: ['--require', '@swc-node/register'],
-      })
-      await tick()
-      expect((records[0] as SpawnRecord).args.slice(0, 4)).toEqual([
-        '--experimental-global-webcrypto',
-        '--require',
-        '@swc-node/register',
-        '/abs/worker.cjs',
-      ])
-      writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-      ;(records[0] as SpawnRecord).child.emit('exit', 0)
-      await promise
-    } finally {
-      Object.defineProperty(globalThis, 'crypto', original)
-    }
+    jest.stubGlobal('crypto', undefined)
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const promise = dispatchRollupWorker(baseDescriptor(), {
+      workerPath: '/abs/worker.cjs',
+      execArgv: ['--require', '@swc-node/register'],
+    })
+    await flushPromises()
+    expect((records[0] as SpawnRecord).args.slice(0, 4)).toEqual([
+      '--experimental-global-webcrypto',
+      '--require',
+      '@swc-node/register',
+      '/abs/worker.cjs',
+    ])
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.exit(0)
+    await promise
   })
 
   it('invokes the optional memory monitor before and after the dispatched job using the supplied label', async () => {
@@ -207,9 +199,9 @@ describe('dispatchRollupWorker', () => {
       monitor,
       label: 'esm:0/1:.',
     })
-    await tick()
+    await flushPromises()
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
     expect(checks).toEqual(['bundle:rollup:dispatch:esm:0/1:.:start', 'bundle:rollup:dispatch:esm:0/1:.:end'])
   })
@@ -218,8 +210,8 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.emit('exit', 1)
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.exit(1)
     await expect(promise).rejects.toThrow(/rollup worker for esm:\/abs\/libs\/foo\/src\/index\.ts/)
   })
 
@@ -227,9 +219,9 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
+    await flushPromises()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
-    ;(records[0] as SpawnRecord).child.emit('exit', 2)
+    ;(records[0] as SpawnRecord).child.exit(2)
     const outcome = await promise.then(
       () => 'resolved',
       () => 'rejected'
@@ -240,52 +232,42 @@ describe('dispatchRollupWorker', () => {
   it('passes stdout chunks through to the parent stdout', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
+    const stdio = captureStdio({ stderr: false })
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.stdout.emit('data', Buffer.from('child output\n'))
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.writeStdout('child output\n')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
-    expect(writeSpy).toHaveBeenCalledWith(expect.anything())
-    writeSpy.mockRestore()
+    stdio.restore()
+    expect(stdio.stdout()).toBe('child output\n')
   })
 
   it('passes stderr string chunks through to the parent stderr', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const writeSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    const stdio = captureStdio({ stdout: false })
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
-    await tick()
-    ;(records[0] as SpawnRecord).child.stderr.emit('data', 'string chunk\n')
+    await flushPromises()
+    ;(records[0] as SpawnRecord).child.stderr.setEncoding('utf8')
+    ;(records[0] as SpawnRecord).child.writeStderr('string chunk\n')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.exit(0)
     await promise
-    expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining('string chunk'))
-    writeSpy.mockRestore()
+    stdio.restore()
+    expect(stdio.stderr()).toBe('string chunk\n')
   })
 })
 
 describe('resolveDefaultRollupWorkerPath', () => {
-  let root: string
-
-  beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-rollup-resolver-'))
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
+  const dir = useTempDir({ prefix: 'builder-rollup-resolver-' })
 
   it('resolves the worker at the bundle/rollup/worker offset beside the builder', () => {
-    const targetDir = join(root, 'bundle', 'rollup', 'worker')
-    mkdirSync(targetDir, { recursive: true })
-    const path = join(targetDir, 'index.cjs')
-    writeFileSync(path, '/* fake worker */', { flag: 'w' })
-    expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path, execArgv: [] })
+    const path = dir.write('bundle/rollup/worker/index.cjs', '/* fake worker */')
+    expect(resolveDefaultRollupWorkerPath(dir.path)).toEqual({ path, execArgv: [] })
   })
 
   it('returns undefined when no rollup worker exists under any ancestor', () => {
-    expect(resolveDefaultRollupWorkerPath(root)).toBeUndefined()
+    expect(resolveDefaultRollupWorkerPath(dir.path)).toBeUndefined()
   })
 })

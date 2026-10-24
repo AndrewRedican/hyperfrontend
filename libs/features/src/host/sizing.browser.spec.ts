@@ -1,18 +1,18 @@
-import type { ResizeObserverStubController } from '../testing/resize-observer-stub'
+import type { ResizeObserverController } from '@hyperfrontend/testing/browser'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { installResizeObserverStub } from '../testing/resize-observer-stub'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { createContainerReporter, createObserverReporter, measureContentBox } from './sizing'
 
-let observers: ResizeObserverStubController
+let observers: ResizeObserverController
 
 function setViewport(width: number, height: number) {
-  Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true })
-  Object.defineProperty(window, 'innerHeight', { value: height, configurable: true, writable: true })
+  jest.replaceProperty(window, 'innerWidth', width)
+  jest.replaceProperty(window, 'innerHeight', height)
 }
 
 beforeEach(() => {
-  observers = installResizeObserverStub()
+  observers = installResizeObserver()
 })
 
 describe('measureContentBox', () => {
@@ -147,7 +147,7 @@ describe('createContainerReporter', () => {
   })
 
   afterEach(() => {
-    setViewport(1024, 768)
+    jest.restoreAllMocks()
   })
 
   const create = (measured: { width: number; height: number }) => createContainerReporter(container, frame, measured)

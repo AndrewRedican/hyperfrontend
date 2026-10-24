@@ -1,8 +1,9 @@
 import type { PackageJson } from './read'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import {
   getDependencies,
   getProductionDependencies,
@@ -16,8 +17,6 @@ import {
   hasInstalledPackage,
   getInstalledVersion,
 } from './dependencies'
-
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_deps__')
 
 describe('getDependencies', () => {
   it('extracts all dependency types', () => {
@@ -198,25 +197,21 @@ describe('hasWorkspaces', () => {
 })
 
 describe('hasInstalledPackage', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-    mkdirSync(join(TEST_DIR, 'node_modules', 'mock-pkg'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'node_modules', 'mock-pkg', 'package.json'), JSON.stringify({ name: 'mock-pkg', version: '1.2.3' }))
-  })
+  const tempDir = useTempDir({ prefix: 'dependencies-test-', scope: 'all' })
 
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
+  beforeAll(() => {
+    mkdirSync(join(tempDir.path, 'node_modules', 'mock-pkg'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'node_modules', 'mock-pkg', 'package.json'), JSON.stringify({ name: 'mock-pkg', version: '1.2.3' }))
   })
 
   it('returns true for installed package', () => {
-    const result = hasInstalledPackage(TEST_DIR, 'mock-pkg')
+    const result = hasInstalledPackage(tempDir.path, 'mock-pkg')
 
     expect(result).toBe(true)
   })
 
   it('returns false for non-installed package', () => {
-    const result = hasInstalledPackage(TEST_DIR, 'non-existent-pkg')
+    const result = hasInstalledPackage(tempDir.path, 'non-existent-pkg')
 
     expect(result).toBe(false)
   })
@@ -229,33 +224,32 @@ describe('hasInstalledPackage', () => {
 })
 
 describe('getInstalledVersion', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-    mkdirSync(join(TEST_DIR, 'node_modules', 'version-pkg'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'node_modules', 'version-pkg', 'package.json'), JSON.stringify({ name: 'version-pkg', version: '2.0.0' }))
-    mkdirSync(join(TEST_DIR, 'node_modules', 'no-version-pkg'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'node_modules', 'no-version-pkg', 'package.json'), JSON.stringify({ name: 'no-version-pkg' }))
-  })
+  const tempDir = useTempDir({ prefix: 'dependencies-test-', scope: 'all' })
 
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
+  beforeAll(() => {
+    mkdirSync(join(tempDir.path, 'node_modules', 'version-pkg'), { recursive: true })
+    writeFileSync(
+      join(tempDir.path, 'node_modules', 'version-pkg', 'package.json'),
+      JSON.stringify({ name: 'version-pkg', version: '2.0.0' })
+    )
+    mkdirSync(join(tempDir.path, 'node_modules', 'no-version-pkg'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'node_modules', 'no-version-pkg', 'package.json'), JSON.stringify({ name: 'no-version-pkg' }))
   })
 
   it('returns version for installed package', () => {
-    const version = getInstalledVersion(TEST_DIR, 'version-pkg')
+    const version = getInstalledVersion(tempDir.path, 'version-pkg')
 
     expect(version).toBe('2.0.0')
   })
 
   it('returns null for non-installed package', () => {
-    const version = getInstalledVersion(TEST_DIR, 'not-installed')
+    const version = getInstalledVersion(tempDir.path, 'not-installed')
 
     expect(version).toBeNull()
   })
 
   it('returns null when package has no version field', () => {
-    const version = getInstalledVersion(TEST_DIR, 'no-version-pkg')
+    const version = getInstalledVersion(tempDir.path, 'no-version-pkg')
 
     expect(version).toBeNull()
   })

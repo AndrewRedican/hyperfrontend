@@ -1,11 +1,9 @@
 import type { MarkdownNode } from './model'
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { PARSE_CASES } from './__test-utils__/parse-cases'
 import { parseMarkdown } from './parse'
 
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
 const FIELDS = ['depth', 'lang', 'meta', 'value', 'url', 'title', 'alt', 'ordered', 'start', 'checked', 'identifier', 'align'] as const
 
 // why: one line per node, in the form the reference trees were written in.
@@ -23,12 +21,10 @@ const withoutDroppedPositions = (actual: string[], expected: string[]): string[]
   actual.map((line, index) => (expected[index]?.includes(' nowhere') ? line.replace(/ \d+:\d+:\d+-\d+:\d+:\d+/, ' nowhere') : line))
 
 describe('parseMarkdown', () => {
-  for (const name of readdirSync(FIXTURES).filter((file) => file.endsWith('.md'))) {
+  for (const { name, source, tree } of PARSE_CASES) {
     it(`parses ${name} as the reference parser does`, () => {
-      const expected = readFileSync(join(FIXTURES, name.replace(/\.md$/, '.tree')), 'utf8')
-        .trimEnd()
-        .split(/\r?\n/)
-      const actual = serialise(parseMarkdown(readFileSync(join(FIXTURES, name), 'utf8')), 0, [])
+      const expected = tree.trimEnd().split(/\r?\n/)
+      const actual = serialise(parseMarkdown(source), 0, [])
       expect(withoutDroppedPositions(actual, expected).join('\n')).toBe(expected.join('\n'))
     })
   }

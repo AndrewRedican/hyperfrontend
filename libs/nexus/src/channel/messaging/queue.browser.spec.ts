@@ -3,7 +3,7 @@ import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import * as queueMessageModule from '../state/queue-message'
 import { queue } from './queue'
@@ -30,7 +30,7 @@ describe('channel/messaging/queue', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
     }
     queueMessage.mockImplementation((current: ChannelState, queued: IMessage) => ({
       ...current,

@@ -120,6 +120,8 @@ export type {
   DiffOptions,
   FileChange,
   FileDiff,
+  MemoryTreeFiles,
+  MemoryTreeOptions,
   ModeType,
   Tree,
   WriteOptions,
@@ -366,6 +368,7 @@ export {
 export {
   commitChanges,
   createFsTree,
+  createMemoryTree,
   createTree,
   createTreeFromDisk,
   formatUnifiedDiff,

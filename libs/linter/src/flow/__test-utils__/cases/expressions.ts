@@ -1,0 +1,71 @@
+/**
+ * The `expressions.tsx` source the control-flow specs read, and the paths and segments recorded for it.
+ *
+ * @module flow/__test-utils__/cases/expressions
+ */
+
+export const EXPRESSIONS = {
+  name: 'expressions.tsx',
+  source: `const chained = a?.b?.[c]?.(d).e
+const plain = a.b(c)
+const arrow = (p = q) => p
+const expression = function named() {
+  return named
+}
+class C {
+  field = compute()
+  static count = 0;
+  [key] = 1
+  method() {
+    return this.field
+  }
+  static {
+    C.count += 1
+  }
+  get value() {
+    return 1
+  }
+  declare typed: number
+}
+const { x = 1, ...rest } = source
+const element = <div onClick={() => go()}>{text}</div>
+function unreachable() {
+  return early
+  late()
+}
+label: {
+}
+`,
+  flow: `P Program@0 final=[16] thrown=[]
+  S0 live prevs=[] thrown=[] VariableDeclaration@0,VariableDeclarator@6,ChainExpression@16,MemberExpression@16,CallExpression@16,MemberExpression@16,MemberExpression@16,Identifier@16
+  S1 live prevs=[0] thrown=[]\x20
+  S2 live prevs=[1] thrown=[] Identifier@23
+  S3 live prevs=[2] thrown=[] Identifier@28,Identifier@31
+  S4 live prevs=[3,0,1,2] thrown=[] Identifier@6,VariableDeclaration@33,VariableDeclarator@39,CallExpression@47,MemberExpression@47,Identifier@47,Identifier@49,Identifier@51,Identifier@39,VariableDeclaration@54,VariableDeclarator@60,Identifier@60,VariableDeclaration@81,VariableDeclarator@87,Identifier@87,ClassDeclaration@136,Identifier@142,ClassBody@144,PropertyDefinition@148,PropertyDefinition@168,PropertyDefinition@188,Identifier@189,MethodDefinition@200,Identifier@200,MethodDefinition@271,Identifier@275,PropertyDefinition@304,VariableDeclaration@328,VariableDeclarator@334,Identifier@355,ObjectPattern@334,Property@336,Identifier@336,AssignmentPattern@336,Identifier@336
+  S15 live prevs=[4] thrown=[] Literal@340
+  S16 live prevs=[15,4] thrown=[] RestElement@343,Identifier@346,VariableDeclaration@362,VariableDeclarator@368,JSXElement@378,JSXOpeningElement@378,JSXIdentifier@379,JSXAttribute@383,JSXIdentifier@383,JSXExpressionContainer@391,JSXExpressionContainer@404,Identifier@405,JSXClosingElement@410,JSXIdentifier@412,Identifier@368,LabeledStatement@468,BlockStatement@475
+P ArrowFunctionExpression@68 final=[7] thrown=[]
+  S5 live prevs=[] thrown=[] AssignmentPattern@69,Identifier@69
+  S6 live prevs=[5] thrown=[] Identifier@73
+  S7 live prevs=[6,5] thrown=[] Identifier@79
+P FunctionExpression@100 final=[8] thrown=[]
+  S8 live prevs=[] thrown=[] ReturnStatement@121,Identifier@128
+P CallExpression@156 final=[9] thrown=[]
+  S9 live prevs=[] thrown=[] CallExpression@156,Identifier@156
+P Literal@183 final=[10] thrown=[]
+  S10 live prevs=[] thrown=[] Literal@183
+P Literal@196 final=[11] thrown=[]
+  S11 live prevs=[] thrown=[] Literal@196
+P FunctionExpression@206 final=[12] thrown=[]
+  S12 live prevs=[] thrown=[] ReturnStatement@215,MemberExpression@222,ThisExpression@222,Identifier@227
+P StaticBlock@239 final=[13] thrown=[]
+  S13 live prevs=[] thrown=[] ExpressionStatement@252,AssignmentExpression@252,Literal@263,MemberExpression@252,Identifier@252,Identifier@254
+P FunctionExpression@280 final=[14] thrown=[]
+  S14 live prevs=[] thrown=[] ReturnStatement@289,Literal@296
+P ArrowFunctionExpression@392 final=[17] thrown=[]
+  S17 live prevs=[] thrown=[] CallExpression@398,Identifier@398
+P FunctionDeclaration@417 final=[18,19] thrown=[]
+  S18 live prevs=[] thrown=[] ReturnStatement@444,Identifier@451
+  S19 dead prevs=[] thrown=[] ExpressionStatement@459,CallExpression@459,Identifier@459
+`,
+}

@@ -1,10 +1,11 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IChannelContract } from '../types/contract'
 import type { IMessage } from '../types/message'
-import type { MockWindow } from './test-utils'
 import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow, createWindowPair } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
-import { createMockWindow, createTestContract, linkMockWindows } from './test-utils'
+import { createTestContract } from './test-utils'
 
 describe('Integration: Many-to-Many', () => {
   beforeAll(() => {
@@ -20,27 +21,21 @@ describe('Integration: Many-to-Many', () => {
     jest.clearAllMocks()
   })
 
-  // why: linkMockWindows wires exactly one counterpart per window, which cannot model many senders reaching one broker window.
+  // why: a window pair wires exactly one counterpart per window, which cannot model many senders reaching one broker window.
   // how: every nexus frame carries the sending broker id, so the network maps it back to the sender's window and origin per frame.
   // note: the receiving broker resolves channels by event.source and checks event.origin against the origin pinned at handshake.
   const createNetwork = () => {
-    const peers: { win: MockWindow; origin: string; brokerId: string }[] = []
+    const peers: { win: FakeWindow; brokerId: string }[] = []
 
     return {
-      attach(win: MockWindow, origin: string, brokerId: string): void {
-        peers.push({ win, origin, brokerId })
+      attach(win: FakeWindow, brokerId: string): void {
+        peers.push({ win, brokerId })
         win.postMessage.mockImplementation((data: unknown) => {
           const sender = peers.find((peer) => peer.brokerId === (data as { senderId?: string })?.senderId)
           if (!sender) {
             return
           }
-          win._dispatchMessage(
-            new MessageEvent('message', {
-              data,
-              origin: sender.origin,
-              source: sender.win as unknown as Window,
-            })
-          )
+          win.receive(data, { origin: sender.win.origin, source: sender.win })
         })
       },
     }
@@ -49,17 +44,17 @@ describe('Integration: Many-to-Many', () => {
   type Network = ReturnType<typeof createNetwork>
 
   const createNode = (network: Network, name: string, origin: string, contract: IChannelContract) => {
-    const win = createMockWindow()
-    const broker = createBroker({ name, contract, window: win as unknown as Window })
-    network.attach(win, origin, broker.id)
+    const win = createFakeWindow({ origin })
+    const broker = createBroker({ name, contract, window: win })
+    network.attach(win, broker.id)
     return { win, broker }
   }
 
   type TestNode = ReturnType<typeof createNode>
 
   const connectPair = (nodeA: TestNode, nodeB: TestNode, nameAtA: string, nameAtB: string) => {
-    const channelAtA = nodeA.broker.addChannel(nameAtA, nodeB.win as unknown as Window)
-    const channelAtB = nodeB.broker.addChannel(nameAtB, nodeA.win as unknown as Window)
+    const channelAtA = nodeA.broker.addChannel(nameAtA, nodeB.win)
+    const channelAtB = nodeB.broker.addChannel(nameAtB, nodeA.win)
     channelAtA.connect()
     channelAtB.connect()
     return { channelAtA, channelAtB }
@@ -118,8 +113,8 @@ describe('Integration: Many-to-Many', () => {
       const nodeA = createNode(network, 'broker-a', 'http://host-a.com', peerContract)
       const nodeB = createNode(network, 'broker-b', 'http://host-b.com', peerContract)
 
-      nodeA.broker.addChannel('channel-a', nodeB.win as unknown as Window)
-      nodeB.broker.addChannel('channel-b', nodeA.win as unknown as Window)
+      nodeA.broker.addChannel('channel-a', nodeB.win)
+      nodeB.broker.addChannel('channel-b', nodeA.win)
 
       expect({
         aChannels: nodeA.broker.channels.map((channel) => channel.name),
@@ -230,14 +225,12 @@ describe('Integration: Many-to-Many', () => {
 
   describe('Peer-to-Peer Communication', () => {
     it('exchanges direct messages in both directions after the handshake', () => {
-      const windowA = createMockWindow()
-      const windowB = createMockWindow()
-      linkMockWindows(windowA, windowB, 'http://peer-1.com', 'http://peer-2.com')
+      const [windowA, windowB] = createWindowPair({ origins: ['http://peer-1.com', 'http://peer-2.com'], delivery: 'sync' })
 
-      const peer1Broker = createBroker({ name: 'peer-1', contract: peerContract, window: windowA as unknown as Window })
-      const peer2Broker = createBroker({ name: 'peer-2', contract: peerContract, window: windowB as unknown as Window })
-      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', windowB as unknown as Window)
-      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', windowA as unknown as Window)
+      const peer1Broker = createBroker({ name: 'peer-1', contract: peerContract, window: windowA })
+      const peer2Broker = createBroker({ name: 'peer-2', contract: peerContract, window: windowB })
+      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', windowB)
+      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', windowA)
       peer1ToPeer2.connect()
       peer2ToPeer1.connect()
 

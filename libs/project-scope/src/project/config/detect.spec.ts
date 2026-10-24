@@ -1,14 +1,14 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { after as afterAll, before as beforeAll, beforeEach } from 'node:test'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { detectConfigs, findConfigFile, getConfigPaths, clearConfigDetectionCache } from './detect'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_detect__')
-
 describe('detectConfigs', () => {
   it('detects package.json in project', () => {
     const configs = detectConfigs(MINIMAL_PROJECT)
@@ -133,53 +133,46 @@ describe('detectConfigs - caching', () => {
 })
 
 describe('detectConfigs - edge cases', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'detect-test-', scope: 'all' })
 
   it('handles empty directory', () => {
-    const configs = detectConfigs(TEST_DIR)
+    const configs = detectConfigs(tempDir.path)
 
     expect(configs).toEqual([])
   })
 
   it('detects exact config file match', () => {
-    mkdirSync(join(TEST_DIR, 'exact-test'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'exact-test', 'tsconfig.json'), '{}')
+    mkdirSync(join(tempDir.path, 'exact-test'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'exact-test', 'tsconfig.json'), '{}')
 
-    const configs = detectConfigs(join(TEST_DIR, 'exact-test'), ['tsconfig'], { skipCache: true })
+    const configs = detectConfigs(join(tempDir.path, 'exact-test'), ['tsconfig'], { skipCache: true })
 
     expect(configs.map((c) => c.path)).toEqual(['tsconfig.json'])
   })
 
   it('detects eslint flat config', () => {
-    mkdirSync(join(TEST_DIR, 'eslint-test'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'eslint-test', 'eslint.config.js'), 'module.exports = []')
+    mkdirSync(join(tempDir.path, 'eslint-test'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'eslint-test', 'eslint.config.js'), 'module.exports = []')
 
-    const configs = detectConfigs(join(TEST_DIR, 'eslint-test'), ['eslint'])
+    const configs = detectConfigs(join(tempDir.path, 'eslint-test'), ['eslint'])
 
     expect(configs.some((c) => c.path === 'eslint.config.js')).toBe(true)
   })
 
   it('detects nested config files with recursive pattern', () => {
-    mkdirSync(join(TEST_DIR, 'nested-config', 'packages', 'lib'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'nested-config', 'packages', 'lib', 'project.json'), '{}')
+    mkdirSync(join(tempDir.path, 'nested-config', 'packages', 'lib'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'nested-config', 'packages', 'lib', 'project.json'), '{}')
 
-    const configs = detectConfigs(join(TEST_DIR, 'nested-config'), ['project.json'], { maxDepth: 10, skipCache: true })
+    const configs = detectConfigs(join(tempDir.path, 'nested-config'), ['project.json'], { maxDepth: 10, skipCache: true })
 
     expect(configs.map((c) => c.path)).toEqual(expect.arrayContaining([expect.stringContaining('project.json')]))
   })
 
   it('does not duplicate configs when patterns match same file', () => {
-    mkdirSync(join(TEST_DIR, 'no-dup-test'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'no-dup-test', 'package.json'), '{}')
+    mkdirSync(join(tempDir.path, 'no-dup-test'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'no-dup-test', 'package.json'), '{}')
 
-    const configs = detectConfigs(join(TEST_DIR, 'no-dup-test'), ['package.json'])
+    const configs = detectConfigs(join(tempDir.path, 'no-dup-test'), ['package.json'])
 
     const packageJsonConfigs = configs.filter((c) => c.type === 'package.json')
     expect(packageJsonConfigs.length).toBe(1)
@@ -193,15 +186,15 @@ describe('detectConfigs - edge cases', () => {
   })
 
   it('respects includeHidden option', () => {
-    mkdirSync(join(TEST_DIR, 'hidden-test', '.hidden-dir'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'hidden-test', '.hidden-dir', 'tsconfig.json'), '{}')
+    mkdirSync(join(tempDir.path, 'hidden-test', '.hidden-dir'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'hidden-test', '.hidden-dir', 'tsconfig.json'), '{}')
 
-    const withHidden = detectConfigs(join(TEST_DIR, 'hidden-test'), ['tsconfig'], {
+    const withHidden = detectConfigs(join(tempDir.path, 'hidden-test'), ['tsconfig'], {
       includeHidden: true,
       maxDepth: 10,
     })
 
-    const withoutHidden = detectConfigs(join(TEST_DIR, 'hidden-test'), ['tsconfig'], {
+    const withoutHidden = detectConfigs(join(tempDir.path, 'hidden-test'), ['tsconfig'], {
       includeHidden: false,
       maxDepth: 10,
       skipCache: true,
@@ -212,14 +205,7 @@ describe('detectConfigs - edge cases', () => {
 })
 
 describe('findConfigFile - edge cases', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'detect-test-', scope: 'all' })
 
   it('returns null for unknown config type', () => {
     // lint-disable-next-line typescript/no-explicit-any
@@ -229,27 +215,27 @@ describe('findConfigFile - edge cases', () => {
   })
 
   it('finds config using exact pattern first', () => {
-    mkdirSync(join(TEST_DIR, 'exact-pattern'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'exact-pattern', 'package.json'), '{}')
+    mkdirSync(join(tempDir.path, 'exact-pattern'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'exact-pattern', 'package.json'), '{}')
 
-    const result = findConfigFile(join(TEST_DIR, 'exact-pattern'), 'package.json')
+    const result = findConfigFile(join(tempDir.path, 'exact-pattern'), 'package.json')
 
     expect(result).toContain('package.json')
   })
 
   it('finds config using glob pattern', () => {
-    mkdirSync(join(TEST_DIR, 'glob-pattern'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'glob-pattern', 'eslint.config.cjs'), 'module.exports = []')
+    mkdirSync(join(tempDir.path, 'glob-pattern'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'glob-pattern', 'eslint.config.cjs'), 'module.exports = []')
 
-    const result = findConfigFile(join(TEST_DIR, 'glob-pattern'), 'eslint')
+    const result = findConfigFile(join(tempDir.path, 'glob-pattern'), 'eslint')
 
     expect(result).toContain('eslint.config.cjs')
   })
 
   it('returns null when config file does not exist', () => {
-    mkdirSync(join(TEST_DIR, 'no-config'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'no-config'), { recursive: true })
 
-    const result = findConfigFile(join(TEST_DIR, 'no-config'), 'tsconfig')
+    const result = findConfigFile(join(tempDir.path, 'no-config'), 'tsconfig')
 
     expect(result).toBeNull()
   })

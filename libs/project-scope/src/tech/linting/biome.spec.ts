@@ -1,8 +1,9 @@
 import { resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { biomeDetector } from './biome'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const BIOME_PROJECT = resolve(FIXTURES_DIR, 'biome-project')
 const BIOME_JSONC_PROJECT = resolve(FIXTURES_DIR, 'biome-jsonc-project')
 

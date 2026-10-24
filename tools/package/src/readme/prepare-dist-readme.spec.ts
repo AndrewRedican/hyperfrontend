@@ -1,18 +1,17 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createMediaCatalog } from './catalog'
 import { prepareDistReadme } from './prepare-dist-readme'
 
-const roots: string[] = []
+const directories: TempDir[] = []
 
 afterAll(() => {
-  for (const root of roots) {
-    rmSync(root, { recursive: true, force: true })
-  }
+  for (const directory of directories) directory.remove()
 })
 
 /** The options every preparation in this file shares, for one workspace root. */
@@ -38,24 +37,18 @@ function workspace(
   media: Record<string, string> = {},
   manifest = '{"name":"@hyperfrontend/data-utils"}'
 ): Fixture {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), 'dist-readme-'))
-  roots.push(workspaceRoot)
-  const projectRoot = join(workspaceRoot, 'libs', 'utils', 'data')
-  const outputPath = join(workspaceRoot, 'dist', 'libs', 'utils', 'data')
-  mkdirSync(projectRoot, { recursive: true })
-  mkdirSync(outputPath, { recursive: true })
-  writeFileSync(join(projectRoot, 'package.json'), manifest)
+  const directory = createTempDir({ prefix: 'dist-readme-' })
+  directories.push(directory)
+  const projectRoot = directory.mkdir('libs/utils/data')
+  const outputPath = directory.mkdir('dist/libs/utils/data')
+  directory.write('libs/utils/data/package.json', manifest)
   if (readme !== undefined) {
-    writeFileSync(join(projectRoot, 'README.md'), readme)
+    directory.write('libs/utils/data/README.md', readme)
     // why: the asset phase copies the source readme into the output before the transform runs, so the fixture starts from that state
-    writeFileSync(join(outputPath, 'README.md'), readme)
+    directory.write('dist/libs/utils/data/README.md', readme)
   }
-  for (const [path, content] of entries(media)) {
-    const target = join(workspaceRoot, 'assets', 'media', path)
-    mkdirSync(join(target, '..'), { recursive: true })
-    writeFileSync(target, content)
-  }
-  return { workspaceRoot, projectRoot, outputPath }
+  for (const [path, content] of entries(media)) directory.write(join('assets', 'media', path), content)
+  return { workspaceRoot: directory.path, projectRoot, outputPath }
 }
 
 /**

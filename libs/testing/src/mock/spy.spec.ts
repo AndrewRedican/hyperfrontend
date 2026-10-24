@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { createSpy, restoreAllMocks } from './spy'
+import { restoreAllMocks } from './registry'
+import { createSpy } from './spy'
 import { isMockFunction } from './types'
 
 describe('createSpy on methods', () => {
@@ -27,6 +28,13 @@ describe('createSpy on methods', () => {
     const host = { greet: () => 'real' }
     createSpy(host, 'greet').mockReturnValue('fake')
     assert.equal(host.greet(), 'fake')
+  })
+
+  it('calls through to the original again after a reset', () => {
+    const host = { greet: () => 'real' }
+    const spy = createSpy(host, 'greet').mockReturnValue('fake')
+    spy.mockReset()
+    assert.equal(host.greet(), 'real')
   })
 
   it('restores the original implementation', () => {

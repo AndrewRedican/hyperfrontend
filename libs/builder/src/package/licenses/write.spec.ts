@@ -1,29 +1,18 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { writeThirdPartyLicensesFile } from './write'
 
 describe('writeThirdPartyLicensesFile', () => {
-  let outputPath: string
-
-  beforeEach(() => {
-    outputPath = mkdtempSync(join(tmpdir(), 'builder-licenses-write-'))
-  })
-
-  afterEach(() => {
-    rmSync(outputPath, { recursive: true, force: true })
-  })
+  const outputDir = useTempDir({ prefix: 'builder-licenses-write-' })
 
   it('writes the THIRD_PARTY_LICENSES.md file at the output root', () => {
-    writeThirdPartyLicensesFile(outputPath, '# Third-Party Licenses\n')
-    expect(readFileSync(join(outputPath, 'THIRD_PARTY_LICENSES.md'), 'utf-8')).toBe('# Third-Party Licenses\n')
+    writeThirdPartyLicensesFile(outputDir.path, '# Third-Party Licenses\n')
+    expect(outputDir.read('THIRD_PARTY_LICENSES.md')).toBe('# Third-Party Licenses\n')
   })
 
   it('overwrites existing content on subsequent calls', () => {
-    writeThirdPartyLicensesFile(outputPath, 'first')
-    writeThirdPartyLicensesFile(outputPath, 'second')
-    expect(readFileSync(join(outputPath, 'THIRD_PARTY_LICENSES.md'), 'utf-8')).toBe('second')
+    writeThirdPartyLicensesFile(outputDir.path, 'first')
+    writeThirdPartyLicensesFile(outputDir.path, 'second')
+    expect(outputDir.read('THIRD_PARTY_LICENSES.md')).toBe('second')
   })
 })

@@ -1,76 +1,12 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { SelectConfig, Choice } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { stripAnsi } from '../ansi-text'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { select } from './select'
-
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
 
 const basicChoices: ReadonlyArray<Choice<string>> = [
   { label: 'Red', value: 'red' },
@@ -79,12 +15,12 @@ const basicChoices: ReadonlyArray<Choice<string>> = [
 ]
 
 describe('select', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -106,7 +42,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -117,7 +53,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -128,7 +64,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -139,7 +75,7 @@ describe('select', () => {
       const config = createConfig({ initial: 2 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -152,7 +88,7 @@ describe('select', () => {
       const config = createConfig({ initial: 2 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -163,7 +99,7 @@ describe('select', () => {
       const config = createConfig({ initial: 0 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Up, Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -174,7 +110,7 @@ describe('select', () => {
       const config = createConfig({ initial: 2 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -192,7 +128,7 @@ describe('select', () => {
       const config = createConfig({ choices })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -208,7 +144,7 @@ describe('select', () => {
       const config = createConfig({ choices, initial: 2 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -221,7 +157,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: Enter is ignored for disabled, then cancel
-      input.enqueueKeys([Key.Enter, Key.CtrlC])
+      await input.sendKeys(Key.Enter, Key.CtrlC)
 
       const result = await promise
 
@@ -234,7 +170,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
 
       const result = await promise
 
@@ -245,7 +181,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Down, Key.CtrlC])
+      await input.sendKeys(Key.Down, Key.Down, Key.CtrlC)
 
       const result = await promise
 
@@ -266,7 +202,7 @@ describe('select', () => {
       // why: navigate down past visible area
       const keys: Key[] = Array.from({ length: 7 }, () => Key.Down)
       keys.push(Key.Enter)
-      input.enqueueKeys(keys)
+      await input.sendKeys(...keys)
 
       const result = await promise
 
@@ -277,7 +213,7 @@ describe('select', () => {
       const config = createConfig({ choices: manyChoices, maxVisible: 5, initial: 10 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -288,10 +224,10 @@ describe('select', () => {
       const config = createConfig({ choices: manyChoices, maxVisible: 5, initial: 7 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: the middle of the list renders the above indicator before the below indicator in one frame
       expect(data).toMatch(/more above[\s\S]*more below/)
@@ -325,10 +261,10 @@ describe('select', () => {
       const config = createConfig({ choices })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       expect(data).toContain('Free tier')
     })
@@ -339,30 +275,30 @@ describe('select', () => {
       const config = createConfig({ message: 'Pick one:' })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Pick one:')
+      expect(output.text()).toContain('Pick one:')
     })
 
     it('shows selected value on submission', async () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Green')
+      expect(output.text()).toContain('Green')
     })
 
     it('shows cancelled text on cancellation', async () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('cancelled')
+      expect(output.text()).toContain('cancelled')
     })
   })
 
@@ -375,7 +311,7 @@ describe('select', () => {
       const config = createConfig<number>({ choices })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -394,7 +330,7 @@ describe('select', () => {
       const config = createConfig<Option>({ choices })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -420,7 +356,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: Down should skip all disabled and land on Last
-      input.enqueueKeys([Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -439,7 +375,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: Up should skip all disabled and land on First
-      input.enqueueKeys([Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -450,10 +386,10 @@ describe('select', () => {
       const config = createConfig({ choices: manyChoices, maxVisible: 5, initial: 0 })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       expect(data).toContain('more below')
     })
@@ -463,7 +399,7 @@ describe('select', () => {
       const promise = select(config)
 
       // why: Navigate up multiple times to force scroll offset adjustment
-      input.enqueueKeys([Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Up, Key.Up, Key.Up, Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -477,7 +413,7 @@ describe('select', () => {
       // why: Navigate down many times to force scroll offset adjustment
       const keys: Key[] = Array.from({ length: 12 }, () => Key.Down)
       keys.push(Key.Enter)
-      input.enqueueKeys(keys)
+      await input.sendKeys(...keys)
 
       const result = await promise
 
@@ -490,7 +426,7 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys(['pasted text', Key.Enter])
+      await input.sendKeys('pasted text', Key.Enter)
 
       const result = await promise
 
@@ -503,16 +439,15 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys(Key.Down)
+      await flushPromises()
 
-      const before = output.getWrittenData().length
+      const before = output.text().length
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
-      const repaint = output.getWrittenData().slice(before)
+      await flushPromises()
+      const repaint = output.text().slice(before)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: the repaint after resize draws the pointer on the choice focused before the resize
@@ -523,14 +458,13 @@ describe('select', () => {
       const config = createConfig()
       const promise = select(config)
 
-      input.enqueueKeys([Key.Down])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys(Key.Down)
+      await flushPromises()
 
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -546,11 +480,11 @@ describe('select', () => {
       const config = createConfig({ choices: manyChoices })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: eight rows leave a four-item window, so two of six overflow
-      expect(output.getWrittenData()).toContain('(2 more below)')
+      expect(output.text()).toContain('(2 more below)')
     })
   })
 })

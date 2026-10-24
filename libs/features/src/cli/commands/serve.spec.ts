@@ -2,27 +2,16 @@ import type { ResolvedServeConfig } from '../../server/serve-config'
 import type { StaticServeDeps, StaticServerHandle } from '../../server/static-serve'
 import type { CliFlags } from '../args'
 import type { RunServeOptions } from './serve'
-import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { afterEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createDeferred, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { createCapturedOutput } from '@hyperfrontend/testing/process'
 import { closeServer, listen } from '../../server/listen'
 import { runServe } from './serve'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
-
-const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
-  const chunks: string[] = []
-  const stream = {
-    write: (chunk: string): boolean => {
-      chunks.push(chunk)
-      return true
-    },
-  } as unknown as NodeJS.WritableStream
-  return { stream, text: () => chunks.join('') }
-}
 
 const config: ResolvedServeConfig = {
   root: '/abs/site',
@@ -39,13 +28,13 @@ const handle = (over: Partial<StaticServerHandle> = {}): StaticServerHandle => (
 })
 
 const deps = (over: Partial<RunServeOptions>): RunServeOptions => {
-  const stdout = sink()
-  const stderr = sink()
+  const stdout = createCapturedOutput()
+  const stderr = createCapturedOutput()
   return {
     flags: mkFlags({}),
     cwd: '/project',
-    stdout: stdout.stream,
-    stderr: stderr.stream,
+    stdout,
+    stderr,
     resolveConfig: () => Promise.resolve(config),
     startServer: () => Promise.resolve(handle()),
     waitForClose: () => Promise.resolve(),
@@ -63,8 +52,8 @@ describe('runServe', () => {
   })
 
   it('writes the root and serving url', async () => {
-    const out = sink()
-    await runServe(deps({ stdout: out.stream }))
+    const out = createCapturedOutput()
+    await runServe(deps({ stdout: out }))
     expect(out.text()).toEqual(expect.stringContaining('  /abs/site → http://localhost:4284/\n'))
   })
 
@@ -75,13 +64,13 @@ describe('runServe', () => {
   })
 
   it('forwards access-log lines to stdout with a trailing newline', async () => {
-    const out = sink()
+    const out = createCapturedOutput()
     let logDep: ((line: string) => void) | undefined
     const startServer = (_config: ResolvedServeConfig, serverDeps?: StaticServeDeps): Promise<StaticServerHandle> => {
       logDep = serverDeps?.log
       return Promise.resolve(handle())
     }
-    await runServe(deps({ stdout: out.stream, startServer }))
+    await runServe(deps({ stdout: out, startServer }))
     logDep?.('GET / 200')
     expect(out.text()).toEqual(expect.stringContaining('GET / 200\n'))
   })
@@ -94,13 +83,10 @@ describe('runServe', () => {
   })
 
   it('stays pending until the shutdown wait resolves', async () => {
-    let release: () => void = () => undefined
-    const gate = new Promise<void>((resolveGate) => {
-      release = resolveGate
-    })
-    const pending = runServe(deps({ waitForClose: () => gate }))
+    const gate = createDeferred()
+    const pending = runServe(deps({ waitForClose: () => gate.promise }))
     const early = await Promise.race([pending.then(() => 'settled'), Promise.resolve('pending')])
-    release()
+    gate.resolve()
     await pending
     expect(early).toBe('pending')
   })
@@ -128,39 +114,39 @@ describe('runServe', () => {
   })
 
   it('reports a resolution error and exits non-zero', async () => {
-    const err = sink()
-    const code = await runServe(deps({ resolveConfig: () => Promise.reject(new Error('boom')), stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runServe(deps({ resolveConfig: () => Promise.reject(new Error('boom')), stderr: err }))
     expect({ code, err: err.text() }).toEqual({ code: 1, err: expect.stringContaining('boom') })
   })
 
   it('surfaces a non-Error rejection', async () => {
-    const err = sink()
-    await runServe(deps({ startServer: () => Promise.reject('kaboom'), stderr: err.stream }))
+    const err = createCapturedOutput()
+    await runServe(deps({ startServer: () => Promise.reject('kaboom'), stderr: err }))
     expect(err.text()).toEqual(expect.stringContaining('kaboom'))
   })
 
   it('reports a port already in use instead of crashing the process', async () => {
     // why: A failed bind reaches the command as a rejection, which is the only way the exit code and the diagnostic can be mapped; an uncaught 'error' event would bypass both.
-    const dir = mkdtempSync(join(tmpdir(), 'hf-serve-port-'))
+    const dir = createTempDir({ prefix: 'hf-serve-port-' })
     const blocker = createServer(() => undefined)
     const taken = await listen(blocker, 0)
-    const err = sink()
+    const err = createCapturedOutput()
     const code = await runServe(
-      deps({ cwd: dir, flags: mkFlags({ port: String(taken) }), resolveConfig: undefined, startServer: undefined, stderr: err.stream })
+      deps({ cwd: dir.path, flags: mkFlags({ port: String(taken) }), resolveConfig: undefined, startServer: undefined, stderr: err })
     )
     await closeServer(blocker)
-    rmSync(dir, { recursive: true, force: true })
+    dir.remove()
     expect({ code, err: err.text() }).toEqual({ code: 1, err: expect.stringContaining('EADDRINUSE') })
   })
 
   it('reports a missing root through the default config resolver', async () => {
     // why: A real temp cwd with a nonexistent --root fails resolution before any server starts, exercising the default resolver and server deps.
-    const dir = mkdtempSync(join(tmpdir(), 'hf-serve-cmd-'))
-    const err = sink()
+    const dir = createTempDir({ prefix: 'hf-serve-cmd-' })
+    const err = createCapturedOutput()
     const code = await runServe(
-      deps({ cwd: dir, flags: mkFlags({ root: 'missing-root' }), resolveConfig: undefined, startServer: undefined, stderr: err.stream })
+      deps({ cwd: dir.path, flags: mkFlags({ root: 'missing-root' }), resolveConfig: undefined, startServer: undefined, stderr: err })
     )
-    rmSync(dir, { recursive: true, force: true })
+    dir.remove()
     expect({ code, err: err.text() }).toEqual({ code: 1, err: expect.stringContaining('Serve root does not exist') })
   })
 })

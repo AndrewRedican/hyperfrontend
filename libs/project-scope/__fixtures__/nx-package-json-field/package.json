@@ -1,8 +1,0 @@
-{
-  "name": "nx-field-package",
-  "version": "1.0.0",
-  "nx": {
-    "projectType": "library",
-    "tags": ["scope:shared"]
-  }
-}

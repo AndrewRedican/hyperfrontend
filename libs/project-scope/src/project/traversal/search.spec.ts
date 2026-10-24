@@ -1,9 +1,10 @@
 import { isAbsolute, join, resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { createTree } from '../../vfs'
 import { findFiles, findFilesInTree, findDirectories } from './search'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 

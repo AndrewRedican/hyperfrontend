@@ -1,10 +1,10 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { BrokerState } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
-import { createMockLogger } from '../../integration-tests/test-utils'
 import { addChannel } from './add'
 import { getChannel } from './get'
 import { removeChannel } from './remove'
@@ -24,7 +24,7 @@ describe('removeChannel', () => {
         emitted: [],
       },
     },
-    logger: createMockLogger(),
+    logger: createMock<Logger>({ getLogLevel: () => 'debug' }),
   }
 
   let registry: ReturnType<typeof createRegistry>

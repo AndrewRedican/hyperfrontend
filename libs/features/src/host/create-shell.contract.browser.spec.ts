@@ -2,7 +2,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { installResizeObserverStub } from '../testing/resize-observer-stub'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { createShell } from './create-shell'
 import { mountEmbedded } from './display-modes/embedded'
 
@@ -13,7 +13,7 @@ const ACCEPT_CONNECTION = '[nexus] connection-request-accepted'
 const FEATURE_ORIGIN = 'https://feature.example'
 
 beforeEach(() => {
-  installResizeObserverStub()
+  installResizeObserver()
 })
 
 // note: Schemas mirror the generator spec fixture, so the exact shapes a built shell inlines are exercised end-to-end through createShell.

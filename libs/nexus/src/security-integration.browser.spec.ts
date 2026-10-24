@@ -1,7 +1,8 @@
 import type { SecurityProtocolVersion, SecurityProvider, SecurityTransport } from './types/security'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { describe, expect, it } from '@hyperfrontend/testing'
-import { createForgedFrame, createForgedHello, createV3Provider, createV4Provider, wait, waitFor } from './integration-tests/test-utils'
+import { describe, expect, it, sleep, waitUntil } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
+import { createForgedFrame, createForgedHello, createV3Provider, createV4Provider, SESSION_WAIT } from './integration-tests/test-utils'
 import { createSecurityRequest, createSecurityResponse, negotiateProtocol } from './security/negotiation/negotiate'
 import { createProtocolRegistry } from './security/registry/factory'
 import { createSecurityTransport } from './security/transport/factory'
@@ -81,13 +82,14 @@ function connectPair(config: PairConfig): Pair {
   }
 
   // how: a post lands on the counterpart's transport synchronously, so the wire is exactly what the transports exchanged.
-  const windowOf = (side: Side): Window =>
-    ({
-      postMessage: (payload: unknown, origin: string, transfer?: unknown[]) => {
-        wire.push({ to: side, payload, origin, transferred: transfer !== undefined })
-        endpoints[side]?.transport.receive(payload as Uint8Array)
-      },
-    }) as unknown as Window
+  const windowOf = (side: Side): Window => {
+    const target = createFakeWindow({ origin: origins[side] })
+    target.postMessage.mockImplementation((payload: unknown, origin: string, transfer?: unknown[]) => {
+      wire.push({ to: side, payload, origin, transferred: transfer !== undefined })
+      endpoints[side]?.transport.receive(payload as Uint8Array)
+    })
+    return target
+  }
 
   const createEndpoint = (side: Side, peer: Side): Endpoint => {
     const received: unknown[] = []
@@ -126,7 +128,7 @@ const confirmed = (endpoint: Endpoint): boolean => endpoint.events.includes('con
 
 const keyPair = async (pair: Pair): Promise<void> => {
   startPair(pair)
-  await waitFor(() => confirmed(pair.initiator) && confirmed(pair.responder))
+  await waitUntil(() => confirmed(pair.initiator) && confirmed(pair.responder), SESSION_WAIT)
 }
 
 describe('Integration: Security Protocol', () => {
@@ -212,9 +214,9 @@ describe('Integration: Security Protocol', () => {
       await keyPair(pair)
 
       pair.initiator.transport.send({ type: 'GREETING', data: 'hello' })
-      await waitFor(() => pair.responder.received.length === 1)
+      await waitUntil(() => pair.responder.received.length === 1, SESSION_WAIT)
       pair.responder.transport.send({ type: 'REPLY', data: 'world' })
-      await waitFor(() => pair.initiator.received.length === 1)
+      await waitUntil(() => pair.initiator.received.length === 1, SESSION_WAIT)
 
       expect({ atInitiator: pair.initiator.received, atResponder: pair.responder.received }).toEqual({
         atInitiator: [{ type: 'REPLY', data: 'world' }],
@@ -228,7 +230,7 @@ describe('Integration: Security Protocol', () => {
       // why: an action sent before the session is keyed waits in the seal stage and leaves as the first sealed frame, ahead of the confirmation.
       pair.initiator.transport.send({ type: 'EARLY' })
       startPair(pair)
-      await waitFor(() => pair.responder.received.length === 1)
+      await waitUntil(() => pair.responder.received.length === 1, SESSION_WAIT)
 
       expect({ events: pair.responder.events, received: pair.responder.received }).toEqual({
         events: ['confirmed'],
@@ -241,7 +243,7 @@ describe('Integration: Security Protocol', () => {
       await keyPair(pair)
 
       pair.initiator.transport.send({ type: 'GREETING' })
-      await waitFor(() => pair.responder.received.length === 1)
+      await waitUntil(() => pair.responder.received.length === 1, SESSION_WAIT)
 
       expect(
         pair.wire.every(
@@ -255,7 +257,7 @@ describe('Integration: Security Protocol', () => {
       await keyPair(pair)
 
       pair.initiator.transport.send({ type: 'GREETING' })
-      await waitFor(() => pair.responder.received.length === 1)
+      await waitUntil(() => pair.responder.received.length === 1, SESSION_WAIT)
 
       expect(pair.wire.map((call) => ({ hello: isHello(call.payload), transferred: call.transferred }))).toEqual(
         pair.wire.map((call) => ({ hello: isHello(call.payload), transferred: !isHello(call.payload) }))
@@ -283,7 +285,7 @@ describe('Integration: Security Protocol', () => {
       const terminal = (endpoint: Endpoint) => endpoint.events.filter((event) => event !== 'error:authentication-failed')
 
       startPair(pair)
-      await waitFor(() => failed(pair.initiator) && failed(pair.responder))
+      await waitUntil(() => failed(pair.initiator) && failed(pair.responder), SESSION_WAIT)
 
       expect({ initiator: terminal(pair.initiator), responder: terminal(pair.responder) }).toEqual({
         initiator: ['error:security-unconfirmed', 'failed:security-unconfirmed'],
@@ -343,7 +345,7 @@ describe('Integration: Security Protocol', () => {
 
       pair.initiator.transport.dispose()
       pair.initiator.transport.send({ type: 'LATE' })
-      await wait(50)
+      await sleep(50)
 
       expect(pair.wire.length).toBe(posted)
     })
@@ -358,7 +360,7 @@ describe('Integration: Security Protocol', () => {
         protocol: 'v4',
         provider: registry.get('v4'),
         label: 'from-registry',
-        target: { postMessage: () => undefined } as unknown as Window,
+        target: createFakeWindow(),
         getOrigin: () => null,
         originId: uuidV4(),
         targetId: uuidV4(),
@@ -377,7 +379,7 @@ describe('Integration: Security Protocol', () => {
           protocol: 'v4',
           provider: registry.get('v4'),
           label: 'missing-provider',
-          target: { postMessage: () => undefined } as unknown as Window,
+          target: createFakeWindow(),
           getOrigin: () => null,
           originId: uuidV4(),
           targetId: uuidV4(),

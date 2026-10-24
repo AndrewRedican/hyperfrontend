@@ -1,41 +1,33 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { InjectWorkerJob } from './types'
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { readFileSync, statSync } from 'node:fs'
+import { beforeEach } from 'node:test'
 import { inject } from 'postject'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { runInjectWorkerJob } from './job-runner'
 jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
 
 const mockInject = inject as Mock
 
 describe('runInjectWorkerJob', () => {
-  let root: string
+  const dir = useTempDir({ prefix: 'builder-inject-worker-' })
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-inject-worker-'))
     mockInject.mockReset().mockResolvedValue(undefined)
   })
 
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
-
   const baseJob = (overrides: Partial<InjectWorkerJob> = {}): InjectWorkerJob => {
-    const hostBinary = join(root, 'fake-node')
-    writeFileSync(hostBinary, Buffer.from('fake-host-binary-bytes-with-NODE_SEA_FUSE_marker'))
-    const blobPath = join(root, 'sea.blob')
-    writeFileSync(blobPath, Buffer.from('blob-bytes'))
+    const hostBinary = dir.write('fake-node', Buffer.from('fake-host-binary-bytes-with-NODE_SEA_FUSE_marker'))
+    const blobPath = dir.write('sea.blob', Buffer.from('blob-bytes'))
     return {
       hostBinary,
-      outputBinary: join(root, 'out', 'cli.linux-x64'),
+      outputBinary: dir.resolve('out', 'cli.linux-x64'),
       blobPath,
       resourceName: 'NODE_SEA_BLOB',
       machoSegmentName: 'NODE_SEA',
       sentinelFuse: 'NODE_SEA_FUSE_xxxxx',
-      reportPath: join(root, 'reports', 'report.json'),
+      reportPath: dir.resolve('reports', 'report.json'),
       ...overrides,
     }
   }
@@ -55,13 +47,13 @@ describe('runInjectWorkerJob', () => {
   })
 
   it('creates the missing parent directories of outputBinary', async () => {
-    const job = baseJob({ outputBinary: join(root, 'nested', 'deep', 'out', 'cli') })
+    const job = baseJob({ outputBinary: dir.resolve('nested', 'deep', 'out', 'cli') })
     await runInjectWorkerJob(job)
     expect(statSync(job.outputBinary).isFile()).toBe(true)
   })
 
   it('creates the missing parent directories of reportPath', async () => {
-    const job = baseJob({ reportPath: join(root, 'nested', 'deep', 'reports', 'report.json') })
+    const job = baseJob({ reportPath: dir.resolve('nested', 'deep', 'reports', 'report.json') })
     await runInjectWorkerJob(job)
     expect(statSync(job.reportPath).isFile()).toBe(true)
   })

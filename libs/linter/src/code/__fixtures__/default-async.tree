@@ -1,5 +1,0 @@
-Program 0-43 sourceType="module"
-  ExportDefaultDeclaration 0-42 exportKind="value"
-    FunctionDeclaration 15-42 async=true
-      Identifier 30-37 name="handler"
-      BlockStatement 40-42

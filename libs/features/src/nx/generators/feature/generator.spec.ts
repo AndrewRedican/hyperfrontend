@@ -1,5 +1,5 @@
 import type { Tree } from '../../model'
-import { beforeEach } from 'node:test'
+import { afterEach, beforeEach } from 'node:test'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -95,6 +95,10 @@ describe('featureGenerator', () => {
     installPackagesMock.mockReset()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it('declares the SDK dependency while keeping existing versions', async () => {
     const tree = createTree()
     await featureGenerator(tree, baseOptions)
@@ -164,17 +168,8 @@ describe('featureGenerator', () => {
   })
 
   it('forwards the NX_DRY_RUN environment flag into the SDK dry-run wording', async () => {
-    const previous = process.env['NX_DRY_RUN']
-    process.env['NX_DRY_RUN'] = 'true'
-    try {
-      await featureGenerator(createTree(), baseOptions)
-    } finally {
-      if (previous === undefined) {
-        delete process.env['NX_DRY_RUN']
-      } else {
-        process.env['NX_DRY_RUN'] = previous
-      }
-    }
+    jest.stubEnv('NX_DRY_RUN', 'true')
+    await featureGenerator(createTree(), baseOptions)
     expect(runInitMock).toHaveBeenCalledWith(expect.objectContaining({ flags: expect.objectContaining({ dryRun: true }) }))
   })
 

@@ -1,9 +1,11 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { beforeEach } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   CHANGELOG_NAMES,
@@ -26,6 +28,16 @@ jest.mock('@hyperfrontend/project-scope/project/traversal', () => ({
 
 const existsMock = jest.mocked(exists)
 const findFilesMock = jest.mocked(findFiles)
+
+/**
+ * Builds an in-memory tree holding an empty file at each given root-relative path.
+ *
+ * @param paths - Root-relative paths of the files the tree holds
+ * @returns Tree rooted at `/workspace` holding the files
+ */
+function treeWithFiles(paths: readonly string[]): Tree {
+  return createMemoryTree(fromEntries(paths.map((path) => [path, ''])))
+}
 
 describe('CHANGELOG_NAMES', () => {
   it('contains common changelog names', () => {
@@ -197,99 +209,66 @@ describe('discoverAllChangelogs', () => {
 })
 
 describe('findProjectChangelogInTree', () => {
-  const createMockTree = (existingPaths: string[], root = '/workspace') => ({
-    root,
-    exists: jest.fn((path: string) => existingPaths.includes(path)),
-    read: jest.fn(),
-    write: jest.fn(),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: jest.fn((path: string) => existingPaths.includes(path)),
-    isDirectory: jest.fn(),
-    isSymlink: jest.fn(),
-    children: jest.fn(),
-    listChanges: jest.fn(() => []),
-    clearChanges: jest.fn(),
-    changePermissions: jest.fn(),
-    changeFile: jest.fn(),
-  })
-
   it('finds CHANGELOG.md in tree when it exists', () => {
-    const tree = createMockTree(['libs/my-lib/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/my-lib/CHANGELOG.md'])
 
-    const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
+    const result = findProjectChangelogInTree(tree, '/workspace/libs/my-lib')
 
     expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 
   it('queries the tree with the root-relative changelog path', () => {
-    const tree = createMockTree(['libs/my-lib/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/my-lib/CHANGELOG.md'])
+    const isFile = jest.spyOn(tree, 'isFile')
 
-    findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
+    findProjectChangelogInTree(tree, '/workspace/libs/my-lib')
 
-    expect(tree.isFile).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
+    expect(isFile).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
   })
 
   it('finds Changelog.md as fallback in tree', () => {
-    const tree = createMockTree(['libs/my-lib/Changelog.md'])
+    const tree = treeWithFiles(['libs/my-lib/Changelog.md'])
 
-    const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
+    const result = findProjectChangelogInTree(tree, '/workspace/libs/my-lib')
 
     expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/Changelog.md'))
   })
 
   it('returns null when no changelog exists in tree', () => {
-    const tree = createMockTree([])
+    const tree = treeWithFiles([])
 
-    const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
+    const result = findProjectChangelogInTree(tree, '/workspace/libs/my-lib')
 
     expect(result).toBeNull()
   })
 
   it('handles relative project paths', () => {
-    const tree = createMockTree(['libs/my-lib/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/my-lib/CHANGELOG.md'])
 
-    const result = findProjectChangelogInTree(tree as Tree, 'libs/my-lib')
+    const result = findProjectChangelogInTree(tree, 'libs/my-lib')
 
     expect(result).toBe(normalizeToNative('libs/my-lib/CHANGELOG.md'))
   })
 
   it('finds changelog created in tree but not on disk', () => {
-    const tree = createMockTree(['libs/new-package/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/new-package/CHANGELOG.md'])
 
-    const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/new-package')
+    const result = findProjectChangelogInTree(tree, '/workspace/libs/new-package')
 
     expect(result).toBe(normalizeToNative('/workspace/libs/new-package/CHANGELOG.md'))
   })
 })
 
 describe('findChangelogsInTree', () => {
-  const createMockTree = (existingPaths: string[], root = '/workspace') => ({
-    root,
-    exists: jest.fn((path: string) => existingPaths.includes(path)),
-    read: jest.fn(),
-    write: jest.fn(),
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: jest.fn((path: string) => existingPaths.includes(path)),
-    isDirectory: jest.fn(),
-    isSymlink: jest.fn(),
-    children: jest.fn(),
-    listChanges: jest.fn(() => []),
-    clearChanges: jest.fn(),
-    changePermissions: jest.fn(),
-    changeFile: jest.fn(),
-  })
-
   it('finds changelogs for multiple packages in tree', () => {
-    const tree = createMockTree(['libs/lib-a/CHANGELOG.md', 'libs/lib-b/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/lib-a/CHANGELOG.md', 'libs/lib-b/CHANGELOG.md'])
 
     const packages = [
       { path: '/workspace/libs/lib-a', name: 'lib-a' },
       { path: '/workspace/libs/lib-b', name: 'lib-b' },
     ]
 
-    const result = findChangelogsInTree(tree as Tree, packages)
+    const result = findChangelogsInTree(tree, packages)
 
     expect(result).toEqual(
       createMap([
@@ -300,35 +279,35 @@ describe('findChangelogsInTree', () => {
   })
 
   it('skips packages without changelog in tree', () => {
-    const tree = createMockTree(['libs/lib-a/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/lib-a/CHANGELOG.md'])
 
     const packages = [
       { path: '/workspace/libs/lib-a', name: 'lib-a' },
       { path: '/workspace/libs/lib-b', name: 'lib-b' },
     ]
 
-    const result = findChangelogsInTree(tree as Tree, packages)
+    const result = findChangelogsInTree(tree, packages)
 
     expect([...result.keys()]).toEqual(['/workspace/libs/lib-a'])
   })
 
   it('returns empty map for empty package list', () => {
-    const tree = createMockTree([])
+    const tree = treeWithFiles([])
 
-    const result = findChangelogsInTree(tree as Tree, [])
+    const result = findChangelogsInTree(tree, [])
 
     expect(result.size).toBe(0)
   })
 
   it('finds changelogs created in tree during multi-phase flow', () => {
-    const tree = createMockTree(['libs/existing/CHANGELOG.md', 'libs/new-package/CHANGELOG.md'])
+    const tree = treeWithFiles(['libs/existing/CHANGELOG.md', 'libs/new-package/CHANGELOG.md'])
 
     const packages = [
       { path: '/workspace/libs/existing', name: 'existing' },
       { path: '/workspace/libs/new-package', name: 'new-package' },
     ]
 
-    const result = findChangelogsInTree(tree as Tree, packages)
+    const result = findChangelogsInTree(tree, packages)
 
     expect([...result.keys()]).toEqual(['/workspace/libs/existing', '/workspace/libs/new-package'])
   })

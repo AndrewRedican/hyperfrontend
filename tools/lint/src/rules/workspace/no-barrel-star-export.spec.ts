@@ -1,31 +1,29 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './no-barrel-star-export.ts'
 
 // why: every recorded case names a file in a temporary workspace; the hermetic cases below cover the same behaviours.
 testRule(rule, { valid: [], invalid: [] })
 
 // why: the rule reads the project and manifest above the file, so the fixture is a disposable workspace in the temporary directory.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-barrel-'))
-const write = (path: string, text: string): void => {
-  mkdirSync(join(ROOT, path, '..'), { recursive: true })
-  writeFileSync(join(ROOT, path), text)
-}
+const DIR = createTempDir({ prefix: 'lint-barrel-' })
+const ROOT = DIR.path
 const PUBLISHABLE = '{ "name": "lib", "projectType": "library", "targets": { "build": {}, "publish": {} } }'
-write('pub/project.json', PUBLISHABLE)
-write(
+DIR.write('pub/project.json', PUBLISHABLE)
+DIR.write(
   'pub/package.json',
   '{ "name": "@s/pub", "exports": { ".": "./src/index.js", "./models": { "import": "./src/models/index.mjs" }, "./cjs": { "require": "./src/cjs/index.cjs" }, "./default": { "default": "./src/default/index.js" }, "./unknown": { "types": "./src/unknown/index.d.ts" }, "./number": 1 } }'
 )
-write('string/project.json', PUBLISHABLE)
-write('string/package.json', '{ "name": "@s/string", "exports": "./src/index.js" }')
-write('array/project.json', PUBLISHABLE)
-write('array/package.json', '{ "name": "@s/array", "exports": 7 }')
-write('internal/project.json', '{ "name": "internal", "projectType": "library", "targets": { "build": {} } }')
-write('internal/package.json', '{ "name": "@s/internal", "exports": "./src/index.js" }')
-write('nomanifest/project.json', PUBLISHABLE)
+DIR.write('string/project.json', PUBLISHABLE)
+DIR.write('string/package.json', '{ "name": "@s/string", "exports": "./src/index.js" }')
+DIR.write('array/project.json', PUBLISHABLE)
+DIR.write('array/package.json', '{ "name": "@s/array", "exports": 7 }')
+DIR.write('internal/project.json', '{ "name": "internal", "projectType": "library", "targets": { "build": {} } }')
+DIR.write('internal/package.json', '{ "name": "@s/internal", "exports": "./src/index.js" }')
+DIR.write('nomanifest/project.json', PUBLISHABLE)
 
 const star = (source: string): string =>
   `Star exports (\`export * from "${source}"\`) are not allowed in entry point files. Use explicit named exports instead: \`export { name1, name2 } from "${source}"\`.`
@@ -105,4 +103,11 @@ testRule(rule, {
       errors: [{ message: star('./foo'), line: 1, column: 1, endLine: 1, endColumn: 22 }],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    DIR.remove()
+    expect(existsSync(ROOT)).toBe(false)
+  })
 })

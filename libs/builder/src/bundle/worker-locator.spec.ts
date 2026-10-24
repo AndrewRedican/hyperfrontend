@@ -1,18 +1,9 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { ascendForWorker, currentModuleDir } from './worker-locator'
 
 const OFFSET = ['bundle', 'rollup', 'worker']
-
-const writeWorkerAt = (root: string, ...segments: string[]): string => {
-  const path = join(root, ...segments)
-  mkdirSync(join(path, '..'), { recursive: true })
-  writeFileSync(path, '/* fake worker */', { flag: 'w' })
-  return path
-}
 
 describe('currentModuleDir', () => {
   it('resolves the directory of the running module', () => {
@@ -21,15 +12,9 @@ describe('currentModuleDir', () => {
 })
 
 describe('ascendForWorker', () => {
-  let root: string
+  const dir = useTempDir({ prefix: 'builder-worker-locator-' })
 
-  beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-worker-locator-'))
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
+  const writeWorkerAt = (...segments: string[]): string => dir.write(join(...segments), '/* fake worker */')
 
   it('defaults to the running module directory and finds the in-source worker', () => {
     expect(ascendForWorker(OFFSET)).toEqual({
@@ -39,36 +24,34 @@ describe('ascendForWorker', () => {
   })
 
   it('returns undefined when no worker exists under any ancestor', () => {
-    expect(ascendForWorker(OFFSET, root)).toBeUndefined()
+    expect(ascendForWorker(OFFSET, dir.path)).toBeUndefined()
   })
 
   it('returns the compiled worker when present at the offset', () => {
-    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs')
-    expect(ascendForWorker(OFFSET, root)).toEqual({ path, execArgv: [] })
+    const path = writeWorkerAt(...OFFSET, 'index.cjs')
+    expect(ascendForWorker(OFFSET, dir.path)).toEqual({ path, execArgv: [] })
   })
 
   it('returns the source worker with the swc loader when only the .ts sibling exists', () => {
-    const path = writeWorkerAt(root, ...OFFSET, 'index.ts')
-    expect(ascendForWorker(OFFSET, root)).toEqual({ path, execArgv: ['--require', '@swc-node/register'] })
+    const path = writeWorkerAt(...OFFSET, 'index.ts')
+    expect(ascendForWorker(OFFSET, dir.path)).toEqual({ path, execArgv: ['--require', '@swc-node/register'] })
   })
 
   it('prefers the compiled worker over the source sibling', () => {
-    const compiled = writeWorkerAt(root, ...OFFSET, 'index.cjs')
-    writeWorkerAt(root, ...OFFSET, 'index.ts')
-    expect(ascendForWorker(OFFSET, root)).toEqual({ path: compiled, execArgv: [] })
+    const compiled = writeWorkerAt(...OFFSET, 'index.cjs')
+    writeWorkerAt(...OFFSET, 'index.ts')
+    expect(ascendForWorker(OFFSET, dir.path)).toEqual({ path: compiled, execArgv: [] })
   })
 
   it('ascends from a nested start directory to a worker in an ancestor', () => {
-    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs')
-    const nested = join(root, 'a', 'b', 'c')
-    mkdirSync(nested, { recursive: true })
+    const path = writeWorkerAt(...OFFSET, 'index.cjs')
+    const nested = dir.mkdir('a/b/c')
     expect(ascendForWorker(OFFSET, nested)).toEqual({ path, execArgv: [] })
   })
 
   it('returns the deepest matching ancestor', () => {
-    writeWorkerAt(root, ...OFFSET, 'index.cjs')
-    const deepRoot = join(root, 'nested')
-    const deepPath = writeWorkerAt(deepRoot, ...OFFSET, 'index.cjs')
-    expect(ascendForWorker(OFFSET, join(deepRoot, 'a', 'b'))).toEqual({ path: deepPath, execArgv: [] })
+    writeWorkerAt(...OFFSET, 'index.cjs')
+    const deepPath = writeWorkerAt('nested', ...OFFSET, 'index.cjs')
+    expect(ascendForWorker(OFFSET, dir.resolve('nested', 'a', 'b'))).toEqual({ path: deepPath, execArgv: [] })
   })
 })

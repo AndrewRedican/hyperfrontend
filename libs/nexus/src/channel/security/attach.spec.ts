@@ -7,7 +7,8 @@ import type { SecurityProvider, SecurityTransport, SecurityTransportError } from
 import type { ChannelInternals, ChannelSecurityDependencies } from '../types'
 import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import * as secureTransportModule from '../../security/transport/secure-transport'
 import { createInitialState } from '../state/initial'
 import { attachSecurityTransport } from './attach'
@@ -43,8 +44,8 @@ describe('channel/security/attach', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    logger = { warn: jest.fn(), error: jest.fn() } as unknown as Logger
-    target = { postMessage: jest.fn() } as unknown as Window
+    logger = createMock<Logger>()
+    target = createFakeWindow()
     provider = { createChannel: jest.fn(), protocolProvider: jest.fn() }
     security = { localId: 'local-1', getProvider: jest.fn(() => provider), dispatch: jest.fn() }
     transport = createMockTransport()
@@ -61,7 +62,7 @@ describe('channel/security/attach', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
       security,
     }
   })

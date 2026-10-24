@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-pkg-fields.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'package.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'package.json')
 const COMPLETE =
   '{\n  "name": "@hyperfrontend/x",\n  "description": "d",\n  "license": "MIT",\n  "sideEffects": false,\n  "engines": {},\n  "keywords": []\n}\n'
 
@@ -11,7 +14,7 @@ testRule(rule, {
     { name: 'a manifest with every field', path: PUBLISHABLE, text: COMPLETE },
     {
       name: 'a manifest of a project that is no publishable library',
-      path: join(import.meta.dirname, '__fixtures__', 'plain', 'package.json'),
+      path: projects.file('plain', 'package.json'),
       text: '{}',
     },
   ],
@@ -73,4 +76,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

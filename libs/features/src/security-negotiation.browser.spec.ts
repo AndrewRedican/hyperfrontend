@@ -1,13 +1,13 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { ShellHandle } from './host/types'
 import type { FeatureHandle } from './hostee/types'
 import type { FeatureContract, SecurityProtocol, ShellOptions } from './shared/types'
 import { afterEach, beforeEach } from 'node:test'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createBroker } from '@hyperfrontend/nexus'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it, jest, sleep, waitUntil } from '@hyperfrontend/testing'
+import { createWindowPair, installResizeObserver } from '@hyperfrontend/testing/browser'
 import { createHeartbeatMonitor } from './host/heartbeat'
 import { createShellHandle } from './host/lifecycle'
 import { createFeatureHandle } from './hostee/lifecycle'
@@ -15,7 +15,6 @@ import { withControlContract } from './shared/control'
 import { createEventEmitter } from './shared/event-emitter'
 import { invertFeatureContract } from './shared/invert-contract'
 import { registerSecurity } from './shared/security'
-import { installResizeObserverStub } from './testing/resize-observer-stub'
 
 // why: Both sides connect, so their REQUESTs cross and nexus breaks the glare by yielding the lower broker id. Ranking the first eight digits of every id minted while a broker is created turns which side answers the other's REQUEST into a test input instead of a coin toss; the real generator still supplies the unique tail.
 jest.mock('@hyperfrontend/random-generator-utils', () => ({
@@ -39,61 +38,11 @@ const schemaContract: FeatureContract = {
   accepted: [{ type: 'setTimezone', schema: { type: 'object', properties: { timezone: { type: 'string' } }, required: ['timezone'] } }],
 }
 
-type MessageListener = (event: MessageEvent) => void
+// how: posting to either window delivers to its own listeners on a later task, with the counterpart as the source and origin, so a reply never lands inside the call that provoked it. Sealed frames travel as the Uint8Array they were posted as.
+const ORIGINS = [HOST_ORIGIN, FEATURE_ORIGIN] as const
 
-interface StubWindow extends Partial<Window> {
-  /** Records every frame the counterpart posts to this window. */
-  postMessage: Mock
-  /** Registers broker message listeners. */
-  addEventListener: Mock
-  /** Removes broker message listeners. */
-  removeEventListener: Mock
-  /** Dispatches a message event to the registered listeners. */
-  _dispatchMessage: (event: MessageEvent) => void
-}
-
-function createStubWindow(): StubWindow {
-  const listeners: MessageListener[] = []
-  return {
-    postMessage: jest.fn(),
-    addEventListener: jest.fn((type: string, listener: MessageListener) => {
-      if (type === 'message') {
-        listeners.push(listener)
-      }
-    }),
-    removeEventListener: jest.fn((type: string, listener: MessageListener) => {
-      const index = listeners.indexOf(listener)
-      if (type === 'message' && index !== -1) {
-        listeners.splice(index, 1)
-      }
-    }),
-    _dispatchMessage: (event: MessageEvent) => listeners.forEach((listener) => listener(event)),
-  }
-}
-
-// how: Mirrors real postMessage semantics: posting to a window dispatches to that window's own listeners on a later task, with the counterpart as the source, so a reply never lands inside the call that provoked it. Sealed frames travel as the Uint8Array they were posted as; the transfer list is irrelevant in-process.
-function linkStubWindows(hostWindow: StubWindow, featureWindow: StubWindow): void {
-  hostWindow.postMessage.mockImplementation((data: unknown) => {
-    setTimeout(() => {
-      hostWindow._dispatchMessage(new MessageEvent('message', { data, origin: FEATURE_ORIGIN, source: featureWindow as unknown as Window }))
-    }, 0)
-  })
-  featureWindow.postMessage.mockImplementation((data: unknown) => {
-    setTimeout(() => {
-      featureWindow._dispatchMessage(new MessageEvent('message', { data, origin: HOST_ORIGIN, source: hostWindow as unknown as Window }))
-    }, 0)
-  })
-}
-
-async function waitFor(condition: () => boolean, attempts = 240): Promise<void> {
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    if (condition()) {
-      return
-    }
-    await createPromise((resolve) => setTimeout(resolve, 25))
-  }
-  throw createError('Timed out waiting for condition')
-}
+// magic: the polling budget a handshake, a confirmation or a deadline close settles within on this machine.
+const SETTLE = { timeout: 6000, interval: 25 }
 
 /** Which side of a crossing-REQUEST glare a broker takes; the lower rank yields and answers as responder. */
 type GlareRank = 'yields' | 'wins'
@@ -127,17 +76,15 @@ const V3: SecuritySelection = { protocol: 'v3' }
 const UNSECURED: SecuritySelection = {}
 
 describe('Integration: host and hostee across the security envelope', () => {
-  let hostWindow: StubWindow
-  let featureWindow: StubWindow
+  let hostWindow: FakeWindow
+  let featureWindow: FakeWindow
   // why: a test may open more than one pair, and each handle starts a heartbeat and a visibility watcher. Holding only the last one would leave the earlier intervals running, which keeps the process alive after the suite has finished.
   const shells: ShellHandle[] = []
   const features: FeatureHandle[] = []
 
   beforeEach(() => {
-    installResizeObserverStub()
-    hostWindow = createStubWindow()
-    featureWindow = createStubWindow()
-    linkStubWindows(hostWindow, featureWindow)
+    installResizeObserver()
+    ;[hostWindow, featureWindow] = createWindowPair({ origins: ORIGINS })
   })
 
   afterEach(() => {
@@ -165,7 +112,7 @@ describe('Integration: host and hostee across the security envelope', () => {
 
   function openHostShell(hostView: FeatureContract = featureContract, security: SecuritySelection = V4, rank?: GlareRank): HostParty {
     const contract = withControlContract(invertFeatureContract(hostView))
-    const broker = mintBrokerWithRank(rank, () => createBroker({ name: 'shell-host', contract, window: hostWindow as unknown as Window }))
+    const broker = mintBrokerWithRank(rank, () => createBroker({ name: 'shell-host', contract, window: hostWindow }))
     const emitter = createEventEmitter()
     const received: unknown[] = []
     const errors: unknown[] = []
@@ -190,7 +137,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       emitter,
       {
         contract,
-        selectMount: () => () => ({ target: featureWindow as unknown as Window, present: { mode: 'embedded' }, cleanup }),
+        selectMount: () => () => ({ target: featureWindow, present: { mode: 'embedded' }, cleanup }),
         registerSecurity,
         createHeartbeatMonitor,
         observeVisibility: () => () => undefined,
@@ -211,9 +158,7 @@ describe('Integration: host and hostee across the security envelope', () => {
     rank?: GlareRank
   ): Party<FeatureHandle> {
     const contract = withControlContract(featureView)
-    const broker = mintBrokerWithRank(rank, () =>
-      createBroker({ name: 'clock-feature', contract, window: featureWindow as unknown as Window })
-    )
+    const broker = mintBrokerWithRank(rank, () => createBroker({ name: 'clock-feature', contract, window: featureWindow }))
     const emitter = createEventEmitter()
     const received: unknown[] = []
     const errors: unknown[] = []
@@ -225,7 +170,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       events.push({ event: 'error', data })
     })
     emitter.on('close', (data) => events.push({ event: 'close', data }))
-    const handle = createFeatureHandle(broker, hostWindow as unknown as Window, emitter, {
+    const handle = createFeatureHandle(broker, hostWindow, emitter, {
       contract,
       protocol: security.protocol,
       sharedKey: security.sharedKey,
@@ -243,13 +188,13 @@ describe('Integration: host and hostee across the security envelope', () => {
     const feature = connectFeature(featureContract, security)
     await feature.handle.ready()
     // why: The session opens before the hello exchange confirms it; sealed traffic is only provable once both transports report ready.
-    await waitFor(() => host.handle.isOpen && host.secured() !== null && feature.secured() !== null, 120)
+    await waitUntil(() => host.handle.isOpen && host.secured() !== null && feature.secured() !== null, { ...SETTLE, timeout: 3000 })
     return { host, feature }
   }
 
-  const framesTo = (target: StubWindow) => target.postMessage.mock.calls.map((call) => call[0] as unknown)
+  const framesTo = (target: FakeWindow) => target.postMessage.mock.calls.map((call) => call[0] as unknown)
 
-  const plaintextFrames = (target: StubWindow) => framesTo(target).filter((frame) => !(frame instanceof Uint8Array))
+  const plaintextFrames = (target: FakeWindow) => framesTo(target).filter((frame) => !(frame instanceof Uint8Array))
 
   const isHandshakeFrame = (frame: unknown) => (frame as { type: string }).type.startsWith('[nexus] connection-')
 
@@ -266,7 +211,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       host.handle.send('setTimezone', { timezone: 'UTC', marker: 'classified-payload' })
       const featureParty = connectFeature()
 
-      await waitFor(() => featureParty.received.length === 1)
+      await waitUntil(() => featureParty.received.length === 1, SETTLE)
 
       expect({
         delivered: featureParty.received,
@@ -285,7 +230,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       const { host, feature } = await openSecuredPair(V4)
 
       feature.handle.send('timeUpdated', { time: 'classified-reply' })
-      await waitFor(() => host.received.length === 1)
+      await waitUntil(() => host.received.length === 1, SETTLE)
 
       expect({
         delivered: host.received,
@@ -307,7 +252,7 @@ describe('Integration: host and hostee across the security envelope', () => {
 
       host.handle.send('setTimezone', { timezone: 'UTC', marker: 'classified-payload' })
       feature.handle.send('timeUpdated', { time: 'classified-reply' })
-      await waitFor(() => host.received.length === 1 && feature.received.length === 1)
+      await waitUntil(() => host.received.length === 1 && feature.received.length === 1, SETTLE)
 
       expect({
         secured: { host: host.secured(), feature: feature.secured() },
@@ -329,10 +274,10 @@ describe('Integration: host and hostee across the security envelope', () => {
       host.handle.on('status', (data) => states.push((data as { state: string }).state))
       const featureParty = connectFeature(featureContract, V3)
       await featureParty.handle.ready()
-      await waitFor(() => host.handle.isOpen)
+      await waitUntil(() => host.handle.isOpen, SETTLE)
 
       // how: Four beat intervals of real time, one past the three-tick miss budget, so a dying beat is guaranteed to have driven the watchdog suspect by now.
-      await createPromise((resolve) => setTimeout(resolve, 4200))
+      await sleep(4200)
 
       expect({ states, hostErrors: host.errors, featureErrors: featureParty.errors }).toEqual({
         states: ['healthy'],
@@ -351,7 +296,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       const host = openHostShell(featureContract, hostKey)
       connectFeature(featureContract, featureKey)
 
-      await waitFor(() => hasClosed(host))
+      await waitUntil(() => hasClosed(host), SETTLE)
 
       expect({ tail: host.events.slice(-2), open: host.handle.isOpen }).toEqual({
         tail: [unconfirmed, { event: 'close', data: undefined }],
@@ -363,7 +308,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       openHostShell(featureContract, hostKey)
       const featureParty = connectFeature(featureContract, featureKey)
 
-      await waitFor(() => hasClosed(featureParty))
+      await waitUntil(() => hasClosed(featureParty), SETTLE)
 
       expect(featureParty.events.slice(-2)).toEqual([unconfirmed, { event: 'close', data: undefined }])
     }, 20_000)
@@ -373,7 +318,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       host.handle.send('setTimezone', { timezone: 'UTC', marker: 'classified-payload' })
       const featureParty = connectFeature(featureContract, featureKey)
 
-      await waitFor(() => hasClosed(host))
+      await waitUntil(() => hasClosed(host), SETTLE)
 
       expect({
         delivered: featureParty.received,
@@ -392,7 +337,7 @@ describe('Integration: host and hostee across the security envelope', () => {
         const host = openHostShell(featureContract, V4)
         const featureParty = connectFeature(featureContract, V3)
 
-        await waitFor(() => host.errors.length > 0 && featureParty.errors.length > 0)
+        await waitUntil(() => host.errors.length > 0 && featureParty.errors.length > 0, SETTLE)
 
         expect({
           hostErrors: host.errors,
@@ -415,7 +360,7 @@ describe('Integration: host and hostee across the security envelope', () => {
         const host = openHostShell(featureContract, V4, 'yields')
         const featureParty = connectFeature(featureContract, UNSECURED, 'wins')
 
-        await waitFor(() => host.errors.length > 0 && featureParty.errors.length > 0)
+        await waitUntil(() => host.errors.length > 0 && featureParty.errors.length > 0, SETTLE)
 
         expect({ hostErrors: host.errors, featureErrors: featureParty.errors, mountCleaned: host.cleanup.mock.calls.length }).toEqual({
           hostErrors: [unavailable],
@@ -435,7 +380,7 @@ describe('Integration: host and hostee across the security envelope', () => {
         const host = openHostShell(featureContract, V4, 'wins')
         connectFeature(featureContract, UNSECURED, 'yields')
 
-        await waitFor(() => host.cleanup.mock.calls.length > 0)
+        await waitUntil(() => host.cleanup.mock.calls.length > 0, SETTLE)
 
         expect({ hostErrors: host.errors, hostOpen: host.handle.isOpen }).toEqual({ hostErrors: [unavailable], hostOpen: false })
       }, 20_000)
@@ -454,7 +399,7 @@ describe('Integration: host and hostee across the security envelope', () => {
         const host = openHostShell(featureContract, UNSECURED, 'wins')
         const featureParty = connectFeature(featureContract, V4, 'yields')
 
-        await waitFor(() => host.errors.length > 0 && featureParty.errors.length > 0)
+        await waitUntil(() => host.errors.length > 0 && featureParty.errors.length > 0, SETTLE)
 
         expect({ hostErrors: host.errors, featureErrors: featureParty.errors, mountCleaned: host.cleanup.mock.calls.length }).toEqual({
           hostErrors: [unavailable],
@@ -467,7 +412,7 @@ describe('Integration: host and hostee across the security envelope', () => {
         const host = openHostShell(featureContract, UNSECURED, 'yields')
         const featureParty = connectFeature(featureContract, V4, 'wins')
 
-        await waitFor(() => host.cleanup.mock.calls.length > 0 && featureParty.errors.length > 0)
+        await waitUntil(() => host.cleanup.mock.calls.length > 0 && featureParty.errors.length > 0, SETTLE)
 
         expect({ hostErrors: host.errors, featureErrors: featureParty.errors }).toEqual({
           hostErrors: [{ reason: 'handshake-cancelled', displayMode: 'embedded' }],
@@ -492,7 +437,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       const featureParty = connectFeature({ ...featureContract, version: '1.2.0' })
 
       await featureParty.handle.ready()
-      await waitFor(() => host.handle.isOpen)
+      await waitUntil(() => host.handle.isOpen, SETTLE)
 
       expect({ hostOpen: host.handle.isOpen, hostErrors: host.errors, featureErrors: featureParty.errors }).toEqual({
         hostOpen: true,
@@ -505,7 +450,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       const host = openHostShell({ ...featureContract, version: '2.0.0' })
       const featureParty = connectFeature({ ...featureContract, version: '1.0.0' })
 
-      await waitFor(() => host.errors.length > 0 && featureParty.errors.length > 0)
+      await waitUntil(() => host.errors.length > 0 && featureParty.errors.length > 0, SETTLE)
 
       expect({ hostOpen: host.handle.isOpen, hostErrors: host.errors, featureErrors: featureParty.errors }).toEqual({
         hostOpen: false,
@@ -534,7 +479,7 @@ describe('Integration: host and hostee across the security envelope', () => {
       await featureParty.handle.ready()
 
       host.handle.send('setTimezone', { sabotage: true })
-      await waitFor(() => featureParty.errors.length === 1)
+      await waitUntil(() => featureParty.errors.length === 1, SETTLE)
 
       expect({ delivered: featureParty.received, errors: featureParty.errors }).toEqual({
         delivered: [],

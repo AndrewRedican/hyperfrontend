@@ -5,6 +5,7 @@ import type { SecurityTransport, SecurityTransportError } from '../../types/secu
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createInitialState } from '../state/initial'
 import { failSecurity } from './fail'
 
@@ -31,7 +32,7 @@ describe('channel/security/fail', () => {
       getProtocol: jest.fn(() => 'v4'),
     }
     state = {
-      ...createInitialState('test-channel', { postMessage: jest.fn() } as unknown as Window, {}),
+      ...createInitialState('test-channel', createFakeWindow(), {}),
       origin: 'https://peer.example.com',
       negotiatedProtocol: 'v4',
       securityTransport: transport,

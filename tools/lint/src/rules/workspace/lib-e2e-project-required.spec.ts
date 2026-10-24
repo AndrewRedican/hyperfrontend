@@ -1,8 +1,12 @@
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { WORKSPACE_ROOT } from '../../runtime/aliases.ts'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-e2e-project-required.ts'
 
+const projects = createProjectTrees()
 const LOGGING = join(WORKSPACE_ROOT, 'libs', 'logging', 'project.json')
 
 testRule(rule, {
@@ -10,7 +14,7 @@ testRule(rule, {
     { name: 'a library whose e2e project exists', path: LOGGING, text: '{ "name": "lib-logging" }' },
     {
       name: 'a library outside libs',
-      path: join(import.meta.dirname, '__fixtures__', 'publishable', 'project.json'),
+      path: projects.file('publishable', 'project.json'),
       text: '{ "name": "lib-nope" }',
     },
     { name: 'a project file without a name', path: LOGGING, text: '{}' },
@@ -44,4 +48,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

@@ -5,7 +5,7 @@ import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as clearQueueModule from '../state/clear-queue'
 import { createInitialState } from '../state/initial'
 import { flush } from './flush'
@@ -30,7 +30,7 @@ describe('channel/messaging/flush', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    logger = { error: jest.fn() } as unknown as Logger
+    logger = createMock<Logger>()
 
     state = {
       ...createInitialState('test-channel', window, { logger }),
@@ -46,7 +46,7 @@ describe('channel/messaging/flush', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
     }
     clearQueue.mockImplementation((current: ChannelState) => ({ ...current, queuedMessages: [] }))
   })

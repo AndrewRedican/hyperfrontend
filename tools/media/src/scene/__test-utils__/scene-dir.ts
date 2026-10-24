@@ -1,9 +1,9 @@
 import type { ResolvedMediaConfig, VariantSpec } from '../../models/config'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** Absolute path of the recorder's source, which fixture scenes import by address. */
 const SRC = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -144,7 +144,8 @@ export default ${stringify(slugs)}.map((slug) => defineScriptedScene({
  * @returns The workspace, its configuration, and the means to fill and remove it.
  */
 export function createSceneWorkspace(): SceneWorkspace {
-  const root = mkdtempSync(join(tmpdir(), 'media-scenes-'))
+  const directory = createTempDir({ prefix: 'media-scenes-' })
+  const root = directory.path
   const config = resolvedConfigFor(root)
   mkdirSync(config.roots.sceneDir)
   mkdirSync(config.roots.outputDir)
@@ -160,6 +161,6 @@ export function createSceneWorkspace(): SceneWorkspace {
       mkdirSync(join(config.roots.outputDir, slug), { recursive: true })
       writeFileSync(join(config.roots.outputDir, slug, name), typeof contents === 'string' ? contents : stringify(contents))
     },
-    remove: () => rmSync(root, { recursive: true, force: true }),
+    remove: directory.remove,
   }
 }

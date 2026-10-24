@@ -1,44 +1,6 @@
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { changeJsonFile, DEFAULT_CHANGE_JSON_FILE_OPTIONS } from './change-json-file'
-
-/**
- * Creates a mock Tree for testing.
- *
- * @param files - Initial file contents
- * @returns Mock tree with testing utilities
- */
-function createMockTree(files: Record<string, string>): Tree & { _getWrittenFiles: () => Record<string, string> } {
-  const writtenFiles: Record<string, string> = {}
-
-  const tree = {
-    read: (path: string, encoding?: string) => {
-      if (writtenFiles[path]) {
-        return encoding ? writtenFiles[path] : Buffer.from(writtenFiles[path])
-      }
-      const content = files[path]
-      if (content === null || content === undefined) return null
-      return encoding ? content : Buffer.from(content)
-    },
-    write: (path: string, content: string | Buffer) => {
-      writtenFiles[path] = typeof content === 'string' ? content : content.toString()
-    },
-    exists: (path: string) => path in files || path in writtenFiles,
-    changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
-      const content = tree.read(path, undefined)
-      if (content === null) {
-        throw new Error(`File not found: ${path}`)
-      }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : (content as Buffer)
-      const result = transform(buffer)
-      tree.write(path, result)
-    },
-    root: '/workspace',
-    _getWrittenFiles: () => writtenFiles,
-  }
-
-  return tree as unknown as Tree & { _getWrittenFiles: () => Record<string, string> }
-}
 
 describe('changeJsonFile', () => {
   describe('DEFAULT_CHANGE_JSON_FILE_OPTIONS', () => {
@@ -49,7 +11,7 @@ describe('changeJsonFile', () => {
 
   describe('basic functionality', () => {
     it('transforms JSON file content', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name": "test", "version": "1.0.0"}',
       })
 
@@ -58,13 +20,12 @@ describe('changeJsonFile', () => {
         return data
       })
 
-      const written = tree._getWrittenFiles()
-      const result = JSON.parse(written['package.json'])
+      const result = JSON.parse(tree.read('package.json', 'utf-8') ?? '')
       expect(result).toEqual({ name: 'test', version: '2.0.0' })
     })
 
     it('preserves all fields when transforming', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': JSON.stringify({
           name: 'test',
           version: '1.0.0',
@@ -78,13 +39,12 @@ describe('changeJsonFile', () => {
         return data
       })
 
-      const written = tree._getWrittenFiles()
-      const result = JSON.parse(written['package.json'])
+      const result = JSON.parse(tree.read('package.json', 'utf-8') ?? '')
       expect(result).toEqual({ name: 'test', version: '2.0.0', description: 'Test package', main: 'index.js' })
     })
 
     it('can add new fields', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name": "test"}',
       })
 
@@ -93,13 +53,12 @@ describe('changeJsonFile', () => {
         return data
       })
 
-      const written = tree._getWrittenFiles()
-      const result = JSON.parse(written['package.json'])
+      const result = JSON.parse(tree.read('package.json', 'utf-8') ?? '')
       expect(result.version).toBe('1.0.0')
     })
 
     it('can remove fields', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name": "test", "version": "1.0.0", "private": true}',
       })
 
@@ -108,67 +67,66 @@ describe('changeJsonFile', () => {
         return data
       })
 
-      const written = tree._getWrittenFiles()
-      const result = JSON.parse(written['package.json'])
+      const result = JSON.parse(tree.read('package.json', 'utf-8') ?? '')
       expect(result).toEqual({ name: 'test', version: '1.0.0' })
     })
   })
 
   describe('formatting options', () => {
     it('uses 2-space indentation by default', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name":"test"}',
       })
 
       changeJsonFile(tree, 'package.json', (data) => data)
 
-      const written = tree._getWrittenFiles()['package.json']
+      const written = tree.read('package.json', 'utf-8') ?? ''
       expect(written).toContain('  "name"')
     })
 
     it('adds trailing newline by default', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name":"test"}',
       })
 
       changeJsonFile(tree, 'package.json', (data) => data)
 
-      const written = tree._getWrittenFiles()['package.json']
+      const written = tree.read('package.json', 'utf-8') ?? ''
       expect(written.endsWith('\n')).toBe(true)
     })
 
     it('respects custom indent option', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name":"test"}',
       })
 
       changeJsonFile(tree, 'package.json', (data) => data, { indent: 4 })
 
-      const written = tree._getWrittenFiles()['package.json']
+      const written = tree.read('package.json', 'utf-8') ?? ''
       expect(written).toContain('    "name"')
     })
 
     it('respects trailingNewline: false option', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': '{"name":"test"}',
       })
 
       changeJsonFile(tree, 'package.json', (data) => data, { trailingNewline: false })
 
-      const written = tree._getWrittenFiles()['package.json']
+      const written = tree.read('package.json', 'utf-8') ?? ''
       expect(written).toBe('{\n  "name": "test"\n}')
     })
   })
 
   describe('error handling', () => {
     it('throws when file does not exist', () => {
-      const tree = createMockTree({})
+      const tree = createMemoryTree({})
 
       expect(() => changeJsonFile(tree, 'nonexistent.json', (data) => data)).toThrow('File not found: nonexistent.json')
     })
 
     it('throws when JSON is invalid', () => {
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'invalid.json': 'not valid json {{{',
       })
 
@@ -184,7 +142,7 @@ describe('changeJsonFile', () => {
         dependencies?: Record<string, string>
       }
 
-      const tree = createMockTree({
+      const tree = createMemoryTree({
         'package.json': JSON.stringify({
           name: 'test',
           version: '1.0.0',
@@ -197,8 +155,7 @@ describe('changeJsonFile', () => {
         return pkg
       })
 
-      const written = tree._getWrittenFiles()
-      const result = JSON.parse(written['package.json'])
+      const result = JSON.parse(tree.read('package.json', 'utf-8') ?? '')
       expect(result.dependencies).toEqual({ lodash: '^4.0.0', underscore: '^1.0.0' })
     })
   })

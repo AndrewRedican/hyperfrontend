@@ -5,7 +5,8 @@ import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -29,15 +30,7 @@ describe('handleMessage', () => {
   let routingContext: RoutingContext
 
   beforeEach(() => {
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
     mockBrokerState = {
       id: 'broker-1',
@@ -56,9 +49,7 @@ describe('handleMessage', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = {
-      postMessage: jest.fn(),
-    } as unknown as Window
+    mockWindow = createFakeWindow()
 
     routingContext = {
       state: mockBrokerState,
@@ -298,7 +289,7 @@ describe('handleMessage', () => {
     const channel1 = addConnectedChannel('channel-1', mockWindow)
     const notify1Spy = jest.spyOn(channel1, 'notifyMessage')
 
-    const window2 = { postMessage: jest.fn() } as unknown as Window
+    const window2: Window = createFakeWindow()
     const channel2 = addConnectedChannel('channel-2', window2)
     const notify2Spy = jest.spyOn(channel2, 'notifyMessage')
 

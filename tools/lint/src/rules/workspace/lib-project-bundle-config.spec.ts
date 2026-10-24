@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-project-bundle-config.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'project.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'project.json')
 const file = (options: string): string => `{\n  "targets": { "build": { "options": ${options} }, "publish": {} }\n}\n`
 const MISSING_ENTRY = (format: string): string =>
   `Bundled output '${format}' is missing required field 'entry'. Bundled outputs must specify their entry point.`
@@ -21,7 +24,7 @@ testRule(rule, {
     { name: 'no targets', path: PUBLISHABLE, text: '{}' },
     {
       name: 'a project that is no publishable library',
-      path: join(import.meta.dirname, '__fixtures__', 'application', 'project.json'),
+      path: projects.file('application', 'project.json'),
       text: file('{ "iife": {} }'),
     },
     { name: 'bundles declared as a list, left to the build', path: PUBLISHABLE, text: file('{ "iife": [{ "entry": "." }], "umd": true }') },
@@ -52,4 +55,11 @@ testRule(rule, {
       errors: [{ message: MISSING_ENTRY('iife'), line: 2, column: 40 }],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

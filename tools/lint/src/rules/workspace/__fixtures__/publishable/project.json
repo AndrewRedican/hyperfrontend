@@ -1,8 +1,0 @@
-{
-  "name": "lib-fixture",
-  "projectType": "library",
-  "targets": {
-    "build": {},
-    "publish": {}
-  }
-}

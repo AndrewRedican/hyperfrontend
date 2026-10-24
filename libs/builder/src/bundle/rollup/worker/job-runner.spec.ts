@@ -1,47 +1,26 @@
 import type { RollupBuildDescriptor } from './types'
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { runRollupWorkerJob } from './job-runner'
 
 describe('runRollupWorkerJob', () => {
-  let root: string
+  const dir = useTempDir({ prefix: 'builder-rollup-worker-' })
 
-  beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-rollup-worker-'))
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
-
-  const writeSrc = (relative: string, contents: string): string => {
-    const path = join(root, relative)
-    writeFileSync(path, contents)
-    return path
-  }
-
-  const writeTsconfig = (): string => {
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: {
-          target: 'ES2022',
-          module: 'ESNext',
-          moduleResolution: 'Bundler',
-          esModuleInterop: true,
-          allowJs: true,
-          isolatedModules: true,
-          skipLibCheck: true,
-        },
-      })
-    )
-    return tsConfigPath
-  }
+  const writeTsconfig = (): string =>
+    dir.write('tsconfig.json', {
+      compilerOptions: {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        esModuleInterop: true,
+        allowJs: true,
+        isolatedModules: true,
+        skipLibCheck: true,
+      },
+    })
 
   const baseDescriptor = (overrides: Partial<RollupBuildDescriptor>): RollupBuildDescriptor => ({
     format: 'esm',
@@ -52,8 +31,8 @@ describe('runRollupWorkerJob', () => {
     bundledDepsPlugin: null,
     workspaceRoutes: [],
     tsConfigPath: '',
-    projectRoot: root,
-    workspaceRoot: root,
+    projectRoot: dir.path,
+    workspaceRoot: dir.path,
     bundleWorkspaceDeps: false,
     bundle: null,
     bin: null,
@@ -62,10 +41,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('reports a positive output size, positive memory figures and a non-negative duration for an ESM descriptor', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const inputFile = dir.write('input.ts', 'export const value = 42\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     const report = await runRollupWorkerJob(
       baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath })
     )
@@ -78,10 +57,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('persists the returned report as JSON at reportPath', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const inputFile = dir.write('input.ts', 'export const value = 42\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     const report = await runRollupWorkerJob(
       baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath })
     )
@@ -89,49 +68,49 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes an ESM bundle under outputDir when given an ESM descriptor', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const inputFile = dir.write('input.ts', 'export const value = 42\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('42')
   })
 
   it('writes a CJS bundle when format is cjs', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 7\n')
+    const inputFile = dir.write('input.ts', 'export const value = 7\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(baseDescriptor({ format: 'cjs', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
     const contents = readFileSync(join(outputDir, 'index.cjs'), 'utf8')
     expect(contents).toContain("'use strict'")
   })
 
   it('folds a dynamic import of a local module into the single ESM entry file', async () => {
-    writeSrc('lazy.ts', 'export const lazy = 314\n')
-    const inputFile = writeSrc('input.ts', "export const load = () => import('./lazy')\n")
+    dir.write('lazy.ts', 'export const lazy = 314\n')
+    const inputFile = dir.write('input.ts', "export const load = () => import('./lazy')\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('314')
   })
 
   it('folds a dynamic import of a local module into the single CJS entry file', async () => {
-    writeSrc('lazy.ts', 'export const lazy = 271\n')
-    const inputFile = writeSrc('input.ts', "export const load = () => import('./lazy')\n")
+    dir.write('lazy.ts', 'export const lazy = 271\n')
+    const inputFile = dir.write('input.ts', "export const load = () => import('./lazy')\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(baseDescriptor({ format: 'cjs', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
     expect(readFileSync(join(outputDir, 'index.cjs'), 'utf8')).toContain('271')
   })
 
   it('marks externals as external in the rollup config', async () => {
-    const inputFile = writeSrc('input.ts', "import other from 'other-dep'\nexport default other\n")
+    const inputFile = dir.write('input.ts', "import other from 'other-dep'\nexport default other\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
@@ -148,16 +127,16 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('throws when a workspace-routed package import escapes routing in an entry build', async () => {
-    const inputFile = writeSrc('input.ts', "import x from '@scope/pkg'\nexport default x\n")
+    const inputFile = dir.write('input.ts', "import x from '@scope/pkg'\nexport default x\n")
     const tsConfigPath = writeTsconfig()
     await expect(
       runRollupWorkerJob(
         baseDescriptor({
           format: 'esm',
           inputFile,
-          outputDir: join(root, 'out'),
+          outputDir: dir.resolve('out'),
           tsConfigPath,
-          reportPath: join(root, 'report.json'),
+          reportPath: dir.resolve('report.json'),
           workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
         })
       )
@@ -165,16 +144,16 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('throws when a sub-path import of a workspace-routed package escapes routing', async () => {
-    const inputFile = writeSrc('input.ts', "import x from '@scope/pkg/sub'\nexport default x\n")
+    const inputFile = dir.write('input.ts', "import x from '@scope/pkg/sub'\nexport default x\n")
     const tsConfigPath = writeTsconfig()
     await expect(
       runRollupWorkerJob(
         baseDescriptor({
           format: 'esm',
           inputFile,
-          outputDir: join(root, 'out'),
+          outputDir: dir.resolve('out'),
           tsConfigPath,
-          reportPath: join(root, 'report.json'),
+          reportPath: dir.resolve('report.json'),
           workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
         })
       )
@@ -182,16 +161,16 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('lets a non-routed unresolved import externalize without throwing', async () => {
-    const inputFile = writeSrc('input.ts', "import x from '@other/pkg'\nexport default x\n")
+    const inputFile = dir.write('input.ts', "import x from '@other/pkg'\nexport default x\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
+    const outputDir = dir.resolve('out')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
         inputFile,
         outputDir,
         tsConfigPath,
-        reportPath: join(root, 'report.json'),
+        reportPath: dir.resolve('report.json'),
         workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
       })
     )
@@ -199,15 +178,17 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('still bundles an entry whose workspace import cannot resolve without path mappings', async () => {
-    const inputFile = writeSrc(
+    const inputFile = dir.write(
       'input.ts',
       "import { isArray } from '@other/pkg'\nexport const joined = (value: unknown): string => (isArray(value) ? value.join(',') : '')\n"
     )
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
+    const outputDir = dir.resolve('out')
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
     try {
-      await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: join(root, 'report.json') }))
+      await runRollupWorkerJob(
+        baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: dir.resolve('report.json') })
+      )
     } finally {
       warn.mockRestore()
     }
@@ -215,15 +196,17 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('drops type diagnostics computed without path mappings, where a workspace import cannot resolve', async () => {
-    const inputFile = writeSrc(
+    const inputFile = dir.write(
       'input.ts',
       "import { isArray } from '@other/pkg'\nexport const joined = (value: unknown): string => (isArray(value) ? value.join(',') : '')\n"
     )
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
+    const outputDir = dir.resolve('out')
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
     try {
-      await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: join(root, 'report.json') }))
+      await runRollupWorkerJob(
+        baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: dir.resolve('report.json') })
+      )
     } finally {
       warn.mockRestore()
     }
@@ -231,9 +214,9 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('keeps type diagnostics when the typescript plugin resolves workspace imports itself', async () => {
-    const inputFile = writeSrc('input.ts', "export const count: number = 'one'\n")
+    const inputFile = dir.write('input.ts', "export const count: number = 'one'\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
+    const outputDir = dir.resolve('out')
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
     try {
       await runRollupWorkerJob(
@@ -242,7 +225,7 @@ describe('runRollupWorkerJob', () => {
           inputFile,
           outputDir,
           tsConfigPath,
-          reportPath: join(root, 'report.json'),
+          reportPath: dir.resolve('report.json'),
           bundleWorkspaceDeps: true,
         })
       )
@@ -253,11 +236,11 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('routes bundled-dep imports through the externalize plugin when configured', async () => {
-    const inputFile = writeSrc('input.ts', "import x from 'rollup'\nexport default x\n")
+    const inputFile = dir.write('input.ts', "import x from 'rollup'\nexport default x\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
-    const depsRoot = join(root, '_dependencies')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
+    const depsRoot = dir.resolve('_dependencies')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
@@ -274,11 +257,9 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('emits a runnable CJS bundle when an externalized dep uses pre-pass named-form exports (default + named with __esModule)', async () => {
-    const depsRoot = join(root, '_dependencies')
-    const depDir = join(depsRoot, 'fake-dep')
-    mkdirSync(depDir, { recursive: true })
-    writeFileSync(
-      join(depDir, 'index.cjs'),
+    const depsRoot = dir.resolve('_dependencies')
+    dir.write(
+      '_dependencies/fake-dep/index.cjs',
       [
         "'use strict';",
         "Object.defineProperty(exports, '__esModule', { value: true });",
@@ -287,10 +268,10 @@ describe('runRollupWorkerJob', () => {
         'exports.fakeDep = fakeDep;',
       ].join('\n')
     )
-    const inputFile = writeSrc('input.ts', "import x from 'fake-dep'\nmodule.exports = x()\n")
+    const inputFile = dir.write('input.ts', "import x from 'fake-dep'\nmodule.exports = x()\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'cjs',
@@ -306,14 +287,15 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('emits const (not var) require bindings for externalized deps in CJS output', async () => {
-    const depsRoot = join(root, '_dependencies')
-    const depDir = join(depsRoot, 'fake-dep')
-    mkdirSync(depDir, { recursive: true })
-    writeFileSync(join(depDir, 'index.cjs'), ["'use strict';", 'function fakeDep() { return 5 }', 'exports.fakeDep = fakeDep;'].join('\n'))
-    const inputFile = writeSrc('input.ts', "import { fakeDep } from 'fake-dep'\nexport const value = fakeDep()\n")
+    const depsRoot = dir.resolve('_dependencies')
+    dir.write(
+      '_dependencies/fake-dep/index.cjs',
+      ["'use strict';", 'function fakeDep() { return 5 }', 'exports.fakeDep = fakeDep;'].join('\n')
+    )
+    const inputFile = dir.write('input.ts', "import { fakeDep } from 'fake-dep'\nexport const value = fakeDep()\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'cjs',
@@ -330,17 +312,17 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('compiles TS-only syntax through the baseUrl branch when sources live outside the process cwd', async () => {
-    writeSrc('types.ts', 'export interface Box { value: number }\n')
-    const inputFile = writeSrc('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 41 }\n")
+    dir.write('types.ts', 'export interface Box { value: number }\n')
+    const inputFile = dir.write('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 41 }\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
+    const outputDir = dir.resolve('out')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
         inputFile,
         outputDir,
         tsConfigPath,
-        reportPath: join(root, 'report.json'),
+        reportPath: dir.resolve('report.json'),
         bundleWorkspaceDeps: true,
       })
     )
@@ -348,17 +330,17 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('compiles TS-only syntax into an IIFE bundle when sources live outside the process cwd', async () => {
-    writeSrc('types.ts', 'export interface Box { value: number }\n')
-    const inputFile = writeSrc('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 43 }\n")
+    dir.write('types.ts', 'export interface Box { value: number }\n')
+    const inputFile = dir.write('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 43 }\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'iife-out')
+    const outputDir = dir.resolve('iife-out')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'iife',
         inputFile,
         outputDir,
         tsConfigPath,
-        reportPath: join(root, 'report.json'),
+        reportPath: dir.resolve('report.json'),
         bundle: { globalName: 'MyLib', minify: false },
       })
     )
@@ -366,10 +348,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes an unminified-only IIFE bundle when minify is disabled', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const inputFile = dir.write('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'iife-out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('iife-out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'iife',
@@ -388,10 +370,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes both unminified and minified IIFE bundles when minify is enabled', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const inputFile = dir.write('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'iife-out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('iife-out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'iife',
@@ -413,10 +395,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes a UMD bundle with amdId when supplied', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const inputFile = dir.write('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'umd-out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('umd-out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'umd',
@@ -438,11 +420,11 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes a bin CJS bundle to bin.outputFile wrapped in the shebang banner and the bootstrap footer', async () => {
-    const inputFile = writeSrc('hf-build.ts', 'export const runCz = async () => 0\n')
+    const inputFile = dir.write('hf-build.ts', 'export const runCz = async () => 0\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'bin-out')
+    const outputDir = dir.resolve('bin-out')
     const outputFile = join(outputDir, 'hf-build.js')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'cjs',
@@ -466,11 +448,11 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('marks the bin CJS bundle executable', async () => {
-    const inputFile = writeSrc('hf-build.ts', 'export const runCz = async () => 0\n')
+    const inputFile = dir.write('hf-build.ts', 'export const runCz = async () => 0\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'bin-out')
+    const outputDir = dir.resolve('bin-out')
     const outputFile = join(outputDir, 'hf-build.js')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'cjs',
@@ -495,11 +477,11 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes a bin ESM bundle to bin.outputFile when format is esm', async () => {
-    const inputFile = writeSrc('hf-build.ts', 'export default async () => 0\n')
+    const inputFile = dir.write('hf-build.ts', 'export default async () => 0\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'bin-out')
+    const outputDir = dir.resolve('bin-out')
     const outputFile = join(outputDir, 'hf-build.mjs')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
@@ -523,11 +505,11 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('routes workspace-dep imports through _dependencies/<packageName>/ when workspaceRoutes is populated', async () => {
-    const inputFile = writeSrc('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
+    const inputFile = dir.write('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
-    const depsRoot = join(root, '_dependencies')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
+    const depsRoot = dir.resolve('_dependencies')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
@@ -545,14 +527,14 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('routes sub-path workspace specifiers exactly when policy is sub-path', async () => {
-    const inputFile = writeSrc(
+    const inputFile = dir.write(
       'input.ts',
       "import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'\nexport default dateNow\n"
     )
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'out')
-    const reportPath = join(root, 'report.json')
-    const depsRoot = join(root, '_dependencies')
+    const outputDir = dir.resolve('out')
+    const reportPath = dir.resolve('report.json')
+    const depsRoot = dir.resolve('_dependencies')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'esm',
@@ -576,10 +558,10 @@ describe('runRollupWorkerJob', () => {
   })
 
   it('writes only the unminified UMD output when minify is disabled', async () => {
-    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const inputFile = dir.write('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()
-    const outputDir = join(root, 'umd-out')
-    const reportPath = join(root, 'report.json')
+    const outputDir = dir.resolve('umd-out')
+    const reportPath = dir.resolve('report.json')
     await runRollupWorkerJob(
       baseDescriptor({
         format: 'umd',

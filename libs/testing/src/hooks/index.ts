@@ -10,6 +10,7 @@ import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { locateRuntimeEntry } from '../lib/locate.ts'
 import { currentGeneration } from './generation.ts'
+import { MOCK_LIFECYCLE_VAR, registerMockLifecycle } from './mock-lifecycle.ts'
 import {
   MOCK_SCHEME,
   isMocked,
@@ -165,3 +166,4 @@ function isSetupFile(url: string, setupFiles: ReadonlySet<string>): boolean {
 }
 
 registerResolutionHooks()
+registerMockLifecycle(process.env[MOCK_LIFECYCLE_VAR])

@@ -1,21 +1,23 @@
 import type { ExpectedError, InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
 import type { DependencyChecksOptions } from './dependency-checks.ts'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createDependencyWorkspace } from './__fixtures__/dependency-workspace.ts'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { createDependencyWorkspace } from './__test-utils__/dependency-workspace.ts'
 import rule from './dependency-checks.ts'
 
 const ROOT = createDependencyWorkspace()
 // why: a workspace with no root project or root manifest is the only place a manifest belongs to no project, or a build reads no root manifest.
-const BARE = mkdtempSync(join(tmpdir(), 'lint-dependencies-bare-'))
-writeFileSync(join(BARE, 'tsconfig.base.json'), '{}')
-mkdirSync(join(BARE, 'loose'))
-mkdirSync(join(BARE, 'libs/built'), { recursive: true })
-writeFileSync(join(BARE, 'libs/built/project.json'), JSON.stringify({ name: 'built', targets: { build: {} } }))
+const BARE_DIR = createTempDir({
+  prefix: 'lint-dependencies-bare-',
+  tree: { 'tsconfig.base.json': '{}', 'libs/built/project.json': JSON.stringify({ name: 'built', targets: { build: {} } }) },
+})
+const BARE = BARE_DIR.path
+BARE_DIR.mkdir('loose')
 execFileSync('git', ['init', '-q'], { cwd: BARE })
 
 const EXPECTED = ['@ws/dep', 'left-pad', 'inner', 'hoisted']
@@ -173,7 +175,7 @@ testRule(rule, {
 describe('the disposable workspaces', () => {
   it('are removed at the end', () => {
     rmSync(ROOT, { recursive: true, force: true })
-    rmSync(BARE, { recursive: true, force: true })
+    BARE_DIR.remove()
     expect(existsSync(ROOT) || existsSync(BARE)).toBe(false)
   })
 })

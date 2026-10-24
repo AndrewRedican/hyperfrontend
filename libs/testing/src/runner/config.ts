@@ -48,6 +48,12 @@ export type TestConfig = {
   moduleNameMapper?: Record<string, string>
   /** Per-test timeout in milliseconds. */
   testTimeout?: number
+  /** Clears every mock's recorded calls before each test, like Jest's `clearMocks`. */
+  clearMocks?: boolean
+  /** Clears calls and drops implementations on every mock before each test, like Jest's `resetMocks`. */
+  resetMocks?: boolean
+  /** Restores every spy and replaced property before each test, like Jest's `restoreMocks`. */
+  restoreMocks?: boolean
 }
 
 /**

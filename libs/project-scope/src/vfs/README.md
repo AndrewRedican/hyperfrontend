@@ -24,6 +24,24 @@ const tree2 = createTree('./my-project', {
 const tree3 = createTreeFromDisk('./my-project')
 ```
 
+### Creating a Tree in Memory
+
+[`createMemoryTree`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-createMemoryTree) holds every file in memory, for tests and previews of code that works through a [`Tree`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-Tree). The starting files are its base layer: they read as existing files and never appear in [`listChanges`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-Tree), while later writes, renames and deletes are buffered and reported exactly as a disk-backed tree reports them.
+
+```typescript
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+
+const tree = createMemoryTree({
+  'package.json': '{"workspaces":["packages/*"]}',
+  'packages/app/package.json': '{"name":"app","version":"1.0.0"}',
+})
+
+tree.write('packages/app/package.json', '{"name":"app","version":"1.1.0"}')
+tree.listChanges() // one UPDATE, with the original content attached
+```
+
+[`commitChanges`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-commitChanges) applies a memory tree's changes to its own files and never to disk. Directories exist wherever a file path implies them, and the root defaults to `/workspace`; pass [`root`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-MemoryTreeOptions-prop-root) to resolve absolute paths against another one.
+
 ### Reading Files
 
 Read files from the tree (considers buffered changes).

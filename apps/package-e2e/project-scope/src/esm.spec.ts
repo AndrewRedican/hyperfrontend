@@ -3,6 +3,7 @@ import { describe, it, expect } from '@hyperfrontend/testing'
 import {
   analyzeProject,
   buildSimpleProjectGraph,
+  createMemoryTree,
   createTree,
   createTreeFromDisk,
   discoverNxProjects,
@@ -24,6 +25,12 @@ describe('@hyperfrontend/project-scope ESM', () => {
 
   it('exports analyzeProject function', () => {
     expect(typeof analyzeProject).toBe('function')
+  })
+
+  it('buffers a write over a file held in a memory tree', () => {
+    const tree = createMemoryTree({ 'package.json': '{}' })
+    tree.write('package.json', '{"name":"app"}')
+    expect(tree.listChanges().map(({ path, type }) => ({ path, type }))).toEqual([{ path: 'package.json', type: 'UPDATE' }])
   })
 })
 

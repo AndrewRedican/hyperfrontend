@@ -1,38 +1,23 @@
 import type { RollupLog } from 'rollup'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { onWarn, runPrePassWorkerJob } from './job-runner'
 
 describe('runPrePassWorkerJob', () => {
-  let root: string
-
-  beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-worker-'))
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
-
-  const writeSrc = (relative: string, contents: string): string => {
-    const path = join(root, relative)
-    writeFileSync(path, contents)
-    return path
-  }
+  const dir = useTempDir({ prefix: 'builder-worker-' })
 
   it('reports a positive output size, positive memory figures and a non-negative duration for a JS job', async () => {
-    const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
+    const inputPath = dir.write('input.mjs', 'export const value = 42\n')
     const report = await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
       inputPath,
       format: 'esm',
-      outputPath: join(root, 'out.esm.js'),
+      outputPath: dir.resolve('out.esm.js'),
       otherDeps: [],
-      reportPath: join(root, 'report.json'),
+      reportPath: dir.resolve('report.json'),
     })
     expect({
       outputSize: report.outputSize > 0,
@@ -43,14 +28,14 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('persists the returned report as JSON at reportPath', async () => {
-    const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', 'export const value = 42\n')
+    const reportPath = dir.resolve('report.json')
     const report = await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
       inputPath,
       format: 'esm',
-      outputPath: join(root, 'out.esm.js'),
+      outputPath: dir.resolve('out.esm.js'),
       otherDeps: [],
       reportPath,
     })
@@ -58,8 +43,8 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('writes an ESM bundle at outputPath when given a JS job', async () => {
-    const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
-    const outputPath = join(root, 'out.esm.js')
+    const inputPath = dir.write('input.mjs', 'export const value = 42\n')
+    const outputPath = dir.resolve('out.esm.js')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -67,15 +52,15 @@ describe('runPrePassWorkerJob', () => {
       format: 'esm',
       outputPath,
       otherDeps: [],
-      reportPath: join(root, 'report.json'),
+      reportPath: dir.resolve('report.json'),
     })
     expect(readFileSync(outputPath, 'utf8')).toContain('42')
   })
 
   it('writes a CJS bundle when format is "cjs"', async () => {
-    const inputPath = writeSrc('input.mjs', 'export const value = 7\n')
-    const outputPath = join(root, 'out.cjs')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', 'export const value = 7\n')
+    const outputPath = dir.resolve('out.cjs')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -90,9 +75,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('marks otherDeps as external in the rollup config', async () => {
-    const inputPath = writeSrc('input.mjs', "import other from 'other-dep'\nexport default other\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import other from 'other-dep'\nexport default other\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -107,9 +92,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('marks subpath imports of otherDeps as external', async () => {
-    const inputPath = writeSrc('input.mjs', "import other from 'other-dep/sub'\nexport default other\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import other from 'other-dep/sub'\nexport default other\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -124,9 +109,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('marks node:-prefixed builtins as external', async () => {
-    const inputPath = writeSrc('input.mjs', "import { join } from 'node:path'\nexport default join('a', 'b')\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import { join } from 'node:path'\nexport default join('a', 'b')\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -140,9 +125,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('marks bare node builtins as external', async () => {
-    const inputPath = writeSrc('input.mjs', "import os from 'os'\nexport default os.tmpdir()\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import os from 'os'\nexport default os.tmpdir()\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -156,11 +141,11 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('suppresses circular-dependency warnings while still completing the bundle', async () => {
-    writeSrc('a.mjs', "import './b.mjs'\nexport const a = 1\n")
-    writeSrc('b.mjs', "import './a.mjs'\nexport const b = 2\n")
-    const inputPath = writeSrc('input.mjs', "export * from './a.mjs'\nexport * from './b.mjs'\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    dir.write('a.mjs', "import './b.mjs'\nexport const a = 1\n")
+    dir.write('b.mjs', "import './a.mjs'\nexport const b = 2\n")
+    const inputPath = dir.write('input.mjs', "export * from './a.mjs'\nexport * from './b.mjs'\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     const report = await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -174,9 +159,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('externalizes "typescript" from the JS pre-pass even when not in otherDeps', async () => {
-    const inputPath = writeSrc('input.mjs', "import ts from 'typescript'\nexport default ts\n")
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import ts from 'typescript'\nexport default ts\n")
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -191,9 +176,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('externalizes "typescript/lib/foo" subpath imports from the JS pre-pass', async () => {
-    const inputPath = writeSrc('input.mjs', "import ts from 'typescript/lib/typescript'\nexport default ts\n")
-    const outputPath = join(root, 'out.cjs')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.mjs', "import ts from 'typescript/lib/typescript'\nexport default ts\n")
+    const outputPath = dir.resolve('out.cjs')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -208,9 +193,9 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('runs a dts job and writes a .d.ts output', async () => {
-    const inputPath = writeSrc('types.d.ts', 'export interface Hello { value: number }\n')
-    const outputPath = join(root, 'out.d.ts')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('types.d.ts', 'export interface Hello { value: number }\n')
+    const outputPath = dir.resolve('out.d.ts')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'dts',
       dep: 'fixture',
@@ -224,27 +209,23 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('runs a workspace-js job over a TypeScript source entry', async () => {
-    const inputPath = writeSrc('input.ts', 'export const value: number = 99\n')
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: {
-          module: 'es2022',
-          moduleResolution: 'bundler',
-          target: 'es2022',
-          esModuleInterop: true,
-          allowJs: true,
-          strict: false,
-          declaration: false,
-          isolatedModules: true,
-          rootDir: root,
-        },
-        files: [inputPath],
-      })
-    )
-    const outputPath = join(root, 'dist', 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.ts', 'export const value: number = 99\n')
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: {
+        module: 'es2022',
+        moduleResolution: 'bundler',
+        target: 'es2022',
+        esModuleInterop: true,
+        allowJs: true,
+        strict: false,
+        declaration: false,
+        isolatedModules: true,
+        rootDir: dir.path,
+      },
+      files: [inputPath],
+    })
+    const outputPath = dir.resolve('dist', 'out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
       dep: '@fixture/sample',
@@ -254,31 +235,27 @@ describe('runPrePassWorkerJob', () => {
       outputPath,
       reportPath,
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
     })
     expect(readFileSync(outputPath, 'utf8')).toContain('99')
   })
 
   it('compiles TS-only syntax in a workspace-js job whose tsconfig declares no rootDir and whose sources live outside the process cwd', async () => {
-    const inputPath = writeSrc('input.ts', 'export const value: number = 77\n')
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: {
-          module: 'es2022',
-          moduleResolution: 'bundler',
-          target: 'es2022',
-          esModuleInterop: true,
-          allowJs: true,
-          strict: false,
-          declaration: false,
-          isolatedModules: true,
-        },
-        files: [inputPath],
-      })
-    )
-    const outputPath = join(root, 'dist', 'out.esm.js')
+    const inputPath = dir.write('input.ts', 'export const value: number = 77\n')
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: {
+        module: 'es2022',
+        moduleResolution: 'bundler',
+        target: 'es2022',
+        esModuleInterop: true,
+        allowJs: true,
+        strict: false,
+        declaration: false,
+        isolatedModules: true,
+      },
+      files: [inputPath],
+    })
+    const outputPath = dir.resolve('dist', 'out.esm.js')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
       dep: '@fixture/sample',
@@ -286,38 +263,34 @@ describe('runPrePassWorkerJob', () => {
       format: 'esm',
       otherDeps: [],
       outputPath,
-      reportPath: join(root, 'report.json'),
+      reportPath: dir.resolve('report.json'),
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
     })
     expect(readFileSync(outputPath, 'utf8')).toContain('77')
   })
 
   it('marks otherWorkspaceSpecifiers as external in workspace-js jobs (exact match only)', async () => {
-    const inputPath = writeSrc(
+    const inputPath = dir.write(
       'input.ts',
       "import { value } from '@x/sub'\nimport { other } from '@x/sub/deep'\nexport default { value, other }\n"
     )
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: {
-          module: 'es2022',
-          moduleResolution: 'bundler',
-          target: 'es2022',
-          esModuleInterop: true,
-          allowJs: true,
-          strict: false,
-          declaration: false,
-          isolatedModules: true,
-          rootDir: root,
-        },
-        files: [inputPath],
-      })
-    )
-    const outputPath = join(root, 'dist', 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: {
+        module: 'es2022',
+        moduleResolution: 'bundler',
+        target: 'es2022',
+        esModuleInterop: true,
+        allowJs: true,
+        strict: false,
+        declaration: false,
+        isolatedModules: true,
+        rootDir: dir.path,
+      },
+      files: [inputPath],
+    })
+    const outputPath = dir.resolve('dist', 'out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
       dep: '@fixture/sample',
@@ -328,16 +301,16 @@ describe('runPrePassWorkerJob', () => {
       outputPath,
       reportPath,
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
     })
     const contents = readFileSync(outputPath, 'utf8')
     expect(contents).toMatch(/from\s+["']@x\/sub["']/)
   })
 
   it('throws when a workspace-js job is missing tsConfigPath', async () => {
-    const inputPath = writeSrc('input.ts', 'export const value = 1\n')
-    const outputPath = join(root, 'out.esm.js')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.ts', 'export const value = 1\n')
+    const outputPath = dir.resolve('out.esm.js')
+    const reportPath = dir.resolve('report.json')
     await expect(
       runPrePassWorkerJob({
         kind: 'workspace-js',
@@ -347,17 +320,16 @@ describe('runPrePassWorkerJob', () => {
         otherDeps: [],
         outputPath,
         reportPath,
-        workspaceRoot: root,
+        workspaceRoot: dir.path,
       })
     ).rejects.toThrow(/missing tsConfigPath/)
   })
 
   it('throws when a workspace-dts job is missing workspaceRoot', async () => {
-    const inputPath = writeSrc('input.ts', 'export interface Hello { value: number }\n')
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(tsConfigPath, JSON.stringify({ compilerOptions: { declaration: true } }))
-    const outputPath = join(root, 'out.d.ts')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.ts', 'export interface Hello { value: number }\n')
+    const tsConfigPath = dir.write('tsconfig.json', { compilerOptions: { declaration: true } })
+    const outputPath = dir.resolve('out.d.ts')
+    const reportPath = dir.resolve('report.json')
     await expect(
       runPrePassWorkerJob({
         kind: 'workspace-dts',
@@ -373,23 +345,19 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('runs a workspace-dts job over a TypeScript source entry', async () => {
-    const inputPath = writeSrc('input.ts', 'export interface Hello { value: number }\n')
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: {
-          module: 'es2022',
-          moduleResolution: 'bundler',
-          target: 'es2022',
-          declaration: true,
-          emitDeclarationOnly: true,
-        },
-        include: ['**/*.ts'],
-      })
-    )
-    const outputPath = join(root, 'dist', 'out.d.ts')
-    const reportPath = join(root, 'report.json')
+    const inputPath = dir.write('input.ts', 'export interface Hello { value: number }\n')
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: {
+        module: 'es2022',
+        moduleResolution: 'bundler',
+        target: 'es2022',
+        declaration: true,
+        emitDeclarationOnly: true,
+      },
+      include: ['**/*.ts'],
+    })
+    const outputPath = dir.resolve('dist', 'out.d.ts')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-dts',
       dep: '@fixture/sample',
@@ -399,16 +367,16 @@ describe('runPrePassWorkerJob', () => {
       outputPath,
       reportPath,
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
     })
     expect(readFileSync(outputPath, 'utf8')).toMatch(/interface Hello \{\s*value: number;?\s*\}/)
   })
 
   it('rewrites cross-bundled-dep imports to relative paths under depsRoot when npmDeps is non-empty (js kind)', async () => {
-    const inputPath = writeSrc('input.mjs', "import other from 'other-dep'\nexport default other\n")
-    const depsRoot = join(root, '_dependencies')
+    const inputPath = dir.write('input.mjs', "import other from 'other-dep'\nexport default other\n")
+    const depsRoot = dir.resolve('_dependencies')
     const outputPath = join(depsRoot, 'fixture', 'index.mjs')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
@@ -426,17 +394,13 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('rewrites whole-surface workspace specifiers to relative chunk paths in workspace-js jobs', async () => {
-    const inputPath = writeSrc('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
-      })
-    )
-    const depsRoot = join(root, '_dependencies')
+    const inputPath = dir.write('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
+    })
+    const depsRoot = dir.resolve('_dependencies')
     const outputPath = join(depsRoot, '@hyperfrontend', 'logging', 'index.cjs')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
       dep: '@hyperfrontend/logging',
@@ -446,7 +410,7 @@ describe('runPrePassWorkerJob', () => {
       otherDeps: [],
       reportPath,
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
       npmDeps: [],
       workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
       depsRoot,
@@ -456,20 +420,16 @@ describe('runPrePassWorkerJob', () => {
   })
 
   it('rewrites sub-path workspace specifiers to relative sibling chunks (workspace-js, sub-path policy)', async () => {
-    const inputPath = writeSrc(
+    const inputPath = dir.write(
       'input.ts',
       "import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'\nexport default dateNow\n"
     )
-    const tsConfigPath = join(root, 'tsconfig.json')
-    writeFileSync(
-      tsConfigPath,
-      JSON.stringify({
-        compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
-      })
-    )
-    const depsRoot = join(root, '_dependencies')
+    const tsConfigPath = dir.write('tsconfig.json', {
+      compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
+    })
+    const depsRoot = dir.resolve('_dependencies')
     const outputPath = join(depsRoot, '@hyperfrontend', 'immutable-api-utils', 'built-in-copy', 'array', 'index.cjs')
-    const reportPath = join(root, 'report.json')
+    const reportPath = dir.resolve('report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
       dep: '@hyperfrontend/immutable-api-utils/built-in-copy/array',
@@ -479,7 +439,7 @@ describe('runPrePassWorkerJob', () => {
       otherDeps: [],
       reportPath,
       tsConfigPath,
-      workspaceRoot: root,
+      workspaceRoot: dir.path,
       npmDeps: [],
       workspaceRoutes: [
         {

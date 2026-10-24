@@ -1,15 +1,18 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-project-metadata.ts'
 
-const PUBLISHABLE = join(import.meta.dirname, '__fixtures__', 'publishable', 'project.json')
+const projects = createProjectTrees()
+const PUBLISHABLE = projects.file('publishable', 'project.json')
 
 testRule(rule, {
   valid: [
     { name: 'a complete project file', path: PUBLISHABLE, text: '{ "name": "lib-x", "description": "d", "tags": ["type:util"] }' },
     {
       name: 'a project file of an application',
-      path: join(import.meta.dirname, '__fixtures__', 'application', 'project.json'),
+      path: projects.file('application', 'project.json'),
       text: '{}',
     },
   ],
@@ -78,4 +81,11 @@ testRule(rule, {
       errors: [{ message: "Publishable library project.json 'tags' field must be a non-empty array.", line: 1, column: 40 }],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

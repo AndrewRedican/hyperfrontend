@@ -1,13 +1,11 @@
-import type { Mock, Mocked } from '@hyperfrontend/testing'
-import type { MemoryMonitor, MemorySnapshot } from './memory/monitor'
+import type { DeepMocked, Mock } from '@hyperfrontend/testing'
+import type { MemoryMonitor } from './memory/monitor'
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join as nodeJoin } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { logger } from '@hyperfrontend/logging'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { runBinPhase } from './bin/run-bin-phase'
 import { build, createBuildContext } from './build'
 import { discoverEntries } from './bundle/entries/discover-entries'
@@ -36,13 +34,7 @@ const EMPTY_FORMATS: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
 
 const baseConfig = (): BuildConfig => ({ projectRoot: '/abs/repo/libs/foo', workspaceRoot: '/abs/repo' })
 
-const makeMonitor = (): Mocked<MemoryMonitor> => ({
-  snapshot: jest.fn(),
-  check: jest.fn(),
-  logDebug: jest.fn(),
-  logSummary: jest.fn(),
-  getSnapshots: jest.fn<[], MemorySnapshot[]>().mockReturnValue([]),
-})
+const makeMonitor = (): DeepMocked<MemoryMonitor> => createMock<MemoryMonitor>({ getSnapshots: () => [] })
 
 beforeEach(() => {
   ;(discoverEntries as Mock).mockReset().mockReturnValue(DISCOVERY)
@@ -131,17 +123,11 @@ describe('createBuildContext', () => {
   })
 
   describe('bundleAllDeps integration', () => {
-    let fxRoot: string
+    const fixture = useTempDir({ prefix: 'builder-build-bundle-all-' })
     const seedPkg = (deps: Record<string, string>, peer?: Record<string, string>): string => {
-      writeFileSync(nodeJoin(fxRoot, 'package.json'), JSON.stringify({ dependencies: deps, peerDependencies: peer ?? {} }))
-      return fxRoot
+      fixture.write('package.json', { dependencies: deps, peerDependencies: peer ?? {} })
+      return fixture.path
     }
-    beforeEach(() => {
-      fxRoot = mkdtempSync(nodeJoin(tmpdir(), 'builder-build-bundle-all-'))
-    })
-    afterEach(() => {
-      rmSync(fxRoot, { recursive: true, force: true })
-    })
 
     it('defaults bundledDeps to an empty list when no format opts in', () => {
       const projectRoot = seedPkg({ rollup: '*' })
@@ -172,22 +158,16 @@ describe('createBuildContext', () => {
 
     it('passes the workspace predicate through so workspace deps are subtracted', () => {
       // context: the workspace dep must be resolvable (mapped + seeded) so bundleAllDeps resolution succeeds rather than failing loud
-      const write = (rel: string, contents: string): void => {
-        const abs = nodeJoin(fxRoot, rel)
-        mkdirSync(nodeJoin(abs, '..'), { recursive: true })
-        writeFileSync(abs, contents)
-      }
-      write('libs/foo/package.json', JSON.stringify({ dependencies: { rollup: '*', '@hyperfrontend/logging': '*' } }))
-      write('libs/logging/package.json', JSON.stringify({ name: 'logging' }))
-      write('libs/logging/tsconfig.lib.json', JSON.stringify({ compilerOptions: {} }))
-      write('libs/logging/src/index.ts', 'export {}')
-      write(
-        'tsconfig.base.json',
-        JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['libs/logging/src/index.ts'] } } })
-      )
+      fixture.writeTree({
+        'libs/foo/package.json': { dependencies: { rollup: '*', '@hyperfrontend/logging': '*' } },
+        'libs/logging/package.json': { name: 'logging' },
+        'libs/logging/tsconfig.lib.json': { compilerOptions: {} },
+        'libs/logging/src/index.ts': 'export {}',
+        'tsconfig.base.json': { compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['libs/logging/src/index.ts'] } } },
+      })
       const ctx = createBuildContext({
-        projectRoot: nodeJoin(fxRoot, 'libs/foo'),
-        workspaceRoot: fxRoot,
+        projectRoot: fixture.resolve('libs/foo'),
+        workspaceRoot: fixture.path,
         isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
         esm: { bundleWorkspaceDeps: true, bundleAllDeps: true },
       })

@@ -1,8 +1,9 @@
 import { resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeFixtures } from '../__test-utils__/write-fixtures'
 import { isNxWorkspace, isNxProject, findNxWorkspaceRoot, getNxWorkspaceInfo, NX_CONFIG_FILES, NX_PROJECT_FILE } from './detect'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const CORE_PROJECT = resolve(MONOREPO, 'packages/core')

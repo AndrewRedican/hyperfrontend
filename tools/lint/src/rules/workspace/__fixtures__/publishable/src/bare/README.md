@@ -1,3 +1,0 @@
-# bare
-
-## No description

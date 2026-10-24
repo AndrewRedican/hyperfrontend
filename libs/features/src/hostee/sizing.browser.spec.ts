@@ -3,8 +3,8 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { applyBodyReset, createPresentationApplier, watchWindowSize } from './sizing'
 
 function setViewport(width: number, height: number) {
-  Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true })
-  Object.defineProperty(window, 'innerHeight', { value: height, configurable: true, writable: true })
+  jest.replaceProperty(window, 'innerWidth', width)
+  jest.replaceProperty(window, 'innerHeight', height)
 }
 
 function styleTexts(): string[] {
@@ -20,6 +20,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  jest.restoreAllMocks()
   document.head.innerHTML = ''
   document.body.innerHTML = ''
 })

@@ -4,21 +4,11 @@ import type { CliFlags } from '../args'
 import type { RunDevOptions } from './dev'
 import { resolve } from 'node:path'
 import { afterEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createDeferred, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createCapturedOutput } from '@hyperfrontend/testing/process'
 import { runDev } from './dev'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
-
-const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
-  const chunks: string[] = []
-  const stream = {
-    write: (chunk: string): boolean => {
-      chunks.push(chunk)
-      return true
-    },
-  } as unknown as NodeJS.WritableStream
-  return { stream, text: () => chunks.join('') }
-}
 
 const config: ResolvedDevConfig = {
   apps: [{ name: 'clock', outputDir: '/abs/dist', port: 3000 }],
@@ -36,13 +26,13 @@ const handle = (over: Partial<DevServerHandle> = {}): DevServerHandle => ({
 })
 
 const deps = (over: Partial<RunDevOptions>): RunDevOptions => {
-  const stdout = sink()
-  const stderr = sink()
+  const stdout = createCapturedOutput()
+  const stderr = createCapturedOutput()
   return {
     flags: mkFlags({}),
     cwd: '/project',
-    stdout: stdout.stream,
-    stderr: stderr.stream,
+    stdout,
+    stderr,
     resolveConfig: () => Promise.resolve(config),
     startServer: () => Promise.resolve(handle()),
     waitForClose: () => Promise.resolve(),
@@ -60,20 +50,20 @@ describe('runDev', () => {
   })
 
   it('writes each running app url', async () => {
-    const out = sink()
-    await runDev(deps({ stdout: out.stream }))
+    const out = createCapturedOutput()
+    await runDev(deps({ stdout: out }))
     expect(out.text()).toEqual(expect.stringContaining('clock → http://localhost:3000/'))
   })
 
   it('writes the debug url when the debug UI is enabled', async () => {
-    const out = sink()
-    await runDev(deps({ stdout: out.stream }))
+    const out = createCapturedOutput()
+    await runDev(deps({ stdout: out }))
     expect(out.text()).toEqual(expect.stringContaining('Debug UI: http://localhost:4280/'))
   })
 
   it('omits the debug url when the debug UI is disabled', async () => {
-    const out = sink()
-    await runDev(deps({ stdout: out.stream, startServer: () => Promise.resolve(handle({ debugUrl: undefined })) }))
+    const out = createCapturedOutput()
+    await runDev(deps({ stdout: out, startServer: () => Promise.resolve(handle({ debugUrl: undefined })) }))
     expect(out.text()).not.toEqual(expect.stringContaining('Debug UI:'))
   })
 
@@ -91,13 +81,10 @@ describe('runDev', () => {
   })
 
   it('stays pending until the shutdown wait resolves', async () => {
-    let release: () => void = () => undefined
-    const gate = new Promise<void>((resolveGate) => {
-      release = resolveGate
-    })
-    const pending = runDev(deps({ waitForClose: () => gate }))
+    const gate = createDeferred()
+    const pending = runDev(deps({ waitForClose: () => gate.promise }))
     const early = await Promise.race([pending.then(() => 'settled'), Promise.resolve('pending')])
-    release()
+    gate.resolve()
     await pending
     expect(early).toBe('pending')
   })
@@ -119,14 +106,14 @@ describe('runDev', () => {
   })
 
   it('reports a resolution error and exits non-zero', async () => {
-    const err = sink()
-    const code = await runDev(deps({ resolveConfig: () => Promise.reject(new Error('boom')), stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runDev(deps({ resolveConfig: () => Promise.reject(new Error('boom')), stderr: err }))
     expect({ code, err: err.text() }).toEqual({ code: 1, err: expect.stringContaining('boom') })
   })
 
   it('surfaces a non-Error rejection', async () => {
-    const err = sink()
-    await runDev(deps({ startServer: () => Promise.reject('kaboom'), stderr: err.stream }))
+    const err = createCapturedOutput()
+    await runDev(deps({ startServer: () => Promise.reject('kaboom'), stderr: err }))
     expect(err.text()).toEqual(expect.stringContaining('kaboom'))
   })
 })

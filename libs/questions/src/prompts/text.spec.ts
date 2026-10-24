@@ -1,83 +1,19 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { TextConfig } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { text } from './text'
 
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
-
 describe('text', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -97,7 +33,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['h', 'e', 'l', 'l', 'o', Key.Enter])
+      await input.sendKeys('h', 'e', 'l', 'l', 'o', Key.Enter)
 
       const result = await promise
 
@@ -108,7 +44,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -119,7 +55,7 @@ describe('text', () => {
       const config = createConfig({ initial: 'default' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -130,7 +66,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['billing\r'])
+      await input.sendKeys('billing\r')
 
       expect(await promise).toEqual({ result: PromptResult.Submitted, value: 'billing' })
     })
@@ -139,7 +75,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['billing\n'])
+      await input.sendKeys('billing\n')
 
       expect(await promise).toEqual({ result: PromptResult.Submitted, value: 'billing' })
     })
@@ -150,7 +86,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
 
       const result = await promise
 
@@ -161,7 +97,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', 'c', Key.CtrlC])
+      await input.sendKeys('a', 'b', 'c', Key.CtrlC)
 
       const result = await promise
 
@@ -183,7 +119,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', 'c', Key.Backspace, Key.Enter])
+      await input.sendKeys('a', 'b', 'c', Key.Backspace, Key.Enter)
 
       const result = await promise
 
@@ -194,7 +130,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['x', 'y', '\b', Key.Enter])
+      await input.sendKeys('x', 'y', '\b', Key.Enter)
 
       const result = await promise
 
@@ -205,7 +141,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys([Key.Backspace, Key.Backspace, 'a', Key.Enter])
+      await input.sendKeys(Key.Backspace, Key.Backspace, 'a', Key.Enter)
 
       const result = await promise
 
@@ -216,7 +152,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'c', Key.Left, 'b', Key.Enter])
+      await input.sendKeys('a', 'c', Key.Left, 'b', Key.Enter)
 
       const result = await promise
 
@@ -227,7 +163,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'c', Key.Left, Key.Left, Key.Right, 'b', Key.Enter])
+      await input.sendKeys('a', 'c', Key.Left, Key.Left, Key.Right, 'b', Key.Enter)
 
       const result = await promise
 
@@ -238,7 +174,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys([Key.Left, Key.Left, 'a', Key.Enter])
+      await input.sendKeys(Key.Left, Key.Left, 'a', Key.Enter)
 
       const result = await promise
 
@@ -249,7 +185,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', Key.Right, Key.Right, 'b', Key.Enter])
+      await input.sendKeys('a', Key.Right, Key.Right, 'b', Key.Enter)
 
       const result = await promise
 
@@ -265,7 +201,7 @@ describe('text', () => {
       const promise = text(config)
 
       // why: first submit fails validation, second succeeds
-      input.enqueueKeys(['a', Key.Enter, 'b', 'c', Key.Enter])
+      await input.sendKeys('a', Key.Enter, 'b', 'c', Key.Enter)
 
       const result = await promise
 
@@ -279,10 +215,10 @@ describe('text', () => {
       const promise = text(config)
 
       // why: first submit fails validation, second succeeds
-      input.enqueueKeys(['a', Key.Enter, 'b', 'c', Key.Enter])
+      await input.sendKeys('a', Key.Enter, 'b', 'c', Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Too short')
+      expect(output.text()).toContain('Too short')
     })
 
     it('accepts valid input immediately', async () => {
@@ -291,7 +227,7 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['a', '@', 'b', Key.Enter])
+      await input.sendKeys('a', '@', 'b', Key.Enter)
 
       const result = await promise
 
@@ -306,7 +242,7 @@ describe('text', () => {
       const promise = text(config)
 
       // why: submit initial which is too short, then add character
-      input.enqueueKeys([Key.Enter, 'c', Key.Enter])
+      await input.sendKeys(Key.Enter, 'c', Key.Enter)
 
       const result = await promise
 
@@ -319,22 +255,22 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', 'c', Key.Left, Key.Left, Key.Enter])
+      await input.sendKeys('a', 'b', 'c', Key.Left, Key.Left, Key.Enter)
       await promise
 
       // why: the '? Enter value: ' prefix spans 15 columns; caret at value index 1 parks at column 16
-      expect(output.getWrittenData()).toContain('\x1B[16C')
+      expect(output.text()).toContain('\x1B[16C')
     })
 
     it('shows the initial-value hint when the value is cleared', async () => {
       const config = createConfig({ initial: 'abc' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter])
+      await input.sendKeys(Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter)
       await promise
 
       // why: the cleared frame paints the dim hint, then parks the caret at column 15, the end of the prefix, right before it
-      expect(output.getWrittenData()).toContain('\x1B[2mabc\x1B[0m\r\x1B[15C')
+      expect(output.text()).toContain('\x1B[2mabc\x1B[0m\r\x1B[15C')
     })
   })
 
@@ -343,7 +279,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['hello world', Key.Enter])
+      await input.sendKeys('hello world', Key.Enter)
 
       const result = await promise
 
@@ -354,7 +290,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['\x1B[200~pasted ', 'text\x1B[201~', Key.Enter])
+      await input.sendKeys('\x1B[200~pasted ', 'text\x1B[201~', Key.Enter)
 
       const result = await promise
 
@@ -365,7 +301,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['\x1B[200~line1\r\nline2\nline3\x1B[201~', Key.Enter])
+      await input.sendKeys('\x1B[200~line1\r\nline2\nline3\x1B[201~', Key.Enter)
 
       const result = await promise
 
@@ -377,7 +313,7 @@ describe('text', () => {
       const promise = text(config)
 
       // why: the embedded carriage return must not act as Enter; only the explicit Enter afterwards submits
-      input.enqueueKeys(['first\rsecond', Key.Enter])
+      await input.sendKeys('first\rsecond', Key.Enter)
 
       const result = await promise
 
@@ -388,7 +324,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['\x1B[200~ab\x07cd\x1B[201~', Key.Enter])
+      await input.sendKeys('\x1B[200~ab\x07cd\x1B[201~', Key.Enter)
 
       const result = await promise
 
@@ -399,7 +335,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', Key.Left, '\x1B[200~XY\x1B[201~', Key.Enter])
+      await input.sendKeys('a', 'b', Key.Left, '\x1B[200~XY\x1B[201~', Key.Enter)
 
       const result = await promise
 
@@ -410,7 +346,7 @@ describe('text', () => {
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['\x1B[200~\x07\x1B[201~', 'z', Key.Enter])
+      await input.sendKeys('\x1B[200~\x07\x1B[201~', 'z', Key.Enter)
 
       const result = await promise
 
@@ -420,22 +356,18 @@ describe('text', () => {
 
   describe('resize', () => {
     it('repaints the current value when the terminal resizes', async () => {
-      output.columns = 80
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b'])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys('a', 'b')
+      await flushPromises()
 
-      const before = output.getWrittenData().length
-      output.columns = 40
-      output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
-      const repaint = output.getWrittenData().slice(before)
+      const before = output.text().length
+      output.resize(40)
+      await flushPromises()
+      const repaint = output.text().slice(before)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: the repaint after resize re-renders the preserved value
@@ -443,20 +375,16 @@ describe('text', () => {
     })
 
     it('submits the value typed before the terminal resized', async () => {
-      output.columns = 80
       const config = createConfig()
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b'])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys('a', 'b')
+      await flushPromises()
 
-      output.columns = 40
-      output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
+      output.resize(40)
+      await flushPromises()
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -469,17 +397,15 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['a', Key.Enter])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys('a', Key.Enter)
+      await flushPromises()
 
-      const before = output.getWrittenData().length
+      const before = output.text().length
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
-      const repaint = output.getWrittenData().slice(before)
+      await flushPromises()
+      const repaint = output.text().slice(before)
 
-      input.enqueueKeys(['b', 'c', Key.Enter])
+      await input.sendKeys('b', 'c', Key.Enter)
       await promise
 
       expect(repaint).toContain('Too short')
@@ -491,15 +417,13 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['a', Key.Enter])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys('a', Key.Enter)
+      await flushPromises()
 
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
-      input.enqueueKeys(['b', 'c', Key.Enter])
+      await input.sendKeys('b', 'c', Key.Enter)
 
       const result = await promise
 
@@ -518,7 +442,7 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', 'c', Key.Enter])
+      await input.sendKeys('a', 'b', 'c', Key.Enter)
       await promise
 
       // why: initial render plus one per keystroke
@@ -531,20 +455,20 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['a', 'b', 'c', Key.Enter])
+      await input.sendKeys('a', 'b', 'c', Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Length: 3')
+      expect(output.text()).toContain('Length: 3')
     })
 
     it('falls back to static message when renderMessage is absent', async () => {
       const config = createConfig({ message: 'Static:' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Static:')
+      expect(output.text()).toContain('Static:')
     })
   })
 
@@ -555,7 +479,7 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['s', 'e', 'c', 'r', 'e', 't', Key.Enter])
+      await input.sendKeys('s', 'e', 'c', 'r', 'e', 't', Key.Enter)
 
       const result = await promise
 
@@ -568,11 +492,11 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys(['s', 'e', 'c', 'r', 'e', 't', Key.Enter])
+      await input.sendKeys('s', 'e', 'c', 'r', 'e', 't', Key.Enter)
       await promise
 
       // why: output should show masked value
-      expect(output.getWrittenData()).toContain('******')
+      expect(output.text()).toContain('******')
     })
   })
 
@@ -581,32 +505,32 @@ describe('text', () => {
       const config = createConfig({ message: 'Test message:' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Test message:')
+      expect(output.text()).toContain('Test message:')
     })
 
     it('shows initial value hint', async () => {
       const config = createConfig({ initial: 'default value' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: initial should be shown somewhere in output
-      expect(output.getWrittenData()).toContain('default value')
+      expect(output.text()).toContain('default value')
     })
 
     it('shows submitted initial value when no user input', async () => {
       const config = createConfig({ initial: 'default' })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: submitted display shows initial value
-      expect(output.getWrittenData()).toContain('default')
+      expect(output.text()).toContain('default')
     })
 
     it('shows formatted value on submission with format', async () => {
@@ -616,11 +540,11 @@ describe('text', () => {
       })
       const promise = text(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: formatted value should appear
-      expect(output.getWrittenData()).toContain('[xyz]')
+      expect(output.text()).toContain('[xyz]')
     })
   })
 })

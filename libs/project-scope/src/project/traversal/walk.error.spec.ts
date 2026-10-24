@@ -1,6 +1,7 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import { resolve } from 'node:path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import * as fsModule from '../../core/fs'
 import { walkDirectory } from './walk'
 
@@ -10,7 +11,7 @@ jest.mock('../../core/fs', () => {
   return { ...actual, readDirectory: jest.fn(actual.readDirectory) }
 })
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const mockReadDirectory = fsModule.readDirectory as MockedFunction<typeof fsModule.readDirectory>
 

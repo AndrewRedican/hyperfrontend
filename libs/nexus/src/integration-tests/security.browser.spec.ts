@@ -1,16 +1,16 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { SecurityPolicy } from '../broker/types'
 import type { IChannelContract } from '../types/contract'
-import type { MockWindow } from './test-utils'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
-import { createMockWindow } from './test-utils'
 
 describe('Integration: Security', () => {
-  let mockWindow: MockWindow
+  let mockWindow: FakeWindow
 
   beforeEach(() => {
-    mockWindow = createMockWindow()
+    mockWindow = createFakeWindow()
   })
 
   const testContract: IChannelContract = {
@@ -19,7 +19,7 @@ describe('Integration: Security', () => {
   }
 
   const createSecureBroker = (settings: Record<string, unknown> = {}) =>
-    createBroker({ name: 'secure-broker', contract: testContract, window: mockWindow as unknown as Window, settings })
+    createBroker({ name: 'secure-broker', contract: testContract, window: mockWindow, settings })
 
   describe('Origin Whitelist', () => {
     it('records the whitelisted origins', () => {
@@ -113,7 +113,7 @@ describe('Integration: Security', () => {
     it('creates channels under the broker security settings', () => {
       const broker = createSecureBroker({ whitelist: ['https://trusted.com'] })
 
-      const channel = broker.addChannel('test-channel', createMockWindow() as unknown as Window)
+      const channel = broker.addChannel('test-channel', createFakeWindow())
 
       expect(channel.name).toBe('test-channel')
     })
@@ -121,8 +121,8 @@ describe('Integration: Security', () => {
     it('registers multiple channels under the same security policy', () => {
       const broker = createSecureBroker({ whitelist: ['https://trusted.com'] })
 
-      broker.addChannel('channel-1', createMockWindow() as unknown as Window)
-      broker.addChannel('channel-2', createMockWindow() as unknown as Window)
+      broker.addChannel('channel-1', createFakeWindow())
+      broker.addChannel('channel-2', createFakeWindow())
 
       expect(broker.channels.map((channel) => channel.name)).toEqual(['channel-1', 'channel-2'])
     })

@@ -1,7 +1,7 @@
 import type { MockFn } from '@hyperfrontend/testing'
 import type { Process } from './lifecycle-aware-component.model'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it, jest, sleep } from '@hyperfrontend/testing'
 import { LifecycleAwareComponent } from './lifecycle-aware-component'
 
 describe('LifecycleAwareComponent', () => {
@@ -18,10 +18,6 @@ describe('LifecycleAwareComponent', () => {
 
   function runAsyncProcess(name: keyof typeof config): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(config[name] === 'success' ? resolve : reject, 200 /* milliseconds */))
-  }
-
-  function sleep(milliseconds: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds))
   }
 
   class AsyncProcess extends LifecycleAwareComponent {

@@ -1,16 +1,12 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { moduleDeclarations, moduleExports, parsedModule, resolveModule } from './exports-index.ts'
 
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-exports-'))
-const write = (path: string, text: string): void => {
-  mkdirSync(dirname(join(ROOT, path)), { recursive: true })
-  writeFileSync(join(ROOT, path), text)
-}
-write(
+const DIR = createTempDir({ prefix: 'lint-exports-' })
+const ROOT = DIR.path
+DIR.write(
   'src/index.ts',
   [
     "import { inner as renamed, 'odd' as odd } from './inner.js'",
@@ -25,9 +21,9 @@ write(
     "export { 'quoted' as spelled } from './star'",
   ].join('\n')
 )
-write('src/star.ts', "export const one = 1\nexport type Two = string\nexport { one as 'quoted' }")
-write('src/inner.ts', 'export function inner() {}\nexport const odd = 2')
-write(
+DIR.write('src/star.ts', "export const one = 1\nexport type Two = string\nexport { one as 'quoted' }")
+DIR.write('src/inner.ts', 'export function inner() {}\nexport const odd = 2')
+DIR.write(
   'src/patterns.ts',
   [
     'export const { a, b: [c, , d = 1], ...rest } = source',
@@ -45,12 +41,12 @@ write(
     'if (x) {}',
   ].join('\n')
 )
-write('src/cycle/a.ts', "export * from './b'\nexport const fromA = 1")
-write('src/cycle/b.ts', "export * from './a'\nexport const fromB = 2")
-write('src/broken.ts', 'export const = ')
-write('src/types.d.ts', 'export declare const typed: number')
-write('src/emitted.ts', 'export const emitted = 1')
-write('src/folder/index.mts', 'export const folder = 1')
+DIR.write('src/cycle/a.ts', "export * from './b'\nexport const fromA = 1")
+DIR.write('src/cycle/b.ts', "export * from './a'\nexport const fromB = 2")
+DIR.write('src/broken.ts', 'export const = ')
+DIR.write('src/types.d.ts', 'export declare const typed: number')
+DIR.write('src/emitted.ts', 'export const emitted = 1')
+DIR.write('src/folder/index.mts', 'export const folder = 1')
 
 describe('parsedModule', () => {
   it('parses a declaration file', () => {
@@ -161,7 +157,7 @@ describe('moduleExports', () => {
 
 describe('the disposable directory', () => {
   it('is removed once the cases have run', () => {
-    rmSync(ROOT, { recursive: true })
+    DIR.remove()
     expect(resolveModule(join(ROOT, 'src/index.ts'), './star')).toBe(null)
   })
 })

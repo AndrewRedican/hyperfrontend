@@ -1,15 +1,18 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { existsSync, rmSync } from 'node:fs'
+import { join, posix } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { writeConfigModules } from './__test-utils__/config-modules'
 import { CONFIG_FILE, findConfigFile, loadConfig } from './load'
 
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
+const FIXTURES = writeConfigModules()
 
-const TREE = mkdtempSync(join(tmpdir(), 'lint-config-'))
-mkdirSync(join(TREE, 'project', 'src', 'deep'), { recursive: true })
-writeFileSync(join(TREE, CONFIG_FILE), 'export default []\n')
-writeFileSync(join(TREE, 'project', CONFIG_FILE), 'export default []\n')
+const DIR = createTempDir({
+  prefix: 'lint-config-',
+  tree: { [CONFIG_FILE]: 'export default []\n', [posix.join('project', CONFIG_FILE)]: 'export default []\n' },
+})
+const TREE = DIR.path
+DIR.mkdir('project/src/deep')
 
 describe('findConfigFile', () => {
   it('finds the file in the directory itself', () => {
@@ -47,7 +50,8 @@ describe('loadConfig', () => {
   })
 
   it('leaves no temporary tree behind', () => {
-    rmSync(TREE, { recursive: true, force: true })
-    expect(findConfigFile(join(TREE, 'project'))).toBeNull()
+    DIR.remove()
+    rmSync(FIXTURES, { recursive: true, force: true })
+    expect([findConfigFile(join(TREE, 'project')), existsSync(FIXTURES)]).toEqual([null, false])
   })
 })

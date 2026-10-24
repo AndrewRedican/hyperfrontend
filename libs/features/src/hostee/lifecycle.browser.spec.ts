@@ -3,12 +3,12 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
 import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow, installResizeObserver } from '@hyperfrontend/testing/browser'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
-import { installResizeObserverStub } from '../testing/resize-observer-stub'
+import { createMockChannel } from '../testing/mock-channel'
 import { createFeatureHandle, resolveHostWindow } from './lifecycle'
 
 // note: Intervals hand back their own delay as the handle, so a test can say which timer it means: the heartbeat's beat and the visibility watch's poll both run while a feature is open.
@@ -34,75 +34,37 @@ jest.mock('@hyperfrontend/network-protocol/browser/v4', () => ({
 
 beforeEach(() => {
   jest.clearAllMocks()
-  installResizeObserverStub()
+  installResizeObserver()
 })
-
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-  triggerMessage(type: string, data?: unknown): void
-  send: Mock
-  disconnect: Mock
-  connect: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const send = jest.fn()
-  const disconnect = jest.fn()
-  const connect = jest.fn()
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send,
-    disconnect,
-    connect,
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-    send,
-    disconnect,
-    connect,
-  }
-}
 
 function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: Mock; registerProtocol: Mock } {
   const addChannel = jest.fn(() => channel)
   const registerProtocol = jest.fn()
-  return { broker: { addChannel, registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel, registerProtocol }
+  return { broker: createMock<BrokerHandle>({ addChannel, registerProtocol }), addChannel, registerProtocol }
 }
 
 describe('resolveHostWindow', () => {
   it('returns the parent window when embedded in an iframe', () => {
-    const parent = { name: 'parent' } as unknown as Window
-    expect(resolveHostWindow({ parent, opener: null } as unknown as Window)).toBe(parent)
+    const parent = createFakeWindow()
+    expect(resolveHostWindow(createMock<Window>({ parent, opener: null }))).toBe(parent)
   })
 
   it('returns the opener window when launched as a popup', () => {
-    const opener = { name: 'opener' } as unknown as Window
-    const win = { opener } as unknown as Window
+    const opener = createFakeWindow()
+    const win = createMock<Window>({ opener })
     Object.assign(win, { parent: win })
     expect(resolveHostWindow(win)).toBe(opener)
   })
 
   it('returns null when running at the top level', () => {
-    const win = { opener: null } as unknown as Window
+    const win = createMock<Window>({ opener: null })
     Object.assign(win, { parent: win })
     expect(resolveHostWindow(win)).toBeNull()
   })
 })
 
 describe('createFeatureHandle', () => {
-  const hostWindow = { name: 'host' } as unknown as Window
+  const hostWindow = createFakeWindow()
   // note: A schema-free contract keeps payload validation inert here; the schema paths are covered by the payload validation block below.
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
   const sharedKey = 'a-key-of-sixteen-or-more'
@@ -445,9 +407,7 @@ describe('createFeatureHandle', () => {
       })
       const settled = jest.fn()
       void handle.ready().then(settled, settled)
-      await createPromise<void>((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await flushPromises()
       expect(settled).not.toHaveBeenCalled()
     })
   })
@@ -540,12 +500,6 @@ describe('createFeatureHandle', () => {
   })
 
   describe('request/response', () => {
-    function flush() {
-      return createPromise<void>((resolve) => {
-        setTimeout(resolve, 0)
-      })
-    }
-
     function sentEnvelope(send: Mock, index = 0): Record<string, unknown> {
       const call = send.mock.calls[index]
       if (!call) {
@@ -629,7 +583,7 @@ describe('createFeatureHandle', () => {
       })
       handle.handle('getTime', () => '12:00')
       mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'getTime' })
-      await flush()
+      await flushPromises()
       expect(mock.send).toHaveBeenCalledWith(
         ControlType.Response,
         expect.objectContaining({ correlationId: 'host-1', from: 'feature', innerType: 'getTime', ok: true, payload: '12:00' })
@@ -640,7 +594,7 @@ describe('createFeatureHandle', () => {
       const mock = createMockChannel()
       createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
       mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'missing' })
-      await flush()
+      await flushPromises()
       expect(mock.send).toHaveBeenCalledWith(
         ControlType.Response,
         expect.objectContaining({ ok: false, error: "No handler is registered for 'missing'." })
@@ -655,7 +609,7 @@ describe('createFeatureHandle', () => {
       const pending = handle.request('getSettings')
       const envelope = sentEnvelope(mock.send)
       mock.triggerMessage(ControlType.Request, envelope)
-      await flush()
+      await flushPromises()
       expect(mock.send).toHaveBeenCalledTimes(1)
       mock.triggerMessage(ControlType.Response, { correlationId: envelope['correlationId'], from: 'host', ok: true })
       await pending

@@ -5,6 +5,7 @@ import { PassThrough } from 'node:stream'
 import { beforeEach } from 'node:test'
 import { readJsonFile } from '@hyperfrontend/project-scope/core'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { readAll } from '@hyperfrontend/testing/process'
 import { build } from '../build'
 import runHfBuildDefault, {
   HF_BUILD_DEFAULT_CONFIG_NAME,
@@ -18,13 +19,6 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual<typeof import('@hyperfrontend/project-scope/core')>('@hyperfrontend/project-scope/core')
   return { ...actual, readJsonFile: jest.fn() }
 })
-
-const drain = (stream: PassThrough): string => {
-  const chunks: Buffer[] = []
-  let buf: Buffer | null
-  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
-  return Buffer.concat(chunks).toString('utf8')
-}
 
 const EMPTY_FORMATS: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
 const EMPTY_RESULT: BuildResult = {
@@ -106,7 +100,7 @@ describe('runHfBuild', () => {
   it('writes nothing to stderr when the build resolves', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('')
+    expect(readAll(stderr)).toBe('')
   })
 
   it('reads the default config from <cwd>/builder.config.json', async () => {
@@ -158,13 +152,13 @@ describe('runHfBuild', () => {
   it('prints the usage text to stdout for --help', async () => {
     const stdout = new PassThrough()
     await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr: new PassThrough(), stdout })
-    expect(drain(stdout)).toContain('Usage: hf-build')
+    expect(readAll(stdout)).toContain('Usage: hf-build')
   })
 
   it('writes nothing to stderr for --help when stdout is supplied', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: ['--help'], cwd: '/repo', stderr, stdout: new PassThrough() })
-    expect(drain(stderr)).toBe('')
+    expect(readAll(stderr)).toBe('')
   })
 
   it('reads no config file for --help', async () => {
@@ -185,7 +179,7 @@ describe('runHfBuild', () => {
   it('falls back to stderr for the usage text when no stdout is supplied', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: ['-h'], cwd: '/repo', stderr })
-    expect(drain(stderr)).toContain('Usage: hf-build')
+    expect(readAll(stderr)).toContain('Usage: hf-build')
   })
 
   it('returns 1 when argv parsing fails', async () => {
@@ -196,7 +190,7 @@ describe('runHfBuild', () => {
   it('echoes the parse error to stderr when argv parsing fails', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: ['--bogus'], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('Unknown argument: --bogus\n')
+    expect(readAll(stderr)).toBe('Unknown argument: --bogus\n')
   })
 
   it('reads no config file when argv parsing fails', async () => {
@@ -223,7 +217,7 @@ describe('runHfBuild', () => {
       throw new Error('Config file not found: /repo/builder.config.json')
     })
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('Config file not found: /repo/builder.config.json\n')
+    expect(readAll(stderr)).toBe('Config file not found: /repo/builder.config.json\n')
   })
 
   it('invokes no build when config loading throws', async () => {
@@ -248,7 +242,7 @@ describe('runHfBuild', () => {
       throw 'plain string failure'
     })
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('plain string failure\n')
+    expect(readAll(stderr)).toBe('plain string failure\n')
   })
 
   it('returns 1 when build() rejects with an Error', async () => {
@@ -261,7 +255,7 @@ describe('runHfBuild', () => {
     const stderr = new PassThrough()
     ;(build as Mock).mockRejectedValueOnce(new Error('rollup blew up'))
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('rollup blew up\n')
+    expect(readAll(stderr)).toBe('rollup blew up\n')
   })
 
   it('returns 1 when build() rejects with a non-Error', async () => {
@@ -274,7 +268,7 @@ describe('runHfBuild', () => {
     const stderr = new PassThrough()
     ;(build as Mock).mockRejectedValueOnce('opaque failure')
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(drain(stderr)).toBe('opaque failure\n')
+    expect(readAll(stderr)).toBe('opaque failure\n')
   })
 
   const runWithInjected = async (): Promise<{ code: number; readConfig: Mock; runBuild: Mock; injectedConfig: BuildConfig }> => {

@@ -2,13 +2,13 @@ import type { CliFlags } from '../args'
 import type { ResolvedBuildBundle } from '../config/resolve'
 import type { RunBuildOptions } from './build'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
 import { build } from '@hyperfrontend/builder'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { createCapturedOutput } from '@hyperfrontend/testing/process'
 import { runBuild } from './build'
 
 jest.mock('node:child_process')
@@ -26,36 +26,17 @@ const bundle = (protocol: 'none' | 'v3' | 'v4', protocolExplicit = false): Resol
   protocolExplicit,
 })
 
-const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
-  const chunks: string[] = []
-  const stream = {
-    write: (chunk: string): boolean => {
-      chunks.push(chunk)
-      return true
-    },
-  } as unknown as NodeJS.WritableStream
-  return { stream, text: () => chunks.join('') }
-}
-
 describe('runBuild', () => {
-  let dir: string
-
-  beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hf-build-'))
-  })
-
-  afterEach(() => {
-    rmSync(dir, { recursive: true, force: true })
-  })
+  const tmp = useTempDir({ prefix: 'hf-build-' })
 
   const deps = (over: Partial<RunBuildOptions>): RunBuildOptions => {
-    const stdout = sink()
-    const stderr = sink()
+    const stdout = createCapturedOutput()
+    const stderr = createCapturedOutput()
     return {
       flags: mkFlags({}),
-      cwd: dir,
-      stdout: stdout.stream,
-      stderr: stderr.stream,
+      cwd: tmp.path,
+      stdout,
+      stderr,
       resolveConfig: () => Promise.resolve(bundle('v4')),
       runBuilder: jest.fn(),
       packTarball: () => 'clock-shell-1.0.0.tgz',
@@ -74,8 +55,8 @@ describe('runBuild', () => {
     expect(runBuilder).toHaveBeenCalledWith(
       expect.objectContaining({
         projectRoot: expect.any(String),
-        workspaceRoot: dir,
-        outputPath: expect.stringContaining(join(dir, '.hf-shell-clock-')),
+        workspaceRoot: tmp.path,
+        outputPath: expect.stringContaining(tmp.resolve('.hf-shell-clock-')),
       })
     )
   })
@@ -83,18 +64,18 @@ describe('runBuild', () => {
   it('emits into the staging dir rather than --out so the builder only ever cleans a dir this build created', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ flags: mkFlags({ out: 'out' }), runBuilder }))
-    expect(runBuilder).toHaveBeenCalledWith(expect.objectContaining({ outputPath: expect.not.stringContaining(join(dir, 'out')) }))
+    expect(runBuilder).toHaveBeenCalledWith(expect.objectContaining({ outputPath: expect.not.stringContaining(tmp.resolve('out')) }))
   })
 
   it('reports the packed tarball', async () => {
-    const out = sink()
-    await runBuild(deps({ stdout: out.stream }))
+    const out = createCapturedOutput()
+    await runBuild(deps({ stdout: out }))
     expect(out.text()).toEqual(expect.stringContaining('Packed clock-shell-1.0.0.tgz'))
   })
 
   it('omits the packed line when no tarball is produced', async () => {
-    const out = sink()
-    await runBuild(deps({ stdout: out.stream, packTarball: () => '' }))
+    const out = createCapturedOutput()
+    await runBuild(deps({ stdout: out, packTarball: () => '' }))
     expect(out.text()).toEqual(expect.not.stringContaining('Packed'))
   })
 
@@ -105,20 +86,20 @@ describe('runBuild', () => {
   })
 
   it('announces the dry-run in the summary', async () => {
-    const out = sink()
-    await runBuild(deps({ flags: mkFlags({ dryRun: true }), stdout: out.stream }))
+    const out = createCapturedOutput()
+    await runBuild(deps({ flags: mkFlags({ dryRun: true }), stdout: out }))
     expect(out.text()).toEqual(expect.stringContaining('Would build'))
   })
 
   it('rejects a build without a security protocol', async () => {
-    const err = sink()
-    const code = await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none')), stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none')), stderr: err }))
     expect(code).toBe(1)
   })
 
   it('names the v3 and v4 protocols when the build has none', async () => {
-    const err = sink()
-    await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none')), stderr: err.stream }))
+    const err = createCapturedOutput()
+    await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none')), stderr: err }))
     expect(err.text()).toBe('Build requires a security protocol: pass --protocol v3 or --protocol v4.\n')
   })
 
@@ -133,8 +114,8 @@ describe('runBuild', () => {
   })
 
   it('names --allow-open, the risk, and the v3/v4 alternatives when an explicit none is unacknowledged', async () => {
-    const err = sink()
-    await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream }))
+    const err = createCapturedOutput()
+    await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err }))
     expect(err.text()).toBe(
       "Building with an explicit protocol 'none' produces an open shell: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v3 / --protocol v4.\n"
     )
@@ -146,10 +127,8 @@ describe('runBuild', () => {
   })
 
   it('warns on stderr when building an acknowledged open shell', async () => {
-    const err = sink()
-    await runBuild(
-      deps({ flags: mkFlags({ allowOpen: true }), resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream })
-    )
+    const err = createCapturedOutput()
+    await runBuild(deps({ flags: mkFlags({ allowOpen: true }), resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err }))
     expect(err.text()).toEqual(expect.stringContaining('Warning: building an open shell'))
   })
 
@@ -157,7 +136,7 @@ describe('runBuild', () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))
     expect(runBuilder).toHaveBeenCalledWith(
-      expect.objectContaining({ projectRoot: expect.stringContaining(join(dir, '.hf-shell-clock-')) })
+      expect.objectContaining({ projectRoot: expect.stringContaining(tmp.resolve('.hf-shell-clock-')) })
     )
   })
 
@@ -173,54 +152,49 @@ describe('runBuild', () => {
 
   it('honors an explicit --out and a relative --cwd', async () => {
     await runBuild(deps({ flags: mkFlags({ out: 'out', cwd: '.' }) }))
-    expect(existsSync(join(dir, 'out', 'metadata.json'))).toBe(true)
+    expect(tmp.exists('out/metadata.json')).toBe(true)
   })
 
   it('writes the shell into a dist/ tree beside the project', async () => {
-    const out = join(`${dir}-dist`, 'shell')
+    const out = join(`${tmp.path}-dist`, 'shell')
     try {
       await runBuild(deps({ flags: mkFlags({ out }) }))
       expect(existsSync(join(out, 'metadata.json'))).toBe(true)
     } finally {
-      rmSync(`${dir}-dist`, { recursive: true, force: true })
+      rmSync(`${tmp.path}-dist`, { recursive: true, force: true })
     }
   })
 
   it('accepts an existing empty --out', async () => {
-    mkdirSync(join(dir, 'out'))
+    tmp.mkdir('out')
     const code = await runBuild(deps({ flags: mkFlags({ out: 'out' }) }))
     expect(code).toBe(0)
   })
 
   it('replaces an earlier shell in --out, dropping its stale tarball', async () => {
-    const out = join(dir, 'out')
-    mkdirSync(out)
-    writeFileSync(join(out, 'metadata.json'), '{ "generatedBy": "@hyperfrontend/features" }')
-    writeFileSync(join(out, 'clock-shell-0.9.0.tgz'), 'stale')
+    tmp.write('out/metadata.json', '{ "generatedBy": "@hyperfrontend/features" }')
+    tmp.write('out/clock-shell-0.9.0.tgz', 'stale')
     await runBuild(deps({ flags: mkFlags({ out: 'out' }) }))
-    expect(existsSync(join(out, 'clock-shell-0.9.0.tgz'))).toBe(false)
+    expect(tmp.exists('out/clock-shell-0.9.0.tgz')).toBe(false)
   })
 
   it('refuses an --out holding files it did not write', async () => {
-    mkdirSync(join(dir, 'src'))
-    writeFileSync(join(dir, 'src', 'app.ts'), 'export {}')
+    tmp.write('src/app.ts', 'export {}')
     const code = await runBuild(deps({ flags: mkFlags({ out: 'src' }) }))
     expect(code).toBe(1)
   })
 
   it('tells the consumer to pick a new or empty directory for a foreign --out', async () => {
-    mkdirSync(join(dir, 'src'))
-    writeFileSync(join(dir, 'src', 'app.ts'), 'export {}')
-    const err = sink()
-    await runBuild(deps({ flags: mkFlags({ out: 'src' }), stderr: err.stream }))
+    tmp.write('src/app.ts', 'export {}')
+    const err = createCapturedOutput()
+    await runBuild(deps({ flags: mkFlags({ out: 'src' }), stderr: err }))
     expect(err.text()).toBe(
-      `build: --out "${join(dir, 'src')}" holds files hf build did not write. Point --out at a new or empty directory, or remove it first.\n`
+      `build: --out "${tmp.resolve('src')}" holds files hf build did not write. Point --out at a new or empty directory, or remove it first.\n`
     )
   })
 
   it('refuses a foreign --out before building anything', async () => {
-    mkdirSync(join(dir, 'src'))
-    writeFileSync(join(dir, 'src', 'app.ts'), 'export {}')
+    tmp.write('src/app.ts', 'export {}')
     const runBuilder = jest.fn()
     await runBuild(deps({ flags: mkFlags({ out: 'src' }), runBuilder }))
     expect(runBuilder).not.toHaveBeenCalled()
@@ -232,8 +206,8 @@ describe('runBuild', () => {
   })
 
   it('refuses a parent of the project as --out', async () => {
-    const err = sink()
-    await runBuild(deps({ flags: mkFlags({ out: '..' }), stderr: err.stream }))
+    const err = createCapturedOutput()
+    await runBuild(deps({ flags: mkFlags({ out: '..' }), stderr: err }))
     expect(err.text()).toEqual(expect.stringContaining('contains the project itself'))
   })
 
@@ -243,24 +217,22 @@ describe('runBuild', () => {
   })
 
   it('refuses to replace an --out that gained foreign files during the build', async () => {
-    const out = join(dir, 'out')
     const runBuilder = jest.fn(() => {
-      mkdirSync(out)
-      writeFileSync(join(out, 'notes.txt'), 'mine')
+      tmp.write('out/notes.txt', 'mine')
       return Promise.resolve()
     })
     await runBuild(deps({ flags: mkFlags({ out: 'out' }), runBuilder }))
-    expect(readFileSync(join(out, 'notes.txt'), 'utf-8')).toBe('mine')
+    expect(tmp.read('out/notes.txt')).toBe('mine')
   })
 
   it('publishes the staged README beside the built package', async () => {
     await runBuild(deps({}))
-    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'README.md'), 'utf-8')).toContain('# clock-shell')
+    expect(tmp.read('dist/clock-shell/README.md')).toContain('# clock-shell')
   })
 
   it('publishes the staged metadata beside the built package', async () => {
     await runBuild(deps({}))
-    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'metadata.json'), 'utf-8')).toContain('"protocol": "v4"')
+    expect(tmp.read('dist/clock-shell/metadata.json')).toContain('"protocol": "v4"')
   })
 
   it('lists metadata.json in the built manifest files array so npm pack ships it', async () => {
@@ -269,9 +241,7 @@ describe('runBuild', () => {
       return Promise.resolve()
     })
     await runBuild(deps({ runBuilder }))
-    expect(parse(readFileSync(join(dir, 'dist', 'clock-shell', 'package.json'), 'utf-8'))).toEqual(
-      expect.objectContaining({ files: ['**/index.*', 'metadata.json'] })
-    )
+    expect(parse(tmp.read('dist/clock-shell/package.json'))).toEqual(expect.objectContaining({ files: ['**/index.*', 'metadata.json'] }))
   })
 
   it('leaves a built manifest without a files array untouched', async () => {
@@ -280,7 +250,7 @@ describe('runBuild', () => {
       return Promise.resolve()
     })
     await runBuild(deps({ runBuilder }))
-    expect(parse(readFileSync(join(dir, 'dist', 'clock-shell', 'package.json'), 'utf-8'))).not.toHaveProperty('files')
+    expect(parse(tmp.read('dist/clock-shell/package.json'))).not.toHaveProperty('files')
   })
 
   it('normalizes declaration-map sources before packing', async () => {
@@ -289,7 +259,7 @@ describe('runBuild', () => {
       return Promise.resolve()
     })
     await runBuild(deps({ runBuilder }))
-    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'index.d.ts.map'), 'utf-8')).toBe('{"version":3,"sources":["clock/src/index.ts"]}')
+    expect(tmp.read('dist/clock-shell/index.d.ts.map')).toBe('{"version":3,"sources":["clock/src/index.ts"]}')
   })
 
   it('notes a malformed declaration map on stderr without failing the build', async () => {
@@ -297,49 +267,46 @@ describe('runBuild', () => {
       writeFileSync(join(input.outputPath, 'index.d.ts.map'), 'not json')
       return Promise.resolve()
     })
-    const err = sink()
-    const code = await runBuild(deps({ runBuilder, stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runBuild(deps({ runBuilder, stderr: err }))
     expect({ code, note: err.text() }).toEqual({ code: 0, note: expect.stringContaining('Skipping malformed declaration map') })
   })
 
   it('defaults the output to a per-shell directory under dist', async () => {
     await runBuild(deps({}))
-    expect(existsSync(join(dir, 'dist', 'clock-shell', 'metadata.json'))).toBe(true)
+    expect(tmp.exists('dist/clock-shell/metadata.json')).toBe(true)
   })
 
   it('accepts an absolute --out path', async () => {
-    await runBuild(deps({ flags: mkFlags({ out: join(dir, 'abs-out') }) }))
-    expect(existsSync(join(dir, 'abs-out', 'metadata.json'))).toBe(true)
+    await runBuild(deps({ flags: mkFlags({ out: tmp.resolve('abs-out') }) }))
+    expect(tmp.exists('abs-out/metadata.json')).toBe(true)
   })
 
   it('removes the staging dir once the shell is delivered', async () => {
     await runBuild(deps({}))
-    expect(existsSync(join(dir, `.hf-shell-clock-${process.pid}`))).toBe(false)
+    expect(tmp.exists(`.hf-shell-clock-${process.pid}`)).toBe(false)
   })
 
   it('surfaces a resolution error', async () => {
-    const err = sink()
-    const code = await runBuild(deps({ resolveConfig: () => Promise.reject(new Error('bad config')), stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runBuild(deps({ resolveConfig: () => Promise.reject(new Error('bad config')), stderr: err }))
     expect(code).toBe(1)
   })
 
   it('surfaces a non-Error rejection', async () => {
-    const err = sink()
-    const code = await runBuild(deps({ resolveConfig: () => Promise.reject('boom'), stderr: err.stream }))
+    const err = createCapturedOutput()
+    const code = await runBuild(deps({ resolveConfig: () => Promise.reject('boom'), stderr: err }))
     expect(code).toBe(1)
   })
 
   it('resolves real config files when no resolver is injected', async () => {
-    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [] }')
-    writeFileSync(
-      join(dir, 'feature.config.json'),
-      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v4" }'
-    )
+    tmp.write('clock.contract.json', '{ "emitted": [], "accepted": [] }')
+    tmp.write('feature.config.json', '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v4" }')
     const code = await runBuild({
       flags: mkFlags({}),
-      cwd: dir,
-      stdout: sink().stream,
-      stderr: sink().stream,
+      cwd: tmp.path,
+      stdout: createCapturedOutput(),
+      stderr: createCapturedOutput(),
       runBuilder: jest.fn(),
       packTarball: () => 'clock.tgz',
     })
@@ -354,9 +321,9 @@ describe('runBuild', () => {
     mockExecFileSync.mockReturnValue('clock-shell-1.0.0.tgz\n')
     await runBuild({
       flags: mkFlags({}),
-      cwd: dir,
-      stdout: sink().stream,
-      stderr: sink().stream,
+      cwd: tmp.path,
+      stdout: createCapturedOutput(),
+      stderr: createCapturedOutput(),
       resolveConfig: () => Promise.resolve(bundle('v4')),
     })
   }

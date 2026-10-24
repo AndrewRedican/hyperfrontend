@@ -1,75 +1,11 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { SelectConfig, Choice } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { select } from './select'
-
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
 
 const basicChoices: ReadonlyArray<Choice<string>> = [
   { label: 'Apple', value: 'apple' },
@@ -78,12 +14,12 @@ const basicChoices: ReadonlyArray<Choice<string>> = [
 ]
 
 describe('select searchable mode', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -106,7 +42,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: type 'ban' narrows to Banana; Enter submits
-      input.enqueueKeys(['b', 'a', 'n', Key.Enter])
+      await input.sendKeys('b', 'a', 'n', Key.Enter)
 
       const result = await promise
 
@@ -117,7 +53,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['C', 'H', Key.Enter])
+      await input.sendKeys('C', 'H', Key.Enter)
 
       const result = await promise
 
@@ -129,7 +65,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: type 'xy' (no matches), backspace twice clears, 'a' matches Apple first
-      input.enqueueKeys(['x', 'y', Key.Backspace, Key.Backspace, 'a', Key.Enter])
+      await input.sendKeys('x', 'y', Key.Backspace, Key.Backspace, 'a', Key.Enter)
 
       const result = await promise
 
@@ -140,7 +76,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Enter])
+      await input.sendKeys(Key.Backspace, Key.Backspace, Key.Enter)
 
       const result = await promise
 
@@ -151,7 +87,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['x', '\b', 'a', Key.Enter])
+      await input.sendKeys('x', '\b', 'a', Key.Enter)
 
       const result = await promise
 
@@ -163,7 +99,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: navigate down twice, then type narrows to Cherry (cursor resets to 0)
-      input.enqueueKeys([Key.Down, Key.Down, 'c', Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, 'c', Key.Enter)
 
       const result = await promise
 
@@ -174,30 +110,30 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['z', 'z', 'z', Key.CtrlC])
+      await input.sendKeys('z', 'z', 'z', Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('No matches')
+      expect(output.text()).toContain('No matches')
     })
 
     it('shows filter hint when searchable and empty query', async () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('type to filter')
+      expect(output.text()).toContain('type to filter')
     })
 
     it('displays search query text', async () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['a', 'p', Key.Enter])
+      await input.sendKeys('a', 'p', Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       expect(data).toContain('ap')
     })
@@ -207,7 +143,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: typing does not filter; Enter selects the default first choice
-      input.enqueueKeys(['b', 'a', Key.Enter])
+      await input.sendKeys('b', 'a', Key.Enter)
 
       const result = await promise
 
@@ -219,7 +155,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: 'zzz' leaves no matches; Enter should not submit; backspace opens a match; Enter then submits Apple
-      input.enqueueKeys(['z', 'z', 'z', Key.Enter, Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter])
+      await input.sendKeys('z', 'z', 'z', Key.Enter, Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter)
 
       const result = await promise
 
@@ -230,7 +166,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['\b', '\b', Key.Enter])
+      await input.sendKeys('\b', '\b', Key.Enter)
 
       const result = await promise
 
@@ -249,7 +185,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: filter to options containing '1' → Option 1, Option 10..19 (11 items).
-      input.enqueueKeys(['1', Key.Down, Key.Down, Key.Enter])
+      await input.sendKeys('1', Key.Down, Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -261,10 +197,10 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: filter '1' yields 11 matches; with maxVisible=3 we should see "more below"
-      input.enqueueKeys(['1', Key.CtrlC])
+      await input.sendKeys('1', Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('more below')
+      expect(output.text()).toContain('more below')
     })
 
     it('skips disabled items within filtered results when navigating down', async () => {
@@ -277,7 +213,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: filter 'a' keeps all three; Down from Apple should skip disabled Apricot onto Avocado
-      input.enqueueKeys(['a', Key.Down, Key.Enter])
+      await input.sendKeys('a', Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -294,7 +230,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: filter 'a', down to Avocado, Up skips disabled Apricot back to Apple
-      input.enqueueKeys(['a', Key.Down, Key.Up, Key.Enter])
+      await input.sendKeys('a', Key.Down, Key.Up, Key.Enter)
 
       const result = await promise
 
@@ -306,7 +242,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: filter to empty, Up/Down are no-ops, Ctrl+C cancels
-      input.enqueueKeys(['z', 'z', 'z', Key.Down, Key.Up, Key.CtrlC])
+      await input.sendKeys('z', 'z', 'z', Key.Down, Key.Up, Key.CtrlC)
 
       const result = await promise
 
@@ -319,7 +255,7 @@ describe('select searchable mode', () => {
 
       // why: filter '1' (11 matches), navigate deep down then back up to force scroll reset
       const keys = ['1', Key.Down, Key.Down, Key.Down, Key.Down, Key.Up, Key.Up, Key.Up, Key.Up, Key.Enter]
-      input.enqueueKeys(keys)
+      await input.sendKeys(...keys)
 
       const result = await promise
 
@@ -333,7 +269,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['\x1B[200~ban\nana\x1B[201~', Key.Enter])
+      await input.sendKeys('\x1B[200~ban\nana\x1B[201~', Key.Enter)
 
       const result = await promise
 
@@ -345,7 +281,7 @@ describe('select searchable mode', () => {
       const promise = select(config)
 
       // why: a multi-character chunk is treated as a paste and filters at once
-      input.enqueueKeys(['ban', Key.Enter])
+      await input.sendKeys('ban', Key.Enter)
 
       const result = await promise
 
@@ -356,7 +292,7 @@ describe('select searchable mode', () => {
       const config = createConfig({ searchable: true })
       const promise = select(config)
 
-      input.enqueueKeys(['\x1B[200~\nban\x1B[201~', 'b', Key.Enter])
+      await input.sendKeys('\x1B[200~\nban\x1B[201~', 'b', Key.Enter)
 
       const result = await promise
 

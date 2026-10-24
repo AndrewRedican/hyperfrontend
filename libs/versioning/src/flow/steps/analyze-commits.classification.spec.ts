@@ -1,8 +1,8 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Mock, Mocked } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { createMockContext, createMockGitClient, createMockLogger } from './__test-utils__/analyze-commits-mocks'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMockContext, createMockGitClient } from './__test-utils__/analyze-commits-mocks'
 import { createAnalyzeCommitsStep } from './analyze-commits'
 
 describe('analyze-commits step', () => {
@@ -218,7 +218,7 @@ describe('analyze-commits step', () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat(lib-test): scoped feature', hash: 'commit1' }],
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -295,7 +295,7 @@ describe('analyze-commits step', () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: feature', hash: 'commit1' }],
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -333,7 +333,7 @@ describe('analyze-commits step', () => {
               return baseCommits
             },
           } as unknown as GitClient
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -374,7 +374,7 @@ describe('analyze-commits step', () => {
               return baseCommits
             },
           } as unknown as GitClient
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -403,7 +403,7 @@ describe('analyze-commits step', () => {
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
           ]
           const git = createMockGitClient({ commits })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -431,7 +431,7 @@ describe('analyze-commits step', () => {
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
           ]
           const git = createMockGitClient({ commits })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('tooling'))
           const context = createMockContext({
             git,
@@ -456,7 +456,7 @@ describe('analyze-commits step', () => {
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
           ]
           const git = createMockGitClient({ commits })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('tooling'))
           const context = createMockContext({
             git,
@@ -482,7 +482,7 @@ describe('analyze-commits step', () => {
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
           ]
           const git = createMockGitClient({ commits })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('custom'))
           const context = createMockContext({
             git,
@@ -559,7 +559,7 @@ describe('analyze-commits step', () => {
             }),
             getCommitsSince: getCommitsSinceMock,
           } as unknown as GitClient
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -613,7 +613,7 @@ describe('analyze-commits step', () => {
               return baseCommits
             },
           } as unknown as GitClient
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -639,7 +639,7 @@ describe('analyze-commits step', () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: feature', hash: 'commit1' }],
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,
@@ -663,7 +663,7 @@ describe('analyze-commits step', () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: feature', hash: 'commit1' }],
           })
-          const logger = createMockLogger()
+          const logger = createMock<Logger>()
           const context = createMockContext({
             git,
             logger,

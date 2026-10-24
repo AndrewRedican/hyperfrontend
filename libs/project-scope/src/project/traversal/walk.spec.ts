@@ -1,17 +1,17 @@
 import type { Tree } from '../../vfs'
 import type { WalkEntry, WalkOptions, WalkVisitor } from './walk'
-import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdirSync, writeFileSync, symlinkSync } from 'node:fs'
 import { join, posix, resolve } from 'node:path'
-import { after as afterAll, before as beforeAll } from 'node:test'
+import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { writeFixtures } from '../../__test-utils__/write-fixtures'
 import { createTree } from '../../vfs'
 import { walkDirectory, walkTree } from './walk'
 
-const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const FIXTURES_DIR = writeFixtures()
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
-const TEST_DIR = join(import.meta.dirname, '__test_fixtures_walk__')
-const SYMLINK_DIR = join(import.meta.dirname, '__test_fixtures_walk_symlink__')
 
 /**
  * Collects the relative path of every entry a walk visits, sorted so a suite can
@@ -270,14 +270,7 @@ describe('walkTree', () => {
 })
 
 describe('walkDirectory - edge cases', () => {
-  beforeAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-    mkdirSync(TEST_DIR, { recursive: true })
-  })
-
-  afterAll(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true })
-  })
+  const tempDir = useTempDir({ prefix: 'walk-test-', scope: 'all' })
 
   it('handles non-existent directory gracefully', () => {
     const entries: WalkEntry[] = []
@@ -291,15 +284,15 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('respects .gitignore patterns', () => {
-    mkdirSync(join(TEST_DIR, 'gitignore-test'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'gitignore-test', 'node_modules'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'gitignore-test', 'dist'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'gitignore-test', '.gitignore'), 'node_modules\ndist')
-    writeFileSync(join(TEST_DIR, 'gitignore-test', 'index.ts'), 'export {}')
-    writeFileSync(join(TEST_DIR, 'gitignore-test', 'node_modules', 'pkg.js'), 'module.exports = {}')
-    writeFileSync(join(TEST_DIR, 'gitignore-test', 'dist', 'index.js'), 'console.log("dist")')
+    mkdirSync(join(tempDir.path, 'gitignore-test'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'gitignore-test', 'node_modules'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'gitignore-test', 'dist'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'gitignore-test', '.gitignore'), 'node_modules\ndist')
+    writeFileSync(join(tempDir.path, 'gitignore-test', 'index.ts'), 'export {}')
+    writeFileSync(join(tempDir.path, 'gitignore-test', 'node_modules', 'pkg.js'), 'module.exports = {}')
+    writeFileSync(join(tempDir.path, 'gitignore-test', 'dist', 'index.js'), 'console.log("dist")')
 
-    expect(collectRelativePaths(join(TEST_DIR, 'gitignore-test'), { includeHidden: true, respectGitignore: true })).toEqual([
+    expect(collectRelativePaths(join(tempDir.path, 'gitignore-test'), { includeHidden: true, respectGitignore: true })).toEqual([
       '.gitignore',
       'index.ts',
     ])
@@ -311,7 +304,7 @@ describe('walkDirectory - edge cases', () => {
       entries.push(entry)
     }
 
-    walkDirectory(join(TEST_DIR, 'gitignore-test'), visitor, {
+    walkDirectory(join(tempDir.path, 'gitignore-test'), visitor, {
       includeHidden: true,
       respectGitignore: false,
     })
@@ -320,13 +313,13 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('re-includes a path matched by a later negation pattern', () => {
-    mkdirSync(join(TEST_DIR, 'negation-test'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), '*.log\n!keep.log')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'debug.log'), 'debug')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'keep.log'), 'keep')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'index.ts'), 'export {}')
+    mkdirSync(join(tempDir.path, 'negation-test'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'negation-test', '.gitignore'), '*.log\n!keep.log')
+    writeFileSync(join(tempDir.path, 'negation-test', 'debug.log'), 'debug')
+    writeFileSync(join(tempDir.path, 'negation-test', 'keep.log'), 'keep')
+    writeFileSync(join(tempDir.path, 'negation-test', 'index.ts'), 'export {}')
 
-    expect(collectRelativePaths(join(TEST_DIR, 'negation-test'), { includeHidden: true, respectGitignore: true })).toEqual([
+    expect(collectRelativePaths(join(tempDir.path, 'negation-test'), { includeHidden: true, respectGitignore: true })).toEqual([
       '.gitignore',
       'index.ts',
       'keep.log',
@@ -334,14 +327,14 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('keeps unrelated entries when the ignore file holds a negation', () => {
-    mkdirSync(join(TEST_DIR, 'negation-keeps', 'dist'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'negation-keeps', 'src'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'negation-keeps', '.gitignore'), 'dist\n!dist/.gitkeep')
-    writeFileSync(join(TEST_DIR, 'negation-keeps', 'dist', '.gitkeep'), '')
-    writeFileSync(join(TEST_DIR, 'negation-keeps', 'package.json'), '{}')
-    writeFileSync(join(TEST_DIR, 'negation-keeps', 'src', 'index.ts'), 'export {}')
+    mkdirSync(join(tempDir.path, 'negation-keeps', 'dist'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'negation-keeps', 'src'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'negation-keeps', '.gitignore'), 'dist\n!dist/.gitkeep')
+    writeFileSync(join(tempDir.path, 'negation-keeps', 'dist', '.gitkeep'), '')
+    writeFileSync(join(tempDir.path, 'negation-keeps', 'package.json'), '{}')
+    writeFileSync(join(tempDir.path, 'negation-keeps', 'src', 'index.ts'), 'export {}')
 
-    expect(collectRelativePaths(join(TEST_DIR, 'negation-keeps'), { respectGitignore: true })).toEqual([
+    expect(collectRelativePaths(join(tempDir.path, 'negation-keeps'), { respectGitignore: true })).toEqual([
       'package.json',
       'src',
       'src/index.ts',
@@ -349,33 +342,33 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('ignores a directory named by a trailing-slash pattern', () => {
-    mkdirSync(join(TEST_DIR, 'dir-only-test', 'build'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'dir-only-test', '.gitignore'), 'build/')
-    writeFileSync(join(TEST_DIR, 'dir-only-test', 'build', 'out.js'), 'out')
-    writeFileSync(join(TEST_DIR, 'dir-only-test', 'index.ts'), 'export {}')
+    mkdirSync(join(tempDir.path, 'dir-only-test', 'build'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'dir-only-test', '.gitignore'), 'build/')
+    writeFileSync(join(tempDir.path, 'dir-only-test', 'build', 'out.js'), 'out')
+    writeFileSync(join(tempDir.path, 'dir-only-test', 'index.ts'), 'export {}')
 
-    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-test'), { respectGitignore: true })).toEqual(['index.ts'])
+    expect(collectRelativePaths(join(tempDir.path, 'dir-only-test'), { respectGitignore: true })).toEqual(['index.ts'])
   })
 
   it('keeps a file whose name matches a trailing-slash pattern', () => {
-    mkdirSync(join(TEST_DIR, 'dir-only-file'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'dir-only-file', '.gitignore'), 'build/')
-    writeFileSync(join(TEST_DIR, 'dir-only-file', 'build'), 'a file, not a directory')
+    mkdirSync(join(tempDir.path, 'dir-only-file'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'dir-only-file', '.gitignore'), 'build/')
+    writeFileSync(join(tempDir.path, 'dir-only-file', 'build'), 'a file, not a directory')
 
-    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-file'), { respectGitignore: true })).toEqual(['build'])
+    expect(collectRelativePaths(join(tempDir.path, 'dir-only-file'), { respectGitignore: true })).toEqual(['build'])
   })
 
   it('handles patterns starting with slash', () => {
-    mkdirSync(join(TEST_DIR, 'slash-pattern-test'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'slash-pattern-test', '.gitignore'), '/root-only.txt')
-    writeFileSync(join(TEST_DIR, 'slash-pattern-test', 'root-only.txt'), 'root')
+    mkdirSync(join(tempDir.path, 'slash-pattern-test'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'slash-pattern-test', '.gitignore'), '/root-only.txt')
+    writeFileSync(join(tempDir.path, 'slash-pattern-test', 'root-only.txt'), 'root')
 
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
       entries.push(entry)
     }
 
-    walkDirectory(join(TEST_DIR, 'slash-pattern-test'), visitor, {
+    walkDirectory(join(tempDir.path, 'slash-pattern-test'), visitor, {
       includeHidden: true,
       respectGitignore: true,
     })
@@ -384,10 +377,10 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('handles stop return value in nested directories', () => {
-    mkdirSync(join(TEST_DIR, 'nested-stop'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'nested-stop', 'zzz'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'nested-stop', 'aaa-stop.txt'), 'stop here')
-    writeFileSync(join(TEST_DIR, 'nested-stop', 'zzz', 'after.txt'), 'should not reach')
+    mkdirSync(join(tempDir.path, 'nested-stop'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'nested-stop', 'zzz'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'nested-stop', 'aaa-stop.txt'), 'stop here')
+    writeFileSync(join(tempDir.path, 'nested-stop', 'zzz', 'after.txt'), 'should not reach')
 
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
@@ -398,28 +391,28 @@ describe('walkDirectory - edge cases', () => {
       return undefined
     }
 
-    walkDirectory(join(TEST_DIR, 'nested-stop'), visitor, { includeHidden: true })
+    walkDirectory(join(tempDir.path, 'nested-stop'), visitor, { includeHidden: true })
 
     expect(entries.map((entry) => entry.name)).toEqual(['aaa-stop.txt'])
   })
 
   it('handles empty directory', () => {
-    mkdirSync(join(TEST_DIR, 'empty-dir'), { recursive: true })
+    mkdirSync(join(tempDir.path, 'empty-dir'), { recursive: true })
 
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
       entries.push(entry)
     }
 
-    walkDirectory(join(TEST_DIR, 'empty-dir'), visitor)
+    walkDirectory(join(tempDir.path, 'empty-dir'), visitor)
 
     expect(entries.length).toBe(0)
   })
 
   it('returns undefined from visitor by default', () => {
-    mkdirSync(join(TEST_DIR, 'undefined-return'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'undefined-return', 'a.txt'), 'a')
-    writeFileSync(join(TEST_DIR, 'undefined-return', 'b.txt'), 'b')
+    mkdirSync(join(tempDir.path, 'undefined-return'), { recursive: true })
+    writeFileSync(join(tempDir.path, 'undefined-return', 'a.txt'), 'a')
+    writeFileSync(join(tempDir.path, 'undefined-return', 'b.txt'), 'b')
 
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
@@ -427,7 +420,7 @@ describe('walkDirectory - edge cases', () => {
       return undefined
     }
 
-    walkDirectory(join(TEST_DIR, 'undefined-return'), visitor)
+    walkDirectory(join(tempDir.path, 'undefined-return'), visitor)
 
     expect(entries.length).toBe(2)
   })
@@ -467,22 +460,19 @@ describe('walkTree - error propagation', () => {
 })
 
 describe('walkTree - symlinked directories', () => {
-  beforeAll(() => {
-    rmSync(SYMLINK_DIR, { recursive: true, force: true })
-    mkdirSync(join(SYMLINK_DIR, 'src'), { recursive: true })
-    writeFileSync(join(SYMLINK_DIR, 'src', 'a.ts'), 'export {}')
-    symlinkSync(join(SYMLINK_DIR, 'src'), join(SYMLINK_DIR, 'link-dir'), 'dir')
-    symlinkSync('..', join(SYMLINK_DIR, 'src', 'loop'), 'dir')
-  })
+  const symlinkDir = useTempDir({ prefix: 'walk-symlink-test-', scope: 'all' })
 
-  afterAll(() => {
-    rmSync(SYMLINK_DIR, { recursive: true, force: true })
+  beforeAll(() => {
+    mkdirSync(join(symlinkDir.path, 'src'), { recursive: true })
+    writeFileSync(join(symlinkDir.path, 'src', 'a.ts'), 'export {}')
+    symlinkSync(join(symlinkDir.path, 'src'), join(symlinkDir.path, 'link-dir'), 'dir')
+    symlinkSync('..', join(symlinkDir.path, 'src', 'loop'), 'dir')
   })
 
   it('reports a directory symlink as a symlink', () => {
     const entries: WalkEntry[] = []
     walkTree(
-      createTree(SYMLINK_DIR),
+      createTree(symlinkDir.path),
       '',
       (entry) => {
         entries.push(entry)
@@ -496,7 +486,7 @@ describe('walkTree - symlinked directories', () => {
   it('reports a real directory as not a symlink', () => {
     const entries: WalkEntry[] = []
     walkTree(
-      createTree(SYMLINK_DIR),
+      createTree(symlinkDir.path),
       '',
       (entry) => {
         entries.push(entry)
@@ -510,7 +500,7 @@ describe('walkTree - symlinked directories', () => {
   it('stops at a symlink instead of walking the loop behind it', () => {
     const visited: string[] = []
     walkTree(
-      createTree(SYMLINK_DIR),
+      createTree(symlinkDir.path),
       '',
       (entry) => {
         visited.push(entry.relativePath)

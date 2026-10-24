@@ -1,35 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { createCalculateBumpStep, createCheckIdempotencyStep, CALCULATE_BUMP_STEP_ID } from './calculate-bump'
-
-function createMockLogger(): Logger {
-  return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-  } as unknown as Logger
-}
-
-function createMockTree(): Tree {
-  return {
-    root: '/workspace',
-    read: () => null,
-    write: jest.fn(),
-    exists: () => false,
-    delete: jest.fn(),
-    rename: jest.fn(),
-    isFile: () => false,
-    children: () => [],
-    listChanges: () => [],
-  } as unknown as Tree
-}
 
 interface MockRegistryOptions {
   publishedVersions?: string[]
@@ -59,51 +35,6 @@ function createMockRegistry(options: MockRegistryOptions = {}): Registry {
   }
 }
 
-function createMockGitClient(): GitClient {
-  return {
-    cwd: '/workspace',
-    timeout: 30000,
-    getCommitLog: () => [],
-    getCommitsBetween: () => [],
-    getCommitsSince: () => [],
-    getCommit: () => null,
-    commitExists: () => true,
-    getTags: () => [],
-    getTag: () => null,
-    createTag: jest.fn(),
-    deleteTag: () => true,
-    tagExists: () => false,
-    getLatestTag: () => null,
-    getTagsForPackage: () => [],
-    pushTag: () => true,
-    createCommit: jest.fn(),
-    stage: jest.fn(),
-    unstage: () => true,
-    stageAll: jest.fn(),
-    amendCommit: jest.fn(),
-    createEmptyCommit: jest.fn(),
-    getHead: () => 'abc123',
-    getCurrentBranch: () => 'main',
-    hasStagedChanges: () => false,
-    hasUnstagedChanges: () => false,
-    hasUntrackedFiles: () => false,
-    getStatus: () => ({
-      clean: true,
-      entries: [],
-      staged: [],
-      unstaged: [],
-      untracked: [],
-    }),
-    isClean: () => true,
-    getRepositoryRoot: () => '/workspace',
-    getHeadHash: () => 'abc123',
-    getHeadShortHash: () => 'abc123',
-    getModifiedFiles: () => [],
-    getUntrackedFiles: () => [],
-    getStagedFiles: () => [],
-  } as unknown as GitClient
-}
-
 function createMockCommit(overrides: Partial<ConventionalCommit> = {}): ConventionalCommit {
   return {
     type: 'feat',
@@ -124,10 +55,10 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
     projectName: 'lib-test',
     projectRoot: '/workspace/libs/test',
     packageName: '@test/pkg',
-    tree: createMockTree(),
+    tree: createMemoryTree(),
     registry: createMockRegistry(),
-    git: createMockGitClient(),
-    logger: createMockLogger(),
+    git: createMock<GitClient>(),
+    logger: createMock<Logger>(),
     config: { preset: 'conventional', ...config },
     state: { ...state },
   }

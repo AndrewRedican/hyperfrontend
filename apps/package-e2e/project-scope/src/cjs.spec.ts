@@ -22,6 +22,11 @@ describe('@hyperfrontend/project-scope CJS', () => {
     const { analyzeProject } = require('@hyperfrontend/project-scope')
     expect(typeof analyzeProject).toBe('function')
   })
+
+  it('reads a file held in a memory tree', () => {
+    const { createMemoryTree } = require('@hyperfrontend/project-scope')
+    expect(createMemoryTree({ 'a.txt': 'a' }).read('a.txt', 'utf-8')).toBe('a')
+  })
 })
 
 describe('NX heuristics (CJS)', () => {

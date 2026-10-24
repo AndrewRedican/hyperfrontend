@@ -1,10 +1,13 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions, UnresponsiveInfo, UnresponsivePolicy } from '../shared/types'
+import type { MockChannel } from '../testing/mock-channel'
 import type { HeartbeatState } from './heartbeat'
 import type { MountResult } from './types'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
@@ -12,28 +15,7 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
   clearTimeout: (id: number) => clearTimeout(id),
 }))
 
-interface MockChannel {
-  channel: ChannelHandle
-  trigger(event: string, data?: unknown): void
-}
-
-function createMockChannel(): MockChannel {
-  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
-  const channel = {
-    on: (event: string, handler: (data?: unknown) => void) => {
-      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
-      return () => undefined
-    },
-    onMessage: () => () => undefined,
-    send: jest.fn(),
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return { channel, trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)) }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 /** One mounted frame's display hooks, as the shell drove them. */
 interface FrameDouble {
@@ -53,13 +35,13 @@ interface ConcealSetupOptions {
 
 function setup(options: ConcealSetupOptions = {}) {
   const channels: MockChannel[] = []
-  const broker = {
+  const broker = createMock<BrokerHandle>({
     addChannel: jest.fn(() => {
       const mock = createMockChannel()
       channels.push(mock)
       return mock.channel
     }),
-  } as unknown as BrokerHandle
+  })
   const frames: FrameDouble[] = []
   const trace: string[] = []
   const mount = jest.fn((): MountResult => {

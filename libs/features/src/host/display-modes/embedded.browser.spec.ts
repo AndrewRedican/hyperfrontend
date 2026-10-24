@@ -1,14 +1,14 @@
+import type { ResizeObserverController } from '@hyperfrontend/testing/browser'
 import type { ShellOptions } from '../../shared/types'
-import type { ResizeObserverStubController } from '../../testing/resize-observer-stub'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { installResizeObserverStub } from '../../testing/resize-observer-stub'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { mountEmbedded } from './embedded'
 
-let observers: ResizeObserverStubController
+let observers: ResizeObserverController
 
 beforeEach(() => {
-  observers = installResizeObserverStub()
+  observers = installResizeObserver()
 })
 
 function mount(options: Partial<ShellOptions> = {}) {

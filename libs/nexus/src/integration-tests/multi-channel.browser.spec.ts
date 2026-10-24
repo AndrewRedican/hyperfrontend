@@ -1,8 +1,9 @@
-import type { MockWindow } from './test-utils'
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow, createWindowPair } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
-import { createMockWindow, createContractPair } from './test-utils'
+import { createContractPair } from './test-utils'
 
 const MAIN_ORIGIN = 'http://main-host.com'
 
@@ -26,50 +27,34 @@ describe('Integration: Multi-Channel', () => {
     ['ACK', 'RESPONSE']
   )
 
-  // how: the main broker listens on one shared window while each counterpart gets a proxy that posts back into it with the counterpart's own origin and source.
-  const wireCounterpart = (mainWindow: MockWindow, counterpartWindow: MockWindow, counterpartOrigin: string): MockWindow => {
-    const mainProxy = createMockWindow()
-    counterpartWindow.postMessage.mockImplementation((data: unknown) => {
-      counterpartWindow._dispatchMessage(
-        new MessageEvent('message', {
-          data,
-          origin: MAIN_ORIGIN,
-          source: mainProxy as unknown as Window,
-        })
-      )
-    })
-    mainProxy.postMessage.mockImplementation((data: unknown) => {
-      mainWindow._dispatchMessage(
-        new MessageEvent('message', {
-          data,
-          origin: counterpartOrigin,
-          source: counterpartWindow as unknown as Window,
-        })
-      )
-    })
-    return mainProxy
+  // how: each counterpart is paired with a proxy of the main window, and whatever reaches the proxy is relayed into the one window the main broker listens on.
+  const wireCounterpart = (mainWindow: FakeWindow, counterpartOrigin: string) => {
+    const [mainProxy, counterpartWindow] = createWindowPair({ origins: [MAIN_ORIGIN, counterpartOrigin], delivery: 'sync' })
+    mainProxy.addEventListener('message', (event: MessageEvent) =>
+      mainWindow.receive(event.data, { origin: event.origin, source: counterpartWindow })
+    )
+    return { mainProxy, counterpartWindow }
   }
 
-  const buildPair = (mainWindow: MockWindow, mainBroker: ReturnType<typeof createBroker>, index: number) => {
-    const counterpartWindow = createMockWindow()
-    const mainProxy = wireCounterpart(mainWindow, counterpartWindow, `http://counterpart-${index}.com`)
+  const buildPair = (mainWindow: FakeWindow, mainBroker: ReturnType<typeof createBroker>, index: number) => {
+    const { mainProxy, counterpartWindow } = wireCounterpart(mainWindow, `http://counterpart-${index}.com`)
     const counterpartBroker = createBroker({
       name: `counterpart-broker-${index}`,
       contract: counterpartContract,
-      window: counterpartWindow as unknown as Window,
+      window: counterpartWindow,
       settings: { logLevel: 'error' },
     })
-    const counterpartChannel = counterpartBroker.addChannel('to-main', mainProxy as unknown as Window)
-    const mainChannel = mainBroker.addChannel(`channel-${index}`, counterpartWindow as unknown as Window)
+    const counterpartChannel = counterpartBroker.addChannel('to-main', mainProxy)
+    const mainChannel = mainBroker.addChannel(`channel-${index}`, counterpartWindow)
     return { mainChannel, counterpartChannel, counterpartWindow }
   }
 
   const setupMultiChannel = (channelCount: number) => {
-    const mainWindow = createMockWindow()
+    const mainWindow = createFakeWindow({ origin: MAIN_ORIGIN })
     const mainBroker = createBroker({
       name: 'multi-broker',
       contract: mainContract,
-      window: mainWindow as unknown as Window,
+      window: mainWindow,
       settings: { logLevel: 'error' },
     })
     const pairs: ReturnType<typeof buildPair>[] = []

@@ -1,0 +1,50 @@
+/**
+ * The `elements.tsx` source the scope specs read, and the scopes the reference scope manager finds in it.
+ *
+ * @module scope/__test-utils__/cases/elements
+ */
+
+export const ELEMENTS = {
+  name: 'elements.tsx',
+  source: `import React, { Component } from 'react'
+const el = (
+  <div className="x" {...spread} onClick={() => handler(React)}>
+    <Component.Inner x={1} />
+    <this.Child />
+    <svg:rect />
+    <>{child}</>
+    <Generic<string> />
+    text
+  </div>
+)
+function Comp() {
+  return <Comp>{Comp}</Comp>
+}
+`,
+  scopes: `S0 global Program 0-295 up=- strict=0
+S1 module Program 0-295 up=0 strict=1
+  V React defs=ImportBinding@7 ids=7 t=1 v=1 refs=7,110
+  V Component defs=ImportBinding@16 ids=16 t=1 v=1 refs=124
+  V el defs=Variable@47 ids=47 t=0 v=1 refs=47
+  V Comp defs=FunctionName@255 ids=255 t=0 v=1 refs=274,280,287
+  R 47 el w v init=1 we=56 => S1:el
+  R 7 React r v init=0 we=- => S1:React
+  R 79 spread r v init=0 we=- => ext
+  R 124 Component r v init=0 we=- => S1:Component
+  R 173 svg r v init=0 we=- => ext
+  R 177 rect r v init=0 we=- => ext
+  R 192 child r v init=0 we=- => ext
+  R 207 Generic r v init=0 we=- => ext
+  T 79,102,173,177,192,207
+S2 function ArrowFunctionExpression 96-116 up=1 strict=1
+  R 102 handler r v init=0 we=- => ext
+  R 110 React r v init=0 we=- => S1:React
+  T 102,110
+S3 function FunctionDeclaration 246-294 up=1 strict=1
+  V arguments defs= ids= t=1 v=1 refs=
+  R 274 Comp r v init=0 we=- => S1:Comp
+  R 280 Comp r v init=0 we=- => S1:Comp
+  R 287 Comp r v init=0 we=- => S1:Comp
+  T 274,280,287
+`,
+}

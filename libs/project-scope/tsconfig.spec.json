@@ -5,5 +5,5 @@
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["test.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.d.ts"]
+  "include": ["test.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.d.ts", "src/**/__test-utils__/**/*.ts"]
 }

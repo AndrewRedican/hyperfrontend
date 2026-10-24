@@ -1,13 +1,14 @@
 import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import rule from './no-unwanted-barrel-files.ts'
 
 // why: the rule reads each library's project file and manifest, so the cases lint libraries of a disposable workspace.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-barrels-'))
+const DIR = createTempDir({ prefix: 'lint-barrels-' })
+const ROOT = DIR.path
 
 /**
  * A library in the workspace.
@@ -18,14 +19,12 @@ const ROOT = mkdtempSync(join(tmpdir(), 'lint-barrels-'))
  * @returns The library's root
  */
 function library(name: string, manifest: unknown, publishable = true): string {
-  const root = join(ROOT, name)
-  mkdirSync(root, { recursive: true })
-  writeFileSync(
-    join(root, 'project.json'),
+  DIR.write(
+    `${name}/project.json`,
     JSON.stringify({ projectType: 'library', targets: publishable ? { build: {}, publish: {} } : { build: {} } })
   )
-  if (manifest !== null) writeFileSync(join(root, 'package.json'), JSON.stringify(manifest))
-  return root
+  if (manifest !== null) DIR.write(`${name}/package.json`, JSON.stringify(manifest))
+  return DIR.resolve(name)
 }
 
 const PLAIN = library('plain', { name: 'plain' })
@@ -108,7 +107,7 @@ testRule(rule, {
 
 describe('the disposable workspace', () => {
   it('is removed at the end', () => {
-    rmSync(ROOT, { recursive: true, force: true })
+    DIR.remove()
     expect(existsSync(ROOT)).toBe(false)
   })
 })

@@ -1,9 +1,10 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { MemoryMonitor } from '../memory/monitor'
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
 import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
 import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
@@ -224,8 +225,7 @@ describe('runBundlePhase', () => {
   })
 
   it('drives the optional monitor with start/end check labels for every rollup invocation and the declarations phase', async () => {
-    const labels: string[] = []
-    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     await runBundlePhase(
       makeContext(),
       {
@@ -236,7 +236,7 @@ describe('runBundlePhase', () => {
       } as BuildConfig,
       monitor
     )
-    expect(labels).toEqual([
+    expect(monitor.check.mock.calls.flat()).toEqual([
       'bundle:esm:0/2:.:start',
       'bundle:esm:0/2:.:end',
       'bundle:esm:1/2:./browser:start',
@@ -256,19 +256,17 @@ describe('runBundlePhase', () => {
   })
 
   it('skips the shared-first-party dedupe checkpoint when dedupeSharedInternals is false', async () => {
-    const labels: string[] = []
-    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     await runBundlePhase(
       makeContext(),
       { projectRoot: '', workspaceRoot: '', esm: { bundleWorkspaceDeps: false }, dedupeSharedInternals: false } as BuildConfig,
       monitor
     )
-    expect(labels).not.toContain('bundle:dedupe:shared-first-party:end')
+    expect(monitor.check.mock.calls.flat()).not.toContain('bundle:dedupe:shared-first-party:end')
   })
 
   it('emits monitor labels for IIFE and UMD entries when configured', async () => {
-    const labels: string[] = []
-    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     await runBundlePhase(
       makeContext(),
       {
@@ -279,7 +277,7 @@ describe('runBundlePhase', () => {
       } as BuildConfig,
       monitor
     )
-    expect(labels).toEqual([
+    expect(monitor.check.mock.calls.flat()).toEqual([
       'bundle:esm:end:post-recover',
       'bundle:cjs:end:post-recover',
       'bundle:iife:0/1:.:start',
@@ -304,7 +302,7 @@ describe('runBundlePhase', () => {
       cjs: { bundleWorkspaceDeps: false },
     } as BuildConfig
     const withoutMonitor = await runBundlePhase(makeContext(), config)
-    const monitor = { check: jest.fn() } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     const withMonitor = await runBundlePhase(makeContext(), config, monitor)
     expect(withMonitor).toEqual(withoutMonitor)
   })
@@ -379,8 +377,7 @@ describe('runBundlePhase', () => {
   })
 
   it('emits monitor checkpoints around the pre-pass when active', async () => {
-    const checks: string[] = []
-    const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -389,7 +386,7 @@ describe('runBundlePhase', () => {
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config, monitor)
-    expect(checks.slice(0, 2)).toEqual(['bundle:dependencies:prepass:start', 'bundle:dependencies:prepass:end'])
+    expect(monitor.check.mock.calls.flat().slice(0, 2)).toEqual(['bundle:dependencies:prepass:start', 'bundle:dependencies:prepass:end'])
   })
 
   it('runs the d.ts pre-pass once when bundledDeps is non-empty', async () => {
@@ -479,12 +476,11 @@ describe('runBundlePhase', () => {
   })
 
   it('emits the dependency-prune checkpoint after pruning when deps are bundled', async () => {
-    const checks: string[] = []
-    const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const monitor = createMock<MemoryMonitor>()
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, { projectRoot: '', workspaceRoot: '' } as BuildConfig, monitor)
-    expect(checks).toContain('bundle:dependencies:prune:end')
+    expect(monitor.check.mock.calls.flat()).toContain('bundle:dependencies:prune:end')
   })
 
   it('skips the d.ts pre-pass when no bundled deps', async () => {

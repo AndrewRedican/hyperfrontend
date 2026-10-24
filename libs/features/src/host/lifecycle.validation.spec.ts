@@ -1,10 +1,10 @@
-import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
-import type { Mock } from '@hyperfrontend/testing'
+import type { BrokerHandle } from '@hyperfrontend/nexus'
 import type { FeatureContract, ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createEventEmitter } from '../shared/event-emitter'
+import { createMockChannel } from '../testing/mock-channel'
 import { createShellHandle } from './lifecycle'
 
 // note: Covers the per-action payload validation around send and subscriber dispatch; the broader shell lifecycle lives in lifecycle.spec.ts.
@@ -18,38 +18,11 @@ const HOST_CONTRACT: FeatureContract = {
   accepted: [{ type: 'timeUpdated', schema: { type: 'object', properties: { time: { type: 'number' } }, required: ['time'] } }],
 }
 
-interface MockChannel {
-  channel: ChannelHandle
-  triggerMessage(type: string, data?: unknown): void
-  send: Mock
-}
-
-function createMockChannel(): MockChannel {
-  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const send = jest.fn()
-  const channel = {
-    on: () => () => undefined,
-    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
-      messageHandlers.push(handler)
-      return () => undefined
-    },
-    send,
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-    connect: jest.fn(),
-  } as unknown as ChannelHandle
-  return {
-    channel,
-    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
-    send,
-  }
-}
-
-const TARGET = { name: 'target' } as unknown as Window
+const TARGET = createFakeWindow()
 
 function setup() {
   const mock = createMockChannel()
-  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+  const broker = createMock<BrokerHandle>({ addChannel: jest.fn(() => mock.channel) })
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const emitter = createEventEmitter()
   const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
@@ -141,9 +114,7 @@ describe('createShellHandle payload validation', () => {
     ctx.mock.send.mockClear()
     ctx.handle.handle('getHostInfo', () => 'ready')
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'getHostInfo' })
-    await createPromise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await flushPromises()
     expect({ errors: handler.mock.calls, responded: ctx.mock.send.mock.calls }).toEqual({
       errors: [],
       responded: [['__hf:response', expect.objectContaining({ ok: true, payload: 'ready' })]],

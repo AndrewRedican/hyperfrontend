@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { issuesStep, parseReferences } from './issues'
@@ -47,7 +48,7 @@ describe('issuesStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -59,7 +60,7 @@ describe('issuesStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     await pending
 
     expect(ctx.draft.footers).toBeUndefined()
@@ -71,7 +72,7 @@ describe('issuesStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['y', 'f', 'i', 'x', 'e', 's', ' ', '#', '1', '2', TestKey.Enter])
+    await term.input.sendKeys('y', 'f', 'i', 'x', 'e', 's', ' ', '#', '1', '2', Keys.Enter)
     await pending
 
     expect(ctx.draft.footers).toEqual([{ key: 'Fixes', value: '12', separator: ' #' }])
@@ -83,7 +84,7 @@ describe('issuesStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })
@@ -95,7 +96,7 @@ describe('issuesStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['y', TestKey.CtrlC])
+    await term.input.sendKeys('y', Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })
@@ -113,7 +114,7 @@ describe('issuesStep', () => {
     }
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     await pending
 
     expect(ctx.draft.footers).toEqual([{ key: 'BREAKING CHANGE', value: 'x', separator: ':' }])
@@ -126,7 +127,7 @@ describe('issuesStep', () => {
     ctx.draft = { footers: [{ key: 'Fixes', value: '1', separator: ' #' }] }
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     await pending
 
     expect(ctx.draft.footers).toBeUndefined()
@@ -139,7 +140,7 @@ describe('issuesStep', () => {
     ctx.draft = { footers: [{ key: 'Note', value: 'x', separator: ':' }] }
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['n'])
+    await term.input.sendKeys('n')
     await pending
 
     expect(ctx.draft.footers).toEqual([{ key: 'Note', value: 'x', separator: ':' }])
@@ -152,7 +153,7 @@ describe('issuesStep', () => {
     ctx.draft = { footers: [{ key: 'Fixes', value: '1', separator: ' #' }] }
 
     const pending = issuesStep.run(ctx)
-    term.input.enqueueKeys(['y', 'r', 'e', ' ', '#', '9', TestKey.Enter])
+    await term.input.sendKeys('y', 'r', 'e', ' ', '#', '9', Keys.Enter)
     await pending
 
     expect(ctx.draft.footers).toEqual([{ key: 'Re', value: '9', separator: ' #' }])

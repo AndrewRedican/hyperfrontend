@@ -3,7 +3,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createCrossPlatformWorkspace, recordedMessage } from './__fixtures__/cross-platform-workspace.ts'
+import { createCrossPlatformWorkspace, recordedMessage } from './__test-utils__/cross-platform-workspace.ts'
 import rule from './cross-platform.ts'
 
 const workspace = createCrossPlatformWorkspace()

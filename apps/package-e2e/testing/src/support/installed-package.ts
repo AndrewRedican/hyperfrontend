@@ -39,16 +39,6 @@ export function installedUrl(...segments: string[]): string {
 }
 
 /**
- * Names one of the fixture projects the suites run against.
- *
- * @param name - The fixture directory under `src/fixtures`.
- * @returns The absolute path of the fixture root.
- */
-export function fixtureDir(name: string): string {
-  return join(PROJECT_DIR, 'src', 'fixtures', name)
-}
-
-/**
  * The prefix of every variable the e2e executor and the workspace runner hand to a child.
  */
 const HARNESS_PREFIX = 'HF_TEST_'

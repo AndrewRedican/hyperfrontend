@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { clearAllMocks, createMockFn, resetAllMocks } from './mock-fn'
+import { createMockFn } from './mock-fn'
+import { clearAllMocks, resetAllMocks } from './registry'
 import { isMockFunction } from './types'
 
 describe('createMockFn call recording', () => {
@@ -151,10 +152,16 @@ describe('createMockFn resetting', () => {
     assert.equal(mock(), 5)
   })
 
-  it('drops the implementation on a reset', () => {
+  it('drops an implementation set after creation on a reset', () => {
     const mock = createMockFn().mockReturnValue(5)
     mock.mockReset()
     assert.equal(mock(), undefined)
+  })
+
+  it('returns to the implementation it was created with on a reset', () => {
+    const mock = createMockFn(() => 'initial').mockReturnValue('override')
+    mock.mockReset()
+    assert.equal(mock(), 'initial')
   })
 
   it('drops queued once-values on a reset', () => {
@@ -180,5 +187,11 @@ describe('createMockFn resetting', () => {
     const mock = createMockFn().mockReturnValue(9)
     resetAllMocks()
     assert.equal(mock(), undefined)
+  })
+
+  it("keeps each mock's creation implementation through resetAllMocks", () => {
+    const mock = createMockFn(() => 'initial')
+    resetAllMocks()
+    assert.equal(mock(), 'initial')
   })
 })

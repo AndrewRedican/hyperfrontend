@@ -1,75 +1,11 @@
+import type { CapturedOutput, TtyInput } from '@hyperfrontend/testing/process'
 import type { MultiselectConfig, Choice } from '../types'
-import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it } from '@hyperfrontend/testing'
+import { createCapturedOutput, createTtyInput } from '@hyperfrontend/testing/process'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { multiselect } from './multiselect'
-
-/**
- * Creates a mock input stream for testing.
- *
- * @returns Mock input stream with raw mode support and enqueue methods
- */
-function createMockInput(): PassThrough & {
-  isRaw: boolean
-  setRawMode: (mode: boolean) => void
-  enqueueKeys: (keys: string[]) => void
-} {
-  const input = new PassThrough() as PassThrough & {
-    isRaw: boolean
-    setRawMode: (mode: boolean) => void
-    enqueueKeys: (keys: string[]) => void
-  }
-  input.isRaw = false
-  input.setRawMode = (mode: boolean): void => {
-    input.isRaw = mode
-  }
-
-  const keyQueue: string[] = []
-  let emitting = false
-
-  const emitNext = (): void => {
-    if (keyQueue.length > 0 && !emitting) {
-      emitting = true
-      const key = keyQueue.shift()
-      if (key !== undefined) {
-        setImmediate(() => {
-          input.emit('data', Buffer.from(key))
-          emitting = false
-          emitNext()
-        })
-      }
-    }
-  }
-
-  input.enqueueKeys = (keys: string[]): void => {
-    keyQueue.push(...keys)
-    emitNext()
-  }
-
-  return input
-}
-
-/**
- * Creates a mock output stream for testing.
- *
- * @returns Mock output stream that collects written data
- */
-function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
-  let writtenData = ''
-
-  const originalWrite = output.write.bind(output)
-  output.write = ((chunk: string | Buffer): boolean => {
-    writtenData += chunk.toString()
-    return originalWrite(chunk)
-  }) as typeof output.write
-
-  output.getWrittenData = (): string => writtenData
-
-  return output
-}
 
 const basicChoices: ReadonlyArray<Choice<string>> = [
   { label: 'Apple', value: 'apple' },
@@ -78,12 +14,12 @@ const basicChoices: ReadonlyArray<Choice<string>> = [
 ]
 
 describe('multiselect', () => {
-  let input: ReturnType<typeof createMockInput>
-  let output: ReturnType<typeof createMockOutput>
+  let input: TtyInput
+  let output: CapturedOutput
 
   beforeEach(() => {
-    input = createMockInput()
-    output = createMockOutput()
+    input = createTtyInput()
+    output = createCapturedOutput({ tty: true })
   })
 
   afterEach(() => {
@@ -105,7 +41,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -116,7 +52,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -127,7 +63,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -138,7 +74,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -149,7 +85,7 @@ describe('multiselect', () => {
       const config = createConfig({ initial: [1, 2] })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 
@@ -161,7 +97,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: toggle first, desleect second, submit
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -174,7 +110,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -185,7 +121,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Down, Key.Down, Key.Up, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, Key.Up, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -196,7 +132,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Up, Key.Up, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Up, Key.Up, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -207,7 +143,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Down, Key.Down, Key.Down, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, Key.Down, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -220,7 +156,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
 
       const result = await promise
 
@@ -231,7 +167,7 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.CtrlC])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.CtrlC)
 
       const result = await promise
 
@@ -245,7 +181,7 @@ describe('multiselect', () => {
       const config = createConfig({ choices })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -260,10 +196,10 @@ describe('multiselect', () => {
       const config = createConfig({ choices })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('(disabled)')
+      expect(output.text()).toContain('(disabled)')
     })
 
     it('handles all disabled choices', async () => {
@@ -275,7 +211,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: try to navigate and select, should be ignored
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -289,7 +225,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: the first Enter has one selection and is rejected; a second selection lets the next Enter submit
-      input.enqueueKeys([Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -300,10 +236,10 @@ describe('multiselect', () => {
       const config = createConfig({ min: 2 })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('at least 2')
+      expect(output.text()).toContain('at least 2')
     })
 
     it('submits under a minimum of one once an option is selected', async () => {
@@ -311,7 +247,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: the first Enter has no selection and is rejected
-      input.enqueueKeys([Key.Enter, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Enter, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -322,10 +258,10 @@ describe('multiselect', () => {
       const config = createConfig({ min: 1 })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Enter, Key.Space, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: the message keeps the singular noun and the plural form is printed nowhere in the output
       expect({ singular: /at least 1 option\b/.test(data), plural: data.includes('options') }).toEqual({ singular: true, plural: false })
@@ -336,7 +272,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: select 3, but max is 2 so third is ignored
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -347,10 +283,10 @@ describe('multiselect', () => {
       const config = createConfig({ min: 1, max: 3 })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: both hints render inside one parenthesised counter suffix
       expect(data).toContain('(min: 1, max: 3)')
@@ -368,7 +304,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       const downKeys = Array.from({ length: 7 }, () => Key.Down)
-      input.enqueueKeys([...downKeys, Key.Space, Key.Enter])
+      await input.sendKeys(...downKeys, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -380,10 +316,10 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: navigate to middle to show both indicators
-      input.enqueueKeys([Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Down, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: one frame renders the above indicator before the below indicator
       expect(data).toMatch(/more above[\s\S]*more below/)
@@ -395,30 +331,30 @@ describe('multiselect', () => {
       const config = createConfig({ message: 'Pick items:' })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('Pick items:')
+      expect(output.text()).toContain('Pick items:')
     })
 
     it('shows selected count', async () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('2 selected')
+      expect(output.text()).toContain('2 selected')
     })
 
     it('shows selected labels on submission', async () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: the submitted line joins the selected labels with a comma
       expect(data).toContain('Apple, Banana')
@@ -428,20 +364,20 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      expect(output.getWrittenData()).toContain('none')
+      expect(output.text()).toContain('none')
     })
 
     it('shows cancelled text on cancellation', async () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.CtrlC])
+      await input.sendKeys(Key.CtrlC)
       await promise
 
-      expect(output.getWrittenData()).toContain('cancelled')
+      expect(output.text()).toContain('cancelled')
     })
   })
 
@@ -454,10 +390,10 @@ describe('multiselect', () => {
       const config = createConfig({ choices })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       expect(data).toContain('1-10 items')
     })
@@ -485,7 +421,7 @@ describe('multiselect', () => {
       const config = createConfig<number>({ choices })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -504,7 +440,7 @@ describe('multiselect', () => {
       const config = createConfig<Option>({ choices })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -526,7 +462,7 @@ describe('multiselect', () => {
       // why: Navigate down first to scroll, then navigate up multiple times
       const downKeys = Array.from({ length: 10 }, () => Key.Down)
       const upKeys = Array.from({ length: 6 }, () => Key.Up)
-      input.enqueueKeys([...downKeys, ...upKeys, Key.Space, Key.Enter])
+      await input.sendKeys(...downKeys, ...upKeys, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -545,7 +481,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: Pressing down once should skip all disabled and land on Last
-      input.enqueueKeys([Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -564,7 +500,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: Navigate to last (skips disabled), then up should skip all disabled and land on First
-      input.enqueueKeys([Key.Down, Key.Up, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Down, Key.Up, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -576,7 +512,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: Select first item, move down, then submit - first item should be selected but not focused
-      input.enqueueKeys([Key.Space, Key.Down, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Enter)
 
       const result = await promise
 
@@ -589,10 +525,10 @@ describe('multiselect', () => {
       const config = createConfig({ min: 2 })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: the counter suffix carries the min hint alone and no frame prints a max hint
       expect({ minHint: data.includes('(min: 2)'), maxHint: data.includes('max:') }).toEqual({ minHint: true, maxHint: false })
@@ -602,10 +538,10 @@ describe('multiselect', () => {
       const config = createConfig({ max: 3 })
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Enter)
       await promise
 
-      const data = output.getWrittenData()
+      const data = output.text()
 
       // why: the counter suffix carries the max hint alone and no frame prints a min hint
       expect({ maxHint: data.includes('(max: 3)'), minHint: data.includes('min:') }).toEqual({ maxHint: true, minHint: false })
@@ -617,7 +553,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: Select 2, but max is 1 so second is ignored
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -630,7 +566,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: Try to select 3 items with max: 1, only first should be selected
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space, Key.Down, Key.Space, Key.Enter])
+      await input.sendKeys(Key.Space, Key.Down, Key.Space, Key.Down, Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -644,7 +580,7 @@ describe('multiselect', () => {
       const promise = multiselect(config)
 
       // why: the paste must not toggle or submit; Space then selects normally
-      input.enqueueKeys(['pasted text', Key.Space, Key.Enter])
+      await input.sendKeys('pasted text', Key.Space, Key.Enter)
 
       const result = await promise
 
@@ -657,18 +593,15 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys(Key.Space, Key.Down, Key.Space)
+      await flushPromises()
 
-      const before = output.getWrittenData().length
+      const before = output.text().length
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
-      const repaint = output.getWrittenData().slice(before)
+      await flushPromises()
+      const repaint = output.text().slice(before)
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
       await promise
 
       // why: the repaint after resize keeps the selection counter intact
@@ -679,16 +612,13 @@ describe('multiselect', () => {
       const config = createConfig()
       const promise = multiselect(config)
 
-      input.enqueueKeys([Key.Space, Key.Down, Key.Space])
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
-      await new Promise((resolve) => setImmediate(resolve))
+      await input.sendKeys(Key.Space, Key.Down, Key.Space)
+      await flushPromises()
 
       output.emit('resize')
-      await new Promise((resolve) => setImmediate(resolve))
+      await flushPromises()
 
-      input.enqueueKeys([Key.Enter])
+      await input.sendKeys(Key.Enter)
 
       const result = await promise
 

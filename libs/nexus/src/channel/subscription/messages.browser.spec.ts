@@ -1,7 +1,7 @@
 import type { MessageHandler, ChannelState } from '../../types/channel'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import { subscribeToMessages } from './messages'
 
@@ -36,7 +36,7 @@ describe('channel/subscription/messages', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
     }
   })
 

@@ -9,8 +9,8 @@ const config: TestConfig = {
   coverageExclude: [
     // why: a re-export barrel has no behaviour of its own; every symbol it names is covered where it is defined.
     'src/**/index.ts',
-    // why: the files under __fixtures__ are inputs the specs read, not code the linter runs.
-    'src/**/__fixtures__/**',
+    // why: the modules under __test-utils__ hold the inputs the specs read and the code that writes them out, not code the linter runs.
+    'src/**/__test-utils__/**',
     // why: these modules hold types alone, so no test can load them.
     'src/code/model.ts',
     'src/markdown/model.ts',

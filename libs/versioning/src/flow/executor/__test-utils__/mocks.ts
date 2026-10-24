@@ -1,6 +1,6 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-import type { Mocked } from '@hyperfrontend/testing'
+import type { DeepMocked } from '@hyperfrontend/testing'
 import type { ConventionalCommit } from '../../../commits/models/conventional'
 import type { GitClient } from '../../../git/factory'
 import type { Registry } from '../../../registry/models/registry'
@@ -11,7 +11,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { normalizePath } from '@hyperfrontend/project-scope/core/path'
-import { jest } from '@hyperfrontend/testing'
+import { createMock } from '@hyperfrontend/testing'
 import { createProject } from '../../../workspace/models/project'
 
 /** A pending virtual file system change reported by the mock tree. */
@@ -230,19 +230,8 @@ export function createMockGitClient(commits: readonly Partial<ConventionalCommit
  * expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('lib-test'))
  * ```
  */
-export function createMockLogger(): Mocked<Logger> {
-  return jest.mocked<Logger>({
-    log: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    setLogLevel: jest.fn(),
-    getLogLevel: jest.fn().mockReturnValue('error'),
-    channel: jest.fn(),
-    timed: jest.fn(),
-    timedAsync: jest.fn(),
-  })
+export function createMockLogger(): DeepMocked<Logger> {
+  return createMock<Logger>({ getLogLevel: () => 'error' })
 }
 
 /**

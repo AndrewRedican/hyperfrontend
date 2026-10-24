@@ -2,7 +2,7 @@ import type { CodeMention } from './docs-mentions.ts'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createDocsWorkspace } from '../__fixtures__/docs-workspace.ts'
+import { createDocsWorkspace } from '../__test-utils__/docs-workspace.ts'
 import { docsIndex } from './docs-catalog.ts'
 import { exemptionOf, resolveMention } from './docs-mentions.ts'
 

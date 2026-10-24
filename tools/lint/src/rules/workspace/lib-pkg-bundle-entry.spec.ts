@@ -1,8 +1,11 @@
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-pkg-bundle-entry.ts'
 
-const BUNDLED = join(import.meta.dirname, '__fixtures__', 'bundled', 'package.json')
+const projects = createProjectTrees()
+const BUNDLED = projects.file('bundled', 'package.json')
 const message = (entry: string): string =>
   `Bundle entry '${entry}' specified in project.json is not found in package.json exports. Add the export: "${entry}": "./path/to/entry.js"`
 
@@ -10,12 +13,12 @@ testRule(rule, {
   valid: [
     {
       name: 'two bundles with the same entry, asked once',
-      path: join(import.meta.dirname, '__fixtures__', 'bundled-same', 'package.json'),
+      path: projects.file('bundled-same', 'package.json'),
       text: '{ "exports": { ".": "./src/index.js" } }',
     },
     {
       name: 'a bundle whose entry is empty, ignored',
-      path: join(import.meta.dirname, '__fixtures__', 'bundled-empty', 'package.json'),
+      path: projects.file('bundled-empty', 'package.json'),
       text: '{ "exports": { ".": "./src/index.js" } }',
     },
     {
@@ -23,7 +26,7 @@ testRule(rule, {
       path: BUNDLED,
       text: '{ "exports": { ".": "./src/index.js", "./browser": "./src/browser/index.js" } }',
     },
-    { name: 'a library without bundles', path: join(import.meta.dirname, '__fixtures__', 'publishable', 'package.json'), text: '{}' },
+    { name: 'a library without bundles', path: projects.file('publishable', 'package.json'), text: '{}' },
   ],
   invalid: [
     {
@@ -51,4 +54,11 @@ testRule(rule, {
       ],
     },
   ],
+})
+
+describe('the disposable workspace', () => {
+  it('is removed once the cases have run', () => {
+    projects.remove()
+    expect(existsSync(projects.root)).toBe(false)
+  })
 })

@@ -1,22 +1,28 @@
 import type { RunEnvironment } from './run'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { writeConfigModules } from '../config/__test-utils__/config-modules'
 import { run } from './run'
 
-const FIXTURES = join(import.meta.dirname, '..', 'config', '__fixtures__')
-const PLAIN = join(import.meta.dirname, '__fixtures__', 'plain')
+/** The configuration modules the command is pointed at. */
+const FIXTURES = writeConfigModules()
 
 // why: the JSON report carries native absolute paths, which escape their backslashes on Windows, so the paths are read back rather than searched for.
 const reportedFiles = (out: readonly string[]): string[] => (parse(out.join('')) as { filePath: string }[]).map((result) => result.filePath)
 
+/** A directory holding a lone manifest, outside any configuration. */
+const PLAIN_DIR = createTempDir({ prefix: 'lint-plain-', tree: { 'package.json': { name: 'plain-fixture' } } })
+const PLAIN = PLAIN_DIR.path
+
 /** A project whose configuration sits above the directory the command runs in. */
-const TREE = mkdtempSync(join(tmpdir(), 'lint-run-'))
-mkdirSync(join(TREE, 'src'))
-writeFileSync(join(TREE, 'lint.config.ts'), "export default [{ files: ['src/**/*.ts'], rules: { 'no-debugger': 'error' } }]\n")
-writeFileSync(join(TREE, 'src', 'a.ts'), 'debugger\n')
+const TREE_DIR = createTempDir({
+  prefix: 'lint-run-',
+  tree: { 'lint.config.ts': "export default [{ files: ['src/**/*.ts'], rules: { 'no-debugger': 'error' } }]\n", 'src/a.ts': 'debugger\n' },
+})
+const TREE = TREE_DIR.path
 
 interface Captured {
   readonly environment: RunEnvironment
@@ -124,12 +130,16 @@ describe('run', () => {
   })
 
   it('writes fixes to disk under --fix', async () => {
-    const directory = mkdtempSync(join(tmpdir(), 'lint-run-'))
-    writeFileSync(join(directory, 'project.json'), '{ "projectType": "library", "targets": { "build": {}, "publish": {} } }')
-    writeFileSync(join(directory, 'package.json'), '{ "main": "x", "exports": {} }')
-    const code = await run(['--config', join(FIXTURES, 'no-main.ts'), '--fix', 'package.json'], capture(directory).environment)
-    const written = readFileSync(join(directory, 'package.json'), 'utf8')
-    rmSync(directory, { recursive: true })
+    const directory = createTempDir({
+      prefix: 'lint-run-',
+      tree: {
+        'project.json': '{ "projectType": "library", "targets": { "build": {}, "publish": {} } }',
+        'package.json': '{ "main": "x", "exports": {} }',
+      },
+    })
+    const code = await run(['--config', join(FIXTURES, 'no-main.ts'), '--fix', 'package.json'], capture(directory.path).environment)
+    const written = directory.read('package.json')
+    directory.remove()
     expect({ code, written }).toEqual({ code: 0, written: '{ "exports": {} }' })
   })
 
@@ -193,14 +203,16 @@ describe('run', () => {
     expect(captured.out.join('')).toContain('"message":"Unexpected \'debugger\' statement."')
   })
 
-  it('leaves no temporary tree behind', () => {
-    rmSync(TREE, { recursive: true, force: true })
-    expect(existsSync(TREE)).toBe(false)
-  })
-
   it('prints an empty JSON report for a clean run', async () => {
     const captured = capture(import.meta.dirname, '{}')
     await run(['--config', join(FIXTURES, 'empty.ts'), '--format', 'json', '--stdin', '--stdin-filename', 'a.json'], captured.environment)
     expect(captured.out.join('')).toContain('"messages":[]')
+  })
+
+  it('leaves no temporary trees behind', () => {
+    TREE_DIR.remove()
+    PLAIN_DIR.remove()
+    rmSync(FIXTURES, { recursive: true, force: true })
+    expect([existsSync(TREE), existsSync(PLAIN), existsSync(FIXTURES)]).toEqual([false, false, false])
   })
 })

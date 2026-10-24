@@ -1,9 +1,8 @@
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../../models'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
+import { mkdirSync } from 'node:fs'
+import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { synthesizeMissingExportsPass } from './missing-exports-pass'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }
@@ -42,67 +41,54 @@ const WRAPPER = [
 ].join('\n')
 
 describe('synthesizeMissingExportsPass', () => {
-  let outputPath: string
+  const outputDir = useTempDir({ prefix: 'builder-missing-exports-pass-' })
   let depsRoot: string
 
   beforeEach(() => {
-    outputPath = mkdtempSync(join(tmpdir(), 'builder-missing-exports-pass-'))
-    depsRoot = join(outputPath, '_dependencies')
+    depsRoot = outputDir.resolve('_dependencies')
     mkdirSync(depsRoot, { recursive: true })
   })
 
-  afterEach(() => {
-    rmSync(outputPath, { recursive: true, force: true })
-  })
-
-  const write = (relPath: string, content: string): void => {
-    const abs = join(outputPath, relPath)
-    mkdirSync(join(abs, '..'), { recursive: true })
-    writeFileSync(abs, content)
-  }
-
-  const read = (relPath: string): string => readFileSync(join(outputPath, relPath), 'utf-8')
-
   it('returns a zero count when the deps root does not exist', () => {
-    expect(synthesizeMissingExportsPass(makeContext(outputPath), join(outputPath, 'absent'))).toEqual({ namedExportsSynthesized: 0 })
+    expect(synthesizeMissingExportsPass(makeContext(outputDir.path), outputDir.resolve('absent'))).toEqual({ namedExportsSynthesized: 0 })
   })
 
   it('returns a zero count when no chunk files exist', () => {
-    expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 0 })
+    expect(synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)).toEqual({ namedExportsSynthesized: 0 })
   })
 
   it('synthesizes a named export an entry demands from an interop wrapper', () => {
-    write('_dependencies/postject/index.mjs', WRAPPER)
-    write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
-    expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
+    outputDir.write('_dependencies/postject/index.mjs', WRAPPER)
+    outputDir.write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
+    expect(synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
   })
 
   it('appends the synthesized binding to the wrapper chunk', () => {
-    write('_dependencies/postject/index.mjs', WRAPPER)
-    write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
-    synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/postject/index.mjs')).toContain('export { inject$1 as inject };')
+    outputDir.write('_dependencies/postject/index.mjs', WRAPPER)
+    outputDir.write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
+    synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)
+    expect(outputDir.read('_dependencies/postject/index.mjs')).toContain('export { inject$1 as inject };')
   })
 
   it('collects demand from sibling dependency chunks as importers', () => {
-    write('_dependencies/postject/index.mjs', WRAPPER)
-    write(
+    outputDir.write('_dependencies/postject/index.mjs', WRAPPER)
+    outputDir.write(
       '_dependencies/other/index.mjs',
       "import { inject } from '../postject/index.mjs';\nconst use = () => inject();\nexport { use };\n"
     )
-    expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
+    expect(synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
   })
 
   it('treats wholesale namespace demand as needing no synthesis', () => {
-    write('_dependencies/postject/index.mjs', WRAPPER)
-    write('index.mjs', "import * as postject from './_dependencies/postject/index.mjs';\nexport const run = () => postject;\n")
-    expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 0 })
+    outputDir.write('_dependencies/postject/index.mjs', WRAPPER)
+    outputDir.write('index.mjs', "import * as postject from './_dependencies/postject/index.mjs';\nexport const run = () => postject;\n")
+    expect(synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)).toEqual({ namedExportsSynthesized: 0 })
   })
 
   it('leaves a chunk untouched when its exports satisfy the demand', () => {
-    write('_dependencies/tool/index.mjs', 'const run = () => 1;\nexport { run };\n')
-    write('index.mjs', "import { run } from './_dependencies/tool/index.mjs';\nexport const go = () => run();\n")
-    synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/tool/index.mjs')).toBe('const run = () => 1;\nexport { run };\n')
+    outputDir.write('_dependencies/tool/index.mjs', 'const run = () => 1;\nexport { run };\n')
+    outputDir.write('index.mjs', "import { run } from './_dependencies/tool/index.mjs';\nexport const go = () => run();\n")
+    synthesizeMissingExportsPass(makeContext(outputDir.path), depsRoot)
+    expect(outputDir.read('_dependencies/tool/index.mjs')).toBe('const run = () => 1;\nexport { run };\n')
   })
 })

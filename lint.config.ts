@@ -78,6 +78,7 @@ export default [
     files: ['**/package.json'],
     rules: {
       'workspace/no-vscode-config': 'error',
+      'workspace/no-test-fixtures': 'error',
     },
   },
   {

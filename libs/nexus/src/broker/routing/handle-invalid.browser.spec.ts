@@ -4,7 +4,8 @@ import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -26,15 +27,7 @@ describe('handleInvalid', () => {
   let routingContext: RoutingContext
 
   beforeEach(() => {
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
     mockBrokerState = {
       id: 'broker-1',
@@ -53,9 +46,7 @@ describe('handleInvalid', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = {
-      postMessage: jest.fn(),
-    } as unknown as Window
+    mockWindow = createFakeWindow()
 
     routingContext = {
       state: mockBrokerState,
@@ -134,7 +125,7 @@ describe('handleInvalid', () => {
 
   it('resolves the channel by process id rather than by source window', () => {
     const { processId, invalidHandler } = addTrackedChannel('test-channel', mockWindow)
-    const otherWindow = { postMessage: jest.fn() } as unknown as Window
+    const otherWindow = createFakeWindow()
 
     handleInvalid(routingContext, invalidEvent({ processId, error: 'Stale frame' }, otherWindow))
 
@@ -143,7 +134,7 @@ describe('handleInvalid', () => {
 
   it('routes each report to the channel that owns the process', () => {
     const first = addTrackedChannel('channel-1', mockWindow)
-    const second = addTrackedChannel('channel-2', { postMessage: jest.fn() } as unknown as Window)
+    const second = addTrackedChannel('channel-2', createFakeWindow())
 
     handleInvalid(routingContext, invalidEvent({ processId: first.processId, error: 'Error 1' }))
     handleInvalid(routingContext, invalidEvent({ processId: second.processId, error: 'Error 2' }))

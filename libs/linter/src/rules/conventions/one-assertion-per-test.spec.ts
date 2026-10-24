@@ -1,15 +1,15 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { testRule } from '../../testing/rule-tester'
 import rule from './one-assertion-per-test'
 
 // why: some cases lint a file that must exist on disk, so the fixture is a disposable directory in the temporary directory.
-const ROOT = mkdtempSync(join(tmpdir(), 'lint-one-assertion-'))
+const DIR = createTempDir({ prefix: 'lint-one-assertion-' })
+const ROOT = DIR.path
 const WORKSPACE = join(ROOT, 'workspace')
-const SPEC = join(WORKSPACE, 'libs', 'demo', 'src', 'demo.spec.ts')
-mkdirSync(join(WORKSPACE, 'libs', 'demo', 'src'), { recursive: true })
+const SPEC = join(DIR.mkdir('workspace/libs/demo/src'), 'demo.spec.ts')
 
 const message = (where: string): string =>
   `A test body asserts one behaviour, but this one holds 2 assertions (${where}). Split it into focused tests, each named for the single behaviour it asserts; when the checks jointly describe one indivisible behaviour, fold them into one assertion with a composite or asymmetric matcher such as expect.objectContaining.`
@@ -323,7 +323,7 @@ testRule(rule, {
 
 describe('the disposable workspace', () => {
   it('is removed once the cases have run', () => {
-    rmSync(ROOT, { recursive: true })
+    DIR.remove()
     expect(existsSync(ROOT)).toBe(false)
   })
 })

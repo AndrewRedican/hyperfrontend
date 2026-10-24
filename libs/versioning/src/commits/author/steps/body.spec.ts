@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { bodyStep } from './body'
@@ -11,7 +12,7 @@ describe('bodyStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = bodyStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
@@ -23,7 +24,7 @@ describe('bodyStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = bodyStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.body).toBeUndefined()
@@ -35,7 +36,7 @@ describe('bodyStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = bodyStep.run(ctx)
-    term.input.enqueueKeys(['a', 'b', TestKey.Enter])
+    await term.input.sendKeys('a', 'b', Keys.Enter)
     await pending
 
     expect(ctx.draft.body).toBe('ab')
@@ -47,7 +48,7 @@ describe('bodyStep', () => {
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
     const pending = bodyStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })

@@ -1,1 +1,0 @@
-export = { value: 1 }

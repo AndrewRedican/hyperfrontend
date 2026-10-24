@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { buildCompatibilityDocument } from '@hyperfrontend/workspace'
-import { createMarkdownWorkspace } from './__fixtures__/markdown-workspace.ts'
+import { createMarkdownWorkspace } from './__test-utils__/markdown-workspace.ts'
 import rule from './lib-compatibility-matrix.ts'
 
 const workspace = createMarkdownWorkspace()

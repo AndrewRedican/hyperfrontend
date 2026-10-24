@@ -5,10 +5,8 @@ import { resolvePopupDefaults } from './defaults'
 import { mountPopup } from './popup'
 
 describe('mountPopup', () => {
-  const originalScreen = Object.getOwnPropertyDescriptor(window, 'screen')
-
-  function stubScreen(screen: { availWidth: number; availHeight: number } | undefined) {
-    Object.defineProperty(window, 'screen', { value: screen, configurable: true })
+  function stubScreen(screen: Pick<Screen, 'availWidth' | 'availHeight'> | undefined) {
+    jest.replaceProperty(window, 'screen', screen as Screen)
   }
 
   beforeEach(() => {
@@ -17,11 +15,6 @@ describe('mountPopup', () => {
   })
 
   afterEach(() => {
-    if (originalScreen) {
-      Object.defineProperty(window, 'screen', originalScreen)
-    } else {
-      Reflect.deleteProperty(window, 'screen')
-    }
     jest.restoreAllMocks()
   })
 

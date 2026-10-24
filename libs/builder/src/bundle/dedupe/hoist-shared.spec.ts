@@ -1,10 +1,11 @@
+import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { join } from 'node:path'
+import { beforeEach } from 'node:test'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { hoistSharedFirstParty } from './hoist-shared'
 
 const makeDiscovery = (entries: EntryPoint[]): EntryPointDiscovery => ({
@@ -16,21 +17,13 @@ const makeDiscovery = (entries: EntryPoint[]): EntryPointDiscovery => ({
 })
 
 describe('hoistSharedFirstParty', () => {
-  let root: string
+  const fixture = useTempDir({ prefix: 'builder-dedupe-' })
   let projectRoot: string
   let outputPath: string
 
-  const write = (relPath: string, content: string): void => {
-    const abs = join(outputPath, relPath)
-    mkdirSync(dirname(abs), { recursive: true })
-    writeFileSync(abs, content)
-  }
+  const write = (relPath: string, content: string): string => fixture.write(join('out', relPath), content)
 
-  const writeSrc = (relPath: string, content: string): void => {
-    const abs = join(projectRoot, 'src', relPath)
-    mkdirSync(dirname(abs), { recursive: true })
-    writeFileSync(abs, content)
-  }
+  const writeSrc = (relPath: string, content: string): string => fixture.write(join('project', 'src', relPath), content)
 
   const rootEntry = (): EntryPoint => ({ exportPath: '.', srcPath: '', inputFile: join(projectRoot, 'src', 'index.ts'), isRoot: true })
   const greetEntry = (): EntryPoint => ({
@@ -42,7 +35,7 @@ describe('hoistSharedFirstParty', () => {
 
   const context = (entries: EntryPoint[] = [rootEntry(), greetEntry()]): BuildContext => ({
     projectRoot,
-    workspaceRoot: root,
+    workspaceRoot: fixture.path,
     projectRelativePath: 'project',
     outputPath,
     tsConfigPath: join(projectRoot, 'tsconfig.lib.json'),
@@ -56,11 +49,8 @@ describe('hoistSharedFirstParty', () => {
   })
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'builder-dedupe-'))
-    projectRoot = join(root, 'project')
-    outputPath = join(root, 'out')
-    mkdirSync(projectRoot, { recursive: true })
-    mkdirSync(outputPath, { recursive: true })
+    projectRoot = fixture.resolve('project')
+    outputPath = fixture.resolve('out')
     writeSrc('base/base.ts', "export const BASE = 'b'\n")
     writeSrc('greet/greet.ts', "export const greet = (): string => 'x'\n")
     writeSrc('index.ts', "export * from './base/base'\nexport * from './greet/greet'\n")
@@ -83,10 +73,6 @@ describe('hoistSharedFirstParty', () => {
       'greet/index.cjs',
       "'use strict';\nvar dep = require('../_dependencies/dep/index.cjs');\nconst BASE = 'b';\nconst greet = (n) => dep.tag(BASE + n);\nexports.greet = greet;\n"
     )
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
   })
 
   it('writes a shared chunk for every hotspot module per format', () => {
@@ -144,10 +130,12 @@ describe('hoistSharedFirstParty', () => {
   })
 
   it('captures a memory checkpoint per format', () => {
-    const labels: string[] = []
-    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof hoistSharedFirstParty>[1]
+    const monitor = createMock<MemoryMonitor>()
     hoistSharedFirstParty(context(), monitor)
-    expect(labels).toEqual(['bundle:dedupe:shared-first-party:esm:end', 'bundle:dedupe:shared-first-party:cjs:end'])
+    expect(monitor.check.mock.calls.flat()).toEqual([
+      'bundle:dedupe:shared-first-party:esm:end',
+      'bundle:dedupe:shared-first-party:cjs:end',
+    ])
   })
 
   it('does nothing when fewer than two entries exist', () => {

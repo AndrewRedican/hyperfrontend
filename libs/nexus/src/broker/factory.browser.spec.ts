@@ -1,12 +1,14 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IAction } from '../types/action'
 import type { ChannelHandle } from '../types/channel'
 import type { IChannelContract } from '../types/contract'
 import type { SecurityChannelOptions, SecurityProvider, SecurityWireChannel } from '../types/security'
 import type { BrokerHandle, BrokerSettings, SecurityPolicy } from './types'
 import { afterEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { ACTION_TYPES } from '../types/action'
 import { createBroker } from './factory'
 
@@ -22,20 +24,12 @@ jest.mock('@hyperfrontend/random-generator-utils', () => {
   }
 })
 
-/** A broker window whose message listener the spec drives directly */
-type Host = {
-  /** The window handed to the broker */
-  window: Window
-  /** Hands a synthetic message event to every listener the broker registered */
-  deliver: (event: { data: unknown; origin: string; source: Window | null }) => void
-}
-
 /** A broker wired to a fake host window and a secured, activated channel */
 type SecuredSetup = {
   /** The broker under test */
   broker: BrokerHandle
-  /** The fake host window and its delivery hook */
-  host: Host
+  /** The fake host window the broker listens on */
+  host: FakeWindow
   /** The logger the broker writes to */
   logger: Logger
   /** The wire pipeline the provider handed to the channel transport */
@@ -57,35 +51,6 @@ describe('createBroker', () => {
   afterEach(() => {
     jest.clearAllMocks()
   })
-
-  function createMockLogger(): Logger {
-    return {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
-  }
-
-  function createHost(): Host {
-    const listeners: EventListener[] = []
-    const hostWindow = {
-      addEventListener: jest.fn((_type: string, listener: EventListener) => {
-        listeners.push(listener)
-      }),
-    } as unknown as Window
-    return {
-      window: hostWindow,
-      deliver: (event) => {
-        for (const listener of listeners) {
-          listener(event as unknown as Event)
-        }
-      },
-    }
-  }
 
   function createWire(): SecurityWireChannel {
     return {
@@ -119,18 +84,15 @@ describe('createBroker', () => {
   }
 
   function createSecuredSetup(options: { active: boolean; settings?: Partial<BrokerSettings> } = { active: true }): SecuredSetup {
-    const host = createHost()
-    const logger = createMockLogger()
+    const host = createFakeWindow()
+    const logger = createMock<Logger>({ getLogLevel: () => 'debug' })
     const wire = createWire()
     let wireOptions: SecurityChannelOptions | null = null
     const provider = createProvider(wire, (captured) => {
       wireOptions = captured
     })
-    const broker = createTestBroker(
-      { logLevel: 'debug', logger, security: { protocols: { v4: provider } }, ...options.settings },
-      host.window
-    )
-    const source = { postMessage: jest.fn() } as unknown as Window
+    const broker = createTestBroker({ logLevel: 'debug', logger, security: { protocols: { v4: provider } }, ...options.settings }, host)
+    const source = createFakeWindow()
     const channel = broker.addChannel('test-channel', source)
     if (options.active) {
       channel.activate('https://app.example', mockContract, 'peer-1')
@@ -187,11 +149,11 @@ describe('createBroker', () => {
     })
 
     it('listens for messages on the window it was given', () => {
-      const host = createHost()
+      const host = createFakeWindow()
 
-      createTestBroker({}, host.window)
+      createTestBroker({}, host)
 
-      expect(host.window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function))
+      expect(host.addEventListener).toHaveBeenCalledWith('message', expect.any(Function))
     })
   })
 
@@ -461,10 +423,10 @@ describe('createBroker', () => {
     const userMessage = peerAction(ACTION_TYPES.NEW_MESSAGE, { data: { type: 'test-action', data: 'hello' } })
 
     function createPlainSetup(settings: Partial<BrokerSettings>) {
-      const host = createHost()
-      const logger = createMockLogger()
-      const broker = createTestBroker({ logLevel: 'debug', logger, ...settings }, host.window)
-      const source = { postMessage: jest.fn() } as unknown as Window
+      const host = createFakeWindow()
+      const logger = createMock<Logger>({ getLogLevel: () => 'debug' })
+      const broker = createTestBroker({ logLevel: 'debug', logger, ...settings }, host)
+      const source = createFakeWindow()
       const channel = broker.addChannel('test-channel', source)
       channel.activate('https://app.example', mockContract, 'peer-1')
       const onMessage = jest.fn()
@@ -475,7 +437,7 @@ describe('createBroker', () => {
     it('ignores messages from blacklisted origins', () => {
       const { host, logger, source, onMessage } = createPlainSetup({ blacklist: ['https://app.example'] })
 
-      host.deliver({ data: userMessage, origin: 'https://app.example', source })
+      host.receive(userMessage, { origin: 'https://app.example', source })
 
       expect({ logged: (logger.info as Mock).mock.calls, delivered: onMessage.mock.calls }).toEqual({
         logged: [['test-broker ignored message from https://app.example']],
@@ -486,7 +448,7 @@ describe('createBroker', () => {
     it('ignores messages from origins outside the whitelist', () => {
       const { host, logger, source, onMessage } = createPlainSetup({ whitelist: ['https://trusted.example'] })
 
-      host.deliver({ data: userMessage, origin: 'https://app.example', source })
+      host.receive(userMessage, { origin: 'https://app.example', source })
 
       expect({ logged: (logger.info as Mock).mock.calls, delivered: onMessage.mock.calls }).toEqual({
         logged: [['test-broker ignored message from https://app.example']],
@@ -497,17 +459,17 @@ describe('createBroker', () => {
     it('routes plaintext actions from admitted origins to the handlers', () => {
       const { host, source, onMessage } = createPlainSetup({ whitelist: ['https://app.example'] })
 
-      host.deliver({ data: userMessage, origin: 'https://app.example', source })
+      host.receive(userMessage, { origin: 'https://app.example', source })
 
       expect(onMessage).toHaveBeenCalledWith({ type: 'test-action', data: 'hello' })
     })
 
     it('ignores wire frames from windows without a channel', () => {
-      const host = createHost()
-      const logger = createMockLogger()
-      createTestBroker({ logLevel: 'debug', logger }, host.window)
+      const host = createFakeWindow()
+      const logger = createMock<Logger>({ getLogLevel: () => 'debug' })
+      createTestBroker({ logLevel: 'debug', logger }, host)
 
-      host.deliver({ data: new Uint8Array([9]), origin: 'https://app.example', source: { postMessage: jest.fn() } as unknown as Window })
+      host.receive(new Uint8Array([9]), { origin: 'https://app.example', source: createFakeWindow() })
 
       expect(logger.info).toHaveBeenCalledWith('test-broker ignored a wire frame - no channel for the source window')
     })
@@ -517,7 +479,7 @@ describe('createBroker', () => {
       const invalidHandler = jest.fn()
       channel.on('invalid', invalidHandler)
 
-      host.deliver({ data: new Uint8Array([9]), origin: 'https://app.example', source })
+      host.receive(new Uint8Array([9]), { origin: 'https://app.example', source })
 
       expect({ received: (wire.receive as Mock).mock.calls, invalid: invalidHandler.mock.calls }).toEqual({
         received: [[new Uint8Array([9])]],
@@ -530,7 +492,7 @@ describe('createBroker', () => {
       const onMessage = jest.fn()
       channel.onMessage(onMessage)
 
-      host.deliver({ data: userMessage, origin: 'https://app.example', source })
+      host.receive(userMessage, { origin: 'https://app.example', source })
 
       expect(onMessage).not.toHaveBeenCalled()
     })
@@ -540,7 +502,7 @@ describe('createBroker', () => {
       const invalidHandler = jest.fn()
       channel.on('invalid', invalidHandler)
 
-      host.deliver({ data: userMessage, origin: 'https://app.example', source })
+      host.receive(userMessage, { origin: 'https://app.example', source })
 
       expect(invalidHandler).toHaveBeenCalledWith(
         { error: "Dropped plaintext '[nexus] new-message' action: the channel is secured.", action: userMessage },
@@ -551,7 +513,7 @@ describe('createBroker', () => {
     it('lets handshake actions through the gate on a secured channel', () => {
       const { host, source } = createSecuredSetup({ active: false })
 
-      host.deliver({ data: peerAction(ACTION_TYPES.CANCEL_CONNECTION, { processId: 'process-9' }), origin: 'https://app.example', source })
+      host.receive(peerAction(ACTION_TYPES.CANCEL_CONNECTION, { processId: 'process-9' }), { origin: 'https://app.example', source })
 
       expect(source.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({ type: ACTION_TYPES.CANCEL_CONNECTION_ACKNOWLEDGED, processId: 'process-9' }),

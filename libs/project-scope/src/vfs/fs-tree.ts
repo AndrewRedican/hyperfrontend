@@ -1,14 +1,14 @@
+import type { TreeStore } from './store'
 import type { Tree, FileChange, WriteOptions, CreateTreeOptions, ModeType } from './types'
-import { readFileSync, lstatSync, readlinkSync } from 'node:fs'
 import { posix } from 'node:path'
 import { from as arrayFrom } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { exists as fsExists, isFile as fsIsFile, isDirectory as fsIsDirectory, readDirectory } from '../core/fs'
 import { isSafePath } from '../core/fs/guard'
 import { createScopedLogger } from '../core/logger'
 import { normalizePath, joinPath, relativePath, isAbsolute, removeTrailingSlash, resolvePath, getDirname } from '../core/path'
+import { diskStore } from './store'
 import { Mode } from './types'
 
 const fsTreeLogger = createScopedLogger('project-scope:vfs:tree')
@@ -48,6 +48,24 @@ interface ChangeRecord {
  * ```
  */
 export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
+  return createStoreTree(root, diskStore, options)
+}
+
+/**
+ * Create a tree that buffers its changes over a store holding the files it has not changed.
+ *
+ * @param root - Absolute path of the tree's root
+ * @param store - Where unchanged files are read from
+ * @param options - Configuration for verbose logging and symlink handling
+ * @returns A Tree whose reads fall through to the store
+ *
+ * @example Building a tree over a store
+ * ```typescript
+ * const tree = createStoreTree('/workspace', diskStore)
+ * tree.read('package.json', 'utf-8')
+ * ```
+ */
+export function createStoreTree(root: string, store: TreeStore, options?: CreateTreeOptions): Tree {
   const _root = removeTrailingSlash(normalizePath(root))
   const _changes: Map<string, ChangeRecord> = createMap()
   const _isVerbose = options?.verbose ?? false
@@ -80,10 +98,10 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
   }
 
   /**
-   * Get absolute path on disk.
+   * Get the absolute path the store is asked about.
    *
    * @param filePath - Relative path from root
-   * @returns Absolute path on disk
+   * @returns Absolute path under the root
    */
   function absolutePath(filePath: string): string {
     return joinPath(_root, normalizeFilePath(filePath))
@@ -108,14 +126,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
    * @returns True if path is a symlink
    */
   function isSymlinkNormalizedPath(normalPath: string): boolean {
-    const absPath = absolutePath(normalPath)
-
-    try {
-      const stats = lstatSync(absPath)
-      return stats.isSymbolicLink()
-    } catch {
-      return false
-    }
+    return store.isSymlink(absolutePath(normalPath))
   }
 
   /**
@@ -136,7 +147,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
     }
 
     try {
-      const target = readlinkSync(absPath)
+      const target = store.readlink(absPath)
 
       let targetAbsolute: string
       if (isAbsolute(target)) {
@@ -164,34 +175,24 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
   }
 
   /**
-   * Check if path exists on disk (not considering buffered changes).
+   * Check if path exists in the store (not considering buffered changes).
    *
    * @param normalPath - Normalized path to check
-   * @returns True if exists on disk
+   * @returns True if the store holds it
    */
-  function existsOnDisk(normalPath: string): boolean {
-    const absPath = absolutePath(normalPath)
-    return fsExists(absPath)
+  function existsInStore(normalPath: string): boolean {
+    return store.exists(absolutePath(normalPath))
   }
 
   /**
-   * Read from disk (not considering buffered changes).
+   * Read from the store (not considering buffered changes).
    *
    * @param normalPath - Normalized path to read
    * @returns File content or null
    */
-  function readFromDisk(normalPath: string): Buffer | null {
+  function readFromStore(normalPath: string): Buffer | null {
     validateSymlink(normalPath)
-
-    const absPath = absolutePath(normalPath)
-    if (!fsIsFile(absPath)) {
-      return null
-    }
-    try {
-      return readFileSync(absPath)
-    } catch {
-      return null
-    }
+    return store.read(absolutePath(normalPath))
   }
 
   const tree: Tree = {
@@ -215,24 +216,11 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         }
       }
 
-      validateSymlink(normalPath)
-
-      const absPath = absolutePath(normalPath)
-
-      if (!fsExists(absPath)) {
+      const content = readFromStore(normalPath)
+      if (content === null) {
         return null
       }
-
-      if (!fsIsFile(absPath)) {
-        return null
-      }
-
-      try {
-        const content = readFileSync(absPath)
-        return encoding ? content.toString(encoding) : content
-      } catch {
-        return null
-      }
+      return encoding ? content.toString(encoding) : content
     },
 
     write(filePath: string, content: Buffer | string, options?: WriteOptions): void {
@@ -251,7 +239,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       }
 
       const existingChange = _changes.get(normalPath)
-      const diskExists = existsOnDisk(normalPath)
+      const diskExists = existsInStore(normalPath)
 
       let changeType: 'CREATE' | 'UPDATE'
       let originalContent: Buffer | null = null
@@ -260,7 +248,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         changeType = 'CREATE'
       } else {
         changeType = 'UPDATE'
-        originalContent = existingChange?.originalContent ?? readFromDisk(normalPath)
+        originalContent = existingChange?.originalContent ?? readFromStore(normalPath)
       }
 
       _changes.set(normalPath, {
@@ -288,7 +276,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         }
       }
 
-      return existsOnDisk(normalPath)
+      return existsInStore(normalPath)
     },
 
     delete(filePath: string): void {
@@ -301,14 +289,14 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         return
       }
 
-      if (!existsOnDisk(normalPath)) {
+      if (!existsInStore(normalPath)) {
         return
       }
 
       _changes.set(normalPath, {
         type: 'DELETE',
         content: null,
-        originalContent: readFromDisk(normalPath),
+        originalContent: readFromStore(normalPath),
       })
 
       logChange('DELETE', normalPath)
@@ -334,8 +322,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         return change.type !== 'DELETE'
       }
 
-      const absPath = absolutePath(normalPath)
-      return fsIsFile(absPath)
+      return store.isFile(absolutePath(normalPath))
     },
 
     isDirectory(filePath: string): boolean {
@@ -348,8 +335,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         }
       }
 
-      const absPath = absolutePath(normalPath)
-      return fsIsDirectory(absPath)
+      return store.isDirectory(absolutePath(normalPath))
     },
 
     isSymlink(filePath: string): boolean {
@@ -364,15 +350,10 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       const childSet = createSet<string>()
 
       const absPath = absolutePath(normalPath)
-      try {
-        if (fsExists(absPath) && fsIsDirectory(absPath)) {
-          const entries = readDirectory(absPath)
-          for (const entry of entries) {
-            childSet.add(entry.name)
-          }
+      if (store.isDirectory(absPath)) {
+        for (const name of store.list(absPath)) {
+          childSet.add(name)
         }
-      } catch {
-        // Directory doesn't exist on disk
       }
 
       const prefix = normalPath === '.' || normalPath === '' ? '' : normalPath + posix.sep
@@ -435,7 +416,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       if (existingChange) {
         existingChange.permissions = mode
       } else {
-        const content = readFromDisk(normalPath)
+        const content = readFromStore(normalPath)
         _changes.set(normalPath, {
           type: 'UPDATE',
           content,

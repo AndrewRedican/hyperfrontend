@@ -1,5 +1,5 @@
 import type { BrokerHandle } from '@hyperfrontend/nexus'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createFeatureHandle } from './lifecycle'
 
@@ -7,7 +7,7 @@ import { createFeatureHandle } from './lifecycle'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
 function createUnhostedHandle() {
-  return createFeatureHandle({} as unknown as BrokerHandle, null, createEventEmitter(), { contract: { emitted: [], accepted: [] } })
+  return createFeatureHandle(createMock<BrokerHandle>(), null, createEventEmitter(), { contract: { emitted: [], accepted: [] } })
 }
 
 describe('the frozen feature handle', () => {

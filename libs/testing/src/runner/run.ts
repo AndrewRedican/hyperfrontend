@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
 import { mergeLcov, renderLcov } from '../coverage/lcov'
-import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles } from './argv'
+import { buildRunPlan, serialiseMockLifecycle, serialiseModuleMap, serialiseSetupFiles } from './argv'
 import { withDefaults } from './config'
 import { normalizePath, workspaceRelativePath } from './portable-paths'
 
@@ -65,10 +65,12 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   mkdirSync(context.coverageDir, { recursive: true })
 
   const moduleMap = serialiseModuleMap(resolved)
+  const mockLifecycle = serialiseMockLifecycle(resolved)
   const shared = {
     ...process.env,
     HF_TEST_WORKSPACE_ROOT: context.workspaceRoot,
     ...(moduleMap ? { HF_TEST_MODULE_MAP: moduleMap } : {}),
+    ...(mockLifecycle ? { HF_TEST_MOCK_LIFECYCLE: mockLifecycle } : {}),
   }
   // why: Node marks its own test children with this, and a child that inherits it refuses to run any files at all.
   delete shared['NODE_TEST_CONTEXT']

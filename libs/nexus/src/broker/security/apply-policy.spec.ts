@@ -1,15 +1,14 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityPolicy } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { createMockLogger } from '../../integration-tests/test-utils'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { applyPolicy } from './apply-policy'
 
 describe('applyPolicy', () => {
   let mockLogger: Logger
 
   beforeEach(() => {
-    mockLogger = createMockLogger()
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
   })
 
   const createMockEvent = (origin = 'https://example.com'): MessageEvent => {

@@ -1,20 +1,18 @@
 import type { Node } from '../code/model'
 import type { LanguageSettings } from '../config/model'
 import type { RuleContext } from '../engine/rule'
-import { readFileSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { extname } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseCode } from '../code/parse'
 import { DEFAULT_LANGUAGE } from '../config/model'
-import { dumpScopes } from './__fixtures__/dump'
+import { ANALYSIS_CASES } from './__test-utils__/analysis-cases'
+import { dumpScopes } from './__test-utils__/dump'
 import { analyzeScopes, findVariable, scopeAnalysisOf, scopeOf } from './analysis'
 
-const FIXTURES = join(import.meta.dirname, '__fixtures__')
-
-/** One fixture: a file under `__fixtures__` and how it is read. */
+/** One fixture: a recorded source and how it is read. */
 interface Fixture {
   /** Which fixture to read. */
-  readonly file: string
+  readonly file: keyof typeof ANALYSIS_CASES
   /** How it is read, where it differs from the default. */
   readonly language?: Partial<LanguageSettings>
 }
@@ -42,8 +40,8 @@ const FIXTURE_FILES: readonly Fixture[] = [
  * @param language - How it is read
  * @returns The program's tree
  */
-function program(file: string, language: LanguageSettings): Node {
-  return parseCode(readFileSync(join(FIXTURES, file), 'utf8'), extname(file), language.sourceType).tree as Node
+function program(file: keyof typeof ANALYSIS_CASES, language: LanguageSettings): Node {
+  return parseCode(ANALYSIS_CASES[file].source, extname(file), language.sourceType).tree as Node
 }
 
 describe('analyzeScopes', () => {
@@ -51,7 +49,7 @@ describe('analyzeScopes', () => {
     it(`analyses ${fixture.file} as the reference scope manager does`, () => {
       const language = { ...DEFAULT_LANGUAGE, ...fixture.language }
       // why: the recorded dumps were written through a console, which drops the trailing space of a line listing nothing.
-      const expected = readFileSync(join(FIXTURES, fixture.file.replace(/\.[a-z]+$/, '.scopes')), 'utf8')
+      const expected = ANALYSIS_CASES[fixture.file].scopes
         .trimEnd()
         .split(/\r?\n/)
         .map((line) => line.trimEnd())

@@ -6,20 +6,8 @@ import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { readAll } from '@hyperfrontend/testing/process'
 import { CL_EXIT_INVALID, CL_EXIT_VALID, formatValidationResult, parseClArgs, runCl } from './cl'
-
-/**
- * Extracts everything written to the mock stream as a single string.
- *
- * @param stream - Stream whose buffered content should be read
- * @returns Concatenated stream output decoded as UTF-8
- */
-function drain(stream: PassThrough): string {
-  const chunks: Buffer[] = []
-  let buf: Buffer | null
-  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
-  return Buffer.concat(chunks).toString('utf8')
-}
 
 /**
  * Builds a trivial `loadCommitConfig` stand-in that returns an empty config.
@@ -44,7 +32,7 @@ function stubLoad(capture: { options?: LoadCommitConfigOptions }): (options: Loa
 async function runClCapturing(options: Omit<RunClOptions, 'stderr'>): Promise<{ code: number; stderr: string }> {
   const stderr = new PassThrough()
   const code = await runCl({ ...options, stderr })
-  return { code, stderr: drain(stderr) }
+  return { code, stderr: readAll(stderr) }
 }
 
 const MESSAGE_PATH = join(tmpdir(), 'msg.txt')

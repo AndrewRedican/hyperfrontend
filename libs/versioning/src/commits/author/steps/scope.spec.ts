@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { Keys } from '@hyperfrontend/testing/process'
 import { createTestConfig } from '../__test-utils__/base-config'
-import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
+import { createMockTerminal } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { NO_SCOPE_CANDIDATES_MESSAGE, scopeStep } from './scope'
@@ -36,7 +37,7 @@ describe('scopeStep', () => {
     ctx.defaultScope = 'alpha'
 
     const pending = scopeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.scope).toEqual(['alpha'])
@@ -51,7 +52,7 @@ describe('scopeStep', () => {
     ctx.draft = { scope: ['beta'] }
 
     const pending = scopeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Enter])
+    await term.input.sendKeys(Keys.Enter)
     await pending
 
     expect(ctx.draft.scope).toEqual(['beta'])
@@ -64,7 +65,7 @@ describe('scopeStep', () => {
     ctx.candidateScopes = ['alpha']
 
     const pending = scopeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })
@@ -77,7 +78,7 @@ describe('scopeStep', () => {
     ctx.candidateScopes = ['alpha', 'beta']
 
     const pending = scopeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.Space, TestKey.Enter])
+    await term.input.sendKeys(Keys.Space, Keys.Enter)
     await pending
 
     expect(ctx.draft.scope).toEqual(['alpha'])
@@ -90,7 +91,7 @@ describe('scopeStep', () => {
     ctx.candidateScopes = ['alpha']
 
     const pending = scopeStep.run(ctx)
-    term.input.enqueueKeys([TestKey.CtrlC])
+    await term.input.sendKeys(Keys.CtrlC)
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Cancelled })

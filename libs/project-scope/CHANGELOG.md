@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...1e12b8201eb30b82352b2f4d88d5f7663991f358) - 2026-10-24
+
+### Features
+
+- add createMemoryTree for trees held entirely in memory
+
+### Bug Fixes
+
+- commit a memory tree into memory instead of onto disk
+
 ## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...28ab8c85dd6b02b45c755c6ddbd19adc54645fe8) - 2026-10-14
 
 ### Features

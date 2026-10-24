@@ -3,7 +3,8 @@ import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createInitialState } from '../state/initial'
 import * as queueModule from './queue'
 import { send } from './send'
@@ -33,7 +34,7 @@ describe('channel/messaging/send', () => {
     jest.clearAllMocks()
 
     state = {
-      ...createInitialState('test-channel', { postMessage: jest.fn() } as unknown as Window, {
+      ...createInitialState('test-channel', createFakeWindow(), {
         contract: { accepted: [{ type: 'SYSTEM_MESSAGE' }], emitted: [{ type: 'USER_ACTION' }] },
       }),
       active: true,
@@ -48,9 +49,9 @@ describe('channel/messaging/send', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {
-        newMessage: jest.fn((data: IMessage) => ({ type: '[nexus] new-message', senderId: 'broker-id', data })),
-      } as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>({
+        newMessage: (data: IMessage) => ({ type: '[nexus] new-message', senderId: 'broker-id', data }),
+      }),
     }
   })
 

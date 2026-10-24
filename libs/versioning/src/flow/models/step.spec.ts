@@ -1,5 +1,5 @@
 import type { FlowContext, FlowStepResult } from './types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFailedResult, createNoopStep, createSkippedResult, createStep, createSuccessResult } from './step'
 
 function createMockContext(): FlowContext {
@@ -11,13 +11,7 @@ function createMockContext(): FlowContext {
     tree: {} as FlowContext['tree'],
     registry: {} as FlowContext['registry'],
     git: {} as FlowContext['git'],
-    logger: {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-    } as unknown as FlowContext['logger'],
+    logger: createMock<FlowContext['logger']>(),
     config: { preset: 'conventional' },
     state: {},
   }

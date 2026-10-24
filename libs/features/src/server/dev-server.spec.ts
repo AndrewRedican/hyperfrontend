@@ -1,12 +1,11 @@
 import type { Server } from 'node:http'
 import type { ResolvedDevConfig } from './config'
 import type { DevServerHandle } from './dev-server'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, get } from 'node:http'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir, useTempDir } from '@hyperfrontend/testing/fs'
 import { startDevServer } from './dev-server'
 import { closeServer, listen } from './listen'
 
@@ -20,12 +19,12 @@ const fetchUrl = (url: string): Promise<{ status: number; body: string }> =>
   })
 
 describe('startDevServer', () => {
-  let assetRoot: string
-  let appDir: string
+  const assets = useTempDir({ prefix: 'hf-assets-' })
+  const app = useTempDir({ prefix: 'hf-app-' })
   let handle: DevServerHandle | undefined
 
   const config = (over: Partial<ResolvedDevConfig> = {}): ResolvedDevConfig => ({
-    apps: [{ name: 'clock', outputDir: appDir, port: 0 }],
+    apps: [{ name: 'clock', outputDir: app.path, port: 0 }],
     debug: { enabled: true, messageLog: true, securityView: true },
     debugPort: 0,
     sourcePath: '/p/hf-dev.config.json',
@@ -33,55 +32,51 @@ describe('startDevServer', () => {
   })
 
   beforeEach(() => {
-    assetRoot = mkdtempSync(join(tmpdir(), 'hf-assets-'))
-    appDir = mkdtempSync(join(tmpdir(), 'hf-app-'))
-    writeFileSync(join(assetRoot, 'index.html'), '<debug>HF_MANIFEST_PLACEHOLDER</debug>')
-    writeFileSync(join(assetRoot, 'index.iife.min.js'), 'var HyperfrontendFeaturesDebugUi = {}')
-    writeFileSync(join(appDir, 'index.html'), 'APP_INDEX')
+    assets.write('index.html', '<debug>HF_MANIFEST_PLACEHOLDER</debug>')
+    assets.write('index.iife.min.js', 'var HyperfrontendFeaturesDebugUi = {}')
+    app.write('index.html', 'APP_INDEX')
   })
 
   afterEach(async () => {
     await handle?.close()
     handle = undefined
-    rmSync(assetRoot, { recursive: true, force: true })
-    rmSync(appDir, { recursive: true, force: true })
   })
 
   it('serves each app static output', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     await expect(fetchUrl(handle.apps[0]?.url ?? '')).resolves.toEqual({ status: 200, body: 'APP_INDEX' })
   })
 
   it('serves the debug UI with the manifest injected', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     await expect(fetchUrl(handle.debugUrl ?? '')).resolves.toEqual(
       expect.objectContaining({ status: 200, body: expect.stringContaining('"clock"') })
     )
   })
 
   it('serves the manifest at /__apps', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     const response = await fetchUrl(`${handle.debugUrl}__apps`)
     expect(response).toEqual(expect.objectContaining({ status: 200, body: expect.stringContaining('"name":"clock"') }))
   })
 
   it('serves the compiled debug-UI assets under /__debug/', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     await expect(fetchUrl(`${handle.debugUrl}__debug/index.iife.min.js`)).resolves.toEqual(
       expect.objectContaining({ status: 200, body: 'var HyperfrontendFeaturesDebugUi = {}' })
     )
   })
 
   it('returns 404 for an unknown control path', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     await expect(fetchUrl(`${handle.debugUrl}nope`)).resolves.toEqual(expect.objectContaining({ status: 404 }))
   })
 
   it('reports a 404 when the debug-UI assets are missing', async () => {
-    const empty = mkdtempSync(join(tmpdir(), 'hf-empty-'))
-    handle = await startDevServer(config(), { assetRoot: empty })
+    const empty = createTempDir({ prefix: 'hf-empty-' })
+    handle = await startDevServer(config(), { assetRoot: empty.path })
     const response = await fetchUrl(handle.debugUrl ?? '')
-    rmSync(empty, { recursive: true, force: true })
+    empty.remove()
     expect(response).toEqual({ status: 404, body: 'Debug UI assets not found.' })
   })
 
@@ -92,7 +87,7 @@ describe('startDevServer', () => {
   })
 
   it('exposes the running apps in the manifest', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     expect(handle.manifest.apps).toEqual([expect.objectContaining({ name: 'clock' })])
   })
 
@@ -127,9 +122,9 @@ describe('startDevServer', () => {
   it('rejects with the bind error when an app port is already in use', async () => {
     const blocker = createServer(() => undefined)
     const taken = await listen(blocker, 0)
-    const failure = await startDevServer(config({ apps: [{ name: 'clock', outputDir: appDir, port: taken }] }), { assetRoot }).catch(
-      (error: unknown) => error
-    )
+    const failure = await startDevServer(config({ apps: [{ name: 'clock', outputDir: app.path, port: taken }] }), {
+      assetRoot: assets.path,
+    }).catch((error: unknown) => error)
     await closeServer(blocker)
     expect(failure).toEqual(expect.objectContaining({ code: 'EADDRINUSE' }))
   })
@@ -139,11 +134,11 @@ describe('startDevServer', () => {
     const taken = await listen(blocker, 0)
     const started: Server[] = []
     const apps = [
-      { name: 'first', outputDir: appDir, port: 0 },
-      { name: 'second', outputDir: appDir, port: taken },
+      { name: 'first', outputDir: app.path, port: 0 },
+      { name: 'second', outputDir: app.path, port: taken },
     ]
     await startDevServer(config({ apps }), {
-      assetRoot,
+      assetRoot: assets.path,
       createServer: (handler) => {
         const server = createServer(handler)
         started.push(server)
@@ -155,7 +150,7 @@ describe('startDevServer', () => {
   })
 
   it('stops serving after close', async () => {
-    handle = await startDevServer(config(), { assetRoot })
+    handle = await startDevServer(config(), { assetRoot: assets.path })
     const url = handle.apps[0]?.url ?? ''
     await handle.close()
     handle = undefined

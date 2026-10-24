@@ -137,6 +137,22 @@ export function setupPaths(environment: TestEnvironment, projectRoot: string): s
 }
 
 /**
+ * Renders the mock lifecycle options for the preload, which reads them from the environment
+ * because it runs in a child process.
+ *
+ * @param config - The project's configuration.
+ * @returns The enabled steps, comma-separated, or undefined when none is enabled.
+ * @example Rendering the value of `HF_TEST_MOCK_LIFECYCLE`
+ * ```ts
+ * serialiseMockLifecycle({ ...config, clearMocks: true, restoreMocks: true }) // => 'clear,restore'
+ * ```
+ */
+export function serialiseMockLifecycle(config: TestConfig): string | undefined {
+  const steps = [config.clearMocks && 'clear', config.resetMocks && 'reset', config.restoreMocks && 'restore'].filter(Boolean)
+  return steps.length === 0 ? undefined : steps.join(',')
+}
+
+/**
  * Renders a project's `moduleNameMapper` for the resolution hooks, which read it from the
  * environment because they run in a child process.
  *

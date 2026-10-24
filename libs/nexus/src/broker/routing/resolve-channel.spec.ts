@@ -1,12 +1,13 @@
 import type { IAction } from '../../types/action'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createRegistry } from '../../core/registry/factory'
 import { resolveChannel } from './resolve-channel'
 
 describe('resolveChannel', () => {
-  const sourceWindow = { postMessage: jest.fn() } as unknown as Window
-  const otherWindow = { postMessage: jest.fn() } as unknown as Window
+  const sourceWindow = createFakeWindow()
+  const otherWindow = createFakeWindow()
 
   function createEvent(senderId: string, source: Window | null, origin = 'http://remote.example'): MessageEvent<IAction> {
     return {

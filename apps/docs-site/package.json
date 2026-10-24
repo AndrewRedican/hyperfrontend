@@ -59,6 +59,9 @@
     "vite": "8.2.4",
     "@tailwindcss/typography": {
       "postcss-selector-parser": "7.1.6"
+    },
+    "jsdom": {
+      "undici": "8.12.3"
     }
   }
 }

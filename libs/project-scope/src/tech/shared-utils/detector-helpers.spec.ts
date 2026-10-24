@@ -1,9 +1,6 @@
 import type { PackageJson } from '../../project/package'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { beforeEach, afterEach } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import {
   collectAllDependencies,
   parseVersionString,
@@ -88,36 +85,27 @@ describe('parseVersionString', () => {
 })
 
 describe('locateConfigFile', () => {
-  let tempDir: string
-
-  beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'config-test-'))
-  })
-
-  afterEach(() => {
-    rmSync(tempDir, { recursive: true, force: true })
-  })
+  const dir = useTempDir({ prefix: 'config-test-' })
 
   it('finds first matching config file', () => {
-    writeFileSync(join(tempDir, 'webpack.config.js'), '')
-    const result = locateConfigFile(tempDir, ['vite.config.js', 'webpack.config.js'])
+    dir.write('webpack.config.js', '')
+    const result = locateConfigFile(dir.path, ['vite.config.js', 'webpack.config.js'])
     expect(result).toBe('webpack.config.js')
   })
 
   it('returns undefined when no files match', () => {
-    const result = locateConfigFile(tempDir, ['nonexistent.config.js'])
+    const result = locateConfigFile(dir.path, ['nonexistent.config.js'])
     expect(result).toBeUndefined()
   })
 
   it('returns first match when multiple files exist', () => {
-    writeFileSync(join(tempDir, 'webpack.config.js'), '')
-    writeFileSync(join(tempDir, 'vite.config.js'), '')
-    const result = locateConfigFile(tempDir, ['vite.config.js', 'webpack.config.js'])
+    dir.writeTree({ 'webpack.config.js': '', 'vite.config.js': '' })
+    const result = locateConfigFile(dir.path, ['vite.config.js', 'webpack.config.js'])
     expect(result).toBe('vite.config.js')
   })
 
   it('handles empty patterns array', () => {
-    const result = locateConfigFile(tempDir, [])
+    const result = locateConfigFile(dir.path, [])
     expect(result).toBeUndefined()
   })
 })
