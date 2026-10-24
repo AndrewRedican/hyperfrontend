@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/testing",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A lightweight Jest-like testing library built on native Node capabilities.",
   "license": "MIT",
   "sideEffects": false,
