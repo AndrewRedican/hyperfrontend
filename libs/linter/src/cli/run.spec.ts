@@ -7,10 +7,13 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { run } from './run'
 
 const FIXTURES = join(import.meta.dirname, '..', 'config', '__fixtures__')
-const PLAIN = join(import.meta.dirname, '__fixtures__', 'plain')
 
 // why: the JSON report carries native absolute paths, which escape their backslashes on Windows, so the paths are read back rather than searched for.
 const reportedFiles = (out: readonly string[]): string[] => (parse(out.join('')) as { filePath: string }[]).map((result) => result.filePath)
+
+/** A directory holding a lone manifest, outside any configuration. */
+const PLAIN = mkdtempSync(join(tmpdir(), 'lint-plain-'))
+writeFileSync(join(PLAIN, 'package.json'), '{\n  "name": "plain-fixture"\n}\n')
 
 /** A project whose configuration sits above the directory the command runs in. */
 const TREE = mkdtempSync(join(tmpdir(), 'lint-run-'))
@@ -193,9 +196,10 @@ describe('run', () => {
     expect(captured.out.join('')).toContain('"message":"Unexpected \'debugger\' statement."')
   })
 
-  it('leaves no temporary tree behind', () => {
+  it('leaves no temporary trees behind', () => {
     rmSync(TREE, { recursive: true, force: true })
-    expect(existsSync(TREE)).toBe(false)
+    rmSync(PLAIN, { recursive: true, force: true })
+    expect([existsSync(TREE), existsSync(PLAIN)]).toEqual([false, false])
   })
 
   it('prints an empty JSON report for a clean run', async () => {
