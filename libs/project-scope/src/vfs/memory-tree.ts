@@ -1,13 +1,15 @@
+import type { MemoryCommit } from './memory-commit'
 import type { TreeStore } from './store'
 import type { CreateTreeOptions, Tree } from './types'
 import { posix } from 'node:path'
 import { from as arrayFrom } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { defineProperty, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { isAbsolute, removeTrailingSlash, resolvePath } from '../core/path'
 import { createStoreTree } from './fs-tree'
+import { MEMORY_COMMIT } from './memory-commit'
 
 /**
  * The files a memory tree starts with, keyed by path relative to its root.
@@ -62,7 +64,8 @@ export function createMemoryStore(root: string, files: Map<string, Buffer>): Tre
  *
  * The starting files are the tree's base layer: they read as existing files and are not
  * reported by `listChanges`, while everything written, renamed or deleted afterwards is
- * buffered and reported exactly as a disk-backed tree reports it. Directories exist wherever
+ * buffered and reported exactly as a disk-backed tree reports it. `commitChanges` applies the
+ * buffered changes to the tree's own files and never to disk. Directories exist wherever
  * a file path implies them. Paths are portable, so a native Windows path and its POSIX
  * spelling name the same file.
  *
@@ -88,5 +91,15 @@ export function createMemoryTree(files: MemoryTreeFiles = {}, options: MemoryTre
       typeof content === 'string' ? Buffer.from(content, 'utf-8') : content
     )
   }
-  return createStoreTree(root, createMemoryStore(root, contents), { verbose: options.verbose })
+  const tree = createStoreTree(root, createMemoryStore(root, contents), { verbose: options.verbose })
+  const commit: MemoryCommit = (change) => {
+    const path = resolvePath(root, change.path)
+    if (change.type !== 'DELETE') {
+      contents.set(path, change.content as Buffer)
+      return
+    }
+    for (const key of arrayFrom(contents.keys())) if (key === path || key.startsWith(`${path}${posix.sep}`)) contents.delete(key)
+  }
+  defineProperty(tree, MEMORY_COMMIT, { value: commit })
+  return tree
 }

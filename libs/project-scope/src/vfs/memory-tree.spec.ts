@@ -1,6 +1,8 @@
+import { existsSync } from 'node:fs'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolvePath } from '../core/path'
+import { commitChanges } from './commit'
 import { createMemoryStore, createMemoryTree } from './memory-tree'
 
 const SEED = {
@@ -109,6 +111,46 @@ describe('createMemoryTree', () => {
 
   it('reports no symbolic links', () => {
     expect(createMemoryTree(SEED).isSymlink('package.json')).toBe(false)
+  })
+})
+
+describe('commitChanges on a memory tree', () => {
+  const ROOT = resolvePath('/hf-memory-tree-never-on-disk')
+
+  it('makes the committed content the new base layer', () => {
+    const tree = createMemoryTree(SEED, { root: ROOT })
+    tree.write('package.json', '{"name":"committed"}')
+    commitChanges(tree)
+    expect({ read: tree.read('package.json', 'utf-8'), changes: tree.listChanges() }).toEqual({ read: '{"name":"committed"}', changes: [] })
+  })
+
+  it('writes nothing to disk', () => {
+    const tree = createMemoryTree({}, { root: ROOT })
+    tree.write('created.txt', 'x')
+    commitChanges(tree)
+    expect(existsSync(ROOT)).toBe(false)
+  })
+
+  it('counts the changes it applied', () => {
+    const tree = createMemoryTree(SEED, { root: ROOT })
+    tree.write('README.md', '#')
+    tree.write('package.json', '{}')
+    tree.delete('packages/app/src/index.ts')
+    const { created, updated, deleted } = commitChanges(tree)
+    expect({ created, updated, deleted }).toEqual({ created: 1, updated: 1, deleted: 1 })
+  })
+
+  it('removes a committed directory together with everything under it', () => {
+    const tree = createMemoryTree(SEED, { root: ROOT })
+    tree.delete('packages')
+    commitChanges(tree)
+    expect({ app: tree.exists('packages/app/package.json'), packages: tree.exists('packages'), kept: tree.exists('package.json') }).toEqual(
+      {
+        app: false,
+        packages: false,
+        kept: true,
+      }
+    )
   })
 })
 

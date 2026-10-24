@@ -40,7 +40,7 @@ tree.write('packages/app/package.json', '{"name":"app","version":"1.1.0"}')
 tree.listChanges() // one UPDATE, with the original content attached
 ```
 
-Directories exist wherever a file path implies them, and the root defaults to `/workspace`; pass [`root`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-MemoryTreeOptions-prop-root) to resolve absolute paths against another one.
+[`commitChanges`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-commitChanges) applies a memory tree's changes to its own files and never to disk. Directories exist wherever a file path implies them, and the root defaults to `/workspace`; pass [`root`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-MemoryTreeOptions-prop-root) to resolve absolute paths against another one.
 
 ### Reading Files
 
