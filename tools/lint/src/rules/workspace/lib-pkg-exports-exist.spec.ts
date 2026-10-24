@@ -14,7 +14,7 @@ testRule(rule, {
     {
       name: 'a file that exists as written',
       path: PUBLISHABLE,
-      text: '{ "exports": { "./package.json": "./package.json", "./src": "./src/index.ts" } }',
+      text: '{ "exports": { "./readme": "./src/sub/README.md", "./src": "./src/index.ts" } }',
     },
     {
       name: 'module and commonjs paths whose source exists',

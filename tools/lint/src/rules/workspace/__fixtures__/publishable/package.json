@@ -1,6 +1,0 @@
-{
-  "name": "@hyperfrontend/fixture",
-  "exports": {
-    ".": "./src/index.js"
-  }
-}
