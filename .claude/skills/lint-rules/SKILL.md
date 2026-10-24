@@ -129,7 +129,7 @@ testRule(rule, {
 
 - Each case is one test: `valid` must report nothing; `invalid` lists every message in position order and, for a fixing rule, the `output` after fixes. Cases take `options`, `settings`, `language` and `root` like a config block.
 - Compute positions from the case's own text (`text.indexOf(needle) + 1`), never by counting lines by hand.
-- Rules that read the workspace use a disposable fixture workspace under `__fixtures__/` (for instance `createLibraryWorkspace()`), created at module level and removed by a final `it('removes the disposable workspace', …)`; `afterAll` is not available.
+- Rules that read the workspace use a disposable workspace written into the temporary directory from a `__test-utils__` module (for instance `createLibraryWorkspace()`), created at module level and removed by a final `it('removes the disposable workspace', …)`; `afterAll` is not available. Never keep test material as files at rest: `workspace/no-test-fixtures` reports fixture directories and any non-code file under `__test-utils__`.
 - Test names are assertive: `reports X`, `allows Y`, never `should …`.
 - A workspace rule's spec imports `testRule` from `@hyperfrontend/linter/testing`.
 - 100 % lines, branches and functions, measured by `npx nx test lib-linter` for packaged rules and `npx nx test tool-lint` for workspace rules. One spec alone: see the single-spec recipe in memory (`node --import libs/testing/src/hooks/index.ts --test --experimental-test-coverage …` from the project root). Uncoverable branches: the `lint-coverage` skill.
