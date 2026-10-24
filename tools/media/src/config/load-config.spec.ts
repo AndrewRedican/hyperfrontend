@@ -1,17 +1,15 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import { resolve } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { loadConfig, validateVariants } from './load-config'
 
-const roots: string[] = []
+const directories: TempDir[] = []
 
 afterAll(() => {
-  for (const root of roots) {
-    rmSync(root, { recursive: true, force: true })
-  }
+  for (const directory of directories) directory.remove()
 })
 
 /**
@@ -21,13 +19,11 @@ afterAll(() => {
  * @returns Absolute path of the file.
  */
 function configFile(body: string): string {
-  const root = mkdtempSync(join(tmpdir(), 'media-config-'))
-  roots.push(root)
-  const filePath = join(root, 'media.config.ts')
+  const directory = createTempDir({ prefix: 'media-config-' })
+  directories.push(directory)
   // why: the fixture imports the recorder by file URL; a native absolute path reads as a URL scheme on Windows
   const defineConfig = pathToFileURL(resolve(fileURLToPath(import.meta.url), '../define-config.ts')).href
-  writeFileSync(filePath, `import { defineConfig } from '${defineConfig}'\nexport default defineConfig(${body})\n`)
-  return filePath
+  return directory.write('media.config.ts', `import { defineConfig } from '${defineConfig}'\nexport default defineConfig(${body})\n`)
 }
 
 describe('loadConfig', () => {
