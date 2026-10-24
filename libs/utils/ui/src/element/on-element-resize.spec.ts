@@ -1,84 +1,56 @@
-import type { ResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
-import { before as beforeAll } from 'node:test'
+import type { ResizeObserverController } from '@hyperfrontend/testing/browser'
+import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { onElementResize } from './on-element-resize'
 
 describe('onElementResize', () => {
-  let mock: ResizeObserverMock
+  let observers: ResizeObserverController
 
-  beforeAll(() => {
-    mock = setupResizeObserverMock()
+  beforeEach(() => {
+    observers = installResizeObserver()
+  })
+
+  afterEach(() => {
+    observers.restore()
   })
 
   it('observes the given element', () => {
     const element = document.createElement('div')
-    const callback = jest.fn()
 
-    const unsubscribeResize = onElementResize(element, callback)
+    const unsubscribeResize = onElementResize(element, jest.fn())
 
-    expect(mock.observe).toHaveBeenCalledWith(element)
+    expect(observers.isObserved(element)).toBe(true)
     unsubscribeResize()
   })
 
-  it('triggers the callback with the correct arguments when the element is resized', () => {
+  it('triggers the callback with the content rect when the element is resized', () => {
     const element = document.createElement('div')
     const callback = jest.fn()
 
     const unsubscribeResize = onElementResize(element, callback)
+    observers.resize(element, { width: 200, height: 100 })
 
-    const contentRect: DOMRectReadOnly = {
-      x: 0,
-      y: 0,
-      width: 200,
-      height: 100,
-      top: 0,
-      bottom: 100,
-      left: 0,
-      right: 200,
-      toJSON: () => ({}),
-    }
-
-    const entry = { contentRect, target: element }
-    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
-
-    expect(callback).toHaveBeenCalledWith(contentRect)
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ width: 200, height: 100, right: 200, bottom: 100 }))
     unsubscribeResize()
   })
 
   it('stops observing the element when the unsubscribe function is called', () => {
     const element = document.createElement('div')
-    const callback = jest.fn()
 
-    const unsubscribeResize = onElementResize(element, callback)
-
+    const unsubscribeResize = onElementResize(element, jest.fn())
     unsubscribeResize()
 
-    expect(mock.unobserve).toHaveBeenCalledWith(element)
+    expect(observers.isObserved(element)).toBe(false)
   })
 
-  it('ignores resize notifications after the unsubscribe function is called', () => {
+  it('ignores a resize notification that arrives after the unsubscribe function is called', () => {
     const element = document.createElement('div')
     const callback = jest.fn()
 
     const unsubscribeResize = onElementResize(element, callback)
-
     unsubscribeResize()
-
-    const contentRect: DOMRectReadOnly = {
-      x: 0,
-      y: 0,
-      width: 300,
-      height: 150,
-      top: 0,
-      bottom: 150,
-      left: 0,
-      right: 300,
-      toJSON: () => ({}),
-    }
-
-    const entry = { contentRect, target: element }
-    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
+    observers.resizeLate(element, { width: 300, height: 150 })
 
     expect(callback).not.toHaveBeenCalled()
   })

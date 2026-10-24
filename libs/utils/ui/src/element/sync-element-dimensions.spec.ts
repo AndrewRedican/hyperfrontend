@@ -1,36 +1,51 @@
+import type { ResizeObserverController } from '@hyperfrontend/testing/browser'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
+import { installResizeObserver } from '@hyperfrontend/testing/browser'
 import { syncElementDimensions } from './sync-element-dimensions'
+
+/**
+ * Where the source element sits and how large it is, in pixels.
+ */
+type SourceRect = {
+  /** Horizontal size. */
+  width: number
+  /** Vertical size. */
+  height: number
+  /** Distance of the top edge from the viewport's top. */
+  top: number
+  /** Distance of the left edge from the viewport's left. */
+  left: number
+}
 
 describe('syncElementDimensions', () => {
   let sourceElement: HTMLElement
   let targetElement: HTMLElement
-  let resizeObserverMock: ReturnType<typeof setupResizeObserverMock>
+  let observers: ResizeObserverController
+
+  /**
+   * Makes the source element measure as the given rectangle.
+   *
+   * @param rect - Where the element sits and how large it is.
+   */
+  const measureSourceAs = (rect: SourceRect): void => {
+    const { width, height, top, left } = rect
+    jest.replaceProperty(
+      sourceElement,
+      'getBoundingClientRect',
+      jest.fn(() => ({ width, height, top, left, bottom: top + height, right: left + width, x: left, y: top, toJSON: () => ({}) }))
+    )
+  }
 
   beforeEach(() => {
-    resizeObserverMock = setupResizeObserverMock()
+    observers = installResizeObserver()
 
     sourceElement = document.createElement('div')
     targetElement = document.createElement('div')
     document.body.appendChild(sourceElement)
     document.body.appendChild(targetElement)
 
-    Object.defineProperty(sourceElement, 'getBoundingClientRect', {
-      value: jest.fn(() => ({
-        width: 200,
-        height: 100,
-        top: 10,
-        left: 20,
-        bottom: 110,
-        right: 220,
-        x: 20,
-        y: 10,
-        toJSON: () => ({}),
-      })),
-      writable: true,
-      configurable: true,
-    })
+    measureSourceAs({ width: 200, height: 100, top: 10, left: 20 })
 
     sourceElement.style.position = 'absolute'
   })
@@ -38,6 +53,7 @@ describe('syncElementDimensions', () => {
   afterEach(() => {
     document.body.innerHTML = ''
     jest.clearAllMocks()
+    jest.restoreAllMocks()
   })
 
   it('syncs dimensions from source to target element', () => {
@@ -90,34 +106,9 @@ describe('syncElementDimensions', () => {
 
     jest.runAllTimers()
 
-    Object.defineProperty(sourceElement, 'getBoundingClientRect', {
-      value: jest.fn(() => ({
-        width: 300,
-        height: 150,
-        top: 15,
-        left: 25,
-        bottom: 165,
-        right: 325,
-        x: 25,
-        y: 15,
-        toJSON: () => ({}),
-      })),
-      writable: true,
-      configurable: true,
-    })
+    measureSourceAs({ width: 300, height: 150, top: 15, left: 25 })
 
-    resizeObserverMock.callback(
-      [
-        {
-          target: sourceElement,
-          contentRect: {} as DOMRectReadOnly,
-          borderBoxSize: [] as unknown as ResizeObserverSize[],
-          contentBoxSize: [] as unknown as ResizeObserverSize[],
-          devicePixelContentBoxSize: [] as unknown as ResizeObserverSize[],
-        },
-      ],
-      {} as ResizeObserver
-    )
+    observers.resize(sourceElement, { width: 300, height: 150 })
 
     const { width, height, top, left } = targetElement.style
     expect({ width, height, top, left }).toEqual({ width: '300px', height: '150px', top: '15px', left: '25px' })
@@ -169,38 +160,11 @@ describe('syncElementDimensions', () => {
 
     cleanup()
 
-    Object.defineProperty(sourceElement, 'getBoundingClientRect', {
-      value: jest.fn(() => ({
-        width: 500,
-        height: 500,
-        top: 50,
-        left: 50,
-        bottom: 550,
-        right: 550,
-        x: 50,
-        y: 50,
-        toJSON: () => ({}),
-      })),
-      writable: true,
-      configurable: true,
-    })
+    measureSourceAs({ width: 500, height: 500, top: 50, left: 50 })
 
     const initialWidth = targetElement.style.width
 
-    if (resizeObserverMock.callback) {
-      resizeObserverMock.callback(
-        [
-          {
-            target: sourceElement,
-            contentRect: {} as DOMRectReadOnly,
-            borderBoxSize: [] as unknown as ResizeObserverSize[],
-            contentBoxSize: [] as unknown as ResizeObserverSize[],
-            devicePixelContentBoxSize: [] as unknown as ResizeObserverSize[],
-          },
-        ],
-        {} as ResizeObserver
-      )
-    }
+    observers.resizeLate(sourceElement, { width: 500, height: 500 })
 
     expect(targetElement.style.width).toBe(initialWidth)
   })
