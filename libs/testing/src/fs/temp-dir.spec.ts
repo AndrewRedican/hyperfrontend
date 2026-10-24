@@ -62,9 +62,10 @@ describe('createTempDir options', () => {
 
   it('creates the directory in the given parent, with the given prefix', () => {
     const dir = createTempDir({ parent: join(parent, 'made'), prefix: 'custom-' })
+    // why: on Windows the temporary directory can carry an 8.3 short name (RUNNER~1), which only the native resolution expands, as createTempDir does.
     assert.deepEqual(
       { parent: dirname(dir.path), named: basename(dir.path).startsWith('custom-') },
-      { parent: realpathSync(join(parent, 'made')), named: true }
+      { parent: realpathSync.native(join(parent, 'made')), named: true }
     )
   })
 
