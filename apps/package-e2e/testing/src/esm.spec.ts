@@ -18,7 +18,7 @@ import { PROJECT_DIR, installedPath, installedUrl, runChildSuite, tapCount, with
 const consumers = writeConsumerProjects()
 after(() => consumers.remove())
 
-const ENTRIES = ['', 'coverage', 'dom', 'fs', 'hooks', 'process', 'reporter', 'runner']
+const ENTRIES = ['', 'browser', 'coverage', 'dom', 'fs', 'hooks', 'process', 'reporter', 'runner']
 const MAIN_EXPORTS = [
   'createDeferred',
   'createMock',
@@ -72,16 +72,11 @@ const JEST_METHODS = [
   'requireActual',
   'requireMock',
 ]
-const FS_EXPORTS = ['createTempDir', 'useTempDir', 'writeFile', 'writeTree']
-const PROCESS_EXPORTS = [
-  'Keys',
-  'captureStdio',
-  'createCapturedOutput',
-  'createFakeChildProcess',
-  'createTtyInput',
-  'readAll',
-  'spawnSyncResult',
-]
+const HELPER_EXPORTS = {
+  browser: ['createFakeWindow', 'createWindowPair', 'installResizeObserver'],
+  fs: ['createTempDir', 'useTempDir', 'writeFile', 'writeTree'],
+  process: ['Keys', 'captureStdio', 'createCapturedOutput', 'createFakeChildProcess', 'createTtyInput', 'readAll', 'spawnSyncResult'],
+}
 const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']
 const BASELINE_EXCLUDE = ['**/*.spec.ts', '**/*.spec.tsx', '**/*.d.ts', 'test.config.ts']
 const COVERAGE_EXPORTS = [
@@ -138,9 +133,10 @@ describe('@hyperfrontend/testing ESM', () => {
   describe('package layout', () => {
     const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
 
-    it('maps the eight entries and the manifest in exports', () => {
+    it('maps the nine entries and the manifest in exports', () => {
       expect(Object.keys(manifest.exports).sort()).toEqual([
         '.',
+        './browser',
         './coverage',
         './dom',
         './fs',
@@ -580,9 +576,21 @@ describe('@hyperfrontend/testing ESM', () => {
     })
   })
 
-  describe('installed fs entry', () => {
-    it('exports the temporary directory helpers', async () => {
-      expect(Object.keys(await import(installedUrl('fs', 'index.mjs'))).sort()).toEqual(FS_EXPORTS)
+  describe('installed helper entries', () => {
+    it('export the documented surfaces', async () => {
+      const surfaces = await Promise.all(
+        Object.keys(HELPER_EXPORTS).map(async (entry) => [entry, Object.keys(await import(installedUrl(entry, 'index.mjs'))).sort()])
+      )
+      expect(Object.fromEntries(surfaces)).toEqual(HELPER_EXPORTS)
+    })
+
+    it('delivers a post between a linked pair of windows', async () => {
+      const { createWindowPair } = await import(installedUrl('browser', 'index.mjs'))
+      const [host, frame] = createWindowPair({ delivery: 'sync' })
+      const received: unknown[] = []
+      frame.addEventListener('message', (event: MessageEvent) => received.push({ data: event.data, fromHost: event.source === host }))
+      frame.postMessage('PING', '*')
+      expect(received).toEqual([{ data: 'PING', fromHost: true }])
     })
 
     it('writes a tree into a temporary directory and removes it', async () => {
@@ -591,12 +599,6 @@ describe('@hyperfrontend/testing ESM', () => {
       const manifest = dir.readJson('package.json')
       dir.remove()
       expect({ manifest, removed: !existsSync(dir.path) }).toEqual({ manifest: { name: 'app' }, removed: true })
-    })
-  })
-
-  describe('installed process entry', () => {
-    it('exports the process stand-ins', async () => {
-      expect(Object.keys(await import(installedUrl('process', 'index.mjs'))).sort()).toEqual(PROCESS_EXPORTS)
     })
 
     it('types keys into a terminal input one chunk at a time', async () => {

@@ -110,7 +110,7 @@ describe('@hyperfrontend/testing CJS', () => {
     })
 
     it('resolves the require condition of every entry to a CommonJS file', () => {
-      const entries = ['.', './coverage', './dom', './fs', './hooks', './process', './reporter', './runner']
+      const entries = ['.', './browser', './coverage', './dom', './fs', './hooks', './process', './reporter', './runner']
       const resolved = entries.map((entry) => {
         const target = manifest.exports[entry].require
         return { entry, target, exists: typeof target === 'string' && existsSync(installedPath(target)) }
