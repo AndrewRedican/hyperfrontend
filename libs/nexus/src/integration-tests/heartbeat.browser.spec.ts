@@ -1,12 +1,13 @@
-import type { MockWindow } from './test-utils'
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createWindowPair } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
-import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
+import { createContractPair } from './test-utils'
 
 describe('Integration: Heartbeat', () => {
-  let windowA: MockWindow
-  let windowB: MockWindow
+  let windowA: FakeWindow
+  let windowB: FakeWindow
 
   beforeAll(() => {
     jest.useFakeTimers()
@@ -17,10 +18,7 @@ describe('Integration: Heartbeat', () => {
   })
 
   beforeEach(() => {
-    windowA = createMockWindow()
-    windowB = createMockWindow()
-
-    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+    ;[windowA, windowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
   })
 
   afterEach(() => {
@@ -32,11 +30,11 @@ describe('Integration: Heartbeat', () => {
   const { contractA, contractB } = createContractPair(['PING', 'DATA'], ['PONG', 'ACK'])
 
   const setupPair = () => {
-    const brokerA = createBroker({ name: 'heartbeat-broker-a', contract: contractA, window: windowA as unknown as Window })
-    const brokerB = createBroker({ name: 'heartbeat-broker-b', contract: contractB, window: windowB as unknown as Window })
+    const brokerA = createBroker({ name: 'heartbeat-broker-a', contract: contractA, window: windowA })
+    const brokerB = createBroker({ name: 'heartbeat-broker-b', contract: contractB, window: windowB })
     return {
-      channelA: brokerA.addChannel('to-b', windowB as unknown as Window),
-      channelB: brokerB.addChannel('to-a', windowA as unknown as Window),
+      channelA: brokerA.addChannel('to-b', windowB),
+      channelB: brokerB.addChannel('to-a', windowA),
     }
   }
 

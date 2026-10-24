@@ -4,7 +4,8 @@ import type { ChannelSecurityDependencies } from '../../channel/types'
 import type { SecurityProvider, SecurityWireChannel } from '../../types/security'
 import type { BrokerState } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -15,10 +16,10 @@ describe('addChannel', () => {
   const brokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: {} as unknown as Window,
+    window: createFakeWindow(),
     contract,
     settings: { contract },
-    logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger,
+    logger: createMock<Logger>(),
   }
 
   let registry: ReturnType<typeof createRegistry>
@@ -33,7 +34,7 @@ describe('addChannel', () => {
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({ getBrokerId: () => 'broker-1', getContract: () => contract })
-    target = {} as unknown as Window
+    target = createFakeWindow()
     wireChannel = {
       label: 'wire',
       send: jest.fn(),

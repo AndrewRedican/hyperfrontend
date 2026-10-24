@@ -6,7 +6,8 @@ import type { SecurityProvider, SecurityTransport, SecurityWireChannel } from '.
 import type { ChannelInternals, ChannelSecurityDependencies } from '../types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createInitialState } from '../state/initial'
 import { connect } from './connect'
 
@@ -47,8 +48,8 @@ describe('channel/lifecycle/connect', () => {
 
   beforeEach(() => {
     sentActions = []
-    logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() } as unknown as Logger
-    target = { postMessage: jest.fn() } as unknown as Window
+    logger = createMock<Logger>()
+    target = createFakeWindow()
     wire = {
       label: 'test-channel',
       send: jest.fn(),

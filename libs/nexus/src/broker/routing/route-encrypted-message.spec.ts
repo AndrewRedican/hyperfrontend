@@ -7,7 +7,8 @@ import type { IChannelContract } from '../../types/contract'
 import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
 import type { RouteHandler, RoutingContext } from './types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -48,15 +49,7 @@ describe('routeEncryptedMessage', () => {
       getContract: () => validContract,
     })
     router = createRouter({})
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
     routingContext = {
       state: createMockBrokerState(),
       registry,
@@ -66,7 +59,7 @@ describe('routeEncryptedMessage', () => {
       getSupportedProtocols: () => ['none'],
       security: { localId: 'broker-1', getProvider: () => undefined, dispatch: () => undefined },
     }
-    sourceWindow = { postMessage: jest.fn() } as unknown as Window
+    sourceWindow = createFakeWindow()
   })
 
   function createMockTransport(overrides: Partial<SecurityTransport> = {}): SecurityTransport {
@@ -84,8 +77,8 @@ describe('routeEncryptedMessage', () => {
 
   function addMockChannel(
     overrides: Partial<{ origin: string | null; transport: SecurityTransport | null; notifyEvent: Mock }> = {}
-  ): Partial<ChannelHandle> {
-    const mockChannel: Partial<ChannelHandle> = {
+  ): ChannelHandle {
+    const mockChannel = createMock<ChannelHandle>({
       id: 'channel-1',
       name: 'test-channel',
       target: sourceWindow,
@@ -94,8 +87,8 @@ describe('routeEncryptedMessage', () => {
       getOrigin: () => ('origin' in overrides ? (overrides.origin as string | null) : 'http://example.com'),
       getSecurityTransport: () => ('transport' in overrides ? (overrides.transport as SecurityTransport | null) : null),
       notifyEvent: overrides.notifyEvent ?? jest.fn(),
-    }
-    registry.add(mockChannel as ChannelHandle)
+    })
+    registry.add(mockChannel)
     return mockChannel
   }
 
@@ -142,9 +135,9 @@ describe('routeEncryptedMessage', () => {
 
     it('resolves the channel by source window even when another channel shares the origin', () => {
       addMockChannel({ transport: null })
-      const otherWindow = { postMessage: jest.fn() } as unknown as Window
+      const otherWindow = createFakeWindow()
       const transport = createMockTransport()
-      const otherChannel: Partial<ChannelHandle> = {
+      const otherChannel = createMock<ChannelHandle>({
         id: 'channel-2',
         name: 'other-channel',
         target: otherWindow,
@@ -152,9 +145,8 @@ describe('routeEncryptedMessage', () => {
         getName: () => 'other-channel',
         getOrigin: () => 'http://example.com',
         getSecurityTransport: () => transport,
-        notifyEvent: jest.fn(),
-      }
-      registry.add(otherChannel as ChannelHandle)
+      })
+      registry.add(otherChannel)
 
       routeEncryptedMessage(routingContext, router, encryptedEvent({ source: otherWindow }))
 

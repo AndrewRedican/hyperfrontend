@@ -1,9 +1,8 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Mock } from '@hyperfrontend/testing'
 import type { SecurityErrorEventData } from '../types/events'
 import type { SecurityErrorCode } from '../types/security'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it } from '@hyperfrontend/testing'
 import { createSecurityErrorEventData, logSecurityError, readProtocolErrorCode } from './errors'
 
 const FRAME_VERDICTS: readonly SecurityErrorCode[] = [
@@ -19,34 +18,10 @@ interface CodedError extends Error {
   code?: unknown
 }
 
-interface LoggerHarness {
-  logger: Logger
-  error: Mock
-  warn: Mock
-}
-
 function createCodedError(code: unknown, message = 'verdict'): CodedError {
   const error: CodedError = createError(message)
   error.code = code
   return error
-}
-
-function createLoggerHarness(): LoggerHarness {
-  const error = jest.fn()
-  const warn = jest.fn()
-  const logger: Logger = {
-    error,
-    warn,
-    log: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-    setLogLevel: jest.fn(),
-    getLogLevel: jest.fn(),
-    channel: jest.fn(),
-    timed: jest.fn(),
-    timedAsync: jest.fn(),
-  }
-  return { logger, error, warn }
 }
 
 describe('security/errors', () => {
@@ -132,53 +107,53 @@ describe('security/errors', () => {
 
   describe('logSecurityError', () => {
     it('logs an unknown error with its cause through logger.error', () => {
-      const { logger, error } = createLoggerHarness()
+      const logger = createMock<Logger>()
       const cause = createError('Original')
       const errorData: SecurityErrorEventData = { message: 'Unknown error occurred', code: 'unknown', cause }
 
       logSecurityError(logger, 'my-channel', errorData)
 
-      expect(error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', cause)
+      expect(logger.error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', cause)
     })
 
     it('logs an unknown error without a cause through logger.error', () => {
-      const { logger, error } = createLoggerHarness()
+      const logger = createMock<Logger>()
 
       logSecurityError(logger, 'my-channel', { message: 'Unknown error occurred', code: 'unknown' })
 
-      expect(error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', undefined)
+      expect(logger.error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', undefined)
     })
 
     it('does not warn for an unknown error', () => {
-      const { logger, warn } = createLoggerHarness()
+      const logger = createMock<Logger>()
 
       logSecurityError(logger, 'my-channel', { message: 'Unknown error occurred', code: 'unknown' })
 
-      expect(warn).not.toHaveBeenCalled()
+      expect(logger.warn).not.toHaveBeenCalled()
     })
 
     it('logs a protocol verdict through logger.warn', () => {
-      const { logger, warn } = createLoggerHarness()
+      const logger = createMock<Logger>()
 
       logSecurityError(logger, 'secure-channel', { message: 'Frame counter went backwards', code: 'replayed' })
 
-      expect(warn).toHaveBeenCalledWith('secure-channel security error:', '[replayed]', 'Frame counter went backwards')
+      expect(logger.warn).toHaveBeenCalledWith('secure-channel security error:', '[replayed]', 'Frame counter went backwards')
     })
 
     it('logs a transport code through logger.warn', () => {
-      const { logger, warn } = createLoggerHarness()
+      const logger = createMock<Logger>()
 
       logSecurityError(logger, 'secure-channel', { message: 'No confirmation arrived', code: 'security-unconfirmed' })
 
-      expect(warn).toHaveBeenCalledWith('secure-channel security error:', '[security-unconfirmed]', 'No confirmation arrived')
+      expect(logger.warn).toHaveBeenCalledWith('secure-channel security error:', '[security-unconfirmed]', 'No confirmation arrived')
     })
 
     it('does not log a coded error through logger.error', () => {
-      const { logger, error } = createLoggerHarness()
+      const logger = createMock<Logger>()
 
       logSecurityError(logger, 'secure-channel', { message: 'Frame counter went backwards', code: 'replayed' })
 
-      expect(error).not.toHaveBeenCalled()
+      expect(logger.error).not.toHaveBeenCalled()
     })
   })
 })

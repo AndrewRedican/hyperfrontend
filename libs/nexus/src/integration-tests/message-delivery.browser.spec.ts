@@ -1,20 +1,18 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IChannelContract } from '../types/contract'
 import type { IMessage } from '../types/message'
-import type { MockWindow } from './test-utils'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createWindowPair } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
-import { createMockWindow, linkMockWindows, createContractPair, createTestContract } from './test-utils'
+import { createContractPair, createTestContract } from './test-utils'
 
 describe('Message Delivery Integration', () => {
-  let windowA: MockWindow
-  let windowB: MockWindow
+  let windowA: FakeWindow
+  let windowB: FakeWindow
 
   beforeEach(() => {
-    windowA = createMockWindow()
-    windowB = createMockWindow()
-
-    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+    ;[windowA, windowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
   })
 
   afterEach(() => {
@@ -22,11 +20,11 @@ describe('Message Delivery Integration', () => {
   })
 
   function createConnectedPair(contractA: IChannelContract, contractB: IChannelContract) {
-    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-    const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+    const channelA = brokerA.addChannel('to-b', windowB)
 
-    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
-    const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
+    const channelB = brokerB.addChannel('to-a', windowA)
 
     channelA.connect()
     channelB.connect()

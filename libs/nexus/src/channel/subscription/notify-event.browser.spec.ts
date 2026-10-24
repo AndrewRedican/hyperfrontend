@@ -5,7 +5,7 @@ import type { ChannelEvent } from '../../types/events'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import { notifyEvent } from './notify-event'
 
@@ -29,7 +29,7 @@ describe('channel/subscription/notify-event', () => {
   let logger: Logger
 
   beforeEach(() => {
-    logger = { debug: jest.fn(), error: jest.fn() } as unknown as Logger
+    logger = createMock<Logger>()
 
     state = createInitialState('test-channel', window, { logger })
 
@@ -41,7 +41,7 @@ describe('channel/subscription/notify-event', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
     }
   })
 

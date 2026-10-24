@@ -12,6 +12,7 @@ import type { SecureTransportConfig } from './types'
 import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createSecureTransport } from './secure-transport'
 
 // magic: First byte the scripted protocol stamps on its hello frame.
@@ -76,7 +77,7 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
     return { label, ...channel }
   })
   const provider: SecurityProvider = { createChannel, protocolProvider: jest.fn() }
-  const postMessage = jest.fn()
+  const target = createFakeWindow()
   const onAction = jest.fn()
   const onError = jest.fn()
   const onConfirmed = jest.fn()
@@ -85,7 +86,7 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
     protocol: 'v4',
     provider,
     label: 'spec-channel',
-    target: { postMessage } as unknown as Window,
+    target,
     getOrigin: () => null,
     originId: ORIGIN_ID,
     targetId: TARGET_ID,
@@ -101,7 +102,18 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
   if (!captured.options) {
     throw createError('The provider did not build a wire channel')
   }
-  return { transport, channel, options: captured.options, createChannel, provider, postMessage, onAction, onError, onConfirmed, onFailed }
+  return {
+    transport,
+    channel,
+    options: captured.options,
+    createChannel,
+    provider,
+    postMessage: target.postMessage,
+    onAction,
+    onError,
+    onConfirmed,
+    onFailed,
+  }
 }
 
 function createDrop(overrides: Partial<SecurityPacketDrop> = {}): SecurityPacketDrop {

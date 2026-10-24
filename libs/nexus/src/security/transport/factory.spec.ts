@@ -9,6 +9,7 @@ import type {
 import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_REQUEST_RETRY_MS } from '../../constants/defaults'
 import { createSecurityTransport } from './factory'
 
@@ -52,7 +53,7 @@ function createConfig(overrides: Partial<SecurityTransportConfig> = {}): Securit
   return {
     protocol: 'none',
     label: 'factory-spec',
-    target: { postMessage: jest.fn() } as unknown as Window,
+    target: createFakeWindow(),
     getOrigin: () => null,
     originId: ORIGIN_ID,
     targetId: TARGET_ID,
@@ -99,23 +100,21 @@ describe('createSecurityTransport', () => {
     })
 
     it('posts actions unchanged', () => {
-      const postMessage = jest.fn()
-      const transport = createSecurityTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createSecurityTransport(createConfig({ target }))
 
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
 
     it('posts to the pinned origin', () => {
-      const postMessage = jest.fn()
-      const transport = createSecurityTransport(
-        createConfig({ target: { postMessage } as unknown as Window, getOrigin: () => 'https://custom.example.com' })
-      )
+      const target = createFakeWindow()
+      const transport = createSecurityTransport(createConfig({ target, getOrigin: () => 'https://custom.example.com' }))
 
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://custom.example.com')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://custom.example.com')
     })
   })
 

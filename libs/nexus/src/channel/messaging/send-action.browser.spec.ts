@@ -1,10 +1,12 @@
 import type { Mock } from '@hyperfrontend/testing'
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IAction } from '../../types/action'
 import type { ChannelState } from '../../types/channel'
 import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { HANDSHAKE_ACTION_TYPES } from '../../constants/handshake-actions'
 import { ACTION_TYPES } from '../../types/action'
 import { createInitialState } from '../state/initial'
@@ -44,13 +46,13 @@ describe('channel/messaging/send-action', () => {
     return undefined
   }
 
-  let postMessage: Mock
+  let target: FakeWindow
   let state: ChannelState
   let channel: ChannelInternals
   let transport: SecurityTransport
 
   beforeEach(() => {
-    postMessage = jest.fn()
+    target = createFakeWindow()
     transport = {
       send: jest.fn(),
       receive: jest.fn(),
@@ -62,7 +64,7 @@ describe('channel/messaging/send-action', () => {
     }
 
     state = {
-      ...createInitialState('test-channel', { postMessage } as unknown as Window, { origin: 'https://example.com' }),
+      ...createInitialState('test-channel', target, { origin: 'https://example.com' }),
       active: true,
     }
 
@@ -74,7 +76,7 @@ describe('channel/messaging/send-action', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as unknown as ChannelInternals['actions'],
+      actions: createMock<ChannelInternals['actions']>(),
     }
   })
 
@@ -90,7 +92,7 @@ describe('channel/messaging/send-action', () => {
     it('rejects an invalid action without posting anything', () => {
       const error = thrownBy(() => sendAction(channel, {} as IAction))
 
-      expect({ error, posted: postMessage.mock.calls }).toEqual({ error: expect.any(Error), posted: [] })
+      expect({ error, posted: target.postMessage.mock.calls }).toEqual({ error: expect.any(Error), posted: [] })
     })
   })
 
@@ -98,7 +100,7 @@ describe('channel/messaging/send-action', () => {
     it('posts the action to the pinned origin', () => {
       sendAction(channel, request)
 
-      expect(postMessage).toHaveBeenCalledWith(request, 'https://example.com')
+      expect(target.postMessage).toHaveBeenCalledWith(request, 'https://example.com')
     })
 
     it('posts to any origin before one is pinned', () => {
@@ -106,7 +108,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, request)
 
-      expect(postMessage).toHaveBeenCalledWith(request, '*')
+      expect(target.postMessage).toHaveBeenCalledWith(request, '*')
     })
 
     it('posts to any origin when the pinned origin is opaque', () => {
@@ -114,7 +116,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, request)
 
-      expect(postMessage).toHaveBeenCalledWith(request, '*')
+      expect(target.postMessage).toHaveBeenCalledWith(request, '*')
     })
 
     it('posts even while the channel is closed', () => {
@@ -122,7 +124,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, request)
 
-      expect(postMessage).toHaveBeenCalledWith(request, 'https://example.com')
+      expect(target.postMessage).toHaveBeenCalledWith(request, 'https://example.com')
     })
 
     it.each(sealedTypes)('posts %s in plaintext', (type: string) => {
@@ -130,7 +132,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, action)
 
-      expect(postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+      expect(target.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
     })
   })
 
@@ -144,7 +146,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, action)
 
-      expect(postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+      expect(target.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
     })
 
     it.each(handshakeTypes)('keeps %s away from the transport', (type: string) => {
@@ -164,7 +166,7 @@ describe('channel/messaging/send-action', () => {
     it.each(sealedTypes)('never posts %s in plaintext', (type: string) => {
       sendAction(channel, actionOf(type))
 
-      expect(postMessage).not.toHaveBeenCalled()
+      expect(target.postMessage).not.toHaveBeenCalled()
     })
 
     it('routes through the transport while the channel is still closed', () => {
@@ -190,7 +192,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(channel, request)
 
-      expect(postMessage).toHaveBeenCalledWith(request, '*')
+      expect(target.postMessage).toHaveBeenCalledWith(request, '*')
     })
 
     it('validates the action before consulting the transport', () => {

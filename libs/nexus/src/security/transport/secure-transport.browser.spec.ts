@@ -3,7 +3,8 @@ import type { SecurityChannelOptions, SecurityPacket, SecurityProvider, Security
 import type { SecureTransportConfig } from './types'
 import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createDeferred, describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { ACTION_TYPES } from '../../constants/action-types'
 import { createSecureTransport } from './secure-transport'
 
@@ -43,11 +44,6 @@ interface Harness {
   onFailed: Mock
 }
 
-interface Deferred {
-  promise: Promise<Uint8Array>
-  resolve: (frame: Uint8Array) => void
-}
-
 function createScriptedChannel(): ScriptedChannel {
   return {
     hello: jest.fn().mockResolvedValue(HELLO_FRAME),
@@ -60,14 +56,6 @@ function createScriptedChannel(): ScriptedChannel {
   }
 }
 
-function createDeferred(): Deferred {
-  const deferred: Partial<Deferred> = {}
-  deferred.promise = new Promise<Uint8Array>((resolve) => {
-    deferred.resolve = resolve
-  })
-  return deferred as Deferred
-}
-
 function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: ScriptedChannel = createScriptedChannel()): Harness {
   const captured: { options?: SecurityChannelOptions } = {}
   const createChannel = jest.fn((label: string, options: SecurityChannelOptions): SecurityWireChannel => {
@@ -75,7 +63,7 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
     return { label, ...channel }
   })
   const provider: SecurityProvider = { createChannel, protocolProvider: jest.fn() }
-  const postMessage = jest.fn()
+  const target = createFakeWindow()
   const onAction = jest.fn()
   const onError = jest.fn()
   const onConfirmed = jest.fn()
@@ -84,7 +72,7 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
     protocol: 'v4',
     provider,
     label: 'spec-channel',
-    target: { postMessage } as unknown as Window,
+    target,
     getOrigin: () => null,
     originId: ORIGIN_ID,
     targetId: TARGET_ID,
@@ -100,7 +88,18 @@ function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: 
   if (!captured.options) {
     throw createError('The provider did not build a wire channel')
   }
-  return { transport, channel, options: captured.options, createChannel, provider, postMessage, onAction, onError, onConfirmed, onFailed }
+  return {
+    transport,
+    channel,
+    options: captured.options,
+    createChannel,
+    provider,
+    postMessage: target.postMessage,
+    onAction,
+    onError,
+    onConfirmed,
+    onFailed,
+  }
 }
 
 function createPacket(message: unknown): SecurityPacket {
@@ -108,13 +107,6 @@ function createPacket(message: unknown): SecurityPacket {
     origin: TARGET_ID,
     target: ORIGIN_ID,
     data: { pid: 'peer-process', id: 'packet-1', sequence: 1, message, schema: {}, schemaHash: EMPTY_SCHEMA_HASH },
-  }
-}
-
-async function flush(): Promise<void> {
-  // why: A resolved hello reaches postMessage through a promise reaction; a few microtask turns let every queued reaction run.
-  for (let turn = 0; turn < 4; turn += 1) {
-    await Promise.resolve()
   }
 }
 
@@ -162,7 +154,7 @@ describe('createSecureTransport', () => {
       const { transport, postMessage } = createHarness()
 
       transport.start()
-      await flush()
+      await flushPromises()
 
       expect(postMessage.mock.calls).toEqual([[HELLO_FRAME, '*']])
     })
@@ -171,7 +163,7 @@ describe('createSecureTransport', () => {
       const { transport, postMessage } = createHarness({ getOrigin: () => PINNED_ORIGIN })
 
       transport.start()
-      await flush()
+      await flushPromises()
 
       expect(postMessage).toHaveBeenCalledWith(HELLO_FRAME, PINNED_ORIGIN)
     })
@@ -180,7 +172,7 @@ describe('createSecureTransport', () => {
       const { transport, postMessage } = createHarness({ getOrigin: () => 'null' })
 
       transport.start()
-      await flush()
+      await flushPromises()
 
       expect(postMessage).toHaveBeenCalledWith(HELLO_FRAME, '*')
     })
@@ -190,7 +182,7 @@ describe('createSecureTransport', () => {
 
       transport.start()
       jest.advanceTimersByTime(RETRY_MS * 2)
-      await flush()
+      await flushPromises()
 
       expect(postMessage).toHaveBeenCalledTimes(3)
     })
@@ -217,16 +209,16 @@ describe('createSecureTransport', () => {
       const { transport, options, postMessage } = createHarness()
 
       transport.start()
-      await flush()
+      await flushPromises()
       options.receive(createPacket({ type: 'PING' }))
       jest.advanceTimersByTime(RETRY_MS * 3)
-      await flush()
+      await flushPromises()
 
       expect(postMessage).toHaveBeenCalledTimes(1)
     })
 
     it('discards a hello that resolves after the counterpart confirmed', async () => {
-      const deferred = createDeferred()
+      const deferred = createDeferred<Uint8Array>()
       const channel = createScriptedChannel()
       channel.hello.mockReturnValue(deferred.promise)
       const { transport, options, postMessage } = createHarness({}, channel)
@@ -234,13 +226,13 @@ describe('createSecureTransport', () => {
       transport.start()
       options.receive(createPacket({ type: 'PING' }))
       deferred.resolve(HELLO_FRAME)
-      await flush()
+      await flushPromises()
 
       expect(postMessage).not.toHaveBeenCalled()
     })
 
     it('discards a hello that resolves after dispose', async () => {
-      const deferred = createDeferred()
+      const deferred = createDeferred<Uint8Array>()
       const channel = createScriptedChannel()
       channel.hello.mockReturnValue(deferred.promise)
       const { transport, postMessage } = createHarness({}, channel)
@@ -248,7 +240,7 @@ describe('createSecureTransport', () => {
       transport.start()
       transport.dispose()
       deferred.resolve(HELLO_FRAME)
-      await flush()
+      await flushPromises()
 
       expect(postMessage).not.toHaveBeenCalled()
     })
@@ -311,7 +303,7 @@ describe('createSecureTransport', () => {
       const { transport, onFailed } = createHarness({}, channel)
 
       transport.start()
-      await flush()
+      await flushPromises()
 
       expect(onFailed).toHaveBeenCalledWith({
         message: "Cannot produce the 'v4' session hello: no key material",
@@ -326,7 +318,7 @@ describe('createSecureTransport', () => {
       const { transport } = createHarness({}, channel)
 
       transport.start()
-      await flush()
+      await flushPromises()
       jest.advanceTimersByTime(RETRY_MS * 3)
 
       expect(channel.hello).toHaveBeenCalledTimes(1)

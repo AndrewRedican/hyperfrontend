@@ -1,15 +1,16 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IAction } from '../types/action'
 import type { IChannelContract } from '../types/contract'
-import type { MockWindow } from './test-utils'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createWindowPair } from '@hyperfrontend/testing/browser'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
-import { collectEvents, createContractPair, createMockWindow, linkMockWindows, plaintextFramesTo, simulateMessage } from './test-utils'
+import { collectEvents, createContractPair, plaintextFramesTo } from './test-utils'
 
 describe('Connection Flow Integration', () => {
-  let windowA: MockWindow
-  let windowB: MockWindow
+  let windowA: FakeWindow
+  let windowB: FakeWindow
 
   beforeAll(() => {
     jest.useFakeTimers()
@@ -20,10 +21,7 @@ describe('Connection Flow Integration', () => {
   })
 
   beforeEach(() => {
-    windowA = createMockWindow()
-    windowB = createMockWindow()
-
-    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+    ;[windowA, windowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
   })
 
   afterEach(() => {
@@ -32,17 +30,23 @@ describe('Connection Flow Integration', () => {
   })
 
   const setupPair = (contractA: IChannelContract, contractB: IChannelContract) => {
-    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
     return {
       brokerA,
       brokerB,
-      channelA: brokerA.addChannel('to-b', windowB as unknown as Window),
-      channelB: brokerB.addChannel('to-a', windowA as unknown as Window),
+      channelA: brokerA.addChannel('to-b', windowB),
+      channelB: brokerB.addChannel('to-a', windowA),
     }
   }
 
-  const postedTypes = (target: MockWindow) => target.postMessage.mock.calls.map((call) => (call[0] as { type: string }).type)
+  const postedTypes = (target: FakeWindow) => target.posted().map((frame) => (frame as { type: string }).type)
+
+  // how: a test that silenced a window with mockImplementation links it again by delivering each post as the paired window would.
+  const relink = (): void => {
+    windowA.postMessage.mockImplementation((data: unknown) => windowA.receive(data, { origin: 'http://host-b.com', source: windowB }))
+    windowB.postMessage.mockImplementation((data: unknown) => windowB.receive(data, { origin: 'http://host-a.com', source: windowA }))
+  }
 
   const activity = (a: { isActive(): boolean }, b: { isActive(): boolean }) => ({ a: a.isActive(), b: b.isActive() })
 
@@ -91,13 +95,11 @@ describe('Connection Flow Integration', () => {
       first.channelA.connect()
       first.channelB.connect()
 
-      const otherWindowA = createMockWindow()
-      const otherWindowB = createMockWindow()
-      linkMockWindows(otherWindowA, otherWindowB, 'http://host-a.com', 'http://host-b.com')
-      const brokerA = createBroker({ name: 'broker-a2', contract: contractA, window: otherWindowA as unknown as Window })
-      const brokerB = createBroker({ name: 'broker-b2', contract: contractB, window: otherWindowB as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', otherWindowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', otherWindowA as unknown as Window)
+      const [otherWindowA, otherWindowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
+      const brokerA = createBroker({ name: 'broker-a2', contract: contractA, window: otherWindowA })
+      const brokerB = createBroker({ name: 'broker-b2', contract: contractB, window: otherWindowB })
+      const channelA = brokerA.addChannel('to-b', otherWindowB)
+      const channelB = brokerB.addChannel('to-a', otherWindowA)
       channelB.connect()
       channelA.connect()
 
@@ -133,16 +135,16 @@ describe('Connection Flow Integration', () => {
       windowA.postMessage.mockImplementation(() => undefined)
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
+      const channelA = brokerA.addChannel('to-b', windowB)
+      const channelB = brokerB.addChannel('to-a', windowA)
 
       channelA.connect()
       channelB.connect()
       const beforeLink = activity(channelA, channelB)
 
-      linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+      relink()
       jest.advanceTimersByTime(1000)
 
       expect({ beforeLink, afterLink: activity(channelA, channelB) }).toEqual({
@@ -157,10 +159,10 @@ describe('Connection Flow Integration', () => {
       windowA.postMessage.mockImplementation(() => undefined)
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
+      const channelA = brokerA.addChannel('to-b', windowB)
+      const channelB = brokerB.addChannel('to-a', windowA)
 
       const openA = jest.fn()
       const openB = jest.fn()
@@ -169,7 +171,7 @@ describe('Connection Flow Integration', () => {
 
       channelA.connect()
       channelB.connect()
-      linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+      relink()
       jest.advanceTimersByTime(2000)
 
       expect([openA.mock.calls.length, openB.mock.calls.length]).toEqual([1, 1])
@@ -182,8 +184,8 @@ describe('Connection Flow Integration', () => {
 
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const channelA = brokerA.addChannel('to-b', windowB)
 
       const timeoutHandler = jest.fn()
       channelA.on('connect-timeout', timeoutHandler)
@@ -199,8 +201,8 @@ describe('Connection Flow Integration', () => {
 
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window, { requestRetryMs: 500 })
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const channelA = brokerA.addChannel('to-b', windowB, { requestRetryMs: 500 })
 
       channelA.connect()
       jest.advanceTimersByTime(1500)
@@ -218,8 +220,8 @@ describe('Connection Flow Integration', () => {
 
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window, { connectTimeoutMs: 2000 })
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const channelA = brokerA.addChannel('to-b', windowB, { connectTimeoutMs: 2000 })
 
       const timeoutHandler = jest.fn()
       channelA.on('connect-timeout', timeoutHandler)
@@ -235,16 +237,16 @@ describe('Connection Flow Integration', () => {
 
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
+      const channelA = brokerA.addChannel('to-b', windowB)
+      const channelB = brokerB.addChannel('to-a', windowA)
 
       channelA.connect()
       jest.advanceTimersByTime(10_000)
       const activeAfterTimeout = channelA.isActive()
 
-      linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+      relink()
       channelB.connect()
       channelA.connect()
 
@@ -259,10 +261,10 @@ describe('Connection Flow Integration', () => {
 
       windowB.postMessage.mockImplementation(() => undefined)
 
-      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
-      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA })
+      const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB })
+      const channelA = brokerA.addChannel('to-b', windowB)
+      const channelB = brokerB.addChannel('to-a', windowA)
 
       channelA.send('PING', { seq: 1 })
       channelA.connect()
@@ -271,7 +273,7 @@ describe('Connection Flow Integration', () => {
       const messagesB: unknown[] = []
       channelB.onMessage((msg) => messagesB.push(msg))
 
-      linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+      relink()
       channelB.connect()
       channelA.connect()
 
@@ -293,7 +295,7 @@ describe('Connection Flow Integration', () => {
       const requestFrame = plaintextFramesTo(windowA)[0]
 
       windowA.postMessage.mockClear()
-      simulateMessage(windowA, requestFrame, 'http://host-b.com', windowB)
+      windowA.receive(requestFrame, { origin: 'http://host-b.com', source: windowB })
 
       expect({
         duplicated: requestFrame.type,
@@ -315,7 +317,7 @@ describe('Connection Flow Integration', () => {
       const acceptFrame = plaintextFramesTo(windowB).find((frame) => frame.type === ACTION_TYPES.ACCEPT_CONNECTION)
 
       windowB.postMessage.mockClear()
-      simulateMessage(windowB, acceptFrame as IAction, 'http://host-a.com', windowA)
+      windowB.receive(acceptFrame as IAction, { origin: 'http://host-a.com', source: windowA })
 
       expect({
         duplicated: acceptFrame?.type,
@@ -336,7 +338,7 @@ describe('Connection Flow Integration', () => {
 
       const openFrame = plaintextFramesTo(windowA).find((frame) => frame.type === ACTION_TYPES.OPEN_CONNECTION)
 
-      simulateMessage(windowA, openFrame as IAction, 'http://host-b.com', windowB)
+      windowA.receive(openFrame as IAction, { origin: 'http://host-b.com', source: windowB })
 
       expect({ duplicated: openFrame?.type, opens: openB.mock.calls.length }).toEqual({
         duplicated: ACTION_TYPES.OPEN_CONNECTION,
@@ -369,11 +371,9 @@ describe('Connection Flow Integration', () => {
       const messagesB: unknown[] = []
       channelB.onMessage((msg) => messagesB.push(msg))
 
-      simulateMessage(
-        windowB,
+      windowB.receive(
         { type: ACTION_TYPES.NEW_MESSAGE, senderId: channelA.getId(), data: { type: 'PING', data: {} } },
-        'http://evil.example',
-        windowA
+        { origin: 'http://evil.example', source: windowA }
       )
 
       expect(messagesB).toEqual([])
@@ -389,11 +389,9 @@ describe('Connection Flow Integration', () => {
       const messagesB: unknown[] = []
       channelB.onMessage((msg) => messagesB.push(msg))
 
-      simulateMessage(
-        windowB,
+      windowB.receive(
         { type: ACTION_TYPES.NEW_MESSAGE, senderId: brokerA.id, data: { type: 'PING', data: {} } },
-        'http://host-a.com',
-        windowA
+        { origin: 'http://host-a.com', source: windowA }
       )
 
       expect(messagesB).toEqual([expect.objectContaining({ type: 'PING' })])
@@ -624,8 +622,8 @@ describe('Connection Flow Integration', () => {
       const beforeReload = activity(channelA, channelB)
 
       // how: A reloaded page re-creates its broker in the same window, so the counterpart sees a REQUEST from a new sender id.
-      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA as unknown as Window })
-      const channelA2 = brokerA2.addChannel('to-b', windowB as unknown as Window)
+      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA })
+      const channelA2 = brokerA2.addChannel('to-b', windowB)
       channelA2.connect()
 
       expect({ beforeReload, afterReload: activity(channelA2, channelB) }).toEqual({
@@ -645,8 +643,8 @@ describe('Connection Flow Integration', () => {
       channelB.on('close', (data) => events.push({ close: data }))
       channelB.on('open', () => events.push({ open: true }))
 
-      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA as unknown as Window })
-      brokerA2.addChannel('to-b', windowB as unknown as Window).connect()
+      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA })
+      brokerA2.addChannel('to-b', windowB).connect()
 
       expect({ events, peerId: channelB.getPeerId() }).toEqual({
         events: [{ close: { notify: false, reason: 'peer-reload' } }, { open: true }],
@@ -661,17 +659,15 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelB.connect()
 
-      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA as unknown as Window })
-      brokerA2.addChannel('to-b', windowB as unknown as Window).connect()
+      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA })
+      brokerA2.addChannel('to-b', windowB).connect()
 
       const messagesB: unknown[] = []
       channelB.onMessage((msg) => messagesB.push(msg))
 
-      simulateMessage(
-        windowB,
+      windowB.receive(
         { type: ACTION_TYPES.NEW_MESSAGE, senderId: brokerA.id, data: { type: 'MSG', data: {} } },
-        'http://host-a.com',
-        windowA
+        { origin: 'http://host-a.com', source: windowA }
       )
 
       expect(messagesB).toEqual([])

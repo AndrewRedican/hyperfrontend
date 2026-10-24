@@ -1,10 +1,11 @@
 import type { NoneTransportConfig } from './types'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createNoneTransport } from './none-transport'
 
 describe('NoneTransport', () => {
   const createConfig = (overrides: Partial<NoneTransportConfig> = {}): NoneTransportConfig => ({
-    target: { postMessage: jest.fn() } as unknown as Window,
+    target: createFakeWindow(),
     getOrigin: () => null,
     onAction: jest.fn(),
     ...overrides,
@@ -12,61 +13,61 @@ describe('NoneTransport', () => {
 
   describe('send', () => {
     it('posts the action unchanged with a wildcard target before the origin is pinned', () => {
-      const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createNoneTransport(createConfig({ target }))
 
       transport.send({ type: 'TEST', data: 123 })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST', data: 123 }, '*')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST', data: 123 }, '*')
     })
 
     it('posts with a wildcard target for opaque origins', () => {
-      const postMessage = jest.fn()
+      const target = createFakeWindow()
       const transport = createNoneTransport(
         createConfig({
-          target: { postMessage } as unknown as Window,
+          target,
           getOrigin: () => 'null',
         })
       )
 
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
 
     it('posts to the pinned origin once learned', () => {
-      const postMessage = jest.fn()
+      const target = createFakeWindow()
       const transport = createNoneTransport(
         createConfig({
-          target: { postMessage } as unknown as Window,
+          target,
           getOrigin: () => 'https://feature.example.com',
         })
       )
 
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://feature.example.com')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://feature.example.com')
     })
 
     it('drops actions while stopped', () => {
-      const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createNoneTransport(createConfig({ target }))
 
       transport.stop()
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).not.toHaveBeenCalled()
+      expect(target.postMessage).not.toHaveBeenCalled()
     })
 
     it('sends again after resume', () => {
-      const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createNoneTransport(createConfig({ target }))
 
       transport.stop()
       transport.resume()
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
   })
 
@@ -106,22 +107,22 @@ describe('NoneTransport', () => {
 
   describe('lifecycle', () => {
     it('posts nothing on start', () => {
-      const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createNoneTransport(createConfig({ target }))
 
       transport.start()
 
-      expect(postMessage).not.toHaveBeenCalled()
+      expect(target.postMessage).not.toHaveBeenCalled()
     })
 
     it('keeps sending after dispose', () => {
-      const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+      const target = createFakeWindow()
+      const transport = createNoneTransport(createConfig({ target }))
 
       transport.dispose()
       transport.send({ type: 'TEST' })
 
-      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
+      expect(target.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
 
     it('keeps delivering after dispose', () => {

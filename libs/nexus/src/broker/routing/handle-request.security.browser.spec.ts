@@ -9,7 +9,8 @@ import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -58,15 +59,7 @@ describe('handleRequest security negotiation', () => {
   })
 
   beforeEach(() => {
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
     mockBrokerState = {
       id: 'broker-1',
@@ -85,9 +78,7 @@ describe('handleRequest security negotiation', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => ownContract,
     })
-    mockWindow = {
-      postMessage: jest.fn(),
-    } as unknown as Window
+    mockWindow = createFakeWindow()
 
     wire = {
       label: 'wire',

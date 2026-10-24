@@ -1,26 +1,23 @@
+import type { FakeWindow } from '@hyperfrontend/testing/browser'
 import type { IChannelSettings } from '../types/channel'
 import type { SecurityErrorEventData } from '../types/events'
 import type { SecurityProtocolProviders } from '../types/security'
-import type { MockWindow, Party, RecordedEvent } from './test-utils'
+import type { Party, RecordedEvent } from './test-utils'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it, jest, sleep, waitUntil } from '@hyperfrontend/testing'
+import { createFakeWindow, createWindowPair } from '@hyperfrontend/testing/browser'
 import { ACTION_TYPES } from '../types/action'
 import {
   collectEvents,
   createContractPair,
   createForgedFrame,
   createForgedHello,
-  createMockWindow,
   createParty,
   createV3Provider,
   createV4Provider,
   destroyParties,
-  framesTo,
-  linkMockWindows,
   plaintextTypesTo,
-  simulateMessage,
-  wait,
-  waitFor,
+  SESSION_WAIT,
 } from './test-utils'
 
 const SHARED_KEY = 'security-session-spec-shared-key'
@@ -30,14 +27,12 @@ describe('Integration: Secure Session', () => {
   const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
   const v3Settings: Partial<IChannelSettings> = { security: { protocol: 'v3' } }
 
-  let windowA: MockWindow
-  let windowB: MockWindow
+  let windowA: FakeWindow
+  let windowB: FakeWindow
   let parties: Party[]
 
   beforeEach(() => {
-    windowA = createMockWindow()
-    windowB = createMockWindow()
-    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+    ;[windowA, windowB] = createWindowPair({ origins: ['http://host-a.com', 'http://host-b.com'], delivery: 'sync' })
     parties = []
   })
 
@@ -78,7 +73,7 @@ describe('Integration: Secure Session', () => {
     const readyB = readyEvents(b)
     a.channel.connect()
     b.channel.connect()
-    await waitFor(() => readyA.length === 1 && readyB.length === 1)
+    await waitUntil(() => readyA.length === 1 && readyB.length === 1, SESSION_WAIT)
     windowA.postMessage.mockClear()
     windowB.postMessage.mockClear()
     return { readyA, readyB }
@@ -97,11 +92,11 @@ describe('Integration: Secure Session', () => {
       await keyPair(a, b)
 
       a.channel.send('PING', { n: 1 })
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
       b.channel.send('PONG', { n: 2 })
-      await waitFor(() => messagesA.length === 1)
+      await waitUntil(() => messagesA.length === 1, SESSION_WAIT)
 
-      expect({ toB: framesTo(windowB), toA: framesTo(windowA), messagesA, messagesB }).toEqual({
+      expect({ toB: windowB.posted(), toA: windowA.posted(), messagesA, messagesB }).toEqual({
         toB: [expect.any(Uint8Array)],
         toA: [expect.any(Uint8Array)],
         messagesA: [expect.objectContaining({ type: 'PONG', data: { n: 2 } })],
@@ -117,7 +112,7 @@ describe('Integration: Secure Session', () => {
 
       a.channel.send('PING', { n: 1 })
       b.channel.send('PONG', { n: 2 })
-      await waitFor(() => messagesB.length === 2)
+      await waitUntil(() => messagesB.length === 2, SESSION_WAIT)
 
       expect({ toB: plaintextTypesTo(windowB), toA: plaintextTypesTo(windowA) }).toEqual({ toB: [], toA: [] })
     })
@@ -129,9 +124,9 @@ describe('Integration: Secure Session', () => {
       await keyPair(a, b)
 
       a.channel.send('PING', { secret: 'classified-payload' })
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
 
-      const wireFrame = framesTo(windowB)[0] as Uint8Array
+      const wireFrame = windowB.posted()[0] as Uint8Array
       expect(new TextDecoder().decode(wireFrame)).not.toContain('classified-payload')
     })
 
@@ -144,7 +139,7 @@ describe('Integration: Secure Session', () => {
       b.channel.connect()
 
       a.channel.send('PING', { early: true })
-      await waitFor(() => timeline.length === 2)
+      await waitUntil(() => timeline.length === 2, SESSION_WAIT)
 
       expect({ timeline, plaintextProductFrames: plaintextTypesTo(windowB).filter((type) => type === ACTION_TYPES.NEW_MESSAGE) }).toEqual({
         timeline: ['security-ready', 'message:PING'],
@@ -160,7 +155,7 @@ describe('Integration: Secure Session', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
 
       expect({
         delivered: messagesB,
@@ -180,11 +175,9 @@ describe('Integration: Secure Session', () => {
       const invalidB = collectEvents(b.channel, ['invalid'])
       await keyPair(a, b)
 
-      simulateMessage(
-        windowB,
+      windowB.receive(
         { type: ACTION_TYPES.NEW_MESSAGE, senderId: a.broker.id, data: { type: 'PING', data: { forged: true } } },
-        'http://host-a.com',
-        windowA
+        { origin: 'http://host-a.com', source: windowA }
       )
 
       expect({ messagesB, invalidB }).toEqual({
@@ -204,8 +197,8 @@ describe('Integration: Secure Session', () => {
       const errorsA = collectEvents(a.channel, ['security-error'])
       await keyPair(a, b)
 
-      simulateMessage(windowA, new Uint8Array([3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 7, 7]), 'http://evil.example', windowB)
-      await waitFor(() => invalidA.length === 1)
+      windowA.receive(new Uint8Array([3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 7, 7]), { origin: 'http://evil.example', source: windowB })
+      await waitUntil(() => invalidA.length === 1, SESSION_WAIT)
 
       expect({ invalidA, errorsA }).toEqual({
         invalidA: [{ event: 'invalid', data: { error: "Dropped a wire frame from unexpected origin 'http://evil.example'." } }],
@@ -224,8 +217,8 @@ describe('Integration: Secure Session', () => {
       b.channel.connect()
 
       // how: the frame passes every check that precedes decryption, so only the session keys can reject it.
-      simulateMessage(windowA, createForgedFrame(3), 'http://host-b.com', windowB)
-      await waitFor(() => readyA.length === 1)
+      windowA.receive(createForgedFrame(3), { origin: 'http://host-b.com', source: windowB })
+      await waitUntil(() => readyA.length === 1, SESSION_WAIT)
 
       expect({ errors: errorCodes(errorsA), readyA, closesA, active: a.channel.isActive() }).toEqual({
         errors: ['authentication-failed'],
@@ -262,7 +255,7 @@ describe('Integration: Secure Session', () => {
 
       a.channel.connect()
       b.channel.connect()
-      await waitFor(() => closed(closesA) && closed(closesB))
+      await waitUntil(() => closed(closesA) && closed(closesB), SESSION_WAIT)
 
       expect({ readyA, readyB }).toEqual({ readyA: [], readyB: [] })
     })
@@ -275,7 +268,7 @@ describe('Integration: Secure Session', () => {
       a.channel.connect()
       b.channel.connect()
       const activeAfterHandshake = [a.channel.isActive(), b.channel.isActive()]
-      await waitFor(() => closed(eventsA) && closed(eventsB))
+      await waitUntil(() => closed(eventsA) && closed(eventsB), SESSION_WAIT)
 
       const unconfirmed = [
         { event: 'security-error', data: expect.objectContaining({ code: 'security-unconfirmed' }) },
@@ -310,9 +303,9 @@ describe('Integration: Secure Session', () => {
       const reloaded = setupParty('a', { name: 'broker-a-reloaded', providers: { v3: createV3Provider() }, channelSettings: v3Settings })
       const readyReloaded = readyEvents(reloaded)
       reloaded.channel.connect()
-      await waitFor(() => readyReloaded.length === 1 && lifecycleB.some((event) => event.event === 'security-ready'))
+      await waitUntil(() => readyReloaded.length === 1 && lifecycleB.some((event) => event.event === 'security-ready'), SESSION_WAIT)
       reloaded.channel.send('PING', { fresh: true })
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
 
       expect({
         lifecycleB,
@@ -348,7 +341,7 @@ describe('Integration: Secure Session', () => {
       // how: swallowing the OPEN leaves the responder waiting with its transport attached, which is the state cancel() has to clean up.
       windowB.postMessage.mockImplementation((data: unknown) => {
         if ((data as { type?: string }).type !== ACTION_TYPES.OPEN_CONNECTION) {
-          windowB._dispatchMessage(new MessageEvent('message', { data, origin: 'http://host-a.com', source: windowA as unknown as Window }))
+          windowB.receive(data, { origin: 'http://host-a.com', source: windowA })
         }
       })
       b.channel.connect()
@@ -372,8 +365,8 @@ describe('Integration: Secure Session', () => {
       const errorsA = collectEvents(a.channel, ['security-error'])
       await keyPair(a, b)
 
-      simulateMessage(windowA, createForgedFrame(4), 'http://host-b.com', windowB)
-      await waitFor(() => errorsA.length === 1)
+      windowA.receive(createForgedFrame(4), { origin: 'http://host-b.com', source: windowB })
+      await waitUntil(() => errorsA.length === 1, SESSION_WAIT)
 
       expect({ errors: errorCodes(errorsA), active: a.channel.isActive() }).toEqual({ errors: ['unsupported-version'], active: true })
     })
@@ -384,8 +377,8 @@ describe('Integration: Secure Session', () => {
       await keyPair(a, b)
 
       // magic: 11 bytes is a whole header plus one byte, short of the 27 a sealed packet needs.
-      simulateMessage(windowA, createForgedFrame(3, 11), 'http://host-b.com', windowB)
-      await waitFor(() => errorsA.length === 1)
+      windowA.receive(createForgedFrame(3, 11), { origin: 'http://host-b.com', source: windowB })
+      await waitUntil(() => errorsA.length === 1, SESSION_WAIT)
 
       expect({ errors: errorCodes(errorsA), active: a.channel.isActive() }).toEqual({ errors: ['malformed'], active: true })
     })
@@ -397,10 +390,10 @@ describe('Integration: Secure Session', () => {
       const errorsB = collectEvents(b.channel, ['security-error'])
       await keyPair(a, b)
       a.channel.send('PING', { n: 1 })
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
 
-      simulateMessage(windowB, framesTo(windowB)[0] as Uint8Array, 'http://host-a.com', windowA)
-      await waitFor(() => errorsB.length === 1)
+      windowB.receive(windowB.posted()[0] as Uint8Array, { origin: 'http://host-a.com', source: windowA })
+      await waitUntil(() => errorsB.length === 1, SESSION_WAIT)
 
       expect({ errors: errorCodes(errorsB), delivered: messagesB.length }).toEqual({ errors: ['replayed'], delivered: 1 })
     })
@@ -410,7 +403,7 @@ describe('Integration: Secure Session', () => {
       const errorsA = collectEvents(a.channel, ['security-error'])
       await keyPair(a, b)
 
-      simulateMessage(windowA, createForgedHello(3), 'http://host-b.com', windowB)
+      windowA.receive(createForgedHello(3), { origin: 'http://host-b.com', source: windowB })
 
       expect({ errors: errorCodes(errorsA), active: a.channel.isActive() }).toEqual({ errors: ['hello-rejected'], active: true })
     })
@@ -423,7 +416,7 @@ describe('Integration: Secure Session', () => {
       // how: only the REQUEST reaches the responder, so it waits for OPEN with its transport started and no genuine hello in flight.
       windowB.postMessage.mockImplementation((data: unknown) => {
         if ((data as { type?: string }).type === ACTION_TYPES.REQUEST_CONNECTION) {
-          windowB._dispatchMessage(new MessageEvent('message', { data, origin: 'http://host-a.com', source: windowA as unknown as Window }))
+          windowB.receive(data, { origin: 'http://host-a.com', source: windowA })
         }
       })
       const eventsB = collectEvents(b.channel, ['security-error', 'deny', 'connect-timeout'])
@@ -431,8 +424,8 @@ describe('Integration: Secure Session', () => {
       a.channel.connect()
       b.channel.connect()
 
-      simulateMessage(windowB, createForgedHello(3), 'http://host-a.com', windowA)
-      await waitFor(() => eventsB.some((event) => event.event === 'deny'))
+      windowB.receive(createForgedHello(3), { origin: 'http://host-a.com', source: windowA })
+      await waitUntil(() => eventsB.some((event) => event.event === 'deny'), SESSION_WAIT)
 
       expect({
         eventsB,
@@ -468,7 +461,7 @@ describe('Integration: Secure Session', () => {
       b.channel.connect()
       const eventsB = collectEvents(b.channel)
 
-      simulateMessage(windowB, createForgedFrame(3), 'http://host-a.com', windowA)
+      windowB.receive(createForgedFrame(3), { origin: 'http://host-a.com', source: windowA })
 
       expect({ eventsB, messagesB, active: b.channel.isActive() }).toEqual({ eventsB: [], messagesB: [], active: true })
     })
@@ -478,8 +471,8 @@ describe('Integration: Secure Session', () => {
       await keyPair(a, b)
       const eventsB = collectEvents(b.channel)
 
-      simulateMessage(windowB, createForgedFrame(3), 'http://stranger.example', createMockWindow())
-      await wait(50)
+      windowB.receive(createForgedFrame(3), { origin: 'http://stranger.example', source: createFakeWindow() })
+      await sleep(50)
 
       expect({ eventsB, active: b.channel.isActive() }).toEqual({ eventsB: [], active: true })
     })
@@ -495,12 +488,12 @@ describe('Integration: Secure Session', () => {
 
       transport?.stop()
       a.channel.send('PING', { n: 1 })
-      await wait(50)
-      const framesWhileStopped = framesTo(windowB).length
+      await sleep(50)
+      const framesWhileStopped = windowB.posted().length
       transport?.resume()
-      await waitFor(() => messagesB.length === 1)
+      await waitUntil(() => messagesB.length === 1, SESSION_WAIT)
 
-      expect({ framesWhileStopped, framesAfterResume: framesTo(windowB) }).toEqual({
+      expect({ framesWhileStopped, framesAfterResume: windowB.posted() }).toEqual({
         framesWhileStopped: 0,
         framesAfterResume: [expect.any(Uint8Array)],
       })

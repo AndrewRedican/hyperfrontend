@@ -7,7 +7,8 @@ import type { SecurityTransport } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createFakeWindow } from '@hyperfrontend/testing/browser'
 import { HANDSHAKE_ACTION_TYPES } from '../../constants/handshake-actions'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -38,15 +39,7 @@ describe('isPlaintextAllowed', () => {
 
   beforeEach(() => {
     registry = createRegistry()
-    logger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    logger = createMock<Logger>({ getLogLevel: () => 'debug' })
     context = {
       state: brokerState,
       registry,
@@ -56,7 +49,7 @@ describe('isPlaintextAllowed', () => {
       getSupportedProtocols: () => ['none'],
       security: { localId: 'broker-1', getProvider: () => undefined, dispatch: () => undefined },
     }
-    sourceWindow = { postMessage: jest.fn() } as unknown as Window
+    sourceWindow = createFakeWindow()
     transport = {
       send: jest.fn(),
       receive: jest.fn(),
@@ -68,16 +61,15 @@ describe('isPlaintextAllowed', () => {
     }
   })
 
-  function addChannel(securityTransport: SecurityTransport | null, target: Window = sourceWindow): Partial<ChannelHandle> {
-    const channel: Partial<ChannelHandle> = {
+  function addChannel(securityTransport: SecurityTransport | null, target: Window = sourceWindow): ChannelHandle {
+    const channel = createMock<ChannelHandle>({
       id: 'channel-1',
       name: 'test-channel',
       target,
       getName: () => 'test-channel',
       getSecurityTransport: () => securityTransport,
-      notifyEvent: jest.fn(),
-    }
-    registry.add(channel as ChannelHandle)
+    })
+    registry.add(channel)
     return channel
   }
 
@@ -148,7 +140,7 @@ describe('isPlaintextAllowed', () => {
     })
 
     it('admits an action from a window without a channel', () => {
-      addChannel(transport, { postMessage: jest.fn() } as unknown as Window)
+      addChannel(transport, createFakeWindow())
 
       expect(isPlaintextAllowed(context, event(newMessage))).toBe(true)
     })
@@ -208,16 +200,15 @@ describe('isPlaintextAllowed', () => {
     })
 
     it('resolves the channel by the source window, not by the sender id', () => {
-      addChannel(transport, { postMessage: jest.fn() } as unknown as Window)
-      const unsecured: Partial<ChannelHandle> = {
+      addChannel(transport, createFakeWindow())
+      const unsecured = createMock<ChannelHandle>({
         id: 'channel-2',
         name: 'other-channel',
         target: sourceWindow,
         getName: () => 'other-channel',
         getSecurityTransport: () => null,
-        notifyEvent: jest.fn(),
-      }
-      registry.add(unsecured as ChannelHandle)
+      })
+      registry.add(unsecured)
 
       expect(isPlaintextAllowed(context, event({ ...newMessage, senderId: 'channel-1' }))).toBe(true)
     })

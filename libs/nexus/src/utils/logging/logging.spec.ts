@@ -2,8 +2,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { Logger } from './create-logger'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { createMockLogger } from '../../integration-tests/test-utils'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ACTION_TYPES } from '../../types/action'
 import { createLogger } from './create-logger'
 import { logAction } from './log-action'
@@ -45,7 +44,7 @@ describe('Logging Utilities', () => {
     })
 
     it('uses custom logger when provided', () => {
-      const customLogger = createMockLogger()
+      const customLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
       const logger = createLogger({ customLogger })
 
@@ -53,7 +52,7 @@ describe('Logging Utilities', () => {
     })
 
     it('custom logger receives calls correctly', () => {
-      const customLogger = createMockLogger()
+      const customLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
       const logger = createLogger({ customLogger })
 
@@ -76,7 +75,7 @@ describe('Logging Utilities', () => {
     })
 
     it('custom logger is used regardless of level setting', () => {
-      const customLogger = createMockLogger()
+      const customLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
       const logger = createLogger({ level: 'error', customLogger })
 
@@ -196,7 +195,7 @@ describe('Logging Utilities', () => {
       })
 
       it('uses customLogger from options object', () => {
-        const customLogger = createMockLogger()
+        const customLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
         const logger = createLogger({ customLogger })
 
@@ -221,7 +220,7 @@ describe('Logging Utilities', () => {
     let mockLogger: Logger
 
     beforeEach(() => {
-      mockLogger = createMockLogger()
+      mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
     })
 
     it('logs sent action', () => {
@@ -311,7 +310,7 @@ describe('Logging Utilities', () => {
     let mockLogger: Logger
 
     beforeEach(() => {
-      mockLogger = createMockLogger()
+      mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
     })
 
     it('logs OPEN event', () => {
@@ -377,7 +376,7 @@ describe('Logging Utilities', () => {
 
   describe('Integration', () => {
     it('works together for action logging flow', () => {
-      const mockLogger = createMockLogger()
+      const mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
       const action: IAction = {
         type: ACTION_TYPES.NEW_MESSAGE,
@@ -400,7 +399,7 @@ describe('Logging Utilities', () => {
     })
 
     it('works together for event logging flow', () => {
-      const mockLogger = createMockLogger()
+      const mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
 
       logEvent(mockLogger, 'open', { channelId: '1' })
       logEvent(mockLogger, 'close', { reason: 'done' })

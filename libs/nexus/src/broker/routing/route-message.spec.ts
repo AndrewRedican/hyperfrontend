@@ -5,7 +5,7 @@ import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RouteHandler, RoutingContext } from './types'
 import { beforeEach } from 'node:test'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createMock, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -24,15 +24,7 @@ describe('routeMessage', () => {
 
   beforeEach(() => {
     mockHandler = jest.fn()
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    } as unknown as Logger
+    mockLogger = createMock<Logger>({ getLogLevel: () => 'debug' })
     const state: BrokerState = {
       id: 'broker-1',
       name: 'test-broker',
