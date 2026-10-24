@@ -5,11 +5,9 @@
  * @module config/__test-utils__/config-modules
  */
 
-import { mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** Absolute path of the library's source, which the written modules import by address. */
 const SRC = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -97,7 +95,5 @@ export default [{ families: { fixture: { 'no-main': rule } } }, { files: ['**/pa
  * ```
  */
 export function writeConfigModules(): string {
-  const directory = mkdtempSync(join(tmpdir(), 'lint-configs-'))
-  for (const [name, text] of entries(CONFIG_MODULES)) writeFileSync(join(directory, name), text)
-  return directory
+  return createTempDir({ prefix: 'lint-configs-', tree: CONFIG_MODULES }).path
 }

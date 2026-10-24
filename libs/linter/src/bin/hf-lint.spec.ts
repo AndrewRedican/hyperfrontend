@@ -1,13 +1,18 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { runHfLint } from './hf-lint'
 
-const PROJECT = mkdtempSync(join(tmpdir(), 'hf-lint-'))
-writeFileSync(join(PROJECT, 'lint.config.ts'), "export default [{ files: ['**/*.js'], rules: { 'no-debugger': 'error' } }]\n")
-writeFileSync(join(PROJECT, 'a.js'), 'debugger\n')
-writeFileSync(join(PROJECT, 'piped.txt'), 'const a = 1\n')
+const DIR = createTempDir({
+  prefix: 'hf-lint-',
+  tree: {
+    'lint.config.ts': "export default [{ files: ['**/*.js'], rules: { 'no-debugger': 'error' } }]\n",
+    'a.js': 'debugger\n',
+    'piped.txt': 'const a = 1\n',
+  },
+})
+const PROJECT = DIR.path
 
 /** A process whose streams are captured. */
 interface Captured {
@@ -52,7 +57,7 @@ describe('runHfLint', () => {
   })
 
   it('leaves no temporary project behind', () => {
-    rmSync(PROJECT, { recursive: true, force: true })
+    DIR.remove()
     expect(existsSync(PROJECT)).toBe(false)
   })
 })
