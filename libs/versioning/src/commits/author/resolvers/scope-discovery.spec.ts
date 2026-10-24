@@ -1,8 +1,9 @@
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { writeScopeWorkspace } from '../__test-utils__/scope-workspace'
 import { discoverScopes } from './scope-discovery'
 
-const fixturesRoot = resolve(import.meta.dirname, '../../../../__fixtures__/scope-discovery')
+const fixturesRoot = writeScopeWorkspace()
 
 describe('discoverScopes', () => {
   it('returns empty when no paths are staged', () => {

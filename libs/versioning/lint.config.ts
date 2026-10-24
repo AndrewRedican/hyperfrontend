@@ -3,9 +3,6 @@ import baseConfig from '../../lint.base.config.ts'
 export default [
   ...baseConfig,
   {
-    ignores: ['__fixtures__/**'],
-  },
-  {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'max-file-lines': [
