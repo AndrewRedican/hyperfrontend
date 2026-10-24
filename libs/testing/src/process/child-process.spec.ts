@@ -9,6 +9,12 @@ describe('createFakeChildProcess', () => {
     assert.notEqual(createFakeChildProcess().pid, createFakeChildProcess().pid)
   })
 
+  it('accepts an undefined process identifier, as for a child that never started', () => {
+    const child = createFakeChildProcess()
+    child.pid = undefined
+    assert.equal(child.pid, undefined)
+  })
+
   it('uses the process identifier it was given', () => {
     assert.equal(createFakeChildProcess({ pid: 42 }).pid, 42)
   })

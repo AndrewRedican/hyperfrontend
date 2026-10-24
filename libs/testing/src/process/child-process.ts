@@ -12,8 +12,8 @@ import { createCapturedOutput } from './terminal'
  * drives by hand.
  */
 export interface FakeChildProcess extends EventEmitter {
-  /** Process identifier. */
-  pid: number
+  /** Process identifier, or undefined as for a child the system never started. Assign undefined to model one. */
+  pid: number | undefined
   /** What the parent wrote to the child's stdin. */
   stdin: CapturedOutput
   /** The child's stdout, fed by `writeStdout`. */
