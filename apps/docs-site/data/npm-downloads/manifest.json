@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "refreshedAt": "2026-10-22T19:09:43.151Z",
-  "frontier": "2026-10-18",
+  "refreshedAt": "2026-10-24T16:56:35.459Z",
+  "frontier": "2026-10-22",
   "revalidationDays": 7,
   "packages": {
     "@hyperfrontend/nexus": {
@@ -63,6 +63,9 @@
     },
     "@hyperfrontend/testing": {
       "created": "2026-10-15"
+    },
+    "@hyperfrontend/linter": {
+      "created": "2026-10-23"
     }
   }
 }
