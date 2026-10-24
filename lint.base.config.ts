@@ -117,6 +117,12 @@ export default [
   { files: ['**/*.spec.ts'], rules: on('assertive-test-names jest-mock-after-imports') },
   { files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'], rules: { 'one-assertion-per-test': 'error' } },
   {
+    files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}'],
+    // why: the package e2e suites stand where a consumer stands, installing only the published package they exercise.
+    ignores: ['apps/package-e2e/**'],
+    rules: { 'workspace/no-mkdtemp-in-tests': 'error' },
+  },
+  {
     files: ['**/*.ts'],
     ignores: ['**/*.spec.ts', '**/test.setup.ts', '**/*.types.ts'],
     rules: on(
