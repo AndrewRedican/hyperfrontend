@@ -69,6 +69,20 @@ describe('run', () => {
     )
   })
 
+  it('prints the stack of the failure under the file whose rule threw', async () => {
+    const captured = capture(import.meta.dirname, '{}')
+    expect({
+      code: await run(['--config', join(FIXTURES, 'throwing.ts'), '--stdin', '--stdin-filename', 'a.json'], captured.environment),
+      errors: captured.errors,
+    }).toEqual({
+      code: 2,
+      errors: [
+        `Error while linting ${join(import.meta.dirname, 'a.json')}: Rule fixture/throws: boom\n`,
+        expect.stringContaining('throwing-rule'),
+      ],
+    })
+  })
+
   it('exits 2 when no configuration file exists at or above the working directory', async () => {
     expect(await run(['--stdin', '--stdin-filename', 'a.json'], capture('/', '{}').environment)).toBe(2)
   })

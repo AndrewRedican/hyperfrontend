@@ -56,6 +56,27 @@ export default defineRule<undefined, JsonTreeNode>({
 })
 `
 
+/** A rule a family registers in the specs: throws from its listener. */
+const THROWING_RULE = `import type { JsonTreeNode } from '${sourceUrl('languages', 'json.ts')}'
+import { defineRule } from '${sourceUrl('engine', 'rule.ts')}'
+
+/**
+ * A rule a family registers in the specs: throws from its listener.
+ */
+export default defineRule<undefined, JsonTreeNode>({
+  id: 'fixture/throws',
+  language: 'json',
+  fixable: false,
+  create() {
+    return {
+      document() {
+        throw new Error('boom')
+      },
+    }
+  },
+})
+`
+
 /** Every configuration module, keyed by its file name. */
 const CONFIG_MODULES: Readonly<Record<string, string>> = {
   'empty.ts': `export default [{ files: ['**/*.json'], rules: {} }]
@@ -72,6 +93,11 @@ export default [{ families: { fixture: { 'no-main': rule } } }, { files: ['**/pa
   'not-blocks.ts': `export default [{ files: ['**/*.json'] }, 'nothing']
 `,
   'null-config.ts': `export default null
+`,
+  'throwing-rule.ts': THROWING_RULE,
+  'throwing.ts': `import rule from './throwing-rule'
+
+export default [{ families: { fixture: { throws: rule } } }, { files: ['**/*.json'], rules: { 'fixture/throws': 'error' } }]
 `,
   'warn.ts': `export default [
   { families: { fixture: { 'no-main': () => import('./no-main-rule') } } },
