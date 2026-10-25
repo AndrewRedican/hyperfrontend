@@ -2,8 +2,10 @@
  * ESM (ES Modules) E2E tests for `@hyperfrontend/testing`
  * Tests that the packed package is importable, that every entry carries its documented
  * surface, and that the installed preloads, runner and reporter work from a consumer's seat.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
 import type { FileCoverage } from '@hyperfrontend/testing/coverage'
 import type { RunOutcome, TestConfig } from '@hyperfrontend/testing/runner'
 import type { ChildRun } from './support/installed-package'
@@ -12,100 +14,65 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { writeConsumerProjects } from './support/consumer-projects'
+import { JEST_STYLE_SPECS, JEST_STYLE_SUITES, writeConsumerProjects } from './support/consumer-projects'
 import { PROJECT_DIR, installedPath, installedUrl, runChildSuite, tapCount, withoutHarnessEnvironment } from './support/installed-package'
+import {
+  BASELINE_EXCLUDE,
+  COVERAGE_EXPORTS,
+  DESCRIBE_MODIFIERS,
+  ENTRIES,
+  EXPECT_NEGATIONS,
+  EXPECT_STATICS,
+  HELPER_EXPORTS,
+  IT_MODIFIERS,
+  JEST_METHODS,
+  MAIN_EXPORTS,
+  RUNNER_FUNCTIONS,
+} from './support/documented-surface'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/testing'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+// why: the dom entry loads jsdom, the optional peer a consumer installs itself, exactly as this e2e project pins it.
+const PEERS = ['jsdom@26.1.0']
+const RUNNER = [
+  "import { equals, expect, jest, matchesSubset } from '@hyperfrontend/testing'",
+  "import { percentOf } from '@hyperfrontend/testing/coverage'",
+  "import { createTempDir } from '@hyperfrontend/testing/fs'",
+  'async function main() {',
+  '  expect(1 + 1).toBe(2)',
+  "  expect({ id: 7, tags: ['a', 'b'] }).toEqual({ id: expect.any(Number), tags: expect.arrayContaining(['b']) })",
+  "  let failure = ''",
+  '  try {',
+  '    expect(1).toBe(2)',
+  '  } catch (error) {',
+  '    failure = error.message',
+  '  }',
+  '  const add = jest.fn((left, right) => left + right)',
+  '  add(1, 2)',
+  '  add(3, 4)',
+  '  expect(add).toHaveBeenCalledTimes(2)',
+  "  const dir = createTempDir({ tree: { 'package.json': { name: 'app' } } })",
+  "  const manifest = dir.readJson('package.json')",
+  '  dir.remove()',
+  '  return {',
+  '    failure: /expected 1 to be 2/.test(failure),',
+  '    results: add.mock.results.map((result) => result.value),',
+  '    equals: equals({ a: [1] }, { a: [1] }),',
+  '    subset: matchesSubset({ a: 1, b: 2 }, { a: 1 }),',
+  '    manifest,',
+  '    percent: percentOf({ found: 4, hit: 1 }),',
+  '  }',
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 const consumers = writeConsumerProjects()
 after(() => consumers.remove())
 
-const ENTRIES = ['', 'browser', 'coverage', 'dom', 'fs', 'hooks', 'process', 'reporter', 'runner']
-const MAIN_EXPORTS = [
-  'createDeferred',
-  'createMock',
-  'describe',
-  'equals',
-  'expect',
-  'flushPromises',
-  'it',
-  'jest',
-  'matchesSubset',
-  'sleep',
-  'waitFor',
-  'waitUntil',
-]
-const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
-const DESCRIBE_MODIFIERS = ['each', 'only', 'skip']
-const EXPECT_STATICS = [
-  'any',
-  'anything',
-  'objectContaining',
-  'arrayContaining',
-  'stringContaining',
-  'stringMatching',
-  'closeTo',
-  'assertions',
-  'hasAssertions',
-]
-const EXPECT_NEGATIONS = ['objectContaining', 'arrayContaining', 'stringContaining', 'stringMatching']
-const JEST_METHODS = [
-  'fn',
-  'spyOn',
-  'mocked',
-  'clearAllMocks',
-  'resetAllMocks',
-  'restoreAllMocks',
-  'replaceProperty',
-  'stubEnv',
-  'stubGlobal',
-  'useFakeTimers',
-  'useRealTimers',
-  'advanceTimersByTime',
-  'advanceTimersByTimeAsync',
-  'runAllTimers',
-  'runOnlyPendingTimers',
-  'clearAllTimers',
-  'setSystemTime',
-  'resetModules',
-  'mock',
-  'unmock',
-  'doMock',
-  'requireActual',
-  'requireMock',
-]
-const HELPER_EXPORTS = {
-  browser: ['createFakeWindow', 'createWindowPair', 'installResizeObserver'],
-  fs: ['createTempDir', 'useTempDir', 'writeFile', 'writeTree'],
-  process: ['Keys', 'captureStdio', 'createCapturedOutput', 'createFakeChildProcess', 'createTtyInput', 'readAll', 'spawnSyncResult'],
-}
-const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']
-const BASELINE_EXCLUDE = ['**/*.spec.ts', '**/*.spec.tsx', '**/*.d.ts', 'test.config.ts']
-const COVERAGE_EXPORTS = [
-  'mergeLcov',
-  'renderLcov',
-  'findThresholdShortfalls',
-  'renderCoverageTable',
-  'findUnmeasuredFiles',
-  'fileTotals',
-  'overallTotals',
-  'percentOf',
-  'uncoveredRanges',
-]
-const JEST_STYLE_SPECS = [
-  'src/origin.spec.ts',
-  'src/mock-factory.spec.ts',
-  'src/automock.spec.ts',
-  'src/do-mock.spec.ts',
-  'src/timers.spec.ts',
-  'src/each.spec.ts',
-]
-const JEST_STYLE_SUITES = [
-  'the runtime a fixture imports',
-  'jest.mock with a factory',
-  'jest.mock automock of a built-in',
-  'jest.doMock after jest.resetModules',
-  'fake timers',
-  'it.each',
-]
 const COVERAGE_FLAGS = ['--experimental-test-coverage', '--test-coverage-include=src/**/*.ts']
 const SAMPLE_LCOV = [
   'TN:',
@@ -688,6 +655,41 @@ describe('@hyperfrontend/testing ESM', () => {
       const { findUnmeasuredFiles } = await import(installedUrl('coverage', 'index.mjs'))
       const { missing } = findUnmeasuredFiles([], consumers.dir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
       expect(missing.filter((file: string) => file.endsWith('.spec.ts'))).toEqual([])
+    })
+  })
+})
+
+describe('@hyperfrontend/testing ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  before(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE, peers: PEERS })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  after(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('asserts, mocks, writes a temp tree and totals coverage from the installed entries', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      failure: true,
+      results: [3, 7],
+      equals: true,
+      subset: true,
+      manifest: {
+        name: 'app',
+      },
+      percent: 25,
     })
   })
 })

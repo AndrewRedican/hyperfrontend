@@ -75,6 +75,8 @@ export interface NativeConsumerOptions {
   tarball: string
   /** The package name the tarball carries. */
   packageName: string
+  /** Packages installed beside the tarball, as `name@version` specifiers: the peers the package expects a consumer to bring. */
+  peers?: readonly string[]
 }
 
 /**
@@ -150,7 +152,8 @@ export function createNativeConsumer(options: NativeConsumerOptions): NativeCons
   const dir = createTempDir({ prefix: 'hf-native-consumer-' })
   const root = dir.path
   writeFileSync(join(root, 'package.json'), `${JSON.stringify({ name: 'native-consumer', version: '0.0.0', private: true }, null, 2)}\n`)
-  execFileSync('npm', shellSafe(['install', '--prefer-offline', '--no-audit', '--no-fund', '--loglevel=error', options.tarball]), {
+  const installed = [options.tarball, ...(options.peers ?? [])]
+  execFileSync('npm', shellSafe(['install', '--prefer-offline', '--no-audit', '--no-fund', '--loglevel=error', ...installed]), {
     cwd: root,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],

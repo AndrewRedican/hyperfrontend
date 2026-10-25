@@ -10,6 +10,25 @@ import { PROJECT_DIR } from './installed-package'
  */
 const SCRATCH_DIR = join(PROJECT_DIR, 'tmp')
 
+/** The spec files of the `jest-style` consumer project, in the order the suites run them. */
+export const JEST_STYLE_SPECS = [
+  'src/origin.spec.ts',
+  'src/mock-factory.spec.ts',
+  'src/automock.spec.ts',
+  'src/do-mock.spec.ts',
+  'src/timers.spec.ts',
+  'src/each.spec.ts',
+]
+/** The suite names the `jest-style` specs declare, which the TAP report prints back. */
+export const JEST_STYLE_SUITES = [
+  'the runtime a fixture imports',
+  'jest.mock with a factory',
+  'jest.mock automock of a built-in',
+  'jest.doMock after jest.resetModules',
+  'fake timers',
+  'it.each',
+]
+
 /**
  * Where {@link writeConsumerProjects} put the consumer projects.
  */
