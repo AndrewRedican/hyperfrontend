@@ -1,101 +1,81 @@
 /**
- * ESM (ES Modules) E2E tests for `@hyperfrontend/questions`
- * Tests that the package is importable and exports work correctly.
- * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/questions`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `import` sees them.
  */
 
-import type { NativeConsumer } from '../../shared/native-consumer'
-import { join } from 'node:path'
-import { before as beforeAll, after as afterAll } from 'node:test'
-import { describe, it, expect } from '@hyperfrontend/testing'
-import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
 
-const PACKAGE = '@hyperfrontend/questions'
-const E2E_DIR = join(import.meta.dirname, '..')
-// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
-const SETUP_TIMEOUT = 120_000
-const RUNNER = [
-  "import { PromptResult, confirm, style } from '@hyperfrontend/questions'",
-  "import { PassThrough } from 'node:stream'",
-  'async function main() {',
-  '  const input = new PassThrough()',
-  '  input.isTTY = true',
-  '  input.isRaw = false',
-  '  input.setRawMode = (mode) => {',
-  '    input.isRaw = mode',
-  '    return input',
-  '  }',
-  '  const written = []',
-  '  const output = new PassThrough()',
-  '  output.isTTY = true',
-  '  output.columns = 80',
-  '  output.rows = 24',
-  "  output.on('data', (chunk) => written.push(chunk.toString()))",
-  "  const pending = confirm({ message: 'Continue?', input, output })",
-  "  setImmediate(() => input.write('y'))",
-  '  const outcome = await pending',
-  '  return {',
-  '    result: outcome.result,',
-  '    value: outcome.value,',
-  '    submitted: PromptResult.Submitted,',
-  "    asked: written.join('').includes('Continue?'),",
-  "    styled: style.bold('x') !== 'x' && style.bold('x').includes('x'),",
-  '  }',
-  '}',
-  'process.stdout.write(JSON.stringify(await main()))',
-  '',
-].join('\n')
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/questions ESM', () => {
-  it('is importable', async () => {
-    const pkg = await import('@hyperfrontend/questions')
-    expect(pkg).toBeDefined()
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('has exports', async () => {
-    const pkg = await import('@hyperfrontend/questions')
-    const exportedKeys = Object.keys(pkg)
-    expect(exportedKeys.length).toBeGreaterThan(0)
+  it('exposes the documented surface of the main entry', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/questions')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
+    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        confirm: 'function',
+        select: 'function',
+        multiselect: 'function',
+        text: 'function',
+        style: 'object',
+        PromptResult: 'object',
+      })
+    )
   })
 
-  it('exports functions or objects', async () => {
-    const pkg = await import('@hyperfrontend/questions')
-
-    // At least one export should be a function, object, or class
-    const exportTypes = Object.values(pkg).map((v) => typeof v)
-    const hasValidExport = exportTypes.some((t) => ['function', 'object'].includes(t))
-    expect(hasValidExport).toBe(true)
-  })
-})
-
-describe('@hyperfrontend/questions ESM under plain Node in an isolated consumer', () => {
-  let consumer: NativeConsumer
-
-  beforeAll(
-    () => {
-      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
-      consumer.write('run.mjs', RUNNER)
-    },
-    { timeout: SETUP_TIMEOUT }
-  )
-
-  afterAll(() => {
-    consumer.remove()
+  it('names the two prompt outcomes', () => {
+    const results = consumer.run(async () => {
+      const { PromptResult } = await import('@hyperfrontend/questions')
+      return PromptResult
+    })
+    expect(results).toEqual({
+      Submitted: 'submitted',
+      Cancelled: 'cancelled',
+    })
   })
 
-  it('imports every export entry natively', () => {
-    const loads = consumer.loadEntries('import')
-    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  it('wraps text in terminal styling codes', () => {
+    const styled = consumer.run(async () => {
+      const { style } = await import('@hyperfrontend/questions')
+      return [style.bold('x').includes('x'), style.bold('x') === 'x']
+    })
+    expect(styled).toEqual([true, false])
   })
 
   it('answers a confirm prompt driven through a terminal stream', () => {
-    const run = consumer.node([join(consumer.path, 'run.mjs')])
-    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+    const outcome = consumer.run(async () => {
+      const { confirm } = await import('@hyperfrontend/questions')
+      const { PassThrough } = await import('node:stream')
+      const input = Object.assign(new PassThrough(), {
+        isTTY: true,
+        isRaw: false,
+        setRawMode: (mode: boolean) => Object.assign(input, { isRaw: mode }),
+      })
+      const written: string[] = []
+      const output = Object.assign(new PassThrough(), { isTTY: true, columns: 80, rows: 24 })
+      output.on('data', (chunk: Buffer) => written.push(chunk.toString()))
+      const pending = confirm({
+        message: 'Continue?',
+        input: input as unknown as NodeJS.ReadStream,
+        output: output as unknown as NodeJS.WriteStream,
+      })
+      setImmediate(() => input.write('y'))
+      const answer = await pending
+      return { result: answer.result, value: answer.value, asked: written.join('').includes('Continue?') }
+    })
+    expect(outcome).toEqual({
       result: 'submitted',
       value: true,
-      submitted: 'submitted',
       asked: true,
-      styled: true,
     })
   })
 })
