@@ -1,9 +1,38 @@
 /**
  * ESM (ES Modules) E2E tests for `@hyperfrontend/data-utils`
  * Tests that the package is importable and exports work correctly.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
+import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/data-utils'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "import { getDepth, getType, hasCircularReference, isIdentical, sameType } from '@hyperfrontend/data-utils'",
+  'async function main() {',
+  '  const ring = { a: 1 }',
+  '  const before = hasCircularReference(ring)',
+  '  ring.self = ring',
+  '  return {',
+  "    types: [getType('x'), getType(1), getType(null), getType([]), getType({})],",
+  '    identical: isIdentical({ a: [1, 2] }, { a: [1, 2] }),',
+  '    different: isIdentical({ a: 1 }, { a: 2 }),',
+  "    shared: sameType('a', 'b'),",
+  "    mixed: sameType('a', 1),",
+  '    circular: [before, hasCircularReference(ring)],',
+  '    depth: getDepth({ a: { b: { c: 1 } } }),',
+  '  }',
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 describe('@hyperfrontend/data-utils ESM', () => {
   it('is importable', async () => {
@@ -105,5 +134,39 @@ describe('@hyperfrontend/data-utils ESM', () => {
   it('exports locateKey function', async () => {
     const { locateKey } = await import('@hyperfrontend/data-utils')
     expect(typeof locateKey).toBe('function')
+  })
+})
+
+describe('@hyperfrontend/data-utils ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('classifies, compares and measures values', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      types: ['string', 'number', 'null', 'array', 'object'],
+      identical: true,
+      different: false,
+      shared: 'string',
+      mixed: false,
+      circular: [false, true],
+      depth: [3, [['a', 'b', 'c']]],
+    })
   })
 })
