@@ -50,6 +50,11 @@ describe('selfInputs', () => {
     expect(selfInputs(root, project, 'build')).toEqual(['{projectRoot}/c/**', '{projectRoot}/c/**', '{projectRoot}/x', 'missing-name'])
   })
 
+  it('stops expanding a named input that names itself through another', () => {
+    const project = withInputs(['a'], { a: ['b', '{projectRoot}/a/**'], b: ['a', '{projectRoot}/b/**'] })
+    expect(selfInputs(root, project, 'build')).toEqual(['{projectRoot}/b/**', '{projectRoot}/a/**'])
+  })
+
   it('falls back to the default input without nx.json', () => {
     const bare = createDependencyWorkspace()
     rmSync(`${bare}/nx.json`)

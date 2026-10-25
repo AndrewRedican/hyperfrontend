@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { readJson } from '../../../graph/workspace.ts'
 
@@ -80,17 +81,20 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
     return input.dependencies !== true && (input.projects === undefined || input.projects === 'self')
   })
   const patterns: string[] = []
-  const expand = (inputs: readonly InputDefinition[]): void => {
+  const expand = (inputs: readonly InputDefinition[], expanding: ReadonlySet<string>): void => {
+    // why: a named input that names itself, directly or through another, would otherwise expand without end.
+    const follow = (name: string): void => {
+      if (!expanding.has(name)) expand(named[name] ?? [], createSet([...expanding, name]))
+    }
     for (const input of inputs) {
       if (typeof input === 'string') {
-        const inner = named[input]
-        if (inner === undefined) patterns.push(input)
-        else expand(inner)
+        if (named[input] === undefined) patterns.push(input)
+        else follow(input)
       } else if (input.fileset !== undefined) patterns.push(input.fileset)
-      else if (input.input !== undefined) expand(named[input.input] ?? [])
+      else if (input.input !== undefined) follow(input.input)
     }
   }
-  expand(own)
+  expand(own, createSet())
   return patterns
 }
 
