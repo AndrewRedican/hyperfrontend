@@ -1,64 +1,47 @@
 /**
- * CJS (CommonJS) E2E tests for `@hyperfrontend/immutable-api-utils`
- * Tests that the package is requireable and exports work correctly.
- * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/immutable-api-utils`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `require` sees them.
  */
 
 'use strict'
 
-const { join } = require('node:path')
-const { before: beforeAll, after: afterAll } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
-const { createNativeConsumer, tarballFor } = require('../../shared/native-consumer')
+const { usePackedConsumer } = require('@hyperfrontend/testing/consumer')
 
-const PACKAGE = '@hyperfrontend/immutable-api-utils'
-const E2E_DIR = join(__dirname, '..')
-// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
-const SETUP_TIMEOUT = 120_000
-const RUNNER = [
-  "'use strict'",
-  "const { lockedPropertyDescriptors, lockedProps } = require('@hyperfrontend/immutable-api-utils')",
-  "const { freeze } = require('@hyperfrontend/immutable-api-utils/built-in-copy/object')",
-  "const { locked } = require('@hyperfrontend/immutable-api-utils/locked')",
-  'async function main() {',
-  '  const target = {}',
-  '  lockedProps(target, [',
-  "    ['foo', 'bar'],",
-  "    ['num', 42],",
-  '  ])',
-  "  let reassigned = 'allowed'",
-  '  try {',
-  "    target.foo = 'changed'",
-  '  } catch {',
-  "    reassigned = 'refused'",
-  '  }',
-  '  return {',
-  "    descriptor: lockedPropertyDescriptors('v'),",
-  '    values: [target.foo, target.num],',
-  '    reassigned,',
-  '    frozen: Object.isFrozen(freeze({ a: 1 })),',
-  "    lockedIsFunction: typeof locked === 'function',",
-  '  }',
-  '}',
-  'main().then((out) => process.stdout.write(JSON.stringify(out)))',
-  '',
-].join('\n')
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/immutable-api-utils CJS', () => {
-  it('is requireable', () => {
-    const immutableApiUtils = require('@hyperfrontend/immutable-api-utils')
-    expect(immutableApiUtils).toBeDefined()
+  it('requires every export entry', () => {
+    expect(consumer.entries('require').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('exports lockedPropertyDescriptors', () => {
-    const { lockedPropertyDescriptors } = require('@hyperfrontend/immutable-api-utils')
-    expect(typeof lockedPropertyDescriptors).toBe('function')
+  it('exposes the documented surface of the main entry', () => {
+    const surface = consumer.run(
+      async () => {
+        const entry = require('@hyperfrontend/immutable-api-utils')
+        return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof entry[name]]))
+      },
+      { kind: 'require' }
+    )
+    expect(surface).toEqual(
+      expect.objectContaining({
+        lockedPropertyDescriptors: 'function',
+        lockedProps: 'function',
+        locked: 'function',
+      })
+    )
   })
 
   it('creates locked property descriptors', () => {
-    const { lockedPropertyDescriptors } = require('@hyperfrontend/immutable-api-utils')
-
-    const descriptor = lockedPropertyDescriptors('test-value')
+    const descriptor = consumer.run(
+      async () => {
+        const { lockedPropertyDescriptors } = require('@hyperfrontend/immutable-api-utils')
+        return lockedPropertyDescriptors('test-value')
+      },
+      { kind: 'require' }
+    )
     expect(descriptor).toEqual({
       value: 'test-value',
       writable: false,
@@ -67,77 +50,59 @@ describe('@hyperfrontend/immutable-api-utils CJS', () => {
     })
   })
 
-  it('exports lockedProps', () => {
-    const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
-    expect(typeof lockedProps).toBe('function')
-  })
-
   it('locks properties on an object with the given values', () => {
-    const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
-
-    const obj: Record<string, unknown> = {}
-    lockedProps(obj, [
-      ['foo', 'bar'],
-      ['num', 42],
-    ])
-
-    expect({ foo: obj.foo, num: obj.num }).toEqual({ foo: 'bar', num: 42 })
+    const values = consumer.run(
+      async () => {
+        const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
+        const target: Record<string, unknown> = {}
+        lockedProps(target, [
+          ['foo', 'bar'],
+          ['num', 42],
+        ])
+        return [target.foo, target.num]
+      },
+      { kind: 'require' }
+    )
+    expect(values).toEqual(['bar', 42])
   })
 
   it('locks properties on an object against reassignment', () => {
-    const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
-
-    const obj: Record<string, unknown> = {}
-    lockedProps(obj, [
-      ['foo', 'bar'],
-      ['num', 42],
-    ])
-
-    // Should not be writable
-    expect(() => {
-      obj.foo = 'changed'
-    }).toThrow()
-  })
-
-  it('exports locked decorator', () => {
-    const { locked } = require('@hyperfrontend/immutable-api-utils')
-    expect(typeof locked).toBe('function')
-  })
-})
-
-describe('@hyperfrontend/immutable-api-utils CJS under plain Node in an isolated consumer', () => {
-  let consumer
-
-  beforeAll(
-    () => {
-      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
-      consumer.write('run.cjs', RUNNER)
-    },
-    { timeout: SETUP_TIMEOUT }
-  )
-
-  afterAll(() => {
-    consumer.remove()
-  })
-
-  it('requires every export entry natively', () => {
-    const loads = consumer.loadEntries('require')
-    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
-  })
-
-  it('locks properties and freezes through the built-in copies', () => {
-    const run = consumer.node([join(consumer.path, 'run.cjs')])
-    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
-      descriptor: {
-        value: 'v',
-        writable: false,
-        configurable: false,
-        enumerable: false,
+    const outcome = consumer.run(
+      async () => {
+        const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
+        const target: Record<string, unknown> = {}
+        lockedProps(target, [['foo', 'bar']])
+        try {
+          target.foo = 'changed'
+          return 'reassigned'
+        } catch {
+          return 'refused'
+        }
       },
-      values: ['bar', 42],
-      reassigned: 'refused',
-      frozen: true,
-      lockedIsFunction: true,
-    })
+      { kind: 'require' }
+    )
+    expect(outcome).toBe('refused')
+  })
+
+  it('freezes an object through the built-in copy entry', () => {
+    const frozen = consumer.run(
+      async () => {
+        const { freeze } = require('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+        return Object.isFrozen(freeze({ a: 1 }))
+      },
+      { kind: 'require' }
+    )
+    expect(frozen).toBe(true)
+  })
+
+  it('exposes the locked decorator through its own entry', () => {
+    const kind = consumer.run(
+      async () => {
+        const { locked } = require('@hyperfrontend/immutable-api-utils/locked')
+        return typeof locked
+      },
+      { kind: 'require' }
+    )
+    expect(kind).toBe('function')
   })
 })
