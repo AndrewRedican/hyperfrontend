@@ -5,7 +5,7 @@
   "license": "MIT",
   "sideEffects": false,
   "dependencies": {
-    "@hyperfrontend/builder": "0.5.3",
+    "@hyperfrontend/builder": "0.5.4",
     "@hyperfrontend/immutable-api-utils": "1.0.2",
     "@hyperfrontend/json-utils": "1.1.0",
     "@hyperfrontend/network-protocol": "2.0.1",

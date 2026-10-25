@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/f83ba11a155be922f200d00abb89c39d1e3982c7...2faa3ba57520a4e3248ea899da0d5266eb3c9a01) - 2026-10-25
+
+### Features
+
+- drive a packed package from a consumer entry
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/9e6cdcc777484b3f38ca87cfea42d4cb758075a6...1e12b8201eb30b82352b2f4d88d5f7663991f358) - 2026-10-24
 
 ### Features

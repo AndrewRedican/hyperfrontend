@@ -4,8 +4,8 @@
   "description": "Nx plugin providing build executors for hyperfrontend library packages.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/builder": "0.5.3",
-    "@hyperfrontend/testing": "0.2.0"
+    "@hyperfrontend/builder": "0.5.4",
+    "@hyperfrontend/testing": "0.3.0"
   },
   "devDependencies": {
     "@hyperfrontend/project-scope": "0.4.0",
