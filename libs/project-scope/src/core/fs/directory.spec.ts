@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdirSync, writeFileSync, existsSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -17,6 +17,7 @@ describe('core/fs/directory', () => {
     writeFileSync(join(tempDir.path, '.dotfile'), 'hidden')
     writeFileSync(join(tempDir.path, 'subdir', 'file3.txt'), 'content3')
     writeFileSync(join(tempDir.path, 'subdir', 'nested', 'file4.txt'), 'content4')
+    symlinkSync(tempDir.path, join(tempDir.path, 'subdir', 'nested', 'back'), 'dir')
   })
 
   describe('readDirectory', () => {
@@ -74,6 +75,21 @@ describe('core/fs/directory', () => {
     it('respects maxDepth: 1 to include subdir but not deeply nested', () => {
       const names = readDirectoryRecursive(tempDir.path, { maxDepth: 1 }).map((e) => e.name)
       expect(names.sort()).toEqual(['file1.txt', 'file2.txt', 'file3.txt', 'nested', 'subdir'])
+    })
+
+    it('lists a symlinked directory as a symlink rather than a directory', () => {
+      const entries = readDirectoryRecursive(tempDir.path)
+      expect(entries.find((e) => e.name === 'back')).toMatchObject({ isSymlink: true, isDirectory: false, depth: 2 })
+    })
+
+    it('does not enter a symlinked directory by default', () => {
+      const names = readDirectoryRecursive(tempDir.path).map((e) => e.name)
+      expect(names.filter((name) => name === 'back' || name === 'file1.txt').sort()).toEqual(['back', 'file1.txt'])
+    })
+
+    it('walks each directory once when a followed symlink leads back into the tree', () => {
+      const names = readDirectoryRecursive(tempDir.path, { followSymlinks: true }).map((e) => e.name)
+      expect(names.sort()).toEqual(['back', 'file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', 'nested', 'subdir'])
     })
 
     it('includes depth information', () => {
