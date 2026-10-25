@@ -7,6 +7,7 @@
 
 import type { Node, SourceToken } from '../../../code/model'
 import type { RuleFile } from '../../../engine/rule'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { tokensBetween, tokenText } from '../../../code/source'
 
 /**
@@ -38,4 +39,22 @@ export function sameTokens(program: Node, file: RuleFile, a: Node, b: Node): boo
       return token.category === other.category && tokenText(file, token) === tokenText(file, other)
     })
   )
+}
+
+/**
+ * A node's tokens as one text: two nodes have the same key exactly when `sameTokens` holds for them.
+ *
+ * @param program - The program whose tokens are read
+ * @param file - The file linted
+ * @param node - The node keyed
+ * @returns The categories and texts of its tokens, encoded so that no two token lists share a key
+ *
+ * @example Collect the labels of a switch without comparing each pair
+ * ```ts
+ * // case limit + 1: ... case limit+1:
+ * tokenKey(program, file, first) === tokenKey(program, file, second) // => true
+ * ```
+ */
+export function tokenKey(program: Node, file: RuleFile, node: Node): string {
+  return stringify(tokensBetween(program, node.start, node.end).map((token) => [token.category, tokenText(file, token)]))
 }
