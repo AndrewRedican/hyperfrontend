@@ -7,11 +7,65 @@
  *
  * Note: network-protocol has many sub-entries for browser/node variants.
  * In Node.js environment, we test the node-specific entries.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
 'use strict'
 
+const { join } = require('node:path')
+const { before: beforeAll, after: afterAll } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { createNativeConsumer, tarballFor } = require('../../shared/native-consumer')
+
+const PACKAGE = '@hyperfrontend/network-protocol'
+const E2E_DIR = join(__dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "'use strict'",
+  "const { createProtocol } = require('@hyperfrontend/network-protocol/node/v3')",
+  "const { createData, deserializeData } = require('@hyperfrontend/network-protocol/node/data')",
+  "const { createUnencryptedPacket } = require('@hyperfrontend/network-protocol/node/packet')",
+  "const { getProtocolErrorCode } = require('@hyperfrontend/network-protocol/security')",
+  'async function main() {',
+  '  const noop = () => undefined',
+  '  const logger = {',
+  '    log: noop,',
+  '    warn: noop,',
+  '    error: noop,',
+  '    info: noop,',
+  '    debug: noop,',
+  '    setLogLevel: noop,',
+  "    getLogLevel: () => 'info',",
+  '    channel: () => logger,',
+  '    timed: (_label, fn) => fn(),',
+  '    timedAsync: (_label, fn) => fn(),',
+  '  }',
+  "  const INITIATOR = '550e8400-e29b-41d4-a716-446655440000'",
+  "  const RESPONDER = '641c7fcb-d7dd-4a18-ab50-ce797192ed82'",
+  '  const provider = createProtocol(logger)',
+  "  const initiator = provider(noop, noop, { protocol: 'v3', role: 'initiator', localId: INITIATOR, peerId: RESPONDER })",
+  "  const responder = provider(noop, noop, { protocol: 'v3', role: 'responder', localId: RESPONDER, peerId: INITIATOR })",
+  '  responder.acceptHello(await initiator.hello())',
+  '  initiator.acceptHello(await responder.hello())',
+  "  const packet = createUnencryptedPacket(INITIATOR, RESPONDER, deserializeData(await createData(INITIATOR, 1, { type: 'PING' })))",
+  '  const frame = await initiator.seal(packet)',
+  '  const opened = await responder.open(frame)',
+  '  let replay = null',
+  '  try {',
+  '    await responder.open(frame)',
+  '  } catch (error) {',
+  '    replay = getProtocolErrorCode(error)',
+  '  }',
+  '  return {',
+  "    hidesPlaintext: !new TextDecoder().decode(frame).includes('PING'),",
+  '    roundTrip: JSON.stringify(opened) === JSON.stringify(packet),',
+  '    replay,',
+  '  }',
+  '}',
+  'main().then((out) => process.stdout.write(JSON.stringify(out)))',
+  '',
+].join('\n')
 
 /** The negotiated session a provider binds a protocol instance to. */
 interface Session {
@@ -545,6 +599,36 @@ describe('@hyperfrontend/network-protocol CJS', () => {
     it('is requireable', () => {
       const topic = require('@hyperfrontend/network-protocol/topic')
       expect(topic).toBeDefined()
+    })
+  })
+})
+
+describe('@hyperfrontend/network-protocol CJS under plain Node in an isolated consumer', () => {
+  let consumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.cjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('requires every export entry natively', () => {
+    const loads = consumer.loadEntries('require')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('seals on one side of a v3 session, opens on the other and rejects a replay', () => {
+    const run = consumer.node([join(consumer.path, 'run.cjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      hidesPlaintext: true,
+      roundTrip: true,
+      replay: 'replayed',
     })
   })
 })

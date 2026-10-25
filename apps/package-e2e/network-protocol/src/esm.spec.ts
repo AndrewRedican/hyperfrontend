@@ -7,11 +7,65 @@
  *
  * Note: network-protocol has many sub-entries for browser/node variants.
  * In Node.js environment, we test the node-specific entries.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
+import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import type { Channel, PacketDrop, Protocol, ProtocolProvider, ProtocolSession } from '@hyperfrontend/network-protocol/node/channel'
 import type { UnencryptedPacket } from '@hyperfrontend/network-protocol/node/packet'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/network-protocol'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "import { createProtocol } from '@hyperfrontend/network-protocol/node/v3'",
+  "import { createData, deserializeData } from '@hyperfrontend/network-protocol/node/data'",
+  "import { createUnencryptedPacket } from '@hyperfrontend/network-protocol/node/packet'",
+  "import { getProtocolErrorCode } from '@hyperfrontend/network-protocol/security'",
+  'async function main() {',
+  '  const noop = () => undefined',
+  '  const logger = {',
+  '    log: noop,',
+  '    warn: noop,',
+  '    error: noop,',
+  '    info: noop,',
+  '    debug: noop,',
+  '    setLogLevel: noop,',
+  "    getLogLevel: () => 'info',",
+  '    channel: () => logger,',
+  '    timed: (_label, fn) => fn(),',
+  '    timedAsync: (_label, fn) => fn(),',
+  '  }',
+  "  const INITIATOR = '550e8400-e29b-41d4-a716-446655440000'",
+  "  const RESPONDER = '641c7fcb-d7dd-4a18-ab50-ce797192ed82'",
+  '  const provider = createProtocol(logger)',
+  "  const initiator = provider(noop, noop, { protocol: 'v3', role: 'initiator', localId: INITIATOR, peerId: RESPONDER })",
+  "  const responder = provider(noop, noop, { protocol: 'v3', role: 'responder', localId: RESPONDER, peerId: INITIATOR })",
+  '  responder.acceptHello(await initiator.hello())',
+  '  initiator.acceptHello(await responder.hello())',
+  "  const packet = createUnencryptedPacket(INITIATOR, RESPONDER, deserializeData(await createData(INITIATOR, 1, { type: 'PING' })))",
+  '  const frame = await initiator.seal(packet)',
+  '  const opened = await responder.open(frame)',
+  '  let replay = null',
+  '  try {',
+  '    await responder.open(frame)',
+  '  } catch (error) {',
+  '    replay = getProtocolErrorCode(error)',
+  '  }',
+  '  return {',
+  "    hidesPlaintext: !new TextDecoder().decode(frame).includes('PING'),",
+  '    roundTrip: JSON.stringify(opened) === JSON.stringify(packet),',
+  '    replay,',
+  '  }',
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 /** The logger shape `createProtocol` validates before it builds a provider. */
 type Logger = Parameters<typeof import('@hyperfrontend/network-protocol/node/v3').createProtocol>[0]
@@ -461,6 +515,36 @@ describe('@hyperfrontend/network-protocol ESM', () => {
     it('is importable', async () => {
       const topic = await import('@hyperfrontend/network-protocol/topic')
       expect(topic).toBeDefined()
+    })
+  })
+})
+
+describe('@hyperfrontend/network-protocol ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('seals on one side of a v3 session, opens on the other and rejects a replay', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      hidesPlaintext: true,
+      roundTrip: true,
+      replay: 'replayed',
     })
   })
 })
