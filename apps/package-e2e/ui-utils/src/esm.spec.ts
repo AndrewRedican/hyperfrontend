@@ -4,9 +4,27 @@
  *
  * Note: ui-utils is browser-focused but sub-entries should still be importable.
  * Functionality tests are limited as many features require a real DOM.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
+import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/ui-utils'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "import { hexToRgb, rgbToHex, rgbToString } from '@hyperfrontend/ui-utils/color'",
+  'async function main() {',
+  "  return { rgb: hexToRgb('#ff0000'), hex: rgbToHex(255, 0, 0).toLowerCase(), string: rgbToString(hexToRgb('#00ff00')) }",
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 describe('@hyperfrontend/ui-utils ESM', () => {
   describe('color sub-entry', () => {
@@ -108,6 +126,40 @@ describe('@hyperfrontend/ui-utils ESM', () => {
     it('is importable', async () => {
       const time = await import('@hyperfrontend/ui-utils/time')
       expect(time).toBeDefined()
+    })
+  })
+})
+
+describe('@hyperfrontend/ui-utils ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('converts colours through the color entry', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      rgb: {
+        r: 255,
+        g: 0,
+        b: 0,
+      },
+      hex: '#ff0000',
+      string: 'rgb(0,255,0)',
     })
   })
 })
