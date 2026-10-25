@@ -1,9 +1,49 @@
 /**
  * ESM (ES Modules) E2E tests for `@hyperfrontend/function-utils`
  * Tests that the package is importable and exports work correctly.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
+import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/function-utils'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "import { createConditionalExecutionFunction, createErrorIgnoringFunction, createRunOnceFunction, noop } from '@hyperfrontend/function-utils'",
+  'async function main() {',
+  '  let runs = 0',
+  '  const once = createRunOnceFunction(() => {',
+  '    runs += 1',
+  "    return 'result'",
+  '  })',
+  '  const results = [once(), once()]',
+  '  const guarded = createErrorIgnoringFunction(() => {',
+  "    throw new Error('boom')",
+  '  })',
+  '  let threw = false',
+  '  try {',
+  '    guarded()',
+  '  } catch {',
+  '    threw = true',
+  '  }',
+  '  let executed = 0',
+  '  createConditionalExecutionFunction(() => {',
+  '    executed += 1',
+  '  }, () => true)()',
+  '  createConditionalExecutionFunction(() => {',
+  '    executed += 1',
+  '  }, () => false)()',
+  '  return { results, runs, noopReturnsUndefined: noop() === undefined, threw, executed }',
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 describe('@hyperfrontend/function-utils ESM', () => {
   it('is importable', async () => {
@@ -83,5 +123,37 @@ describe('@hyperfrontend/function-utils ESM', () => {
     )
     conditionalFn()
     expect(executed).toBe(true)
+  })
+})
+
+describe('@hyperfrontend/function-utils ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('wraps functions to run once, ignore errors and run conditionally', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      results: ['result', 'result'],
+      runs: 1,
+      noopReturnsUndefined: true,
+      threw: false,
+      executed: 1,
+    })
   })
 })
