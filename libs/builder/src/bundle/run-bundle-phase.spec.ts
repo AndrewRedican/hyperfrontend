@@ -183,6 +183,64 @@ describe('runBundlePhase', () => {
     expect(result.umd).toEqual([])
   })
 
+  it('builds the root entry when an IIFE config omits entry on a multi-entry library', async () => {
+    const result = await runBundlePhase(makeContext(), {
+      projectRoot: '',
+      workspaceRoot: '',
+      iife: { globalName: 'MyLib' },
+    } as BuildConfig)
+    expect(result.iife).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
+  })
+
+  it('builds the root entry when a UMD config omits entry on a multi-entry library', async () => {
+    const result = await runBundlePhase(makeContext(), {
+      projectRoot: '',
+      workspaceRoot: '',
+      umd: { globalName: 'MyLib' },
+    } as BuildConfig)
+    expect(result.umd).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
+  })
+
+  it('refuses an IIFE config whose entry selection resolves to several entries', async () => {
+    await expect(
+      runBundlePhase(makeContext(), {
+        projectRoot: '',
+        workspaceRoot: '',
+        iife: { globalName: 'MyLib', entry: ['.', './browser'] },
+      } as BuildConfig)
+    ).rejects.toThrow('iife bundle resolves 2 entries (., ./browser)')
+  })
+
+  it('refuses a UMD config whose entry selection resolves to several entries', async () => {
+    await expect(
+      runBundlePhase(makeContext(), {
+        projectRoot: '',
+        workspaceRoot: '',
+        umd: { globalName: 'MyLib', entry: ['.', './browser'] },
+      } as BuildConfig)
+    ).rejects.toThrow('umd bundle resolves 2 entries (., ./browser)')
+  })
+
+  it('refuses an IIFE config that omits entry on a library without a root entry', async () => {
+    const context = makeContext()
+    const nodeEntry: EntryPoint = {
+      exportPath: './node',
+      srcPath: 'node',
+      inputFile: '/abs/libs/foo/src/node/index.ts',
+      isRoot: false,
+      platform: 'node',
+    }
+    context.entryPointDiscovery = {
+      ...DISCOVERY,
+      hasRootEntry: false,
+      entryPoints: [BROWSER_ENTRY, nodeEntry],
+      platformEntries: [BROWSER_ENTRY, nodeEntry],
+    }
+    await expect(
+      runBundlePhase(context, { projectRoot: '', workspaceRoot: '', iife: { globalName: 'MyLib' } } as BuildConfig)
+    ).rejects.toThrow('Set `entry` on the iife config to exactly one export path.')
+  })
+
   it('honors the per-format `output` override when ensuring the bundle directory', async () => {
     await runBundlePhase(makeContext(), {
       projectRoot: '',

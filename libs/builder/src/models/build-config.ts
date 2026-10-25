@@ -106,6 +106,10 @@ export interface CjsConfig extends FormatEntryConfig {
 
 /**
  * IIFE (browser self-executing) output configuration.
+ *
+ * A bundle is built from exactly one entry, since every entry would write the same
+ * `index.iife.js`: when `entry` is omitted the root entry is used, and a selection that
+ * resolves to several entries is refused.
  */
 export interface IifeConfig extends FormatEntryConfig {
   /** Global variable name exposed by the bundle. */
@@ -124,6 +128,10 @@ export interface IifeConfig extends FormatEntryConfig {
 
 /**
  * UMD (universal module definition) output configuration.
+ *
+ * A bundle is built from exactly one entry, since every entry would write the same
+ * `index.umd.js`: when `entry` is omitted the root entry is used, and a selection that
+ * resolves to several entries is refused.
  */
 export interface UmdConfig extends FormatEntryConfig {
   /** Global variable name exposed by the bundle. */

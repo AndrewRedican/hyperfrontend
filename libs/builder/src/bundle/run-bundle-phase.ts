@@ -1,5 +1,15 @@
 import type { MemoryMonitor } from '../memory/monitor'
-import type { BuildConfig, BuildContext, CjsConfig, EsmConfig, FormatOutputs, IifeConfig, UmdConfig, WorkspaceBundledDep } from '../models'
+import type {
+  BuildConfig,
+  BuildContext,
+  CjsConfig,
+  EntryPoint,
+  EsmConfig,
+  FormatOutputs,
+  IifeConfig,
+  UmdConfig,
+  WorkspaceBundledDep,
+} from '../models'
 import type { PrePassJob } from './dependencies/pre-pass'
 import type { RollupBuildDescriptor } from './rollup/worker/types'
 import { from, isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
@@ -57,6 +67,32 @@ interface DispatchOptions {
 type ResolveDispatch = () => DispatchOptions
 
 const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? (value as T[]) : [value as T])
+
+/**
+ * Resolves the entries a browser bundle format (IIFE or UMD) is built from.
+ *
+ * Every bundle of one config writes the same `index.<format>.js` into the config's output directory, so a config
+ * can carry one entry at most. When `entry` is omitted the root entry is chosen; a selection that still resolves to
+ * several entries is refused rather than letting the last one silently overwrite the others.
+ *
+ * @param config - The IIFE or UMD config being resolved.
+ * @param discovered - Every entry point discovery found.
+ * @param format - The format, for the error message.
+ * @returns Zero or one entry.
+ * @throws {Error} When the config resolves to more than one entry.
+ */
+const resolveBundleEntries = (config: IifeConfig | UmdConfig, discovered: EntryPoint[], format: 'iife' | 'umd'): EntryPoint[] => {
+  const entries = resolveEntries(config, discovered)
+  if (entries.length <= 1) return entries
+  if (config.entry === undefined) {
+    const root = entries.find((entry) => entry.isRoot)
+    if (root) return [root]
+  }
+  const listed = entries.map((entry) => entry.exportPath).join(', ')
+  throw createError(
+    `${format} bundle resolves ${entries.length} entries (${listed}), but every ${format} entry writes the same index.${format}.js, so only one can ship. Set \`entry\` on the ${format} config to exactly one export path.`
+  )
+}
 
 const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cjs'> => {
   const formats = createSet<'esm' | 'cjs'>([])
@@ -217,7 +253,7 @@ const runIifeFormats = async (
   monitor?: MemoryMonitor
 ): Promise<void> => {
   for (const iifeConfig of toArray(config.iife) as IifeConfig[]) {
-    const entries = resolveEntries(iifeConfig, context.entryPointDiscovery.entryPoints)
+    const entries = resolveBundleEntries(iifeConfig, context.entryPointDiscovery.entryPoints, 'iife')
     if (entries.length === 0) continue
     ensureDir(join(context.outputPath, iifeConfig.output ?? 'bundle'))
     for (const [i, entry] of entries.entries()) {
@@ -239,7 +275,7 @@ const runUmdFormats = async (
   monitor?: MemoryMonitor
 ): Promise<void> => {
   for (const umdConfig of toArray(config.umd) as UmdConfig[]) {
-    const entries = resolveEntries(umdConfig, context.entryPointDiscovery.entryPoints)
+    const entries = resolveBundleEntries(umdConfig, context.entryPointDiscovery.entryPoints, 'umd')
     if (entries.length === 0) continue
     ensureDir(join(context.outputPath, umdConfig.output ?? 'bundle'))
     for (const [i, entry] of entries.entries()) {
