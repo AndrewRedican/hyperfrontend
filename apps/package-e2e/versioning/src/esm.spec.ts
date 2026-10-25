@@ -1,9 +1,38 @@
 /**
  * ESM (ES Modules) E2E tests for `@hyperfrontend/versioning`
  * Tests that the package is importable and exports work correctly.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
+import type { NativeConsumer } from '../../shared/native-consumer'
+import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
+
+const PACKAGE = '@hyperfrontend/versioning'
+const E2E_DIR = join(import.meta.dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "import { compare, format, increment, parseChangelog, parseConventionalCommit, parseVersion, serializeChangelog } from '@hyperfrontend/versioning'",
+  'async function main() {',
+  "  const one = parseVersion('1.2.3').version",
+  "  const two = parseVersion('2.0.0').version",
+  "  const commit = parseConventionalCommit('feat(lib-x): add a thing')",
+  "  const changelog = '# Changelog\\n\\n## 1.0.0 - 2024-01-15\\n\\n### Added\\n\\n- Initial release\\n'",
+  '  const parsed = parseChangelog(changelog)',
+  '  return {',
+  "    bumped: format(increment(one, 'minor')),",
+  '    order: compare(one, two),',
+  '    commit: { type: commit.type, scope: commit.scope, subject: commit.subject },',
+  '    entries: parsed.entries.length,',
+  '    fixpoint: serializeChangelog(parsed) === changelog,',
+  '  }',
+  '}',
+  'process.stdout.write(JSON.stringify(await main()))',
+  '',
+].join('\n')
 
 describe('@hyperfrontend/versioning ESM', () => {
   describe('main entry', () => {
@@ -171,6 +200,42 @@ describe('@hyperfrontend/versioning ESM', () => {
     it('exports createRegistry function', async () => {
       const { createRegistry } = await import('@hyperfrontend/versioning')
       expect(typeof createRegistry).toBe('function')
+    })
+  })
+})
+
+describe('@hyperfrontend/versioning ESM under plain Node in an isolated consumer', () => {
+  let consumer: NativeConsumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.mjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('imports every export entry natively', () => {
+    const loads = consumer.loadEntries('import')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('bumps and compares versions, parses a commit and round-trips a changelog', () => {
+    const run = consumer.node([join(consumer.path, 'run.mjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      bumped: '1.3.0',
+      order: -1,
+      commit: {
+        type: 'feat',
+        scope: ['lib-x'],
+        subject: 'add a thing',
+      },
+      entries: 1,
+      fixpoint: true,
     })
   })
 })
