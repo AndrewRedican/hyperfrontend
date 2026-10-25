@@ -1,24 +1,5 @@
+import type { ConsumerRun, PackedConsumer } from '@hyperfrontend/testing/consumer'
 import { join } from 'node:path'
-
-/** The result of a child process run inside the consumer, as the shared consumer helper reports it. */
-export interface ProbeRun {
-  /** The child's exit code, or null when a signal ended it. */
-  status: number | null
-  /** Everything the child wrote to stdout. */
-  stdout: string
-  /** Everything the child wrote to stderr. */
-  stderr: string
-}
-
-/** The slice of the shared consumer handle this module drives. */
-export interface ProbeConsumer {
-  /** Absolute path of the consumer directory. */
-  readonly path: string
-  /** Writes a file under the consumer directory and returns its absolute path. */
-  write(relativePath: string, content: string): string
-  /** Runs a file with plain Node from the consumer directory. */
-  node(args: readonly string[]): ProbeRun
-}
 
 /** The directory, relative to the consumer, the library is written to and built from. */
 export const PROBE_LIBRARY_DIR = 'probe-lib'
@@ -116,18 +97,25 @@ const SOURCES: Record<string, string> = {
  * @param consumer - The consumer the builder is installed in.
  * @returns The build child's result; its stdout is the JSON format counts on success.
  */
-export function buildProbeLibrary(consumer: ProbeConsumer): ProbeRun {
-  for (const [relativePath, content] of Object.entries(SOURCES)) consumer.write(relativePath, content)
-  return consumer.node([join(consumer.path, PROBE_LIBRARY_DIR, 'build.mjs')])
+export function buildProbeLibrary(consumer: PackedConsumer): ConsumerRun {
+  consumer.writeTree(SOURCES)
+  return consumer.node([join(consumer.path, PROBE_LIBRARY_DIR, 'build.mjs')], { timeout: 600_000 })
+}
+
+/** How a build child ended, read for one assertion. */
+export interface BuildReport {
+  /** The child's exit code, or null when a signal ended it. */
+  status: number | null
+  /** The parsed format counts on success, the child's stderr otherwise. */
+  counts: unknown
 }
 
 /**
- * Parses the JSON a runner wrote, surfacing the child's stderr when it exited non-zero.
+ * Reads the format counts a build child reported, or its stderr when it failed.
  *
- * @param run - The child's result.
- * @returns The parsed stdout.
+ * @param run - The build child's result.
+ * @returns The exit status with the counts on success or the error output otherwise.
  */
-export function jsonOf(run: ProbeRun): unknown {
-  if (run.status !== 0) throw new Error(`runner exited ${run.status}: ${run.stderr}`)
-  return JSON.parse(run.stdout)
+export function buildReport(run: ConsumerRun): BuildReport {
+  return { status: run.status, counts: run.status === 0 ? JSON.parse(run.stdout) : run.stderr }
 }

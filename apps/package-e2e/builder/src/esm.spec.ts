@@ -1,103 +1,24 @@
 /**
  * ESM (ES Modules) E2E tests for `@hyperfrontend/builder`.
  *
- * The first suite imports the installed package from this test process. The second installs the packed
- * tarball into a directory outside the workspace and drives it through plain Node child processes with
- * no loader hooks, path aliases or hoisted `node_modules`: every entry is imported natively, a two-entry
- * library is built with it, and the built ES modules, the browser bundles and the declarations are
- * exercised the way a consumer's tooling would.
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node with no
+ * loader hooks: every entry is imported natively, a two-entry library is built with the installed builder, and the
+ * built ES modules, the browser bundles and the declarations are exercised the way a consumer's tooling would.
  */
 
-import type { ConsumerRun, NativeConsumer } from '../../shared/native-consumer'
+import type { ConsumerRun } from '@hyperfrontend/testing/consumer'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { before as beforeAll, after as afterAll } from 'node:test'
+import { before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createNativeConsumer, tarballFor } from '../../shared/native-consumer'
-import { PROBE_LIBRARY_COUNTS, PROBE_LIBRARY_FILES, PROBE_LIBRARY_OUT, buildProbeLibrary, jsonOf } from './support/probe-library'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+import { PROBE_LIBRARY_COUNTS, PROBE_LIBRARY_FILES, PROBE_LIBRARY_OUT, buildProbeLibrary, buildReport } from './support/probe-library'
 
-const PACKAGE = '@hyperfrontend/builder'
-const E2E_DIR = join(import.meta.dirname, '..')
-// why: a tarball install, a bundled build with a declaration pass and a consumer typecheck run back to back in the setup.
-const SETUP_TIMEOUT = 600_000
+// why: a bundled build with a declaration pass runs in the setup, after the install.
+const BUILD_TIMEOUT = 600_000
 
-describe('@hyperfrontend/builder ESM', () => {
-  it('is importable', async () => {
-    const pkg = await import('@hyperfrontend/builder')
-    expect(pkg).toBeDefined()
-  })
-
-  it('exposes the documented public API', async () => {
-    const pkg = await import('@hyperfrontend/builder')
-    const expected = [
-      'build',
-      'createBuildContext',
-      'runBinPhase',
-      'runBundlePhase',
-      'runPackagePhase',
-      'createMemoryMonitor',
-      'recover',
-      'byNames',
-      'byPrefix',
-    ] as const
-    for (const name of expected) {
-      expect(typeof pkg[name]).toBe('function')
-    }
-  })
-
-  it('resolves the /presets subpath export with byNames and byPrefix functions', async () => {
-    const { byNames, byPrefix } = await import('@hyperfrontend/builder/presets')
-    expect({ byNames, byPrefix }).toEqual({ byNames: expect.any(Function), byPrefix: expect.any(Function) })
-  })
-
-  it('builds a byNames predicate from the /presets subpath that accepts a listed name', async () => {
-    const { byNames } = await import('@hyperfrontend/builder/presets')
-    const isNamed = byNames(['internal-utils'])
-    expect(isNamed('internal-utils')).toBe(true)
-  })
-
-  it('builds a byNames predicate from the /presets subpath that rejects an unlisted name', async () => {
-    const { byNames } = await import('@hyperfrontend/builder/presets')
-    const isNamed = byNames(['internal-utils'])
-    expect(isNamed('rollup')).toBe(false)
-  })
-
-  it('builds a byPrefix predicate from the /presets subpath that accepts a name under the prefix', async () => {
-    const { byPrefix } = await import('@hyperfrontend/builder/presets')
-    const isScoped = byPrefix('@hyperfrontend/')
-    expect(isScoped('@hyperfrontend/logging')).toBe(true)
-  })
-
-  it('builds a byPrefix predicate from the /presets subpath that rejects a name outside the prefix', async () => {
-    const { byPrefix } = await import('@hyperfrontend/builder/presets')
-    const isScoped = byPrefix('@hyperfrontend/')
-    expect(isScoped('rollup')).toBe(false)
-  })
-})
-
-const RUNNERS: Record<string, string> = {
-  'presets.mjs': [
-    "import { byNames, byPrefix } from '@hyperfrontend/builder/presets'",
-    "const named = byNames(['internal-utils'])",
-    "const scoped = byPrefix('@hyperfrontend/')",
-    "process.stdout.write(JSON.stringify({ named: named('internal-utils'), unnamed: named('rollup'), scoped: scoped('@hyperfrontend/logging'), unscoped: scoped('rollup') }))",
-    '',
-  ].join('\n'),
-  'run-esm.mjs': [
-    `import { VERSION, greet, merge } from './${PROBE_LIBRARY_OUT}/index.mjs'`,
-    `import { shout } from './${PROBE_LIBRARY_OUT}/extra/index.mjs'`,
-    "process.stdout.write(JSON.stringify({ merged: merge({ a: 1 }, { b: 2 }), greeting: greet('x'), shouted: shout('y'), VERSION }))",
-    '',
-  ].join('\n'),
-  'run-bundles.cjs': [
-    "const { readFileSync } = require('node:fs')",
-    "const { runInNewContext } = require('node:vm')",
-    'const iife = {}',
-    `runInNewContext(readFileSync('${PROBE_LIBRARY_OUT}/bundle/index.iife.min.js', 'utf8'), iife)`,
-    'const umd = { exports: {} }',
-    `runInNewContext(readFileSync('${PROBE_LIBRARY_OUT}/bundle/index.umd.min.js', 'utf8'), { module: umd, exports: umd.exports })`,
-    'process.stdout.write(JSON.stringify({ iife: Object.keys(iife.Probe).sort(), iifeMerge: iife.Probe.merge({ a: 1 }, { b: 2 }), umd: Object.keys(umd.exports).sort() }))',
-    '',
-  ].join('\n'),
+/** A consumer of the built library, type-checked by the installed TypeScript under strict NodeNext resolution. */
+const TYPECHECK_PROJECT = {
   'typecheck/consumer.ts': [
     "import { greet, merge } from 'probe-lib'",
     "import { shout } from 'probe-lib/extra'",
@@ -106,68 +27,97 @@ const RUNNERS: Record<string, string> = {
     'export { merged, shouted }',
     '',
   ].join('\n'),
-  'typecheck/tsconfig.json': `${JSON.stringify(
-    {
-      compilerOptions: {
-        module: 'NodeNext',
-        moduleResolution: 'NodeNext',
-        strict: true,
-        skipLibCheck: false,
-        noEmit: true,
-        types: [],
-        baseUrl: '.',
-        paths: { 'probe-lib': [`../${PROBE_LIBRARY_OUT}/index.d.ts`], 'probe-lib/extra': [`../${PROBE_LIBRARY_OUT}/extra/index.d.ts`] },
-      },
-      files: ['consumer.ts'],
+  'typecheck/tsconfig.json': {
+    compilerOptions: {
+      module: 'NodeNext',
+      moduleResolution: 'NodeNext',
+      strict: true,
+      skipLibCheck: false,
+      noEmit: true,
+      types: [],
+      baseUrl: '.',
+      paths: { 'probe-lib': [`../${PROBE_LIBRARY_OUT}/index.d.ts`], 'probe-lib/extra': [`../${PROBE_LIBRARY_OUT}/extra/index.d.ts`] },
     },
-    null,
-    2
-  )}\n`,
+    files: ['consumer.ts'],
+  },
 }
 
-describe('@hyperfrontend/builder ESM under plain Node in an isolated consumer', () => {
-  let consumer: NativeConsumer
-  let buildRun: ConsumerRun
+/** The built root and extra entry files a child loads. */
+interface BuiltModules {
+  /** The root entry's absolute path. */
+  root: string
+  /** The extra entry's absolute path. */
+  extra: string
+}
 
-  beforeAll(
-    () => {
-      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
-      for (const [relativePath, content] of Object.entries(RUNNERS)) consumer.write(relativePath, content)
-      buildRun = buildProbeLibrary(consumer)
-    },
-    { timeout: SETUP_TIMEOUT }
-  )
+/** The minified browser bundles a child evaluates. */
+interface BuiltBundles {
+  /** The IIFE bundle's absolute path. */
+  iife: string
+  /** The UMD bundle's absolute path. */
+  umd: string
+}
 
-  afterAll(() => {
-    consumer.remove()
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
+let built: ConsumerRun
+
+before(
+  () => {
+    consumer.writeTree(TYPECHECK_PROJECT)
+    built = buildProbeLibrary(consumer)
+  },
+  { timeout: BUILD_TIMEOUT }
+)
+
+describe('@hyperfrontend/builder ESM', () => {
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('imports every export entry natively', () => {
-    const loads = consumer.loadEntries('import')
-    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  it('exposes the documented public API', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/builder')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
+    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        build: 'function',
+        createBuildContext: 'function',
+        runBinPhase: 'function',
+        runBundlePhase: 'function',
+        runPackagePhase: 'function',
+        createMemoryMonitor: 'function',
+        recover: 'function',
+        byNames: 'function',
+        byPrefix: 'function',
+      })
+    )
   })
 
   it('declares the documented Node.js floor', () => {
-    const manifest = JSON.parse(consumer.node(['-p', `JSON.stringify(require('${PACKAGE}/package.json').engines)`]).stdout) as {
-      node: string
+    const manifest = JSON.parse(readFileSync(join(consumer.path, 'node_modules', '@hyperfrontend', 'builder', 'package.json'), 'utf8')) as {
+      engines: { node: string }
     }
-    expect(manifest.node).toBe('>=18.0.0')
+    expect(manifest.engines.node).toBe('>=18.0.0')
   })
 
   it('classifies package names through the presets entry', () => {
-    expect(jsonOf(consumer.node([join(consumer.path, 'presets.mjs')]))).toEqual({
-      named: true,
-      unnamed: false,
-      scoped: true,
-      unscoped: false,
+    const verdicts = consumer.run(async () => {
+      const { byNames, byPrefix } = await import('@hyperfrontend/builder/presets')
+      const named = byNames(['internal-utils'])
+      const scoped = byPrefix('@hyperfrontend/')
+      return {
+        named: named('internal-utils'),
+        unnamed: named('rollup'),
+        scoped: scoped('@hyperfrontend/logging'),
+        unscoped: scoped('rollup'),
+      }
     })
+    expect(verdicts).toEqual({ named: true, unnamed: false, scoped: true, unscoped: false })
   })
 
   it('builds a two-entry library with bundled deps and minified browser bundles', () => {
-    expect({ status: buildRun.status, counts: buildRun.status === 0 ? JSON.parse(buildRun.stdout) : buildRun.stderr }).toEqual({
-      status: 0,
-      counts: PROBE_LIBRARY_COUNTS,
-    })
+    expect(buildReport(built)).toEqual({ status: 0, counts: PROBE_LIBRARY_COUNTS })
   })
 
   it('emits every entry in every format with the bundled dep and the shared chunk beside them', () => {
@@ -175,20 +125,46 @@ describe('@hyperfrontend/builder ESM under plain Node in an isolated consumer', 
   })
 
   it('runs the built ES modules through the bundled dep and the shared chunk', () => {
-    expect(jsonOf(consumer.node([join(consumer.path, 'run-esm.mjs')]))).toEqual({
-      merged: { a: 1, b: 2 },
-      greeting: 'hello x',
-      shouted: 'HELLO Y',
-      VERSION: '1.0.0',
-    })
+    const outputs = consumer.run(
+      async (args: BuiltModules) => {
+        const { pathToFileURL: toUrl } = await import('node:url')
+        const { VERSION, greet, merge } = await import(toUrl(args.root).href)
+        const { shout } = await import(toUrl(args.extra).href)
+        return { merged: merge({ a: 1 }, { b: 2 }), greeting: greet('x'), shouted: shout('y'), VERSION }
+      },
+      {
+        args: {
+          root: join(consumer.path, PROBE_LIBRARY_OUT, 'index.mjs'),
+          extra: join(consumer.path, PROBE_LIBRARY_OUT, 'extra', 'index.mjs'),
+        },
+      }
+    )
+    expect(outputs).toEqual({ merged: { a: 1, b: 2 }, greeting: 'hello x', shouted: 'HELLO Y', VERSION: '1.0.0' })
   })
 
   it('builds the browser bundles from the root entry when the bundle configs omit entry', () => {
-    expect(jsonOf(consumer.node([join(consumer.path, 'run-bundles.cjs')]))).toEqual({
-      iife: ['VERSION', 'greet', 'merge'],
-      iifeMerge: { a: 1, b: 2 },
-      umd: ['VERSION', 'greet', 'merge'],
-    })
+    const globals = consumer.run(
+      async (args: BuiltBundles) => {
+        const { readFileSync: read } = await import('node:fs')
+        const { runInNewContext } = await import('node:vm')
+        const iife: { Probe?: { merge: (a: object, b: object) => object } } = {}
+        runInNewContext(read(args.iife, 'utf8'), iife)
+        const umd = { exports: {} }
+        runInNewContext(read(args.umd, 'utf8'), { module: umd, exports: umd.exports })
+        return {
+          iife: Object.keys(iife.Probe ?? {}).sort(),
+          iifeMerge: iife.Probe?.merge({ a: 1 }, { b: 2 }),
+          umd: Object.keys(umd.exports).sort(),
+        }
+      },
+      {
+        args: {
+          iife: join(consumer.path, PROBE_LIBRARY_OUT, 'bundle', 'index.iife.min.js'),
+          umd: join(consumer.path, PROBE_LIBRARY_OUT, 'bundle', 'index.umd.min.js'),
+        },
+      }
+    )
+    expect(globals).toEqual({ iife: ['VERSION', 'greet', 'merge'], iifeMerge: { a: 1, b: 2 }, umd: ['VERSION', 'greet', 'merge'] })
   })
 
   it('emits declarations a strict NodeNext consumer compiles without skipLibCheck', () => {
