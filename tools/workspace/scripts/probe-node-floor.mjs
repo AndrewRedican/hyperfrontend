@@ -23,8 +23,11 @@
  *
  *   node tools/workspace/scripts/probe-node-floor.mjs
  *   npx -y -p node@18.0.0 node tools/workspace/scripts/probe-node-floor.mjs
+ *   node tools/workspace/scripts/probe-node-floor.mjs --list-floors
  *
- * `HF_DIST` points at another built tree (default `dist/libs`).
+ * `--list-floors` prints the distinct `engines.node` floors the built packages declare, lowest
+ * first, one per line, so a caller can run the probe once per floor. `HF_DIST` points at another
+ * built tree (default `dist/libs`).
  */
 import { spawn } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -158,6 +161,20 @@ const runAll = async (probes) => {
   return results
 }
 
+/**
+ * The distinct floors the built packages declare, lowest first.
+ *
+ * @param packages - The built packages.
+ * @returns Each distinct floor as `major.minor.patch`.
+ */
+const distinctFloors = (packages) => {
+  const floors = new Map()
+  for (const pkg of packages) {
+    if (pkg.floor !== null) floors.set(pkg.floor.join('.'), pkg.floor)
+  }
+  return [...floors.values()].sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]).map((floor) => floor.join('.'))
+}
+
 const main = async () => {
   const distRoot = resolve(process.env.HF_DIST ?? join('dist', 'libs'))
   if (!existsSync(distRoot)) {
@@ -165,6 +182,10 @@ const main = async () => {
     process.exit(2)
   }
   const built = findPackages(distRoot).sort((a, b) => a.name.localeCompare(b.name))
+  if (process.argv.includes('--list-floors')) {
+    process.stdout.write(`${distinctFloors(built).join('\n')}\n`)
+    return
+  }
   const skipped = built.filter((pkg) => runsBelow(pkg.floor))
   const packages = built.filter((pkg) => !runsBelow(pkg.floor))
   const probes = collectProbes(packages)
