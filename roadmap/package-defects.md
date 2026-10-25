@@ -15,7 +15,6 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 
 | #    | Package                 | Defect                                                                  | Severity |
 | ---- | ----------------------- | ----------------------------------------------------------------------- | -------- |
-| D-02 | package-e2e (all)       | The ESM lane never calls anything, so call-time failures ship unseen    | high     |
 | D-04 | project-scope / builder | Declaration alias cycle: one symbol left, and no builder-side guard     | medium   |
 | D-09 | logging                 | A channel shares its level with its parent in both directions           | medium   |
 | D-10 | state-machine           | Nothing makes `init` run once under concurrent callers                  | medium   |
@@ -23,22 +22,6 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 | D-12 | ui-utils                | `syncElementDimensions` copies the source's inline `position`           | low      |
 
 ---
-
-## D-02 — the ESM package-e2e lane is not real ESM
-
-Every publishable library has an `esm` e2e config, and none of them proves the ESM entry works.
-`apps/package-e2e/project-scope/src/esm.spec.ts` asserts `expect(typeof X).toBe('function')` for
-each import and never calls anything, so a call-time `ReferenceError` is invisible. Separately,
-the lane's module handling accepts subpaths that Node rejects outright, so an ESM spec can pass
-green against a tarball a plain `.mjs` import fails on.
-
-That combination is what let the dedupe defect ship across three packages: every affected entry
-linked cleanly and only threw when a function was actually called. One real call per suite that
-crosses a `_shared` chunk would have caught it.
-
-**Docs follow-up.** None directly, but until a real native-ESM smoke exists (a plain `.mjs` or
-`node --input-type=module` run against the packed tarball) every "verified against the published
-package" claim in an authored-lane guide has to be re-run by hand rather than trusted to CI.
 
 ## D-04 — the declaration alias cycle still reaches project-scope, and the builder has no guard
 
