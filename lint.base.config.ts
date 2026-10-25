@@ -14,7 +14,7 @@ const WORKSPACE_PACKAGE_PREFIXES = ['@hyperfrontend', '@nx']
 export default [
   { families: WORKSPACE_FAMILIES },
   { ignores: ['.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'] },
-  { files: CODE, rules: CODE_RULES },
+  { files: CODE, rules: { ...CODE_RULES, ...on('typescript/no-unused-vars') } },
   { files: JAVASCRIPT, language: { globals: BROWSER_AND_NODE_GLOBALS } },
   { files: SCRIPT, rules: JSDOC_RULES },
   {
