@@ -1,11 +1,23 @@
 /**
  * CJS (CommonJS) E2E tests for `@hyperfrontend/builder`
- * Tests that the package is requireable, its subpaths resolve, and the bin is wired.
+ * Tests that the package is requireable, its subpaths resolve, and the bin is wired, from this test
+ * process; then, from a packed-tarball install outside the workspace driven through plain Node child
+ * processes with no loader hooks, that every entry requires natively and a library built with the
+ * installed builder runs as CommonJS.
  */
 
 'use strict'
 
+const { join } = require('node:path')
+const { before: beforeAll, after: afterAll } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { createNativeConsumer, tarballFor } = require('../../shared/native-consumer')
+const { PROBE_LIBRARY_COUNTS, PROBE_LIBRARY_OUT, buildProbeLibrary, jsonOf } = require('./support/probe-library')
+
+const PACKAGE = '@hyperfrontend/builder'
+const E2E_DIR = join(__dirname, '..')
+// why: a tarball install and a bundled build run back to back in the setup.
+const SETUP_TIMEOUT = 600_000
 
 describe('@hyperfrontend/builder CJS', () => {
   it('is requireable', () => {
@@ -102,5 +114,52 @@ describe('@hyperfrontend/builder CJS', () => {
     const pkg = require('@hyperfrontend/builder/package.json')
     const binRelative = pkg.bin['hf-build'].replace(/^\.\//, '')
     expect(pkg.files).toContain(binRelative)
+  })
+})
+
+describe('@hyperfrontend/builder CJS under plain Node in an isolated consumer', () => {
+  let consumer
+  let buildRun
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write(
+        'run-cjs.cjs',
+        [
+          `const { VERSION, greet, merge } = require('./${PROBE_LIBRARY_OUT}/index.cjs')`,
+          `const { shout } = require('./${PROBE_LIBRARY_OUT}/extra/index.cjs')`,
+          "process.stdout.write(JSON.stringify({ merged: merge({ a: 1 }, { b: 2 }), greeting: greet('x'), shouted: shout('y'), VERSION }))",
+          '',
+        ].join('\n')
+      )
+      buildRun = buildProbeLibrary(consumer)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('requires every export entry natively', () => {
+    const loads = consumer.loadEntries('require')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('builds a two-entry library with bundled deps and minified browser bundles', () => {
+    expect({ status: buildRun.status, counts: buildRun.status === 0 ? JSON.parse(buildRun.stdout) : buildRun.stderr }).toEqual({
+      status: 0,
+      counts: PROBE_LIBRARY_COUNTS,
+    })
+  })
+
+  it('runs the built CommonJS modules through the bundled dep and the shared chunk', () => {
+    expect(jsonOf(consumer.node([join(consumer.path, 'run-cjs.cjs')]))).toEqual({
+      merged: { a: 1, b: 2 },
+      greeting: 'hello x',
+      shouted: 'HELLO Y',
+      VERSION: '1.0.0',
+    })
   })
 })
