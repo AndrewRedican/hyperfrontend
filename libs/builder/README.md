@@ -99,6 +99,8 @@ the TypeScript resolved from your workspace root on the current Node binary, so
 when your project already depends on TypeScript that is the compiler that runs,
 on Windows as well as POSIX systems. The builder is built against **TypeScript >= 5.9**.
 
+That one install is all a build needs: Rollup and its plugins ship inside the package, and Rollup's native parser is listed under [`optionalDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-optionalDependencies) only because that is how npm picks the binding for your platform, exactly as Rollup itself declares it. The manifest declares Node.js 18 and npm 8, which `engine-strict` enforces with an EBADENGINE error; the bundled Rollup plugins declare Node.js 20 in their own manifests, so Node.js 20 or later is the recommended runtime.
+
 ## Quick Start
 
 Drive the full pipeline programmatically with [`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build):
