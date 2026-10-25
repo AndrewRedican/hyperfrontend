@@ -329,6 +329,7 @@ export class Builder {
    * Closes the path being built: the heads fall off its end.
    */
   private close(): void {
-    this.path.final.push(...this.heads)
+    // why: a switch of many breaking cases ends in as many heads, more than one call accepts as spread arguments.
+    for (const head of this.heads) this.path.final.push(head)
   }
 }

@@ -383,7 +383,8 @@ function buildTry(b: Builder, node: Node): void {
   b.contexts.pop()
   if (finalizer === null) {
     const outer = b.innermost('try')
-    if (outer !== null) outer.implicit.push(...implicit)
+    // why: a long catch block leaves more segments than one call accepts as spread arguments.
+    if (outer !== null) for (const segment of implicit) outer.implicit.push(segment)
     b.heads = normal
     return
   }

@@ -163,7 +163,8 @@ export class ScopeManager {
       }
     }
     global.through.length = 0
-    global.through.push(...unresolved)
+    // why: a spread hands every element to one call, and a minified script leaves more references unresolved than a call accepts.
+    for (const ref of unresolved) global.through.push(ref)
   }
 
   /**
