@@ -1,30 +1,31 @@
 /**
- * CJS (CommonJS) E2E tests for <%= packageName %>
- * Tests that the package is requireable and exports work correctly.
+ * CJS (CommonJS) E2E tests for `<%= packageName %>`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `require` sees them.
  */
 
 'use strict'
 
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { usePackedConsumer } = require('@hyperfrontend/testing/consumer')
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('<%= packageName %> CJS', () => {
-  it('is requireable', () => {
-    const pkg = require('<%= packageName %>')
-    expect(pkg).toBeDefined()
+  it('requires every export entry', () => {
+    expect(consumer.entries('require').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('has exports', () => {
-    const pkg = require('<%= packageName %>')
-    const exportedKeys = Object.keys(pkg)
-    expect(exportedKeys.length).toBeGreaterThan(0)
-  })
-
-  it('exports functions or objects', () => {
-    const pkg = require('<%= packageName %>')
-
+  it('exports functions or objects from the main entry', () => {
+    const kinds = consumer.run(
+      () => {
+        const entry = require('<%= packageName %>')
+        return Object.values(entry).map((value) => typeof value)
+      },
+      { kind: 'require' }
+    )
     // why: a package with nothing callable or structured to export has not been packed from its sources
-    const exportTypes = Object.values(pkg).map((v) => typeof v)
-    const hasValidExport = exportTypes.some((t) => ['function', 'object'].includes(t))
-    expect(hasValidExport).toBe(true)
+    expect(kinds.some((kind) => kind === 'function' || kind === 'object')).toBe(true)
   })
 })
