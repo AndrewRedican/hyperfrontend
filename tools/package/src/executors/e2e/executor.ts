@@ -133,9 +133,10 @@ const FORMAT_RUNS: Record<string, FormatRun> = {
  * @param testDir - The test project directory
  * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
  * @param workspaceRoot - The root directory of the workspace
+ * @param tarballPath - The packed tarball the suites may install into an isolated consumer, when one was packed
  * @returns True if tests passed, false otherwise
  */
-function runNodeTests(testDir: string, format: string, workspaceRoot: string): boolean {
+function runNodeTests(testDir: string, format: string, workspaceRoot: string, tarballPath: string | undefined): boolean {
   const run = FORMAT_RUNS[format]
   if (!run) {
     logger.error(`Unknown e2e format "${format}"`)
@@ -170,6 +171,8 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
         ...process.env,
         HF_TEST_WORKSPACE_ROOT: workspaceRoot,
         HF_TEST_ALIASES: stringify(testingAliases(workspaceRoot)),
+        // why: the suites that drive the package under plain Node install this tarball into a directory outside the workspace, so they get its path rather than guessing it from the project's manifest.
+        ...(tarballPath ? { HF_E2E_TARBALL: tarballPath } : {}),
       },
     })
     logger.info(`${format} tests passed`)
@@ -245,7 +248,7 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
   const results: boolean[] = []
 
   for (const format of formats) {
-    const success = runNodeTests(testDir, format, workspaceRoot)
+    const success = runNodeTests(testDir, format, workspaceRoot, tarballPath)
     results.push(success)
   }
 
