@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to test a package the way a consumer installs it",
+  "problem": "My library passes every test in the workspace, where path aliases, loader hooks and a hoisted node_modules resolve whatever the source asks for, and then a consumer runs npm install and the published entry fails to load or throws on the first call.",
+  "outcome": "A suite that installs the packed tarball into a directory outside the workspace, loads every exports entry under plain Node with import and with require, calls the package from a child process the way a consumer does, and can repeat all of that on the oldest Node release the package declares.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/testing"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/testing@0.3.0",
+    "verifiedOn": "2026-10-25"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/testing", "symbol": "usePackedConsumer" },
+    { "package": "@hyperfrontend/testing", "symbol": "createPackedConsumer" },
+    { "package": "@hyperfrontend/testing", "symbol": "PackedConsumer" },
+    { "package": "@hyperfrontend/testing", "symbol": "PackedConsumerOptions" },
+    { "package": "@hyperfrontend/testing", "symbol": "RunOptions" },
+    { "package": "@hyperfrontend/testing", "symbol": "EntryLoad" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A library whose build writes a publishable directory with its own package.json and an exports map",
+      "A suite on @hyperfrontend/testing, or on node:test, running on Node.js 22.18 or later",
+      "npm available on the machine that runs the suite, since the install goes through it"
+    ]
+  },
+  "related": {
+    "guides": ["run-typescript-tests-on-node-test", "publish-a-typescript-library-to-npm"],
+    "reference": ["/docs/libraries/testing/consumer", "/docs/libraries/testing"],
+    "explanation": ["/docs/libraries/testing/architecture"]
+  },
+  "keywords": [
+    "e2e",
+    "package test",
+    "npm pack",
+    "tarball",
+    "exports map",
+    "ESM",
+    "CommonJS",
+    "require",
+    "import",
+    "dual package",
+    "consumer",
+    "plain Node",
+    "loader hooks",
+    "path aliases",
+    "peer dependency",
+    "engines",
+    "Node 18",
+    "publish"
+  ]
+}
