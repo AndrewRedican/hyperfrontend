@@ -215,17 +215,14 @@ jobs:
           check-type: build
           affected-only: 'false'
 
-      - name: Read the Node.js floor the packages declare
-        id: floor
-        run: echo "version=$(node -p "require('./libs/features/package.json').engines.node.replace(/[^0-9.]/g, '')")" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js ${{ steps.floor.outputs.version }}
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        with:
-          node-version: ${{ steps.floor.outputs.version }}
-
-      - name: Load every built package entry on the floor Node.js
-        run: node tools/workspace/scripts/probe-node-floor.mjs
+      - name: Load every built package entry on each Node.js floor the packages declare
+        # why: the packages declare different floors (most 18, the testing package 22.18, the linter 24), and the probe only covers a package on a release at or above its own floor, so it runs once per distinct floor on that exact release
+        run: |
+          for floor in $(node tools/workspace/scripts/probe-node-floor.mjs --list-floors); do
+            echo "::group::Node.js $floor"
+            npx -y -p "node@$floor" node tools/workspace/scripts/probe-node-floor.mjs
+            echo "::endgroup::"
+          done
 
   ci-status:
     name: status
