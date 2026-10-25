@@ -1,14 +1,9 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { basename, dirname, join } from 'node:path'
+import type { FileTree } from '@hyperfrontend/testing/fs'
+import { posix } from 'node:path'
 import { CONSUMER_SOURCES } from '../__test-utils__/consumer-sources'
-import { PROJECT_DIR } from './installed-package'
 
-/**
- * The git-ignored scratch directory the consumer projects are written under. It sits inside
- * the e2e project so that a bare `@hyperfrontend/testing` import in a consumer source climbs
- * to this project's `node_modules`, which holds the installed tarball.
- */
-const SCRATCH_DIR = join(PROJECT_DIR, 'tmp')
+/** The directory under the consumer the projects are written to, one subdirectory each. */
+export const CONSUMERS_DIR = 'consumers'
 
 /** The spec files of the `jest-style` consumer project, in the order the suites run them. */
 export const JEST_STYLE_SPECS = [
@@ -19,6 +14,7 @@ export const JEST_STYLE_SPECS = [
   'src/timers.spec.ts',
   'src/each.spec.ts',
 ]
+
 /** The suite names the `jest-style` specs declare, which the TAP report prints back. */
 export const JEST_STYLE_SUITES = [
   'the runtime a fixture imports',
@@ -30,41 +26,25 @@ export const JEST_STYLE_SUITES = [
 ]
 
 /**
- * Where {@link writeConsumerProjects} put the consumer projects.
+ * The consumer projects as one tree to write under the consumer, so a bare `@hyperfrontend/testing` import in any
+ * of them climbs to the consumer's `node_modules`, which holds the installed tarball.
+ *
+ * @returns Every project's files keyed by `consumers/<project>/<path>`.
  */
-export type ConsumerProjects = {
-  /** The absolute directory holding one subdirectory per consumer project. */
-  root: string
-  /** Names the root of one consumer project. */
-  dir: (name: string) => string
-  /** Names the root of one consumer project relative to the e2e project root, with forward slashes, the way coverage reports name files. */
-  workspacePath: (name: string) => string
-  /** Deletes the consumer projects, and the scratch directory once no other suite holds projects in it. */
-  remove: () => void
+export function consumerProjectsTree(): FileTree {
+  const tree: FileTree = {}
+  for (const [name, files] of Object.entries(CONSUMER_SOURCES)) {
+    for (const [path, text] of Object.entries(files)) tree[posix.join(CONSUMERS_DIR, name, path)] = text
+  }
+  return tree
 }
 
 /**
- * Writes every consumer project to a fresh directory under the e2e project's scratch directory.
+ * Names one consumer project relative to the consumer, with forward slashes, the way coverage reports name files.
  *
- * @returns The paths of the written projects and the way to delete them.
+ * @param name - Which consumer project, as the sources key it.
+ * @returns The project's directory below `consumers`, spelled the way coverage reports spell it.
  */
-export function writeConsumerProjects(): ConsumerProjects {
-  mkdirSync(SCRATCH_DIR, { recursive: true })
-  const root = mkdtempSync(join(SCRATCH_DIR, 'consumers-'))
-  for (const [name, files] of Object.entries(CONSUMER_SOURCES)) {
-    for (const [path, text] of Object.entries(files)) {
-      const file = join(root, name, path)
-      mkdirSync(dirname(file), { recursive: true })
-      writeFileSync(file, text)
-    }
-  }
-  return {
-    root,
-    dir: (name) => join(root, name),
-    workspacePath: (name) => [basename(SCRATCH_DIR), basename(root), name].join('/'),
-    remove: () => {
-      rmSync(root, { recursive: true, force: true })
-      if (readdirSync(SCRATCH_DIR).length === 0) rmSync(SCRATCH_DIR, { recursive: true, force: true })
-    },
-  }
+export function consumerProjectPath(name: string): string {
+  return posix.join(CONSUMERS_DIR, name)
 }
