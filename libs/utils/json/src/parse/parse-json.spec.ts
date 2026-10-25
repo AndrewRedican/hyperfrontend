@@ -181,6 +181,11 @@ describe('parseJsonSource', () => {
       expect(parseJsonSource('nul').error).toEqual({ message: 'Unexpected character n', offset: 0 })
     })
 
+    it("throws a failure that is not the parser's own", () => {
+      const depth = 100000
+      expect(() => parseJsonSource('['.repeat(depth) + ']'.repeat(depth))).toThrow(RangeError)
+    })
+
     it('keeps the comments found before the error', () => {
       expect(parseJsonSource('// note\n@').comments).toEqual([{ start: 0, end: 7 }])
     })

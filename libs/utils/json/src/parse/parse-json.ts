@@ -2,8 +2,8 @@
  * A JSON parser that keeps positions: every object, array, property and literal records where it
  * starts and ends in the text, so a tool can report on, or edit, one part of a document. Line and
  * block comments and trailing commas are accepted, as editors and configuration files allow them,
- * and the comments are returned with their positions. Nothing throws: a malformed document is
- * reported with the offset where parsing stopped.
+ * and the comments are returned with their positions. A malformed document is reported with the
+ * offset where parsing stopped; only a document nested deeper than the platform's call stack throws.
  *
  * @module parse/parse-json
  */
@@ -77,6 +77,25 @@ export interface JsonParseResult {
   readonly error: JsonParseError | null
 }
 
+/** The failure the parser throws, which `parseJsonSource` turns into its result. */
+class ParseFailure {
+  /** What was wrong. */
+  readonly message: string
+  /** The offset where parsing stopped. */
+  readonly offset: number
+
+  /**
+   * Records why parsing stopped.
+   *
+   * @param message - What was wrong
+   * @param offset - The offset where parsing stopped
+   */
+  constructor(message: string, offset: number) {
+    this.message = message
+    this.offset = offset
+  }
+}
+
 /** The parser's position in the text. */
 interface State {
   /** The text being parsed. */
@@ -112,7 +131,9 @@ export function parseJsonSource(text: string): JsonParseResult {
     if (state.index < text.length) fail(state, 'Unexpected content after the document')
     return { root, comments: state.comments, error: null }
   } catch (error) {
-    return { root: null, comments: state.comments, error: error as JsonParseError }
+    // why: the parser throws nothing but its own failures; anything else, a stack overflow on a document nested beyond the platform's depth included, is not a parse error to report.
+    if (!(error instanceof ParseFailure)) throw error
+    return { root: null, comments: state.comments, error: freeze({ message: error.message, offset: error.offset }) }
   }
 }
 
@@ -121,10 +142,10 @@ export function parseJsonSource(text: string): JsonParseResult {
  *
  * @param state - The parser, whose index becomes the error's offset
  * @param message - What was wrong
- * @throws {JsonParseError} Always; `parseJsonSource` turns it into its result
+ * @throws {ParseFailure} Always; `parseJsonSource` turns it into its result
  */
 function fail(state: State, message: string): never {
-  throw freeze({ message, offset: state.index })
+  throw new ParseFailure(message, state.index)
 }
 
 /**
