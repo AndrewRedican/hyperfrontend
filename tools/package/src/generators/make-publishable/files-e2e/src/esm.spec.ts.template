@@ -1,28 +1,26 @@
 /**
- * ESM (ES Modules) E2E tests for <%= packageName %>
- * Tests that the package is importable and exports work correctly.
+ * ESM (ES Modules) E2E tests for `<%= packageName %>`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `import` sees them.
  */
 
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('<%= packageName %> ESM', () => {
-  it('is importable', async () => {
-    const pkg = await import('<%= packageName %>')
-    expect(pkg).toBeDefined()
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('has exports', async () => {
-    const pkg = await import('<%= packageName %>')
-    const exportedKeys = Object.keys(pkg)
-    expect(exportedKeys.length).toBeGreaterThan(0)
-  })
-
-  it('exports functions or objects', async () => {
-    const pkg = await import('<%= packageName %>')
-
+  it('exports functions or objects from the main entry', () => {
+    const kinds = consumer.run(async () => {
+      const entry = await import('<%= packageName %>')
+      return Object.values(entry).map((value) => typeof value)
+    })
     // why: a package with nothing callable or structured to export has not been packed from its sources
-    const exportTypes = Object.values(pkg).map((v) => typeof v)
-    const hasValidExport = exportTypes.some((t) => ['function', 'object'].includes(t))
-    expect(hasValidExport).toBe(true)
+    expect(kinds.some((kind) => kind === 'function' || kind === 'object')).toBe(true)
   })
 })

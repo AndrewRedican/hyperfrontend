@@ -27,7 +27,11 @@ description: Create E2E test projects for publishable hyperfrontend libraries. U
 
 ## Key Files
 
-Generator creates: `project.json`, `package.json`, `tsconfig.json`, `jest.config.{esm,cjs,browser}.ts`, `src/<name>.spec.ts`
+Generator creates: `project.json`, `package.json`, `tsconfig.json`, `src/{esm,cjs,iife,umd}.spec.ts`
+
+## Spec shape
+
+`esm.spec.ts` and `cjs.spec.ts` run on `usePackedConsumer` from `@hyperfrontend/testing/consumer`: the executor passes the packed tarball as `HF_E2E_TARBALL`, the helper installs it into a temp dir outside the workspace, and every test runs under plain Node with no loader hooks. `consumer.entries('import' | 'require')` loads every exports subpath; `consumer.run(fn, { kind, args })` serialises `fn` into the consumer and returns its JSON result, so the body imports the package itself and closes over nothing. Browser bundles stay on `iife.spec.ts` / `umd.spec.ts` with the shared helpers.
 
 **Critical fields:**
 

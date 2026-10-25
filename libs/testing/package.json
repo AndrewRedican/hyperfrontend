@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/testing",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A lightweight Jest-like testing library built on native Node capabilities.",
   "license": "MIT",
   "sideEffects": false,
@@ -11,6 +11,7 @@
   "exports": {
     ".": "./src/index.js",
     "./browser": "./src/browser/index.js",
+    "./consumer": "./src/consumer/index.js",
     "./coverage": "./src/coverage/index.js",
     "./dom": "./src/dom/index.js",
     "./fs": "./src/fs/index.js",

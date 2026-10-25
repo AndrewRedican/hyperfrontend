@@ -1,111 +1,121 @@
 /**
- * CJS (CommonJS) E2E tests for `@hyperfrontend/data-utils`
- * Tests that the package is requireable and exports work correctly.
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/data-utils`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `require` sees them.
  */
 
 'use strict'
 
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { usePackedConsumer } = require('@hyperfrontend/testing/consumer')
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/data-utils CJS', () => {
-  it('is requireable', () => {
-    const dataUtils = require('@hyperfrontend/data-utils')
-    expect(dataUtils).toBeDefined()
+  it('requires every export entry', () => {
+    expect(consumer.entries('require').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('exports getType function', () => {
-    const { getType } = require('@hyperfrontend/data-utils')
-    expect(typeof getType).toBe('function')
+  it('exposes the documented surface of the main entry', () => {
+    const surface = consumer.run(
+      async () => {
+        const entry = require('@hyperfrontend/data-utils')
+        return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof entry[name]]))
+      },
+      { kind: 'require' }
+    )
+    expect(surface).toEqual(
+      expect.objectContaining({
+        getType: 'function',
+        isIdentical: 'function',
+        sameType: 'function',
+        traverse: 'function',
+        selectiveCopy: 'function',
+        hasCircularReference: 'function',
+        getDepth: 'function',
+        locateKey: 'function',
+      })
+    )
   })
 
-  it.each([
-    ['hello', 'string'],
-    [123, 'number'],
-    [true, 'boolean'],
-    [null, 'null'],
-    [undefined, 'undefined'],
-    [[], 'array'],
-    [{}, 'object'],
-  ])('detects the type of %p as %s', (input, expected) => {
-    const { getType } = require('@hyperfrontend/data-utils')
-
-    expect(getType(input)).toBe(expected)
-  })
-
-  it('exports isIdentical function', () => {
-    const { isIdentical } = require('@hyperfrontend/data-utils')
-    expect(typeof isIdentical).toBe('function')
+  it('names the type of each kind of value', () => {
+    const types = consumer.run(
+      async () => {
+        const { getType } = require('@hyperfrontend/data-utils')
+        return [getType('hello'), getType(123), getType(true), getType(null), getType(undefined), getType([]), getType({})]
+      },
+      { kind: 'require' }
+    )
+    expect(types).toEqual(['string', 'number', 'boolean', 'null', 'undefined', 'array', 'object'])
   })
 
   it('detects structurally equal objects as identical', () => {
-    const { isIdentical } = require('@hyperfrontend/data-utils')
-
-    expect(isIdentical({ a: 1 }, { a: 1 })).toBe(true)
+    const identical = consumer.run(
+      async () => {
+        const { isIdentical } = require('@hyperfrontend/data-utils')
+        return isIdentical({ a: [1, 2] }, { a: [1, 2] })
+      },
+      { kind: 'require' }
+    )
+    expect(identical).toBe(true)
   })
 
   it('detects objects with different values as not identical', () => {
-    const { isIdentical } = require('@hyperfrontend/data-utils')
-
-    expect(isIdentical({ a: 1 }, { a: 2 })).toBe(false)
-  })
-
-  it('detects structurally equal arrays as identical', () => {
-    const { isIdentical } = require('@hyperfrontend/data-utils')
-
-    expect(isIdentical([1, 2, 3], [1, 2, 3])).toBe(true)
-  })
-
-  it('exports sameType function', () => {
-    const { sameType } = require('@hyperfrontend/data-utils')
-    expect(typeof sameType).toBe('function')
+    const identical = consumer.run(
+      async () => {
+        const { isIdentical } = require('@hyperfrontend/data-utils')
+        return isIdentical({ a: 1 }, { a: 2 })
+      },
+      { kind: 'require' }
+    )
+    expect(identical).toBe(false)
   })
 
   it('names the type two strings share through sameType', () => {
-    const { sameType } = require('@hyperfrontend/data-utils')
-
-    expect(sameType('hello', 'world')).toBe('string')
+    const shared = consumer.run(
+      async () => {
+        const { sameType } = require('@hyperfrontend/data-utils')
+        return sameType('hello', 'world')
+      },
+      { kind: 'require' }
+    )
+    expect(shared).toBe('string')
   })
 
   it('returns false from sameType for a string and a number', () => {
-    const { sameType } = require('@hyperfrontend/data-utils')
-
-    expect(sameType('hello', 123)).toBe(false)
-  })
-
-  it('exports traverse function', () => {
-    const { traverse } = require('@hyperfrontend/data-utils')
-    expect(typeof traverse).toBe('function')
-  })
-
-  it('exports selectiveCopy function', () => {
-    const { selectiveCopy } = require('@hyperfrontend/data-utils')
-    expect(typeof selectiveCopy).toBe('function')
-  })
-
-  it('exports hasCircularReference function', () => {
-    const { hasCircularReference } = require('@hyperfrontend/data-utils')
-    expect(typeof hasCircularReference).toBe('function')
+    const shared = consumer.run(
+      async () => {
+        const { sameType } = require('@hyperfrontend/data-utils')
+        return sameType('hello', 123)
+      },
+      { kind: 'require' }
+    )
+    expect(shared).toBe(false)
   })
 
   it('reports a circular reference only once the object references itself', () => {
-    const { hasCircularReference } = require('@hyperfrontend/data-utils')
-
-    const obj: Record<string, unknown> = { a: 1 }
-    const beforeSelfReference = hasCircularReference(obj)
-
-    obj.self = obj
-    const afterSelfReference = hasCircularReference(obj)
-
-    expect({ beforeSelfReference, afterSelfReference }).toEqual({ beforeSelfReference: false, afterSelfReference: true })
+    const circular = consumer.run(
+      async () => {
+        const { hasCircularReference } = require('@hyperfrontend/data-utils')
+        const ring: Record<string, unknown> = { a: 1 }
+        const before = hasCircularReference(ring)
+        ring.self = ring
+        return [before, hasCircularReference(ring)]
+      },
+      { kind: 'require' }
+    )
+    expect(circular).toEqual([false, true])
   })
 
-  it('exports getDepth function', () => {
-    const { getDepth } = require('@hyperfrontend/data-utils')
-    expect(typeof getDepth).toBe('function')
-  })
-
-  it('exports locateKey function', () => {
-    const { locateKey } = require('@hyperfrontend/data-utils')
-    expect(typeof locateKey).toBe('function')
+  it('measures the depth of a nested object and locates its deepest path', () => {
+    const depth = consumer.run(
+      async () => {
+        const { getDepth } = require('@hyperfrontend/data-utils')
+        return getDepth({ a: { b: { c: 1 } } })
+      },
+      { kind: 'require' }
+    )
+    expect(depth).toEqual([3, [['a', 'b', 'c']]])
   })
 })

@@ -172,6 +172,7 @@
       "@hyperfrontend/string-utils/node": ["libs/utils/string/src/node/index.ts"],
       "@hyperfrontend/testing": ["libs/testing/src/index.ts"],
       "@hyperfrontend/testing/browser": ["libs/testing/src/browser/index.ts"],
+      "@hyperfrontend/testing/consumer": ["libs/testing/src/consumer/index.ts"],
       "@hyperfrontend/testing/coverage": ["libs/testing/src/coverage/index.ts"],
       "@hyperfrontend/testing/dom": ["libs/testing/src/dom/index.ts"],
       "@hyperfrontend/testing/fs": ["libs/testing/src/fs/index.ts"],

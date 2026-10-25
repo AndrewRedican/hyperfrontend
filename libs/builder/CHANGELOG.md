@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.4](https://github.com/AndrewRedican/hyperfrontend/compare/0fddb51472b558e4512b21a3a2e59747730085ff...2faa3ba57520a4e3248ea899da0d5266eb3c9a01) - 2026-10-25
+
+### Bug Fixes
+
+- build browser bundles from one entry, refuse several
+
+### Performance
+
+- skip type checking in workers that drop diagnostics
+
 ## [0.5.3](https://github.com/AndrewRedican/hyperfrontend/compare/48c68a5121e56df2ff34e82df2c97002142a8538...63818b0b6230c4909ee5c020b8c2e18ffa293273) - 2026-10-23
 
 ### Bug Fixes

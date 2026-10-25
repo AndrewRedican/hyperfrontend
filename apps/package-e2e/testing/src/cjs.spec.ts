@@ -1,86 +1,30 @@
 /**
- * CJS (CommonJS) E2E tests for `@hyperfrontend/testing`
- * Tests that the packed package is requireable, that its CommonJS entries carry the
- * documented surface, and that the CommonJS runner hands Node the ES module preloads.
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/testing`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace, with jsdom beside it as the optional peer a
+ * consumer brings, and every test runs under plain Node with no loader hooks: the CommonJS entries carry the
+ * documented surface, and the CommonJS runner hands Node the ES module preloads.
  */
 
 'use strict'
 
-const { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = require('node:fs')
-const { tmpdir } = require('node:os')
-const { join } = require('node:path')
-const { after } = require('node:test')
+const { existsSync, readFileSync } = require('node:fs')
+const { join, posix } = require('node:path')
+const { before } = require('node:test')
+const { pathToFileURL } = require('node:url')
 const { describe, it, expect } = require('@hyperfrontend/testing')
-const { writeConsumerProjects } = require('./support/consumer-projects')
-const { PROJECT_DIR, installedPath, installedUrl, withoutHarnessEnvironment } = require('./support/installed-package')
+const { usePackedConsumer } = require('@hyperfrontend/testing/consumer')
+const { consumerProjectPath, consumerProjectsTree } = require('./support/consumer-projects')
+const {
+  BASELINE_EXCLUDE,
+  COVERAGE_EXPORTS,
+  EXPECT_STATICS,
+  IT_MODIFIERS,
+  JEST_METHODS,
+  MAIN_EXPORTS,
+  RUNNER_FUNCTIONS,
+} = require('./support/documented-surface')
 
-const consumers = writeConsumerProjects()
-after(() => consumers.remove())
-
-const MAIN_EXPORTS = [
-  'createDeferred',
-  'createMock',
-  'describe',
-  'equals',
-  'expect',
-  'flushPromises',
-  'it',
-  'jest',
-  'matchesSubset',
-  'sleep',
-  'waitFor',
-  'waitUntil',
-]
-const IT_MODIFIERS = ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']
-const EXPECT_STATICS = [
-  'any',
-  'anything',
-  'objectContaining',
-  'arrayContaining',
-  'stringContaining',
-  'stringMatching',
-  'closeTo',
-  'assertions',
-  'hasAssertions',
-]
-const JEST_METHODS = [
-  'fn',
-  'spyOn',
-  'mocked',
-  'clearAllMocks',
-  'resetAllMocks',
-  'restoreAllMocks',
-  'replaceProperty',
-  'stubEnv',
-  'stubGlobal',
-  'useFakeTimers',
-  'useRealTimers',
-  'advanceTimersByTime',
-  'advanceTimersByTimeAsync',
-  'runAllTimers',
-  'runOnlyPendingTimers',
-  'clearAllTimers',
-  'setSystemTime',
-  'resetModules',
-  'mock',
-  'unmock',
-  'doMock',
-  'requireActual',
-  'requireMock',
-]
-const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']
-const BASELINE_EXCLUDE = ['**/*.spec.ts', '**/*.spec.tsx', '**/*.d.ts', 'test.config.ts']
-const COVERAGE_EXPORTS = [
-  'mergeLcov',
-  'renderLcov',
-  'findThresholdShortfalls',
-  'renderCoverageTable',
-  'findUnmeasuredFiles',
-  'fileTotals',
-  'overallTotals',
-  'percentOf',
-  'uncoveredRanges',
-]
 const SAMPLE_LCOV = [
   'TN:',
   'SF:src/sample.ts',
@@ -97,11 +41,64 @@ const SAMPLE_LCOV = [
   '',
 ].join('\n')
 
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL, peers: ['jsdom@26.1.0'] })
+
+before(() => consumer.writeTree(consumerProjectsTree()))
+
+/**
+ * Names a file inside the installed package.
+ *
+ * @param {...string} segments - Path segments below the package root.
+ * @returns {string} The absolute path.
+ */
+function installedPath(...segments) {
+  return join(consumer.path, 'node_modules', '@hyperfrontend', 'testing', ...segments)
+}
+
+/**
+ * Runs the installed runner over the `project` consumer in a child, from its CommonJS build, and reports the outcome.
+ *
+ * @param {object} config - The project's test configuration.
+ * @returns {{ success: boolean, failures: string[], coverageTable: string[], lcov: string }} What the run reported and wrote.
+ */
+function runInstalledRunner(config) {
+  return consumer.run(
+    async (args) => {
+      const { runProjectTests } = require('@hyperfrontend/testing/runner')
+      const { existsSync: exists, mkdtempSync, readFileSync: read, rmSync } = require('node:fs')
+      const { tmpdir } = require('node:os')
+      const { join: joinPath } = require('node:path')
+      const coverageDir = mkdtempSync(joinPath(tmpdir(), 'hf-testing-e2e-cjs-'))
+      try {
+        const outcome = runProjectTests(args.config, {
+          workspaceRoot: args.workspaceRoot,
+          projectRoot: args.projectRoot,
+          coverageDir,
+          silent: true,
+        })
+        const lcovPath = joinPath(coverageDir, 'lcov.info')
+        return {
+          success: outcome.success,
+          failures: outcome.failures,
+          coverageTable: outcome.coverageTable,
+          lcov: exists(lcovPath) ? read(lcovPath, 'utf8') : '',
+        }
+      } finally {
+        rmSync(coverageDir, { recursive: true, force: true })
+      }
+    },
+    {
+      kind: 'require',
+      args: { config, workspaceRoot: consumer.path, projectRoot: join(consumer.path, consumerProjectPath('project')) },
+      timeout: 300_000,
+    }
+  )
+}
+
 describe('@hyperfrontend/testing CJS', () => {
   describe('package layout', () => {
-    const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
-
     it('points main at the CommonJS build, module at the ES module build and types at the declarations', () => {
+      const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
       expect({ main: manifest.main, module: manifest.module, types: manifest.types }).toEqual({
         main: './index.cjs',
         module: './index.mjs',
@@ -110,134 +107,175 @@ describe('@hyperfrontend/testing CJS', () => {
     })
 
     it('resolves the require condition of every entry to a CommonJS file', () => {
-      const entries = ['.', './browser', './coverage', './dom', './fs', './hooks', './process', './reporter', './runner']
+      const manifest = JSON.parse(readFileSync(installedPath('package.json'), 'utf8'))
+      const entries = ['.', './browser', './consumer', './coverage', './dom', './fs', './hooks', './process', './reporter', './runner']
       const resolved = entries.map((entry) => {
         const target = manifest.exports[entry].require
         return { entry, target, exists: typeof target === 'string' && existsSync(installedPath(target)) }
       })
       expect(resolved).toEqual(entries.map((entry) => ({ entry, target: expect.stringMatching(/index\.cjs$/), exists: true })))
     })
+
+    it('requires every export entry', () => {
+      expect(consumer.entries('require').filter((entry) => !entry.ok)).toEqual([])
+    })
   })
 
   describe('main entry', () => {
     it('exports the Jest-style surface', () => {
-      const packed = require(installedPath('index.cjs'))
-      expect(Object.keys(packed).sort()).toEqual(MAIN_EXPORTS)
+      const names = consumer.run(() => Object.keys(require('@hyperfrontend/testing')).sort(), { kind: 'require' })
+      expect(names).toEqual(MAIN_EXPORTS)
     })
 
     it('pulls in neither preload, so no document appears on the global', () => {
-      require(installedPath('index.cjs'))
-      expect(typeof document).toBe('undefined')
+      const documentType = consumer.run(
+        () => {
+          require('@hyperfrontend/testing')
+          return typeof document
+        },
+        { kind: 'require' }
+      )
+      expect(documentType).toBe('undefined')
     })
 
-    it('is a copy of its own, distinct from the workspace runtime this suite runs on', () => {
-      const packed = require(installedPath('index.cjs'))
-      expect(packed.expect).not.toBe(expect)
-    })
-
-    it('carries the it modifiers', () => {
-      const packed = require(installedPath('index.cjs'))
-      for (const name of IT_MODIFIERS) expect(typeof packed.it[name]).toBe('function')
-    })
-
-    it('carries the expect statics', () => {
-      const packed = require(installedPath('index.cjs'))
-      for (const name of EXPECT_STATICS) expect(typeof packed.expect[name]).toBe('function')
-    })
-
-    it('carries the jest namespace', () => {
-      const packed = require(installedPath('index.cjs'))
-      for (const name of JEST_METHODS) expect(typeof packed.jest[name]).toBe('function')
+    it('carries the it modifiers, the expect statics and the jest namespace', () => {
+      const kinds = consumer.run(
+        () => {
+          const { expect: packedExpect, it: packedIt, jest: packedJest } = require('@hyperfrontend/testing')
+          const typesOf = (target, names) => names.map((name) => typeof target[name])
+          return {
+            it: typesOf(packedIt, ['each', 'only', 'skip', 'todo', 'concurrent', 'failing']),
+            expect: typesOf(packedExpect, [
+              'any',
+              'anything',
+              'objectContaining',
+              'arrayContaining',
+              'stringContaining',
+              'stringMatching',
+              'closeTo',
+              'assertions',
+              'hasAssertions',
+            ]),
+            jest: typesOf(packedJest, Object.keys(packedJest)),
+          }
+        },
+        { kind: 'require' }
+      )
+      const functions = (count) => Array.from({ length: count }, () => 'function')
+      expect(kinds).toEqual({
+        it: functions(IT_MODIFIERS.length),
+        expect: functions(EXPECT_STATICS.length),
+        jest: functions(JEST_METHODS.length),
+      })
     })
   })
 
   describe('fs and process entries', () => {
     it('writes a tree into a temporary directory and removes it', () => {
-      const { createTempDir } = require(installedPath('fs', 'index.cjs'))
-      const dir = createTempDir({ tree: { 'a.txt': 'a' } })
-      const text = dir.read('a.txt')
-      dir.remove()
-      expect({ text, removed: !existsSync(dir.path) }).toEqual({ text: 'a', removed: true })
+      const facts = consumer.run(
+        () => {
+          const { createTempDir } = require('@hyperfrontend/testing/fs')
+          const { existsSync: exists } = require('node:fs')
+          const dir = createTempDir({ tree: { 'a.txt': 'a' } })
+          const text = dir.read('a.txt')
+          dir.remove()
+          return { text, removed: !exists(dir.path) }
+        },
+        { kind: 'require' }
+      )
+      expect(facts).toEqual({ text: 'a', removed: true })
     })
 
     it('builds a spawnSync result', () => {
-      const { spawnSyncResult } = require(installedPath('process', 'index.cjs'))
-      expect(spawnSyncResult({ stdout: 'ok' })).toEqual(expect.objectContaining({ status: 0, stdout: 'ok' }))
+      const result = consumer.run(() => require('@hyperfrontend/testing/process').spawnSyncResult({ stdout: 'ok' }), { kind: 'require' })
+      expect(result).toEqual(expect.objectContaining({ status: 0, stdout: 'ok' }))
     })
   })
 
   describe('installed expect and jest.fn', () => {
-    it('matches by identity, by structure with asymmetric matchers, and on thrown errors', () => {
-      const { expect: packed } = require(installedPath('index.cjs'))
-      packed(2 * 2).toBe(4)
-      packed({ id: 7, tags: ['a', 'b'] }).toEqual({ id: packed.any(Number), tags: packed.arrayContaining(['b']) })
-      packed(() => {
-        throw new RangeError('out of range')
-      }).toThrow('out of range')
-      expect(() => packed(1).toBe(2)).toThrow(/expected 1 to be 2/)
+    it('matches by identity, by structure with asymmetric matchers, on thrown errors and on settled promises', () => {
+      const outcome = consumer.run(
+        async () => {
+          const { expect: packed } = require('@hyperfrontend/testing')
+          packed(2 * 2).toBe(4)
+          packed({ id: 7, tags: ['a', 'b'] }).toEqual({ id: packed.any(Number), tags: packed.arrayContaining(['b']) })
+          packed(() => {
+            throw new RangeError('out of range')
+          }).toThrow('out of range')
+          await packed(Promise.resolve(3)).resolves.toBe(3)
+          await packed(Promise.reject(new Error('nope'))).rejects.toThrow('nope')
+          return 'matched'
+        },
+        { kind: 'require' }
+      )
+      expect(outcome).toBe('matched')
     })
 
-    it('awaits resolves and rejects', async () => {
-      const { expect: packed } = require(installedPath('index.cjs'))
-      await packed(Promise.resolve(3)).resolves.toBe(3)
-      await packed(Promise.reject(new Error('nope'))).rejects.toThrow('nope')
+    it('raises a failed toBe as a thrown assertion naming both values', () => {
+      const message = consumer.run(
+        () => {
+          const { expect: packed } = require('@hyperfrontend/testing')
+          try {
+            packed(1).toBe(2)
+            return 'passed'
+          } catch (error) {
+            return error.message
+          }
+        },
+        { kind: 'require' }
+      )
+      expect(message).toMatch(/expected 1 to be 2/)
     })
 
     it('inspects the calls recorded on a jest.fn', () => {
-      const { expect: packed, jest: packedJest } = require(installedPath('index.cjs'))
-      const record = packedJest.fn()
-      record('first', 1)
-      record('second', 2)
-      packed(record).toHaveBeenCalledTimes(2)
-      packed(record).toHaveBeenCalledWith('first', 1)
-      packed(record).toHaveBeenLastCalledWith('second', 2)
-      expect(() => packed(record).toHaveBeenCalledWith('third', 3)).toThrow()
+      const facts = consumer.run(
+        () => {
+          const { expect: packed, jest: packedJest } = require('@hyperfrontend/testing')
+          const record = packedJest.fn()
+          record('first', 1)
+          record('second', 2)
+          packed(record).toHaveBeenCalledTimes(2)
+          packed(record).toHaveBeenCalledWith('first', 1)
+          packed(record).toHaveBeenLastCalledWith('second', 2)
+          try {
+            packed(record).toHaveBeenCalledWith('third', 3)
+            return 'unexpected call accepted'
+          } catch {
+            return 'unexpected call refused'
+          }
+        },
+        { kind: 'require' }
+      )
+      expect(facts).toBe('unexpected call refused')
     })
   })
 
   describe('installed runner', () => {
-    const coverageDirs = []
-
-    after(() => {
-      for (const dir of coverageDirs) rmSync(dir, { recursive: true, force: true })
-    })
-
-    function run(config) {
-      const { runProjectTests } = require(installedPath('runner', 'index.cjs'))
-      const coverageDir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-cjs-'))
-      coverageDirs.push(coverageDir)
-      const outcome = withoutHarnessEnvironment(() =>
-        runProjectTests(config, { workspaceRoot: PROJECT_DIR, projectRoot: consumers.dir('project'), coverageDir, silent: true })
+    it('exports the runner functions and the baseline coverage exclusions', () => {
+      const surface = consumer.run(
+        (names) => {
+          const runner = require('@hyperfrontend/testing/runner')
+          return { functions: names.filter((name) => typeof runner[name] === 'function'), baseline: runner.BASELINE_COVERAGE_EXCLUDE }
+        },
+        { kind: 'require', args: RUNNER_FUNCTIONS }
       )
-      return { ...outcome, coverageDir }
-    }
-
-    function passingMathConfig() {
-      return {
-        environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }],
-        coverageInclude: ['src/math.ts'],
-        coverageThresholds: { lines: 100, branches: 100, functions: 100 },
-      }
-    }
-
-    it('exports the runner functions', () => {
-      const runner = require(installedPath('runner', 'index.cjs'))
-      for (const name of RUNNER_FUNCTIONS) expect(typeof runner[name]).toBe('function')
-    })
-
-    it('exports the baseline coverage exclusions', () => {
-      const runner = require(installedPath('runner', 'index.cjs'))
-      expect(runner.BASELINE_COVERAGE_EXCLUDE).toEqual(BASELINE_EXCLUDE)
+      expect(surface).toEqual({ functions: RUNNER_FUNCTIONS, baseline: BASELINE_EXCLUDE })
     })
 
     it('locates the ES module preloads and reporter from the CommonJS build', () => {
-      const { buildRunPlan, withDefaults } = require(installedPath('runner', 'index.cjs'))
-      const config = withDefaults({
-        environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true }],
-        coverageInclude: ['src/**/*.ts'],
-      })
-      const plan = buildRunPlan(config, config.environments[0], consumers.dir('project'), join(tmpdir(), 'unused'))
-      expect(plan.argv).toEqual(
+      const argv = consumer.run(
+        (args) => {
+          const { buildRunPlan, withDefaults } = require('@hyperfrontend/testing/runner')
+          const config = withDefaults({
+            environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true }],
+            coverageInclude: ['src/**/*.ts'],
+          })
+          return buildRunPlan(config, config.environments[0], args.projectRoot, 'unused').argv
+        },
+        { kind: 'require', args: { projectRoot: join(consumer.path, consumerProjectPath('project')) } }
+      )
+      const installedUrl = (...segments) => pathToFileURL(installedPath(...segments)).href
+      expect(argv).toEqual(
         expect.arrayContaining([
           installedUrl('hooks', 'index.mjs'),
           installedUrl('dom', 'index.mjs'),
@@ -246,84 +284,89 @@ describe('@hyperfrontend/testing CJS', () => {
       )
     })
 
-    it('runs a project to a passing verdict through the preloads it located', () => {
-      const outcome = run(passingMathConfig())
-      expect({ success: outcome.success, failures: outcome.failures }).toEqual({ success: true, failures: [] })
-    })
-
-    it('tables the source file of a project it ran', () => {
-      const outcome = run(passingMathConfig())
-      expect(outcome.coverageTable.some((row) => row.startsWith('src/math.ts'))).toBe(true)
+    it('runs a project to a passing verdict through the preloads it located, tabling its source', () => {
+      const report = runInstalledRunner({
+        environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }],
+        coverageInclude: ['src/math.ts'],
+        coverageThresholds: { lines: 100, branches: 100, functions: 100 },
+      })
+      expect({
+        success: report.success,
+        failures: report.failures,
+        tabled: report.coverageTable.some((row) => row.startsWith('src/math.ts')),
+      }).toEqual({
+        success: true,
+        failures: [],
+        tabled: true,
+      })
     })
 
     it('writes the merged lcov.info naming the file from the workspace root', () => {
-      const outcome = run(passingMathConfig())
-      expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain(
-        `SF:${consumers.workspacePath('project')}/src/math.ts\n`
-      )
+      const report = runInstalledRunner({
+        environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }],
+        coverageInclude: ['src/math.ts'],
+      })
+      // why: lcov names files with forward slashes on every platform, so the expected path is built as a portable one.
+      expect(report.lcov).toContain(`SF:${posix.join(consumerProjectPath('project'), 'src', 'math.ts')}\n`)
     })
 
     it('fails a run whose coverage misses a declared threshold', () => {
-      const outcome = run({
+      const report = runInstalledRunner({
         environments: [{ name: 'node', testMatch: ['src/extras.spec.ts'] }],
         coverageInclude: ['src/extras.ts'],
         coverageThresholds: { functions: 100 },
       })
-      expect({ success: outcome.success, failures: outcome.failures }).toEqual({
+      expect({ success: report.success, failures: report.failures }).toEqual({
         success: false,
         failures: ['50.00% function coverage does not meet threshold of 100%'],
       })
     })
 
     it('preloads a setup module whose jest.mock applies to every spec', () => {
-      const outcome = run({
+      const report = runInstalledRunner({
         environments: [{ name: 'node', testMatch: ['src/greeting.spec.ts'], setupFiles: ['test.setup.ts'] }],
         coverageInclude: ['src/greeting.ts'],
       })
-      expect({ success: outcome.success, failures: outcome.failures }).toEqual({ success: true, failures: [] })
+      expect({ success: report.success, failures: report.failures }).toEqual({ success: true, failures: [] })
     })
   })
 
   describe('installed coverage entry', () => {
-    function readSampleReport() {
-      const { mergeLcov } = require(installedPath('coverage', 'index.cjs'))
-      const dir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-cjs-lcov-'))
-      try {
-        const report = join(dir, 'lcov.node.info')
-        writeFileSync(report, SAMPLE_LCOV)
-        return [...mergeLcov([report]).values()]
-      } finally {
-        rmSync(dir, { recursive: true, force: true })
-      }
-    }
-
     it('exports the merge, render, gate and completeness functions', () => {
-      const coverage = require(installedPath('coverage', 'index.cjs'))
-      for (const name of COVERAGE_EXPORTS) expect(typeof coverage[name]).toBe('function')
+      const names = consumer.run(() => Object.keys(require('@hyperfrontend/testing/coverage')).sort(), { kind: 'require' })
+      expect(names).toEqual([...COVERAGE_EXPORTS].sort())
     })
 
-    it('reads a report and totals the lines of its file', () => {
-      const { fileTotals } = require(installedPath('coverage', 'index.cjs'))
-      const files = readSampleReport()
-      expect(fileTotals(files[0]).lines).toEqual({ found: 3, hit: 1 })
-    })
-
-    it('expresses the line total of a file as a percentage', () => {
-      const { fileTotals, percentOf } = require(installedPath('coverage', 'index.cjs'))
-      const files = readSampleReport()
-      expect(percentOf(fileTotals(files[0]).lines)).toBeCloseTo(33.33, 1)
-    })
-
-    it('lists the uncovered lines of a file as ranges', () => {
-      const { uncoveredRanges } = require(installedPath('coverage', 'index.cjs'))
-      const files = readSampleReport()
-      expect(uncoveredRanges(files[0])).toEqual(['2-3'])
-    })
-
-    it('reports a line total that misses its threshold', () => {
-      const { findThresholdShortfalls } = require(installedPath('coverage', 'index.cjs'))
-      const files = readSampleReport()
-      expect(findThresholdShortfalls(files, { lines: 50 })).toEqual(['33.33% line coverage does not meet threshold of 50%'])
+    it('reads a report, totals the lines of its file, lists the uncovered ranges and reports a missed threshold', () => {
+      const facts = consumer.run(
+        (args) => {
+          const { fileTotals, findThresholdShortfalls, mergeLcov, percentOf, uncoveredRanges } = require('@hyperfrontend/testing/coverage')
+          const { mkdtempSync, rmSync, writeFileSync } = require('node:fs')
+          const { tmpdir } = require('node:os')
+          const { join: joinPath } = require('node:path')
+          const dir = mkdtempSync(joinPath(tmpdir(), 'hf-testing-e2e-cjs-lcov-'))
+          try {
+            const report = joinPath(dir, 'lcov.node.info')
+            writeFileSync(report, args.lcov)
+            const files = [...mergeLcov([report]).values()]
+            return {
+              lines: fileTotals(files[0]).lines,
+              percent: Math.round(percentOf(fileTotals(files[0]).lines) * 100) / 100,
+              uncovered: uncoveredRanges(files[0]),
+              shortfalls: findThresholdShortfalls(files, { lines: 50 }),
+            }
+          } finally {
+            rmSync(dir, { recursive: true, force: true })
+          }
+        },
+        { kind: 'require', args: { lcov: SAMPLE_LCOV } }
+      )
+      expect(facts).toEqual({
+        lines: { found: 3, hit: 1 },
+        percent: 33.33,
+        uncovered: ['2-3'],
+        shortfalls: ['33.33% line coverage does not meet threshold of 50%'],
+      })
     })
   })
 })

@@ -1,103 +1,101 @@
 /**
- * CJS (CommonJS) E2E tests for `@hyperfrontend/random-generator-utils`
- * Tests that the package is requireable and exports work correctly.
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/random-generator-utils`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `require` sees them.
  */
 
 'use strict'
 
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { usePackedConsumer } = require('@hyperfrontend/testing/consumer')
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/random-generator-utils CJS', () => {
-  it('is requireable', () => {
-    const randomGenerator = require('@hyperfrontend/random-generator-utils')
-    expect(randomGenerator).toBeDefined()
+  it('requires every export entry', () => {
+    expect(consumer.entries('require').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('exports uuidV4 function', () => {
-    const { uuidV4 } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof uuidV4).toBe('function')
-  })
-
-  it('generates a UUIDv4 as a string', () => {
-    const { uuidV4 } = require('@hyperfrontend/random-generator-utils')
-
-    const uuid = uuidV4()
-    expect(typeof uuid).toBe('string')
+  it('exposes the documented surface of the main entry', () => {
+    const surface = consumer.run(
+      async () => {
+        const entry = require('@hyperfrontend/random-generator-utils')
+        return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof entry[name]]))
+      },
+      { kind: 'require' }
+    )
+    expect(surface).toEqual(
+      expect.objectContaining({
+        uuidV4: 'function',
+        isUuidV4: 'function',
+        randomUniform: 'function',
+        randomGaussian: 'function',
+        randomPseudo: 'function',
+        randomExponential: 'function',
+        randomPowerLaw: 'function',
+        createRandomGenerator: 'function',
+      })
+    )
   })
 
   it('generates a UUIDv4 that isUuidV4 accepts', () => {
-    const { uuidV4, isUuidV4 } = require('@hyperfrontend/random-generator-utils')
-
-    const uuid = uuidV4()
-    expect(isUuidV4(uuid)).toBe(true)
-  })
-
-  it('exports isUuidV4 function', () => {
-    const { isUuidV4 } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof isUuidV4).toBe('function')
+    const accepted = consumer.run(
+      async () => {
+        const { isUuidV4, uuidV4 } = require('@hyperfrontend/random-generator-utils')
+        return isUuidV4(uuidV4())
+      },
+      { kind: 'require' }
+    )
+    expect(accepted).toBe(true)
   })
 
   it('rejects a malformed string through isUuidV4', () => {
-    const { isUuidV4 } = require('@hyperfrontend/random-generator-utils')
-
-    expect(isUuidV4('not-a-uuid')).toBe(false)
+    const accepted = consumer.run(
+      async () => {
+        const { isUuidV4 } = require('@hyperfrontend/random-generator-utils')
+        return isUuidV4('not-a-uuid')
+      },
+      { kind: 'require' }
+    )
+    expect(accepted).toBe(false)
   })
 
   it('accepts a well-formed UUIDv4 through isUuidV4', () => {
-    const { isUuidV4 } = require('@hyperfrontend/random-generator-utils')
-
-    expect(isUuidV4('550e8400-e29b-41d4-a716-446655440000')).toBe(true)
+    const accepted = consumer.run(
+      async () => {
+        const { isUuidV4 } = require('@hyperfrontend/random-generator-utils')
+        return isUuidV4('550e8400-e29b-41d4-a716-446655440000')
+      },
+      { kind: 'require' }
+    )
+    expect(accepted).toBe(true)
   })
 
-  it('exports randomUniform function', () => {
-    const { randomUniform } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof randomUniform).toBe('function')
-  })
-
-  it('draws a uniform value no lower than the minimum', () => {
-    const { randomUniform } = require('@hyperfrontend/random-generator-utils')
-
-    const value = randomUniform(0, 10)
-    expect(value).toBeGreaterThanOrEqual(0)
-  })
-
-  it('draws a uniform value below the maximum', () => {
-    const { randomUniform } = require('@hyperfrontend/random-generator-utils')
-
-    const value = randomUniform(0, 10)
-    expect(value).toBeLessThan(10)
-  })
-
-  it('exports randomGaussian function', () => {
-    const { randomGaussian } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof randomGaussian).toBe('function')
-  })
-
-  it('exports randomPseudo function', () => {
-    const { randomPseudo } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof randomPseudo).toBe('function')
-  })
-
-  it('exports randomExponential function', () => {
-    const { randomExponential } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof randomExponential).toBe('function')
-  })
-
-  it('exports randomPowerLaw function', () => {
-    const { randomPowerLaw } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof randomPowerLaw).toBe('function')
-  })
-
-  it('exports createRandomGenerator', () => {
-    const { createRandomGenerator } = require('@hyperfrontend/random-generator-utils')
-    expect(typeof createRandomGenerator).toBe('function')
+  it('draws uniform values inside the half-open range', () => {
+    const withinBounds = consumer.run(
+      async () => {
+        const { randomUniform } = require('@hyperfrontend/random-generator-utils')
+        const draws = Array.from({ length: 50 }, () => randomUniform(0, 10))
+        return draws.every((value) => value >= 0 && value < 10)
+      },
+      { kind: 'require' }
+    )
+    expect(withinBounds).toBe(true)
   })
 
   it('replays one seed exactly through createRandomGenerator', () => {
-    const { createRandomGenerator } = require('@hyperfrontend/random-generator-utils')
-
-    const first = createRandomGenerator(42)
-    const second = createRandomGenerator(42)
-    expect([first.next(), first.gaussian(0, 10), first.uuidV4()]).toEqual([second.next(), second.gaussian(0, 10), second.uuidV4()])
+    const draws = consumer.run(
+      async () => {
+        const { createRandomGenerator } = require('@hyperfrontend/random-generator-utils')
+        const first = createRandomGenerator(42)
+        const second = createRandomGenerator(42)
+        const firstDraws = [first.next(), first.gaussian(0, 10), first.uuidV4()]
+        const secondDraws = [second.next(), second.gaussian(0, 10), second.uuidV4()]
+        return JSON.stringify(firstDraws) === JSON.stringify(secondDraws)
+      },
+      { kind: 'require' }
+    )
+    expect(draws).toBe(true)
   })
 })

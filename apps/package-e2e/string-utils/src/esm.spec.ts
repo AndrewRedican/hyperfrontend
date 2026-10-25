@@ -1,74 +1,69 @@
 /**
- * ESM (ES Modules) E2E tests for `@hyperfrontend/string-utils`
- * Tests that the package sub-entries are importable and exports work correctly.
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/string-utils`.
  *
- * Note: string-utils has platform-specific entries: ./browser, ./node
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `import` sees them.
  */
 
-import { describe, it, expect } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/string-utils ESM', () => {
-  describe('node sub-entry', () => {
-    it('is importable', async () => {
-      const nodeEntry = await import('@hyperfrontend/string-utils/node')
-      expect(nodeEntry).toBeDefined()
-    })
-
-    it('exports utf8StringToUint8Array function', async () => {
-      const { utf8StringToUint8Array } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof utf8StringToUint8Array).toBe('function')
-    })
-
-    it('exports uint8ArrayToUtf8String function', async () => {
-      const { uint8ArrayToUtf8String } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof uint8ArrayToUtf8String).toBe('function')
-    })
-
-    it('exports uint8ArrayToBase64 function', async () => {
-      const { uint8ArrayToBase64 } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof uint8ArrayToBase64).toBe('function')
-    })
-
-    it('exports base64ToUint8Array function', async () => {
-      const { base64ToUint8Array } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof base64ToUint8Array).toBe('function')
-    })
-
-    it('exports arrayBufferToUtf8String function', async () => {
-      const { arrayBufferToUtf8String } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof arrayBufferToUtf8String).toBe('function')
-    })
-
-    it('exports toBase64 function', async () => {
-      const { toBase64 } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof toBase64).toBe('function')
-    })
-
-    it('exports fromBase64 function', async () => {
-      const { fromBase64 } = await import('@hyperfrontend/string-utils/node')
-      expect(typeof fromBase64).toBe('function')
-    })
-
-    it('correctly converts string to Uint8Array and back', async () => {
-      const { utf8StringToUint8Array, uint8ArrayToUtf8String } = await import('@hyperfrontend/string-utils/node')
-
-      const original = 'Hello, World! 👋'
-      const uint8Array = utf8StringToUint8Array(original)
-      const result = uint8ArrayToUtf8String(uint8Array)
-
-      expect(result).toBe(original)
-    })
-
-    it('correctly converts to base64 and back', async () => {
-      const { toBase64, fromBase64 } = await import('@hyperfrontend/string-utils/node')
-
-      const original = 'Hello, World!'
-      const base64 = toBase64(original)
-      const result = fromBase64(base64)
-
-      expect(result).toBe(original)
-    })
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  // Note: browser sub-entry is not tested in Node.js environment
+  it('exposes the documented surface of the node entry', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/string-utils/node')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
+    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        utf8StringToUint8Array: 'function',
+        uint8ArrayToUtf8String: 'function',
+        uint8ArrayToBase64: 'function',
+        base64ToUint8Array: 'function',
+        arrayBufferToUtf8String: 'function',
+        toBase64: 'function',
+        fromBase64: 'function',
+      })
+    )
+  })
+
+  it('converts a string to bytes and back', () => {
+    const text = consumer.run(async () => {
+      const { uint8ArrayToUtf8String, utf8StringToUint8Array } = await import('@hyperfrontend/string-utils/node')
+      return uint8ArrayToUtf8String(utf8StringToUint8Array('Hello, World! 👋'))
+    })
+    expect(text).toBe('Hello, World! 👋')
+  })
+
+  it('encodes a string as base64', () => {
+    const encoded = consumer.run(async () => {
+      const { toBase64 } = await import('@hyperfrontend/string-utils/node')
+      return toBase64('Hello, World!')
+    })
+    expect(encoded).toBe('SGVsbG8sIFdvcmxkIQ==')
+  })
+
+  it('decodes what it encoded as base64', () => {
+    const text = consumer.run(async () => {
+      const { fromBase64, toBase64 } = await import('@hyperfrontend/string-utils/node')
+      return fromBase64(toBase64('Hello, World! 👋'))
+    })
+    expect(text).toBe('Hello, World! 👋')
+  })
+
+  it('round-trips bytes through base64', () => {
+    const text = consumer.run(async () => {
+      const { base64ToUint8Array, uint8ArrayToBase64, uint8ArrayToUtf8String, utf8StringToUint8Array } =
+        await import('@hyperfrontend/string-utils/node')
+      const bytes = utf8StringToUint8Array('Hello, World! 👋')
+      return uint8ArrayToUtf8String(base64ToUint8Array(uint8ArrayToBase64(bytes)))
+    })
+    expect(text).toBe('Hello, World! 👋')
+  })
 })

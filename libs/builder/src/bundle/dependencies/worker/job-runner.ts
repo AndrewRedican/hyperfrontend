@@ -255,6 +255,8 @@ const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
       noEmitOnError: false,
       noEmit: false,
       module: 'esnext',
+      // why: a workspace dep is type-checked by its own project; this job only needs the emit, and skipping the checker's pass leaves the emitted code byte-identical.
+      noCheck: true,
     },
   }) as Plugin
   const plugins: Plugin[] = []

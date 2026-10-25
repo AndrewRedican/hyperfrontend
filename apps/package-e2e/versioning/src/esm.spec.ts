@@ -1,176 +1,117 @@
 /**
- * ESM (ES Modules) E2E tests for `@hyperfrontend/versioning`
- * Tests that the package is importable and exports work correctly.
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/versioning`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `import` sees them.
  */
 
-import { describe, it, expect } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/versioning ESM', () => {
-  describe('main entry', () => {
-    it('is importable', async () => {
-      const versioning = await import('@hyperfrontend/versioning')
-      expect(versioning).toBeDefined()
-    })
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  describe('changelog module', () => {
-    it('exports parseChangelog function', async () => {
-      const { parseChangelog } = await import('@hyperfrontend/versioning')
-      expect(typeof parseChangelog).toBe('function')
+  it('exposes the documented surface of the main entry', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/versioning')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
     })
-
-    it('exports serializeChangelog function', async () => {
-      const { serializeChangelog } = await import('@hyperfrontend/versioning')
-      expect(typeof serializeChangelog).toBe('function')
-    })
-
-    it('exports createChangelog function', async () => {
-      const { createChangelog } = await import('@hyperfrontend/versioning')
-      expect(typeof createChangelog).toBe('function')
-    })
-
-    it('exports createEmptyChangelog function', async () => {
-      const { createEmptyChangelog } = await import('@hyperfrontend/versioning')
-      expect(typeof createEmptyChangelog).toBe('function')
-    })
-
-    it('parses a simple changelog', async () => {
-      const { parseChangelog } = await import('@hyperfrontend/versioning')
-
-      const changelogContent = `# Changelog
-
-## [1.0.0] - 2024-01-15
-
-### Added
-- Initial release
-`
-      const result = parseChangelog(changelogContent)
-      expect(result).toEqual(expect.objectContaining({ entries: expect.anything() }))
-    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        parseChangelog: 'function',
+        serializeChangelog: 'function',
+        createChangelog: 'function',
+        createEmptyChangelog: 'function',
+        parseConventionalCommit: 'function',
+        isConventionalCommit: 'function',
+        parseVersion: 'function',
+        increment: 'function',
+        compare: 'function',
+        satisfies: 'function',
+        format: 'function',
+        createConventionalFlow: 'function',
+        createMinimalFlow: 'function',
+        executeFlow: 'function',
+        createStep: 'function',
+        createWorkspaceConfig: 'function',
+        createWorkspace: 'function',
+        createProject: 'function',
+        createGitClient: 'function',
+        createNpmRegistry: 'function',
+        createRegistry: 'function',
+        DEFAULT_GIT_CLIENT_CONFIG: 'object',
+      })
+    )
   })
 
-  describe('commits module', () => {
-    it('exports parseConventionalCommit function', async () => {
-      const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
-      expect(typeof parseConventionalCommit).toBe('function')
-    })
-
-    it('exports isConventionalCommit function', async () => {
-      const { isConventionalCommit } = await import('@hyperfrontend/versioning')
-      expect(typeof isConventionalCommit).toBe('function')
-    })
-
-    it('parses a conventional commit message', async () => {
-      const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
-
-      const commit = parseConventionalCommit('feat: add new feature')
-      expect(commit).toEqual(expect.objectContaining({ type: 'feat' }))
-    })
-  })
-
-  describe('semver module', () => {
-    it('exports parseVersion function', async () => {
-      const { parseVersion } = await import('@hyperfrontend/versioning')
-      expect(typeof parseVersion).toBe('function')
-    })
-
-    it('exports increment function', async () => {
-      const { increment } = await import('@hyperfrontend/versioning')
-      expect(typeof increment).toBe('function')
-    })
-
-    it('exports compare function', async () => {
-      const { compare } = await import('@hyperfrontend/versioning')
-      expect(typeof compare).toBe('function')
-    })
-
-    it('exports satisfies function', async () => {
-      const { satisfies } = await import('@hyperfrontend/versioning')
-      expect(typeof satisfies).toBe('function')
-    })
-
-    it('exports format function', async () => {
-      const { format } = await import('@hyperfrontend/versioning')
-      expect(typeof format).toBe('function')
-    })
-
-    it('parses and formats a version string', async () => {
-      const { parseVersion, format } = await import('@hyperfrontend/versioning')
-
+  it('parses and formats a version string', () => {
+    const formatted = consumer.run(async () => {
+      const { format, parseVersion } = await import('@hyperfrontend/versioning')
       const result = parseVersion('1.2.3')
-      const formatted = result.version ? format(result.version) : undefined
-      expect({ success: result.success, formatted }).toEqual({ success: true, formatted: '1.2.3' })
+      return [result.success, result.version ? format(result.version) : undefined]
     })
+    expect(formatted).toEqual([true, '1.2.3'])
+  })
 
-    it('increments a version', async () => {
-      const { parseVersion, increment, format } = await import('@hyperfrontend/versioning')
-
+  it('increments the minor version', () => {
+    const bumped = consumer.run(async () => {
+      const { format, increment, parseVersion } = await import('@hyperfrontend/versioning')
       const result = parseVersion('1.0.0')
-      const formatted = result.version ? format(increment(result.version, 'minor')) : undefined
-      expect({ success: result.success, formatted }).toEqual({ success: true, formatted: '1.1.0' })
+      return result.version ? format(increment(result.version, 'minor')) : undefined
+    })
+    expect(bumped).toBe('1.1.0')
+  })
+
+  it('orders two versions through compare', () => {
+    const order = consumer.run(async () => {
+      const { compare, parseVersion } = await import('@hyperfrontend/versioning')
+      const one = parseVersion('1.2.3').version
+      const two = parseVersion('2.0.0').version
+      return one && two ? compare(one, two) : undefined
+    })
+    expect(order).toBe(-1)
+  })
+
+  it('parses a conventional commit header into type, scope and subject', () => {
+    const commit = consumer.run(async () => {
+      const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
+      const commit = parseConventionalCommit('feat(lib-x): add a thing')
+      return { type: commit.type, scope: commit.scope, subject: commit.subject }
+    })
+    expect(commit).toEqual({
+      type: 'feat',
+      scope: ['lib-x'],
+      subject: 'add a thing',
     })
   })
 
-  describe('flow module', () => {
-    it('exports createConventionalFlow function', async () => {
-      const { createConventionalFlow } = await import('@hyperfrontend/versioning')
-      expect(typeof createConventionalFlow).toBe('function')
+  it('recognises a conventional commit message', () => {
+    const conventional = consumer.run(async () => {
+      const { isConventionalCommit } = await import('@hyperfrontend/versioning')
+      return [isConventionalCommit('feat: add new feature'), isConventionalCommit('added a feature')]
     })
-
-    it('exports createMinimalFlow function', async () => {
-      const { createMinimalFlow } = await import('@hyperfrontend/versioning')
-      expect(typeof createMinimalFlow).toBe('function')
-    })
-
-    it('exports executeFlow function', async () => {
-      const { executeFlow } = await import('@hyperfrontend/versioning')
-      expect(typeof executeFlow).toBe('function')
-    })
-
-    it('exports createStep function', async () => {
-      const { createStep } = await import('@hyperfrontend/versioning')
-      expect(typeof createStep).toBe('function')
-    })
+    expect(conventional).toEqual([true, false])
   })
 
-  describe('workspace module', () => {
-    it('exports createWorkspaceConfig function', async () => {
-      const { createWorkspaceConfig } = await import('@hyperfrontend/versioning')
-      expect(typeof createWorkspaceConfig).toBe('function')
+  it('parses a changelog into its entries', () => {
+    const entries = consumer.run(async () => {
+      const { parseChangelog } = await import('@hyperfrontend/versioning')
+      const changelog = '# Changelog\n\n## 1.0.0 - 2024-01-15\n\n### Added\n\n- Initial release\n'
+      return parseChangelog(changelog).entries.length
     })
-
-    it('exports createWorkspace function', async () => {
-      const { createWorkspace } = await import('@hyperfrontend/versioning')
-      expect(typeof createWorkspace).toBe('function')
-    })
-
-    it('exports createProject function', async () => {
-      const { createProject } = await import('@hyperfrontend/versioning')
-      expect(typeof createProject).toBe('function')
-    })
+    expect(entries).toBe(1)
   })
 
-  describe('git module', () => {
-    it('exports createGitClient function', async () => {
-      const { createGitClient } = await import('@hyperfrontend/versioning')
-      expect(typeof createGitClient).toBe('function')
+  it('serialises a parsed changelog back to the same text', () => {
+    const fixpoint = consumer.run(async () => {
+      const { parseChangelog, serializeChangelog } = await import('@hyperfrontend/versioning')
+      const changelog = '# Changelog\n\n## 1.0.0 - 2024-01-15\n\n### Added\n\n- Initial release\n'
+      return serializeChangelog(parseChangelog(changelog)) === changelog
     })
-
-    it('exports DEFAULT_GIT_CLIENT_CONFIG constant', async () => {
-      const { DEFAULT_GIT_CLIENT_CONFIG } = await import('@hyperfrontend/versioning')
-      expect(DEFAULT_GIT_CLIENT_CONFIG).toBeDefined()
-    })
-  })
-
-  describe('registry module', () => {
-    it('exports createNpmRegistry function', async () => {
-      const { createNpmRegistry } = await import('@hyperfrontend/versioning')
-      expect(typeof createNpmRegistry).toBe('function')
-    })
-
-    it('exports createRegistry function', async () => {
-      const { createRegistry } = await import('@hyperfrontend/versioning')
-      expect(typeof createRegistry).toBe('function')
-    })
+    expect(fixpoint).toBe(true)
   })
 })

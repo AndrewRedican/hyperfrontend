@@ -1,89 +1,104 @@
 /**
- * ESM (ES Modules) E2E tests for `@hyperfrontend/cryptography`
- * Tests that the package sub-entries are importable and exports work correctly.
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/cryptography`.
  *
- * Note: cryptography has platform-specific entries: ./browser, ./node, ./common
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
+ * with no loader hooks, so the entries resolve and behave as a consumer's `import` sees them.
  */
 
-import { describe, it, expect } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/cryptography ESM', () => {
-  describe('node sub-entry', () => {
-    it('is importable', async () => {
-      const nodeEntry = await import('@hyperfrontend/cryptography/node')
-      expect(nodeEntry).toBeDefined()
-    })
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
+  })
 
-    it('exports createHash function', async () => {
+  it('exposes the documented surface of the node entry', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/cryptography/node')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
+    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        createHash: 'function',
+        encrypt: 'function',
+        decrypt: 'function',
+        createVault: 'function',
+        generateKey: 'function',
+        getRandomValues: 'function',
+        getTimeBasedPassword: 'function',
+        isSHA256Hash: 'function',
+      })
+    )
+  })
+
+  it('exposes the documented surface of the common entry', () => {
+    const surface = consumer.run(async () => {
+      const entry = await import('@hyperfrontend/cryptography/common')
+      return Object.fromEntries(Object.keys(entry).map((name) => [name, typeof (entry as Record<string, unknown>)[name]]))
+    })
+    expect(surface).toEqual(
+      expect.objectContaining({
+        isSHA256Hash: 'function',
+      })
+    )
+  })
+
+  it('hashes a message with SHA-256 through the node entry', () => {
+    const hash = consumer.run(async () => {
       const { createHash } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof createHash).toBe('function')
+      return await createHash('abc')
     })
+    expect(hash).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+  })
 
-    it('exports encrypt function', async () => {
+  it('accepts a well-formed SHA-256 hash through the common entry', () => {
+    const accepted = consumer.run(async () => {
+      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
+      return isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    })
+    expect(accepted).toBe(true)
+  })
+
+  it('rejects a string that is not a SHA-256 hash', () => {
+    const accepted = consumer.run(async () => {
+      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
+      return isSHA256Hash('not-a-hash')
+    })
+    expect(accepted).toBe(false)
+  })
+
+  it('decrypts what it encrypted under the same password', () => {
+    const opened = consumer.run(async () => {
+      const { decrypt, encrypt } = await import('@hyperfrontend/cryptography/node')
+      const sealed = await encrypt('top secret', 'pa55word')
+      return await decrypt(sealed, 'pa55word')
+    })
+    expect(opened).toBe('top secret')
+  })
+
+  it('keeps the plaintext out of the sealed bytes', () => {
+    const leaked = consumer.run(async () => {
       const { encrypt } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof encrypt).toBe('function')
+      const sealed = await encrypt('top secret', 'pa55word')
+      return new TextDecoder().decode(sealed).includes('top secret')
     })
-
-    it('exports decrypt function', async () => {
-      const { decrypt } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof decrypt).toBe('function')
-    })
-
-    it('exports createVault function', async () => {
-      const { createVault } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof createVault).toBe('function')
-    })
-
-    it('exports generateKey function', async () => {
-      const { generateKey } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof generateKey).toBe('function')
-    })
-
-    it('exports getRandomValues function', async () => {
-      const { getRandomValues } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof getRandomValues).toBe('function')
-    })
-
-    it('exports getTimeBasedPassword function', async () => {
-      const { getTimeBasedPassword } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof getTimeBasedPassword).toBe('function')
-    })
-
-    it('exports isSHA256Hash function', async () => {
-      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/node')
-      expect(typeof isSHA256Hash).toBe('function')
-    })
+    expect(leaked).toBe(false)
   })
 
-  describe('common sub-entry', () => {
-    it('is importable', async () => {
-      const commonEntry = await import('@hyperfrontend/cryptography/common')
-      expect(commonEntry).toBeDefined()
+  it('refuses to decrypt under another password', () => {
+    const outcome = consumer.run(async () => {
+      const { decrypt, encrypt } = await import('@hyperfrontend/cryptography/node')
+      const sealed = await encrypt('top secret', 'pa55word')
+      try {
+        await decrypt(sealed, 'other-pass')
+        return 'opened'
+      } catch {
+        return 'rejected'
+      }
     })
-
-    it('exports isSHA256Hash function', async () => {
-      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
-      expect(typeof isSHA256Hash).toBe('function')
-    })
-
-    it('isSHA256Hash accepts a well-formed SHA256 hash', async () => {
-      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
-
-      // Valid SHA256 hashes are 64 hex characters
-      const validHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-
-      expect(isSHA256Hash(validHash)).toBe(true)
-    })
-
-    it('isSHA256Hash rejects a string that is not a SHA256 hash', async () => {
-      const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
-
-      const invalidHash = 'not-a-hash'
-
-      expect(isSHA256Hash(invalidHash)).toBe(false)
-    })
+    expect(outcome).toBe('rejected')
   })
-
-  // Note: browser sub-entry is not tested in Node.js environment
-  // as it uses Web Crypto API which requires browser context
 })

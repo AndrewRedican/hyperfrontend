@@ -115,7 +115,8 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
           sourceMap: job.sourcemap,
           // why: without an explicit anchor the plugin resolves its include filter against process.cwd(); the worker inherits the caller's cwd, so sources outside it would silently skip the TS transform and reach rollup as raw TypeScript.
           filterRoot: job.workspaceRoot,
-          compilerOptions: { paths: {} },
+          // why: with the path mappings blanked every diagnostic of this program is dropped by onWarnEntry, so the checker's pass is skipped outright; emit is unchanged and the whole program is still checked by the typecheck target.
+          compilerOptions: { paths: {}, noCheck: true },
         }) as Plugin)
   )
   return plugins

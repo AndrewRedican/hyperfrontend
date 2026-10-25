@@ -1,23 +1,21 @@
 /**
- * ESM E2E tests for `@hyperfrontend/linter`: the installed package lints a project on disk from
- * code and from its `hf-lint` bin, runs a rule registered through `families`, and exposes its
- * secondary entries.
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/linter`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node with no
+ * loader hooks: the installed package lints a project on disk from code and from its `hf-lint` bin, runs a rule
+ * registered through `families`, and exposes its secondary entries the way a consumer's `import` sees them.
  */
 
-import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
+import { before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
 
-const PROJECT = mkdtempSync(join(tmpdir(), 'linter-e2e-'))
-mkdirSync(join(PROJECT, 'src'))
-writeFileSync(join(PROJECT, 'package.json'), '{ "name": "consumer", "type": "module" }\n')
-writeFileSync(join(PROJECT, 'src', 'a.ts'), 'var total = 1\ndebugger\nexport { total as sum }\n')
-writeFileSync(
-  join(PROJECT, 'lint.config.mjs'),
-  [
+/** The project the installed linter is run over, with a rule of its own registered through `families`. */
+const PROJECT = {
+  'project/package.json': { name: 'consumer', type: 'module' },
+  'project/src/a.ts': 'var total = 1\ndebugger\nexport { total as sum }\n',
+  'project/lint.config.mjs': [
     'export default [',
     "  { families: { local: { 'no-total': { id: 'local/no-total', language: 'code', fixable: false, create: (context) => ({",
     "    Identifier(node) { if (node.name === 'total') context.report({ start: node.start, end: node.end, message: 'Rename total.' }) },",
@@ -25,53 +23,63 @@ writeFileSync(
     "  { files: ['src/**/*.ts'], rules: { 'no-var': 'error', 'no-debugger': 'warn', 'local/no-total': 'error' } },",
     ']',
     '',
-  ].join('\n')
-)
+  ].join('\n'),
+}
 
-/** The installed bin's entry, beside the package's manifest. */
-const BIN = join(dirname(createRequire(import.meta.url).resolve('@hyperfrontend/linter/package.json')), 'bin', 'hf-lint.mjs')
+/** Where the lint runs from and which config it reads. */
+interface LintTarget {
+  /** The project directory. */
+  cwd: string
+  /** The config file, relative to it. */
+  config: string
+}
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
+
+before(() => consumer.writeTree(PROJECT))
 
 describe('@hyperfrontend/linter ESM', () => {
-  it('lints a project from code with a rule registered through families', async () => {
-    const { lint } = await import('@hyperfrontend/linter')
-    const report = await lint({ cwd: PROJECT, config: 'lint.config.mjs' })
-    expect(report.results[0]?.messages.map((message) => `${message.line}:${message.column} ${message.ruleId}`)).toEqual([
-      '1:1 no-var',
-      '1:5 local/no-total',
-      '2:1 no-debugger',
-      '3:10 local/no-total',
-    ])
+  it('imports every export entry', () => {
+    expect(consumer.entries('import').filter((entry) => !entry.ok)).toEqual([])
   })
 
-  it('applies fixes in memory when asked', async () => {
-    const { lint } = await import('@hyperfrontend/linter')
-    const report = await lint({ cwd: PROJECT, config: 'lint.config.mjs', fix: true })
-    expect(report.results[0]?.output).toBe('let total = 1\ndebugger\nexport { total as sum }\n')
+  it('exposes the helpers and testing entries', () => {
+    const kinds = consumer.run(async () => {
+      const helpers = await import('@hyperfrontend/linter/helpers')
+      const testing = await import('@hyperfrontend/linter/testing')
+      return [typeof helpers.parseCode, typeof helpers.scopeAnalysisOf, typeof testing.testRule]
+    })
+    expect(kinds).toEqual(['function', 'function', 'function'])
+  })
+
+  it('lints a project from code with a rule registered through families', () => {
+    const messages = consumer.run(
+      async (target: LintTarget) => {
+        const { lint } = await import('@hyperfrontend/linter')
+        const report = await lint({ cwd: target.cwd, config: target.config })
+        return report.results[0]?.messages.map((message) => `${message.line}:${message.column} ${message.ruleId}`)
+      },
+      { args: { cwd: join(consumer.path, 'project'), config: 'lint.config.mjs' } }
+    )
+    expect(messages).toEqual(['1:1 no-var', '1:5 local/no-total', '2:1 no-debugger', '3:10 local/no-total'])
+  })
+
+  it('applies fixes in memory when asked', () => {
+    const output = consumer.run(
+      async (target: LintTarget) => {
+        const { lint } = await import('@hyperfrontend/linter')
+        const report = await lint({ cwd: target.cwd, config: target.config, fix: true })
+        return report.results[0]?.output
+      },
+      { args: { cwd: join(consumer.path, 'project'), config: 'lint.config.mjs' } }
+    )
+    expect(output).toBe('let total = 1\ndebugger\nexport { total as sum }\n')
   })
 
   it('runs the hf-lint bin and exits with 1 on an error', () => {
-    const result = spawnSync(process.execPath, [BIN, '--config', 'lint.config.mjs', '--format', 'json'], { cwd: PROJECT, encoding: 'utf8' })
-    expect({
-      status: result.status,
-      rules: (JSON.parse(result.stdout) as { messages: { ruleId: string }[] }[])[0]?.messages.length,
-    }).toEqual({
-      status: 1,
-      rules: 4,
-    })
-  })
-
-  it('exposes the helpers and testing entries', async () => {
-    const helpers = await import('@hyperfrontend/linter/helpers')
-    const testing = await import('@hyperfrontend/linter/testing')
-    expect([typeof helpers.parseCode, typeof helpers.scopeAnalysisOf, typeof testing.testRule]).toEqual([
-      'function',
-      'function',
-      'function',
-    ])
-  })
-
-  it('leaves no temporary project behind', () => {
-    rmSync(PROJECT, { recursive: true, force: true })
-    expect(existsSync(PROJECT)).toBe(false)
+    const bin = join(consumer.path, 'node_modules', '@hyperfrontend', 'linter', 'bin', 'hf-lint.mjs')
+    const run = consumer.node([bin, '--config', 'lint.config.mjs', '--format', 'json'], { cwd: 'project' })
+    const results = JSON.parse(run.stdout) as Array<{ messages: unknown[] }>
+    expect({ status: run.status, messages: results[0]?.messages.length }).toEqual({ status: 1, messages: 4 })
   })
 })
