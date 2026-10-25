@@ -128,6 +128,7 @@ For several environments, setup files and a coverage gate, declare a `test.confi
 | [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/)           | The `node --import` preload: TypeScript resolution and mocks       |
 | [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/)               | The preload that puts a jsdom window on the global                 |
 | [`/browser`](https://www.hyperfrontend.dev/docs/libraries/testing/browser/)       | Linked windows for cross-origin messaging, a driven ResizeObserver |
+| [`/consumer`](https://www.hyperfrontend.dev/docs/libraries/testing/consumer/)     | A packed package installed and run the way a consumer runs it      |
 | [`/fs`](https://www.hyperfrontend.dev/docs/libraries/testing/fs/)                 | Temporary directories and fixture trees written from data          |
 | [`/process`](https://www.hyperfrontend.dev/docs/libraries/testing/process/)       | Terminal, standard stream and child process stand-ins              |
 | [`/runner`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/)         | The config-driven runner, one `node --test` per environment        |
