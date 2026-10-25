@@ -1,11 +1,40 @@
 /**
  * CJS (CommonJS) E2E tests for `@hyperfrontend/random-generator-utils`
  * Tests that the package is requireable and exports work correctly.
+ * A second suite installs the packed tarball outside the workspace and drives it through plain Node child processes with no loader hooks, so every export entry and a real call are checked the way a consumer runs them.
  */
 
 'use strict'
 
+const { join } = require('node:path')
+const { before: beforeAll, after: afterAll } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
+const { createNativeConsumer, tarballFor } = require('../../shared/native-consumer')
+
+const PACKAGE = '@hyperfrontend/random-generator-utils'
+const E2E_DIR = join(__dirname, '..')
+// why: the setup installs the tarball from the npm cache, which takes a few seconds on a cold disk.
+const SETUP_TIMEOUT = 120_000
+const RUNNER = [
+  "'use strict'",
+  "const { createRandomGenerator, isUuidV4, randomUniform, uuidV4 } = require('@hyperfrontend/random-generator-utils')",
+  'async function main() {',
+  '  const first = createRandomGenerator(42)',
+  '  const second = createRandomGenerator(42)',
+  '  const firstDraws = [first.next(), first.gaussian(0, 10), first.uuidV4()]',
+  '  const secondDraws = [second.next(), second.gaussian(0, 10), second.uuidV4()]',
+  '  const draws = Array.from({ length: 50 }, () => randomUniform(0, 10))',
+  '  return {',
+  '    generated: isUuidV4(uuidV4()),',
+  "    rejects: isUuidV4('not-a-uuid'),",
+  "    accepts: isUuidV4('550e8400-e29b-41d4-a716-446655440000'),",
+  '    withinBounds: draws.every((value) => value >= 0 && value < 10),',
+  '    replay: JSON.stringify(firstDraws) === JSON.stringify(secondDraws),',
+  '  }',
+  '}',
+  'main().then((out) => process.stdout.write(JSON.stringify(out)))',
+  '',
+].join('\n')
 
 describe('@hyperfrontend/random-generator-utils CJS', () => {
   it('is requireable', () => {
@@ -99,5 +128,37 @@ describe('@hyperfrontend/random-generator-utils CJS', () => {
     const first = createRandomGenerator(42)
     const second = createRandomGenerator(42)
     expect([first.next(), first.gaussian(0, 10), first.uuidV4()]).toEqual([second.next(), second.gaussian(0, 10), second.uuidV4()])
+  })
+})
+
+describe('@hyperfrontend/random-generator-utils CJS under plain Node in an isolated consumer', () => {
+  let consumer
+
+  beforeAll(
+    () => {
+      consumer = createNativeConsumer({ tarball: tarballFor(E2E_DIR, PACKAGE), packageName: PACKAGE })
+      consumer.write('run.cjs', RUNNER)
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
+
+  afterAll(() => {
+    consumer.remove()
+  })
+
+  it('requires every export entry natively', () => {
+    const loads = consumer.loadEntries('require')
+    expect({ probed: loads.length > 0, failures: loads.filter((load) => !load.ok) }).toEqual({ probed: true, failures: [] })
+  })
+
+  it('generates identifiers, bounded draws and a replayable seeded stream', () => {
+    const run = consumer.node([join(consumer.path, 'run.cjs')])
+    expect(run.status === 0 ? JSON.parse(run.stdout) : run.stderr).toEqual({
+      generated: true,
+      rejects: false,
+      accepts: true,
+      withinBounds: true,
+      replay: true,
+    })
   })
 })
