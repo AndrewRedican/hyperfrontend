@@ -14,7 +14,6 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { nxRunner } from '@hyperfrontend/integration-nx/adapters'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { compareArtifacts, renderDrift } from '../src/artifact-drift/compare'
 import { contentHash, hashContent, parsePackJson } from '../src/artifact-drift/pack'
@@ -62,7 +61,14 @@ function npm(args: readonly string[], cwd: string): string {
  * @returns The report lines
  */
 function report(project: ProjectRecord): string[] {
-  if (!values['skip-build']) nxRunner(root)(['run', `${project.name}:build`])
+  // why: Nx still executes a build until the owned runner replaces the spawn; headless, without its daemon or cloud
+  if (!values['skip-build'])
+    execFileSync('npx', ['nx', 'run', `${project.name}:build`], {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
+      env: { ...process.env, NX_DAEMON: 'false', NX_NO_CLOUD: 'true', NX_TUI: 'false' },
+    })
   const dist = join(root, 'dist', project.root)
   const pack = parsePackJson(npm(['pack', '--dry-run', '--json', '--ignore-scripts'], dist))
   const local = createMap(pack.files.map((file) => [file.path, hashContent(readFileSync(join(dist, file.path)))] as const))
