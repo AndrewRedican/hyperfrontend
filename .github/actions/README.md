@@ -10,129 +10,30 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **Location**: `.github/actions/setup-monorepo/action.yml`
 
+**Inputs**:
+
+- `cache-scope` (optional, default: `'default'`): A name the Nx cache key carries. The `plan` job and the `environment` jobs of one run save different outputs, and an `actions/cache` key is immutable once saved, so each job family keeps a key of its own (`plan`, `environment`) and restores from its own previous runs.
+
 **Outputs**:
 
 - `cache-hit`: Boolean indicating whether npm cache was hit
+- `nx-cache-hit`: Boolean indicating whether the Nx cache was hit
 
 **Usage**:
 
 ```yaml
 - name: Setup monorepo
   uses: ./.github/actions/setup-monorepo
+  with:
+    cache-scope: environment
 ```
 
 **What it does**:
 
 1. Sets up the Node.js version `.nvmrc` names (the same one package.json engines requires)
 2. Caches npm dependencies using `package-lock.json` hash
-3. Installs dependencies with `npm ci`
-
----
-
-### nx-affected
-
-**Purpose**: Calculates affected projects using Nx based on git changes between two references.
-
-**Location**: `.github/actions/nx-affected/action.yml`
-
-**Inputs**:
-
-- `base-ref` (required): Base git reference for comparison (e.g., `origin/main`)
-- `head-ref` (optional, default: `'HEAD'`): Head git reference for comparison
-- `targets` (optional, default: `''`): Comma-separated list of targets to check
-
-**Outputs**:
-
-- `affected-projects`: Comma-separated list of affected project names (e.g., `project1,project2`)
-- `has-affected`: Boolean string (`'true'` or `'false'`) indicating if there are any affected projects
-- `projects-json`: JSON array of affected project names (e.g., `["project1","project2"]`)
-
-**Usage**:
-
-```yaml
-- name: Calculate affected projects
-  id: nx-affected
-  uses: ./.github/actions/nx-affected
-  with:
-    base-ref: origin/${{ github.base_ref }}
-    head-ref: HEAD
-
-- name: Use affected projects
-  run: echo "Affected: ${{ steps.nx-affected.outputs.affected-projects }}"
-
-- name: Skip if no affected projects
-  if: steps.nx-affected.outputs.has-affected != 'true'
-  run: echo "No affected projects"
-```
-
-**What it does**:
-
-1. Runs `npx nx show projects --affected` to calculate affected projects
-2. Handles cases where no projects are affected
-3. Converts output to multiple formats (CSV, JSON, boolean)
-4. Sets GitHub Actions outputs for downstream jobs
-
-**Important Notes**:
-
-- Requires `fetch-depth: 0` in the checkout step for accurate git history
-- Returns empty values and `has-affected=false` when no projects are affected
-- Useful for optimizing CI by running checks only on changed code
-
----
-
-### run-checks
-
-**Purpose**: Runs specific checks (format, lint, test, build, e2e) for all or affected projects using Nx.
-
-**Location**: `.github/actions/run-checks/action.yml`
-
-**Inputs**:
-
-- `check-type` (required): Type of check to run (`format`, `lint`, `test`, `build`, or `e2e`)
-- `affected-only` (optional, default: `'false'`): Whether to run checks only on affected projects
-- `affected-projects` (optional, default: `''`): Comma-separated list of affected project names (required if `affected-only` is `true`)
-
-**Usage**:
-
-```yaml
-# Run format check on all projects
-- name: Run format check
-  uses: ./.github/actions/run-checks
-  with:
-    check-type: format
-    affected-only: 'false'
-
-# Run lint only on affected projects
-- name: Run lint on affected
-  uses: ./.github/actions/run-checks
-  with:
-    check-type: lint
-    affected-only: 'true'
-    affected-projects: ${{ needs.setup.outputs.affected-projects }}
-```
-
-**Check Types**:
-
-- `format`: Runs `format:check` target (code formatting validation)
-- `lint`: Runs `lint` target (linting)
-- `test`: Runs `test` target (unit tests)
-- `build`: Runs `build` target (compilation/bundling)
-- `e2e`: Runs `e2e` target (end-to-end tests)
-
-**What it does**:
-
-1. Determines the Nx target based on check type
-2. If `affected-only` is true and projects are specified, runs on those projects
-3. If `affected-only` is true but no projects, skips execution
-4. If `affected-only` is false, runs on all projects
-5. Uses `CI=1` for deterministic behavior and `--parallel=1` for sequential execution
-
-**Important Notes**:
-
-- Automatically skips when `affected-only=true` but no affected projects
-- Sequential execution (`--parallel=1`) prevents resource exhaustion issues
-- `CI=1` ensures deterministic build behavior
-- Exit code is preserved (fails workflow if check fails)
+3. Caches the Nx cache under the operating system, the scope, the lock-file hash and the commit
+4. Installs dependencies with `npm ci`
 
 ---
 
@@ -174,7 +75,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **What it does**:
 
 1. **Removes stale comments**: Deletes any existing version-check comments from previous runs (idempotency)
-2. **Validates versions**: Runs `nx version-check` for each affected library with a version target
+2. **Validates versions**: Lists the libraries whose `version` target the change reaches through the owned graph (`pipeline affected --target version --projects`, file ownership) and runs `nx version-check` for each
 3. **Posts failure comment**: If validation fails, posts a comment with:
    - List of libraries with issues
    - Step-by-step fix instructions
@@ -191,6 +92,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **Important Notes**:
 
 - Requires `fetch-depth: 0` in checkout for accurate git history
+- Reads the persisted graph state under `.hf/graph` when the job restored it, and builds it cold otherwise
 - Requires `pull-requests: write` permission for commenting
 - Uses `gh` CLI for API calls (included in GitHub Actions runners)
 - Skips gracefully when no libraries with version targets are affected
@@ -205,13 +107,16 @@ Actions are designed to be used together in workflows:
 
 ```yaml
 - uses: ./.github/actions/setup-monorepo
-- uses: ./.github/actions/nx-affected
-  id: affected
-- uses: ./.github/actions/run-checks
   with:
-    affected-only: 'true'
-    affected-projects: ${{ steps.affected.outputs.affected-projects }}
+    cache-scope: plan
+- uses: ./.github/actions/version-check
+  with:
+    base-ref: origin/${{ github.base_ref }}
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    pr-number: ${{ github.event.pull_request.number }}
 ```
+
+The selection of work is not an action: the `plan` job runs `tools/workspace/bin/pipeline.ts plan`, and the `environment` jobs run `pipeline.ts run`. The workflow files hold only what GitHub itself must read (triggers, permissions, runners, caches, artifacts, secrets, timeouts); selection, ordering, parallelism, failure propagation and publish gating live in `tools/workspace/src/pipeline`.
 
 ### Reusability
 
@@ -231,7 +136,7 @@ Test actions locally using [act](https://github.com/nektos/act):
 
 ```bash
 # Test in the context of a workflow
-act pull_request -j setup -W .github/workflows/ci-pr.yml
+act pull_request -j plan -W .github/workflows/ci-pr.yml
 
 # Test with specific inputs
 act pull_request -W .github/workflows/ci-pr.yml

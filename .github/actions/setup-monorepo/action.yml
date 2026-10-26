@@ -1,5 +1,10 @@
 name: 'Setup Monorepo'
 description: 'Sets up Node.js environment, caches dependencies and Nx cache, and installs packages for the monorepo'
+inputs:
+  cache-scope:
+    description: "A name the Nx cache key carries, so jobs of one run that save different outputs never claim each other's key"
+    required: false
+    default: 'default'
 outputs:
   cache-hit:
     description: 'Whether npm cache was hit'
@@ -36,10 +41,10 @@ runs:
         path: |
           .nx/cache
           node_modules/.cache/nx
-        key: ${{ runner.os }}-nx-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+        key: ${{ runner.os }}-nx-${{ inputs.cache-scope }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-nx-${{ hashFiles('**/package-lock.json') }}-
-          ${{ runner.os }}-nx-
+          ${{ runner.os }}-nx-${{ inputs.cache-scope }}-${{ hashFiles('**/package-lock.json') }}-
+          ${{ runner.os }}-nx-${{ inputs.cache-scope }}-
 
     - name: Install dependencies
       shell: bash

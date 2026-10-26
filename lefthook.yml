@@ -33,28 +33,17 @@ pre-push:
       priority: 1
       run: npx nx run-many -t audit
       fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
-    typecheck:
+    binary-budget:
       priority: 2
-      run: CI=1 npx nx affected -t=typecheck
-      fail_text: 'Typecheck failed. Fix type errors before pushing.'
-    lint:
+      run: node tools/workspace/scripts/check-binary-budget.mjs --allow-over-budget
+      fail_text: 'A commit on this branch adds a file over the 2,000,000-byte limit, which CI rejects. Drop it from the branch history before pushing.'
+    pipeline:
       priority: 3
-      run: npx nx run @hyperfrontend/workspace:lint:all -- --affected=true
-      fail_text: 'Lint failed. Fix lint errors before pushing. See lint-output.txt for details.'
-    test:
-      priority: 4
-      run: CI=1 npx nx affected -t=test
-      fail_text: 'Tests failed. Fix failing tests before pushing.'
-    build:
-      priority: 5
-      run: CI=1 NODE_OPTIONS="--expose-gc --max-old-space-size=4096" npx nx affected -t=build
-      fail_text: 'Build failed. Fix build errors before pushing.'
-    e2e:
-      priority: 6
-      run: CI=1 npx nx affected -t=e2e
-      fail_text: 'E2E tests failed. Fix failing E2E tests before pushing.'
+      # why: the same plan and prerequisite rules as CI, one task at a time; dependents of a failure are skipped and everything independent still runs
+      run: CI=1 NODE_OPTIONS="--expose-gc --max-old-space-size=4096" node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
+      fail_text: 'The pipeline failed. Read the summary above; each task wrote its log under .hf/pipeline/logs.'
     version:
-      priority: 7
+      priority: 4
       run: npx nx version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
@@ -62,7 +51,3 @@ pre-push:
         Please check the output above for details.
         If you need to skip versioning temporarily, use: git push --no-verify
         Note: CI will fail if versions are not properly applied.
-    binary-budget:
-      priority: 1
-      run: node tools/workspace/scripts/check-binary-budget.mjs --allow-over-budget
-      fail_text: 'A commit on this branch adds a file over the 2,000,000-byte limit, which CI rejects. Drop it from the branch history before pushing.'

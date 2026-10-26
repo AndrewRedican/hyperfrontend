@@ -70,8 +70,8 @@ runs:
       run: |
         echo "Validating versions for affected libraries..."
 
-        # Get affected library projects that have a version target
-        AFFECTED=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} --type=lib --with-target=version 2>/dev/null || echo "")
+        # The libraries whose version target the change reaches, from the owned graph (file ownership)
+        AFFECTED=$(node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts affected --target version --base "${{ inputs.base-ref }}" --head "${{ inputs.head-ref }}" --projects)
 
         if [ -z "$AFFECTED" ]; then
           echo "No affected libraries with version target"

@@ -231,19 +231,22 @@ git push origin main
 
 ### Testing Your Changes
 
-Run the following commands to ensure your changes don't break anything:
+Run the pipeline the pre-push hook and CI run, from the merge base with `origin/main` to your working tree:
 
 ```bash
-# Run tests for affected projects
+# Typecheck, lint, test, build and e2e of what your change reaches, one task at a time, with a reason per task
+npx nx run tool-workspace:pipeline -- run --local
+
+# Only plan: which chains and tasks a change reaches, and why every other task is skipped
+npx nx run tool-workspace:pipeline -- plan --base origin/main
+```
+
+A single target still runs through Nx:
+
+```bash
 npx nx affected -t test
-
-# Run linting
 npx nx affected -t lint
-
-# Build affected projects
 npx nx affected -t build
-
-# Run E2E tests for affected libraries (verifies CJS, ESM, browser outputs)
 CI=1 npx nx affected -t e2e
 ```
 
@@ -270,7 +273,7 @@ Output goes to `dist/libs/<library>/` with ESM + CJS formats.
 
 Version bumps happen automatically via **lefthook pre-push hooks**. When you `git push`:
 
-1. lefthook runs typecheck, lint, and tests
+1. lefthook runs the pipeline: typecheck, lint, test, build and e2e of what your change reaches
 2. The `version:all` target detects affected libraries
 3. For each affected library, versioning runs (package.json, CHANGELOG.md updated)
 4. A single batch commit is created: `chore: update versions for lib-a, lib-b`

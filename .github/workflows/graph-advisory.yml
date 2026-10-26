@@ -16,7 +16,8 @@ on:
         required: false
         default: '40'
 
-# Read-only: the report is a workflow artifact, nothing is written to the repository.
+# Read-only: the report is a workflow artifact, nothing is written to the repository; the full run
+# job alone may dispatch the ci workflow.
 permissions:
   contents: read
 
@@ -66,3 +67,15 @@ jobs:
             .hf/replay/*.json
           retention-days: 30
           if-no-files-found: warn
+
+  full-run:
+    name: full-run
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # why: dispatches the ci workflow with every task of every project
+    steps:
+      - name: Run every task of every project on main
+        # why: the pull-request and main plans run what a change reaches; this weekly run is the net under the narrower selection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci-main.yml --repo "$GITHUB_REPOSITORY" --ref main -f full=true

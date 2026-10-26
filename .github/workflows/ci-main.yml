@@ -3,6 +3,13 @@ name: ci
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Run every task of every project instead of what the push reaches'
+        required: false
+        type: boolean
+        default: false
 
 # Read-only permissions by default
 permissions:
@@ -14,119 +21,144 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  setup:
-    name: setup
+  plan:
+    name: plan
     runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.plan.outputs.environments }}
+      has-work: ${{ steps.plan.outputs.has-work }}
+      graph-digest: ${{ steps.graph-state.outputs.digest }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-  format:
-    name: format
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run format check
-        uses: ./.github/actions/run-checks
         with:
-          check-type: format
-          affected-only: 'false'
-
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+          fetch-depth: 0 # why: the plan compares the push with the previous head of main
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-
-      - name: Run lint
-        uses: ./.github/actions/run-checks
         with:
-          check-type: lint
-          affected-only: 'false'
+          cache-scope: plan
 
-  typecheck:
-    name: typecheck
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run typecheck
-        uses: ./.github/actions/run-checks
+      - name: Restore graph state
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
-          check-type: typecheck
-          affected-only: 'false'
+          path: .hf/graph
+          key: ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-
 
-  build:
-    name: build
-    runs-on: ubuntu-latest
-    needs: typecheck
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build and verify the graph state
+        id: graph-state
+        shell: bash
+        run: |
+          # The restored state is updated incrementally, then checked against a cold build.
+          # Drift is a warning that rebuilds cold; it never fails the job.
+          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          $GRAPH build | tee -a "$GITHUB_STEP_SUMMARY"
+          if ! $GRAPH verify; then
+            echo "::warning::the restored graph state differs from a cold build; rebuilding cold"
+            $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
+      - name: Check the formatting of every file
+        run: CI=1 npx nx format:check
 
-      - name: Run build
-        uses: ./.github/actions/run-checks
-        with:
-          check-type: build
-          affected-only: 'false'
+      - name: Plan the push
+        id: plan
+        env:
+          PIPELINE_NX_TARGETS: '' # why: the per-target rollback knob; name targets here to let Nx select them instead of the owned graph
+        # why: the previous head of main is the base; a force-push, a first push or a dispatch without one plans everything, as does the full input
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up --nx-targets "$PIPELINE_NX_TARGETS" ${{ inputs.full == true && '--all' || '' }} --summary --github-output
 
-      - name: Upload build artifacts
+      - name: Upload the plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: dist
-          path: dist/
-          retention-days: 7
-          if-no-files-found: warn
+          name: pipeline-plan
+          path: .hf/pipeline/plan.json
+          retention-days: 30
 
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    needs: setup
+  environment:
+    name: environment (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
+    needs: [plan]
+    if: needs.plan.outputs.has-work == 'true'
+    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds and publishes, so it gets the longer limit
+    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    permissions:
+      contents: read
+      checks: write # why: one check run per chain, best-effort
+      actions: read # why: the Linux environment reads the Windows job's conclusion before it publishes
+      id-token: write # why: npm provenance for the publishes
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.environments) }}
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Keep line endings as committed
+        if: matrix.os == 'windows'
+        run: git config --global core.autocrlf false
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # why: the versioning and e2e executors read history
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-
-      - name: Run tests
-        uses: ./.github/actions/run-checks
         with:
-          check-type: test
-          affected-only: 'false'
+          cache-scope: environment
+
+      - name: Download the plan
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pipeline-plan
+          path: .hf/pipeline
+
+      - name: Build the graph state and compare it with the Linux one
+        if: matrix.os == 'windows'
+        run: |
+          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
+          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          $GRAPH build --force
+          DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
+          echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
+          [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
+
+      - name: Configure npm authentication
+        if: matrix.os == 'linux'
+        run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Run the plan
+        # why: the publishes inside the Linux run wait for the Windows environment to conclude; the publish executor still skips versions already on npm
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "environment (windows)"
+
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pipeline-results-${{ matrix.os }}
+          path: |
+            .hf/pipeline/results-${{ matrix.os }}.json
+            .hf/pipeline/logs
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload coverage reports
-        if: always()
+        if: always() && matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-reports-main
           path: coverage/
           retention-days: 30
+          if-no-files-found: ignore
 
       - name: Upload overall coverage to Codecov
-        if: always()
+        if: always() && matrix.os == 'linux'
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -134,7 +166,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload library coverage to Codecov
-        if: always()
+        if: always() && matrix.os == 'linux'
         shell: bash
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -181,65 +213,35 @@ jobs:
             fi
           done
 
-  e2e:
-    name: e2e
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run E2E tests
-        uses: ./.github/actions/run-checks
+      - name: Upload build artifacts
+        if: matrix.os == 'linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          check-type: e2e
-          affected-only: 'false'
-
-  node-floor:
-    name: node-floor
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Build all projects
-        uses: ./.github/actions/run-checks
-        with:
-          check-type: build
-          affected-only: 'false'
-
-      - name: Load every built package entry on each Node.js floor the packages declare
-        # why: the packages declare different floors (most 18, the testing package 22.18, the linter 24), and the probe only covers a package on a release at or above its own floor, so it runs once per distinct floor on that exact release
-        run: |
-          for floor in $(node tools/workspace/scripts/probe-node-floor.mjs --list-floors); do
-            echo "::group::Node.js $floor"
-            npx -y -p "node@$floor" node tools/workspace/scripts/probe-node-floor.mjs
-            echo "::endgroup::"
-          done
+          name: dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: warn
 
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [format, lint, typecheck, build, test, e2e, node-floor]
+    needs: [plan, environment]
     if: always()
     steps:
       - name: Check CI status
         run: |
-          # Check if any required job failed
-          if [ "${{ needs.format.result }}" = "failure" ] || \
-             [ "${{ needs.lint.result }}" = "failure" ] || \
-             [ "${{ needs.typecheck.result }}" = "failure" ] || \
-             [ "${{ needs.build.result }}" = "failure" ] || \
-             [ "${{ needs.test.result }}" = "failure" ] || \
-             [ "${{ needs.e2e.result }}" = "failure" ] || \
-             [ "${{ needs.node-floor.result }}" = "failure" ]; then
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "❌ The plan did not complete on main branch"
+            exit 1
+          fi
+
+          # Nothing to run: the push reaches no task and the registry lacks nothing
+          if [ "${{ needs.plan.outputs.has-work }}" != "true" ]; then
+            echo "✅ No task is affected on main branch"
+            exit 0
+          fi
+
+          if [ "${{ needs.environment.result }}" != "success" ]; then
             echo "❌ One or more CI checks failed on main branch"
             exit 1
           fi
@@ -249,8 +251,8 @@ jobs:
   push-tags:
     name: push-tags
     runs-on: ubuntu-latest
-    needs: [publish]
-    if: needs.publish.result == 'success'
+    needs: [environment]
+    if: needs.environment.result == 'success'
     continue-on-error: true
     permissions:
       contents: write
@@ -344,64 +346,11 @@ jobs:
           # registry positively reported as absent were moved in the previous step.
           git push origin --tags --force 2>/dev/null || echo "No tags to push"
 
-  publish:
-    name: publish
-    runs-on: ubuntu-latest
-    needs: [ci-status, build]
-    if: needs.ci-status.result == 'success'
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: dist
-          path: dist/
-
-      - name: Get publishable libraries
-        id: publishable
-        run: |
-          # Get all library projects (not using affected - we want ALL libraries)
-          # The publish executor is idempotent and will skip versions already on npm
-          LIBS=$(npx nx show projects --type=lib 2>/dev/null | tr '\n' ',' | sed 's/,$//')
-
-          if [ -z "$LIBS" ]; then
-            echo "No library projects found"
-            echo "has_libs=false" >> $GITHUB_OUTPUT
-          else
-            echo "Library projects to check for publishing:"
-            echo "$LIBS"
-            echo "has_libs=true" >> $GITHUB_OUTPUT
-            echo "libs=$LIBS" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Configure npm authentication
-        if: steps.publishable.outputs.has_libs == 'true'
-        run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish all libraries (skips already published)
-        if: steps.publishable.outputs.has_libs == 'true'
-        run: |
-          # Run publish for all libraries - executor is idempotent and skips
-          # versions already on npm, so this is safe to run on every push
-          CI=1 npx nx run-many -t=publish --projects=${{ steps.publishable.outputs.libs }} --parallel=1
-
   create-github-release:
     name: github-release
     runs-on: ubuntu-latest
-    needs: [publish, push-tags]
-    if: always() && needs.publish.result == 'success'
+    needs: [environment, push-tags]
+    if: always() && needs.environment.result == 'success'
     continue-on-error: true
     permissions:
       contents: write
@@ -562,8 +511,8 @@ jobs:
   dispatch-native-builds:
     name: dispatch-native-builds
     runs-on: ubuntu-latest
-    needs: [publish, push-tags, create-github-release]
-    if: always() && needs.publish.result == 'success'
+    needs: [environment, push-tags, create-github-release]
+    if: always() && needs.environment.result == 'success'
     permissions:
       contents: read
       actions: write # required to dispatch the per-lib native workflow

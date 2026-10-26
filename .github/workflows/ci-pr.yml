@@ -14,21 +14,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup:
-    name: setup
+  plan:
+    name: plan
     runs-on: ubuntu-latest
     outputs:
-      affected-projects: ${{ steps.nx-affected.outputs.affected-projects }}
-      has-affected: ${{ steps.nx-affected.outputs.has-affected }}
+      environments: ${{ steps.plan.outputs.environments }}
+      has-work: ${{ steps.plan.outputs.has-work }}
       graph-digest: ${{ steps.graph-state.outputs.digest }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0 # Required for Nx affected calculations
+          fetch-depth: 0 # why: the plan reads the merge base with the base branch
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
+        with:
+          cache-scope: plan
 
       - name: Restore graph state
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -52,18 +54,27 @@ jobs:
           fi
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
-      - name: Calculate affected projects
-        id: nx-affected
-        uses: ./.github/actions/nx-affected
+      - name: Check the formatting of every file
+        run: CI=1 npx nx format:check
+
+      - name: Plan the pull request
+        id: plan
+        env:
+          PIPELINE_NX_TARGETS: '' # why: the per-target rollback knob; name targets here to let Nx select them instead of the owned graph
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --nx-targets "$PIPELINE_NX_TARGETS" --summary --github-output
+
+      - name: Upload the plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          base-ref: origin/${{ github.base_ref }}
-          head-ref: HEAD
+          name: pipeline-plan
+          path: .hf/pipeline/plan.json
+          retention-days: 7
 
   graph-advisory:
     name: graph-advisory
     runs-on: ubuntu-latest
-    needs: [setup]
-    # why: the report is advisory; ci-status does not read this job, so nothing here gates the pull request
+    needs: [plan]
+    # why: the report is advisory; status does not read this job, so nothing here gates the pull request
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -72,6 +83,8 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
+        with:
+          cache-scope: plan
 
       - name: Restore graph state
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -134,8 +147,8 @@ jobs:
   version-check:
     name: version-check
     runs-on: ubuntu-latest
-    needs: [setup]
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [plan]
+    if: needs.plan.outputs.has-work == 'true'
     permissions:
       contents: read # Read-only - no commits
       pull-requests: write # For failure comments
@@ -148,6 +161,16 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
+        with:
+          cache-scope: plan
+
+      - name: Restore graph state
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: .hf/graph
+          key: ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-
 
       - name: Validate versions
         id: version-check
@@ -159,83 +182,78 @@ jobs:
           pr-number: ${{ github.event.pull_request.number }}
           comment-on-success: 'false'
 
-  format:
-    name: format
-    runs-on: ubuntu-latest
-    needs: [setup, version-check]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
+  environment:
+    name: environment (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
+    needs: [plan, version-check]
+    if: always() && needs.plan.outputs.has-work == 'true' && needs.version-check.result == 'success'
+    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds, so it gets the longer limit
+    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    permissions:
+      contents: read
+      checks: write # why: one check run per chain on the pull request, best-effort
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.environments) }}
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Keep line endings as committed
+        if: matrix.os == 'windows'
+        run: git config --global core.autocrlf false
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # why: the versioning and e2e executors read history
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-
-      - name: Run format check
-        uses: ./.github/actions/run-checks
         with:
-          check-type: format
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+          cache-scope: environment
 
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    needs: [setup, version-check]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run lint
-        uses: ./.github/actions/run-checks
+      - name: Download the plan
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          check-type: lint
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+          name: pipeline-plan
+          path: .hf/pipeline
 
-  typecheck:
-    name: typecheck
-    runs-on: ubuntu-latest
-    needs: [setup, version-check]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build the graph state and compare it with the Linux one
+        if: matrix.os == 'windows'
+        run: |
+          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
+          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          $GRAPH build --force
+          DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
+          echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
+          [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
+      - name: Run the plan
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
 
-      - name: Run typecheck
-        uses: ./.github/actions/run-checks
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          check-type: typecheck
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+          name: pipeline-results-${{ matrix.os }}
+          path: |
+            .hf/pipeline/results-${{ matrix.os }}.json
+            .hf/pipeline/logs
+          retention-days: 7
+          if-no-files-found: warn
 
-  build:
-    name: build
-    runs-on: ubuntu-latest
-    needs: [setup, version-check, typecheck]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success' && needs.typecheck.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run build
-        uses: ./.github/actions/run-checks
+      - name: Upload coverage reports
+        if: always() && matrix.os == 'linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          check-type: build
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+          name: coverage-reports-pr
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload build artifacts
+        if: matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dist-pr
@@ -243,156 +261,10 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    needs: [setup, version-check]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run tests
-        uses: ./.github/actions/run-checks
-        with:
-          check-type: test
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
-
-      - name: Upload coverage reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: coverage-reports-pr
-          path: coverage/
-          retention-days: 7
-
-  e2e:
-    name: e2e
-    runs-on: ubuntu-latest
-    needs: [setup, version-check, build]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success' && needs.build.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Run E2E tests
-        uses: ./.github/actions/run-checks
-        with:
-          check-type: e2e
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
-
-  node-floor:
-    name: node-floor
-    runs-on: ubuntu-latest
-    needs: [setup, version-check, build]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success' && needs.build.result == 'success'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Build affected projects
-        uses: ./.github/actions/run-checks
-        with:
-          check-type: build
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
-
-      - name: Load every built package entry on each Node.js floor the packages declare
-        # why: the packages declare different floors (most 18, the testing package 22.18, the linter 24), and the probe only covers a package on a release at or above its own floor, so it runs once per distinct floor on that exact release
-        run: |
-          for floor in $(node tools/workspace/scripts/probe-node-floor.mjs --list-floors); do
-            echo "::group::Node.js $floor"
-            npx -y -p "node@$floor" node tools/workspace/scripts/probe-node-floor.mjs
-            echo "::endgroup::"
-          done
-
-  windows:
-    name: windows
-    runs-on: windows-latest
-    needs: [setup, version-check]
-    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
-    timeout-minutes: 90
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Keep line endings as committed
-        run: git config --global core.autocrlf false
-
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Build the graph state and compare it with the Linux one
-        run: |
-          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
-          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
-          $GRAPH build --force
-          DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
-          echo "windows graph.json digest $DIGEST, linux ${{ needs.setup.outputs.graph-digest }}"
-          [ "$DIGEST" = "${{ needs.setup.outputs.graph-digest }}" ]
-
-      - name: Typecheck the libraries and tools
-        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*" --parallel=1
-
-      - name: Lint every project
-        run: CI=1 npx nx lint:all
-
-      - name: Test the libraries and tools
-        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*" --parallel=1
-
-  linter-support:
-    name: linter-support (${{ matrix.os }}, Node ${{ matrix.node }})
-    runs-on: ${{ matrix.os }}
-    needs: [setup, version-check]
-    # why: the linter declares Node.js 24 on Linux and Windows, so its packed CLI and API are exercised on the floor release and the newest 24 on both, whenever the package is affected
-    if: always() && needs.version-check.result == 'success' && contains(format(',{0},', needs.setup.outputs.affected-projects), ',lib-linter,')
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        node: ['24.0.0', '24']
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Keep line endings as committed
-        run: git config --global core.autocrlf false
-
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Build the linter
-        run: CI=1 npx nx build lib-linter
-
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Lint, fix and test a rule in a consumer of the packed package
-        run: node apps/package-e2e/linter/scripts/consumer-smoke.mjs
-
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [setup, binary-budget, version-check, format, lint, typecheck, build, test, e2e, node-floor, windows, linter-support]
+    needs: [plan, binary-budget, version-check, environment]
     if: always()
     steps:
       - name: Check CI status
@@ -403,23 +275,19 @@ jobs:
             exit 1
           fi
 
-          # If no affected projects, pass
-          if [ "${{ needs.setup.outputs.has-affected }}" != "true" ]; then
-            echo "✅ No affected projects - PR checks passed"
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "❌ The plan did not complete"
+            exit 1
+          fi
+
+          # Nothing to run: the plan found no task the change reaches
+          if [ "${{ needs.plan.outputs.has-work }}" != "true" ]; then
+            echo "✅ No task is affected - PR checks passed"
             exit 0
           fi
 
-          # Check if any required job failed
           if [ "${{ needs.version-check.result }}" = "failure" ] || \
-             [ "${{ needs.format.result }}" = "failure" ] || \
-             [ "${{ needs.lint.result }}" = "failure" ] || \
-             [ "${{ needs.typecheck.result }}" = "failure" ] || \
-             [ "${{ needs.build.result }}" = "failure" ] || \
-             [ "${{ needs.test.result }}" = "failure" ] || \
-             [ "${{ needs.e2e.result }}" = "failure" ] || \
-             [ "${{ needs.node-floor.result }}" = "failure" ] || \
-             [ "${{ needs.windows.result }}" = "failure" ] || \
-             [ "${{ needs.linter-support.result }}" = "failure" ]; then
+             [ "${{ needs.environment.result }}" != "success" ]; then
             echo "❌ One or more CI checks failed"
             exit 1
           fi
