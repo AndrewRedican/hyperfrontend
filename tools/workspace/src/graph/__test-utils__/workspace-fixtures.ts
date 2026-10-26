@@ -84,9 +84,10 @@ function library(root: string, name: string, entries: readonly string[] = []): F
 
 /**
  * The fixture workspace at its base: two libraries with secondary entries, a consumer of one
- * entry, a spec-only dependency, a type-only dependency, a side-effect import, a non-literal
- * dynamic import, an `export *` barrel, a cross-project cycle, and a root project reading a
- * `{workspaceRoot}/` input.
+ * entry, a consumer of the other library's main entry, a spec-only dependency, a type-only
+ * dependency, a side-effect import, a library whose entry loads a module it cannot name, an
+ * `export *` barrel, a library re-exporting another whole, a cross-project cycle, an e2e project
+ * running after its dependency's build, and a root project reading a `{workspaceRoot}/` input.
  */
 export const FIXTURE_WORKSPACE: FileTree = freeze({
   'package.json': json({ name: '@fixture/workspace', private: true, devDependencies: { typescript: '5.0.0' } }),
@@ -119,11 +120,14 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
         '@fixture/testing': ['libs/testing/src/index.ts'],
         '@fixture/cycle-a': ['libs/cycle-a/src/index.ts'],
         '@fixture/cycle-b': ['libs/cycle-b/src/index.ts'],
+        '@fixture/gamma': ['libs/gamma/src/index.ts'],
+        '@fixture/delta': ['libs/delta/src/index.ts'],
         '@fixture/tooling': ['tools/tooling/src/index.ts'],
       },
     },
   }),
   'lint.base.config.ts': 'export default []\n',
+  '.gitignore': '.hf\nnode_modules\n',
   'project.json': json({ name: 'workspace', projectType: 'application', targets: { docs: { inputs: ['{workspaceRoot}/docs/**/*'] } } }),
   'docs/guide.md': '# Guide\n',
   ...library('libs/alpha', '@fixture/alpha', ['extra']),
@@ -143,10 +147,16 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
   ...library('libs/testing', '@fixture/testing'),
   'libs/testing/src/index.ts':
     'export const check = (ok: boolean): void => {\n  if (!ok) throw new Error()\n}\nexport const configure = (): object => ({})\n',
+  'libs/testing/src/extra.ts': 'export const extra = 1\n',
+  ...library('libs/delta', '@fixture/delta'),
+  'libs/delta/src/index.ts': "export * from '@fixture/testing'\n",
   ...library('libs/cycle-a', '@fixture/cycle-a'),
   'libs/cycle-a/src/index.ts': "import { b } from '@fixture/cycle-b'\nexport const a = (): number => b() + 1\n",
   ...library('libs/cycle-b', '@fixture/cycle-b'),
   'libs/cycle-b/src/index.ts': "import type { a } from '@fixture/cycle-a'\nexport const b = (): number => 1\nexport type A = typeof a\n",
+  ...library('libs/gamma', '@fixture/gamma'),
+  'libs/gamma/src/index.ts': 'export const load = (name: string): Promise<unknown> => import(name)\nexport const gamma = 1\n',
+  'libs/gamma/src/other.ts': 'export const other = 2\n',
   ...library('tools/tooling', '@fixture/tooling'),
   'tools/tooling/src/index.ts': 'export const build = (): void => undefined\n',
   'apps/consumer/package.json': json({ name: '@fixture/consumer', private: true }),
@@ -159,6 +169,25 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
   }),
   'apps/consumer/src/main.ts': "import { extra } from '@fixture/alpha/extra'\nexport const main = (): number => extra()\n",
   'apps/consumer/src/loader.ts': 'export const load = (name: string): Promise<unknown> => import(name)\n',
+  'apps/consumer/src/gamma-user.ts': "import { gamma } from '@fixture/gamma'\nexport const user = (): number => gamma\n",
+  'apps/consumer/src/second.ts': "import { extra } from '@fixture/alpha/extra'\nexport const second = (): number => extra() + 1\n",
+  'apps/beta-app/package.json': json({ name: '@fixture/beta-app', private: true }),
+  'apps/beta-app/project.json': json({
+    name: 'app-beta',
+    projectType: 'application',
+    sourceRoot: 'apps/beta-app/src',
+    tags: ['type:app'],
+    targets: { build: {}, test: {}, typecheck: {}, lint: {} },
+  }),
+  'apps/beta-app/src/main.ts':
+    "import { beta, level } from '@fixture/beta'\nexport const main = (): number => beta + level({ level: 1 })\n",
+  'apps/alpha-e2e/project.json': json({
+    name: 'e2e-alpha',
+    projectType: 'application',
+    tags: ['type:e2e'],
+    implicitDependencies: ['lib-alpha'],
+    targets: { e2e: { dependsOn: ['^build'] } },
+  }),
 })
 
 /**
@@ -290,6 +319,66 @@ export const FIXTURES: readonly WorkspaceFixture[] = freeze([
     'a project configuration is deleted; the project and its dependents fall back to project level',
     without(FIXTURE_WORKSPACE, 'libs/beta/project.json'),
     ['D\tlibs/beta/project.json']
+  ),
+  scenario(
+    'dynamic-importer-edit',
+    'a file nothing imports changes in a library whose entry loads a module it cannot name; its consumers fall back to project level',
+    edit(FIXTURE_WORKSPACE, 'libs/gamma/src/other.ts', 'export const other = 3\n'),
+    ['M\tlibs/gamma/src/other.ts']
+  ),
+  scenario(
+    'parse-failure',
+    'an alpha file stops parsing; alpha counts whole for every consumer of any of its entries',
+    edit(FIXTURE_WORKSPACE, 'libs/alpha/src/core.ts', 'const = \n'),
+    ['M\tlibs/alpha/src/core.ts']
+  ),
+  scenario(
+    'deleted-module',
+    'a shared alpha module is deleted and its importers still name it; the dangling imports are reported and alpha counts whole',
+    without(FIXTURE_WORKSPACE, 'libs/alpha/src/shared.ts'),
+    ['D\tlibs/alpha/src/shared.ts']
+  ),
+  scenario(
+    're-exported-project-edit',
+    'a testing file nothing imports changes; delta re-exports testing whole, so delta counts the whole project as reachable',
+    edit(FIXTURE_WORKSPACE, 'libs/testing/src/extra.ts', 'export const extra = 2\n'),
+    ['M\tlibs/testing/src/extra.ts']
+  ),
+  scenario(
+    'renamed-module-dangling',
+    'a shared alpha module moves and its importers still name the old path; the dangling imports are reported as a rename',
+    edit(
+      without(FIXTURE_WORKSPACE, 'libs/alpha/src/shared.ts'),
+      'libs/alpha/src/shared-values.ts',
+      FIXTURE_WORKSPACE['libs/alpha/src/shared.ts'] as string
+    ),
+    ['R100\tlibs/alpha/src/shared.ts\tlibs/alpha/src/shared-values.ts']
+  ),
+  scenario(
+    'deleted-module-rewired',
+    'an alpha module is deleted and its importer rewritten; only the base graph knows which consumers the module reached',
+    edit(
+      without(FIXTURE_WORKSPACE, 'libs/alpha/src/extra/extra-impl.ts'),
+      'libs/alpha/src/extra/index.ts',
+      'export const extra = (): number => 1\n'
+    ),
+    ['D\tlibs/alpha/src/extra/extra-impl.ts', 'M\tlibs/alpha/src/extra/index.ts']
+  ),
+  scenario(
+    'dangling-import-added',
+    'an alpha file gains an import of a module that never existed; the dangling import is reported and alpha counts whole',
+    edit(
+      FIXTURE_WORKSPACE,
+      'libs/alpha/src/core.ts',
+      "import { shared } from './shared'\nimport './missing'\nexport const core = (): number => shared + 1\n"
+    ),
+    ['M\tlibs/alpha/src/core.ts']
+  ),
+  scenario(
+    'lint-config-edit',
+    'the base lint configuration every lint task names as an input changes',
+    edit(FIXTURE_WORKSPACE, 'lint.base.config.ts', 'export default [{}]\n'),
+    ['M\tlint.base.config.ts']
   ),
 ])
 

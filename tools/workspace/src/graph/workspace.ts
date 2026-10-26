@@ -60,7 +60,7 @@ export function listFiles(root: string): string[] {
  * @param root - The workspace root
  * @returns The globs, none when the file is absent
  */
-function nxIgnores(root: string): ReturnType<typeof compileGlob>[] {
+export function nxIgnores(root: string): ReturnType<typeof compileGlob>[] {
   const file = join(root, '.nxignore')
   if (!existsSync(file)) return []
   return readFileSync(file, 'utf8')
