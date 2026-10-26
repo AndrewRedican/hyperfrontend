@@ -38,15 +38,16 @@ nx format:write --projects=<project-name>
 
 ## Module Boundary Tags
 
-| Tag                | Can depend on                             |
-| ------------------ | ----------------------------------------- |
-| `type:core`        | nothing                                   |
-| `type:util`        | `type:core`, `type:util`                  |
-| `type:feature`     | `type:core`, `type:util`, `type:feature`  |
-| `type:protocol`    | `type:core`, `type:util`, `type:protocol` |
-| `type:app`         | `type:util`                               |
-| `type:demo`        | nothing (npm packages only)               |
-| `scope:standalone` | nothing (npm packages only)               |
+| Tag                | Can depend on                                                 |
+| ------------------ | ------------------------------------------------------------- |
+| `type:core`        | nothing                                                       |
+| `type:util`        | `type:core`, `type:util`, `type:integration`                  |
+| `type:feature`     | `type:core`, `type:util`, `type:feature`                      |
+| `type:protocol`    | `type:core`, `type:util`, `type:protocol`, `type:integration` |
+| `type:app`         | `type:util`                                                   |
+| `type:integration` | `type:core`, `type:util`                                      |
+| `type:demo`        | nothing (npm packages only)                                   |
+| `scope:standalone` | nothing (npm packages only)                                   |
 
 ---
 
