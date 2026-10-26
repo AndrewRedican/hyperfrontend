@@ -221,6 +221,54 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
+  records:
+    name: records
+    runs-on: ubuntu-latest
+    needs: [plan, environment]
+    # why: a run that planned work leaves its record whether or not every task passed; a run with nothing to do records nothing
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.has-work == 'true'
+    permissions:
+      contents: write # why: the record is pushed to the ci-records branch, which no ruleset protects
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Download the plan, the graph and the results
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: pipeline-*
+          path: .hf/pipeline
+          merge-multiple: true
+
+      - name: Open the records branch
+        shell: bash
+        run: |
+          # The branch is an orphan: records alone, no history of the workspace. The first run creates it.
+          git fetch origin ci-records:refs/remotes/origin/ci-records || true
+          if git show-ref --verify --quiet refs/remotes/origin/ci-records; then
+            git worktree add --detach .hf/records origin/ci-records
+          else
+            git worktree add --orphan .hf/records
+          fi
+
+      - name: Write the record
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts record --out .hf/records --run-id ${{ github.run_id }} --run-number ${{ github.run_number }} --attempt ${{ github.run_attempt }} --sha ${{ github.sha }} --ref ${{ github.ref }} --event ${{ github.event_name }} --url "$RUN_URL"
+
+      - name: Push the record
+        shell: bash
+        working-directory: .hf/records
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "record run ${{ github.run_number }} (${{ github.sha }})" --quiet
+          git push origin HEAD:refs/heads/ci-records
+
   ci-status:
     name: status
     runs-on: ubuntu-latest
