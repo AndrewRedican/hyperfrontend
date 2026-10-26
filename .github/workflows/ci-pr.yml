@@ -17,6 +17,9 @@ jobs:
   plan:
     name: plan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write # why: the plan is published as the `pipeline plan` check run, which a page reads without a token
     outputs:
       environments: ${{ steps.plan.outputs.environments }}
       has-work: ${{ steps.plan.outputs.has-work }}
@@ -44,8 +47,10 @@ jobs:
 
       - name: Plan the pull request
         id: plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output
+          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload the plan and the graph
@@ -162,7 +167,16 @@ jobs:
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
       - name: Run the plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # why: the chain check runs are created through the API; GitHub sets no token in the environment by itself
         run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
+
+      - name: Settle what a run that did not end left behind
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
       - name: Upload the results
         if: always()

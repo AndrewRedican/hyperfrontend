@@ -24,6 +24,9 @@ jobs:
   plan:
     name: plan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write # why: the plan is published as the `pipeline plan` check run, which a page reads without a token
     outputs:
       environments: ${{ steps.plan.outputs.environments }}
       has-work: ${{ steps.plan.outputs.has-work }}
@@ -51,9 +54,11 @@ jobs:
 
       - name: Plan the push
         id: plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         # why: the previous head of main is the base; a force-push, a first push or a dispatch without one plans everything, as does the full input
         run: |
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output
+          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload the plan and the graph
@@ -119,8 +124,17 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Run the plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows job and the chain check runs go through the API; GitHub sets no token in the environment by itself
         # why: the publishes inside the Linux run wait for the Windows environment to conclude; the publish executor still skips versions already on npm
         run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "environment (windows)"
+
+      - name: Settle what a run that did not end left behind
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
       - name: Upload the results
         if: always()
