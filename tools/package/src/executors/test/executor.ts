@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { TestExecutorOptions } from './schema'
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'

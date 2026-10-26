@@ -1,4 +1,4 @@
-import type { ProjectGraph } from '@nx/devkit'
+import type { ProjectGraph } from '@hyperfrontend/integration-nx/compat'
 import { posix } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'

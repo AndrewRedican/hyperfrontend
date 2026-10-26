@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionCheckExecutorSchema } from './schema'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { isVersionCommit } from '../version/lib/is-version-commit'

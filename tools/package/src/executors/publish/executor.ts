@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { PublishExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'

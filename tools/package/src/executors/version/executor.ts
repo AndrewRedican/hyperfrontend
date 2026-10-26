@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionExecutorSchema } from './schema'
 import { getLogger } from './lib/logger'
 import { runVersionForProject } from './lib/run-version-for-project'

@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
 import type { VersionBatchExecutorSchema } from './schema'
 import { createProjectGraphAsync } from '@nx/devkit'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
