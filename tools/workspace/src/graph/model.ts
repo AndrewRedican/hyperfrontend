@@ -55,6 +55,8 @@ export interface TargetRecord {
   readonly executor?: string
   /** The inputs, as `project.json` writes them. */
   readonly inputs?: readonly unknown[]
+  /** The tasks this target runs after, as `project.json` writes them. */
+  readonly dependsOn?: readonly unknown[]
 }
 
 /** A project's `project.json`, as far as the graph reads it. */

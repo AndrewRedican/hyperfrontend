@@ -39,7 +39,7 @@ describe('targetInputs', () => {
     expect([targetInputs(root, lib, 'test').from, targetInputs(root, lib, 'build').from, targetInputs(root, lib, 'version')]).toEqual([
       'project',
       'defaults',
-      { value: ['default'], from: 'implicit' },
+      { value: ['default', '^default'], from: 'implicit' },
     ])
   })
 })

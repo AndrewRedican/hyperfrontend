@@ -57,6 +57,7 @@ export const ReasonRule = freeze({
   RenamedModule: 'renamed-module',
   ToolChanged: 'tool-changed',
   DeclaredDependency: 'declared-dependency',
+  DependentTask: 'dependent-task',
   ParseFailure: 'parse-failure',
   StateInvalidated: 'state-invalidated',
 } as const)
@@ -94,4 +95,6 @@ export interface AffectedSet {
   readonly selected: readonly TaskDecision[]
   /** The tasks skipped, sorted by id, each with the reason it was safe to skip. */
   readonly skipped: readonly TaskDecision[]
+  /** The fallback rules that fired while the closures were followed: unresolved loads, dangling imports, parse failures, cycles. */
+  readonly fallbacks: readonly Reason[]
 }

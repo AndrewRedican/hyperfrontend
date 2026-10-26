@@ -33,7 +33,25 @@ export interface TargetDefaults {
   readonly inputs?: readonly InputDefinition[]
   /** The executor. */
   readonly executor?: string
+  /** The tasks the target runs after. */
+  readonly dependsOn?: readonly unknown[]
 }
+
+/** A task dependency written as an object. */
+export interface DependsOnObject {
+  /** The target depended on. */
+  readonly target?: string
+  /** Whose target: the project's dependencies, named projects, or the project itself when absent. */
+  readonly projects?: string | readonly string[]
+  /** Whether the dependencies' target is meant. */
+  readonly dependencies?: boolean
+}
+
+/** A task dependency: `target`, `^target`, or the object form. */
+export type DependsOn = string | DependsOnObject
+
+/** The inputs Nx gives a target configured without any. */
+const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
 
 /** The workspace configuration, as far as the targets are read. */
 export interface NxConfiguration {
@@ -73,7 +91,8 @@ export function readNxConfiguration(root: string): NxConfiguration {
 }
 
 /**
- * The inputs of a target: the project's own, else the workspace defaults, else `default`.
+ * The inputs of a target: the project's own, else the workspace defaults, else Nx's implicit
+ * `default` and `^default`.
  *
  * @param root - The workspace root, absolute
  * @param project - The project whose target is read
@@ -84,7 +103,20 @@ export function targetInputs(root: string, project: ProjectRecord, target: strin
   const own = project.configuration?.targets?.[target]?.inputs as readonly InputDefinition[] | undefined
   if (own !== undefined) return { value: own, from: 'project' }
   const defaults = readNxConfiguration(root).targetDefaults?.[target]?.inputs
-  return defaults === undefined ? { value: ['default'], from: 'implicit' } : { value: defaults, from: 'defaults' }
+  return defaults === undefined ? { value: IMPLICIT_INPUTS, from: 'implicit' } : { value: defaults, from: 'defaults' }
+}
+
+/**
+ * The tasks a target runs after: the project's own `dependsOn`, else the workspace defaults.
+ *
+ * @param root - The workspace root, absolute
+ * @param project - The project whose target is read
+ * @param target - The target's name
+ * @returns The dependencies as written, none when neither configures any
+ */
+export function targetDependsOn(root: string, project: ProjectRecord, target: string): readonly DependsOn[] {
+  const own = project.configuration?.targets?.[target]?.dependsOn as readonly DependsOn[] | undefined
+  return own ?? (readNxConfiguration(root).targetDefaults?.[target]?.dependsOn as readonly DependsOn[] | undefined) ?? []
 }
 
 /**
@@ -111,16 +143,29 @@ export function targetExecutor(root: string, project: ProjectRecord, target: str
  * @returns The patterns, `{projectRoot}` still unreplaced
  */
 export function selfInputs(root: string, project: ProjectRecord, target: string): string[] {
-  const named: Readonly<Record<string, readonly InputDefinition[]>> = {
-    default: ['{projectRoot}/**/*'],
-    ...readNxConfiguration(root).namedInputs,
-    ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
-  }
   const own = targetInputs(root, project, target).value.filter((input) => {
     if (typeof input === 'string') return !input.startsWith('^')
     if (input.fileset !== undefined) return input.dependencies !== true
     return input.dependencies !== true && (input.projects === undefined || input.projects === 'self')
   })
+  return expandInputs(root, project, own)
+}
+
+/**
+ * The file patterns a list of inputs stands for, named inputs expanded through the workspace's
+ * and the project's definitions.
+ *
+ * @param root - The workspace root
+ * @param project - The project whose named inputs apply
+ * @param inputs - The inputs to expand
+ * @returns The patterns, `{projectRoot}` still unreplaced
+ */
+export function expandInputs(root: string, project: ProjectRecord, inputs: readonly InputDefinition[]): string[] {
+  const named: Readonly<Record<string, readonly InputDefinition[]>> = {
+    default: ['{projectRoot}/**/*'],
+    ...readNxConfiguration(root).namedInputs,
+    ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
+  }
   const patterns: string[] = []
   const expand = (inputs: readonly InputDefinition[], expanding: ReadonlySet<string>): void => {
     // why: a named input that names itself, directly or through another, would otherwise expand without end.
@@ -135,6 +180,6 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
       else if (input.input !== undefined) follow(input.input)
     }
   }
-  expand(own, createSet())
+  expand(inputs, createSet())
   return patterns
 }
