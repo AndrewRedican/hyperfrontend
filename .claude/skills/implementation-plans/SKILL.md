@@ -63,6 +63,10 @@ Fix all IDE-reported errors before proceeding.
 
 **MUST** read coding skill before implementing any code.
 
+## Living Plans
+
+A plan under `roadmap/` describes what is still to do. When a milestone lands, delete its section and keep only what the remaining milestones build on (a short "what exists" list, decisions that changed). Never add progress notes, status logs or in-between findings unless the owner asks; the plan is not a journal. Plans stay uncommitted until the owner asks to commit them.
+
 ---
 
 ## Checklist
