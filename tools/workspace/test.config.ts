@@ -3,13 +3,19 @@ import type { TestConfig } from '@hyperfrontend/testing/runner'
 /**
  * How the workspace plugin is tested.
  *
- * The compatibility matrix is pure derivation over manifests on disk and is
+ * The compatibility matrix and the graph model are pure derivation and are
  * held to full coverage. The lint-report executor is driven by Nx and
  * exercised by every `lint:all` run.
  */
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
-  coverageInclude: ['src/compatibility-matrix/collect.ts', 'src/compatibility-matrix/render.ts', 'src/compatibility-matrix/refresh.ts'],
+  coverageInclude: [
+    'src/compatibility-matrix/collect.ts',
+    'src/compatibility-matrix/render.ts',
+    'src/compatibility-matrix/refresh.ts',
+    'src/graph/model.ts',
+    'src/graph/roles.ts',
+  ],
   coverageThresholds: { lines: 100, branches: 100, functions: 100 },
 }
 
