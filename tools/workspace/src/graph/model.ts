@@ -97,13 +97,14 @@ export interface ProjectRecord {
   readonly configuration: ProjectConfiguration | null
 }
 
-/** The forms an import takes, by what the statement brings in. */
+/** The forms an import takes, by what the statement brings in; `unresolved` for a load whose specifier is not a literal. */
 export const ImportKind = freeze({
   Value: 'value',
   Type: 'type',
   SideEffect: 'side-effect',
   ReExportAll: 're-export-all',
   Dynamic: 'dynamic',
+  Unresolved: 'unresolved',
 } as const)
 
 /** One of the import forms. */
@@ -111,7 +112,7 @@ export type ImportKind = (typeof ImportKind)[keyof typeof ImportKind]
 
 /** One import of a file. */
 export interface FileImport {
-  /** The specifier as written. */
+  /** The specifier as written, or the expression's text for an `unresolved` load. */
   readonly specifier: string
   /** Whether Nx counts it as dynamic: an `import()`, a `require` under braces, an import type opening a type alias. */
   readonly dynamic: boolean

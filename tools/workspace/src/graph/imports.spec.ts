@@ -6,7 +6,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
-import { importsOfFiles, importsOfText, isCodeFile, readerVersion } from './imports'
+import { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 
 const root = createGraphWorkspace()
 
@@ -61,7 +61,15 @@ describe('importsOfText', () => {
   })
 
   it('ignores calls that are not module loads', () => {
-    expect(kinds("require(name)\nrequire.cache['a']\nload('b')\nrequire.other('c')\nx.require('d')\nrequire['resolve']('e')\n")).toEqual([])
+    expect(kinds("require.cache['a']\nload('b')\nrequire.other('c')\nx.require('d')\nrequire['resolve']('e')\nrequire()\n")).toEqual([])
+  })
+
+  it('keeps a load whose specifier is an expression as unresolved, with the expression as its text', () => {
+    expect(
+      importsOfText("import(name)\nrequire(a + b)\ncreateRequire(import.meta.url)(x)\ncreateRequire(import.meta.url)('y')\n", 'a.ts')?.map(
+        (item) => `${item.kind} ${item.specifier} ${item.line}:${item.column}`
+      )
+    ).toEqual(['unresolved name 1:1', 'unresolved a + b 2:1', 'unresolved x 3:1'])
   })
 
   it('reads nothing from a file that does not parse', () => {
@@ -117,7 +125,7 @@ describe('readerVersion', () => {
       prefix: 'reader-installed-',
       tree: { 'node_modules/@hyperfrontend/linter/package.json': '{ "version": "1.2.3" }' },
     })
-    expect(readerVersion(installed.path)).toBe('2:1.2.3')
+    expect(readerVersion(installed.path)).toBe('3:1.2.3')
   })
 
   it('hashes the aliased parser sources, specs left out', () => {
@@ -132,7 +140,7 @@ describe('readerVersion', () => {
       },
     })
     const hash = createHash('sha1').update('export const a = 1\n').update('export const b = 1\n').digest('hex')
-    expect(readerVersion(aliased.path)).toBe(`2:${hash}`)
+    expect(readerVersion(aliased.path)).toBe(`3:${hash}`)
   })
 
   it('answers unknown for an alias naming no sources beside an installed parser without a version', () => {
@@ -143,11 +151,11 @@ describe('readerVersion', () => {
         'node_modules/@hyperfrontend/linter/package.json': '{ "name": "@hyperfrontend/linter" }',
       },
     })
-    expect(readerVersion(empty.path)).toBe('2:unknown')
+    expect(readerVersion(empty.path)).toBe('3:unknown')
   })
 
   it('answers unknown without an alias or an installed parser, once per root', () => {
-    expect([readerVersion(root), readerVersion(root) === readerVersion(root)]).toEqual(['2:unknown', true])
+    expect([readerVersion(root), readerVersion(root) === readerVersion(root)]).toEqual(['3:unknown', true])
   })
 })
 
@@ -256,9 +264,16 @@ describe('importsOfFiles', () => {
     expect([...importsOfFiles(root, ['libs/b/src/gone.ts']).keys()]).toEqual([])
   })
 
-  it('counts a file that does not parse as importing nothing', () => {
+  it('records a file that does not parse as null', () => {
     writeFileSync(join(root, 'libs/b/src/broken.ts'), "import { from 'x'\n")
-    expect(importsOfFiles(root, ['libs/b/src/broken.ts']).get('libs/b/src/broken.ts')).toEqual([])
+    expect(importsOfFiles(root, ['libs/b/src/broken.ts']).get('libs/b/src/broken.ts')).toBeNull()
+  })
+
+  it('reads one file on request', () => {
+    expect([readImports(root, 'libs/b/src/broken.ts'), readImports(root, 'libs/a/src/index.ts')?.map((item) => item.specifier)]).toEqual([
+      null,
+      ['@fixture/b'],
+    ])
   })
 
   it('does not remember a file that does not parse', () => {

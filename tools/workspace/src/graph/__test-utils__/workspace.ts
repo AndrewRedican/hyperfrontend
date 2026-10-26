@@ -31,7 +31,7 @@ const FILES: Readonly<Record<string, string>> = {
   'tsconfig.base.json':
     '{ "compilerOptions": { "paths": { "@fixture/a": ["libs/a/src/index.ts"], "@fixture/a/*": ["libs/a/src/*"], "@fixture/none": [], "@fixture/a/gone": ["libs/a/src/gone.ts"], "@fixture/b/elsewhere": ["libs/a/src/deep.ts"] } } }',
   '.nxignore': '# ignored\nignored/**\n',
-  '.gitignore': 'node_modules\n',
+  '.gitignore': 'node_modules\n.hf\n',
   'ignored/package.json': '{ "name": "@fixture/ignored" }',
   'package-lock.json':
     '{ "packages": { "": { "name": "@fixture/workspace" }, "node_modules/left-pad": { "version": "1.3.0" }, "node_modules/left-pad/node_modules/inner": { "version": "0.0.1" }, "node_modules/unversioned": {} } }',
@@ -75,7 +75,7 @@ const FILES: Readonly<Record<string, string>> = {
   'node_modules/@fixture/c/package.json': '{ "name": "@fixture/c" }',
   'apps/app/package.json': '{ "name": "@fixture/app", "exports": "./src/main.js" }',
   'apps/app/src/main.ts':
-    "import '@fixture/a/deep'\nconst x = () => import('@fixture/a')\nimport '../../../lint.config'\nexport * from './nothing'\n",
+    "import '@fixture/a/deep'\nconst x = () => import('@fixture/a')\nimport '../../../lint.config'\nexport * from './nothing'\nconst y = (name: string) => import(name)\n",
   'apps/app/src/broken.ts': 'const = \n',
   'apps/app/README.md': '# app\n',
   'lint.config.ts': 'export default []\n',

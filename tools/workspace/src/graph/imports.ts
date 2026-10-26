@@ -2,7 +2,9 @@
  * The imports of every code file, read by the parser and remembered on disk so that a graph build
  * reads only what changed since the last: a file whose size and modification time are unchanged
  * is not read, and one whose content hash is unchanged is not parsed. Each import carries its
- * form, whether it brings in types alone, the names it imports and where it stands.
+ * form, whether it brings in types alone, the names it imports and where it stands; a load whose
+ * specifier is an expression rather than a literal is kept as `unresolved`, so the analysis can
+ * see that the file reaches something it cannot name.
  *
  * @module graph/imports
  */
@@ -26,7 +28,7 @@ const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports
 const CODE_EXTENSIONS = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 
 /** The shape of a remembered import; raised when `FileImport` changes, which a cache written for the old shape does not survive. */
-const CACHE_FORMAT = '2'
+const CACHE_FORMAT = '3'
 
 /** The alias naming the parser package, whose sources decide what a remembered entry means where a workspace runs the parser from source. */
 const PARSER_ALIAS = '@hyperfrontend/linter'
@@ -65,6 +67,9 @@ interface Position {
   /** The one-based column. */
   readonly column: number
 }
+
+/** The imports of each code file: the list read, or null for a file the parser could not read. */
+export type ImportTable = ReadonlyMap<string, readonly FileImport[] | null>
 
 /** The reader versions computed so far, by root. */
 const readerVersions = createMap<string, string>()
@@ -150,6 +155,18 @@ function isRequire(callee: Node): boolean {
 }
 
 /**
+ * Whether a callee is a `createRequire(...)` call, whose result loads a module when called.
+ *
+ * @param callee - The called expression
+ * @returns Whether a call of it loads a module
+ */
+function isCreatedRequire(callee: Node): boolean {
+  return (
+    callee.kind === 'CallExpression' && (callee.callee as Node).kind === 'Identifier' && (callee.callee as Node).name === 'createRequire'
+  )
+}
+
+/**
  * Whether a node opens a scope whose `require` calls Nx counts as dynamic: a braced block other
  * than a function declaration's body or a block nested in one, a switch, a class body or a module
  * block.
@@ -191,6 +208,17 @@ function namesOf(node: Node): string[] {
     if (specifier.kind === 'ImportNamespaceSpecifier') return '*'
     return nameOf((specifier.kind === 'ImportSpecifier' ? specifier.imported : specifier.local) as Node)
   })
+}
+
+/**
+ * The source text of a node.
+ *
+ * @param text - The file's text
+ * @param node - The node whose text is taken
+ * @returns The text between the node's start and end
+ */
+function textOf(text: string, node: Node): string {
+  return text.slice(node.start, node.end)
 }
 
 /**
@@ -255,10 +283,16 @@ export function importsOfTree(tree: Node, text: string): FileImport[] {
               ? 'type'
               : 'value'
       push(node, source, false, kind, typeOnly, namesOf(node))
-    } else if (node.kind === 'ImportExpression' && source !== null) push(node, source, true, 'dynamic', false, [])
-    else if (node.kind === 'CallExpression' && isRequire(node.callee as Node)) {
-      const argument = stringOf((node.arguments as readonly Node[])[0])
-      if (argument !== null) push(node, argument, dynamic, 'value', false, [])
+    } else if (node.kind === 'ImportExpression') {
+      if (source !== null) push(node, source, true, 'dynamic', false, [])
+      else push(node, textOf(text, node.source as Node), true, 'unresolved', false, [])
+    } else if (node.kind === 'CallExpression' && (isRequire(node.callee as Node) || isCreatedRequire(node.callee as Node))) {
+      const first = (node.arguments as readonly Node[])[0]
+      const argument = stringOf(first)
+      if (argument !== null) {
+        // why: Nx reads `require` and `require.resolve` calls alone, so a literal through a created require draws no edge of its own.
+        if (!isCreatedRequire(node.callee as Node)) push(node, argument, dynamic, 'value', false, [])
+      } else if (first !== undefined) push(node, textOf(text, first), true, 'unresolved', false, [])
     } else if (node.kind === 'TSExternalModuleReference') {
       const argument = stringOf(node.expression as Node)
       const typeOnly = (node.parent as Node).importKind === 'type'
@@ -287,22 +321,33 @@ export function importsOfText(text: string, file: string): FileImport[] | null {
 }
 
 /**
+ * The imports of one code file, read and parsed now.
+ *
+ * @param root - The workspace root, absolute
+ * @param file - The workspace-relative path
+ * @returns The imports, or null when the file does not parse
+ */
+export function readImports(root: string, file: string): FileImport[] | null {
+  return importsOfText(readFileSync(join(root, file), 'utf8'), file)
+}
+
+/**
  * The imports of every code file among the given, from the cache where the file is unchanged
  * and from the parser otherwise; the cache is rewritten only when an entry changed. A file that
- * no longer exists is left out, and one that does not parse counts as importing nothing and is
- * not remembered, so a parser that learns to read it reads it next time.
+ * no longer exists is left out, and one that does not parse is recorded as null and is not
+ * remembered, so a parser that learns to read it reads it next time.
  *
  * @param root - The workspace root, absolute
  * @param files - The workspace-relative paths
  * @returns The imports by path, for the code files only
  */
-export function importsOfFiles(root: string, files: readonly string[]): Map<string, readonly FileImport[]> {
+export function importsOfFiles(root: string, files: readonly string[]): Map<string, readonly FileImport[] | null> {
   const cacheFile = join(root, CACHE_FILE)
   const cache = readCache(cacheFile)
   const version = readerVersion(root)
   const remembered = cache !== null && cache.version === version ? cache.files : {}
   const fresh: Record<string, CachedImports> = {}
-  const result = createMap<string, readonly FileImport[]>()
+  const result = createMap<string, readonly FileImport[] | null>()
   let changed = keys(remembered).length
   for (const file of files) {
     if (!isCodeFile(file)) continue
@@ -319,7 +364,7 @@ export function importsOfFiles(root: string, files: readonly string[]): Map<stri
     const text = readFileSync(join(root, file), 'utf8')
     const hash = createHash('sha1').update(text).digest('hex')
     const imports = known !== undefined && known.hash === hash ? known.imports : importsOfText(text, file)
-    result.set(file, imports ?? [])
+    result.set(file, imports)
     if (imports !== null) fresh[file] = { stamp, hash, imports }
     changed = Infinity
   }

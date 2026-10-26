@@ -7,7 +7,8 @@
  * @module graph/build
  */
 
-import type { Edge, EdgeGroup, EntryNode, FileImport, GraphNode, NpmUse, ProjectEdge, ProjectRecord, Resolution, ToolNode } from './model'
+import type { ImportTable } from './imports'
+import type { Edge, EdgeGroup, EntryNode, GraphNode, NpmUse, ProjectEdge, ProjectRecord, Resolution, ToolNode } from './model'
 import type { Resolver } from './resolve'
 import { join } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
@@ -16,7 +17,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { declaredEdges } from './declared-edges'
 import { entriesOfProject } from './entries'
-import { fileEdge } from './file-edges'
+import { fileEdge, unresolvedEdge } from './file-edges'
 import { importsOfFiles, isCodeFile } from './imports'
 import { installedPackages } from './lockfile'
 import { nodeId } from './model'
@@ -37,8 +38,8 @@ export interface WorkspaceGraph extends Resolver {
   readonly versions: ReadonlyMap<string, string>
   /** Each `name@version` installed below another package. */
   readonly nested: ReadonlySet<string>
-  /** The imports of each code file. */
-  readonly imports: ReadonlyMap<string, readonly FileImport[]>
+  /** The imports of each code file, null for a file the parser could not read. */
+  readonly imports: ImportTable
   /** Every node, by id. */
   readonly nodes: ReadonlyMap<string, GraphNode>
   /** Every qualified edge, in canonical order. */
@@ -61,6 +62,14 @@ interface WorkspaceGlobs {
 interface RootManifest {
   /** The package-manager workspaces: globs, or an object holding them. */
   readonly workspaces?: readonly string[] | WorkspaceGlobs
+}
+
+/** What a build may be given instead of reading it. */
+export interface BuildOptions {
+  /** The workspace's files, in place of asking git. */
+  readonly files?: readonly string[]
+  /** The imports of the code files, in place of reading them through the import cache. */
+  readonly imports?: ImportTable
 }
 
 /** The graphs built so far, by root. */
@@ -134,10 +143,11 @@ function groupEdges(
  * Builds the graph of a workspace.
  *
  * @param root - The workspace root, absolute
+ * @param options - The files and imports to build from, where the caller has them
  * @returns The graph of projects, edges, npm uses, aliases and versions
  */
-export function buildGraph(root: string): WorkspaceGraph {
-  const fileList = listFiles(root)
+export function buildGraph(root: string, options: BuildOptions = {}): WorkspaceGraph {
+  const fileList = options.files ?? listFiles(root)
   const files = createSet(fileList)
   const projects = discoverProjects(root, fileList)
   const aliases = readAliases(root)
@@ -158,7 +168,7 @@ export function buildGraph(root: string): WorkspaceGraph {
     if (name !== undefined && !byPackage.has(name)) byPackage.set(name, project)
   }
   const resolver: Resolver = { root, files, projects, aliases, packages: packagesOf(globs.map(compileGlob), projects), entries }
-  const imports = importsOfFiles(root, fileList)
+  const imports = options.imports ?? importsOfFiles(root, fileList)
   const installed = installedPackages(root)
   const edges = createMap<string, ProjectEdge[]>()
   const npmUses = createMap<string, NpmUse[]>()
@@ -172,8 +182,17 @@ export function buildGraph(root: string): WorkspaceGraph {
       own.push({ source: project.name, target: dependency, type: 'implicit', files: [] })
     for (const file of project.files) {
       if (!isCodeFile(file)) continue
+      const items = imports.get(file)
+      if (items === null) {
+        records.push(unresolvedEdge(project, file, null))
+        continue
+      }
       // why: the file list can name a tracked file the working tree has deleted, which has no imports to read.
-      for (const item of imports.get(file) ?? []) {
+      for (const item of items ?? []) {
+        if (item.kind === 'unresolved') {
+          records.push(unresolvedEdge(project, file, item))
+          continue
+        }
         const resolution = resolveSpecifier(resolver, file, item.specifier)
         const record = fileEdge(context, project, file, item, resolution)
         if (record !== null) {

@@ -1,7 +1,8 @@
 /**
  * The qualified edge one import draws: from the importing file to the file, entry or installed
  * package it resolves to, carrying the import's form, the importing file's role, the specifier
- * with its resolution, and the position the import stands at.
+ * with its resolution, and the position the import stands at; and the edge a file draws to its
+ * own project when it loads something it cannot name or cannot be parsed at all.
  *
  * @module graph/file-edges
  */
@@ -16,6 +17,28 @@ export interface FileEdgeContext {
   readonly entries: ReadonlyMap<string, EntryNode>
   /** The installed version of each top-level package. */
   readonly versions: ReadonlyMap<string, string>
+}
+
+/**
+ * The edge from a file to its own project standing for what the file reaches but the graph cannot
+ * name: a load whose specifier is an expression, or, with no import at all, a file the parser
+ * could not read.
+ *
+ * @param project - The project owning the file
+ * @param file - The file, workspace-relative
+ * @param item - The unresolved load, or null for a parse failure
+ * @returns The edge, with a null path for a parse failure
+ */
+export function unresolvedEdge(project: ProjectRecord, file: string, item: FileImport | null): Edge {
+  return {
+    source: nodeId({ kind: 'file', path: file, project: project.name, role: roleOf(file, project.root) }),
+    target: nodeId({ kind: 'project', name: project.name, root: project.root }),
+    kind: 'unresolved',
+    role: roleOf(file, project.root),
+    path: item === null ? null : { specifier: item.specifier, resolved: null },
+    targets: [],
+    evidence: { kind: 'source', file, line: item?.line ?? 1, column: item?.column ?? 1 },
+  }
 }
 
 /**

@@ -38,7 +38,12 @@ describe('the file edges', () => {
       'file:apps/app/src/nothing unresolved production ./nothing=- [] apps/app/src/main.ts 4:1',
       'file:libs/a/src/deep.ts side-effect production @fixture/a/deep=libs/a/src/deep.ts [] apps/app/src/main.ts 1:1',
       'file:lint.config.ts side-effect production ../../../lint.config=lint.config.ts [] apps/app/src/main.ts 3:1',
+      'project:@fixture/app unresolved production name=- [] apps/app/src/main.ts 5:29',
     ])
+  })
+
+  it('draw a file the parser cannot read to its own project, unresolved, without a specifier', () => {
+    expect(from('file:apps/app/src/broken.ts')).toEqual(['project:@fixture/app unresolved production - [] apps/app/src/broken.ts 1:1'])
   })
 
   it('draw imports of installed and missing packages to externals, and none to a built-in', () => {
