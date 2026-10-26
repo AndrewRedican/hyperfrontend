@@ -158,16 +158,45 @@ node --import ./tools/lint/src/runtime/aliases.ts \
 
 `src/baseline/` captures what Nx itself selects for a revision range, as the evidence the owned analysis is compared against: the affected projects from `nx show projects --affected --json`, and the task-level selection with its reasons from `nx affected --explain=stdout`, both run without the daemon and with task selection on.
 
-`scripts/replay-affected.ts` replays merged pull requests. For each of the newest merges on a branch it checks the merged branch's tip out in a worktree under `.hf/replay/worktrees/`, links the repository's `node_modules` into it, captures the selection from the merge base to the tip, and writes `.hf/replay/<merge sha>.json`. A merge already recorded is skipped, so an interrupted replay resumes. `lockfileSkew` in a record is true when the lock file at that revision differs from the one the shared `node_modules` was installed from; a comparison should weigh such a capture accordingly.
+`scripts/replay-affected.ts` replays history. For each of the newest merges on a branch, or with `--commits` for each of its newest commits against their parents, it checks the head out in a worktree under `.hf/replay/worktrees/`, links the repository's `node_modules` into it, captures the selection from the base to the head, and writes `.hf/replay/<sha>.json` with the range's `kind`. A range already recorded is skipped, so an interrupted replay resumes. A revision whose `nx.json` names a plugin the shared `node_modules` no longer holds cannot run Nx; it is reported as not replayable and left unrecorded, so the replay reaches back only as far as the installed plugins allow. `lockfileSkew` in a record is true when the lock file at that revision differs from the one the shared `node_modules` was installed from; a comparison should weigh such a capture accordingly.
 
 ```bash
 npx nx run tool-workspace:replay-affected
 npx nx run tool-workspace:replay-affected --count=20 --targets=build,test
+npx nx run tool-workspace:replay-affected --commits --count=40
 node --import ./tools/lint/src/runtime/aliases.ts \
   tools/workspace/scripts/replay-affected.ts --ref origin/main
 ```
 
 The script loads workspace libraries from source through the lint tool's resolution hook, which is why the raw command passes `--import`; the Nx target does that for you. It runs Nx through `@hyperfrontend/integration-nx/adapters`, the package that holds every call into Nx. `.hf/` is ignored by git.
+
+### Comparison with Nx
+
+`scripts/compare-affected.ts` decides every task of every captured target twice, by Nx and by the owned analysis, and classifies each difference. Without a range it reads the replay captures, checks each head out in a worktree (and its base in another, so a deleted or renamed module can name the tasks it reached), builds the owned graph there, runs the analysis over the same change set and compares. With `--base` it captures Nx's selection for the range now, in the working tree, and compares that; the `graph-advisory` job of the pull-request workflow does this for every pull request, and the weekly `graph-advisory` workflow replays and compares `main`. The classifier and the renderer live in `src/compare/`.
+
+| Verdict                | Meaning                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agree`                | Both selected the task.                                                                                                                        |
+| `both-skipped`         | Neither selected it.                                                                                                                           |
+| `narrower-explained`   | Category (a): Nx selected it, the owned analysis skipped it, and a skip reason of the closed rule set answers every file Nx cites.             |
+| `wider`                | Category (b): the owned analysis selected it and Nx did not. Documented when it rests on `dependent-task`, `global-config` and `tool-changed`. |
+| `narrower-unexplained` | Category (c): Nx selected it, the owned analysis skipped it, and at least one Nx reason has no answer. The acceptance of the analysis is zero. |
+| `nx-only`              | Nx selected a task the owned graph has no task for: the `lint` tasks the lint plugin infers.                                                   |
+
+The three documented wider rules are deliberate: a task selected because a task it runs after is selected, which Nx does not do; a change to `nx.json`, the root `package.json`, the lock file or `tsconfig.base.json`, which the owned analysis treats as invalidating every task while Nx weighs what changed in them; and a change to the source of the executor a task runs, which Nx does not read, so a change to `tools/package` selects every task running one of its executors.
+
+The defaults in `nx.json#targetDefaults` apply to a target only when Nx would merge them: the two name the same executor or one names none, and a `run-commands` or `run-script` pair runs the same command or script or one names none. The demos' builds run `@hyperfrontend/app:build`, so the `build` defaults, their `projects` input among them, leave them alone; the comparison is what showed the owned graph applying them anyway.
+
+```bash
+npx nx run tool-workspace:compare-affected
+npx nx run tool-workspace:compare-affected -- --count 10 --rebuild 10
+npx nx run tool-workspace:compare-affected -- \
+  --base origin/main --head HEAD --label "my branch"
+node --import ./tools/lint/src/runtime/aliases.ts \
+  tools/workspace/scripts/compare-affected.ts --strict
+```
+
+The report is written to `.hf/replay/report.md` (`--out`) and, with `--summary`, appended to the GitHub job summary. `--rebuild <n>` takes up to `n` of the build tasks the owned analysis would have skipped, spread across the ranges, builds each at the base and the head of its range with the Nx cache bypassed and records whether every file under the project's `dist` directory is byte-identical; only tasks running `@hyperfrontend/package:build` are rebuilt. `--skip-previous` leaves the base graph out. The exit code is zero unless `--strict` is given and a category (c) task is found.
 
 ## Upstream type extraction
 

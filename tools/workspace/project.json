@@ -8,6 +8,13 @@
   "targets": {
     "test": {},
     "typecheck": {},
+    "compare-affected": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/scripts/compare-affected.ts"
+      }
+    },
     "replay-affected": {
       "executor": "nx:run-commands",
       "cache": false,
