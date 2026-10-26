@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
 import type { LintReportExecutorOptions } from './schema'
 import type { CrashedProject } from './types'
 import { execFileSync } from 'node:child_process'

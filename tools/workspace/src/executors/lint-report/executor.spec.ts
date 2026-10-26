@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
 import type { Mock } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'

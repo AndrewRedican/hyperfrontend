@@ -1,10 +1,7 @@
-import { logger as nxLogger } from '@nx/devkit'
-import { createLogger } from '@hyperfrontend/logging'
-
 /**
- * Executor logger that wraps `@nx/devkit` logger through `@hyperfrontend/logging`.
+ * The executors' logger: `@hyperfrontend/logging` over the console, so no Nx package is loaded
+ * for a log line and the `no-direct-console` rule is satisfied.
  *
- * This satisfies the no-direct-console ESLint rule while maintaining
- * proper Nx executor logging integration.
+ * @module lib/logger
  */
-export const logger = createLogger(nxLogger.error, nxLogger.warn, nxLogger.log, nxLogger.info, nxLogger.debug)
+export { logger } from '@hyperfrontend/logging'

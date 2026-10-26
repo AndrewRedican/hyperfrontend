@@ -7,8 +7,8 @@
  */
 
 import { parseArgs } from 'node:util'
+import { nxRunner } from '@hyperfrontend/integration-nx/adapters'
 import { DEFAULT_TARGETS, captureBaseline } from '../src/baseline/capture'
-import { nxRunner } from '../src/baseline/nx-runner'
 import { git, replayMerges } from '../src/baseline/replay'
 
 const { values } = parseArgs({
