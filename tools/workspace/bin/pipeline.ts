@@ -5,6 +5,7 @@
  * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
  * `run [--plan <file>] [--environment linux|windows] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>]`,
  * `finalize [--environment linux|windows] [--summary]`,
+ * `record --out <dir> --run-id <id> --run-number <n> --attempt <n> --sha <sha> --ref <ref> --event <event> --url <url>`,
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects]` or
  * `summary --results <file> [--plan <file>] [--summary]`.
  *
@@ -13,9 +14,12 @@
 
 import type { WorkspaceGraph } from '../src/graph/build'
 import type { ChangeSet } from '../src/graph/selection'
+import type { GraphBody } from '../src/graph/store/serialize'
+import type { Envelope } from '../src/graph/store/write'
 import type { CheckRecords, ChainChecks } from '../src/pipeline/checks'
 import type { RunOutcome } from '../src/pipeline/execute'
 import type { Chain, Environment, Plan, PlanTask, RunResults, TaskResult } from '../src/pipeline/model'
+import type { RunIndex } from '../src/pipeline/records'
 import type { ScheduleResult } from '../src/pipeline/schedule'
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -37,10 +41,12 @@ import { changeSet } from '../src/graph/changes'
 import { buildState } from '../src/graph/store/state'
 import { chainChecks, githubChecks } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
+import { explorerDocument } from '../src/pipeline/explorer'
 import { settleChecks } from '../src/pipeline/finalize'
 import { PLAN_CHECK_NAME, planCheckOutput } from '../src/pipeline/live'
 import { Environment as Environments, Outcome, PipelineRule } from '../src/pipeline/model'
 import { createPlan } from '../src/pipeline/plan'
+import { writeRunRecord } from '../src/pipeline/records'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
 import { planSummary, runSummary } from '../src/pipeline/report'
 import { runSchedule } from '../src/pipeline/schedule'
@@ -53,7 +59,7 @@ interface RankedTask extends PlanTask {
 }
 
 /** The usage line. */
-const USAGE = 'expected plan, run, finalize, affected or summary, with the flags the header of this file lists'
+const USAGE = 'expected plan, run, finalize, record, affected or summary, with the flags the header of this file lists'
 
 /** Where the pipeline keeps its files, workspace-relative. */
 const PIPELINE_DIRECTORY = '.hf/pipeline'
@@ -92,6 +98,13 @@ const { values, positionals } = parseArgs({
     'wait-for': { type: 'string' },
     'head-sha': { type: 'string' },
     target: { type: 'string' },
+    'run-id': { type: 'string' },
+    'run-number': { type: 'string' },
+    attempt: { type: 'string', default: '1' },
+    sha: { type: 'string' },
+    ref: { type: 'string' },
+    event: { type: 'string' },
+    url: { type: 'string' },
     json: { type: 'boolean', default: false },
     explain: { type: 'boolean', default: false },
     projects: { type: 'boolean', default: false },
@@ -503,6 +516,44 @@ async function finalize(): Promise<void> {
 }
 
 /**
+ * Writes the record of this run for the records branch: the plan and every environment's
+ * results under `runs/`, the index, and the graph the plan was made from.
+ */
+function record(): void {
+  const out = values.out
+  if (out === undefined || values['run-id'] === undefined || values['run-number'] === undefined || values.sha === undefined)
+    throw createError('record needs --out <dir>, --run-id, --run-number and --sha')
+  const planned = readJsonFile<Plan>(values.plan ?? `${PIPELINE_DIRECTORY}/plan.json`)
+  const results: Partial<Record<Environment, RunResults>> = {}
+  for (const environment of planned.environments) {
+    const found = readJsonIfPresent<RunResults>(`${PIPELINE_DIRECTORY}/results-${environment}.json`)
+    if (found !== null) results[environment] = found
+  }
+  const identity = {
+    id: Number(values['run-id']),
+    number: Number(values['run-number']),
+    attempt: Number(values.attempt),
+    sha: values.sha,
+    ref: values.ref ?? '',
+    event: values.event ?? '',
+    url: values.url ?? '',
+  }
+  const envelope = readJsonIfPresent<Envelope<GraphBody>>(`${PIPELINE_DIRECTORY}/graph.json`)
+  const recordedAt = dateNow()
+  const index = writeRunRecord(
+    {
+      run: identity,
+      plan: planned,
+      results,
+      explorer: envelope === null ? null : explorerDocument(envelope.body, identity.sha, recordedAt),
+      recordedAt,
+    },
+    { write: (path, value) => writeJson(join(out, path), value), readIndex: () => readJsonIfPresent<RunIndex>(join(out, 'index.json')) }
+  )
+  say(`recorded run ${identity.number} (${index.runs.length} in the index)`)
+}
+
+/**
  * Reports an error the command ended with and fails the process.
  *
  * @param error - What was thrown
@@ -523,6 +574,8 @@ if (command === 'plan') {
   run().catch(fail)
 } else if (command === 'finalize') {
   finalize().catch(fail)
+} else if (command === 'record') {
+  record()
 } else if (command === 'affected') {
   if (values.target === undefined) throw createError('affected needs --target <target>')
   const set = selectAffected({
