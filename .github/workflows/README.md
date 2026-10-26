@@ -11,7 +11,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 **How it works**:
 
-1. The `plan` job builds and verifies the persisted graph state, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan is uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, and sets the `environments` matrix.
+1. The `plan` job builds the graph state cold, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan and the graph are uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, published as the `pipeline plan` check run on the head commit, and set the `environments` matrix.
 2. `version-check` validates the version bumps of the libraries the change reaches, and gates the environments.
 3. One `environment (linux)` job and, when any library or tool is selected, one `environment (windows)` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task is `npx nx run <project>:<target>` (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows chains carry typecheck, lint and test of the libraries and tools, plus the linter build and smoke, and compare the graph-state digest with Linux.
 4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
@@ -21,13 +21,13 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - Cancels in-progress runs when new commits are pushed
 - Read-only permissions by default; the environments add `checks: write` for the chain check runs
-- `PIPELINE_NX_TARGETS` in the `plan` step names targets Nx selects instead of the owned graph: the per-target rollback knob, empty by default
+- The `run` step gets `GITHUB_TOKEN`, which the chain check runs and, on main, the wait for the Windows job read; GitHub sets no token in the environment by itself
+- An `always()` step runs `pipeline finalize` after the run: a job killed by its time limit or a cancel still leaves `results-<os>.json` (rewritten after every task) and no check run in progress
 - Uploads build artifacts and coverage for reuse
 
 **Jobs**:
 
 - `plan`: Graph state, format check, the plan and the matrix
-- `graph-advisory`: Compares the owned affected analysis with Nx's task-level selection for the pull request and uploads the report; advisory, never gating
 - `binary-budget`: The binary budget of the pull request, whether or not any task runs
 - `version-check`: Validates version bumps were applied locally
 - `environment (linux)`, `environment (windows)`: Run the plan
@@ -43,7 +43,8 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 1. `plan` selects from `github.event.before` to the pushed head (a force-push, a first push or a dispatch without one plans everything), adds a `publish` task after every selected build of a publishable library, and adds a whole chain for any publishable library whose current version npm positively reports absent (registry drift), so a publish that failed on an earlier push is retried.
 2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for `environment (windows)` to conclude through the jobs API; a Windows failure or a 20-minute timeout skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each still `npx nx run <lib>:publish`, whose executor skips a version already on npm.
 3. Codecov uploads, the `dist` artifact and the results come from the Linux environment.
-4. `push-tags`, `github-release` and `dispatch-native-builds` follow a green environment matrix as before.
+4. `records` pushes the run's plan and results, the run index and the graph's explorer document to the orphan `ci-records` branch whenever the plan had work, whatever the environments concluded; the docs-site's dependency and pipeline explorers read that branch.
+5. `push-tags`, `github-release` and `dispatch-native-builds` follow a green environment matrix as before.
 
 **Features**:
 
@@ -55,6 +56,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `plan`: Graph state, format check, the plan with publishes and registry drift
 - `environment (linux)`, `environment (windows)`: Run the plan; the Linux one publishes
+- `records`: Pushes the run's record and the graph to `ci-records` (`contents: write`)
 - `status`: Aggregates results and provides final status
 - `push-tags`: Creates and pushes version tags
 - `create-github-release`: Creates GitHub releases with changelog
@@ -112,31 +114,25 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `freshness`: Compares the published frontier with npm's and triggers a production build only when they differ
 
-### Graph Advisory ([graph-advisory.yml](./graph-advisory.yml))
+### Full Run ([full-run.yml](./full-run.yml))
 
 **Trigger**:
 
 - Weekly schedule (Monday 05:30 UTC)
-- Manual dispatch, with the number of merges and commits to replay
+- Manual dispatch
 
-**Purpose**: Keep the evidence that the owned affected analysis skips nothing Nx would run, before the pipeline trusts it
+**Purpose**: Run every task of every project once a week: the net under the narrower pull-request and main plans
 
 **How it works**:
 
-1. Builds the persisted graph state cold and verifies it
-2. Replays the newest merges on `main`, and its newest commits one by one, capturing Nx's task-level selection for each range in a worktree sharing the installed `node_modules`; a revision whose `nx.json` names a plugin no longer installed is reported and skipped
-3. Runs the owned analysis at each replayed head and classifies every difference: (a) narrower with a named rule for every file Nx cites, (b) wider, (c) narrower without such a rule
-4. Writes the report to the job summary and uploads it with the captures
-5. The `full-run` job dispatches `ci-main.yml` with `full: true`, so every task of every project runs once a week: the net under the narrower pull-request and main plans
+1. Dispatches `ci-main.yml` on `main` with `full: true`, so its plan runs everything instead of what the last push reached
 
 **Features**:
 
-- Advisory: the job reports, nothing reads its result
-- Read-only repository permissions
+- Read-only repository permissions; `actions: write` for the dispatch alone
 
 **Jobs**:
 
-- `compare`: Replays, compares and uploads `graph-advisory-report`
 - `full-run`: Dispatches the weekly full run of `ci-main.yml`
 
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
@@ -165,19 +161,16 @@ All custom actions are located in [`.github/actions/`](../actions/):
 
 ### setup-monorepo
 
-Sets up the Node.js environment, caches npm dependencies and Nx cache, and installs packages.
+Sets up the Node.js environment, caches the npm download directory and installs packages. No task output is cached anywhere: the owner decided on 2026-10-26 that the plan runs what a change genuinely reaches and nothing is restored from an earlier run, on CI or locally.
 
 **Outputs**:
 
 - `cache-hit`: Whether npm cache was hit
-- `nx-cache-hit`: Whether Nx cache was hit
 
 **Features**:
 
-- npm dependency caching (`~/.npm`)
-- Nx build cache (`.nx/cache`, `node_modules/.cache/nx`)
-- Cache key includes `package-lock.json` hash and commit SHA
-- Fallback to previous caches for faster cold starts
+- npm dependency caching (`~/.npm`), keyed by the `package-lock.json` hash
+- `NX_NO_CLOUD=true` whenever `nx.json` sets `neverConnectToCloud`
 
 **Note**: Node.js version comes from `.nvmrc`, the one pin every environment reads.
 
@@ -238,13 +231,12 @@ act pull_request -j format -W .github/workflows/ci-pr.yml
 
 - PR workflows: < 10 minutes
 - Main branch workflows: < 15 minutes
-- Cache hit rate: > 50%
 
 **Optimizations**:
 
 - The owned plan runs only the tasks a change reaches, with a reason per task and per skip
 - The scheduler runs independent tasks concurrently inside each environment and skips the dependents of a failure
-- npm dependency caching and the Nx cache, keyed per job family
+- npm dependency caching; no task output is cached
 
 ## Troubleshooting
 
@@ -254,17 +246,16 @@ act pull_request -j format -W .github/workflows/ci-pr.yml
 - Verify workflow trigger conditions match your branch/event
 - Check workflow file syntax with `act --list`
 
-### Cache Not Working
+### npm Cache Not Working
 
 - Clear the cache: Go to Actions → Caches → Delete cache
 - Verify `package-lock.json` hasn't changed unexpectedly
-- Check cache key generation in workflow logs
 
 ### Plan Issues
 
 - Ensure `fetch-depth: 0` is set in checkout step
 - Read the `plan` job summary: every task lists the reason it runs, every skipped task the rule that made the skip safe
-- Set `PIPELINE_NX_TARGETS` to a target name to let Nx select that target while the owned selection is investigated
+- `pipeline affected --target <t> --explain` and `graph explain <project:target>` answer locally why a task is in or out
 
 ### Failed Jobs
 
@@ -333,7 +324,6 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 
 - Review and merge Dependabot PRs
 - Check workflow performance metrics
-- Monitor cache hit rates
 
 ### Monthly Tasks
 
@@ -346,11 +336,9 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 - Review security scan results
 - Update documentation
 - Optimize slow workflows
-- Consider Nx Cloud for further optimization
 
 ## Future Enhancements
 
 Planned but not yet implemented:
 
 - Demo app deployments
-- Nx Cloud integration for remote caching (cross-workflow/cross-branch)

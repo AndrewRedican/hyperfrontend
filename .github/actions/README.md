@@ -10,29 +10,22 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **Location**: `.github/actions/setup-monorepo/action.yml`
 
-**Inputs**:
-
-- `cache-scope` (optional, default: `'default'`): A name the Nx cache key carries. The `plan` job and the `environment` jobs of one run save different outputs, and an `actions/cache` key is immutable once saved, so each job family keeps a key of its own (`plan`, `environment`) and restores from its own previous runs.
-
 **Outputs**:
 
 - `cache-hit`: Boolean indicating whether npm cache was hit
-- `nx-cache-hit`: Boolean indicating whether the Nx cache was hit
 
 **Usage**:
 
 ```yaml
 - name: Setup monorepo
   uses: ./.github/actions/setup-monorepo
-  with:
-    cache-scope: environment
 ```
 
 **What it does**:
 
-1. Sets up the Node.js version `.nvmrc` names (the same one package.json engines requires)
-2. Caches npm dependencies using `package-lock.json` hash
-3. Caches the Nx cache under the operating system, the scope, the lock-file hash and the commit
+1. Sets `NX_NO_CLOUD=true` when `nx.json` sets `neverConnectToCloud`, so no Nx invocation reaches Nx Cloud
+2. Sets up the Node.js version `.nvmrc` names (the same one package.json engines requires)
+3. Caches npm dependencies using `package-lock.json` hash; no task output is cached
 4. Installs dependencies with `npm ci`
 
 ---
@@ -107,8 +100,6 @@ Actions are designed to be used together in workflows:
 
 ```yaml
 - uses: ./.github/actions/setup-monorepo
-  with:
-    cache-scope: plan
 - uses: ./.github/actions/version-check
   with:
     base-ref: origin/${{ github.base_ref }}
