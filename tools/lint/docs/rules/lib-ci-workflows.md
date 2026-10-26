@@ -4,12 +4,12 @@ Ensure publishable libraries have complete CI/CD workflow configuration.
 
 ## Rule Details
 
-This rule validates that all publishable library projects have the necessary CI/CD workflow configuration across multiple files:
+This rule runs on `.github/workflows/ci-main.yml` and validates that every publishable library project has the CI/CD configuration the pipeline cannot derive on its own:
 
-1. **Path filter in ci-libraries.yml** - Defines when the library's CI should run
-2. **Matrix entry in ci-libraries.yml** - Includes the library in the build matrix
-3. **Status workflow file** - Individual `ci-lib-*.yml` for per-project badges
-4. **Coverage entry in ci-main.yml** - Enables coverage reporting to Codecov
+1. **Status workflow file** - Individual `ci-lib-*.yml` for per-project badges
+2. **Coverage entry in ci-main.yml** - Enables coverage reporting to Codecov
+
+Nothing selects which libraries CI runs: every pull request and every push to `main` plans its work from the owned pipeline (`tools/workspace`), which reads the project graph and runs the tasks of the projects a change reaches. There is no per-library path filter or matrix entry to register.
 
 ### What is a Publishable Library?
 
@@ -38,32 +38,18 @@ The rule automatically derives the coverage flag from the library path:
 
 For a library at `libs/my-library` with project name `lib-my-library`:
 
-### 1. Path Filter (ci-libraries.yml)
+### 1. Status Workflow File
 
-```yaml
-filters: |
-  my-library:
-    - 'libs/my-library/**'
-```
-
-### 2. Matrix Entry (ci-libraries.yml)
-
-```bash
-add_if_changed "${{ steps.filter.outputs.my-library }}" "lib-my-library" "libs/my-library" "my-library"
-```
-
-### 3. Status Workflow File
-
-Create `.github/workflows/ci-lib-my-library.yml`:
+Create `.github/workflows/ci-lib-my-library.yml`. It builds nothing: when the `ci` workflow completes on `main`, `_lib-status.yml` reads the pipeline results the run uploaded and reports the outcome of the library's tasks, walking back to older runs while the library had none.
 
 ```yaml
 # Build status reporter for lib-my-library
-# This workflow does NOT build - it reports status from ci-libraries.yml matrix build
+# This workflow does NOT build - it reports the outcome of the library's tasks in the ci workflow's results on main
 name: lib-my-library
 
 on:
   workflow_run:
-    workflows: [libraries]
+    workflows: [ci]
     types: [completed]
     branches: [main]
 
@@ -78,7 +64,7 @@ jobs:
       library-path: libs/my-library
 ```
 
-### 4. Coverage Entry (ci-main.yml)
+### 2. Coverage Entry (ci-main.yml)
 
 ```bash
 LIBS=(
@@ -90,22 +76,20 @@ LIBS=(
 
 ### ❌ Incorrect
 
-Missing path filter for a publishable library:
+Missing coverage entry for a publishable library:
 
 ```yaml
-# ci-libraries.yml
-filters: |
-  # Missing: my-new-library:
-  #   - 'libs/my-new-library/**'
-  existing-library:
-    - 'libs/existing-library/**'
+# ci-main.yml
+LIBS=(
+  # Missing: "my-new-library:libs/my-new-library"
+  "existing-library:libs/existing-library"
+)
 ```
 
 Missing status workflow file:
 
 ```
 .github/workflows/
-├── ci-libraries.yml
 ├── ci-main.yml
 ├── ci-lib-existing-library.yml
 └── # Missing: ci-lib-my-new-library.yml
@@ -114,15 +98,6 @@ Missing status workflow file:
 ### ✅ Correct
 
 Complete configuration for all publishable libraries:
-
-```yaml
-# ci-libraries.yml
-filters: |
-  my-new-library:
-    - 'libs/my-new-library/**'
-  existing-library:
-    - 'libs/existing-library/**'
-```
 
 ```yaml
 # ci-main.yml
@@ -134,7 +109,6 @@ LIBS=(
 
 ```
 .github/workflows/
-├── ci-libraries.yml
 ├── ci-main.yml
 ├── ci-lib-existing-library.yml
 └── ci-lib-my-new-library.yml
@@ -142,9 +116,8 @@ LIBS=(
 
 ## When Not To Use It
 
-- If your project doesn't use the matrix-based CI workflow pattern
+- If your project doesn't report per-library badges from the main workflow's pipeline results
 - If you have a different CI/CD setup that doesn't follow this structure
-- For libraries that are intentionally excluded from CI (comment them out with explanation)
 
 ## Related Rules
 
