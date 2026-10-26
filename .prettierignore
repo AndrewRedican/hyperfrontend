@@ -46,3 +46,4 @@ apps/docs-site/notes/
 
 # Recorded scene files: their sha256 binds a media asset, so a reformat invalidates the recording
 tools/media/scenes/
+.hf/
