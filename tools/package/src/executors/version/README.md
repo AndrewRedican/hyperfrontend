@@ -102,7 +102,7 @@ This is controlled by the `updateDependents` option (default: true).
 
 Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
 
-1. lefthook runs `nx version:all` which detects affected libraries
+1. lefthook runs the pipeline (typecheck, lint, test, build and e2e of what the push reaches), then `nx version:all`, which detects affected libraries
 2. For each affected library, package.json and CHANGELOG.md are updated
 3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
 4. Push proceeds with the version commit included
