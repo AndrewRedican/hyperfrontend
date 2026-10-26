@@ -77,23 +77,34 @@ It is plain JavaScript with no dependencies, so the CI job runs it without insta
 
 ## Workspace graph
 
-`src/graph/` holds the model of the owned dependency graph: what the workspace is made of and how its parts depend on one another, qualified more finely than a project-level graph can be. Nothing under it imports Nx; a spec reads every import under the directory and fails on `nx`, `@nx/*` or the Nx-facing adapters.
+`src/graph/`, exported as `@hyperfrontend/workspace/graph`, builds the owned dependency graph: what the workspace is made of and how its parts depend on one another, qualified more finely than a project-level graph can be. `workspaceGraph(root)` builds it once per process from the files git tracks or would track (less `.nxignore`), the `project.json` and `package.json` files among them, `tsconfig.base.json`, `nx.json` and `package-lock.json`. Nothing under the directory imports Nx; a spec reads every import under it and fails on `nx`, `@nx/*` or the Nx-facing adapters. The lint rules of the `projects` family read the graph, and the `version-batch` executor maps changed files to versionable projects through it.
 
-| Node kind  | Identity                                     | Read from                                              |
-| ---------- | -------------------------------------------- | ------------------------------------------------------ |
-| `project`  | the Nx project name                          | `project.json`, or a lone `package.json`               |
-| `file`     | workspace-relative POSIX path, with its role | `git ls-files`                                         |
-| `entry`    | `<package>` or `<package>/<subpath>`         | `package.json#exports`, cross-checked with the aliases |
-| `external` | `<name>@<version>`                           | `package-lock.json`                                    |
-| `tool`     | the executor or command a target runs        | `project.json` targets and `nx.json` defaults          |
-| `config`   | a configuration file a target reads          | target inputs and the known readers                    |
-| `task`     | `<project>:<target>`                         | targets after the defaults merge                       |
+| Node kind  | Identity                                     | Read from                                                    |
+| ---------- | -------------------------------------------- | ------------------------------------------------------------ |
+| `project`  | the Nx project name                          | `project.json`, or a lone `package.json`                     |
+| `file`     | workspace-relative POSIX path, with its role | `git ls-files`                                               |
+| `entry`    | `<package>` or `<package>/<subpath>`         | `package.json#exports`, cross-checked with the aliases       |
+| `external` | `<name>@<version>`                           | `package-lock.json`                                          |
+| `tool`     | the executor a target runs                   | `project.json` targets, `nx.json` defaults, `executors.json` |
+| `config`   | a configuration file or glob a target reads  | target inputs after the named inputs expand                  |
+| `task`     | `<project>:<target>`                         | targets after the defaults merge                             |
 
-Every edge records its `kind` (`value`, `type`, `side-effect`, `re-export-all`, `dynamic`, `unresolved`, `manifest`, `declared`, `tool`, `config`), the `role` of the file that drew it, the specifier and what it resolved to, the targets it is relevant to, and its evidence: a file position or a configuration key. A project edge is the set of file edges between two projects grouped by kind and role, so an import from a spec is visible as such rather than collapsed into one project dependency.
+The graph carries two views of the same imports. `edges` holds the project edges as Nx draws them (`static`, `dynamic`, `implicit`), which the `graph-oracle` script under `tools/lint/scripts/` compares with the file `nx graph --file` writes. `records` holds every qualified edge in canonical order: from a file to the file, entry or installed package it imports, or from a project to the projects it declares, the packages its manifest depends on, the tools its targets run and the configuration its inputs name. Each record carries its `kind` (`value`, `type`, `side-effect`, `re-export-all`, `dynamic`, `unresolved`, `manifest`, `declared`, `tool`, `config`), the `role` of the file that drew it, the specifier and what it resolved to, the targets it is relevant to, and its evidence: a source position or a configuration key. `groups` collects the records between a project and each node outside it by kind and role, so an import from a spec is visible as such rather than collapsed into one project dependency.
 
 The role comes from `roles.ts`: `production`, `spec`, `test-config`, `lint-config`, `build-config`, `script`, `docs` or `asset`, derived from the exclusions of the `production` named input in `nx.json` plus fixed patterns (`__test-utils__/`, `scripts/`, configuration basenames). The module lists the exclusions it implements, and a spec compares that list with `nx.json`, so an exclusion added there without a matching rule here fails the suite instead of being treated as production.
 
-`sortEdges` puts edges in one canonical order, so a graph serialises to the same bytes whatever order its edges were found in. Every affected decision carries a `Reason` whose `rule` is one of a closed set, so an explanation can always name the rule that fired.
+Imports are read with the linter's parser under Nx's rules, so a `require` inside a function or an `import()` counts as dynamic exactly when Nx counts it so, and each import records its form, whether it brings in types alone, the names it imports and its position. They are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. The cache names the reader that wrote it, a hash of the parser's sources where the workspace aliases the parser package to its source, so a parser change invalidates it.
+
+```bash
+npx nx run tool-workspace:graph -- projects
+npx nx run tool-workspace:graph -- graph --json
+npx nx run tool-workspace:graph -- explain lib-logging
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts explain lib-logging
+```
+
+`projects` lists every project with its type, root and tags; `graph` prints the node and edge counts, or with `--json` the projects, nodes and records; `explain` prints the groups a project draws and the groups drawn to it, one line per kind and role with the files behind it.
+
+`sortEdges` puts edges in one canonical order, so a graph serialises to the same bytes whatever order their edges were found in. `selection.ts` holds the records the affected analysis produces: every decision carries a `Reason` whose `rule` is one of a closed set, so an explanation can always name the rule that fired.
 
 ## Affected baseline
 
