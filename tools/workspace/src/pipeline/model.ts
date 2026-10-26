@@ -35,8 +35,6 @@ export const PipelineRule = freeze({
   FullPlan: 'full-plan',
   /** The registry lacks the library's current version. */
   RegistryDrift: 'registry-drift',
-  /** The target's selection was taken from Nx under the override. */
-  SelectorOverride: 'selector-override',
   /** The task moved into the chain of the library it tests. */
   Folded: 'folded',
   /** A task the pipeline runs after a build: a probe, a smoke, a publish, or the build they need. */
@@ -135,8 +133,6 @@ export interface Plan {
   readonly main: boolean
   /** The targets the plan selected. */
   readonly targets: readonly string[]
-  /** The targets whose selection Nx made under the override. */
-  readonly override: readonly string[]
   /** The libraries the registry drift added. */
   readonly drift: readonly string[]
   /** The chains, in scheduling order. */

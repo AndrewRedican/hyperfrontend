@@ -89,7 +89,6 @@ export function planSummary(plan: Plan): string[] {
     '',
     `${plan.mode === 'all' ? 'Full' : 'Affected'} plan (${rangeOf(plan)}): ${plan.chains.length} chains (${counts}), ${tasks} tasks${plan.main ? ', publishing' : ''}.`,
   ]
-  if (plan.override.length > 0) lines.push('', `Selector override: Nx selected ${plan.override.join(', ')}.`)
   if (plan.drift.length > 0) lines.push('', `Registry drift: ${plan.drift.join(', ')}.`)
   if (plan.chains.length === 0) return [...lines, '', 'Nothing to run.']
   lines.push('', '| # | chain | environment | tasks |', '| --- | --- | --- | --- |')

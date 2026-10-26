@@ -32,7 +32,6 @@ const PLAN: Plan = {
   mode: 'affected',
   main: false,
   targets: ['typecheck', 'build'],
-  override: [],
   drift: [],
   chains: [
     { project: 'lib-a', environment: 'linux', order: 0, tasks: [task('lib-a', 'typecheck'), task('lib-a', 'build', ['lib-a:typecheck'])] },
@@ -151,12 +150,10 @@ describe('planSummary', () => {
     ])
   })
 
-  it('names the override, the drift, the head and the publishing', () => {
-    const lines = planSummary({ ...PLAN, head: '0123456789abcdef', main: true, override: ['test'], drift: ['lib-a'] })
-    expect(lines.slice(2, 7)).toEqual([
+  it('names the drift, the head and the publishing', () => {
+    const lines = planSummary({ ...PLAN, head: '0123456789abcdef', main: true, drift: ['lib-a'] })
+    expect(lines.slice(2, 5)).toEqual([
       'Affected plan (abcdef012345 → 0123456789ab): 2 chains (2 linux), 3 tasks, publishing.',
-      '',
-      'Selector override: Nx selected test.',
       '',
       'Registry drift: lib-a.',
     ])

@@ -1,7 +1,7 @@
 /**
  * The plan of a change: the owned selection of every pipeline target, the tasks the pipeline adds
- * around the builds, the registry drift of `main`, the per-target override that lets Nx select
- * instead, and the chains the two environments run, ranked for the scheduler.
+ * around the builds, the registry drift of `main`, and the chains the two environments run,
+ * ranked for the scheduler.
  *
  * @module pipeline/plan
  */
@@ -12,7 +12,6 @@ import type { AffectedSet, ChangeSet } from '../graph/selection'
 import type { Environment, Plan, PlanReason, SkippedTask } from './model'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { selectAffected } from '../graph/affected/select'
 import { compareText } from '../graph/order'
 import { hasTarget } from '../graph/workspace'
@@ -33,10 +32,6 @@ export interface PlanOptions {
   readonly main: boolean
   /** The targets selected; the pipeline's by default. */
   readonly targets?: readonly string[]
-  /** The targets whose selection Nx makes. */
-  readonly override?: readonly string[]
-  /** Nx's project-level selection of a target, consulted for every overridden target. */
-  readonly nxAffected?: (target: string) => readonly string[]
   /** The publishable projects whose current version the registry lacks. */
   readonly drift?: readonly string[]
   /** The graph at the base, which lets a deleted or renamed module name the tasks it reached. */
@@ -81,38 +76,21 @@ function selectAll(graph: WorkspaceGraph, targets: readonly string[]): Selection
 }
 
 /**
- * The selection of a change: the owned decision of every target, replaced by Nx's project-level
- * selection for the overridden targets.
+ * The selection of a change: the owned decision of every target.
  *
- * @param options - The graph, the change, the targets and the override
+ * @param options - The graph, the change and the targets
  * @param targets - The targets selected
  * @returns The selected tasks with their reasons and the skipped decisions
  */
 function selectChange(options: PlanOptions, targets: readonly string[]): Selection {
   const { graph } = options
   const changes = options.changes as ChangeSet
-  const override = createSet(options.override ?? [])
   const selection: Selection = { selected: createMap(), skipped: [] }
   const sets = selectAffected({ graph, changes, targets, previous: options.previous })
   for (const target of targets) {
     const set = sets.get(target) as AffectedSet
-    if (!override.has(target)) {
-      for (const decision of set.selected) selection.selected.set(decision.task, [...decision.reasons])
-      selection.skipped.push(...set.skipped)
-      continue
-    }
-    const named = createSet(options.nxAffected?.(target) ?? [])
-    for (const project of graph.projects.values()) {
-      if (!hasTarget(project, target)) continue
-      const id = `${project.name}:${target}`
-      if (named.has(project.name))
-        select(selection, id, planReason(PipelineRule.SelectorOverride, `nx selected ${project.name} for ${target}`))
-      else
-        selection.skipped.push({
-          task: id,
-          reasons: [planReason(PipelineRule.SelectorOverride, `nx did not select ${project.name} for ${target}`)],
-        })
-    }
+    for (const decision of set.selected) selection.selected.set(decision.task, [...decision.reasons])
+    selection.skipped.push(...set.skipped)
   }
   return selection
 }
@@ -141,7 +119,7 @@ function selectDrift(graph: WorkspaceGraph, selection: Selection, targets: reado
 /**
  * The plan of a change, or of everything.
  *
- * @param options - The graph, the change, whether publishes are planned, the targets, the override and the drift
+ * @param options - The graph, the change, whether publishes are planned, the targets and the drift
  * @returns The plan, its chains ranked
  */
 export function createPlan(options: PlanOptions): Plan {
@@ -162,7 +140,6 @@ export function createPlan(options: PlanOptions): Plan {
     mode: options.changes === null ? 'all' : 'affected',
     main: options.main,
     targets,
-    override: [...(options.override ?? [])].sort(compareText),
     drift,
     chains,
     skipped: [...selection.skipped].sort((left, right) => compareText(left.task, right.task)),

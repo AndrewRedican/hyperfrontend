@@ -86,54 +86,6 @@ describe('createPlan', () => {
     ])
   })
 
-  it('takes the selection of an overridden target from Nx', () => {
-    const plan = createPlan({
-      graph,
-      changes: modified('libs/beta/src/index.ts'),
-      main: false,
-      override: ['test'],
-      nxAffected: () => ['lib-alpha'],
-    })
-    expect(chains(plan)).toEqual([
-      'linux lib-beta: typecheck lint build e2e probe',
-      'windows lib-beta: typecheck lint',
-      'linux lib-alpha: test',
-      'windows lib-alpha: test',
-      'linux app-site: typecheck build',
-    ])
-  })
-
-  it('records the override on the tasks and on the skips', () => {
-    const plan = createPlan({
-      graph,
-      changes: modified('libs/beta/src/index.ts'),
-      main: false,
-      override: ['test'],
-      nxAffected: () => ['lib-alpha'],
-    })
-    const selected = plan.chains.find((chain) => chain.project === 'lib-alpha')?.tasks[0]?.reasons.map((reason) => reason.message)
-    const skipped = plan.skipped.find((item) => item.task === 'lib-beta:test')?.reasons.map((reason) => reason.message)
-    expect({ override: plan.override, selected, skipped }).toEqual({
-      override: ['test'],
-      selected: ['nx selected lib-alpha for test'],
-      skipped: ['nx did not select lib-beta for test'],
-    })
-  })
-
-  it('selects nothing for an overridden target without a selector', () => {
-    expect(chains(createPlan({ graph, changes: modified('libs/beta/src/index.ts'), main: false, override: ['test'] }))).toEqual([
-      'linux lib-beta: typecheck lint build e2e probe',
-      'windows lib-beta: typecheck lint',
-      'linux app-site: typecheck build',
-    ])
-  })
-
-  it('ignores an overridden target that is not planned', () => {
-    expect(
-      chains(createPlan({ graph, changes: modified('libs/beta/src/index.ts'), main: false, targets: ['build'], override: ['docs'] }))
-    ).toEqual(['linux lib-beta: build probe', 'linux app-site: build'])
-  })
-
   it('adds the whole chain of a drifted library on main', () => {
     const plan = createPlan({ graph, changes: modified('README.md'), main: true, drift: ['lib-alpha', 'lib-testing', 'lib-nobody'] })
     expect({ chains: chains(plan), drift: plan.drift }).toEqual({

@@ -2,7 +2,7 @@
  * Plans and runs the pipeline. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts <command>`, or
  * `npx nx run tool-workspace:pipeline -- <command>`, where the command is
- * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--nx-targets <list>] [--out <file>] [--summary] [--github-output] [--force]`,
+ * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--force]`,
  * `run [--plan <file>] [--environment linux|windows] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>]`,
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects]` or
  * `summary --results <file> [--plan <file>] [--summary]`.
@@ -28,9 +28,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { nxRunner } from '@hyperfrontend/integration-nx/adapters'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
-import { parseAffectedProjects } from '../src/baseline/capture'
 import { formatAffected } from '../src/graph/affected/explain'
 import { selectAffected } from '../src/graph/affected/select'
 import { changeSet } from '../src/graph/changes'
@@ -52,7 +50,7 @@ interface RankedTask extends PlanTask {
 
 /** The usage line. */
 const USAGE =
-  'expected plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--nx-targets <list>] [--out <file>] [--summary] [--github-output] [--force], run [--plan <file>] [--environment <env>] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>], affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects] or summary --results <file> [--plan <file>] [--summary]'
+  'expected plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--force], run [--plan <file>] [--environment <env>] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>], affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects] or summary --results <file> [--plan <file>] [--summary]'
 
 /** Where the pipeline keeps its files, workspace-relative. */
 const PIPELINE_DIRECTORY = '.hf/pipeline'
@@ -77,7 +75,6 @@ const { values, positionals } = parseArgs({
     'fallback-all': { type: 'boolean', default: false },
     main: { type: 'boolean', default: false },
     'catch-up': { type: 'boolean', default: false },
-    'nx-targets': { type: 'string', default: '' },
     out: { type: 'string' },
     summary: { type: 'boolean', default: false },
     'github-output': { type: 'boolean', default: false },
@@ -195,28 +192,6 @@ function graphOf(): WorkspaceGraph {
 }
 
 /**
- * Nx's project-level selection of a target, for the override.
- *
- * @param changes - The change set
- * @returns The projects Nx selects for a target
- */
-function nxSelection(changes: ChangeSet): (target: string) => string[] {
-  const run = nxRunner(root as string)
-  return (target) =>
-    parseAffectedProjects(
-      run([
-        'show',
-        'projects',
-        '--affected',
-        '--json',
-        `--base=${changes.base}`,
-        `--head=${changes.head ?? 'HEAD'}`,
-        `--with-target=${target}`,
-      ])
-    )
-}
-
-/**
  * Plans the change of the command line.
  *
  * @param local - Whether the plan is the hook's
@@ -225,7 +200,6 @@ function nxSelection(changes: ChangeSet): (target: string) => string[] {
 async function plan(local: boolean): Promise<Plan> {
   const graph = graphOf()
   const changes = changesOf(local)
-  const override = values['nx-targets'].split(',').filter((target) => target !== '')
   const drift =
     values.main && values['catch-up']
       ? await registryDrift(graph.projects.values(), npmProbe({ cwd: root as string, run: runCommand }))
@@ -234,8 +208,6 @@ async function plan(local: boolean): Promise<Plan> {
     graph,
     changes,
     main: values.main,
-    override,
-    nxAffected: changes === null ? undefined : nxSelection(changes),
     drift,
   })
 }
