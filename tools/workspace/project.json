@@ -14,6 +14,20 @@
       "options": {
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/scripts/replay-affected.ts"
       }
+    },
+    "types-extract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts"
+      }
+    },
+    "types-extract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts --check"
+      }
     }
   }
 }

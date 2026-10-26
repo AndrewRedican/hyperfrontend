@@ -108,7 +108,21 @@ node --import ./tools/lint/src/runtime/aliases.ts \
   tools/workspace/scripts/replay-affected.ts --ref origin/main
 ```
 
-The script loads workspace libraries from source through the lint tool's resolution hook, which is why the raw command passes `--import`; the Nx target does that for you. `.hf/` is ignored by git.
+The script loads workspace libraries from source through the lint tool's resolution hook, which is why the raw command passes `--import`; the Nx target does that for you. It runs Nx through `@hyperfrontend/integration-nx/adapters`, the package that holds every call into Nx. `.hf/` is ignored by git.
+
+## Upstream type extraction
+
+`src/types-extract/` generates the `@nx/devkit`-compatible declarations the workspace compiles against instead of the devkit's own types: `libs/integrations/nx/src/compat/`. It reads Nx's TypeScript sources from GitHub at the tag `types-extract.config.ts` names, resolved once to a commit through the GitHub API and pinned in `types-extract.lock.json`, so every later run and every check reads the same bytes until the lock is deliberately updated. Nothing is installed or executed; files are fetched with `fetch` and parsed with the `typescript` package, syntactically, with no program or checker.
+
+The configuration lists requests: a root module, the exported names wanted, how many references deep to follow, and the output file. The walk starts at the roots, follows every type reference through imports, re-exports and star exports within the followed directories, and places each declaration it reaches in the output of the first request that reached it, a root always in its own request's output. What it cannot or will not carry is written as `unknown`, or as the type the configuration's `boundary.overrides` names for a declaration, and every such rewrite is a row of the generated `REPORT.md`: a reference past the depth, a declaration from a package or outside the followed directories, a `typeof` of a runtime value, an `any` (written as `unknown`), a parameter left untyped (annotated), an enum (carried as the union of its values), a class (carried as the interface of its public instance members), a namespace member (carried flattened under `<Namespace>_<Name>`). Node built-in types stay imports; globals such as `Record` stay as written. The generated `NOTICE.md` lists the upstream files read and reproduces the upstream license.
+
+```bash
+npx nx run tool-workspace:types-extract
+npx nx run tool-workspace:types-extract-check
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts --update
+```
+
+The first command regenerates the files and the lock, writing only what changed. The check regenerates in memory and fails on any byte that differs from the disk, or when the lock does not pin every source as configured; run it twice to see that the output is deterministic. `--update` re-resolves every ref, which is how a branch ref is moved; a tag never moves, so changing the Nx version is editing `ref` in the configuration and running the first command. `GITHUB_TOKEN`, when set, authenticates the API call that resolves the ref.
 
 ## Future Executors
 
