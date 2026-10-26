@@ -59,9 +59,7 @@ jobs:
 
       - name: Plan the pull request
         id: plan
-        env:
-          PIPELINE_NX_TARGETS: '' # why: the per-target rollback knob; name targets here to let Nx select them instead of the owned graph
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --nx-targets "$PIPELINE_NX_TARGETS" --summary --github-output
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output
 
       - name: Upload the plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -69,49 +67,6 @@ jobs:
           name: pipeline-plan
           path: .hf/pipeline/plan.json
           retention-days: 7
-
-  graph-advisory:
-    name: graph-advisory
-    runs-on: ubuntu-latest
-    needs: [plan]
-    # why: the report is advisory; status does not read this job, so nothing here gates the pull request
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0 # why: the comparison reads the merge base and checks it out in a worktree
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-        with:
-          cache-scope: plan
-
-      - name: Restore graph state
-        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
-        with:
-          path: .hf/graph
-          key: ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-
-
-      - name: Compare the owned selection with Nx's for this pull request
-        env:
-          BASE_REF: origin/${{ github.base_ref }}
-          LABEL: 'pull request #${{ github.event.pull_request.number }}'
-        run: |
-          # Captures Nx's task-level selection for the range, runs the owned analysis on the same range and
-          # classifies every difference; the report lands in the job summary and the artifact.
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/scripts/compare-affected.ts \
-            --base "$BASE_REF" --head HEAD --label "$LABEL" --out .hf/replay/advisory.md --summary
-
-      - name: Upload the report
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: graph-advisory-pr
-          path: .hf/replay/advisory.md
-          retention-days: 7
-          if-no-files-found: warn
 
   binary-budget:
     name: binary-budget

@@ -66,10 +66,8 @@ jobs:
 
       - name: Plan the push
         id: plan
-        env:
-          PIPELINE_NX_TARGETS: '' # why: the per-target rollback knob; name targets here to let Nx select them instead of the owned graph
         # why: the previous head of main is the base; a force-push, a first push or a dispatch without one plans everything, as does the full input
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up --nx-targets "$PIPELINE_NX_TARGETS" ${{ inputs.full == true && '--all' || '' }} --summary --github-output
+        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output
 
       - name: Upload the plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
