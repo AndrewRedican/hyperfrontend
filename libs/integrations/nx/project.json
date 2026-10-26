@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-integration-nx",
+  "description": "The workspace's Nx boundary: generated upstream-compatible declarations, the owned configuration vocabulary, the manifest shapes Nx discovers, and the only adapters that call Nx.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:integration", "scope:internal"],
+  "targets": {
+    "typecheck": {},
+    "test": {}
+  }
+}
