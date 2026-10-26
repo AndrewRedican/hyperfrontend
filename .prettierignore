@@ -47,3 +47,11 @@ apps/docs-site/notes/
 # Recorded scene files: their sha256 binds a media asset, so a reformat invalidates the recording
 tools/media/scenes/
 .hf/
+# Generated from upstream Nx sources by tools/workspace types-extract; checked byte for byte
+libs/integrations/nx/src/compat/executor.ts
+libs/integrations/nx/src/compat/graph.ts
+libs/integrations/nx/src/compat/tree.ts
+libs/integrations/nx/src/compat/plugin.ts
+libs/integrations/nx/src/compat/index.ts
+libs/integrations/nx/src/compat/REPORT.md
+libs/integrations/nx/src/compat/NOTICE.md
