@@ -192,10 +192,10 @@ export function timelineLines(results: RunResults, plan: Plan): string[] {
  * The Markdown summary of a run.
  *
  * @param results - The run summarised
- * @param plan - The plan the run executed
+ * @param plan - The plan the run executed, or null when it is not at hand, which leaves the timeline out
  * @returns The lines
  */
-export function runSummary(results: RunResults, plan: Plan): string[] {
+export function runSummary(results: RunResults, plan: Plan | null): string[] {
   return [
     `## Pipeline run (${results.environment})`,
     '',
@@ -205,6 +205,6 @@ export function runSummary(results: RunResults, plan: Plan): string[] {
     '| --- | --- | --- | --- | --- |',
     ...taskRows(results.tasks, true),
     '',
-    ...timelineLines(results, plan),
+    ...(plan === null ? [] : timelineLines(results, plan)),
   ]
 }

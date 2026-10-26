@@ -4,7 +4,7 @@ import type { FetchInit, FetchResponse } from './siblings'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { chainChecks, chainConclusion, checkName, githubChecks } from './checks'
+import { chainChecks, chainConclusion, chainOutput, checkName, githubChecks } from './checks'
 
 /** A chain of one build. */
 const CHAIN: Chain = {
@@ -81,6 +81,21 @@ describe('githubChecks', () => {
     })
   })
 
+  it('rewrites what a check run in progress shows', async () => {
+    const seen: [string, FetchInit][] = []
+    const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async (url: string, init: FetchInit) => {
+      seen.push([url, init])
+      return respond(200, {})
+    })
+    await api?.update(7, { title: 'one of two', summary: 'table', text: '{}' })
+    const [url, init] = seen[0] as [string, FetchInit]
+    expect({ url, method: init.method, body: parse(init.body ?? '') }).toEqual({
+      url: 'https://api.github.com/repos/o/r/check-runs/7',
+      method: 'PATCH',
+      body: { status: 'in_progress', output: { title: 'one of two', summary: 'table', text: '{}' } },
+    })
+  })
+
   it('completes a check run with its conclusion and output', async () => {
     const seen: [string, FetchInit][] = []
     const api = githubChecks(
@@ -102,6 +117,22 @@ describe('githubChecks', () => {
   it('fails on a refused request', async () => {
     const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async () => respond(403, {}))
     await expect(api?.create('lib-a (linux)', 'abc')).rejects.toThrow('POST https://api.github.com/repos/o/r/check-runs answered 403')
+  })
+})
+
+describe('chainOutput', () => {
+  it('carries the table and the chain state', () => {
+    expect(chainOutput(CHAIN, [result('success')], 'done')).toEqual({
+      title: 'done',
+      summary: expect.stringContaining('| `lib-a:build` | ✅ success | 1s |  |'),
+      text: stringify({
+        schema: 1,
+        project: 'lib-a',
+        environment: 'linux',
+        total: 1,
+        tasks: [{ id: 'lib-a:build', outcome: 'success', exitCode: 0, detail: null, startedAt: 0, endedAt: 1000 }],
+      }),
+    })
   })
 })
 
@@ -139,6 +170,9 @@ describe('chainChecks', () => {
           calls.push(['create', name, headSha])
           return 9
         },
+        update: async (id, output) => {
+          calls.push(['update', id, output.title])
+        },
         complete: async (id, conclusion, output) => {
           calls.push(['complete', id, conclusion, output.title])
         },
@@ -157,9 +191,35 @@ describe('chainChecks', () => {
     ])
   })
 
+  it('rewrites the check run as a task of the chain ends', async () => {
+    const { api, calls } = recording()
+    const hooks = chainChecks(api, 'abc', () => undefined)
+    await hooks.onStart(CHAIN)
+    await hooks.onTask(CHAIN, [result('success')])
+    expect(calls).toEqual([
+      ['create', 'lib-a (linux)', 'abc'],
+      ['update', 9, '1 of 1 tasks ended'],
+    ])
+  })
+
+  it('reports the check runs as they are created and completed', async () => {
+    const seen: unknown[] = []
+    const hooks = chainChecks(
+      recording().api,
+      'abc',
+      () => undefined,
+      (records) => seen.push(records)
+    )
+    await hooks.onStart(CHAIN)
+    await hooks.onEnd(CHAIN, [result('success')])
+    expect(seen).toEqual([{ 'lib-a (linux)': { id: 9, completed: false } }, { 'lib-a (linux)': { id: 9, completed: true } }])
+  })
+
   it('completes nothing for a chain that never started', async () => {
     const { api, calls } = recording()
-    await chainChecks(api, 'abc', () => undefined).onEnd(CHAIN, [result('success')])
+    const hooks = chainChecks(api, 'abc', () => undefined)
+    await hooks.onTask(CHAIN, [result('success')])
+    await hooks.onEnd(CHAIN, [result('success')])
     expect(calls).toEqual([])
   })
 
@@ -183,8 +243,10 @@ describe('chainChecks', () => {
 
   it('describes a refusal that is not an error', async () => {
     const notices: string[] = []
-    const hooks = chainChecks({ create: async () => Promise.reject('nope'), complete: async () => undefined }, 'abc', (message) =>
-      notices.push(message)
+    const hooks = chainChecks(
+      { create: async () => Promise.reject('nope'), update: async () => undefined, complete: async () => undefined },
+      'abc',
+      (message) => notices.push(message)
     )
     await hooks.onStart(CHAIN)
     expect(notices).toEqual(['check runs are off for this run: nope'])

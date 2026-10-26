@@ -2,8 +2,9 @@
  * Plans and runs the pipeline. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts <command>`, or
  * `npx nx run tool-workspace:pipeline -- <command>`, where the command is
- * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--force]`,
+ * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
  * `run [--plan <file>] [--environment linux|windows] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>]`,
+ * `finalize [--environment linux|windows] [--summary]`,
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects]` or
  * `summary --results <file> [--plan <file>] [--summary]`.
  *
@@ -12,7 +13,7 @@
 
 import type { WorkspaceGraph } from '../src/graph/build'
 import type { ChangeSet } from '../src/graph/selection'
-import type { ChainChecks } from '../src/pipeline/checks'
+import type { CheckRecords, ChainChecks } from '../src/pipeline/checks'
 import type { RunOutcome } from '../src/pipeline/execute'
 import type { Chain, Environment, Plan, PlanTask, RunResults, TaskResult } from '../src/pipeline/model'
 import type { ScheduleResult } from '../src/pipeline/schedule'
@@ -26,6 +27,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
@@ -35,6 +37,8 @@ import { changeSet } from '../src/graph/changes'
 import { buildState } from '../src/graph/store/state'
 import { chainChecks, githubChecks } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
+import { settleChecks } from '../src/pipeline/finalize'
+import { PLAN_CHECK_NAME, planCheckOutput } from '../src/pipeline/live'
 import { Environment as Environments, Outcome, PipelineRule } from '../src/pipeline/model'
 import { createPlan } from '../src/pipeline/plan'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
@@ -49,8 +53,7 @@ interface RankedTask extends PlanTask {
 }
 
 /** The usage line. */
-const USAGE =
-  'expected plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--force], run [--plan <file>] [--environment <env>] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>], affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects] or summary --results <file> [--plan <file>] [--summary]'
+const USAGE = 'expected plan, run, finalize, affected or summary, with the flags the header of this file lists'
 
 /** Where the pipeline keeps its files, workspace-relative. */
 const PIPELINE_DIRECTORY = '.hf/pipeline'
@@ -213,6 +216,27 @@ async function plan(local: boolean): Promise<Plan> {
 }
 
 /**
+ * Publishes the plan as the `pipeline plan` check run, completed at once, when asked for and possible.
+ *
+ * @param planned - The plan published
+ * @returns Resolves when the check run is completed, or at once when it cannot be created
+ */
+async function publishPlan(planned: Plan): Promise<void> {
+  if (!values.checks) return
+  const api = githubChecks(process.env, fetch)
+  const headSha = headShaOf()
+  if (api === null || headSha === undefined) {
+    say('::notice::the plan check run is off: no GitHub token, repository or head sha')
+    return
+  }
+  try {
+    await api.complete(await api.create(PLAN_CHECK_NAME, headSha), 'success', planCheckOutput(planned))
+  } catch (error) {
+    say(`::notice::the plan check run is off: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
  * Writes the plan, its summary and the workflow outputs.
  *
  * @param planned - What the change selected
@@ -241,6 +265,35 @@ function readJsonFile<Value>(path: string): Value {
 }
 
 /**
+ * Reads a JSON file of the workspace when it is there.
+ *
+ * @param path - The path, workspace-relative
+ * @returns The value, or null when the file is absent
+ */
+function readJsonIfPresent<Value>(path: string): Value | null {
+  return existsSync(resolvePath(path)) ? readJsonFile<Value>(path) : null
+}
+
+/**
+ * The commit the check runs attach to.
+ *
+ * @returns The `--head-sha` of the command line, else the sha of the workflow
+ */
+function headShaOf(): string | undefined {
+  return values['head-sha'] ?? process.env['GITHUB_SHA']
+}
+
+/**
+ * Where the check runs of an environment are recorded, workspace-relative.
+ *
+ * @param environment - Linux or Windows
+ * @returns The path under the pipeline directory
+ */
+function checksPath(environment: Environment): string {
+  return `${PIPELINE_DIRECTORY}/checks-${environment}.json`
+}
+
+/**
  * The gate the publishes wait at: the sibling job's conclusion, asked for once.
  *
  * @param planned - The plan, whose environments say whether a Windows job exists
@@ -263,19 +316,26 @@ function siblingGate(planned: Plan): () => Promise<string | null> {
 }
 
 /**
- * The check-run hooks of the run, when asked for and possible.
+ * The check-run hooks of the run, when asked for and possible; the check runs created are
+ * recorded beside the results so a killed run can still settle them.
  *
+ * @param environment - The environment the run is of
  * @returns The hooks, or null
  */
-function checksOf(): ChainChecks | null {
+function checksOf(environment: Environment): ChainChecks | null {
   if (!values.checks) return null
   const api = githubChecks(process.env, fetch)
-  const headSha = values['head-sha'] ?? process.env['GITHUB_SHA']
+  const headSha = headShaOf()
   if (api === null || headSha === undefined) {
     say('::notice::check runs are off: no GitHub token, repository or head sha')
     return null
   }
-  return chainChecks(api, headSha, (message) => say(`::notice::${message}`))
+  return chainChecks(
+    api,
+    headSha,
+    (message) => say(`::notice::${message}`),
+    (records) => writeJson(checksPath(environment), records)
+  )
 }
 
 /**
@@ -298,9 +358,16 @@ function toTaskResult(task: RankedTask, result: ScheduleResult): TaskResult {
  * @param environment - Which environment's chains run
  * @param parallel - The light budget
  * @param heavy - The heavy budget
+ * @param resultsPath - Where the results are written, after every task that ends and at the end
  * @returns The results
  */
-async function runEnvironment(planned: Plan, environment: Environment, parallel: number, heavy: number): Promise<RunResults> {
+async function runEnvironment(
+  planned: Plan,
+  environment: Environment,
+  parallel: number,
+  heavy: number,
+  resultsPath: string
+): Promise<RunResults> {
   const chains = planned.chains.filter((chain) => chain.environment === environment)
   const tasks: RankedTask[] = chains.flatMap((chain) => chain.tasks.map((task) => ({ ...task, order: chain.order })))
   const chainOf = createMap<string, Chain>(tasks.map((task) => [task.id, chains.find((chain) => chain.project === task.project) as Chain]))
@@ -309,11 +376,25 @@ async function runEnvironment(planned: Plan, environment: Environment, parallel:
   process.once('SIGINT', stop)
   process.once('SIGTERM', stop)
   const gate = siblingGate(planned)
-  const checks = checksOf()
+  const checks = checksOf(environment)
   const settled = createMap<string, TaskResult>()
   const startedChains = createSet<string>()
   const hooks: Promise<void>[] = []
   const started = dateNow()
+  const snapshot = (complete: boolean, members: readonly TaskResult[]): RunResults => {
+    const ended = dateNow()
+    return {
+      environment,
+      base: planned.base,
+      head: planned.head,
+      mode: planned.mode,
+      startedAt: started,
+      endedAt: ended,
+      durationMs: ended - started,
+      complete,
+      tasks: members,
+    }
+  }
   const run = async (task: RankedTask): Promise<RunOutcome> => {
     if (task.target === 'publish') {
       const closed = await gate()
@@ -346,29 +427,26 @@ async function runEnvironment(planned: Plan, environment: Environment, parallel:
       const heading = `${task.id} (${result.outcome}${result.detail === null ? '' : `, ${result.detail}`}, ${round(result.durationMs / 1000)}s)`
       for (const line of replayLines(heading, text, grouped)) say(line)
       const chain = chainOf.get(task.id) as Chain
-      if (checks !== null && chain.tasks.every((member) => settled.has(member.id)))
-        hooks.push(
-          checks.onEnd(
-            chain,
-            chain.tasks.map((member) => settled.get(member.id) as TaskResult)
-          )
+      // why: the file is rewritten after every task, so a job killed by its time limit still leaves what had ended
+      writeJson(
+        resultsPath,
+        snapshot(
+          false,
+          tasks.filter((member) => settled.has(member.id)).map((member) => settled.get(member.id) as TaskResult)
         )
+      )
+      if (checks === null) return
+      const ended = chain.tasks.filter((member) => settled.has(member.id)).map((member) => settled.get(member.id) as TaskResult)
+      hooks.push(ended.length === chain.tasks.length ? checks.onEnd(chain, ended) : checks.onTask(chain, ended))
     },
   })
   await promiseAll(hooks)
   process.off('SIGINT', stop)
   process.off('SIGTERM', stop)
-  const ended = dateNow()
-  return {
-    environment,
-    base: planned.base,
-    head: planned.head,
-    mode: planned.mode,
-    startedAt: started,
-    endedAt: ended,
-    durationMs: ended - started,
-    tasks: tasks.map((task) => toTaskResult(task, results.get(task.id) as ScheduleResult)),
-  }
+  return snapshot(
+    true,
+    tasks.map((task) => toTaskResult(task, results.get(task.id) as ScheduleResult))
+  )
 }
 
 /**
@@ -380,12 +458,48 @@ async function run(): Promise<void> {
   if (values.local) for (const line of planSummary(planned)) say(line)
   const parallel = values.local ? 1 : Number(values.parallel ?? availableParallelism())
   const heavy = values.local || totalmem() < HEAVY_MEMORY_BYTES ? 1 : Number(values.heavy ?? 2)
-  const results = await runEnvironment(planned, environment, parallel, heavy)
-  writeJson(values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`, results)
+  const resultsPath = values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`
+  const results = await runEnvironment(planned, environment, parallel, heavy, resultsPath)
+  writeJson(resultsPath, results)
   const lines = runSummary(results, planned)
   for (const line of lines) say(line)
   summarise(lines)
   process.exitCode = results.tasks.every((task) => task.outcome === Outcome.Success) ? 0 : 1
+}
+
+/**
+ * Settles what a run of this environment that did not end left behind: the check runs it
+ * created and never completed, and the summary of the tasks that had ended.
+ */
+async function finalize(): Promise<void> {
+  const environment = (values.environment as Environment | undefined) ?? ownEnvironment()
+  const resultsPath = values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`
+  const results = readJsonIfPresent<RunResults>(resultsPath)
+  const planned = readJsonIfPresent<Plan>(values.plan ?? `${PIPELINE_DIRECTORY}/plan.json`)
+  const records = readJsonIfPresent<CheckRecords>(checksPath(environment)) ?? {}
+  const open = keys(records).filter((name) => records[name]?.completed === false)
+  if (results?.complete === true && open.length === 0) {
+    say('the run ended on its own; nothing to settle')
+    return
+  }
+  if (results !== null && !results.complete) {
+    const lines = [
+      '> The run did not end; the tasks below are the ones that had ended when it stopped.',
+      '',
+      ...runSummary(results, planned),
+    ]
+    for (const line of lines) say(line)
+    summarise(lines)
+  }
+  if (open.length === 0) return
+  const api = githubChecks(process.env, fetch)
+  if (api === null) {
+    say(`::notice::${open.length} check runs stay in progress: no GitHub token or repository to settle them with`)
+    return
+  }
+  const settlement = await settleChecks({ records, plan: planned, results, api })
+  writeJson(checksPath(environment), settlement.records)
+  for (const name of settlement.settled) say(`settled ${name} as cancelled`)
 }
 
 /**
@@ -400,10 +514,15 @@ function fail(error: unknown): void {
 
 if (command === 'plan') {
   plan(false)
-    .then((planned) => emitPlan(planned, values.out ?? `${PIPELINE_DIRECTORY}/plan.json`))
+    .then(async (planned) => {
+      emitPlan(planned, values.out ?? `${PIPELINE_DIRECTORY}/plan.json`)
+      await publishPlan(planned)
+    })
     .catch(fail)
 } else if (command === 'run') {
   run().catch(fail)
+} else if (command === 'finalize') {
+  finalize().catch(fail)
 } else if (command === 'affected') {
   if (values.target === undefined) throw createError('affected needs --target <target>')
   const set = selectAffected({

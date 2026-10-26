@@ -185,9 +185,11 @@ export interface RunResults {
   readonly startedAt: number
   /** When the run ended, epoch milliseconds. */
   readonly endedAt: number
-  /** The wall-clock of the run. */
+  /** The wall-clock of the run so far. */
   readonly durationMs: number
-  /** Every task of the environment, in chain order. */
+  /** Whether the run ended; false while the file is rewritten after each task that ends. */
+  readonly complete: boolean
+  /** Every task of the environment, in chain order; while the run is incomplete, the tasks that ended. */
   readonly tasks: readonly TaskResult[]
 }
 

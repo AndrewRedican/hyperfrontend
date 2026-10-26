@@ -75,6 +75,7 @@ const RUN: RunResults = {
   startedAt: 1000,
   endedAt: 9000,
   durationMs: 8000,
+  complete: true,
   tasks: [
     result(task('lib-a', 'typecheck'), 'failure', 1000),
     result(task('lib-a', 'build'), 'skipped', null),
@@ -215,6 +216,10 @@ describe('timelineLines', () => {
 })
 
 describe('runSummary', () => {
+  it('leaves the timeline out when the plan is not at hand', () => {
+    expect(runSummary(RUN, null).some((line) => line.startsWith('```mermaid'))).toBe(false)
+  })
+
   it('heads with the environment and the totals, then tables every task', () => {
     expect(runSummary(RUN, PLAN).slice(0, 7)).toEqual([
       '## Pipeline run (linux)',
