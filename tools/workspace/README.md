@@ -75,6 +75,41 @@ node tools/workspace/scripts/check-binary-budget.mjs --base <rev> --allow-over-b
 
 It is plain JavaScript with no dependencies, so the CI job runs it without installing the workspace. When `GITHUB_STEP_SUMMARY` is set it also appends the new binary files to the job summary.
 
+## Workspace graph
+
+`src/graph/` holds the model of the owned dependency graph: what the workspace is made of and how its parts depend on one another, qualified more finely than a project-level graph can be. Nothing under it imports Nx; a spec reads every import under the directory and fails on `nx`, `@nx/*` or the Nx-facing adapters.
+
+| Node kind  | Identity                                     | Read from                                              |
+| ---------- | -------------------------------------------- | ------------------------------------------------------ |
+| `project`  | the Nx project name                          | `project.json`, or a lone `package.json`               |
+| `file`     | workspace-relative POSIX path, with its role | `git ls-files`                                         |
+| `entry`    | `<package>` or `<package>/<subpath>`         | `package.json#exports`, cross-checked with the aliases |
+| `external` | `<name>@<version>`                           | `package-lock.json`                                    |
+| `tool`     | the executor or command a target runs        | `project.json` targets and `nx.json` defaults          |
+| `config`   | a configuration file a target reads          | target inputs and the known readers                    |
+| `task`     | `<project>:<target>`                         | targets after the defaults merge                       |
+
+Every edge records its `kind` (`value`, `type`, `side-effect`, `re-export-all`, `dynamic`, `unresolved`, `manifest`, `declared`, `tool`, `config`), the `role` of the file that drew it, the specifier and what it resolved to, the targets it is relevant to, and its evidence: a file position or a configuration key. A project edge is the set of file edges between two projects grouped by kind and role, so an import from a spec is visible as such rather than collapsed into one project dependency.
+
+The role comes from `roles.ts`: `production`, `spec`, `test-config`, `lint-config`, `build-config`, `script`, `docs` or `asset`, derived from the exclusions of the `production` named input in `nx.json` plus fixed patterns (`__test-utils__/`, `scripts/`, configuration basenames). The module lists the exclusions it implements, and a spec compares that list with `nx.json`, so an exclusion added there without a matching rule here fails the suite instead of being treated as production.
+
+`sortEdges` puts edges in one canonical order, so a graph serialises to the same bytes whatever order its edges were found in. Every affected decision carries a `Reason` whose `rule` is one of a closed set, so an explanation can always name the rule that fired.
+
+## Affected baseline
+
+`src/baseline/` captures what Nx itself selects for a revision range, as the evidence the owned analysis is compared against: the affected projects from `nx show projects --affected --json`, and the task-level selection with its reasons from `nx affected --explain=stdout`, both run without the daemon and with task selection on.
+
+`scripts/replay-affected.ts` replays merged pull requests. For each of the newest merges on a branch it checks the merged branch's tip out in a worktree under `.hf/replay/worktrees/`, links the repository's `node_modules` into it, captures the selection from the merge base to the tip, and writes `.hf/replay/<merge sha>.json`. A merge already recorded is skipped, so an interrupted replay resumes. `lockfileSkew` in a record is true when the lock file at that revision differs from the one the shared `node_modules` was installed from; a comparison should weigh such a capture accordingly.
+
+```bash
+npx nx run tool-workspace:replay-affected
+npx nx run tool-workspace:replay-affected --count=20 --targets=build,test
+node --import ./tools/lint/src/runtime/aliases.ts \
+  tools/workspace/scripts/replay-affected.ts --ref origin/main
+```
+
+The script loads workspace libraries from source through the lint tool's resolution hook, which is why the raw command passes `--import`; the Nx target does that for you. `.hf/` is ignored by git.
+
 ## Future Executors
 
 - `typecheck-report` — Type error report
