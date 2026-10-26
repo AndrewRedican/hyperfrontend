@@ -532,6 +532,10 @@ export const docsNavigation: NavItem[] = [
   {
     slug: 'Contributing',
     href: '/docs/contributing',
+    children: [
+      { slug: 'Dependency graph', href: '/docs/contributing/graph' },
+      { slug: 'Pipeline', href: '/docs/contributing/pipeline' },
+    ],
   },
   {
     slug: 'Acknowledgments',

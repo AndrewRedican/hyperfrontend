@@ -1241,6 +1241,43 @@
      the end marker carries a ring of the surface so it stays legible over
      the line, and the hairline that follows the pointer is the only thing
      that moves. */
+  /* The explorers of the contributing pages: three categorical hues and the four status hues of
+     the data-visualisation palette, each mode stepped for its own surface, plus the ink and line
+     tokens the SVGs read. Nothing in the drawings names a hex. */
+  .ci-explorer {
+    --ci-series-1: #2a78d6;
+    --ci-series-2: #eb6834;
+    --ci-series-3: #1baf7a;
+    --ci-good: #0ca30c;
+    --ci-warning: #c98500;
+    --ci-serious: #d95926;
+    --ci-critical: #d03b3b;
+    --ci-surface: var(--color-white);
+    --ci-node: var(--color-slate-50);
+    --ci-match: var(--color-amber-100);
+    --ci-ink: var(--color-slate-900);
+    --ci-ink-2: var(--color-slate-600);
+    --ci-line: var(--color-slate-300);
+    --ci-grid: var(--color-slate-500);
+  }
+
+  .dark .ci-explorer {
+    --ci-series-1: #3987e5;
+    --ci-series-2: #d95926;
+    --ci-series-3: #199e70;
+    --ci-good: #0ca30c;
+    --ci-warning: #fab219;
+    --ci-serious: #ec835a;
+    --ci-critical: #e66767;
+    --ci-surface: var(--color-slate-900);
+    --ci-node: var(--color-slate-800);
+    --ci-match: var(--color-amber-900);
+    --ci-ink: var(--color-slate-100);
+    --ci-ink-2: var(--color-slate-400);
+    --ci-line: var(--color-slate-700);
+    --ci-grid: var(--color-slate-400);
+  }
+
   .trend-chart {
     position: relative;
     width: 100%;
