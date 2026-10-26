@@ -110,11 +110,16 @@ describe('the declared edges', () => {
     ])
   })
 
-  it('draw a second project sharing a tool to the same tool node', () => {
+  it('draw a second project sharing a tool to the same tool node, and the inferred lint target to its inputs', () => {
     expect(from('project:lib-d')).toEqual([
+      'config:*.md config build-config {workspaceRoot}/*.md=- [lint] nx.json targetDefaults.lint.inputs',
+      'config:lint.config.ts config build-config {workspaceRoot}/lint.config.ts=lint.config.ts [lint] nx.json targetDefaults.lint.inputs',
       'config:patches/** config build-config {workspaceRoot}/patches/**=- [build] nx.json targetDefaults.build.inputs',
+      'config:patches/** config build-config {workspaceRoot}/patches/**=- [lint] nx.json targetDefaults.lint.inputs',
       'project:@fixture/b config build-config - [build] nx.json targetDefaults.build.inputs',
+      'project:@fixture/b config build-config {workspaceRoot}/libs/b/src/**/*=libs/b [lint] nx.json targetDefaults.lint.inputs',
       'tool:@fixture/tooling:build tool build-config @fixture/tooling:build=tools/tooling/src/executors/build/executor.ts [build] nx.json targetDefaults.build.executor',
+      'tool:nx:run-commands tool build-config nx:run-commands=- [lint] libs/d/project.json targets.lint.executor',
     ])
   })
 
@@ -142,17 +147,18 @@ describe('the nodes', () => {
       { kind: 'entry', id: '@fixture/b', project: '@fixture/b', file: 'libs/b/src/index.ts' },
       { kind: 'entry', id: '@fixture/b/side', project: '@fixture/b', file: 'libs/b/src/side.ts' },
       { kind: 'entry', id: '@fixture/c', project: '@fixture/c', file: 'libs/c/index.ts' },
-      { kind: 'external', name: 'left-pad', version: '1.3.0' },
-      { kind: 'external', name: 'missing-package', version: null },
-      { kind: 'tool', id: '@fixture/tooling:build', project: 'tooling', entry: 'tools/tooling/src/executors/build/executor.ts' },
+      { kind: 'tool', id: 'nx:run-commands', project: null, entry: null },
       { kind: 'config', path: 'patches/**' },
       { kind: 'config', path: 'lint.config.ts' },
       { kind: 'config', path: '*.md' },
-      { kind: 'tool', id: 'nx:run-commands', project: null, entry: null },
+      { kind: 'external', name: 'left-pad', version: '1.3.0' },
+      { kind: 'external', name: 'missing-package', version: null },
+      { kind: 'tool', id: '@fixture/tooling:build', project: 'tooling', entry: 'tools/tooling/src/executors/build/executor.ts' },
       { kind: 'tool', id: 'bare', project: null, entry: null },
       { kind: 'tool', id: '@fixture/a:docs', project: 'lib-a', entry: null },
       { kind: 'tool', id: '@fixture/tooling:test', project: 'tooling', entry: null },
       { kind: 'config', path: 'libs/a/docs/**' },
+      { kind: 'config', path: 'libs/b/src/**/*' },
     ])
   })
 
@@ -195,11 +201,19 @@ describe('the groups', () => {
   it('keep a spec import and a type import of the same project apart', () => {
     expect(
       (graph.groups.get('@fixture/b') ?? []).map((group) => `${group.target} ${group.kind} ${group.role} [${group.files.join(',')}]`)
-    ).toEqual(['project:lib-a value spec [libs/b/src/index.spec.ts]', 'project:lib-a type production [libs/b/src/side.ts]'])
+    ).toEqual([
+      'project:lib-a value spec [libs/b/src/index.spec.ts]',
+      'project:lib-a type production [libs/b/src/side.ts]',
+      'tool:nx:run-commands tool build-config [libs/b/project.json]',
+      'config:patches/** config build-config [nx.json]',
+      'config:lint.config.ts config build-config [nx.json]',
+      'config:libs/b/src/**/* config build-config [nx.json]',
+      'config:*.md config build-config [nx.json]',
+    ])
   })
 
-  it('leave out tools as sources', () => {
-    expect([...graph.groups.keys()].sort()).toEqual(['@fixture/app', '@fixture/b', 'lib-a', 'lib-d'])
+  it('give every project but the root a source group once the lint target is inferred', () => {
+    expect([...graph.groups.keys()].sort()).toEqual(['@fixture/app', '@fixture/b', '@fixture/c', 'lib-a', 'lib-d', 'tooling'])
   })
 
   it('name an unresolved path by its file when no project holds it', () => {

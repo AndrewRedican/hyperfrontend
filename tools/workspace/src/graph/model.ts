@@ -43,6 +43,8 @@ export interface PackageManifest {
   readonly optionalDependencies?: Readonly<Record<string, string>>
   /** The exports map. */
   readonly exports?: unknown
+  /** The engines the package declares, `node` among them. */
+  readonly engines?: Readonly<Record<string, string>>
   /** The executors manifest, relative to the package, for a package that implements executors. */
   readonly executors?: string
   /** Nx settings carried by the manifest. */
@@ -65,6 +67,8 @@ export interface TargetRecord {
 export interface TargetOptions {
   /** The one command of a `run-commands` target. */
   readonly command?: string
+  /** The directory a `run-commands` target runs from. */
+  readonly cwd?: string
   /** The commands of a `run-commands` target. */
   readonly commands?: readonly string[]
   /** The script of a `run-script` target. */

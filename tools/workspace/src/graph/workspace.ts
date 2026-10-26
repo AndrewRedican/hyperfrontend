@@ -1,11 +1,12 @@
 /**
  * The workspace as the graph reads it: the files git knows, less what `.nxignore` leaves out,
- * and the projects found by their `project.json` or `package.json`.
+ * the projects found by their `project.json` or `package.json`, and the `lint` target the
+ * workspace linter gives every project but the root and the ones its plugin entry excludes.
  *
  * @module graph/workspace
  */
 
-import type { PackageManifest, ProjectConfiguration, ProjectRecord } from './model'
+import type { PackageManifest, ProjectConfiguration, ProjectRecord, TargetRecord } from './model'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
@@ -34,8 +35,66 @@ interface BaseTsconfig {
   readonly compilerOptions?: AliasOptions
 }
 
+/** A plugin entry of `nx.json`, as far as the exclusions are read. */
+interface PluginEntry {
+  /** The plugin module. */
+  readonly plugin?: string
+  /** The project files the plugin leaves alone. */
+  readonly exclude?: readonly string[]
+}
+
+/** The workspace configuration, as far as the plugins are read. */
+interface PluginsConfiguration {
+  /** The plugins. */
+  readonly plugins?: readonly (string | PluginEntry)[]
+}
+
+/** The options of the inferred `lint` target. */
+export interface LintTargetOptions {
+  /** The directory the command runs in, workspace-relative. */
+  readonly cwd: string
+}
+
+/** What the inferred `lint` target tells Nx about itself. */
+export interface LintTargetMetadata {
+  /** The technologies the target belongs to. */
+  readonly technologies: readonly string[]
+  /** What the target does. */
+  readonly description: string
+}
+
+/** The options of the inferred `lint` target. */
+export interface LintTargetOptions {
+  /** The directory the command runs in, workspace-relative. */
+  readonly cwd: string
+}
+
+/** What the inferred `lint` target tells Nx about itself. */
+export interface LintTargetMetadata {
+  /** The technologies the target belongs to. */
+  readonly technologies: readonly string[]
+  /** What the target does. */
+  readonly description: string
+}
+
+/** The inferred `lint` target of a project, in the shape the linter's Nx plugin answers with. */
+export interface LintTarget {
+  /** The command run. */
+  readonly command: string
+  /** Its options. */
+  readonly options: LintTargetOptions
+  /** Its metadata. */
+  readonly metadata: LintTargetMetadata
+}
+
 /** The largest output git may answer with. */
 const LIST_BUFFER = 64 * 1024 * 1024
+
+/** The linter's entry, workspace-relative. */
+export const LINT_ENTRY = 'tools/lint/bin/lint.ts'
+
+/** The plugin entry of `nx.json` whose exclusions the inference honours. */
+export const LINT_PLUGIN = './tools/lint/src/nx/plugin.ts'
 
 /**
  * The files of a workspace: those git tracks or could track, less the ignored, as
@@ -164,7 +223,63 @@ export function discoverProjects(root: string, files: readonly string[]): Map<st
       configuration,
     })
   }
-  return projects
+  return inferLintTargets(root, projects)
+}
+
+/**
+ * The `lint` target of a project, as the linter's Nx plugin infers it.
+ *
+ * @param root - The project root, workspace-relative and POSIX
+ * @returns The target, running the linter on the project from its root
+ */
+export function lintTarget(root: string): LintTarget {
+  return {
+    command: `node ${posix.relative(root, LINT_ENTRY)} .`,
+    options: { cwd: root },
+    metadata: { technologies: ['lint'], description: 'Runs the workspace linter on the project.' },
+  }
+}
+
+/**
+ * The project files the linter's plugin entry excludes, compiled.
+ *
+ * @param root - The workspace root, absolute
+ * @returns The globs, none without the entry
+ */
+function lintExclusions(root: string): ReturnType<typeof compileGlob>[] {
+  const plugins = readJson<PluginsConfiguration>(join(root, 'nx.json'))?.plugins ?? []
+  const entry = plugins.find((plugin): plugin is PluginEntry => typeof plugin !== 'string' && plugin.plugin === LINT_PLUGIN)
+  return (entry?.exclude ?? []).map(compileGlob)
+}
+
+/**
+ * Gives every project but the workspace root a `lint` target where it declares none, as the
+ * linter's Nx plugin does, leaving out the projects whose files the plugin entry excludes.
+ *
+ * @param root - The workspace root, absolute
+ * @param projects - The projects, by name
+ * @returns The same projects, the inferred target added to their configuration
+ */
+export function inferLintTargets(root: string, projects: ReadonlyMap<string, ProjectRecord>): Map<string, ProjectRecord> {
+  const exclusions = lintExclusions(root)
+  const inferred = createMap<string, ProjectRecord>()
+  for (const [name, project] of projects) {
+    const files = project.files.filter(
+      (file) => posix.dirname(file) === project.root && (posix.basename(file) === 'project.json' || posix.basename(file) === 'package.json')
+    )
+    const skip = project.root === '.' || hasTarget(project, 'lint') || files.every((file) => matchesAny(exclusions, file))
+    if (skip) {
+      inferred.set(name, project)
+      continue
+    }
+    const target: TargetRecord = { executor: 'nx:run-commands', options: { command: lintTarget(project.root).command, cwd: project.root } }
+    const configuration: ProjectConfiguration = {
+      ...(project.configuration ?? {}),
+      targets: { ...(project.configuration?.targets ?? {}), lint: target },
+    }
+    inferred.set(name, { ...project, configuration })
+  }
+  return inferred
 }
 
 /**

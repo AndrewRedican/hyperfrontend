@@ -67,6 +67,7 @@ export type {
   Verification,
 } from './store/state'
 export type { Envelope } from './store/write'
+export type { LintTarget, LintTargetMetadata, LintTargetOptions } from './workspace'
 export { ALL_KINDS, closureOf, entryClosures, hopTo, ruleHop, traceOf } from './affected/closure'
 export { describeReason, formatAffected, formatTask } from './affected/explain'
 export { configurationKind, isGlobalConfig } from './affected/rules'
@@ -101,4 +102,15 @@ export { readStateFile } from './store/read'
 export { entriesBody, graphBody, importsBody, printableProject } from './store/serialize'
 export { buildState, readState, STATE_FILES, stateDirectory, stateStatus, verifyState } from './store/state'
 export { envelopeText, writeStateFile } from './store/write'
-export { discoverProjects, hasTarget, listFiles, nxIgnores, readAliases, readJson } from './workspace'
+export {
+  discoverProjects,
+  hasTarget,
+  inferLintTargets,
+  LINT_ENTRY,
+  LINT_PLUGIN,
+  lintTarget,
+  listFiles,
+  nxIgnores,
+  readAliases,
+  readJson,
+} from './workspace'

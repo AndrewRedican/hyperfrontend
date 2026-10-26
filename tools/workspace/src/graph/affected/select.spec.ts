@@ -37,6 +37,9 @@ const ALL_BUILDS = [
   'lib-tooling',
 ]
 
+/** Every lint task of the fixture: the builds' projects and the e2e project, whose lint target is inferred. */
+const ALL_LINTS = [...ALL_BUILDS.slice(0, 2), 'e2e-alpha', ...ALL_BUILDS.slice(2)]
+
 const analysed = createMap<string, Analysed>()
 
 afterAll(() => {
@@ -159,7 +162,7 @@ describe('the acceptance scenarios', () => {
     ['dynamic-importer-edit', 'lint', ['lib-gamma']],
     ['parse-failure', 'build', ['app-beta', 'app-consumer', 'lib-alpha', 'lib-beta']],
     ['deleted-module', 'build', ['app-beta', 'app-consumer', 'lib-alpha', 'lib-beta']],
-    ['lint-config-edit', 'lint', ALL_BUILDS],
+    ['lint-config-edit', 'lint', ALL_LINTS],
     ['lint-config-edit', 'build', []],
     ['lint-config-edit', 'docs', []],
     ['re-exported-project-edit', 'build', ['lib-delta', 'lib-testing']],

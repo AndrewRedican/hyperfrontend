@@ -2,6 +2,7 @@ import type { ProjectRecord } from './model'
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
 import { discoverProjects, hasTarget, listFiles, readAliases, readJson } from './workspace'
 
@@ -63,6 +64,37 @@ describe('discoverProjects', () => {
   it('leaves unassigned the files no project owns', () => {
     const files = listFiles(root).filter((file) => file !== 'project.json' && file !== 'package.json')
     expect(discoverProjects(root, files).has('root')).toBe(false)
+  })
+
+  it('infers a lint target for a project that declares none, running the linter from its root', () => {
+    expect(discoverProjects(root, listFiles(root)).get('@fixture/b')?.configuration?.targets?.['lint']).toEqual({
+      executor: 'nx:run-commands',
+      options: { command: 'node ../../tools/lint/bin/lint.ts .', cwd: 'libs/b' },
+    })
+  })
+
+  it('leaves a declared lint target as it is', () => {
+    expect(discoverProjects(root, listFiles(root)).get('lib-a')?.configuration?.targets?.['lint']).toEqual({})
+  })
+
+  it('infers no lint target for the workspace root', () => {
+    expect(discoverProjects(root, listFiles(root)).get('root')?.configuration?.targets?.['lint']).toBeUndefined()
+  })
+
+  it('infers no lint target for a project the plugin entry excludes', () => {
+    const excluded = createTempDir({
+      prefix: 'lint-infer-',
+      tree: {
+        'nx.json': '{ "plugins": ["./other.ts", { "plugin": "./tools/lint/src/nx/plugin.ts", "exclude": ["apps/demos/**/*"] }] }',
+        'apps/demos/one/project.json': '{ "name": "demo-one" }',
+        'libs/two/package.json': '{ "name": "@fixture/two" }',
+      },
+    })
+    const projects = discoverProjects(excluded.path, ['nx.json', 'apps/demos/one/project.json', 'libs/two/package.json'])
+    expect([
+      hasTarget(projects.get('demo-one') as ProjectRecord, 'lint'),
+      hasTarget(projects.get('@fixture/two') as ProjectRecord, 'lint'),
+    ]).toEqual([false, true])
   })
 
   it('gives the root project the files no other owns', () => {
