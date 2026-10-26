@@ -1,7 +1,23 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from './tree/tree'
 import { posix } from 'node:path'
-import { updateJson } from '@nx/devkit'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { updateJson } from './tree/tree'
+
+/**
+ * Compiler options as far as the path mappings go.
+ */
+interface PathsCompilerOptions {
+  /** The path aliases, by specifier */
+  paths?: Record<string, string[]>
+}
+
+/**
+ * The base tsconfig as far as its path mappings go.
+ */
+interface PathsTsConfig {
+  /** The compiler options */
+  compilerOptions?: PathsCompilerOptions
+}
 
 /**
  * Options for adding a new path mapping.
@@ -64,7 +80,7 @@ export function sortPaths(paths: Record<string, string[]>): Record<string, strin
  * @param options - Options containing package name and project root
  */
 export function addTsConfigPath(tree: Tree, options: AddPathOptions): void {
-  updateJson(tree, 'tsconfig.base.json', (json) => {
+  updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {
     const paths = json.compilerOptions?.paths ?? {}
 
     paths[options.packageName] = [posix.join(options.projectRoot, 'src', 'index.ts')]
@@ -87,18 +103,18 @@ export function addTsConfigPath(tree: Tree, options: AddPathOptions): void {
  * @param options - Options with current and new package names
  */
 export function renameTsConfigPaths(tree: Tree, options: RenamePathOptions): void {
-  updateJson(tree, 'tsconfig.base.json', (json) => {
+  updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {
     const paths = json.compilerOptions?.paths ?? {}
     const updatedPaths: Record<string, string[]> = {}
 
     for (const [key, value] of entries(paths)) {
       if (key === options.currentPackageName) {
-        updatedPaths[options.newPackageName] = value as string[]
+        updatedPaths[options.newPackageName] = value
       } else if (key.startsWith(`${options.currentPackageName}/`)) {
         const suffix = key.slice(options.currentPackageName.length)
-        updatedPaths[`${options.newPackageName}${suffix}`] = value as string[]
+        updatedPaths[`${options.newPackageName}${suffix}`] = value
       } else {
-        updatedPaths[key] = value as string[]
+        updatedPaths[key] = value
       }
     }
 
@@ -120,13 +136,11 @@ export function renameTsConfigPaths(tree: Tree, options: RenamePathOptions): voi
  * @param options - Options with current/new roots and package names
  */
 export function moveTsConfigPaths(tree: Tree, options: MovePathOptions): void {
-  updateJson(tree, 'tsconfig.base.json', (json) => {
+  updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {
     const paths = json.compilerOptions?.paths ?? {}
     const updatedPaths: Record<string, string[]> = {}
 
-    for (const [key, value] of entries(paths)) {
-      const valuePaths = value as string[]
-
+    for (const [key, valuePaths] of entries(paths)) {
       const isOldPath = valuePaths.some((p) => p.startsWith(options.currentProjectRoot))
 
       if (isOldPath) {

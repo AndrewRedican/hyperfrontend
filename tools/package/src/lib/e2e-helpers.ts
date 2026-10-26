@@ -1,9 +1,25 @@
-import type { Tree } from '@nx/devkit'
+import type { NamedJson } from './json-updaters'
+import type { Tree } from './tree/tree'
 import { posix } from 'node:path'
-import { joinPathFragments, updateJson } from '@nx/devkit'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { replaceDescriptionPackageName } from './json-updaters'
 import { logger } from './logger'
+import { joinPathFragments } from './tree/paths'
+import { updateJson } from './tree/tree'
+
+/** An e2e project.json as far as the rename rewrites it. */
+interface E2eProjectManifest extends NamedJson {
+  /** The library the suite tests, among others */
+  implicitDependencies?: unknown
+}
+
+/** An e2e package.json as far as the rename rewrites it. */
+interface E2ePackageManifest extends NamedJson {
+  /** The packed library it installs */
+  dependencies?: Record<string, string>
+  /** Its scripts */
+  scripts?: Record<string, string>
+}
 
 /**
  * Options for E2E project checking.
@@ -51,7 +67,7 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
   const newE2ERoot = `apps/package-e2e/${newLibName}`
 
   const projectJsonPath = joinPathFragments(currentE2ERoot, 'project.json')
-  updateJson(tree, projectJsonPath, (json) => {
+  updateJson<E2eProjectManifest>(tree, projectJsonPath, (json) => {
     if (json.name === currentE2EProjectName) {
       json.name = newE2EProjectName
     }
@@ -66,16 +82,16 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
 
   const packageJsonPath = joinPathFragments(currentE2ERoot, 'package.json')
   if (tree.exists(packageJsonPath)) {
-    updateJson(tree, packageJsonPath, (json) => {
+    updateJson<E2ePackageManifest>(tree, packageJsonPath, (json) => {
       json.name = `@hyperfrontend/e2e-${newLibName}`
       replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
       if (json.dependencies?.[options.currentPackageName]) {
-        const oldTgzPath = json.dependencies[options.currentPackageName] as string
+        const oldTgzPath = json.dependencies[options.currentPackageName] ?? ''
         json.dependencies[options.newPackageName] = oldTgzPath.replace(`hyperfrontend-${currentLibName}-`, `hyperfrontend-${newLibName}-`)
         delete json.dependencies[options.currentPackageName]
       }
-      if (json.scripts?.['pack-install'] && typeof json.scripts['pack-install'] === 'string') {
-        json.scripts['pack-install'] = (json.scripts['pack-install'] as string).replaceAll(`/${currentLibName}`, `/${newLibName}`)
+      if (json.scripts?.['pack-install'] !== undefined) {
+        json.scripts['pack-install'] = json.scripts['pack-install'].replaceAll(`/${currentLibName}`, `/${newLibName}`)
       }
       return json
     })

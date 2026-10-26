@@ -1,6 +1,25 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from '../../../lib/tree/tree'
 import type { NormalizedOptions } from './move-helpers'
-import { joinPathFragments, updateJson } from '@nx/devkit'
+import { joinPathFragments } from '../../../lib/tree/paths'
+import { updateJson } from '../../../lib/tree/tree'
+
+/** A tsconfig as far as its base goes. */
+interface ExtendingTsConfig {
+  /** The configuration extended, when it is one file */
+  extends?: unknown
+}
+
+/** Compiler options as far as the output directory goes. */
+interface OutDirOptions {
+  /** Where compiled files go */
+  outDir?: unknown
+}
+
+/** A tsconfig as far as its output directory goes. */
+interface OutDirTsConfig {
+  /** The compiler options */
+  compilerOptions?: OutDirOptions
+}
 
 /**
  * Update lint.config.ts with the correct base config path.
@@ -35,7 +54,7 @@ export function updateTsConfigJson(tree: Tree, options: NormalizedOptions): void
     return
   }
 
-  updateJson(tree, tsconfigPath, (json) => {
+  updateJson<ExtendingTsConfig>(tree, tsconfigPath, (json) => {
     if (json.extends && typeof json.extends === 'string') {
       json.extends = `${options.newOffsetFromRoot}tsconfig.base.json`
     }
@@ -55,7 +74,7 @@ function updateTsConfigOutDir(tree: Tree, configPath: string, newOffsetFromRoot:
     return
   }
 
-  updateJson(tree, configPath, (json) => {
+  updateJson<OutDirTsConfig>(tree, configPath, (json) => {
     if (json.compilerOptions?.outDir) {
       json.compilerOptions.outDir = `${newOffsetFromRoot}dist/out-tsc`
     }

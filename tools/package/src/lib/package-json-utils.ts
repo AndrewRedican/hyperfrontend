@@ -1,7 +1,7 @@
-import type { Tree } from '@nx/devkit'
-import { joinPathFragments } from '@nx/devkit'
+import type { Tree } from './tree/tree'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { joinPathFragments } from './tree/paths'
 
 /**
  * Result of reading package.json metadata.

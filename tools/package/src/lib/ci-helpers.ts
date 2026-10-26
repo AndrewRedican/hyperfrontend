@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from './tree/tree'
 import { logger } from './logger'
 
 /**

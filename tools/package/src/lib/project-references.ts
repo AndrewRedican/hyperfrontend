@@ -1,7 +1,19 @@
-import type { Tree } from '@nx/devkit'
-import { getProjects, joinPathFragments, updateJson } from '@nx/devkit'
+import type { Tree } from './tree/tree'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { joinPathFragments } from './tree/paths'
+import { getProjects } from './tree/projects'
+import { updateJson } from './tree/tree'
+
+/**
+ * A project.json as far as its references to other projects go.
+ */
+interface ReferencingProjectJson {
+  /** Projects depended on without an import */
+  implicitDependencies?: unknown
+  /** The targets, whose `dependsOn` may name a project */
+  targets?: Record<string, unknown>
+}
 
 /**
  * Slice of an Nx target config we mutate while updating project references.
@@ -69,9 +81,9 @@ export function updateProjectReferences(tree: Tree, options: UpdateReferencesOpt
       continue
     }
 
-    updateJson(tree, projectJsonPath, (json) => {
+    updateJson<ReferencingProjectJson>(tree, projectJsonPath, (json) => {
       if (isArray(json.implicitDependencies)) {
-        json.implicitDependencies = json.implicitDependencies.map((dep: string) =>
+        json.implicitDependencies = (json.implicitDependencies as string[]).map((dep) =>
           dep === options.currentProjectName ? options.newProjectName : dep
         )
       }

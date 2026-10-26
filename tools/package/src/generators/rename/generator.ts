@@ -1,6 +1,6 @@
-import type { Tree } from '@nx/devkit'
+import type { NamedJson } from '../../lib/json-updaters'
+import type { Tree } from '../../lib/tree/tree'
 import type { RenameGeneratorSchema } from './schema'
-import { formatFiles, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { checkCIWorkflow } from '../../lib/ci-helpers'
 import { updateContentReferences } from '../../lib/content-updaters'
@@ -9,6 +9,10 @@ import { replaceDescriptionPackageName } from '../../lib/json-updaters'
 import { logger } from '../../lib/logger'
 import { derivePackageName, deriveProjectName, extractProjectPrefix } from '../../lib/naming-utils'
 import { updateProjectReferences } from '../../lib/project-references'
+import { formatFiles } from '../../lib/tree/format'
+import { joinPathFragments } from '../../lib/tree/paths'
+import { readProjectConfiguration } from '../../lib/tree/projects'
+import { updateJson } from '../../lib/tree/tree'
 import { renameTsConfigPaths } from '../../lib/tsconfig-utils'
 
 /**
@@ -66,7 +70,7 @@ function normalizeOptions(tree: Tree, options: RenameGeneratorSchema): Normalize
 function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
   const projectJsonPath = joinPathFragments(options.currentProjectRoot, 'project.json')
 
-  updateJson(tree, projectJsonPath, (json) => {
+  updateJson<NamedJson>(tree, projectJsonPath, (json) => {
     json.name = options.newProjectName
     replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
     return json
@@ -86,7 +90,7 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
     return
   }
 
-  updateJson(tree, packageJsonPath, (json) => {
+  updateJson<NamedJson>(tree, packageJsonPath, (json) => {
     json.name = options.newPackageName
     replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
     return json

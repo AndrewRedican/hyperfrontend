@@ -1,8 +1,11 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from '../../lib/tree/tree'
 import type { LibraryGeneratorSchema } from './schema'
 import { join } from 'node:path'
-import { formatFiles, generateFiles, joinPathFragments, names, offsetFromRoot } from '@nx/devkit'
 import { derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
+import { formatFiles } from '../../lib/tree/format'
+import { names } from '../../lib/tree/names'
+import { joinPathFragments, offsetFromRoot } from '../../lib/tree/paths'
+import { generateFiles } from '../../lib/tree/templates'
 import { addTsConfigPath } from '../../lib/tsconfig-utils'
 import { makePublishableGenerator } from '../make-publishable/generator'
 

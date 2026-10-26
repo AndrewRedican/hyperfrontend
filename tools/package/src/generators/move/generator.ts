@@ -1,10 +1,10 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from '../../lib/tree/tree'
 import type { MoveGeneratorSchema } from './schema'
-import { formatFiles } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { checkCIWorkflow } from '../../lib/ci-helpers'
 import { checkE2EProject } from '../../lib/e2e-helpers'
 import { logger } from '../../lib/logger'
+import { formatFiles } from '../../lib/tree/format'
 import {
   copyDirectory,
   deleteDirectory,
