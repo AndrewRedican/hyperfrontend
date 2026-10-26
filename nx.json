@@ -6,7 +6,6 @@
   },
   "targetDefaults": {
     "lint": {
-      "cache": true,
       "inputs": [
         "default",
         "{workspaceRoot}/lint.config.ts",
@@ -21,7 +20,6 @@
       ]
     },
     "@hyperfrontend/package:test": {
-      "cache": true,
       "inputs": ["default", "^production"],
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
@@ -45,7 +43,6 @@
       }
     },
     "build": {
-      "cache": true,
       "inputs": [
         "default",
         "^production",
@@ -70,12 +67,10 @@
       }
     },
     "typecheck": {
-      "cache": true,
       "inputs": ["default", "^production"],
       "executor": "@hyperfrontend/package:typecheck"
     },
     "audit": {
-      "cache": true,
       "inputs": ["dependencyState", { "runtime": "date -u +%F" }],
       "executor": "nx:run-commands",
       "options": {
@@ -120,7 +115,6 @@
       "exclude": ["apps/demos/**/*"]
     }
   ],
-  "nxCloudId": "6991685ccc04119366337805",
-  "neverConnectToCloud": false,
+  "neverConnectToCloud": true,
   "analytics": false
 }
