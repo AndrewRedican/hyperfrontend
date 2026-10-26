@@ -20,6 +20,7 @@ jobs:
     outputs:
       affected-projects: ${{ steps.nx-affected.outputs.affected-projects }}
       has-affected: ${{ steps.nx-affected.outputs.has-affected }}
+      graph-digest: ${{ steps.graph-state.outputs.digest }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -28,6 +29,28 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
+
+      - name: Restore graph state
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: .hf/graph
+          key: ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: Build and verify the graph state
+        id: graph-state
+        shell: bash
+        run: |
+          # The restored state is updated incrementally, then checked against a cold build.
+          # Drift is a warning that rebuilds cold; it never fails the job.
+          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          $GRAPH build | tee -a "$GITHUB_STEP_SUMMARY"
+          if ! $GRAPH verify; then
+            echo "::warning::the restored graph state differs from a cold build; rebuilding cold"
+            $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
       - name: Calculate affected projects
         id: nx-affected
@@ -271,6 +294,15 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
+
+      - name: Build the graph state and compare it with the Linux one
+        run: |
+          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
+          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          $GRAPH build --force
+          DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
+          echo "windows graph.json digest $DIGEST, linux ${{ needs.setup.outputs.graph-digest }}"
+          [ "$DIGEST" = "${{ needs.setup.outputs.graph-digest }}" ]
 
       - name: Typecheck the libraries and tools
         run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*" --parallel=1
