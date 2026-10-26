@@ -1,4 +1,5 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { lintTarget as graphLintTarget } from '@hyperfrontend/workspace/graph'
 import { createNodesV2, lintTarget } from './plugin.ts'
 
 const [pattern, infer] = createNodesV2
@@ -17,6 +18,11 @@ describe('createNodesV2', () => {
 })
 
 describe('lintTarget', () => {
+  // why: the plugin stays dependency-free for Nx to load it cheaply, so the owned graph infers the same target on its own and this keeps the two equal.
+  it('infers the target the owned graph infers', () => {
+    expect(lintTarget('libs/utils/a')).toEqual(graphLintTarget('libs/utils/a'))
+  })
+
   it('runs the linter from the project root', () => {
     expect(lintTarget('libs/utils/a')).toEqual({
       command: 'node ../../../tools/lint/bin/lint.ts .',
