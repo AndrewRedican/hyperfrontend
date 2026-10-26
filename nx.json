@@ -16,7 +16,8 @@
         "{projectRoot}/lint.config.ts",
         "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
-        "{workspaceRoot}/tools/lint/config/**/*"
+        "{workspaceRoot}/tools/lint/config/**/*",
+        "{workspaceRoot}/tools/workspace/src/graph/**/*"
       ]
     },
     "@hyperfrontend/package:test": {
