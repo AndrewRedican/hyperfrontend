@@ -236,7 +236,8 @@
       "@hyperfrontend/versioning/workspace/models": ["libs/versioning/src/workspace/models/index.ts"],
       "@hyperfrontend/versioning/workspace/operations": ["libs/versioning/src/workspace/operations/index.ts"],
       "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
-      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"]
+      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"],
+      "@hyperfrontend/workspace/graph": ["tools/workspace/src/graph/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
