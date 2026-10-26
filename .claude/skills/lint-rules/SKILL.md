@@ -79,7 +79,7 @@ export default defineRule<undefined, Node>({
 | ------------------------------- | --------------------------------------------------------------------------------------- |
 | Scopes, variables, references   | `scopeAnalysisOf(context)`, `scopeOf` (`/helpers`; `libs/linter/src/scope/analysis.ts`) |
 | Code paths                      | `flowAnalysisOf(context)` (`libs/linter/src/flow/analysis.ts`, packaged rules only)     |
-| Project graph (as Nx builds it) | `workspaceGraph(root)` (`tools/lint/src/graph/build.ts`, workspace rules only)          |
+| Project graph (as Nx builds it) | `workspaceGraph(root)` (`@hyperfrontend/workspace/graph`, workspace rules only)         |
 | Regular expression structure    | `parse`, `validate` (`libs/linter/src/regex/`, packaged rules only)                     |
 | JSDoc blocks and types          | `libs/linter/src/jsdoc/` (`parse.ts`, `attach.ts`, `types.ts`, packaged rules only)     |
 
