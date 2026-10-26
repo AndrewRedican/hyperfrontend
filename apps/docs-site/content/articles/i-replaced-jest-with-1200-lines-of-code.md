@@ -9,7 +9,7 @@ heroImage: '/articles/i-replaced-jest-with-1200-lines-of-code/hero.webp'
 category: 'field-notes'
 tags: 'testing, jest, dependencies, supply chain, coverage, ai-assisted engineering, tooling'
 packages: '@hyperfrontend/testing'
-related: 'hyperfrontend-the-long-way-around'
+related: 'hyperfrontend-the-long-way-around, complete-architectural-sovereignty'
 mediumUrl: 'https://medium.com/@andrew.redican.mejia/i-replaced-jest-with-1-200-lines-of-code-id-do-it-again-d852187f04ac'
 ---
 
