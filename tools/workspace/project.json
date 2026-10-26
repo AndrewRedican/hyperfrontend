@@ -15,6 +15,13 @@
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/scripts/replay-affected.ts"
       }
     },
+    "graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+      }
+    },
     "types-extract": {
       "executor": "nx:run-commands",
       "cache": false,
