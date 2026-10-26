@@ -16,7 +16,7 @@ Lint rules that read the workspace's project graph, the one Nx would build, comp
 - **npm packages**: the root `package-lock.json`, one node per name and version.
 - **Dependencies**: each code file's imports, read with the linter's own parser under Nx's rules, so a `require` inside a function or an `import()` counts as dynamic exactly when Nx counts it so; each `package.json`'s dependencies; and `implicitDependencies`.
 
-Imports are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. Like Nx's cached graph, the graph reflects the files on disk, not unsaved editor buffers. `node tools/lint/scripts/graph-oracle.ts --graph <file written by nx graph --file>` compares it with Nx's.
+Imports are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. Like Nx's cached graph, the graph reflects the files on disk, not unsaved editor buffers.
 
 ## module-boundaries
 

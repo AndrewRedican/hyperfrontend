@@ -34,7 +34,7 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 - `src/runtime/aliases.ts`: the resolution hook that loads workspace libraries from source.
 - `src/rules/workspace/`, `src/rules/projects/`: the workspace's rules, with specs and fixtures.
 - `src/nx/plugin.ts`: the Nx plugin inferring each project's `lint` target.
-- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the workspace graph of `@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`) with the file `nx graph --file` writes, `bench.ts` times the linter.
+- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `bench.ts` times the linter.
 
 ## Commands
 
@@ -42,7 +42,6 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 npx nx test tool-lint
 npx nx typecheck tool-lint
 node tools/lint/scripts/parser-oracle.ts
-node tools/lint/scripts/graph-oracle.ts --graph <file written by nx graph --file>
 node tools/lint/scripts/bench.ts
 ```
 
