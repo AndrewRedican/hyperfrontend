@@ -37,6 +37,7 @@ export const DEPENDENCY_CONSTRAINTS = [
   { sourceTag: 'type:feature', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:feature'] },
   { sourceTag: 'type:protocol', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:protocol'] },
   { sourceTag: 'type:app', onlyDependOnLibsWithTags: ['type:util'] },
+  { sourceTag: 'type:integration', onlyDependOnLibsWithTags: ['type:core', 'type:util'] },
   { sourceTag: 'type:demo', onlyDependOnLibsWithTags: [] },
   { sourceTag: 'scope:standalone', onlyDependOnLibsWithTags: [] },
 ]
