@@ -22,7 +22,7 @@ If this sounds idealistic, that's fine. Good software often starts that way.
 
 ## Scope Boundaries
 
-I'm one person, and even with a small group of future maintainers, there's only so much we can realistically build and maintain well. These boundaries exist to keep the project focused and sustainable.
+I'm one person, and even with a small group of future maintainers, there's only so much we can realistically build and maintain well. These boundaries exist to [keep the project focused and sustainable](https://www.hyperfrontend.dev/articles/complete-architectural-sovereignty/#ownership-is-not-an-obligation-to-everyone).
 
 ### Framework-Specific Adapters
 
