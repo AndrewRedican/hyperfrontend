@@ -36,29 +36,14 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-        with:
-          cache-scope: plan
 
-      - name: Restore graph state
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
-        with:
-          path: .hf/graph
-          key: ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-graph-state-${{ hashFiles('**/package-lock.json') }}-
-
-      - name: Build and verify the graph state
+      - name: Build the graph state
         id: graph-state
         shell: bash
+        # why: a cold build takes four seconds and nothing is restored, so the state is the commit's and nothing else's
         run: |
-          # The restored state is updated incrementally, then checked against a cold build.
-          # Drift is a warning that rebuilds cold; it never fails the job.
           GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
-          $GRAPH build | tee -a "$GITHUB_STEP_SUMMARY"
-          if ! $GRAPH verify; then
-            echo "::warning::the restored graph state differs from a cold build; rebuilding cold"
-            $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
+          $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
       - name: Check the formatting of every file
@@ -67,13 +52,17 @@ jobs:
       - name: Plan the push
         id: plan
         # why: the previous head of main is the base; a force-push, a first push or a dispatch without one plans everything, as does the full input
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output
+        run: |
+          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output
+          cp .hf/graph/graph.json .hf/pipeline/graph.json
 
-      - name: Upload the plan
+      - name: Upload the plan and the graph
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pipeline-plan
-          path: .hf/pipeline/plan.json
+          path: |
+            .hf/pipeline/plan.json
+            .hf/pipeline/graph.json
           retention-days: 30
 
   environment:
@@ -106,8 +95,6 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-        with:
-          cache-scope: environment
 
       - name: Download the plan
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

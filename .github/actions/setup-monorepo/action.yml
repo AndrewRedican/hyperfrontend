@@ -1,22 +1,15 @@
 name: 'Setup Monorepo'
-description: 'Sets up Node.js environment, caches dependencies and Nx cache, and installs packages for the monorepo'
-inputs:
-  cache-scope:
-    description: "A name the Nx cache key carries, so jobs of one run that save different outputs never claim each other's key"
-    required: false
-    default: 'default'
+description: 'Sets up Node.js, caches the npm download directory and installs the packages of the monorepo'
 outputs:
   cache-hit:
     description: 'Whether npm cache was hit'
     value: ${{ steps.cache-npm.outputs.cache-hit }}
-  nx-cache-hit:
-    description: 'Whether Nx cache was hit'
-    value: ${{ steps.cache-nx.outputs.cache-hit }}
 runs:
   using: 'composite'
   steps:
-    - name: Configure Nx Cloud
+    - name: Keep Nx off its cloud
       shell: bash
+      # why: nx.json sets neverConnectToCloud; the variable makes every nx invocation of the job honour it
       run: |
         [[ $(jq -r '.neverConnectToCloud // false' nx.json) == "true" ]] && echo "NX_NO_CLOUD=true" >> $GITHUB_ENV || true
 
@@ -33,18 +26,6 @@ runs:
         key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-npm-
-
-    - name: Cache Nx
-      id: cache-nx
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
-      with:
-        path: |
-          .nx/cache
-          node_modules/.cache/nx
-        key: ${{ runner.os }}-nx-${{ inputs.cache-scope }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-nx-${{ inputs.cache-scope }}-${{ hashFiles('**/package-lock.json') }}-
-          ${{ runner.os }}-nx-${{ inputs.cache-scope }}-
 
     - name: Install dependencies
       shell: bash
