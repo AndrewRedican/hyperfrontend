@@ -48,7 +48,6 @@ Besides the project's own files, the E2E project and the status workflow, the ge
 
 | Surface                                                    | What is written                                                                                                  |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `.github/workflows/ci-libraries.yml`                       | Path filter (last active filter) + matrix entry (last active entry)                                              |
 | `.github/workflows/ci-main.yml`                            | `"flag:path"` in the `LIBS` array, alphabetical within the libs group or the utils group                         |
 | `README.md`                                                | Row in the Packages table after the package the ecosystem hierarchy places before it; summary count              |
 | `apps/docs-site/scripts/generate-docs.ts`                  | `LIBRARIES` entry; `LIBRARY_SLUGS` entry for a core or supporting package                                        |
