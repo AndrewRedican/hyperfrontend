@@ -72,6 +72,10 @@ describe('usedPackages', () => {
     ])
   })
 
+  it('skips a load whose specifier is an expression', () => {
+    expect([...usedPackages(graph, lib, ['libs/lib/src/loader.ts'])]).toEqual([])
+  })
+
   it('gives a workspace package without a version the wildcard', () => {
     const user = graph.projects.get('user') as ProjectRecord
     expect([...usedPackages(graph, user, user.files)]).toEqual([['@ws/unversioned', '*']])
