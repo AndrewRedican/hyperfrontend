@@ -393,7 +393,7 @@ function createCIWorkflow(tree: Tree, options: NormalizedOptions): void {
 
 on:
   workflow_run:
-    workflows: [libraries]
+    workflows: [ci]
     types: [completed]
     branches: [main]
 
@@ -413,8 +413,8 @@ jobs:
 }
 
 /**
- * Register the library everywhere the workspace lists its packages: the CI
- * workflows, the root README's packages table and the docs site.
+ * Register the library everywhere the workspace lists its packages: the main
+ * CI workflow, the root README's packages table and the docs site.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
@@ -459,7 +459,7 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * 5. Generates publishable README with required structure, its Node.js badge reading the declared floor
  * 6. Creates E2E project in apps/package-e2e/
  * 7. Creates CI workflow status file
- * 8. Adds the path filter, matrix entry and coverage upload to the shared CI workflows
+ * 8. Adds the coverage upload to the main CI workflow
  * 9. Lists the package in the root README's packages table, in the order the docs-site index presents the packages
  * 10. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
  * 11. Names the one step left for a human: recording the readme media

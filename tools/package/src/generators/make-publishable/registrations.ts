@@ -3,7 +3,6 @@ import type { DocsCategory, EcosystemTierId, LibraryFacts } from './lib/library-
 import { joinPathFragments, readJson, readProjectConfiguration } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '../../lib/logger'
-import { registerLibraryInCiLibraries } from './lib/ci-libraries-workflow'
 import { registerLibraryCoverageUpload } from './lib/ci-main-workflow'
 import { registerLibraryInContent } from './lib/docs-content'
 import { placeLibraryInEcosystem } from './lib/docs-ecosystem'
@@ -12,9 +11,6 @@ import { registerLibraryInNavigation } from './lib/docs-navigation'
 import { docsPageFiles } from './lib/docs-pages'
 import { deriveLibraryFacts } from './lib/library-facts'
 import { registerPackageRow } from './lib/root-readme'
-
-/** The workflow that runs CI for the library that changed. */
-export const CI_LIBRARIES_WORKFLOW = '.github/workflows/ci-libraries.yml'
 
 /** The workflow that uploads every library's coverage from main. */
 export const CI_MAIN_WORKFLOW = '.github/workflows/ci-main.yml'
@@ -52,7 +48,7 @@ export interface RegistrationProject {
  * How the registrations are applied.
  */
 export interface RegistrationOptions {
-  /** Leave the CI workflows alone */
+  /** Leave the main CI workflow alone */
   skipCI: boolean
   /** The level of the ecosystem hierarchy the package is placed on */
   ecosystemTier: EcosystemTierId
@@ -120,8 +116,8 @@ export function collectLibraryFacts(tree: Tree, project: RegistrationProject): L
 
 /**
  * Register a publishable library everywhere the workspace lists its packages:
- * the CI workflows, the root README's packages table, and the docs site's
- * generator, content model, navigation, hierarchy and pages.
+ * the main CI workflow's coverage uploads, the root README's packages table,
+ * and the docs site's generator, content model, navigation, hierarchy and pages.
  *
  * Every registration is written only when it is missing, so running this for
  * a library the workspace already knows changes nothing.
@@ -132,7 +128,6 @@ export function collectLibraryFacts(tree: Tree, project: RegistrationProject): L
  */
 export function registerLibrary(tree: Tree, facts: LibraryFacts, options: RegistrationOptions): void {
   if (!options.skipCI) {
-    rewrite(tree, CI_LIBRARIES_WORKFLOW, (content) => registerLibraryInCiLibraries(content, facts))
     rewrite(tree, CI_MAIN_WORKFLOW, (content) => registerLibraryCoverageUpload(content, facts))
   }
 

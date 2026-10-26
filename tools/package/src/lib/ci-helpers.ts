@@ -37,6 +37,8 @@ export function checkCIWorkflow(tree: Tree, options: CICheckOptions): void {
   logger.warn('Please manually update the CI workflow:')
   logger.warn(`  1. Rename ${currentWorkflowPath} to ${newWorkflowPath}`)
   logger.warn(`  2. Update workflow name and project-name inside ${newWorkflowPath}`)
-  logger.warn(`  3. Update the path filter in .github/workflows/ci-libraries.yml`)
+  logger.warn(
+    `  3. Update the coverage entry in .github/workflows/ci-main.yml and library-path in ${newWorkflowPath} when the project root changed`
+  )
   logger.warn('')
 }
