@@ -2,12 +2,12 @@
 
 The workspace's boundary with Nx. Everything that knows Nx's shapes or calls Nx lives here, so the rest of the workspace compiles against this package and nothing else imports `@nx/devkit`. The package is private and never published; it has no build.
 
-| Entry                                     | Holds                                                                                                                                                                                              | Imports Nx?                                  |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `@hyperfrontend/integration-nx/model`     | The workspace's own vocabulary: `ProjectFile`, `NxJsonFile`, `TargetDefinition`, `InputDefinition`, `WorkspaceProject`, `TaskRef`. The subset of `nx.json` and `project.json` the workspace reads. | No                                           |
-| `@hyperfrontend/integration-nx/compat`    | Generated declarations compatible with `@nx/devkit`: `ExecutorContext`, `PromiseExecutor`, `Tree`, `ProjectGraph`, `CreateNodesV2` and what they reference.                                        | No; the files are copied from Nx's sources   |
-| `@hyperfrontend/integration-nx/adapters`  | The runtime code that calls Nx: `loadDevkit` resolves a workspace's `@nx/devkit` without a static import, `nxRunner` runs its `nx` headless, `readNxGraph` reads the graph Nx computes.            | Lazily, through `createRequire` or a process |
-| `@hyperfrontend/integration-nx/manifests` | The `executors.json` and `generators.json` shapes Nx discovers, and `validateExecutorsManifest` / `validateGeneratorsManifest` checking every entry can be read.                                   | No                                           |
+| Entry                                     | Holds                                                                                                                                                                                              | Imports Nx?                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `@hyperfrontend/integration-nx/model`     | The workspace's own vocabulary: `ProjectFile`, `NxJsonFile`, `TargetDefinition`, `InputDefinition`, `WorkspaceProject`, `TaskRef`. The subset of `nx.json` and `project.json` the workspace reads. | No                                         |
+| `@hyperfrontend/integration-nx/compat`    | Generated declarations compatible with `@nx/devkit`: `ExecutorContext`, `PromiseExecutor`, `Tree`, `ProjectGraph`, `CreateNodesV2` and what they reference.                                        | No; the files are copied from Nx's sources |
+| `@hyperfrontend/integration-nx/adapters`  | The runtime code that reaches a consumer's Nx: `loadDevkit` resolves a workspace's `@nx/devkit` without a static import, `devkitFunction` one of its functions.                                    | Lazily, through `createRequire`            |
+| `@hyperfrontend/integration-nx/manifests` | The `executors.json` and `generators.json` shapes Nx discovers, and `validateExecutorsManifest` / `validateGeneratorsManifest` checking every entry can be read.                                   | No                                         |
 
 ## Generated declarations
 
@@ -24,7 +24,7 @@ The declarations are copied as written, with a few deliberate rewrites that `REP
 
 ## Consumers
 
-The executors of `@hyperfrontend/app`, `@hyperfrontend/package` and `@hyperfrontend/workspace` type their context and signature from `compat`. The affected-baseline replay in `tools/workspace` runs Nx through `adapters`. The `version-batch` executor still calls `createProjectGraphAsync` from `@nx/devkit` until the owned graph replaces it, and the generators of `@hyperfrontend/package` still use the devkit tree helpers.
+The executors of `@hyperfrontend/app`, `@hyperfrontend/package` and `@hyperfrontend/workspace` type their context and signature from `compat`; the `version-batch` executor selects through the owned workspace graph; the generators of `@hyperfrontend/package` run on their own tree helpers. Nothing in the workspace runs Nx through `adapters` any more: `loadDevkit` serves the published features plugin, which resolves the devkit of the workspace it is installed in.
 
 ## Tags
 
