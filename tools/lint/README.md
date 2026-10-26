@@ -33,9 +33,8 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 - `config/`: the families and the workspace's own settings.
 - `src/runtime/aliases.ts`: the resolution hook that loads workspace libraries from source.
 - `src/rules/workspace/`, `src/rules/projects/`: the workspace's rules, with specs and fixtures.
-- `src/graph/`: the project graph Nx would build: projects, their files and tags, each code file's imports and the edges they draw, cached under `node_modules/.cache/hyperfrontend-lint/`.
 - `src/nx/plugin.ts`: the Nx plugin inferring each project's `lint` target.
-- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the graph with the file `nx graph --file` writes, `bench.ts` times the linter.
+- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the workspace graph of `@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`) with the file `nx graph --file` writes, `bench.ts` times the linter.
 
 ## Commands
 

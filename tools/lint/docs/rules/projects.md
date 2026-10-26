@@ -10,7 +10,7 @@ Lint rules that read the workspace's project graph, the one Nx would build, comp
 
 ## The project graph
 
-`src/graph/` builds, once per lint process, the graph Nx would build, and the rules read it:
+`@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`) builds, once per lint process, the graph Nx would build, and the rules read it:
 
 - **Projects**: every directory holding a `project.json` or a `package.json` among the files Git tracks or would track, less what `.nxignore` excludes. Names, types, tags and targets follow Nx: a `package.json` beside a `project.json` adds its scripts as targets and `npm:` tags from `private` and `keywords`.
 - **npm packages**: the root `package-lock.json`, one node per name and version.
