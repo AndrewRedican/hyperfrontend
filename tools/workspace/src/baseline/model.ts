@@ -51,13 +51,18 @@ export interface BaselineSelection {
   readonly explanation: NxExplanation
 }
 
-/** A merge replayed from history, with Nx's selection captured at its head. */
+/** What a replayed range is: a merged branch, or one commit against its parent. */
+export type ReplayKind = 'merge' | 'commit'
+
+/** A merge or a commit replayed from history, with Nx's selection captured at its head. */
 export interface ReplayedMerge {
-  /** The merge commit. */
+  /** Whether the range is a merged branch or a single commit. */
+  readonly kind: ReplayKind
+  /** The merge commit, or the commit itself. */
   readonly sha: string
-  /** The merge base of its parents: where the merged branch forked. */
+  /** The merge base of the merge's parents, where the merged branch forked; the commit's parent for a commit. */
   readonly base: string
-  /** The merged branch's tip: the second parent. */
+  /** The merged branch's tip, the merge's second parent; the commit itself for a commit. */
   readonly head: string
   /** When the merge was committed, ISO 8601. */
   readonly committedAt: string

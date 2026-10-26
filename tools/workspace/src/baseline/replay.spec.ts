@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { git, listMerges, lockfileSkew, replayMerges, withWorktree } from './replay'
+import { git, listCommits, listMerges, lockfileSkew, replayMerges, withWorktree } from './replay'
 
 const SELECTION: BaselineSelection = {
   base: '',
@@ -44,13 +44,25 @@ function commit(message: string): string {
   return git(repo.path, ['rev-parse', 'HEAD'])
 }
 
+/** The commits of the fixture repository. */
+interface FixtureRepository {
+  /** The first commit on main. */
+  readonly base: string
+  /** The branch's one commit. */
+  readonly head: string
+  /** The merge commit. */
+  readonly merge: string
+  /** The commit main made before merging. */
+  readonly mainWork: string
+}
+
 /**
  * Builds a repository with one merged branch: `main` holds the base commit and the merge, the
  * branch holds one commit on top of the base.
  *
  * @returns The base, the branch tip and the merge commit
  */
-function repositoryWithMerge(): { base: string; head: string; merge: string } {
+function repositoryWithMerge(): FixtureRepository {
   git(repo.path, ['init', '-q', '--initial-branch=main'])
   repo.write('package-lock.json', '{ "lockfileVersion": 3 }\n')
   repo.write('README.md', '# fixture\n')
@@ -60,7 +72,7 @@ function repositoryWithMerge(): { base: string; head: string; merge: string } {
   const head = commit('feature')
   git(repo.path, ['checkout', '-q', 'main'])
   repo.write('docs/note.md', 'main moved on\n')
-  commit('main work')
+  const mainWork = commit('main work')
   git(repo.path, [
     '-c',
     `user.name=${IDENTITY.GIT_AUTHOR_NAME}`,
@@ -73,7 +85,7 @@ function repositoryWithMerge(): { base: string; head: string; merge: string } {
     'feature',
   ])
   mkdirSync(repo.resolve('node_modules', 'left-pad'), { recursive: true })
-  return { base, head, merge: git(repo.path, ['rev-parse', 'HEAD']) }
+  return { base, head, merge: git(repo.path, ['rev-parse', 'HEAD']), mainWork }
 }
 
 describe('listMerges', () => {
@@ -87,6 +99,21 @@ describe('listMerges', () => {
   it('returns nothing for a branch without merges', () => {
     repositoryWithMerge()
     expect(listMerges(repo.path, 'feature', 10)).toEqual([])
+  })
+})
+
+describe('listCommits', () => {
+  it('lists the commits with a parent, newest first, each against its parent, merges left out', () => {
+    const { base, head, mainWork } = repositoryWithMerge()
+    expect(listCommits(repo.path, 'main', 10).map((record) => [record.sha, record.base, record.head])).toEqual([
+      [mainWork, base, mainWork],
+      [head, base, head],
+    ])
+  })
+
+  it('returns nothing when no commits are asked for', () => {
+    repositoryWithMerge()
+    expect(listCommits(repo.path, 'main', 0)).toEqual([])
   })
 })
 
@@ -156,10 +183,11 @@ describe('replayMerges', () => {
     const { base, head, merge } = repositoryWithMerge()
     const outDir = repo.resolve('.hf', 'replay')
     const capture = jest.fn((checkout: string, from: string, to: string) => ({ ...SELECTION, base: from, head: to, projects: [checkout] }))
-    const records = replayMerges({ cwd: repo.path, ref: 'main', count: 10, outDir, capture, report: () => undefined })
+    const records = replayMerges({ cwd: repo.path, ref: 'main', kind: 'merge', count: 10, outDir, capture, report: () => undefined })
     expect({ records, written: repo.readJson(join('.hf', 'replay', `${merge}.json`)) }).toEqual({
       records: [
         {
+          kind: 'merge',
           sha: merge,
           base,
           head,
@@ -175,7 +203,15 @@ describe('replayMerges', () => {
   it('reports each merge as it is captured', () => {
     const { merge } = repositoryWithMerge()
     const report = jest.fn((line: string) => line)
-    replayMerges({ cwd: repo.path, ref: 'main', count: 10, outDir: repo.resolve('.hf', 'replay'), capture: () => SELECTION, report })
+    replayMerges({
+      cwd: repo.path,
+      ref: 'main',
+      kind: 'merge',
+      count: 10,
+      outDir: repo.resolve('.hf', 'replay'),
+      capture: () => SELECTION,
+      report,
+    })
     expect(report.mock.calls).toEqual([[`${merge.slice(0, 12)} 1 projects, 1 tasks`]])
   })
 
@@ -183,7 +219,15 @@ describe('replayMerges', () => {
     const { merge } = repositoryWithMerge()
     repo.write('package-lock.json', '{ "lockfileVersion": 3, "packages": {} }\n')
     const report = jest.fn((line: string) => line)
-    replayMerges({ cwd: repo.path, ref: 'main', count: 10, outDir: repo.resolve('.hf', 'replay'), capture: () => SELECTION, report })
+    replayMerges({
+      cwd: repo.path,
+      ref: 'main',
+      kind: 'merge',
+      count: 10,
+      outDir: repo.resolve('.hf', 'replay'),
+      capture: () => SELECTION,
+      report,
+    })
     expect(report.mock.calls).toEqual([[`${merge.slice(0, 12)} 1 projects, 1 tasks, lockfile skew`]])
   })
 
@@ -192,12 +236,64 @@ describe('replayMerges', () => {
     const outDir = repo.resolve('.hf', 'replay')
     const capture = jest.fn(() => SELECTION)
     const report = jest.fn((line: string) => line)
-    replayMerges({ cwd: repo.path, ref: 'main', count: 10, outDir, capture, report: () => undefined })
-    const second = replayMerges({ cwd: repo.path, ref: 'main', count: 10, outDir, capture, report })
+    replayMerges({ cwd: repo.path, ref: 'main', kind: 'merge', count: 10, outDir, capture, report: () => undefined })
+    const second = replayMerges({ cwd: repo.path, ref: 'main', kind: 'merge', count: 10, outDir, capture, report })
     expect({ second, captures: capture.mock.calls.length, reported: report.mock.calls }).toEqual({
       second: [],
       captures: 1,
       reported: [[`${merge.slice(0, 12)} already recorded`]],
     })
+  })
+
+  it('replays commits one by one against their parents when asked', () => {
+    const { base, head, mainWork } = repositoryWithMerge()
+    const outDir = repo.resolve('.hf', 'replay')
+    const capture = jest.fn((_checkout: string, from: string, to: string) => ({ ...SELECTION, base: from, head: to }))
+    const records = replayMerges({ cwd: repo.path, ref: 'main', kind: 'commit', count: 10, outDir, capture, report: () => undefined })
+    expect(
+      records.map((record) => [record.kind, record.sha, record.base, record.head, existsSync(join(outDir, `${record.sha}.json`))])
+    ).toEqual([
+      ['commit', mainWork, base, mainWork, true],
+      ['commit', head, base, head, true],
+    ])
+  })
+
+  it('reports a range whose capture fails and records nothing for it', () => {
+    const { merge } = repositoryWithMerge()
+    const outDir = repo.resolve('.hf', 'replay')
+    const report = jest.fn((line: string) => line)
+    const records = replayMerges({
+      cwd: repo.path,
+      ref: 'main',
+      kind: 'merge',
+      count: 10,
+      outDir,
+      capture: () => {
+        throw new Error('Plugin listed in `nx.json` not found: @nx/eslint/plugin\nmore')
+      },
+      report,
+    })
+    expect({ records, reported: report.mock.calls, written: existsSync(join(outDir, `${merge}.json`)) }).toEqual({
+      records: [],
+      reported: [[`${merge.slice(0, 12)} not replayable: Plugin listed in \`nx.json\` not found: @nx/eslint/plugin`]],
+      written: false,
+    })
+  })
+
+  it('reports what a failed Nx wrote to standard error rather than the command line', () => {
+    const { merge } = repositoryWithMerge()
+    const report = jest.fn((line: string) => line)
+    replayMerges({
+      cwd: repo.path,
+      ref: 'main',
+      kind: 'merge',
+      count: 10,
+      outDir: repo.resolve('.hf', 'replay'),
+      capture: () => {
+        throw Object.assign(new Error('Command failed: node nx.js show projects'), { stderr: '\n  Failed to load 1 Nx plugin(s)\n' })
+      },
+      report,
+    })
+    expect(report.mock.calls).toEqual([[`${merge.slice(0, 12)} not replayable: Failed to load 1 Nx plugin(s)`]])
   })
 })
