@@ -20,7 +20,8 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 **Jobs**:
 
-- `setup`: Calculates affected projects using Nx
+- `setup`: Calculates affected projects using Nx and builds the persisted graph state
+- `graph-advisory`: Compares the owned affected analysis with Nx's task-level selection for the pull request and uploads the report; advisory, never gating
 - `format`: Format checking (affected only)
 - `lint`: Linting (affected only)
 - `typecheck`: Type checking (affected only)
@@ -154,6 +155,31 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 **Jobs**:
 
 - `freshness`: Compares the published frontier with npm's and triggers a production build only when they differ
+
+### Graph Advisory ([graph-advisory.yml](./graph-advisory.yml))
+
+**Trigger**:
+
+- Weekly schedule (Monday 05:30 UTC)
+- Manual dispatch, with the number of merges and commits to replay
+
+**Purpose**: Keep the evidence that the owned affected analysis skips nothing Nx would run, before the pipeline trusts it
+
+**How it works**:
+
+1. Builds the persisted graph state cold and verifies it
+2. Replays the newest merges on `main`, and its newest commits one by one, capturing Nx's task-level selection for each range in a worktree sharing the installed `node_modules`; a revision whose `nx.json` names a plugin no longer installed is reported and skipped
+3. Runs the owned analysis at each replayed head and classifies every difference: (a) narrower with a named rule for every file Nx cites, (b) wider, (c) narrower without such a rule
+4. Writes the report to the job summary and uploads it with the captures
+
+**Features**:
+
+- Advisory: the job reports, nothing reads its result
+- Read-only repository permissions
+
+**Jobs**:
+
+- `compare`: Replays, compares and uploads `graph-advisory-report`
 
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
 
