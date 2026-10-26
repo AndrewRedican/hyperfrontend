@@ -102,9 +102,57 @@ npx nx run tool-workspace:graph -- explain lib-logging
 node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts explain lib-logging
 ```
 
-`projects` lists every project with its type, root and tags; `graph` prints the node and edge counts, or with `--json` the projects, nodes and records; `explain` prints the groups a project draws and the groups drawn to it, one line per kind and role with the files behind it.
+`projects` lists every project with its type, root and tags; `graph` prints the node and edge counts, or with `--json` the projects, nodes and records; `explain <project>` prints the groups a project draws and the groups drawn to it, one line per kind and role with the files behind it; `explain <project:target>`, `build`, `verify`, `status` and `affected` are described below.
 
 `sortEdges` puts edges in one canonical order, so a graph serialises to the same bytes whatever order their edges were found in. `selection.ts` holds the records the affected analysis produces: every decision carries a `Reason` whose `rule` is one of a closed set, so an explanation can always name the rule that fired.
+
+A load whose specifier is an expression (`import(name)`, `require(path)`, `createRequire(...)(x)`) is kept as an `unresolved` import whose text is the expression, and a file the parser cannot read draws one `unresolved` edge to its own project with no specifier at all. Both make the analysis below treat the project as reachable whole, which is the conservative answer when the graph cannot say what a file reaches.
+
+### Persisted state
+
+`src/graph/store/` keeps the graph under `.hf/graph/` (ignored by git and prettier) as five files, each an envelope of `{ body, digest, schema }` in canonical JSON: `files.json` (every file with the blob id git computes for it, so a checkout's line-ending filters apply as they apply to the index), `imports.json` (the imports of each code file keyed by that hash, `null` for a file that does not parse), `graph.json` (projects, nodes, records and the Nx project edges), `entries.json` (the files each entry can reach and a digest of their content) and `meta.json` (the schema, a hash of the graph sources, the import reader, the Node major and the hash of each global configuration file). `buildState` runs under a lock file holding the writer's pid, stale once the pid is dead or after a minute, reads what is persisted, reparses only the code files whose hash changed, rebuilds the graph in memory and rewrites only the files whose bytes differ, so two consecutive builds leave every modification time alone. A change to `nx.json`, the root `package.json`, the lock file or `tsconfig.base.json`, or to the graph sources or the parser, rebuilds cold; a corrupted or foreign file reads as absent and rebuilds cold as well. Two checkouts of the same commit write byte-identical files, on Linux and Windows alike, and the state directory never lists itself.
+
+```bash
+npx nx run tool-workspace:graph -- build
+npx nx run tool-workspace:graph -- build --force
+npx nx run tool-workspace:graph -- verify
+npx nx run tool-workspace:graph -- status --json
+```
+
+`build` updates the state incrementally and `--force` builds it cold; `verify` compares a cold rebuild byte for byte and exits 1 on drift; `status` prints what is persisted and what a build would do.
+
+The `setup` job of the pull-request workflow restores `.hf/graph` from the actions cache keyed by the lock file, builds incrementally, runs `verify`, and on drift warns and rebuilds cold without failing; the Windows leg builds the state cold and fails if its `graph.json` digest differs from the Linux one.
+
+### Affected analysis
+
+`src/graph/affected/` decides, for every task of a target, whether a change set selects it, and writes the reason either way. `changes.ts` reads the change set from git: from the merge base of two revisions to the head, or to the working tree with its dirty and untracked files, renames detected. A task is selected by a changed file among its own inputs, by a changed file of another project its closure reaches, by a changed implementation of a tool it runs, by a changed manifest or a deleted or added configuration of a project it depends on, by a global configuration file, or because a task it runs after (`dependsOn`) is selected. The closure of a task starts from its own files and follows the file edges of the kinds the target cares about through entries into other projects; what the graph cannot follow precisely it counts whole, and says so: a project whose reachable file loads a module it cannot name, a project whose production file does not parse, the owner of a dangling import (reported as a deleted or renamed module when the change set deleted or renamed the target), a project re-exported whole with `export *`, every member of a cross-project cycle, every implicit dependency of a project entered, and the targets of the side-effect imports of any project entered, whichever entry was consumed.
+
+Two rules go beyond what the inputs in `nx.json` say. A `type`-only import does not reach `test` or `lint`, which strip types before running. And `build` reaches its dependencies from its production files alone, since its artifact derives from nothing else; every other target reaches them from every own file it reads, so a spec importing `@hyperfrontend/testing` carries the dependency into `test` and `typecheck` but not into `build`. Both are the first rules to revisit if the comparison against Nx shows a task skipped that should have run.
+
+Every skipped task carries a reason as well: `unreachable` (naming the kinds and roles through which the task's project depends on the changed one, when it does), `kind-irrelevant` (reachable only through type-only imports), or `role-irrelevant` (a spec or configuration file the target's inputs leave out). The fallbacks that fired are listed once each. A `dependsOn` on another target decides that target as well, and the selection of a target runs to a fixed point so a dependency on the same target is honoured.
+
+```bash
+npx nx run tool-workspace:graph -- affected --target build --base main
+npx nx run tool-workspace:graph -- affected --target build --base main --explain
+npx nx run tool-workspace:graph -- affected --target test \
+  --base origin/main --head HEAD --json
+npx nx run tool-workspace:graph -- explain lib-logging:build --base main
+```
+
+The first form prints the selected task ids alone; `--explain` adds every reason, the skipped tasks and the fallbacks; `--json` prints the affected set itself.
+
+The graph is built from the working tree whatever `--head` names, so the analysis of a historical range is exact only when the working tree is that head; the comparison harness checks each revision out before it asks. Handing the analysis the graph at the base as well (`selectAffected({ previous })`) lets a deleted or renamed module name the tasks it reached before the change even where no import dangles; the command line does not do that yet.
+
+### Artifact drift
+
+`scripts/artifact-drift.ts` reports whether the packages the workspace would publish now differ from what the registry holds at the same version: it rebuilds the named projects (or every project with a `publish` target), packs each `dist` with `npm pack --dry-run --json`, hashes the listed files, retrieves the published tarball with `npm pack <name>@<version> --ignore-scripts`, reads it with the tar reader in `src/artifact-drift/` (no system `tar`), and prints the files added, removed and changed with a content hash of each side. It reports and exits zero; nothing acts on it.
+
+```bash
+node --import ./tools/lint/src/runtime/aliases.ts \
+  tools/workspace/scripts/artifact-drift.ts --projects lib-logging,lib-nexus
+node --import ./tools/lint/src/runtime/aliases.ts \
+  tools/workspace/scripts/artifact-drift.ts --skip-build
+```
 
 ## Affected baseline
 
