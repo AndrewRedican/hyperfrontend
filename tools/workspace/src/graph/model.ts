@@ -1,7 +1,7 @@
 /**
- * The owned graph model: the nodes a workspace holds (projects, files, entries, externals, tools,
- * configurations, tasks), the qualified edge record their imports and declarations draw, and the
- * change, selection and reason records the affected analysis produces.
+ * The owned graph model: the project records read off the workspace, the nodes a workspace holds
+ * (projects, files, entries, externals, tools, configurations, tasks), the qualified edge record
+ * their imports and declarations draw, and the project-level edges Nx draws.
  *
  * @module graph/model
  */
@@ -22,6 +22,181 @@ export const NodeKind = freeze({
 
 /** One of the node kinds. */
 export type NodeKind = (typeof NodeKind)[keyof typeof NodeKind]
+
+/** A project's `package.json`, as far as the graph reads it. */
+export interface PackageManifest {
+  /** The package name. */
+  readonly name?: string
+  /** The version. */
+  readonly version?: string
+  /** Whether the package is private. */
+  readonly private?: boolean
+  /** The keywords, which become tags. */
+  readonly keywords?: readonly string[]
+  /** The runtime dependencies. */
+  readonly dependencies?: Readonly<Record<string, string>>
+  /** The development dependencies. */
+  readonly devDependencies?: Readonly<Record<string, string>>
+  /** The peer dependencies. */
+  readonly peerDependencies?: Readonly<Record<string, string>>
+  /** The optional dependencies. */
+  readonly optionalDependencies?: Readonly<Record<string, string>>
+  /** The exports map. */
+  readonly exports?: unknown
+  /** The executors manifest, relative to the package, for a package that implements executors. */
+  readonly executors?: string
+  /** Nx settings carried by the manifest. */
+  readonly nx?: Readonly<Record<string, unknown>>
+}
+
+/** A target of a project, as far as the graph reads it. */
+export interface TargetRecord {
+  /** The executor, `<package>:<name>`. */
+  readonly executor?: string
+  /** The inputs, as `project.json` writes them. */
+  readonly inputs?: readonly unknown[]
+}
+
+/** A project's `project.json`, as far as the graph reads it. */
+export interface ProjectConfiguration {
+  /** The project's name. */
+  readonly name?: string
+  /** `application` or `library`. */
+  readonly projectType?: string
+  /** The tags. */
+  readonly tags?: readonly string[]
+  /** The projects this one depends on without importing them. */
+  readonly implicitDependencies?: readonly string[]
+  /** The targets by name. */
+  readonly targets?: Readonly<Record<string, TargetRecord>>
+  /** The metadata. */
+  readonly metadata?: Readonly<Record<string, unknown>>
+  /** The source root. */
+  readonly sourceRoot?: string
+  /** The named inputs the project defines for its targets. */
+  readonly namedInputs?: Readonly<Record<string, readonly unknown[]>>
+}
+
+/** One project: the data behind a `ProjectNode`. */
+export interface ProjectRecord {
+  /** The name Nx knows it by. */
+  readonly name: string
+  /** The root, workspace-relative and POSIX; `.` for the workspace itself. */
+  readonly root: string
+  /** `app` or `lib`. */
+  readonly type: 'app' | 'lib'
+  /** The tags: the manifest's visibility and keywords, then the configuration's. */
+  readonly tags: readonly string[]
+  /** The projects it depends on by declaration. */
+  readonly implicitDependencies: readonly string[]
+  /** The files it owns, workspace-relative and POSIX, in listing order. */
+  readonly files: readonly string[]
+  /** The manifest, or null when the project has none. */
+  readonly manifest: PackageManifest | null
+  /** The configuration, or null when the project has none. */
+  readonly configuration: ProjectConfiguration | null
+}
+
+/** The forms an import takes, by what the statement brings in. */
+export const ImportKind = freeze({
+  Value: 'value',
+  Type: 'type',
+  SideEffect: 'side-effect',
+  ReExportAll: 're-export-all',
+  Dynamic: 'dynamic',
+} as const)
+
+/** One of the import forms. */
+export type ImportKind = (typeof ImportKind)[keyof typeof ImportKind]
+
+/** One import of a file. */
+export interface FileImport {
+  /** The specifier as written. */
+  readonly specifier: string
+  /** Whether Nx counts it as dynamic: an `import()`, a `require` under braces, an import type opening a type alias. */
+  readonly dynamic: boolean
+  /** The form of the statement. */
+  readonly kind: ImportKind
+  /** Whether the statement brings in types alone, so erasing it leaves the runtime unchanged. */
+  readonly typeOnly: boolean
+  /** The names imported or re-exported: `default`, `*` for a namespace, the exported names; empty when unknown or none. */
+  readonly names: readonly string[]
+  /** The one-based line of the statement. */
+  readonly line: number
+  /** The one-based column of the statement. */
+  readonly column: number
+}
+
+/** A specifier naming a workspace project. */
+export interface ProjectResolution {
+  /** The resolution's kind. */
+  readonly kind: 'project'
+  /** The project the specifier names. */
+  readonly project: ProjectRecord
+  /** The file within it, or null when the specifier names a package without a matching entry or a missing file. */
+  readonly file: string | null
+  /** The workspace-relative path the specifier named, or null for a package name. */
+  readonly path: string | null
+}
+
+/** A specifier naming an npm package. */
+export interface NpmResolution {
+  /** The resolution's kind. */
+  readonly kind: 'npm'
+  /** The package name, scope included. */
+  readonly name: string
+}
+
+/** A specifier naming a Node built-in. */
+export interface BuiltinResolution {
+  /** The resolution's kind. */
+  readonly kind: 'builtin'
+}
+
+/** A specifier naming a path no project holds. */
+export interface UnknownResolution {
+  /** The resolution's kind. */
+  readonly kind: 'unknown'
+  /** The workspace-relative path the specifier named. */
+  readonly path: string
+}
+
+/** What a specifier names. */
+export type Resolution = ProjectResolution | NpmResolution | BuiltinResolution | UnknownResolution
+
+/** An edge between projects, as Nx draws it. */
+export interface ProjectEdge {
+  /** The depending project. */
+  readonly source: string
+  /** The project depended on. */
+  readonly target: string
+  /** `static` for an import, `dynamic` for a dynamic import, `implicit` for a declaration. */
+  readonly type: 'static' | 'dynamic' | 'implicit'
+  /** The files of the source that draw the edge, for an import. */
+  readonly files: readonly string[]
+}
+
+/** The npm packages a project's files import. */
+export interface NpmUse {
+  /** The package name. */
+  readonly name: string
+  /** The files importing it. */
+  readonly files: readonly string[]
+}
+
+/** The edges between two projects of one kind and one role, grouped. */
+export interface EdgeGroup {
+  /** The depending project. */
+  readonly source: string
+  /** The project depended on. */
+  readonly target: string
+  /** What produced the edges. */
+  readonly kind: EdgeKind
+  /** The role of the files that drew them. */
+  readonly role: Role
+  /** The files of the source that draw the edges, in listing order. */
+  readonly files: readonly string[]
+}
 
 /** A project, named as Nx names it. */
 export interface ProjectNode {
@@ -168,94 +343,6 @@ export interface Edge {
   readonly evidence: EdgeEvidence
 }
 
-/** What happened to one file between two revisions. */
-export const ChangeStatus = freeze({
-  Added: 'added',
-  Modified: 'modified',
-  Deleted: 'deleted',
-  Renamed: 'renamed',
-} as const)
-
-/** One of the change statuses. */
-export type ChangeStatus = (typeof ChangeStatus)[keyof typeof ChangeStatus]
-
-/** One changed file. */
-export interface FileChange {
-  /** What happened to it. */
-  readonly status: ChangeStatus
-  /** The path at the head revision, or the deleted path. */
-  readonly path: string
-  /** The path at the base revision for a rename, else null. */
-  readonly previousPath: string | null
-}
-
-/** The files that changed between two revisions. */
-export interface ChangeSet {
-  /** The base revision. */
-  readonly base: string
-  /** The head revision; the working tree when null. */
-  readonly head: string | null
-  /** The changes, sorted by path. */
-  readonly changes: readonly FileChange[]
-}
-
-/** The closed set of rules an affected decision can rest on. */
-export const ReasonRule = freeze({
-  ChangedInput: 'changed-input',
-  ReachableFromEntry: 'reachable-from-entry',
-  Unreachable: 'unreachable',
-  RoleIrrelevant: 'role-irrelevant',
-  KindIrrelevant: 'kind-irrelevant',
-  UnresolvedImport: 'unresolved-import',
-  ExternalReExport: 'external-re-export',
-  SideEffectImport: 'side-effect-import',
-  Cycle: 'cycle',
-  DependencyManifest: 'dependency-manifest',
-  ProjectConfiguration: 'project-configuration',
-  GlobalConfig: 'global-config',
-  DeletedModule: 'deleted-module',
-  RenamedModule: 'renamed-module',
-  ToolChanged: 'tool-changed',
-  DeclaredDependency: 'declared-dependency',
-  ParseFailure: 'parse-failure',
-  StateInvalidated: 'state-invalidated',
-} as const)
-
-/** One of the reason rules. */
-export type ReasonRule = (typeof ReasonRule)[keyof typeof ReasonRule]
-
-/** Why a task was selected or skipped. */
-export interface Reason {
-  /** The rule that fired. */
-  readonly rule: ReasonRule
-  /** The changed file the reason starts from, or null for a reason no file started. */
-  readonly file: string | null
-  /** The edges followed from the file to the task's project, as `source → target` ids. */
-  readonly path: readonly string[]
-  /** One sentence for a reader. */
-  readonly message: string
-}
-
-/** One task's decision with its reasons. */
-export interface TaskDecision {
-  /** The task's id, `<project>:<target>`. */
-  readonly task: string
-  /** The reasons, in the order the rules fired. */
-  readonly reasons: readonly Reason[]
-}
-
-/** The tasks of one target an analysis selected and skipped. */
-export interface AffectedSet {
-  /** The target analysed. */
-  readonly target: string
-  /** The change set analysed. */
-  readonly changes: ChangeSet
-  /** The tasks selected, sorted by id. */
-  readonly selected: readonly TaskDecision[]
-  /** The tasks skipped, sorted by id, each with the reason it was safe to skip. */
-  readonly skipped: readonly TaskDecision[]
-}
-
 /**
  * The id of a node, unique across kinds.
  *
@@ -289,59 +376,4 @@ export function nodeId(node: GraphNode): string {
  */
 export function taskId(task: TaskRef): string {
   return `${task.project}:${task.target}`
-}
-
-/**
- * Orders two edges deterministically: by source, target, kind, role, specifier, then evidence.
- *
- * @param left - One edge
- * @param right - Another
- * @returns Negative, zero or positive as a comparator does
- */
-export function compareEdges(left: Edge, right: Edge): number {
-  return (
-    compareText(left.source, right.source) ||
-    compareText(left.target, right.target) ||
-    compareText(left.kind, right.kind) ||
-    compareText(left.role, right.role) ||
-    compareText(left.path?.specifier ?? '', right.path?.specifier ?? '') ||
-    compareText(left.evidence.file, right.evidence.file) ||
-    compareEvidencePosition(left.evidence, right.evidence)
-  )
-}
-
-/**
- * Orders two pieces of evidence from the same file: a source position by line and column, a
- * configuration key by text; source evidence sorts before configuration evidence.
- *
- * @param left - One piece of evidence
- * @param right - Another
- * @returns Negative, zero or positive as a comparator does
- */
-function compareEvidencePosition(left: EdgeEvidence, right: EdgeEvidence): number {
-  if (left.kind === 'source' && right.kind === 'source') return left.line - right.line || left.column - right.column
-  if (left.kind === 'configuration' && right.kind === 'configuration') return compareText(left.key, right.key)
-  return left.kind === 'source' ? -1 : 1
-}
-
-/**
- * Orders two strings by code unit, the way every serialisation of the graph is ordered.
- *
- * @param left - One string
- * @param right - Another
- * @returns Negative, zero or positive as a comparator does
- */
-export function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0
-}
-
-/**
- * The edges in their canonical order, so two graphs built from the same inputs serialise to the
- * same bytes whatever order their edges were found in.
- *
- * @param edges - The edges in any order
- * @returns A sorted copy
- */
-export function sortEdges(edges: readonly Edge[]): Edge[] {
-  return [...edges].sort(compareEdges)
 }

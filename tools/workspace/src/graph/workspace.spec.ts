@@ -1,8 +1,9 @@
+import type { ProjectRecord } from './model'
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__test-utils__/workspace.ts'
-import { discoverProjects, listFiles, readJson } from './workspace.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace'
+import { discoverProjects, hasTarget, listFiles, readAliases, readJson } from './workspace'
 
 const root = createGraphWorkspace()
 
@@ -37,7 +38,7 @@ describe('readJson', () => {
 describe('discoverProjects', () => {
   it('finds the projects by configuration and manifest', () => {
     const projects = discoverProjects(root, listFiles(root))
-    expect([...projects.keys()].sort()).toEqual(['@fixture/app', '@fixture/b', '@fixture/c', 'lib-a', 'root'])
+    expect([...projects.keys()].sort()).toEqual(['@fixture/app', '@fixture/b', '@fixture/c', 'lib-a', 'lib-d', 'root', 'tooling'])
   })
 
   it('reads the type, tags and implicit dependencies', () => {
@@ -72,6 +73,24 @@ describe('discoverProjects', () => {
       project?.files.includes('lint.config.ts'),
       project?.files.includes('libs/a/src/index.ts'),
     ]).toEqual(['app', ['npm:private', 'scope:root'], true, false])
+  })
+})
+
+describe('readAliases', () => {
+  it('reads the path aliases of the base tsconfig', () => {
+    expect(readAliases(root).get('@fixture/a')).toEqual(['libs/a/src/index.ts'])
+  })
+
+  it('reads none without a base tsconfig', () => {
+    expect(readAliases(join(root, 'libs')).size).toBe(0)
+  })
+})
+
+describe('hasTarget', () => {
+  it('answers whether the configuration declares the target', () => {
+    const projects = discoverProjects(root, listFiles(root))
+    const [a, b] = [projects.get('lib-a') as ProjectRecord, projects.get('@fixture/b') as ProjectRecord]
+    expect([hasTarget(a, 'version'), hasTarget(a, 'serve'), hasTarget(b, 'version')]).toEqual([true, false, false])
   })
 })
 

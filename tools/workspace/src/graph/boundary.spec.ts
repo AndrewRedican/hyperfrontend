@@ -4,13 +4,13 @@ import { readDirectoryRecursive } from '@hyperfrontend/project-scope/core'
 import { describe, expect, it } from '@hyperfrontend/testing'
 
 /** Workspace packages the graph may import, by alias prefix; `@hyperfrontend/testing` is for specs alone. */
-const ALLOWED_WORKSPACE_PREFIXES = ['@hyperfrontend/project-scope/', '@hyperfrontend/immutable-api-utils/', '@hyperfrontend/linter/']
+const ALLOWED_WORKSPACE_PREFIXES = ['@hyperfrontend/project-scope/', '@hyperfrontend/immutable-api-utils/', '@hyperfrontend/linter']
 
 /** Specifiers the graph must never import: Nx itself and the Nx-facing adapters. */
 const FORBIDDEN_PREFIXES = ['nx', '@nx/', '@hyperfrontend/integration-nx']
 
 /** The specifier of an import or re-export statement; only a statement's own line counts, so quoted source inside a fixture does not. */
-const SPECIFIER = /^(?:import|export)\b[^'\n]*'([^']+)'/gm
+const SPECIFIER = /^(?:import|export)\b(?:[^'\n]*\sfrom\s+|\s+)'([^']+)'/gm
 
 /**
  * Whether a specifier is one the boundary allows for a file.

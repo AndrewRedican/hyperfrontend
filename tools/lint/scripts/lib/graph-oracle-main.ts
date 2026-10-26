@@ -10,7 +10,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { buildGraph } from '../../src/graph/build.ts'
+import { buildGraph } from '@hyperfrontend/workspace/graph'
 import { WORKSPACE_ROOT, labelDir, say } from './paths.ts'
 
 /** The project data of a captured node. */

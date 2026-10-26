@@ -1,9 +1,9 @@
-import type { ProjectRecord } from '../../../graph/model.ts'
+import type { ProjectRecord } from '@hyperfrontend/workspace/graph'
 import { existsSync, rmSync } from 'node:fs'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { buildGraph } from '../../../graph/build.ts'
+import { buildGraph } from '@hyperfrontend/workspace/graph'
 import { createDependencyWorkspace } from '../__test-utils__/dependency-workspace.ts'
-import { inputFiles, installedVersion, selfInputs, usedPackages } from './dependencies.ts'
+import { inputFiles, installedVersion, usedPackages } from './dependencies.ts'
 
 const root = createDependencyWorkspace()
 const graph = buildGraph(root)
@@ -27,42 +27,6 @@ function withInputs(inputs: readonly unknown[] | undefined, namedInputs?: Readon
     },
   }
 }
-
-describe('selfInputs', () => {
-  it('reads the target defaults, leaving out the dependencies and other projects', () => {
-    expect(selfInputs(root, lib, 'build')).toEqual(['{projectRoot}/**/*', '{workspaceRoot}/patches/**'])
-  })
-
-  it('expands the project named inputs and object inputs', () => {
-    const project = withInputs(
-      [
-        'own',
-        { input: 'own', projects: 'self' },
-        { fileset: '{projectRoot}/x' },
-        { fileset: '{projectRoot}/y', dependencies: true },
-        { input: 'own', dependencies: true },
-        { env: 'X' },
-        { input: 'undefined-name' },
-        'missing-name',
-      ],
-      { own: ['{projectRoot}/c/**'] }
-    )
-    expect(selfInputs(root, project, 'build')).toEqual(['{projectRoot}/c/**', '{projectRoot}/c/**', '{projectRoot}/x', 'missing-name'])
-  })
-
-  it('stops expanding a named input that names itself through another', () => {
-    const project = withInputs(['a'], { a: ['b', '{projectRoot}/a/**'], b: ['a', '{projectRoot}/b/**'] })
-    expect(selfInputs(root, project, 'build')).toEqual(['{projectRoot}/b/**', '{projectRoot}/a/**'])
-  })
-
-  it('falls back to the default input without nx.json', () => {
-    const bare = createDependencyWorkspace()
-    rmSync(`${bare}/nx.json`)
-    const patterns = selfInputs(bare, withInputs(undefined), 'build')
-    rmSync(bare, { recursive: true, force: true })
-    expect(patterns).toEqual(['{projectRoot}/**/*'])
-  })
-})
 
 describe('inputFiles', () => {
   it('keeps every file for the default pattern alone', () => {

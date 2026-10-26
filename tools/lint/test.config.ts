@@ -8,12 +8,11 @@ import type { TestConfig } from '@hyperfrontend/testing/runner'
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts', 'config/**/*.spec.ts'] }],
   coverageInclude: ['src/**/*.ts', 'config/**/*.ts'],
-  // why: the modules under __test-utils__ build the inputs the specs read, not code the linter runs; the graph model holds types alone, so no test can load it.
+  // why: the modules under __test-utils__ build the inputs the specs read, not code the linter runs.
   coverageExclude: [
     'src/**/*.spec.ts',
     'config/**/*.spec.ts',
     'src/**/__test-utils__/**',
-    'src/graph/model.ts',
     // why: the workspace's settings hold data alone, so no test has behaviour of theirs to run.
     'config/rule-sets.ts',
   ],

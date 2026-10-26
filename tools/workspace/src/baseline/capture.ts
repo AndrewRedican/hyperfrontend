@@ -10,7 +10,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { compareText } from '../graph/model'
+import { compareText } from '../graph/order'
 
 /** Runs one Nx command and returns its standard output. */
 export type NxRunner = (args: readonly string[]) => string

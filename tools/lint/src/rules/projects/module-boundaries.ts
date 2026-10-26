@@ -9,14 +9,13 @@
  */
 
 import type { Node, RuleContext } from '@hyperfrontend/linter'
-import type { WorkspaceGraph } from '../../graph/build.ts'
-import type { ProjectRecord } from '../../graph/model.ts'
+import type { ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import { dirname, posix } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { defineRule } from '@hyperfrontend/linter'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
-import { workspaceGraph } from '../../graph/build.ts'
+import { workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
 import { filesImporting, pathBetween, reachesDynamically } from './shared/reach.ts'
 import { aliasImports, relativeImports } from './shared/remap.ts'

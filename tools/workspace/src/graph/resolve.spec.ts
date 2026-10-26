@@ -1,12 +1,13 @@
-import type { Resolver } from './resolve.ts'
+import type { Resolver } from './resolve'
 import { existsSync, rmSync } from 'node:fs'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__test-utils__/workspace.ts'
-import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve.ts'
-import { discoverProjects, listFiles } from './workspace.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace'
+import { entriesOfProject } from './entries'
+import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve'
+import { discoverProjects, listFiles } from './workspace'
 
 const root = createGraphWorkspace()
 let resolver: Resolver
@@ -14,17 +15,22 @@ let resolver: Resolver
 {
   const files = listFiles(root)
   const projects = discoverProjects(root, files)
+  const aliases = createMap([
+    ['@fixture/a', ['libs/a/src/index.ts']],
+    ['@fixture/a/*', ['libs/a/src/*']],
+    ['@fixture/none', []],
+    ['@fixture/star/*', []],
+  ])
+  const fileSet = createSet(files)
   resolver = {
     root,
-    files: createSet(files),
+    files: fileSet,
     projects,
-    aliases: createMap([
-      ['@fixture/a', ['libs/a/src/index.ts']],
-      ['@fixture/a/*', ['libs/a/src/*']],
-      ['@fixture/none', []],
-      ['@fixture/star/*', []],
-    ]),
+    aliases,
     packages: packagesOf([compileGlob('libs/*')], projects),
+    entries: createMap(
+      [...projects.values()].flatMap((project) => entriesOfProject(project, aliases, fileSet)).map((entry) => [entry.id, entry])
+    ),
   }
 }
 
@@ -139,7 +145,22 @@ describe('resolveSpecifier', () => {
       label('libs/b/src/index.spec.ts', '@fixture/b'),
       label('libs/a/src/deep.ts', 'left-pad'),
       label('libs/a/src/deep.ts', 'missing-package'),
-    ]).toEqual(['project @fixture/b null', 'npm left-pad', 'npm missing-package'])
+    ]).toEqual(['project @fixture/b libs/b/src/index.ts', 'npm left-pad', 'npm missing-package'])
+  })
+
+  it('answers a workspace package subpath by its entry, and null for a subpath without one', () => {
+    expect([label('libs/a/src/deep.ts', '@fixture/b/side'), label('libs/a/src/deep.ts', '@fixture/b/missing')]).toEqual([
+      'project @fixture/b libs/b/src/side.ts',
+      'project @fixture/b null',
+    ])
+  })
+
+  it('carries the path a relative or aliased specifier named, and none for a package name', () => {
+    const paths = ['./gone', '@fixture/a/deep', '@fixture/b'].map((specifier) => {
+      const resolution = resolveSpecifier(resolver, 'libs/a/src/deep.ts', specifier)
+      return resolution.kind === 'project' ? resolution.path : resolution.kind
+    })
+    expect(paths).toEqual(['libs/a/src/gone', 'libs/a/src/deep', null])
   })
 
   it('answers an installed workspace package as npm', () => {
@@ -148,7 +169,10 @@ describe('resolveSpecifier', () => {
 
   it('answers unknown for a path outside every project', () => {
     const projects = createMap([...resolver.projects].filter(([name]) => name !== 'root'))
-    expect(resolveSpecifier({ ...resolver, projects }, 'libs/a/src/deep.ts', '../../../lint.config').kind).toBe('unknown')
+    expect(resolveSpecifier({ ...resolver, projects }, 'libs/a/src/deep.ts', '../../../lint.config')).toEqual({
+      kind: 'unknown',
+      path: 'lint.config',
+    })
   })
 })
 

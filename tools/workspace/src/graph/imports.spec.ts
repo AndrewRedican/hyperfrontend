@@ -1,10 +1,12 @@
+import type { FileImport } from './model'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__test-utils__/workspace.ts'
-import { importsOfFiles, importsOfText, isCodeFile } from './imports.ts'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { createGraphWorkspace } from './__test-utils__/workspace'
+import { importsOfFiles, importsOfText, isCodeFile, readerVersion } from './imports'
 
 const root = createGraphWorkspace()
 
@@ -68,6 +70,84 @@ describe('importsOfText', () => {
 
   it('reads a declaration file', () => {
     expect(kinds("import type { A } from 'a'\n", 'a.d.ts')).toEqual(['a'])
+  })
+})
+
+/**
+ * The form, type-only flag and names of a text's imports, compactly.
+ *
+ * @param text - The code
+ * @returns One `kind[names]` or `kind type-only[names]` per import
+ */
+function forms(text: string): string[] {
+  return (importsOfText(text, 'a.ts') ?? []).map((item) => `${item.kind}${item.typeOnly ? ' type-only' : ''}[${item.names.join(',')}]`)
+}
+
+describe('importsOfText forms', () => {
+  it('reads side-effect, type-only, mixed, default and namespace imports with their names', () => {
+    expect(
+      forms(
+        "import 'a'\nimport type { A } from 'b'\nimport { type A, type B } from 'c'\nimport { A, type B as C } from 'd'\nimport D, * as ns from 'e'\nimport { 'string name' as s } from 'f'\n"
+      )
+    ).toEqual(['side-effect[]', 'type type-only[A]', 'type type-only[A,B]', 'value[A,B]', 'value[default,*]', 'value[string name]'])
+  })
+
+  it('reads named, type-only, star and namespace re-exports', () => {
+    expect(
+      forms("export { x as y } from 'g'\nexport type { T } from 'h'\nexport * from 'i'\nexport * as ns from 'j'\nexport type * from 'k'\n")
+    ).toEqual(['value[x]', 'type type-only[T]', 're-export-all[]', 'value[*]', 're-export-all type-only[]'])
+  })
+
+  it('reads import equals, import types, dynamic imports and require calls', () => {
+    expect(
+      forms("import x = require('l')\nimport type y = require('m')\ntype Q = import('n').Q\nconst p = import('o')\nrequire('q')\n")
+    ).toEqual(['value[*]', 'type type-only[*]', 'type type-only[]', 'dynamic[]', 'value[]'])
+  })
+
+  it('records the line and column of each import', () => {
+    expect(
+      (importsOfText("\nimport 'a'\nconst x = () => import('b')\n", 'a.ts') ?? []).map((item) => `${item.line}:${item.column}`)
+    ).toEqual(['2:1', '3:17'])
+  })
+})
+
+describe('readerVersion', () => {
+  it('names the installed parser version where the workspace does not alias the parser to source', () => {
+    const installed = createTempDir({
+      prefix: 'reader-installed-',
+      tree: { 'node_modules/@hyperfrontend/linter/package.json': '{ "version": "1.2.3" }' },
+    })
+    expect(readerVersion(installed.path)).toBe('2:1.2.3')
+  })
+
+  it('hashes the aliased parser sources, specs left out', () => {
+    const aliased = createTempDir({
+      prefix: 'reader-aliased-',
+      tree: {
+        'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/linter": ["libs/linter/src/index.ts"] } } }',
+        'libs/linter/src/code/b.ts': 'export const b = 1\n',
+        'libs/linter/src/code/a.ts': 'export const a = 1\n',
+        'libs/linter/src/code/a.spec.ts': 'spec\n',
+        'libs/linter/src/code/notes.md': 'notes\n',
+      },
+    })
+    const hash = createHash('sha1').update('export const a = 1\n').update('export const b = 1\n').digest('hex')
+    expect(readerVersion(aliased.path)).toBe(`2:${hash}`)
+  })
+
+  it('answers unknown for an alias naming no sources beside an installed parser without a version', () => {
+    const empty = createTempDir({
+      prefix: 'reader-empty-',
+      tree: {
+        'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/linter": ["libs/linter/src/index.ts"] } } }',
+        'node_modules/@hyperfrontend/linter/package.json': '{ "name": "@hyperfrontend/linter" }',
+      },
+    })
+    expect(readerVersion(empty.path)).toBe('2:unknown')
+  })
+
+  it('answers unknown without an alias or an installed parser, once per root', () => {
+    expect([readerVersion(root), readerVersion(root) === readerVersion(root)]).toEqual(['2:unknown', true])
   })
 })
 
@@ -160,7 +240,16 @@ describe('importsOfFiles', () => {
   it('reads a file whose content changed', () => {
     importsOfFiles(root, ['libs/b/src/index.ts'])
     writeFileSync(join(root, 'libs/b/src/index.ts'), "import 'changed'\n")
-    expect(importsOfFiles(root, ['libs/b/src/index.ts']).get('libs/b/src/index.ts')).toEqual([{ specifier: 'changed', dynamic: false }])
+    const changed: FileImport = {
+      specifier: 'changed',
+      dynamic: false,
+      kind: 'side-effect',
+      typeOnly: false,
+      names: [],
+      line: 1,
+      column: 1,
+    }
+    expect(importsOfFiles(root, ['libs/b/src/index.ts']).get('libs/b/src/index.ts')).toEqual([changed])
   })
 
   it('leaves out a listed file that no longer exists', () => {

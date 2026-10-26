@@ -2,8 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__test-utils__/workspace.ts'
-import { buildGraph, workspaceGraph } from './build.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace'
+import { buildGraph, workspaceGraph } from './build'
 
 const root = createGraphWorkspace()
 
@@ -32,6 +32,21 @@ describe('workspaceGraph', () => {
 
   it('keeps an edge into the root project only from the root project', () => {
     expect(edgesOf('root')).toEqual([])
+  })
+
+  it('draws a type import as static and a require under braces as dynamic', () => {
+    expect(edgesOf('@fixture/b')).toEqual(['lib-a dynamic [libs/b/src/index.spec.ts]', 'lib-a static [libs/b/src/side.ts]'])
+  })
+
+  it('keeps the records in canonical order', () => {
+    const graph = workspaceGraph(root)
+    expect(graph.records.map((edge) => `${edge.source} ${edge.target}`)).toEqual(
+      [...graph.records.map((edge) => `${edge.source} ${edge.target}`)].sort()
+    )
+  })
+
+  it('indexes the entries of every project', () => {
+    expect([...workspaceGraph(root).entries.keys()]).toEqual(['@fixture/app', '@fixture/a', '@fixture/b', '@fixture/b/side', '@fixture/c'])
   })
 
   it('records the npm packages each project uses', () => {

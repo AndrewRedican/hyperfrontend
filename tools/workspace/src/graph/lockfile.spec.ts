@@ -1,8 +1,8 @@
 import { existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createGraphWorkspace } from './__test-utils__/workspace.ts'
-import { installedPackages } from './lockfile.ts'
+import { createGraphWorkspace } from './__test-utils__/workspace'
+import { installedPackages } from './lockfile'
 
 const root = createGraphWorkspace()
 

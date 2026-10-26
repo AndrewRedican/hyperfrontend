@@ -5,12 +5,13 @@
  * @module graph/workspace
  */
 
-import type { PackageManifest, ProjectConfiguration, ProjectRecord } from './model.ts'
+import type { PackageManifest, ProjectConfiguration, ProjectRecord } from './model'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { compileGlob, matchesAny } from '@hyperfrontend/linter/helpers'
 
 /** The project files found in one directory. */
@@ -19,6 +20,18 @@ interface ProjectFiles {
   manifest: PackageManifest | null
   /** The configuration, or null when the directory has none. */
   configuration: ProjectConfiguration | null
+}
+
+/** The compiler options of the base tsconfig, as far as the aliases are read. */
+interface AliasOptions {
+  /** The path aliases, each to its targets. */
+  readonly paths?: Readonly<Record<string, readonly string[]>>
+}
+
+/** The base tsconfig, as far as the aliases are read. */
+interface BaseTsconfig {
+  /** The compiler options. */
+  readonly compilerOptions?: AliasOptions
 }
 
 /** The largest output git may answer with. */
@@ -70,6 +83,16 @@ export function readJson<Value>(path: string): Value | null {
   } catch {
     return null
   }
+}
+
+/**
+ * The path aliases of a workspace, from its `tsconfig.base.json`.
+ *
+ * @param root - The workspace root, absolute
+ * @returns Each alias to its targets, none when the file or its paths are absent
+ */
+export function readAliases(root: string): Map<string, readonly string[]> {
+  return createMap(entries(readJson<BaseTsconfig>(join(root, 'tsconfig.base.json'))?.compilerOptions?.paths ?? {}))
 }
 
 /**
@@ -142,4 +165,15 @@ export function discoverProjects(root: string, files: readonly string[]): Map<st
     })
   }
   return projects
+}
+
+/**
+ * Whether a project declares a target.
+ *
+ * @param project - The project whose targets are read
+ * @param target - The target's name
+ * @returns True when the project's configuration declares it
+ */
+export function hasTarget(project: ProjectRecord, target: string): boolean {
+  return project.configuration?.targets?.[target] !== undefined
 }

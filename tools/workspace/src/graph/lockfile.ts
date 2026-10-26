@@ -9,7 +9,7 @@ import { join, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { readJson } from './workspace.ts'
+import { readJson } from './workspace'
 
 /** One installed package of the lock file. */
 interface LockEntry {

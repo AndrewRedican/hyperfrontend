@@ -6,7 +6,7 @@
  */
 
 import type { Glob } from '@hyperfrontend/linter/helpers'
-import type { ProjectRecord, Resolution } from './model.ts'
+import type { EntryNode, ProjectRecord, Resolution } from './model'
 import { existsSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { join, posix } from 'node:path'
@@ -33,6 +33,8 @@ export interface Resolver {
   readonly aliases: ReadonlyMap<string, readonly string[]>
   /** The projects by package name. */
   readonly packages: ReadonlyMap<string, ProjectRecord>
+  /** The entries every project exposes, by id. */
+  readonly entries: ReadonlyMap<string, EntryNode>
 }
 
 /**
@@ -111,7 +113,8 @@ export function packagesOf(workspaces: readonly Glob[], projects: ReadonlyMap<st
 /**
  * Resolves a specifier seen from a file as Nx does: a relative path or an alias target names the
  * project whose root holds it, whether or not the file exists; an alias that names no project
- * falls through to the package lookup.
+ * falls through to the package lookup, where a package name resolves to the file of the entry it
+ * names.
  *
  * @param resolver - What is known of the workspace
  * @param from - The importing file, workspace-relative
@@ -127,7 +130,8 @@ export function resolveSpecifier(resolver: Resolver, from: string, specifier: st
   const packageName = packageNameOf(specifier)
   const owner = resolver.packages.get(packageName)
   // why: Nx resolves a package the importing file can load from a node_modules directory as npm before it looks for a workspace project of that name.
-  if (owner !== undefined && !isInstalled(resolver.root, from, packageName)) return { kind: 'project', project: owner, file: null }
+  if (owner !== undefined && !isInstalled(resolver.root, from, packageName))
+    return { kind: 'project', project: owner, file: resolver.entries.get(specifier)?.file ?? null, path: null }
   return { kind: 'npm', name: packageName }
 }
 
@@ -181,7 +185,7 @@ function isInstalled(root: string, from: string, packageName: string): boolean {
  */
 function locate(resolver: Resolver, path: string): Resolution {
   const project = projectOfFile(resolver.projects, path)
-  return project === null ? { kind: 'unknown' } : { kind: 'project', project, file: fileOf(resolver.files, path) }
+  return project === null ? { kind: 'unknown', path } : { kind: 'project', project, file: fileOf(resolver.files, path), path }
 }
 
 /**

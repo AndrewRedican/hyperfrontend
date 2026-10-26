@@ -1,13 +1,14 @@
 /**
- * The imports of every code file, read by the parser and remembered on disk so that a lint run
+ * The imports of every code file, read by the parser and remembered on disk so that a graph build
  * reads only what changed since the last: a file whose size and modification time are unchanged
- * is not read, and one whose content hash is unchanged is not parsed.
+ * is not read, and one whose content hash is unchanged is not parsed. Each import carries its
+ * form, whether it brings in types alone, the names it imports and where it stands.
  *
  * @module graph/imports
  */
 
 import type { Node } from '@hyperfrontend/linter'
-import type { FileImport } from './model.ts'
+import type { FileImport, ImportKind } from './model'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, extname, join, posix } from 'node:path'
@@ -16,6 +17,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { childrenOf, parseCode } from '@hyperfrontend/linter/helpers'
+import { readAliases, readJson } from './workspace'
 
 /** Where the remembered imports live under the workspace. */
 const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports.json')
@@ -23,19 +25,11 @@ const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports
 /** The extensions of the files whose imports count. */
 const CODE_EXTENSIONS = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 
-/** The package's parser sources, which the workspace runs from source. */
-const PARSER = join(import.meta.dirname, '..', '..', '..', '..', 'libs', 'linter', 'src', 'code')
+/** The shape of a remembered import; raised when `FileImport` changes, which a cache written for the old shape does not survive. */
+const CACHE_FORMAT = '2'
 
-/** The parser's sources and this module, whose content decides what a remembered entry means. */
-const READER_SOURCES = [
-  ...readdirSync(PARSER)
-    .filter((name) => name.endsWith('.ts') && !name.endsWith('.spec.ts'))
-    .map((name) => join(PARSER, name)),
-  import.meta.filename,
-]
-
-/** The version of the reader, a hash of its sources, which a cache written by another does not survive. */
-const CACHE_VERSION = READER_SOURCES.reduce((hash, file) => hash.update(readFileSync(file)), createHash('sha1')).digest('hex')
+/** The alias naming the parser package, whose sources decide what a remembered entry means where a workspace runs the parser from source. */
+const PARSER_ALIAS = '@hyperfrontend/linter'
 
 /** The kinds whose braces make the `require` calls inside them dynamic for Nx. */
 const DYNAMIC_SCOPES = createSet(['SwitchStatement', 'ClassBody', 'StaticBlock', 'TSModuleBlock'])
@@ -58,6 +52,23 @@ interface CachedImports {
   readonly imports: readonly FileImport[]
 }
 
+/** An installed package's manifest, as far as its version is read. */
+interface InstalledManifest {
+  /** The installed version. */
+  readonly version?: string
+}
+
+/** Where a statement stands in its file. */
+interface Position {
+  /** The one-based line. */
+  readonly line: number
+  /** The one-based column. */
+  readonly column: number
+}
+
+/** The reader versions computed so far, by root. */
+const readerVersions = createMap<string, string>()
+
 /**
  * Whether a file's imports count: a code file outside any node_modules.
  *
@@ -69,6 +80,42 @@ export function isCodeFile(path: string): boolean {
 }
 
 /**
+ * The version of the reader for a workspace: the cache format, then a hash of the parser's
+ * sources where the workspace aliases the parser package to its source, else the installed
+ * parser's version. A cache another version wrote is discarded.
+ *
+ * @param root - The workspace root, absolute
+ * @returns The version string
+ */
+export function readerVersion(root: string): string {
+  let version = readerVersions.get(root)
+  if (version === undefined) {
+    version = `${CACHE_FORMAT}:${parserIdentity(root)}`
+    readerVersions.set(root, version)
+  }
+  return version
+}
+
+/**
+ * What identifies the parser a workspace reads imports with.
+ *
+ * @param root - The workspace root, absolute
+ * @returns A hash of the aliased parser sources, the installed package's version, or `unknown`
+ */
+function parserIdentity(root: string): string {
+  const target = readAliases(root).get(PARSER_ALIAS)?.[0]
+  const sources = target === undefined ? null : join(root, dirname(target), 'code')
+  if (sources !== null && existsSync(sources)) {
+    const hash = createHash('sha1')
+    for (const name of readdirSync(sources).sort()) {
+      if (name.endsWith('.ts') && !name.endsWith('.spec.ts')) hash.update(readFileSync(join(sources, name)))
+    }
+    return hash.digest('hex')
+  }
+  return readJson<InstalledManifest>(join(root, 'node_modules', '@hyperfrontend', 'linter', 'package.json'))?.version ?? 'unknown'
+}
+
+/**
  * The string a literal node holds.
  *
  * @param node - The node, which may be absent
@@ -76,6 +123,16 @@ export function isCodeFile(path: string): boolean {
  */
 function stringOf(node: Node | null | undefined): string | null {
   return node !== null && node !== undefined && node.kind === 'Literal' && typeof node.value === 'string' ? node.value : null
+}
+
+/**
+ * The name an identifier or string literal carries.
+ *
+ * @param node - An identifier or a string literal
+ * @returns The identifier's name or the literal's value
+ */
+function nameOf(node: Node): string {
+  return node.kind === 'Identifier' ? (node.name as string) : (node.value as string)
 }
 
 /**
@@ -109,14 +166,78 @@ function isDynamicScope(node: Node): boolean {
 }
 
 /**
+ * Whether a declaration brings in types alone: written `import type` or `export type`, or every
+ * one of its specifiers written so.
+ *
+ * @param node - An import declaration, a named re-export or a star re-export
+ * @returns True for a type-only declaration
+ */
+function isTypeOnly(node: Node): boolean {
+  if (node.importKind === 'type' || node.exportKind === 'type') return true
+  const specifiers = node.specifiers ?? []
+  return specifiers.length > 0 && specifiers.every((specifier) => specifier.importKind === 'type' || specifier.exportKind === 'type')
+}
+
+/**
+ * The names a declaration imports or re-exports from its source.
+ *
+ * @param node - An import declaration, a named re-export or a star re-export
+ * @returns `default`, `*` for a namespace, or the names as the source exports them
+ */
+function namesOf(node: Node): string[] {
+  if (node.kind === 'ExportAllDeclaration') return node.exported === null ? [] : ['*']
+  return (node.specifiers ?? []).map((specifier) => {
+    if (specifier.kind === 'ImportDefaultSpecifier') return 'default'
+    if (specifier.kind === 'ImportNamespaceSpecifier') return '*'
+    return nameOf((specifier.kind === 'ImportSpecifier' ? specifier.imported : specifier.local) as Node)
+  })
+}
+
+/**
+ * The offsets at which each line of a text starts.
+ *
+ * @param text - The text whose lines are located
+ * @returns The offsets, the first 0
+ */
+function lineStarts(text: string): number[] {
+  const starts = [0]
+  for (let at = text.indexOf('\n'); at !== -1; at = text.indexOf('\n', at + 1)) starts.push(at + 1)
+  return starts
+}
+
+/**
+ * The line and column of an offset.
+ *
+ * @param starts - The offsets each line starts at
+ * @param offset - The offset located
+ * @returns The one-based position
+ */
+function positionOf(starts: readonly number[], offset: number): Position {
+  let low = 0
+  let high = starts.length - 1
+  while (low < high) {
+    const middle = (low + high + 1) >> 1
+    if ((starts[middle] as number) <= offset) low = middle
+    else high = middle - 1
+  }
+  return { line: low + 1, column: offset - (starts[low] as number) + 1 }
+}
+
+/**
  * The imports a tree makes: declarations, re-exports, dynamic imports, `require` and
- * `require.resolve` calls, import equals declarations and import types, as Nx counts them.
+ * `require.resolve` calls, import equals declarations and import types, as Nx counts them, each
+ * with its form, names and position.
  *
  * @param tree - The program
+ * @param text - The text the program was parsed from, for positions
  * @returns The imports, in source order
  */
-export function importsOfTree(tree: Node): FileImport[] {
+export function importsOfTree(tree: Node, text: string): FileImport[] {
+  const starts = lineStarts(text)
   const imports: FileImport[] = []
+  const push = (node: Node, specifier: string, dynamic: boolean, kind: ImportKind, typeOnly: boolean, names: readonly string[]): void => {
+    imports.push({ specifier, dynamic, kind, typeOnly, names, ...positionOf(starts, node.start) })
+  }
   const visit = (node: Node, nested: boolean): void => {
     const source = stringOf(node.source as Node | null | undefined)
     const dynamic = nested || isDynamicScope(node)
@@ -124,18 +245,28 @@ export function importsOfTree(tree: Node): FileImport[] {
       (node.kind === 'ImportDeclaration' || node.kind === 'ExportNamedDeclaration' || node.kind === 'ExportAllDeclaration') &&
       source !== null
     ) {
-      imports.push({ specifier: source, dynamic: false })
-    } else if (node.kind === 'ImportExpression' && source !== null) imports.push({ specifier: source, dynamic: true })
+      const typeOnly = isTypeOnly(node)
+      const kind =
+        node.kind === 'ExportAllDeclaration' && node.exported === null
+          ? 're-export-all'
+          : node.kind === 'ImportDeclaration' && (node.specifiers as readonly Node[]).length === 0
+            ? 'side-effect'
+            : typeOnly
+              ? 'type'
+              : 'value'
+      push(node, source, false, kind, typeOnly, namesOf(node))
+    } else if (node.kind === 'ImportExpression' && source !== null) push(node, source, true, 'dynamic', false, [])
     else if (node.kind === 'CallExpression' && isRequire(node.callee as Node)) {
       const argument = stringOf((node.arguments as readonly Node[])[0])
-      if (argument !== null) imports.push({ specifier: argument, dynamic })
+      if (argument !== null) push(node, argument, dynamic, 'value', false, [])
     } else if (node.kind === 'TSExternalModuleReference') {
       const argument = stringOf(node.expression as Node)
-      if (argument !== null) imports.push({ specifier: argument, dynamic: false })
+      const typeOnly = (node.parent as Node).importKind === 'type'
+      if (argument !== null) push(node, argument, false, typeOnly ? 'type' : 'value', typeOnly, ['*'])
     } else if (node.kind === 'TSImportType') {
       const argument = stringOf(node.argument as Node)
       // why: Nx counts an import type as dynamic only where it opens a type alias, as its lexer sees `= import(`.
-      if (argument !== null) imports.push({ specifier: argument, dynamic: (node.parent as Node).kind === 'TSTypeAliasDeclaration' })
+      if (argument !== null) push(node, argument, (node.parent as Node).kind === 'TSTypeAliasDeclaration', 'type', true, [])
     }
     for (const child of childrenOf(node)) visit(child, dynamic)
   }
@@ -152,7 +283,7 @@ export function importsOfTree(tree: Node): FileImport[] {
  */
 export function importsOfText(text: string, file: string): FileImport[] | null {
   const parsed = parseCode(text, extname(file), 'module', /\.d\.[cm]?ts$/.test(file))
-  return parsed.tree === null ? null : importsOfTree(parsed.tree)
+  return parsed.tree === null ? null : importsOfTree(parsed.tree, text)
 }
 
 /**
@@ -168,7 +299,8 @@ export function importsOfText(text: string, file: string): FileImport[] | null {
 export function importsOfFiles(root: string, files: readonly string[]): Map<string, readonly FileImport[]> {
   const cacheFile = join(root, CACHE_FILE)
   const cache = readCache(cacheFile)
-  const remembered = cache !== null && cache.version === CACHE_VERSION ? cache.files : {}
+  const version = readerVersion(root)
+  const remembered = cache !== null && cache.version === version ? cache.files : {}
   const fresh: Record<string, CachedImports> = {}
   const result = createMap<string, readonly FileImport[]>()
   let changed = keys(remembered).length
@@ -191,12 +323,12 @@ export function importsOfFiles(root: string, files: readonly string[]): Map<stri
     if (imports !== null) fresh[file] = { stamp, hash, imports }
     changed = Infinity
   }
-  if (changed !== 0) writeCache(cacheFile, { version: CACHE_VERSION, files: fresh })
+  if (changed !== 0) writeCache(cacheFile, { version, files: fresh })
   return result
 }
 
 /**
- * Writes the cache: each process writes its own file and renames it into place, so that lint
+ * Writes the cache: each process writes its own file and renames it into place, so that
  * processes running in parallel never read half a cache.
  *
  * @param cacheFile - The cache's absolute path
