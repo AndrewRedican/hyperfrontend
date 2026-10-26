@@ -47,7 +47,7 @@
       "cache": true,
       "inputs": [
         "default",
-        "^default",
+        "^production",
         "{workspaceRoot}/assets/media/*/*.json",
         {
           "projects": ["tool-package", "lib-builder"],
@@ -70,7 +70,7 @@
     },
     "typecheck": {
       "cache": true,
-      "inputs": ["default", "^default"],
+      "inputs": ["default", "^production"],
       "executor": "@hyperfrontend/package:typecheck"
     },
     "audit": {
