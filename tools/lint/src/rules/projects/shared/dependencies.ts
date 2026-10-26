@@ -77,7 +77,9 @@ export function usedPackages(graph: WorkspaceGraph, project: ProjectRecord, file
   const manifest = posix.join(project.root, 'package.json')
   for (const file of files) {
     if (file === manifest) continue
-    for (const { specifier } of graph.imports.get(file) ?? ([] as readonly FileImport[])) {
+    for (const { specifier, kind } of graph.imports.get(file) ?? ([] as readonly FileImport[])) {
+      // why: a load whose specifier is an expression names no package; its text is not a specifier to resolve.
+      if (kind === 'unresolved') continue
       const resolution = graph.resolve(file, specifier)
       if (resolution.kind === 'npm') {
         const version = installedVersion(graph, file, resolution.name)
