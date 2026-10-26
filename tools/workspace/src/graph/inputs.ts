@@ -1,12 +1,15 @@
 /**
- * The inputs and executors of a project's targets after the `nx.json` defaults apply: which
+ * The inputs and executors of a project's targets after the `nx.json` defaults apply, which they
+ * do only when the target is compatible with the default, the way Nx merges them: the two name
+ * the same executor or one names none, and a `run-commands` or `run-script` pair runs the same
+ * command or script or one names none. Also: which
  * inputs a target reads, where they were configured, and the file patterns of the target's own
  * inputs with named inputs expanded.
  *
  * @module graph/inputs
  */
 
-import type { ProjectRecord } from './model'
+import type { ProjectRecord, TargetOptions, TargetRecord } from './model'
 import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -33,6 +36,8 @@ export interface TargetDefaults {
   readonly inputs?: readonly InputDefinition[]
   /** The executor. */
   readonly executor?: string
+  /** The options, as far as they identify a `run-commands` or `run-script` target. */
+  readonly options?: TargetOptions
   /** The tasks the target runs after. */
   readonly dependsOn?: readonly unknown[]
 }
@@ -102,8 +107,53 @@ export function readNxConfiguration(root: string): NxConfiguration {
 export function targetInputs(root: string, project: ProjectRecord, target: string): Configured<readonly InputDefinition[]> {
   const own = project.configuration?.targets?.[target]?.inputs as readonly InputDefinition[] | undefined
   if (own !== undefined) return { value: own, from: 'project' }
-  const defaults = readNxConfiguration(root).targetDefaults?.[target]?.inputs
+  const defaults = targetDefaultsFor(root, project, target)?.inputs
   return defaults === undefined ? { value: IMPLICIT_INPUTS, from: 'implicit' } : { value: defaults, from: 'defaults' }
+}
+
+/**
+ * What a `run-commands` or `run-script` target runs, which decides whether two such targets are
+ * the same target.
+ *
+ * @param record - The target as written
+ * @returns The command, the commands joined, or the script; undefined when the target names none
+ */
+function commandOf(record: TargetRecord | TargetDefaults): string | undefined {
+  const { options } = record
+  return options?.command ?? options?.commands?.join(' && ') ?? options?.script
+}
+
+/**
+ * Whether the workspace defaults of a target apply to a project's target, as Nx decides it: they
+ * do unless the two name different executors, or name the same `run-commands` or `run-script`
+ * executor with different commands.
+ *
+ * @param own - The target as the project writes it, or undefined for a target the defaults alone define
+ * @param defaults - The defaults for the target's name
+ * @returns True when Nx would merge the defaults into the target
+ */
+export function isCompatibleTarget(own: TargetRecord | undefined, defaults: TargetDefaults): boolean {
+  if (own?.executor === undefined || defaults.executor === undefined) return true
+  if (own.executor !== defaults.executor) return false
+  if (own.executor !== 'nx:run-commands' && own.executor !== 'nx:run-script') return true
+  const left = commandOf(own)
+  const right = commandOf(defaults)
+  return left === undefined || right === undefined || left === right
+}
+
+/**
+ * The workspace defaults that apply to a project's target: the entry under the target's name in
+ * `nx.json`, when the target is compatible with it.
+ *
+ * @param root - The workspace root, absolute
+ * @param project - The project whose target is read
+ * @param target - The target's name
+ * @returns The defaults, or null when there are none or they do not apply
+ */
+export function targetDefaultsFor(root: string, project: ProjectRecord, target: string): TargetDefaults | null {
+  const defaults = readNxConfiguration(root).targetDefaults?.[target]
+  if (defaults === undefined) return null
+  return isCompatibleTarget(project.configuration?.targets?.[target], defaults) ? defaults : null
 }
 
 /**
@@ -116,7 +166,7 @@ export function targetInputs(root: string, project: ProjectRecord, target: strin
  */
 export function targetDependsOn(root: string, project: ProjectRecord, target: string): readonly DependsOn[] {
   const own = project.configuration?.targets?.[target]?.dependsOn as readonly DependsOn[] | undefined
-  return own ?? (readNxConfiguration(root).targetDefaults?.[target]?.dependsOn as readonly DependsOn[] | undefined) ?? []
+  return own ?? (targetDefaultsFor(root, project, target)?.dependsOn as readonly DependsOn[] | undefined) ?? []
 }
 
 /**
@@ -130,7 +180,7 @@ export function targetDependsOn(root: string, project: ProjectRecord, target: st
 export function targetExecutor(root: string, project: ProjectRecord, target: string): Configured<string> | null {
   const own = project.configuration?.targets?.[target]?.executor
   if (own !== undefined) return { value: own, from: 'project' }
-  const defaults = readNxConfiguration(root).targetDefaults?.[target]?.executor
+  const defaults = targetDefaultsFor(root, project, target)?.executor
   return defaults === undefined ? null : { value: defaults, from: 'defaults' }
 }
 

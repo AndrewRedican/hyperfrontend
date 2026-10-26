@@ -53,10 +53,22 @@ export interface PackageManifest {
 export interface TargetRecord {
   /** The executor, `<package>:<name>`. */
   readonly executor?: string
+  /** The options, as far as they identify a `run-commands` or `run-script` target. */
+  readonly options?: TargetOptions
   /** The inputs, as `project.json` writes them. */
   readonly inputs?: readonly unknown[]
   /** The tasks this target runs after, as `project.json` writes them. */
   readonly dependsOn?: readonly unknown[]
+}
+
+/** The options that identify what a `run-commands` or `run-script` target runs. */
+export interface TargetOptions {
+  /** The one command of a `run-commands` target. */
+  readonly command?: string
+  /** The commands of a `run-commands` target. */
+  readonly commands?: readonly string[]
+  /** The script of a `run-script` target. */
+  readonly script?: string
 }
 
 /** A project's `project.json`, as far as the graph reads it. */

@@ -41,6 +41,7 @@ export type {
   ProjectRecord,
   ProjectResolution,
   Resolution,
+  TargetOptions,
   TargetRecord,
   TaskRef,
   ToolNode,
@@ -75,7 +76,16 @@ export { buildGraph, workspaceGraph } from './build'
 export { changeSet, parseNameStatus } from './changes'
 export { entriesOfProject, exportTarget } from './entries'
 export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
-export { expandInputs, readNxConfiguration, selfInputs, targetDependsOn, targetExecutor, targetInputs } from './inputs'
+export {
+  expandInputs,
+  isCompatibleTarget,
+  readNxConfiguration,
+  selfInputs,
+  targetDefaultsFor,
+  targetDependsOn,
+  targetExecutor,
+  targetInputs,
+} from './inputs'
 export { installedPackages } from './lockfile'
 export { EdgeKind, ImportKind, NodeKind, nodeId, taskId } from './model'
 export { compareEdges, compareText, sortEdges } from './order'
