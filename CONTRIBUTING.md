@@ -268,9 +268,6 @@ npx nx build lib-nexus
 
 # Build all libraries
 npx nx run-many -t build
-
-# Skip cache for clean build
-npx nx build lib-nexus --skip-nx-cache
 ```
 
 Output goes to `dist/libs/<library>/` with ESM + CJS formats.
@@ -392,11 +389,10 @@ The project uses GitHub Actions for CI/CD automation. All pull requests must pas
 
 When you open a pull request:
 
-- **Affected Projects**: Nx calculates which projects are affected by your changes
 - **Fast Checks**: Only affected projects are validated (format, lint, build, test)
 - **Version Check**: Validates that version bumps were applied by lefthook
 - **Typical Duration**: < 10 minutes
-- **Status Check**: "CI Status Check" must pass to merge
+- **Status Check**: "status" must pass to merge
 
 If the version-check fails, CI will comment on your PR with instructions to fix.
 
@@ -404,7 +400,6 @@ If the version-check fails, CI will comment on your PR with instructions to fix.
 
 After merging to `main`:
 
-- **All Projects**: Comprehensive validation of the entire monorepo
 - **Coverage Thresholds**: Enforces code coverage requirements
 - **Typical Duration**: < 15 minutes
 - **Artifacts**: Coverage reports retained for 30 days
@@ -437,7 +432,7 @@ curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash 
 act pull_request -W .github/workflows/ci-pr.yml
 
 # Test specific job
-act pull_request -j lint -W .github/workflows/ci-pr.yml
+act pull_request -j plan -W .github/workflows/ci-pr.yml
 
 # Test with event payload
 act pull_request -W .github/workflows/ci-pr.yml -e .github/test-events/pr-opened.json
