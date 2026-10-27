@@ -151,7 +151,7 @@ export async function runCheck(config: ResolvedMediaConfig, slug: string): Promi
     const { scene } = loaded
     const stem = scene.asset ?? 'hero'
     const sceneDir = join(config.roots.outputDir, scene.slug)
-    const rerun = `Run: nx media tool-media --scene=${scene.slug}`
+    const rerun = `Run: npm run hf -- run tool-media:media --scene=${scene.slug}`
     const sidecar = readSidecar(join(sceneDir, `${stem}.json`))
     if (sidecar === undefined) {
       issues.push({ slug: scene.slug, reason: `no readable audit record for ${scene.slug}. ${rerun}` })

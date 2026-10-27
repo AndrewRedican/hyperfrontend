@@ -9,7 +9,7 @@ export default defineBrowserScene({
   viewport: { width: 1440, height: 810 },
 
   serve: {
-    build: ['npx', 'nx', 'run-many', '-t', 'build', '-p', 'demo-koi-*'],
+    build: ['npm', 'run', 'hf', '--', 'run-many', '-t', 'build', '-p', 'demo-koi-*'],
     // why: hf serve sends the production COOP/COEP/CSP headers a plain static server does not
     cwd: 'apps/demos/koi-pond/host',
     command: ['npx', 'hf', 'serve', '--root', '{root}', '--port', '{port}'],

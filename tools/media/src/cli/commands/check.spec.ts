@@ -193,19 +193,19 @@ describe('runCheck', () => {
 
   it('asks for a recording when there is no audit record', async () => {
     expect((await runCheck(workspace.config, 'no-record')).issues).toEqual([
-      { slug: 'no-record', reason: 'no readable audit record for no-record. Run: nx media tool-media --scene=no-record' },
+      { slug: 'no-record', reason: 'no readable audit record for no-record. Run: npm run hf -- run tool-media:media --scene=no-record' },
     ])
   })
 
   it('notices the scene has changed since it was recorded', async () => {
     expect((await runCheck(workspace.config, 'stale')).issues).toEqual([
-      { slug: 'stale', reason: 'the scene changed since hero.gif was produced. Run: nx media tool-media --scene=stale' },
+      { slug: 'stale', reason: 'the scene changed since hero.gif was produced. Run: npm run hf -- run tool-media:media --scene=stale' },
     ])
   })
 
   it('names a configured variant the record never mentions', async () => {
     expect((await runCheck(workspace.config, 'missing-variant')).issues).toEqual([
-      { slug: 'missing-variant', reason: 'no dark variant was recorded. Run: nx media tool-media --scene=missing-variant' },
+      { slug: 'missing-variant', reason: 'no dark variant was recorded. Run: npm run hf -- run tool-media:media --scene=missing-variant' },
     ])
   })
 
@@ -233,7 +233,7 @@ describe('runCheck', () => {
 
   it('names the variant whose file is missing', async () => {
     expect((await runCheck(workspace.config, 'gone')).issues).toEqual([
-      { slug: 'gone', reason: 'hero.dark.gif is missing. Run: nx media tool-media --scene=gone' },
+      { slug: 'gone', reason: 'hero.dark.gif is missing. Run: npm run hf -- run tool-media:media --scene=gone' },
     ])
   })
 
@@ -241,7 +241,7 @@ describe('runCheck', () => {
     expect((await runCheck(workspace.config, 'no-animation')).issues).toEqual([
       {
         slug: 'no-animation',
-        reason: 'the portable variant was recorded without its animation. Run: nx media tool-media --scene=no-animation',
+        reason: 'the portable variant was recorded without its animation. Run: npm run hf -- run tool-media:media --scene=no-animation',
       },
     ])
   })
@@ -249,7 +249,7 @@ describe('runCheck', () => {
   it("verifies each variant's stills against their own budgets and records", async () => {
     expect((await runCheck(workspace.config, 'stills')).issues).toEqual([
       { slug: 'stills', reason: 'poster.webp is 5KB, over the 4KB budget' },
-      { slug: 'stills', reason: 'lost.webp is missing. Run: nx media tool-media --scene=stills' },
+      { slug: 'stills', reason: 'lost.webp is missing. Run: npm run hf -- run tool-media:media --scene=stills' },
       { slug: 'stills', reason: 'poster.dark.webp is 50 bytes but its audit record says 60' },
     ])
   })
@@ -272,8 +272,8 @@ describe('runCheck', () => {
 
   it('asks for every variant when a scripted scene was recorded before variants existed', async () => {
     expect((await runCheck(workspace.config, 'pre-variant')).issues).toEqual([
-      { slug: 'pre-variant', reason: 'no portable variant was recorded. Run: nx media tool-media --scene=pre-variant' },
-      { slug: 'pre-variant', reason: 'no dark variant was recorded. Run: nx media tool-media --scene=pre-variant' },
+      { slug: 'pre-variant', reason: 'no portable variant was recorded. Run: npm run hf -- run tool-media:media --scene=pre-variant' },
+      { slug: 'pre-variant', reason: 'no dark variant was recorded. Run: npm run hf -- run tool-media:media --scene=pre-variant' },
     ])
   })
 
@@ -285,7 +285,7 @@ describe('runCheck', () => {
 
   it('names a browser scene whose animation is missing', async () => {
     expect((await runCheck(workspace.config, 'browser-gone')).issues).toEqual([
-      { slug: 'browser-gone', reason: 'hero.gif is missing. Run: nx media tool-media --scene=browser-gone' },
+      { slug: 'browser-gone', reason: 'hero.gif is missing. Run: npm run hf -- run tool-media:media --scene=browser-gone' },
     ])
   })
 })
