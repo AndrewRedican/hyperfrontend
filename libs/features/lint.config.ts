@@ -19,7 +19,7 @@ export default [
             // why: the test runtime is imported only by the specs and test.config.ts, which the published package never ships.
             '@hyperfrontend/testing',
             'typescript',
-            // why: the compile-time parity spec (src/nx/model.compat.spec.ts) type-imports @nx/devkit to pin the structural mirror in src/nx/model.ts, and the nx adapter optionally loads it at RUNTIME from the consumer workspace via createRequire; it is never a declared dependency.
+            // why: the nx adapter optionally loads @nx/devkit at run time from the consumer workspace via createRequire; it is never a declared dependency.
             '@nx/devkit',
             // why: the bundled TypeScript plugin resolves tslib from the consumer's node_modules at build time; it is never imported here, so the graph cannot see it.
             'tslib',
