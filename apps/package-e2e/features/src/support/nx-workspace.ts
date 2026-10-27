@@ -14,8 +14,8 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os'
 import { join, relative, sep } from 'node:path'
 
-// note: Pinned to this repo's own Nx version so the generators are exercised against the exact runtime consumers of this workspace's tooling get.
-const NX_VERSION = '22.7.8'
+// note: Pinned to the Nx release the generated declarations of libs/integrations/nx are extracted from, so the type probe checks them against the devkit they mirror.
+const NX_VERSION = '23.3.0'
 
 /** 10 minutes: create-nx-workspace runs a real npm install over the network, then the packed SDK tarball installs on top of it. */
 export const SETUP_TIMEOUT = 600000
@@ -229,6 +229,22 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
     shell: process.platform === 'win32',
   })
   return { workRoot, pristineDir, packedVersion: tarball.version }
+}
+
+/**
+ * Installs packages into a scratch workspace without recording them in its manifest.
+ *
+ * @param workspaceDir - The scratch workspace to install into.
+ * @param packages - The package specifiers, such as `@types/node@24`.
+ */
+export function installUnsaved(workspaceDir: string, packages: readonly string[]): void {
+  execFileSync('npm', shellSafe(['install', '--no-save', '--no-audit', '--no-fund', ...packages]), {
+    cwd: workspaceDir,
+    env: scratchEnv(),
+    encoding: 'utf8',
+    timeout: TARBALL_INSTALL_TIMEOUT,
+    shell: process.platform === 'win32',
+  })
 }
 
 /**

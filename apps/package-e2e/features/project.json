@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-features",
   "description": "E2E tests for @hyperfrontend/features package outputs",
   "sourceRoot": "{projectRoot}/src",
@@ -15,5 +14,5 @@
     },
     "audit": {}
   },
-  "implicitDependencies": ["lib-features"]
+  "implicitDependencies": ["lib-features", "lib-integration-nx"]
 }
