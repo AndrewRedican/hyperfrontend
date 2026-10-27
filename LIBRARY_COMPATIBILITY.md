@@ -1,6 +1,6 @@
 # Library Compatibility Matrix
 
-> Generated from each package's `project.json` and `package.json`. Regenerate it with `npx nx lint:all` rather than editing it by hand.
+> Generated from each package's `project.json` and `package.json`. Regenerate it with `npm run hf -- run @hyperfrontend/workspace:lint:all` rather than editing it by hand.
 
 ## Platform Support
 
