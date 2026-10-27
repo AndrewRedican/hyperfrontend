@@ -19,6 +19,9 @@ import { defaultEcosystemTier } from './lib/library-facts'
 import { DEFAULT_NODE_ENGINE, DEFAULT_NPM_ENGINE, compactVersion, nodeFloorOf } from './lib/node-floor'
 import { collectLibraryFacts, registerLibrary } from './registrations'
 
+/** The generator's templates, relative to the workspace root. */
+const TEMPLATES = 'tools/package/src/generators/make-publishable'
+
 /**
  * The level a package's support for one runtime is declared at. Profiles only
  * ever claim the two levels that need no explanation; `partial` is written by
@@ -417,7 +420,7 @@ function createE2EProject(tree: Tree, options: NormalizedOptions, keepExisting: 
   const existingSpecs = BROWSER_BUNDLE_FORMATS.filter((format) =>
     tree.exists(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
   )
-  writeTemplates(tree, join(__dirname, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
+  writeTemplates(tree, join(tree.root, TEMPLATES, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
 
   if (options.compatibility.browser !== 'none') return
 
@@ -454,7 +457,7 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeF
     template: '',
   }
 
-  writeTemplates(tree, join(__dirname, 'files'), options.projectRoot, templateOptions, keepExisting)
+  writeTemplates(tree, join(tree.root, TEMPLATES, 'files'), options.projectRoot, templateOptions, keepExisting)
 }
 
 /**
@@ -523,12 +526,12 @@ function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
  */
 function recordReadmeMedia(options: NormalizedOptions): void {
   logger.info(
-    `Note: Record the package banner and runtime strip: npx nx media tool-media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
+    `Note: Record the package banner and runtime strip: npm run hf -- run tool-media:media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
   )
 }
 
 /**
- * Nx generator that converts an internal library to a publishable library.
+ * Generator that converts an internal library to a publishable library.
  *
  * This generator:
  * 1. Updates project.json with build, version, and publish targets, keeping any target it does not write
@@ -543,24 +546,24 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * 10. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
  * 11. Names the one step left for a human: recording the readme media
  *
- * @param tree - The Nx virtual file system tree
+ * @param tree - The virtual file system tree
  * @param options - Configuration options
  * @returns A promise that resolves when the generator completes
  * @throws {Error} When no runtime compatibility profile was given.
  *
  * @example Make a library publishable
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=isomorphic
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=isomorphic
  * ```
  *
  * @example With custom global name and bundle entry
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
  * ```
  *
  * @example Placed on a chosen level of the docs-site hierarchy and section of its index
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {
