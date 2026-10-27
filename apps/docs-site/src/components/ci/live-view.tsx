@@ -39,6 +39,14 @@ export function formatClock(epochMs: number): string {
   return new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(epochMs)
 }
 
+/** The task the reader picked, by environment and id. */
+interface PickedTask {
+  /** The environment of its chain */
+  environment: string
+  /** The task id */
+  id: string
+}
+
 /**
  * A pipeline as it runs: the chains of its plan with every task's state, as the latest read of
  * its commit's check runs describes them, and when the run is read next.
@@ -49,10 +57,15 @@ export function formatClock(epochMs: number): string {
  */
 export function LiveView({ reading, pace }: LiveViewProps) {
   const { run, checkRuns, jobs, readAt } = reading
-  const [selected, setSelected] = useState<LiveTask | null>(null)
+  const [picked, setPicked] = useState<PickedTask | null>(null)
 
   const live = liveRun(checkRuns)
   const progress = liveProgress(live)
+  // why: the details follow the latest read, so the picked task is looked up again in every read rather than kept as it was when clicked
+  const selected =
+    picked === null
+      ? null
+      : (live.chains.find((chain) => chain.environment === picked.environment)?.tasks.find((task) => task.id === picked.id) ?? null)
   return (
     <section className="ci-explorer mt-4">
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -114,7 +127,12 @@ export function LiveView({ reading, pace }: LiveViewProps) {
           </p>
           <ul className="mt-3 space-y-1.5">
             {live.chains.map((chain) => (
-              <ChainRow key={`${chain.project}:${chain.environment}`} chain={chain} selected={selected} onSelect={setSelected} />
+              <ChainRow
+                key={`${chain.project}:${chain.environment}`}
+                chain={chain}
+                selected={picked?.environment === chain.environment ? selected : null}
+                onSelect={(task) => setPicked({ environment: chain.environment, id: task.id })}
+              />
             ))}
           </ul>
         </>

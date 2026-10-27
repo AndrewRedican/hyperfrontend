@@ -375,7 +375,7 @@ function LiveRuns({ token, onRemaining }: LiveRunsProps) {
           ))}
         </ul>
       )}
-      {reading === null ? null : <LiveView reading={reading} pace={pace} />}
+      {reading === null ? null : <LiveView key={reading.run.id} reading={reading} pace={pace} />}
     </>
   )
 }
