@@ -124,7 +124,7 @@ testRule(rule, {
     {
       name: 'a short shell command with one flag',
       path: README,
-      text: fenced('bash', `npx nx serve demo-clock --port=4283 ${'#'.repeat(50)}`),
+      text: fenced('bash', `npx vite serve apps/demos/clock --port=4283 ${'#'.repeat(50)}`),
     },
     {
       name: 'a quoted argument counted as one word',
