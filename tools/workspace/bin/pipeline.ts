@@ -1,8 +1,8 @@
 /**
  * Plans and runs the pipeline. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts <command>`, or
- * `npx nx run tool-workspace:pipeline -- <command>`, where the command is
- * `plan [--base <ref>] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
+ * `npm run hf -- run tool-workspace:pipeline <command>`, where the command is
+ * `plan [--base <ref> | --planned-base] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
  * `run [--plan <file>] [--environment linux|windows] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>]`,
  * `finalize [--environment linux|windows] [--summary]`,
  * `record --out <dir> --run-id <id> --run-number <n> --attempt <n> --sha <sha> --ref <ref> --event <event> --url <url>`,
@@ -47,6 +47,7 @@ import { settleChecks } from '../src/pipeline/finalize'
 import { PLAN_CHECK_NAME, planCheckOutput } from '../src/pipeline/live'
 import { Environment as Environments, Outcome } from '../src/pipeline/model'
 import { createPlan } from '../src/pipeline/plan'
+import { resolvePlannedBase } from '../src/pipeline/planned-base'
 import { writeRunRecord } from '../src/pipeline/records'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
 import { planSummary, runSummary } from '../src/pipeline/report'
@@ -80,6 +81,7 @@ const HEAVY_MEMORY_BYTES = 12 * 1024 * 1024 * 1024
 const { values, positionals } = parseArgs({
   options: {
     base: { type: 'string' },
+    'planned-base': { type: 'boolean', default: false },
     head: { type: 'string' },
     all: { type: 'boolean', default: false },
     'fallback-all': { type: 'boolean', default: false },
@@ -187,9 +189,12 @@ function isAncestor(revision: string): boolean {
  * @param local - Whether the base defaults to `origin/main` and the head to the working tree
  * @returns The change set, or null
  */
-function changesOf(local: boolean): ChangeSet | null {
+async function changesOf(local: boolean): Promise<ChangeSet | null> {
   if (values.all) return null
-  const base = values.base ?? (local ? 'origin/main' : 'main')
+  const base = values['planned-base']
+    ? await resolvePlannedBase({ root: root as string, env: process.env, request: fetch, report: say })
+    : (values.base ?? (local ? 'origin/main' : 'main'))
+  if (base === null) return null
   if (values['fallback-all'] && !isAncestor(base)) {
     say(`${base} is not an ancestor of HEAD: planning everything`)
     return null
@@ -217,7 +222,7 @@ function graphOf(): WorkspaceGraph {
  */
 async function plan(local: boolean): Promise<Plan> {
   const graph = graphOf()
-  const changes = changesOf(local)
+  const changes = await changesOf(local)
   const drift =
     values.main && values['catch-up']
       ? await registryDrift(graph.projects.values(), npmProbe({ cwd: root as string, run: runCommand }))
