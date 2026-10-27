@@ -81,11 +81,11 @@ describe('discoverProjects', () => {
     expect(discoverProjects(root, listFiles(root)).get('root')?.configuration?.targets?.['lint']).toBeUndefined()
   })
 
-  it('infers no lint target for a project the plugin entry excludes', () => {
+  it('infers no lint target for a project nx.json excludes from linting', () => {
     const excluded = createTempDir({
       prefix: 'lint-infer-',
       tree: {
-        'nx.json': '{ "plugins": ["./other.ts", { "plugin": "./tools/lint/src/nx/plugin.ts", "exclude": ["apps/demos/**/*"] }] }',
+        'nx.json': '{ "lint": { "exclude": ["apps/demos/**/*"] } }',
         'apps/demos/one/project.json': '{ "name": "demo-one" }',
         'libs/two/package.json': '{ "name": "@fixture/two" }',
       },

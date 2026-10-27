@@ -23,7 +23,7 @@ export const RUNNER_WORKSPACE: FileTree = freeze({
       audit: { executor: 'nx:run-commands', options: { command: 'npm audit', cwd: '{projectRoot}' } },
       lint: { inputs: ['default'] },
     },
-    plugins: [{ plugin: './tools/lint/src/nx/plugin.ts', exclude: ['apps/demos/**/*'] }],
+    lint: { exclude: ['apps/demos/**/*'] },
   },
   'project.json': { name: 'workspace', targets: { lint: { command: 'node tools/lint/bin/lint.ts .' } } },
   'libs/alpha/package.json': { name: '@fixture/alpha', version: '1.0.0' },

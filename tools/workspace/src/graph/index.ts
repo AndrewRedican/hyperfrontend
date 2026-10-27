@@ -109,7 +109,6 @@ export {
   hasTarget,
   inferLintTargets,
   LINT_ENTRY,
-  LINT_PLUGIN,
   lintTarget,
   listFiles,
   nxIgnores,

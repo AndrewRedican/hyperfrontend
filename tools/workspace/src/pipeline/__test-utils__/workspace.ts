@@ -50,7 +50,7 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
       lint: { inputs: ['default', '{workspaceRoot}/lint.base.config.ts'] },
       publish: { dependsOn: ['build'], executor: '@fixture/tooling:publish' },
     },
-    plugins: [{ plugin: './tools/lint/src/nx/plugin.ts', exclude: ['apps/demos/**/*'] }],
+    lint: { exclude: ['apps/demos/**/*'] },
   }),
   'tsconfig.base.json': json({
     compilerOptions: {
