@@ -234,7 +234,7 @@ function renderVersionSection(libraries: MatrixLibrary[]): string {
 export function renderCompatibilityDocument(libraries: MatrixLibrary[]): string {
   const sections = [
     '# Library Compatibility Matrix',
-    `> Generated from each package's ${code('project.json')} and ${code('package.json')}. Regenerate it with ${code('npx nx lint:all')} rather than editing it by hand.`,
+    `> Generated from each package's ${code('project.json')} and ${code('package.json')}. Regenerate it with ${code('npm run hf -- run @hyperfrontend/workspace:lint:all')} rather than editing it by hand.`,
     renderPlatformSection(libraries),
     renderOutputFormatsSection(libraries),
     renderEngineSection(libraries),
