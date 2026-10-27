@@ -197,13 +197,14 @@ function changesOf(local: boolean): ChangeSet | null {
 }
 
 /**
- * The graph of the working tree, from the persisted state.
+ * The graph of the working tree, from the persisted state; how the state was built goes to
+ * standard error, so standard output carries only the command's result.
  *
  * @returns The graph of the working tree
  */
 function graphOf(): WorkspaceGraph {
   const { graph, outcome } = buildState(root as string, { force: values.force })
-  say(`graph state ${outcome.plan.mode}: ${outcome.plan.reparse.length} files parsed`)
+  process.stderr.write(`graph state ${outcome.plan.mode}: ${outcome.plan.reparse.length} files parsed\n`)
   return graph
 }
 

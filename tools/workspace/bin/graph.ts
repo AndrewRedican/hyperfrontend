@@ -107,16 +107,17 @@ function explainProject(graph: WorkspaceGraph, name: string): void {
 }
 
 /**
- * Builds the persisted state, prints what the build did and returns the graph.
+ * Builds the persisted state, reports what the build did and returns the graph.
  *
  * @param force - Whether to build cold
+ * @param report - Where the report goes: standard error unless it is the command's result, so standard output carries only the result
  * @returns The graph the state describes
  */
-function build(force: boolean): WorkspaceGraph {
+function build(force: boolean, report: (line: string) => void = (line) => process.stderr.write(`${line}\n`)): WorkspaceGraph {
   const { graph, outcome } = buildState(root as string, { force })
   const { plan } = outcome
   const written = outcome.written.length === 0 ? 'nothing written' : `wrote ${outcome.written.join(', ')}`
-  say(
+  report(
     `graph state ${plan.mode} (${plan.reasons.join(', ')}): ${plan.reparse.length} files parsed, ${written}, ${round(outcome.durationMs)} ms`
   )
   return graph
@@ -154,7 +155,7 @@ if (command === 'projects') {
   if (colon === -1) explainProject(workspaceGraph(root), argument)
   else for (const line of formatTask(affected(build(values.force), argument.slice(colon + 1)), argument)) say(line)
 } else if (command === 'build') {
-  build(values.force)
+  build(values.force, say)
 } else if (command === 'verify') {
   const verification = verifyState(root)
   say(
