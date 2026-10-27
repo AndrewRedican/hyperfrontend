@@ -235,13 +235,19 @@ Run the pipeline the pre-push hook and CI run, from the merge base with `origin/
 
 ```bash
 # Typecheck, lint, test, build and e2e of what your change reaches, one task at a time, with a reason per task
-npx nx run tool-workspace:pipeline -- run --local
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
 
 # Only plan: which chains and tasks a change reaches, and why every other task is skipped
-npx nx run tool-workspace:pipeline -- plan --base origin/main
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base origin/main
 ```
 
-A single target still runs through Nx:
+One task of one project runs alone, without the tasks it depends on, through the workspace's own entry:
+
+```bash
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-nexus:test
+```
+
+A target across every project a change reaches still runs through Nx:
 
 ```bash
 npx nx affected -t test

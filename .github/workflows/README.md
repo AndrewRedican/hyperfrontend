@@ -12,8 +12,8 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 **How it works**:
 
 1. The `plan` job builds the graph state cold, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan and the graph are uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, published as the `pipeline plan` check run on the head commit, and set the `environments` matrix.
-2. `version-check` validates the version bumps of the libraries the change reaches, and gates the environments.
-3. One `environment (linux)` job and, when any library or tool is selected, one `environment (windows)` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task is `npx nx run <project>:<target>` (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows chains carry typecheck, lint and test of the libraries and tools, plus the linter build and smoke, and compare the graph-state digest with Linux.
+2. `version-check` checks, without changing anything, the version of every library owning a changed file (every library when a global configuration file changes), and gates the environments; the pre-push hook is what bumps versions.
+3. One `environment (linux)` job and, when any library or tool is selected, one `environment (windows)` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task of a project runs alone through `tools/workspace/bin/hf.ts run <project>:<target>`, in its own process group so a cancel ends everything it started (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows chains carry typecheck, lint and test of the libraries and tools, plus the linter build and smoke, and compare the graph-state digest with Linux.
 4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
 5. `status` aggregates `binary-budget`, `plan`, `version-check` and the environments, and passes when the plan finds nothing to run.
 
@@ -41,7 +41,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 **How it works**:
 
 1. `plan` selects from `github.event.before` to the pushed head (a force-push, a first push or a dispatch without one plans everything), adds a `publish` task after every selected build of a publishable library, and adds a whole chain for any publishable library whose current version npm positively reports absent (registry drift), so a publish that failed on an earlier push is retried.
-2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for `environment (windows)` to conclude through the jobs API; a Windows failure or a 20-minute timeout skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each still `npx nx run <lib>:publish`, whose executor skips a version already on npm.
+2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for `environment (windows)` to conclude through the jobs API; a Windows failure or a 20-minute timeout skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each `hf run <lib>:publish`, whose executor skips a version already on npm and asks npm for provenance.
 3. Codecov uploads, the `dist` artifact and the results come from the Linux environment.
 4. `records` pushes the run's plan and results, the run index and the graph's explorer document to the orphan `ci-records` branch whenever the plan had work, whatever the environments concluded; the docs-site's dependency and pipeline explorers read that branch.
 5. `push-tags`, `github-release` and `dispatch-native-builds` follow a green environment matrix as before.
@@ -176,7 +176,7 @@ Sets up the Node.js environment, caches the npm download directory and installs 
 
 ### version-check
 
-Validates the version bumps of the libraries a change reaches, selected through the owned graph, and keeps one comment on the pull request.
+Checks the version of every library owning a changed file (every library when a global configuration file changes), selected through the owned graph with `pipeline affected --target version-check --projects`, and keeps one comment on the pull request. It changes nothing: the pre-push hook bumps versions.
 
 The selection and execution of work are not actions: `tools/workspace/bin/pipeline.ts` plans and runs, and the workflow files hold only what GitHub itself must read. See [`tools/workspace/README.md`](../../tools/workspace/README.md).
 
