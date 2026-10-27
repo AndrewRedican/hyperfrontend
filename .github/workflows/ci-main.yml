@@ -127,7 +127,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows job and the chain check runs go through the API; GitHub sets no token in the environment by itself
         # why: the publishes inside the Linux run wait for the Windows environment to conclude; the publish executor still skips versions already on npm
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "environment (windows)"
+        # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
+        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "environment (windows)"
 
       - name: Settle what a run that did not end left behind
         if: always()

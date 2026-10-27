@@ -169,7 +169,8 @@ jobs:
       - name: Run the plan
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the chain check runs are created through the API; GitHub sets no token in the environment by itself
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
+        # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
+        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
 
       - name: Settle what a run that did not end left behind
         if: always()
