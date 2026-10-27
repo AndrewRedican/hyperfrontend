@@ -4,7 +4,7 @@ import { resolveDeclaredModes } from '../generators/shared/declared-modes'
 import { ISOLATED_FRAMED, ISOLATED_SAME_ORIGIN, OPEN_ORIGIN } from './config-types.assert'
 import { validateDisplayConfig, validateIsolationConfig } from './contract'
 
-// note: The compile-time half of this guarantee lives in config-types.assert.ts, where `nx typecheck` reaches it; these cover the runtime half that a JSON-authored config takes.
+// note: The compile-time half of this guarantee lives in config-types.assert.ts, where the `typecheck` target reaches it; these cover the runtime half that a JSON-authored config takes.
 
 const IDENTITY = { name: 'probe', version: '1.0.0', contract: './probe.contract.json', url: '/' }
 

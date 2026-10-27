@@ -1,6 +1,6 @@
 import { defineConfig } from './define-config'
 
-// note: Compile-time probes for the isolation narrowing. They live outside a .spec file because `nx typecheck` reads tsconfig.lib.json, which excludes specs, and an `@ts-expect-error` nothing typechecks asserts nothing.
+// note: Compile-time probes for the isolation narrowing. They live in a library file so the library's own typecheck (tsconfig.lib.json) reaches them; an `@ts-expect-error` nothing typechecks asserts nothing.
 // note: Each directive below is itself the assertion: a combination that stops being rejected fails typecheck as an unused directive, and one that starts being rejected fails as a type error, so the narrowing cannot drift in either direction.
 // note: No package entry imports this module, so it is typechecked but never bundled.
 
