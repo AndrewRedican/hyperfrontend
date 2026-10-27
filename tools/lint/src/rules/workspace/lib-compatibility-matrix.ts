@@ -12,7 +12,7 @@ import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME } from '@hyperf
 import { workspaceRootOf } from './shared/locate.ts'
 
 const MESSAGE =
-  'LIBRARY_COMPATIBILITY.md is generated from each package project.json and package.json, and no longer matches them. Run `npx nx lint:all` (or `nx lint @hyperfrontend/workspace --fix`) to regenerate it.'
+  'LIBRARY_COMPATIBILITY.md is generated from each package project.json and package.json, and no longer matches them. Run `npm run hf -- run @hyperfrontend/workspace:lint:all` (or `npm run hf -- run @hyperfrontend/workspace:lint --fix`) to regenerate it.'
 
 export default defineRule<undefined, MarkdownNode>({
   id: 'workspace/lib-compatibility-matrix',

@@ -161,7 +161,7 @@ export default defineRule<Options | undefined, MarkdownNode>({
           const title = lines.findIndex((text) => text.startsWith('# '))
           onLine(
             max(title, 0),
-            `The distribution readme opens with the package banner in place of this title, and no portable ${portableNames(banner.asset)} is recorded under ${assetRoot}/${banner.scene}. Record it: npx nx media tool-media --scene=${banner.scene}`
+            `The distribution readme opens with the package banner in place of this title, and no portable ${portableNames(banner.asset)} is recorded under ${assetRoot}/${banner.scene}. Record it: npm run hf -- run tool-media:media --scene=${banner.scene}`
           )
         }
         if (!directives.some((directive) => directive.id === 'runtimes')) {
