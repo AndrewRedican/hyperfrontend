@@ -13,7 +13,7 @@
 #
 # Pass --soft-fail to report problems and still exit 0. postCreateCommand uses
 # it, because an optional encoder must never be the reason a container build
-# fails, and `nx run tool-media:doctor` reports what is missing either way.
+# fails, and `npm run hf -- run tool-media:doctor` reports what is missing either way.
 set -Eeuo pipefail
 
 soft_fail=0
@@ -27,7 +27,7 @@ done
 fail() {
   echo "media-tools: $1" >&2
   if [[ $soft_fail -eq 1 ]]; then
-    echo "media-tools: continuing without them; run 'npx nx run tool-media:doctor' to see the effect" >&2
+    echo "media-tools: continuing without them; run 'npm run hf -- run tool-media:doctor' to see the effect" >&2
     exit 0
   fi
   exit 1
