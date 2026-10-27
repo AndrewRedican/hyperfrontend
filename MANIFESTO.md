@@ -176,7 +176,7 @@ tarball or package, read its `metadata.json`, and scaffold a typed integration p
 host's own idiom:
 
 ```bash
-npx nx g @hyperfrontend/features:add --feature=my-feature --host=my-host
+npx hf add my-feature --host=my-host
 ```
 
 The feature side of this already exists: `hf init`, `hf build`, and the Nx `feature` generator and

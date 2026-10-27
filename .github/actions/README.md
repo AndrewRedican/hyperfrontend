@@ -23,10 +23,9 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **What it does**:
 
-1. Sets `NX_NO_CLOUD=true` when `nx.json` sets `neverConnectToCloud`, so no Nx invocation reaches Nx Cloud
-2. Sets up the Node.js version `.nvmrc` names (the same one package.json engines requires)
-3. Caches npm dependencies using `package-lock.json` hash; no task output is cached
-4. Installs dependencies with `npm ci`
+1. Sets up the Node.js version `.nvmrc` names (the same one package.json engines requires)
+2. Caches npm dependencies using `package-lock.json` hash; no task output is cached
+3. Installs dependencies with `npm ci`
 
 ---
 
@@ -174,60 +173,60 @@ When adding a new action:
 
 ## Examples
 
-### Complete PR Validation Pattern
+### Pull request pattern
+
+The shape `ci-pr.yml` follows: one `plan` job decides the work, `version-check` gates it, and each environment runs its part of the plan.
 
 ```yaml
 jobs:
-  setup:
+  plan:
     runs-on: ubuntu-latest
     outputs:
-      affected-projects: ${{ steps.affected.outputs.affected-projects }}
-      has-affected: ${{ steps.affected.outputs.has-affected }}
+      environments: ${{ steps.plan.outputs.environments }}
+      has-work: ${{ steps.plan.outputs.has-work }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
-      - id: affected
-        uses: ./.github/actions/nx-affected
-        with:
-          base-ref: origin/main
+      - run: npm run hf -- format --check --all
+      - id: plan
+        run: >-
+          node --import ./tools/lint/src/runtime/aliases.ts
+          tools/workspace/bin/pipeline.ts plan
+          --base "origin/${{ github.base_ref }}" --github-output
 
-  lint:
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+  version-check:
+    needs: plan
+    if: needs.plan.outputs.has-work == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-monorepo
-      - uses: ./.github/actions/run-checks
         with:
-          check-type: lint
-          affected-only: 'true'
-          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-monorepo
+      - uses: ./.github/actions/version-check
+        with:
+          base-ref: origin/${{ github.base_ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+
+  environment:
+    needs: [plan, version-check]
+    strategy:
+      matrix: ${{ fromJSON(needs.plan.outputs.environments) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-monorepo
+      - run: >-
+          node --import ./tools/lint/src/runtime/aliases.ts
+          tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }}
 ```
 
-### Complete Main Branch Pattern
-
-```yaml
-jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-monorepo
-
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-monorepo
-      - uses: ./.github/actions/run-checks
-        with:
-          check-type: test
-          affected-only: 'false'
-```
+The real `environment` job downloads the plan the `plan` job uploaded rather than planning again; see [`ci-pr.yml`](../workflows/ci-pr.yml) and [`ci-main.yml`](../workflows/ci-main.yml).
 
 ## Future Enhancements
 

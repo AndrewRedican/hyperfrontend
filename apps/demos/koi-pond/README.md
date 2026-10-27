@@ -329,7 +329,7 @@ bundler to dedupe.
 ## The workbench
 
 ```bash
-npx nx run demo-koi-workbench:dev     # http://localhost:4283
+npm run hf -- run-many -t dev -p demo-koi-workbench  # http://localhost:4283
 ```
 
 Leave it running and edit anything under `lib/src/`. The workbench resolves
@@ -350,8 +350,10 @@ awareness cone) are off by default and add nothing to the scene until asked for.
 ## Running the pond
 
 ```bash
-npx nx run demo-koi-pond:dev-hosted    # composed pond on :4282, hf debug UI on :4290
-npx nx run-many -t build -p demo-koi-* # composed site → dist/apps/demos/koi-pond/site
+# composed pond on :4282, hf debug UI on :4290
+npm run hf -- run-many -t dev-hosted -p demo-koi-pond
+# composed site → dist/apps/demos/koi-pond/site
+npm run hf -- run-many -t build -p 'demo-koi-*'
 npx http-server dist/apps/demos/koi-pond/site -p 4288   # serve the built site (plain static)
 ```
 
@@ -391,12 +393,17 @@ overrides an earlier one, one header at a time.
 ## Working on it
 
 ```bash
-npx nx run demo-koi-workbench:dev      # the model workbench on :4283, with HMR onto lib/src
-npx nx run demo-koi-lib:build          # emit the published surface into lib/dist
-npx nx run demo-koi-lib:refresh        # rebuild + repack the shared lib into every consumer
-npx nx run demo-koi-lib:verify         # fail loudly when the tarball or a consumer lock has drifted
-npx nx run demo-koi-pond:refresh-fish-shells   # repack all eight koi shells + reinstall into the host
-npx nx run-many -t=lint,typecheck -p demo-koi-*
+# the model workbench on :4283, with HMR onto lib/src
+npm run hf -- run-many -t dev -p demo-koi-workbench
+# emit the published surface into lib/dist
+npm run hf -- run-many -t build -p demo-koi-lib
+# rebuild + repack the shared lib into every consumer
+npm run hf -- run-many -t refresh -p demo-koi-lib
+# fail loudly when the tarball or a consumer lock has drifted
+npm run hf -- run-many -t verify -p demo-koi-lib
+# repack all eight koi shells + reinstall into the host
+npm run hf -- run-many -t refresh-fish-shells -p demo-koi-pond
+npm run hf -- run-many -t typecheck -p 'demo-koi-*'
 ```
 
 **Always run `demo-koi-lib:refresh` after touching `lib/src`.** A bare `npm install` will not

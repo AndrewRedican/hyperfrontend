@@ -30,12 +30,12 @@ npm install -g @openedition/act
 # Test the complete PR workflow
 act pull_request -W .github/workflows/ci-pr.yml -e .github/test-events/pr-opened.json
 
-# Test a specific job
-act pull_request -j setup -W .github/workflows/ci-pr.yml
-act pull_request -j format -W .github/workflows/ci-pr.yml
-act pull_request -j lint -W .github/workflows/ci-pr.yml
-act pull_request -j build -W .github/workflows/ci-pr.yml
-act pull_request -j test -W .github/workflows/ci-pr.yml
+# Test a specific job: plan checks formatting and plans the change,
+# environment runs the plan's typecheck, lint, test, build and e2e tasks
+act pull_request -j plan -W .github/workflows/ci-pr.yml
+act pull_request -j binary-budget -W .github/workflows/ci-pr.yml
+act pull_request -j version-check -W .github/workflows/ci-pr.yml
+act pull_request -j environment -W .github/workflows/ci-pr.yml
 ```
 
 ### Test Main Branch Workflow

@@ -81,7 +81,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 **Inputs**:
 
-- `project-name`: Nx project name (e.g., lib-nexus)
+- `project-name`: project name from `project.json` (e.g., lib-nexus)
 - `library-path`: Path to library (e.g., libs/nexus)
 
 **Jobs**:
@@ -170,7 +170,6 @@ Sets up the Node.js environment, caches the npm download directory and installs 
 **Features**:
 
 - npm dependency caching (`~/.npm`), keyed by the `package-lock.json` hash
-- `NX_NO_CLOUD=true` whenever `nx.json` sets `neverConnectToCloud`
 
 **Note**: Node.js version comes from `.nvmrc`, the one pin every environment reads.
 
@@ -221,8 +220,8 @@ act pull_request -W .github/workflows/ci-pr.yml
 # Test main branch workflow
 act push -W .github/workflows/ci-main.yml
 
-# Test specific job
-act pull_request -j format -W .github/workflows/ci-pr.yml
+# Test specific job (the plan job checks formatting and plans the change)
+act pull_request -j plan -W .github/workflows/ci-pr.yml
 ```
 
 ## Performance Metrics
@@ -255,7 +254,7 @@ act pull_request -j format -W .github/workflows/ci-pr.yml
 
 - Ensure `fetch-depth: 0` is set in checkout step
 - Read the `plan` job summary: every task lists the reason it runs, every skipped task the rule that made the skip safe
-- `pipeline affected --target <t> --explain` and `graph explain <project:target>` answer locally why a task is in or out
+- `npm run hf -- graph affected --target <t> --explain` and `npm run hf -- graph explain <project:target>` answer locally why a task is in or out
 
 ### Failed Jobs
 

@@ -62,9 +62,9 @@ native share sheet, LinkedIn, X, WhatsApp, copy link; analytics through the
 ### Verification
 
 ```bash
-npx nx build docs-site
-npx nx lint docs-site --fix
-npx nx typecheck docs-site
+npm run hf -- run-many -t build -p docs-site
+npm run hf -- run docs-site:lint --fix
+npm run hf -- run-many -t typecheck -p docs-site
 ```
 
 ---
@@ -94,7 +94,7 @@ build (no manual page wiring).
 - Author them under `apps/docs-site/content/faq/`, one file per package, keyed to
   the package by frontmatter. A FAQ is editorial content the site owns, so it
   belongs beside articles and guides rather than inside a publishable project,
-  where it would make Nx, CI, versioning, and publishing treat the package as
+  where it would make CI, versioning, and publishing treat the package as
   changed for a documentation edit.
 - Extend `generate-docs.ts` to discover and emit FAQ content into `.generated`
   and the manifest.
@@ -180,7 +180,7 @@ audit has not run.
 ### Verification
 
 ```bash
-npx nx build docs-site
+npm run hf -- run-many -t build -p docs-site
 npx lighthouse https://hyperfrontend.dev --only-categories=accessibility
 ```
 

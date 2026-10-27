@@ -102,22 +102,24 @@ The devcontainer configuration is located in `.devcontainer/devcontainer.json` a
 - Required system dependencies
 - VS Code extensions
 - Git configuration
-- Development tools (Nx, ESLint, Prettier, etc.)
+- Development tools (Prettier, the workspace linter and the `hf` command line, etc.)
 
 ### Verify Your Setup
 
-After setup, verify everything works:
+After setup, verify everything works. Every workspace task runs through the workspace's own command line, `npm run hf -- <command>`, from the repository root:
 
 ```bash
 # Build all packages
-npx nx run-many -t build
+npm run hf -- run-many -t build --all
 
 # Run tests
-npx nx run-many -t test
+npm run hf -- run-many -t test --all
 
 # Lint code
-npx nx run-many -t lint
+npm run hf -- run-many -t lint --all
 ```
+
+`run <project>:<target>` runs one task alone; `run-many` runs the named tasks and their `dependsOn` prerequisites, one at a time, and skips the dependents of a failure. Nothing is cached, so every task runs every time.
 
 ### Working with Documentation
 
@@ -127,10 +129,10 @@ The documentation site is a Next.js application located in `apps/docs-site/`.
 
 ```bash
 # Install dependencies (required once)
-npx nx install docs-site
+npm run hf -- run docs-site:install
 
-# Start development server
-npx nx serve docs-site
+# Build the site and serve it
+npm run hf -- run-many -t serve -p docs-site
 ```
 
 The site will be available at `http://localhost:3000`.
@@ -138,7 +140,7 @@ The site will be available at `http://localhost:3000`.
 #### Building Documentation
 
 ```bash
-npx nx build docs-site
+npm run hf -- run-many -t build -p docs-site
 ```
 
 The output will be in `apps/docs-site/out/` (this directory is gitignored).
@@ -244,16 +246,16 @@ node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.t
 One task of one project runs alone, without the tasks it depends on, through the workspace's own entry:
 
 ```bash
-node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-nexus:test
+npm run hf -- run lib-nexus:test
 ```
 
-A target across every project a change reaches still runs through Nx:
+A target across every project a change reaches, from the merge base with `origin/main` unless `--base` names another revision:
 
 ```bash
-npx nx affected -t test
-npx nx affected -t lint
-npx nx affected -t build
-CI=1 npx nx affected -t e2e
+npm run hf -- affected -t test
+npm run hf -- affected -t lint
+npm run hf -- affected -t build --base=main
+CI=1 npm run hf -- affected -t e2e
 ```
 
 E2E tests validate that built packages work correctly when consumed via `npm install`. Test projects in `apps/package-e2e/` manage their own dependencies separately from the root workspace.
@@ -264,10 +266,10 @@ Build a single library or all libraries:
 
 ```bash
 # Build one library
-npx nx build lib-nexus
+npm run hf -- run lib-nexus:build
 
 # Build all libraries
-npx nx run-many -t build
+npm run hf -- run-many -t build -p 'lib-*'
 ```
 
 Output goes to `dist/libs/<library>/` with ESM + CJS formats.
@@ -299,16 +301,16 @@ git push --no-verify
 
 ```bash
 # Preview batch version changes (dry run)
-npx nx version:all --dryRun
+npm run hf -- run @hyperfrontend/workspace:version:all --dryRun
 
 # Preview single library version changes
-npx nx version lib-nexus --dryRun
+npm run hf -- run lib-nexus:version --dryRun
 
 # Manually run versioning for a single library
-npx nx version lib-nexus
+npm run hf -- run lib-nexus:version
 
 # Validate version state (what CI runs)
-npx nx version-check lib-nexus
+npm run hf -- run lib-nexus:version-check
 ```
 
 **CI Validation:**
@@ -320,11 +322,12 @@ CI runs `version-check` to validate that versions were correctly applied. If you
 Publishing happens via CI after PR merge. To test locally:
 
 ```bash
-# Dry run (preview)
-npx nx publish lib-nexus --dryRun
+# Dry run (preview); the build runs first
+npm run hf -- run-many -t publish -p lib-nexus --dryRun
 
 # Publish to local Verdaccio for testing
-npx nx publish lib-nexus --registry=http://localhost:4873
+npm run hf -- run-many -t publish -p lib-nexus \
+  --registry=http://localhost:4873
 ```
 
 ## AI Assistance Disclosure
@@ -453,16 +456,16 @@ Common CI failures and fixes:
 
 ```bash
 # Format check failed
-npx prettier --write "**/*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+npm run hf -- format --write
 
 # Lint check failed
-npx nx run-many -t lint --fix
+npm run hf -- affected -t lint
 
 # Test check failed
-npx nx run-many -t test
+npm run hf -- affected -t test
 
 # Build check failed
-npx nx run-many -t build
+npm run hf -- affected -t build
 ```
 
 ### Workflow Documentation
@@ -484,19 +487,19 @@ For more details about workflows and custom actions:
 
 ### Linting
 
-The project uses ESLint for code quality:
+The project lints with the workspace linter, `@hyperfrontend/linter`:
 
 ```bash
-# Run ESLint
-npx nx run-many -t lint
+# Lint every project
+npm run hf -- run-many -t lint --all
 
-# Fix auto-fixable issues
-npx nx run-many -t lint --fix
+# Fix auto-fixable issues in one project
+npm run hf -- run lib-nexus:lint --fix
 ```
 
 ### Formatting
 
-Code formatting is enforced through ESLint configuration. The project follows consistent formatting rules.
+Prettier owns formatting. `npm run hf -- format --check` checks the files your change touches, `--write` rewrites them, and `--all` covers the whole workspace.
 
 ## Commit Message Guidelines
 
