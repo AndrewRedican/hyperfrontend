@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-ui-utils",
   "description": "E2E tests for @hyperfrontend/ui-utils package outputs",
   "sourceRoot": "{projectRoot}/src",
