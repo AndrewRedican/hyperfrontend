@@ -1,5 +1,4 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "lib-questions",
   "description": "Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts",
   "sourceRoot": "{projectRoot}/src",
