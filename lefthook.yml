@@ -40,7 +40,7 @@ pre-push:
     pipeline:
       priority: 3
       # why: the same plan and prerequisite rules as CI, one task at a time; dependents of a failure are skipped and everything independent still runs
-      run: CI=1 NODE_OPTIONS="--expose-gc --max-old-space-size=4096" node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
+      run: CI=1 NODE_OPTIONS="--max-old-space-size=4096" node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
       fail_text: 'The pipeline failed. Read the summary above; each task wrote its log under .hf/pipeline/logs.'
     version:
       priority: 4
