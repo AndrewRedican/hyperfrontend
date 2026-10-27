@@ -60,7 +60,7 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   const resolved = withDefaults(config)
   const failures: string[] = []
 
-  // why: the directory is this target's declared Nx output, so it has to hold what this run produced and nothing a previous tool left behind.
+  // why: the directory is this run's coverage output, so it has to hold what this run produced and nothing a previous tool left behind.
   rmSync(context.coverageDir, { recursive: true, force: true })
   mkdirSync(context.coverageDir, { recursive: true })
 

@@ -4,7 +4,7 @@ export default [
   ...baseConfig,
   {
     // context: this package is the test runtime itself. It must resolve to zero workspace packages, because every
-    // context: library's specs import it and a dependency back onto a library would close a cycle in the Nx graph.
+    // context: library's specs import it and a dependency back onto a library would close a cycle in the workspace graph.
     // context: it must also stay unobservable to the code under test, which mocks the built-in-copy modules project-wide.
     files: ['**/*.ts'],
     rules: {
