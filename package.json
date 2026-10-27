@@ -19,6 +19,9 @@
     "npm": ">=11.16.0"
   },
   "license": "MIT",
+  "scripts": {
+    "hf": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts"
+  },
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
