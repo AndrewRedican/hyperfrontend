@@ -122,7 +122,7 @@ export default [
             '@hyperfrontend/time-utils',
             '@hyperfrontend/ui-utils',
             '@hyperfrontend/web-worker',
-            // Vendored demo shell tarballs are file: deps outside the Nx project graph,
+            // Vendored demo shell tarballs are file: deps outside the workspace project graph,
             // so dependency-checks would auto-remove them; exact names required — list
             // each vendored demo shell here
             '@hyperfrontend/demo-clock-shell',

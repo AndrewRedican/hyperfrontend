@@ -16,10 +16,15 @@ export const metadata = getPageMetadata({
  * The command that serves each shipped demo, in the order the site lists them.
  *
  * Every demo project declares a `dev` target that builds the feature and
- * serves it hosted, so `nx dev <project>` is the one command that runs any
- * of them; the project names are the ones in each demo's `project.json`.
+ * serves it, so `run-many -t dev -p <project>` is the one command that runs
+ * any of them after its install; the project names are the ones in each
+ * demo's `project.json`.
  */
-const DEMO_DEV_COMMANDS = ['npx nx dev demo-clock', 'npx nx dev demo-heartbeat', 'npx nx dev demo-koi-pond']
+const DEMO_DEV_COMMANDS = [
+  'npm run hf -- run-many -t dev -p demo-clock',
+  'npm run hf -- run-many -t dev -p demo-heartbeat',
+  'npm run hf -- run-many -t dev -p demo-koi-pond',
+]
 
 export default function ContributingPage() {
   return (
@@ -119,15 +124,15 @@ export default function ContributingPage() {
         <div className="command-grid mt-4">
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run tests</h3>
-            <CodeBlock code="npx nx run-many -t test" layout="full" />
+            <CodeBlock code="npm run hf -- run-many -t test --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run linting</h3>
-            <CodeBlock code="npx nx run-many -t lint" layout="full" />
+            <CodeBlock code="npm run hf -- run-many -t lint --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Build all packages</h3>
-            <CodeBlock code="npx nx run-many -t build" layout="full" />
+            <CodeBlock code="npm run hf -- run-many -t build --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run a specific demo</h3>

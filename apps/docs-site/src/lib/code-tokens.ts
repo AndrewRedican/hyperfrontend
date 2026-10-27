@@ -38,8 +38,8 @@ export interface HighlightedCode {
  *
  * @example
  * ```ts
- * const { lines } = await highlightTokens('npx nx dev demo-clock', 'bash')
- * lines[0][0] // { content: 'npx', style: '--shiki-light:#1D4ED8;--shiki-dark:#60A5FA' }
+ * const { lines } = await highlightTokens('npm run hf -- run-many -t dev -p demo-clock', 'bash')
+ * lines[0][0] // { content: 'npm', style: '--shiki-light:#1D4ED8;--shiki-dark:#60A5FA' }
  * ```
  */
 export async function highlightTokens(code: string, lang = 'bash'): Promise<HighlightedCode> {

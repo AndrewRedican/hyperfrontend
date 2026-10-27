@@ -36,7 +36,8 @@ export interface CyclingCodeBlockProps {
  * @returns The block.
  * @example The three demos, one command each
  * ```tsx
- * <CyclingCodeBlock commands={['npx nx dev demo-clock', 'npx nx dev demo-heartbeat', 'npx nx dev demo-koi-pond']} layout="full" />
+ * const demos = ['demo-clock', 'demo-heartbeat', 'demo-koi-pond']
+ * <CyclingCodeBlock commands={demos.map((name) => `npm run hf -- run-many -t dev -p ${name}`)} layout="full" />
  * ```
  */
 export async function CyclingCodeBlock({ commands, language, className = 'mt-4', layout }: CyclingCodeBlockProps) {
