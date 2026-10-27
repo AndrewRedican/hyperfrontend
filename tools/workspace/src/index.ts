@@ -1,6 +1,6 @@
 /**
- * `@hyperfrontend/workspace` - Nx plugin for LLM-optimized reports and the
- * workspace documents derived from every package's manifests.
+ * `@hyperfrontend/workspace` - the workspace's own command line, dependency
+ * graph and pipeline, and the executors behind the root project's targets.
  */
 export type {
   BundleFormatConfig,

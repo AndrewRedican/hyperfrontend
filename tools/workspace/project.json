@@ -1,7 +1,6 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "tool-workspace",
-  "description": "Nx plugin providing workspace-wide executors for LLM-optimized reports (lint, typecheck, tests).",
+  "description": "The workspace's own command line, dependency graph and pipeline, and the executors behind the root project's targets.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:util", "scope:internal"],
@@ -10,28 +9,24 @@
     "typecheck": {},
     "graph": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
       }
     },
     "pipeline": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts"
       }
     },
     "types-extract": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts"
       }
     },
     "types-extract-check": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts --check"
       }
