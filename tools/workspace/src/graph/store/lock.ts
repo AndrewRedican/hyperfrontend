@@ -1,12 +1,13 @@
 /**
- * The lock one writer of the state directory holds: a file created exclusively with the writer's
- * pid inside, stale once its writer is dead or it has outlived a bound, so a crashed build never
- * blocks the next one; a second writer waits for it, then proceeds.
+ * The lock one writer of the state directory holds: a file that appears already holding the
+ * writer's pid, stale once its writer is dead or it has outlived a bound, so a crashed build never
+ * blocks the next one; a second writer waits for it, then proceeds. A lock is removed only while it
+ * still holds the pid that was judged, so a writer never deletes its successor's lock.
  *
  * @module graph/store/lock
  */
 
-import { closeSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeSync } from 'node:fs'
+import { linkSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -44,6 +45,36 @@ function isAlive(pid: number): boolean {
 }
 
 /**
+ * What a lock file holds, or null when it is gone.
+ *
+ * @param path - The lock file
+ * @returns Its text, or null when it vanished
+ */
+function readHolder(path: string): string | null {
+  try {
+    return readFileSync(path, 'utf8')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The holder of a lock that no longer protects anything: the lock is gone, older than the bound,
+ * or held by a process that is not running.
+ *
+ * @param path - The lock file
+ * @param staleMs - The bound on its age, in milliseconds
+ * @returns The text the stale lock held (null when it is gone), or undefined while it is live
+ */
+function staleHolder(path: string, staleMs: number): string | null | undefined {
+  const stats = statSync(path, { throwIfNoEntry: false })
+  if (stats === undefined) return null
+  const holder = readHolder(path)
+  if (holder === null || dateNow() - stats.mtimeMs > staleMs) return holder
+  return isAlive(parseInt(holder, 10)) ? undefined : holder
+}
+
+/**
  * Whether a lock file no longer protects anything: it is gone, older than the bound, or held by a
  * process that is not running.
  *
@@ -52,10 +83,17 @@ function isAlive(pid: number): boolean {
  * @returns True when the lock may be removed
  */
 export function isStaleLock(path: string, staleMs: number): boolean {
-  const stats = statSync(path, { throwIfNoEntry: false })
-  if (stats === undefined) return true
-  if (dateNow() - stats.mtimeMs > staleMs) return true
-  return !isAlive(parseInt(readFileSync(path, 'utf8'), 10))
+  return staleHolder(path, staleMs) !== undefined
+}
+
+/**
+ * Removes a lock if it still holds the given text, so a successor's lock taken since is kept.
+ *
+ * @param path - The lock file
+ * @param holder - The text it held when it was judged, null when it was already gone
+ */
+function removeHeldBy(path: string, holder: string | null): void {
+  if (readHolder(path) === holder) rmSync(path, { force: true })
 }
 
 /**
@@ -68,20 +106,24 @@ function pause(ms: number): void {
 }
 
 /**
- * Takes the lock exclusively, if nobody holds it.
+ * Takes the lock exclusively, if nobody holds it: the pid is written to a file of this process's
+ * own and linked into place, so the lock never exists without its holder.
  *
  * @param path - The lock file
+ * @param holder - The text the lock holds
  * @returns True when this process now holds the lock
  */
-function tryLock(path: string): boolean {
+function tryLock(path: string, holder: string): boolean {
+  const own = `${path}.${process.pid}`
+  writeFileSync(own, holder)
+  let taken = true
   try {
-    const descriptor = openSync(path, 'wx')
-    writeSync(descriptor, `${process.pid}\n`)
-    closeSync(descriptor)
-    return true
+    linkSync(own, path)
   } catch {
-    return false
+    taken = false
   }
+  rmSync(own, { force: true })
+  return taken
 }
 
 /**
@@ -98,14 +140,16 @@ export function withLock<Result>(directory: string, work: () => Result, options:
   mkdirSync(directory, { recursive: true })
   const path = join(directory, LOCK_FILE)
   const deadline = dateNow() + timeoutMs
-  while (!tryLock(path)) {
-    if (isStaleLock(path, staleMs)) rmSync(path, { force: true })
+  const own = `${process.pid}\n`
+  while (!tryLock(path, own)) {
+    const stale = staleHolder(path, staleMs)
+    if (stale !== undefined) removeHeldBy(path, stale)
     else if (dateNow() >= deadline) throw createError(`the graph state at ${directory} is locked by another process`)
     else pause(pollMs)
   }
   try {
     return work()
   } finally {
-    rmSync(path, { force: true })
+    removeHeldBy(path, own)
   }
 }

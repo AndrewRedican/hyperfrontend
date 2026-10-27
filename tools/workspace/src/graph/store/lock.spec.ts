@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync, utimesSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
@@ -56,6 +56,25 @@ describe('withLock', () => {
     expect(() => withLock(directory.path, () => 'never', { timeoutMs: 60, pollMs: 10 })).toThrow('locked by another process')
   })
 
+  it('holds its pid while the work runs', () => {
+    const path = join(directory.path, LOCK_FILE)
+    expect(withLock(directory.path, () => readFileSync(path, 'utf8'))).toBe(`${process.pid}\n`)
+  })
+
+  it('leaves only the lock in the directory while the work runs', () => {
+    expect(withLock(directory.path, () => readdirSync(directory.path))).toEqual([LOCK_FILE])
+  })
+
+  it('keeps a lock another writer took after this one was judged stale', () => {
+    const path = join(directory.path, LOCK_FILE)
+    withLock(directory.path, () => writeFileSync(path, `${DEAD_PID}\n`))
+    expect(readFileSync(path, 'utf8')).toBe(`${DEAD_PID}\n`)
+  })
+
+  it('tolerates work that removed the lock', () => {
+    expect(withLock(directory.path, () => rmSync(join(directory.path, LOCK_FILE)))).toBeUndefined()
+  })
+
   it('waits for a live holder and proceeds once it has released the lock', () => {
     const path = join(directory.path, LOCK_FILE)
     const script = `const fs = require('node:fs'); fs.writeFileSync(${JSON.stringify(path)}, process.pid + '\\n'); setTimeout(() => fs.rmSync(${JSON.stringify(path)}), 300)`
@@ -69,6 +88,12 @@ describe('withLock', () => {
 describe('isStaleLock', () => {
   it('counts a missing lock as stale', () => {
     expect(isStaleLock(join(directory.path, 'absent'), 60_000)).toBe(true)
+  })
+
+  it('counts a lock that cannot be read as stale', () => {
+    const path = join(directory.path, 'unreadable')
+    mkdirSync(path)
+    expect(isStaleLock(path, 60_000)).toBe(true)
   })
 
   it('counts a lock holding no pid as stale', () => {
