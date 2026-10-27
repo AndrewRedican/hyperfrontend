@@ -1,6 +1,6 @@
 # Project rules
 
-Lint rules that read the workspace's project graph, the one Nx would build, computed by the linter itself (`src/graph/`); the rules live in `src/rules/projects/`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
+Lint rules that read the workspace's project graph, the one Nx would build, built by `@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`); the rules live in `src/rules/projects/`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
 
 | Rule                                               | Checks                                                              | Files                        |
 | -------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
