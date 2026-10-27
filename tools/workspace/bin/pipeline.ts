@@ -32,7 +32,7 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { formatAffected } from '../src/graph/affected/explain'
@@ -44,13 +44,13 @@ import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
 import { explorerDocument } from '../src/pipeline/explorer'
 import { settleChecks } from '../src/pipeline/finalize'
 import { PLAN_CHECK_NAME, planCheckOutput } from '../src/pipeline/live'
-import { Environment as Environments, Outcome, PipelineRule } from '../src/pipeline/model'
+import { Environment as Environments, Outcome } from '../src/pipeline/model'
 import { createPlan } from '../src/pipeline/plan'
 import { writeRunRecord } from '../src/pipeline/records'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
 import { planSummary, runSummary } from '../src/pipeline/report'
 import { runSchedule } from '../src/pipeline/schedule'
-import { githubJobs, waitForJob } from '../src/pipeline/siblings'
+import { githubJobs, siblingGate } from '../src/pipeline/siblings'
 
 /** A task as the scheduler sees it: with its chain's rank. */
 interface RankedTask extends PlanTask {
@@ -307,28 +307,6 @@ function checksPath(environment: Environment): string {
 }
 
 /**
- * The gate the publishes wait at: the sibling job's conclusion, asked for once.
- *
- * @param planned - The plan, whose environments say whether a Windows job exists
- * @returns A function answering why the publishes must not run, or null when they may
- */
-function siblingGate(planned: Plan): () => Promise<string | null> {
-  // why: a plan without Windows chains has no Windows job to wait for, so the gate opens at once.
-  const name = planned.environments.includes(Environments.Windows) ? values['wait-for'] : undefined
-  const fetchJobs = name === undefined ? null : githubJobs(process.env, fetch)
-  let pending: Promise<string | null> | null = null
-  return () => {
-    if (name === undefined) return createPromise((resolve) => resolve(null))
-    if (fetchJobs === null)
-      return createPromise((resolve) => resolve(`${PipelineRule.WindowsEnvironment}: no GitHub token to ask about ${name}`))
-    pending ??= waitForJob({ fetchJobs, name, timeoutMs: SIBLING_TIMEOUT_MS, intervalMs: SIBLING_INTERVAL_MS }).then((conclusion) =>
-      conclusion === 'success' ? null : `${PipelineRule.WindowsEnvironment}: ${name} concluded ${conclusion}`
-    )
-    return pending
-  }
-}
-
-/**
  * The check-run hooks of the run, when asked for and possible; the check runs created are
  * recorded beside the results so a killed run can still settle them.
  *
@@ -388,7 +366,13 @@ async function runEnvironment(
   const stop = (): void => controller.abort()
   process.once('SIGINT', stop)
   process.once('SIGTERM', stop)
-  const gate = siblingGate(planned)
+  const gate = siblingGate({
+    // why: a plan without Windows chains has no Windows job to wait for, so the gate opens at once.
+    name: planned.environments.includes(Environments.Windows) ? values['wait-for'] : undefined,
+    fetchJobs: githubJobs(process.env, fetch),
+    timeoutMs: SIBLING_TIMEOUT_MS,
+    intervalMs: SIBLING_INTERVAL_MS,
+  })
   const checks = checksOf(environment)
   const settled = createMap<string, TaskResult>()
   const startedChains = createSet<string>()

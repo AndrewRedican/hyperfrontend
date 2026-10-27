@@ -1,25 +1,33 @@
 import type { FetchInit, FetchResponse, JobStatus } from './siblings'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { githubHeaders, githubJobs, pause, waitForJob } from './siblings'
+import { githubHeaders, githubJobs, pause, siblingGate, waitForJob } from './siblings'
+
+/** What one poll answers: the jobs, or what the lister rejects with. */
+type Poll = readonly JobStatus[] | Error | string
 
 /**
  * A job list answering one status per poll.
  *
- * @param polls - The job as each poll sees it; the last repeats
+ * @param polls - The jobs or the rejection each poll sees; the last repeats
  * @returns The lister and the polls made so far
  */
-function polling(polls: readonly (readonly JobStatus[])[]): { fetchJobs: () => Promise<readonly JobStatus[]>; count: () => number } {
+function polling(polls: readonly Poll[]): { fetchJobs: () => Promise<readonly JobStatus[]>; count: () => number } {
   let count = 0
   return {
     fetchJobs: async () => {
-      const jobs = polls[count] ?? (polls[polls.length - 1] as readonly JobStatus[])
+      const answer = polls[count] ?? (polls[polls.length - 1] as Poll)
       count += 1
-      return jobs
+      if (typeof answer === 'string' || answer instanceof Error) throw answer
+      return answer
     },
     count: () => count,
   }
 }
+
+/** The Windows job of the run, still running. */
+const RUNNING: JobStatus = { name: 'environment (windows)', status: 'in_progress', conclusion: null }
 
 /**
  * A response.
@@ -83,6 +91,59 @@ describe('waitForJob', () => {
       [{ name: 'j', status: 'completed', conclusion: 'success' }],
     ])
     expect(await waitForJob({ fetchJobs, name: 'j', timeoutMs: 1000, intervalMs: 1 })).toBe('success')
+  })
+})
+
+describe('siblingGate', () => {
+  const limits = { timeoutMs: 100, intervalMs: 1, sleep: async () => undefined }
+
+  it('opens at once when there is no job to wait for', async () => {
+    expect(await siblingGate({ ...limits, name: undefined, fetchJobs: null })()).toBeNull()
+  })
+
+  it('closes without a lister, naming the job it could not ask about', async () => {
+    expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: null })()).toBe(
+      'windows-environment: no GitHub token to ask about environment (windows)'
+    )
+  })
+
+  it('opens once the job succeeds, asking once for every publish', async () => {
+    const lister = polling([[{ ...RUNNING, status: 'completed', conclusion: 'success' }]])
+    const gate = siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0 })
+    expect({ first: await gate(), second: await gate(), polls: lister.count() }).toEqual({ first: null, second: null, polls: 1 })
+  })
+
+  it('closes when the job did not succeed', async () => {
+    const lister = polling([[{ ...RUNNING, status: 'completed', conclusion: 'failure' }]])
+    expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0 })()).toBe(
+      'windows-environment: environment (windows) concluded failure'
+    )
+  })
+
+  it('asks again after a poll that fails', async () => {
+    const lister = polling([
+      createError("listing the run's jobs answered 502"),
+      [{ ...RUNNING, status: 'completed', conclusion: 'success' }],
+    ])
+    const gate = siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0 })
+    expect({ closed: await gate(), polls: lister.count() }).toEqual({ closed: null, polls: 2 })
+  })
+
+  it('closes when the polls keep failing until the deadline, naming the last failure', async () => {
+    const lister = polling([createError("listing the run's jobs answered 503")])
+    let clock = 0
+    const gate = siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => (clock += 60) })
+    expect({ closed: await gate(), polls: lister.count() }).toEqual({
+      closed: "windows-environment: asking about environment (windows) failed: listing the run's jobs answered 503",
+      polls: 2,
+    })
+  })
+
+  it('names a failure that is not an error object', async () => {
+    const lister = polling(['offline'])
+    expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0, timeoutMs: 0 })()).toBe(
+      'windows-environment: asking about environment (windows) failed: offline'
+    )
   })
 })
 

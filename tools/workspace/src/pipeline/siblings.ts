@@ -11,6 +11,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { PipelineRule } from './model'
 
 /** One job of a run, as far as the wait reads it. */
 export interface JobStatus {
@@ -148,20 +149,57 @@ export function githubJobs(env: GitHubEnvironment, request: FetchLike): FetchJob
 }
 
 /**
- * Waits until a job of the run concludes.
+ * Waits until a job of the run concludes. A poll that fails counts as an unfinished job, so the
+ * wait polls again until the deadline.
  *
  * @param options - The lister, the name, the limits and the clock
  * @returns The job's conclusion, `timeout` or `absent`
+ * @throws {Error} The last poll's error, when that poll failed at or past the deadline
  */
 export async function waitForJob(options: WaitOptions): Promise<string> {
   const now = options.now ?? dateNow
   const sleep = options.sleep ?? pause
   const deadline = now() + options.timeoutMs
   for (;;) {
-    const job = (await options.fetchJobs()).find((item) => item.name === options.name)
-    if (job === undefined) return WaitOutcome.Absent
-    if (job.status === 'completed') return job.conclusion ?? 'unknown'
-    if (now() >= deadline) return WaitOutcome.Timeout
+    try {
+      const job = (await options.fetchJobs()).find((item) => item.name === options.name)
+      if (job === undefined) return WaitOutcome.Absent
+      if (job.status === 'completed') return job.conclusion ?? 'unknown'
+      if (now() >= deadline) return WaitOutcome.Timeout
+    } catch (error) {
+      if (now() >= deadline) throw error
+    }
     await sleep(options.intervalMs)
+  }
+}
+
+/** How the publish gate waits for the sibling job. */
+export interface GateOptions extends Omit<WaitOptions, 'fetchJobs' | 'name'> {
+  /** The job the publishes wait for, or undefined when there is none to wait for. */
+  readonly name: string | undefined
+  /** Lists the jobs, or null when the environment cannot ask. */
+  readonly fetchJobs: FetchJobs | null
+}
+
+/**
+ * The gate the publishes wait at: the sibling job's conclusion, asked for once however many
+ * publishes wait. It closes when the job did not succeed, did not conclude in time, or could
+ * not be asked about.
+ *
+ * @param options - The job, the lister, the limits and the clock
+ * @returns A function answering why the publishes must not run, or null when they may; it never rejects
+ */
+export function siblingGate(options: GateOptions): () => Promise<string | null> {
+  const { name, fetchJobs } = options
+  let pending: Promise<string | null> | null = null
+  return async () => {
+    if (name === undefined) return null
+    if (fetchJobs === null) return `${PipelineRule.WindowsEnvironment}: no GitHub token to ask about ${name}`
+    pending ??= waitForJob({ ...options, name, fetchJobs }).then(
+      (conclusion) => (conclusion === 'success' ? null : `${PipelineRule.WindowsEnvironment}: ${name} concluded ${conclusion}`),
+      (error: unknown) =>
+        `${PipelineRule.WindowsEnvironment}: asking about ${name} failed: ${error instanceof Error ? error.message : String(error)}`
+    )
+    return pending
   }
 }
