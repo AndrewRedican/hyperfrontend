@@ -9,7 +9,7 @@
  *   packages/nx/src/utils/package-manager.ts
  * Roots: ExecutorContext, PromiseExecutor, AsyncIteratorExecutor, Executor, Generator, GeneratorCallback
  * Depth: 2; a reference past it, or outside the followed sources, is written as `unknown` and listed in REPORT.md.
- * Regenerate with `npx nx run tool-workspace:types-extract`; verify with `npx nx run tool-workspace:types-extract-check`.
+ * Regenerate with `npm run hf -- run tool-workspace:types-extract`; verify with `npm run hf -- run tool-workspace:types-extract-check`.
  *
  * Copyright (c) 2017-2026 Narwhal Technologies Inc. Licensed under the terms reproduced in NOTICE.md.
  */

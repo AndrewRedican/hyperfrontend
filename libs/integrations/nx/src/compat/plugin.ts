@@ -5,7 +5,7 @@
  *   packages/nx/src/project-graph/plugins/public-api.ts
  * Roots: CreateNodesV2, CreateNodesFunctionV2, CreateNodesContextV2, CreateNodesResultV2, CreateNodesResult
  * Depth: 2; a reference past it, or outside the followed sources, is written as `unknown` and listed in REPORT.md.
- * Regenerate with `npx nx run tool-workspace:types-extract`; verify with `npx nx run tool-workspace:types-extract-check`.
+ * Regenerate with `npm run hf -- run tool-workspace:types-extract`; verify with `npm run hf -- run tool-workspace:types-extract-check`.
  *
  * Copyright (c) 2017-2026 Narwhal Technologies Inc. Licensed under the terms reproduced in NOTICE.md.
  */
