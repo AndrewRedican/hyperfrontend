@@ -119,7 +119,7 @@ const FORMAT_RUNS: Record<string, FormatRun> = {
   esm: { candidates: ['src/esm.spec.ts'], dom: false, timeoutMs: 30_000 },
   browser: { candidates: ['src/iife.spec.ts', 'src/umd.spec.ts'], dom: true, timeoutMs: 30_000 },
   // why: the nx suites create real consumer workspaces with a network npm install, so a single test legitimately runs for minutes.
-  nx: { candidates: ['src/nx-plugin.spec.ts', 'src/nx-plugin-callbacks.spec.ts'], dom: false, timeoutMs: 900_000 },
+  nx: { candidates: ['src/nx-plugin.spec.ts', 'src/nx-plugin-callbacks.spec.ts', 'src/nx-types.spec.ts'], dom: false, timeoutMs: 900_000 },
 }
 
 /**
