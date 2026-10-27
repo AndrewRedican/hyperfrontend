@@ -43,7 +43,7 @@ jobs:
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
       - name: Check the formatting of every file
-        run: CI=1 npx nx format:check
+        run: npm run -s hf -- format --check --all
 
       - name: Plan the pull request
         id: plan

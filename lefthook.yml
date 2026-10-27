@@ -17,7 +17,7 @@ pre-commit:
       run: node tools/workspace/scripts/check-binary-budget.mjs --staged --allow-over-budget
       fail_text: 'A staged file is over the 2,000,000-byte limit. Unstage it and keep it out of Git, or shrink it.'
     format:
-      run: npx nx format:write
+      run: npm run -s hf -- format --write
       stage_fixed: true
 
 commit-msg:
@@ -31,7 +31,7 @@ pre-push:
   commands:
     audit:
       priority: 1
-      run: npx nx run-many -t audit
+      run: npm run -s hf -- run-many -t audit --all
       fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
     binary-budget:
       priority: 2
@@ -44,7 +44,7 @@ pre-push:
       fail_text: 'The pipeline failed. Read the summary above; each task wrote its log under .hf/pipeline/logs.'
     version:
       priority: 4
-      run: npx nx version:all --verbose
+      run: npm run -s hf -- run @hyperfrontend/workspace:version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
 
