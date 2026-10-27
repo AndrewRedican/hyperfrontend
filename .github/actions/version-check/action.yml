@@ -95,7 +95,7 @@ runs:
         for lib in $AFFECTED; do
           echo "Checking $lib..."
           # Capture both stdout and stderr, check exit code; --verbose=true prints the "matches expected" verdict that tells valid from skipped
-          if RESULT=$(npm run -s hf -- run "$lib:version-check" --verbose=true 2>&1); then
+          if RESULT=$(npm run hf -- run "$lib:version-check" --verbose=true 2>&1); then
             # Exit code 0 - validation passed or skipped
             if echo "$RESULT" | grep -q "version.*matches expected"; then
               if [ -z "$VALID" ]; then VALID="$lib"; else VALID="$VALID, $lib"; fi
@@ -170,7 +170,7 @@ runs:
           echo '2. Run versioning for affected libraries:'
           for lib in "${LIBS[@]}"; do
             echo '   ```bash'
-            echo "   npm run -s hf -- run ${lib}:version"
+            echo "   npm run hf -- run ${lib}:version"
             echo '   ```'
           done
           echo '3. Amend your commit: `git commit --amend --no-edit`'

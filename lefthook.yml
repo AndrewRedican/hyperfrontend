@@ -31,7 +31,7 @@ pre-push:
   commands:
     audit:
       priority: 1
-      run: npm run -s hf -- run-many -t audit --all
+      run: npm run hf -- run-many -t audit --all
       fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
     binary-budget:
       priority: 2
@@ -44,7 +44,7 @@ pre-push:
       fail_text: 'The pipeline failed. Read the summary above; each task wrote its log under .hf/pipeline/logs.'
     version:
       priority: 4
-      run: npm run -s hf -- run @hyperfrontend/workspace:version:all --verbose
+      run: npm run hf -- run @hyperfrontend/workspace:version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
 
