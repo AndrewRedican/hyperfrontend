@@ -77,8 +77,9 @@ describe('withLock', () => {
 
   it('waits for a live holder and proceeds once it has released the lock', () => {
     const path = join(directory.path, LOCK_FILE)
-    const script = `const fs = require('node:fs'); fs.writeFileSync(${JSON.stringify(path)}, process.pid + '\\n'); setTimeout(() => fs.rmSync(${JSON.stringify(path)}), 300)`
-    const holder = spawn(process.execPath, ['-e', script], { stdio: 'ignore', env: { ...process.env, NODE_OPTIONS: '' } })
+    const script =
+      "const fs = require('node:fs'); const path = process.env.LOCK_PATH; fs.writeFileSync(path, process.pid + '\\n'); setTimeout(() => fs.rmSync(path), 300)"
+    const holder = spawn(process.execPath, ['-e', script], { stdio: 'ignore', env: { ...process.env, NODE_OPTIONS: '', LOCK_PATH: path } })
     holder.unref()
     while (!existsSync(path)) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10)
     expect(withLock(directory.path, () => 'eventually', { timeoutMs: 5000, pollMs: 20 })).toBe('eventually')
