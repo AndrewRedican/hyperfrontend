@@ -3,10 +3,11 @@ import type { TestConfig } from '@hyperfrontend/testing/runner'
 /**
  * How the workspace plugin is tested.
  *
- * The compatibility matrix, the workspace graph, the pipeline plan, scheduler and reports, the
- * type extraction and the artifact-drift parsers are pure derivation and are held to full
- * coverage; the drift script's npm and registry calls stay in the script. The lint-report
- * executor is driven by Nx and exercised by every `lint:all` run.
+ * The compatibility matrix, the workspace graph, the task runner, the pipeline plan, scheduler
+ * and reports, the type extraction and the artifact-drift parsers are pure derivation and are
+ * held to full coverage; the drift script's npm and registry calls stay in the script, and the
+ * command line's import of executor modules stays in its entry. The lint-report executor is
+ * exercised by every `lint:all` run.
  */
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
@@ -16,6 +17,7 @@ const config: TestConfig = {
     'src/compatibility-matrix/refresh.ts',
     'src/graph/**/*.ts',
     'src/pipeline/**/*.ts',
+    'src/runner/**/*.ts',
     'src/types-extract/**/*.ts',
     'src/artifact-drift/{tar,pack,compare}.ts',
   ],
