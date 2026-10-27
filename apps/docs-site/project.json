@@ -1,5 +1,4 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "docs-site",
   "description": "Next.js documentation site for hyperfrontend.",
   "sourceRoot": "apps/docs-site/src",
@@ -52,7 +51,6 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
-      "cache": false,
       "inputs": [
         "default",
         "{workspaceRoot}/ACKNOWLEDGMENTS.md",
@@ -69,7 +67,6 @@
         "{workspaceRoot}/plugins/**/*.md",
         "{workspaceRoot}/plugins/**/src/**/*.ts"
       ],
-      "outputs": ["{projectRoot}/.generated", "{projectRoot}/.next", "{projectRoot}/out"],
       "options": {
         "command": "npm run build"
       }
