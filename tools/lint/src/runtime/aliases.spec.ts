@@ -123,7 +123,9 @@ describe('install', () => {
 
   it('leaves the loading of an installed package to Node', () => {
     install()
-    const manifest = createRequire(import.meta.url)(join(WORKSPACE_ROOT, 'node_modules', 'nx', 'package.json')) as { name: string }
-    expect(manifest.name).toBe('nx')
+    const manifest = createRequire(import.meta.url)(join(WORKSPACE_ROOT, 'node_modules', 'typescript', 'package.json')) as {
+      name: string
+    }
+    expect(manifest.name).toBe('typescript')
   })
 })
