@@ -71,12 +71,14 @@ function getPackageVersion(distPath: string): string {
 }
 
 /**
- * Builds the npm publish arguments array.
+ * Builds the npm publish arguments array. A dry run keeps `--provenance`: npm signs the
+ * provenance statement only when it uploads, so the dry run previews the real command and
+ * needs no identity token.
  *
  * @param options - Options for the publish executor
  * @returns Array of npm publish command arguments
  */
-function buildPublishArgs(options: PublishExecutorOptions): string[] {
+export function buildPublishArgs(options: PublishExecutorOptions): string[] {
   const args: string[] = ['publish']
 
   if (options.dryRun) {
@@ -97,6 +99,10 @@ function buildPublishArgs(options: PublishExecutorOptions): string[] {
 
   if (options.otp) {
     args.push('--otp', options.otp)
+  }
+
+  if (options.provenance) {
+    args.push('--provenance')
   }
 
   return args
@@ -141,7 +147,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
 
   if (!existsSync(distPath)) {
     logger.error(`Dist directory not found: ${distPath}`)
-    logger.error(`Run 'nx build ${projectName}' first to build the package.`)
+    logger.error(`Run the task ${projectName}:build first to build the package.`)
     return { success: false }
   }
 

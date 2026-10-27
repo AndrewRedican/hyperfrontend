@@ -85,13 +85,14 @@ npx nx publish lib-cryptography --otp=123456
 
 All options can be passed via CLI flags or configured in `project.json`:
 
-| Option     | Type    | Default    | Description                                   |
-| ---------- | ------- | ---------- | --------------------------------------------- |
-| `dryRun`   | boolean | `false`    | Preview publish without actually publishing   |
-| `registry` | string  | npm config | Custom npm registry URL                       |
-| `tag`      | string  | `latest`   | npm dist-tag (e.g., `latest`, `next`, `beta`) |
-| `access`   | string  | `public`   | Access level: `public` or `restricted`        |
-| `otp`      | string  | -          | One-time password for npm 2FA                 |
+| Option       | Type    | Default    | Description                                                                                                                         |
+| ------------ | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `dryRun`     | boolean | `false`    | Preview publish without actually publishing                                                                                         |
+| `registry`   | string  | npm config | Custom npm registry URL                                                                                                             |
+| `tag`        | string  | `latest`   | npm dist-tag (e.g., `latest`, `next`, `beta`)                                                                                       |
+| `access`     | string  | `public`   | Access level: `public` or `restricted`                                                                                              |
+| `otp`        | string  | -          | One-time password for npm 2FA                                                                                                       |
+| `provenance` | boolean | `false`    | Publish with `--provenance`, signing an attestation of the build (needs an OIDC token, as on GitHub Actions with `id-token: write`) |
 
 ---
 

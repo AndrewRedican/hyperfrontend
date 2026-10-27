@@ -12,4 +12,6 @@ export interface PublishExecutorOptions {
   access?: 'public' | 'restricted'
   /** One-time password for npm 2FA */
   otp?: string
+  /** Attach a provenance statement signed with the CI identity token */
+  provenance?: boolean
 }
