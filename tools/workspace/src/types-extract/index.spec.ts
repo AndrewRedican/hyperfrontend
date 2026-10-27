@@ -140,7 +140,7 @@ describe('runTypesExtract', () => {
   it('uses the locked commit without resolving when the lock is current', async () => {
     const world = worldOf({ 'lock.json': LOCK_TEXT })
     await runTypesExtract(CONFIG, 'write', world.io)
-    expect(world.fetched.includes(TAG_URL)).toBe(false)
+    expect(world.fetched).not.toContain(TAG_URL)
   })
 
   it('writes only the files that changed', async () => {
@@ -159,7 +159,7 @@ describe('runTypesExtract', () => {
   it('re-resolves every source in update mode', async () => {
     const world = worldOf({ 'lock.json': LOCK_TEXT }, UPSTREAM, { [TAG_URL]: { object: { sha: SHA, type: 'commit' } } })
     await runTypesExtract(CONFIG, 'update', world.io)
-    expect(world.fetched.includes(TAG_URL)).toBe(true)
+    expect(world.fetched).toContain(TAG_URL)
   })
 
   it('fails a check when the lock is missing', async () => {
