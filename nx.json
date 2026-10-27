@@ -34,6 +34,7 @@
       }
     },
     "version-check": {
+      "inputs": ["{projectRoot}/**/*"],
       "executor": "@hyperfrontend/package:version-check",
       "options": {
         "scopeFiltering": {

@@ -68,7 +68,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **What it does**:
 
 1. **Removes stale comments**: Deletes any existing version-check comments from previous runs (idempotency)
-2. **Validates versions**: Lists the libraries whose `version` target the change reaches through the owned graph (`pipeline affected --target version --projects`, file ownership) and runs `nx version-check` for each
+2. **Validates versions**: Lists the libraries owning a changed file, or every library when a global configuration file (`nx.json`, `package.json`, `package-lock.json`, `tsconfig.base.json`) changes (`pipeline affected --target version-check --projects`), and runs `hf.ts run <library>:version-check --verbose=true` for each. The job only checks versions; the pre-push hook bumps them
 3. **Posts failure comment**: If validation fails, posts a comment with:
    - List of libraries with issues
    - Step-by-step fix instructions
@@ -85,10 +85,10 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **Important Notes**:
 
 - Requires `fetch-depth: 0` in checkout for accurate git history
-- Reads the persisted graph state under `.hf/graph` when the job restored it, and builds it cold otherwise
+- Builds the graph state under `.hf/graph` cold
 - Requires `pull-requests: write` permission for commenting
 - Uses `gh` CLI for API calls (included in GitHub Actions runners)
-- Skips gracefully when no libraries with version targets are affected
+- Skips gracefully when the change selects no library
 
 ---
 
