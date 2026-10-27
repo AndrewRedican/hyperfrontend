@@ -6,23 +6,22 @@ This executor is used by CI to verify that lefthook versioning ran successfully 
 
 ## Key Features
 
-- **Read-only** — Does NOT modify any files or create commits
-- **Dry-run comparison** — Calculates expected state by running version flow in dry-run mode
-- **Changelog validation** — Uses `@hyperfrontend/versioning` changelog parsing to verify entry content
-- **Clear remediation** — Provides actionable fix instructions on failure
+- **Read-only**: Does NOT modify any files or create commits
+- **Dry-run comparison**: Calculates expected state by running version flow in dry-run mode
+- **Changelog validation**: Uses `@hyperfrontend/versioning` changelog parsing to verify entry content
+- **Clear remediation**: Provides actionable fix instructions on failure
 
 ## Usage
 
 ```bash
 # Check a single library
-npx nx version-check lib-cryptography
-
-# Check all affected libraries
-npx nx run-many -t=version-check --affected
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-cryptography:version-check
 
 # Verbose output for debugging
-npx nx version-check lib-cryptography --verbose
+node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-cryptography:version-check --verbose
 ```
+
+On a pull request, the `version-check` action runs it for every library that owns a changed file.
 
 ## Options
 
@@ -62,12 +61,12 @@ Discrepancies:
     Actual:   2.0.0
 
 Remedy:
-  Run: npx nx version lib-cryptography
+  Run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-cryptography:version
   Or push again to trigger lefthook versioning
 
 To fix this issue:
   1. Pull latest changes: git pull origin <branch>
-  2. Run versioning: npx nx version lib-cryptography
+  2. Run versioning: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run lib-cryptography:version
   3. Commit the changes: git add . && git commit --amend --no-edit
   4. Push: git push --force-with-lease
 
@@ -76,17 +75,17 @@ Or push without --no-verify to let lefthook handle versioning automatically.
 
 ## When to Use
 
-- **CI validation** — Verify versions were applied by lefthook before merge
-- **Local verification** — Confirm lefthook versioning worked correctly
-- **Debugging** — Understand why version state doesn't match expectations
+- **CI validation**: Verify versions were applied by lefthook before merge
+- **Local verification**: Confirm lefthook versioning worked correctly
+- **Debugging**: Understand why version state doesn't match expectations
 
 ## How It Works
 
-1. **Calculate expected state** — Run version flow in dry-run mode
-2. **Read actual state** — Parse package.json and CHANGELOG.md from disk
-3. **Compare versions** — Check if `actual.version === expected.nextVersion`
-4. **Compare changelog** — Verify entry exists and its content (version and sections) matches using `@hyperfrontend/versioning` comparison utilities. The entry's date and compare URL are stamped at generation time and are not compared, so a version commit that is still waiting to be published keeps validating as commits land on top of it
-5. **Return result** — Pass if all match, fail with discrepancy details otherwise
+1. **Calculate expected state**: Run version flow in dry-run mode
+2. **Read actual state**: Parse package.json and CHANGELOG.md from disk
+3. **Compare versions**: Check if `actual.version === expected.nextVersion`
+4. **Compare changelog**: Verify entry exists and its content (version and sections) matches using `@hyperfrontend/versioning` comparison utilities. The entry's date and compare URL are stamped at generation time and are not compared, so a version commit that is still waiting to be published keeps validating as commits land on top of it
+5. **Return result**: Pass if all match, fail with discrepancy details otherwise
 
 ## CI Integration
 
@@ -96,7 +95,7 @@ The version-check executor is called by the `version-check` job in `ci-pr.yml`:
 - name: Validate versions
   run: |
     for lib in $AFFECTED; do
-      npx nx version-check "$lib"
+      node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run "$lib:version-check" --verbose=true
     done
 ```
 
@@ -123,7 +122,7 @@ This ensures validation in CI matches what the version executor would produce.
 
 ## See Also
 
-- [version executor](../version/README.md) — The executor that creates version bumps
-- [version executor ARCHITECTURE.md](../version/ARCHITECTURE.md) — Architecture including CI integration
-- [lefthook.yml](../../../../../lefthook.yml) — Git hooks that run versioning locally
-- [Versioning roadmap](../../../../../roadmap/versioning/README.md) — Future considerations for the versioning library
+- [version executor](../version/README.md): The executor that creates version bumps
+- [version executor ARCHITECTURE.md](../version/ARCHITECTURE.md): Architecture including CI integration
+- [lefthook.yml](../../../../../lefthook.yml): Git hooks that run versioning locally
+- [Versioning roadmap](../../../../../roadmap/versioning/README.md): Future considerations for the versioning library

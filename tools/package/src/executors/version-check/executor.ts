@@ -96,7 +96,9 @@ export default async function versionCheckExecutor(
       logger.log('')
       logger.log('To fix this issue:')
       logger.log('  1. Pull latest changes: git pull origin <branch>')
-      logger.log(`  2. Run versioning: npx nx version ${projectName}`)
+      logger.log(
+        `  2. Run versioning: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run ${projectName}:version`
+      )
       logger.log('  3. Commit the changes: git add . && git commit --amend --no-edit')
       logger.log('  4. Push: git push --force-with-lease')
       logger.log('')
