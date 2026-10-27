@@ -1,9 +1,10 @@
 /**
  * One check run per chain on the pull request: created when the chain's first task starts,
  * updated with its ended tasks as each one ends, and completed with the chain's conclusion and a
- * table of its tasks. Best-effort: a token without the permission disables the check runs after
- * one notice, and nothing else depends on them. The ids are reported as they are created and
- * completed, so a run that is killed can still settle them.
+ * table of its tasks. A chain's requests go out one after another, the completion always last.
+ * Best-effort: a token without the permission disables the check runs after one notice, and
+ * nothing else depends on them. The ids are reported as they are created and completed, so a run
+ * that is killed can still settle them.
  *
  * @module pipeline/checks
  */
@@ -59,6 +60,18 @@ export interface ChainChecks {
   onTask(chain: Chain, results: readonly TaskResult[]): Promise<void>
   /** Called when every task of a chain has a result. */
   onEnd(chain: Chain, results: readonly TaskResult[]): Promise<void>
+}
+
+/** The requests of one chain's check run, sent one after another. */
+interface ChainQueue {
+  /** The last request queued; it answers the check run's id once it and every request before it are done. */
+  tail: Promise<number>
+  /** The state the queued update sends, or null when no update waits or the completion dropped it. */
+  latest: CheckOutput | null
+  /** What the hook of the queued update answered, until the update is sent. */
+  queued: Promise<void> | null
+  /** Whether the completion is queued. */
+  ending: boolean
 }
 
 /** The id a created check run answers with. */
@@ -135,7 +148,11 @@ export function chainOutput(chain: Chain, results: readonly TaskResult[], title:
 }
 
 /**
- * The hooks that keep one check run per chain.
+ * The hooks that keep one check run per chain. Each chain's requests wait for the one before
+ * them, starting with the create: a hook called before the create has answered waits for it,
+ * in-progress updates waiting behind a request collapse into the latest state, and an update
+ * still waiting when the completion is queued is dropped, so the completion is the chain's last
+ * request. Every hook answers once its request (or the request it collapsed into) is done.
  *
  * @param api - The check-run API
  * @param headSha - The commit the check runs are attached to
@@ -150,39 +167,67 @@ export function chainChecks(
   onRecords: (records: CheckRecords) => void = () => undefined
 ): ChainChecks {
   const records = createMap<string, CheckRecord>()
+  const queues = createMap<string, ChainQueue>()
   let enabled = true
   const publish = (): void => onRecords(fromEntries(records))
-  const attempt = async (action: () => Promise<void>): Promise<void> => {
-    if (!enabled) return
+  const settle = async (request: Promise<unknown>): Promise<void> => {
     try {
-      await action()
+      await request
     } catch (error) {
-      // why: several chains start at once, so their refusals arrive together; the first one speaks and switches the rest off.
+      // why: several chains start at once and a chain's queued requests share its refusal, so the first one speaks and switches the rest off.
       if (!enabled) return
       enabled = false
       notice(`check runs are off for this run: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
+  const open = (chain: Chain): ChainQueue | null => {
+    const queue = queues.get(checkName(chain))
+    return queue === undefined || queue.ending || !enabled ? null : queue
+  }
+  const enqueue = (queue: ChainQueue, request: (id: number) => Promise<void>): Promise<void> => {
+    queue.tail = queue.tail.then(async (id) => {
+      await request(id)
+      return id
+    })
+    return settle(queue.tail)
+  }
   return {
-    onStart: (chain) =>
-      attempt(async () => {
-        records.set(checkName(chain), { id: await api.create(checkName(chain), headSha), completed: false })
+    onStart: async (chain) => {
+      if (!enabled) return
+      const name = checkName(chain)
+      const created = api.create(name, headSha).then((id) => {
+        records.set(name, { id, completed: false })
         publish()
-      }),
-    onTask: (chain, results) =>
-      attempt(async () => {
-        const record = records.get(checkName(chain))
-        if (record === undefined) return
-        await api.update(record.id, chainOutput(chain, results, `${results.length} of ${chain.tasks.length} tasks ended`))
-      }),
-    onEnd: (chain, results) =>
-      attempt(async () => {
-        const record = records.get(checkName(chain))
-        if (record === undefined) return
-        const conclusion = chainConclusion(results)
-        await api.complete(record.id, conclusion, chainOutput(chain, results, `${results.length} tasks, ${conclusion}`))
-        records.set(checkName(chain), { id: record.id, completed: true })
+        return id
+      })
+      queues.set(name, { tail: created, latest: null, queued: null, ending: false })
+      return settle(created)
+    },
+    onTask: async (chain, results) => {
+      const queue = open(chain)
+      if (queue === null) return
+      queue.latest = chainOutput(chain, results, `${results.length} of ${chain.tasks.length} tasks ended`)
+      if (queue.queued !== null) return queue.queued
+      queue.queued = enqueue(queue, async (id) => {
+        const output = queue.latest
+        queue.latest = null
+        queue.queued = null
+        if (output !== null && enabled) await api.update(id, output)
+      })
+      return queue.queued
+    },
+    onEnd: async (chain, results) => {
+      const queue = open(chain)
+      if (queue === null) return
+      queue.ending = true
+      queue.latest = null
+      const conclusion = chainConclusion(results)
+      return enqueue(queue, async (id) => {
+        if (!enabled) return
+        await api.complete(id, conclusion, chainOutput(chain, results, `${results.length} tasks, ${conclusion}`))
+        records.set(checkName(chain), { id, completed: true })
         publish()
-      }),
+      })
+    },
   }
 }
