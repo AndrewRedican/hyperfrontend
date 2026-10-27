@@ -1,6 +1,6 @@
 # @hyperfrontend/app
 
-Nx plugin providing executors for hyperfrontend application projects with self-contained dependencies.
+Executors for hyperfrontend application projects with self-contained dependencies, run through the workspace's `hf` command line.
 
 ## Purpose
 
@@ -49,10 +49,9 @@ Builds an application project using its local package.json scripts.
 }
 ```
 
-| Option       | Type   | Default         | Description                           |
-| ------------ | ------ | --------------- | ------------------------------------- |
-| `command`    | string | `npm run build` | Custom build command to run           |
-| `outputPath` | string | -               | Output directory for Nx cache outputs |
+| Option    | Type   | Default         | Description                 |
+| --------- | ------ | --------------- | --------------------------- |
+| `command` | string | `npm run build` | Custom build command to run |
 
 ### serve
 

@@ -12,7 +12,7 @@ import { logger } from '../../lib/logger'
  * directory. Supports self-contained dependency management where each
  * application maintains its own node_modules.
  *
- * @param options - Executor options including command and outputPath
+ * @param options - Executor options: the build command
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the build
  */
