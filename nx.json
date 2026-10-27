@@ -1,9 +1,4 @@
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "parallel": 1,
-  "tui": {
-    "enabled": false
-  },
   "targetDefaults": {
     "lint": {
       "inputs": [
@@ -20,8 +15,7 @@
       ]
     },
     "@hyperfrontend/package:test": {
-      "inputs": ["default", "^production"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "inputs": ["default", "^production"]
     },
     "version": {
       "executor": "@hyperfrontend/package:version",
@@ -54,7 +48,6 @@
         }
       ],
       "executor": "@hyperfrontend/package:build",
-      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/{projectRoot}"
       }
@@ -73,7 +66,7 @@
       "executor": "@hyperfrontend/package:typecheck"
     },
     "audit": {
-      "inputs": ["dependencyState", { "runtime": "date -u +%F" }],
+      "inputs": ["dependencyState"],
       "executor": "nx:run-commands",
       "options": {
         "command": "npm audit --audit-level=moderate",
@@ -106,17 +99,7 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
-  "pluginsConfig": {
-    "@nx/js": {
-      "analyzeSourceFiles": true
-    }
-  },
-  "plugins": [
-    {
-      "plugin": "./tools/lint/src/nx/plugin.ts",
-      "exclude": ["apps/demos/**/*"]
-    }
-  ],
-  "neverConnectToCloud": true,
-  "analytics": false
+  "lint": {
+    "exclude": ["apps/demos/**/*"]
+  }
 }
