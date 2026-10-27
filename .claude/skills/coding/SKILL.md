@@ -1,6 +1,6 @@
 ---
 name: coding
-description: Coding conventions for the hyperfrontend Nx monorepo. Use when refactoring, adding features, fixing bugs, or writing any new code across libs/, apps/, tools/, or plugins/.
+description: Coding conventions for the hyperfrontend monorepo. Use when refactoring, adding features, fixing bugs, or writing any new code across libs/, apps/, tools/, or plugins/.
 ---
 
 # Coding Skill
@@ -28,10 +28,10 @@ Know all enforced rules **before** generating code. Violations will be caught by
 Run in order, targeting only affected projects:
 
 ```bash
-nx test <project-name>
-nx lint <project-name> --fix
-nx run <project-name>:typecheck
-nx format:write --projects=<project-name>
+npm run hf -- run <project-name>:test
+npm run hf -- run <project-name>:lint --fix
+npm run hf -- run <project-name>:typecheck
+npm run hf -- format --write
 ```
 
 ---

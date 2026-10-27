@@ -5,11 +5,11 @@ description: Build, run, debug, test, and deploy the koi pond showcase — a hos
 
 # Koi Pond Demo
 
-Eleven Nx projects in `apps/demos/koi-pond/`. A **host** pond opens one **fish** feature app per koi (eight framework apps to draw from), each rendering one 3D koi into its own transparent iframe; the host composites them into one scene, owns the pointer, and relays neighbours. The pond is itself a **hostee** the docs-site gallery mounts. A shared **lib** (packed to a tarball) carries the model, contracts, the steering brain, the frame loop, geometry, the renderer-free 3D koi, and the three.js adapter. A **workbench** develops the koi model in isolation.
+Eleven projects in `apps/demos/koi-pond/`. A **host** pond opens one **fish** feature app per koi (eight framework apps to draw from), each rendering one 3D koi into its own transparent iframe; the host composites them into one scene, owns the pointer, and relays neighbours. The pond is itself a **hostee** the docs-site gallery mounts. A shared **lib** (packed to a tarball) carries the model, contracts, the steering brain, the frame loop, geometry, the renderer-free 3D koi, and the three.js adapter. A **workbench** develops the koi model in isolation.
 
-## Projects → dirs (Nx name = commit scope)
+## Projects → dirs (project name = commit scope)
 
-| Nx project           | Dir          | Role                                                                                     |
+| Project              | Dir          | Role                                                                                     |
 | -------------------- | ------------ | ---------------------------------------------------------------------------------------- |
 | `demo-koi-lib`       | `lib/`       | model, contracts+wire, motion brain, runtime loop, geometry, `koi3d/`, `three/`, `solo/` |
 | `demo-koi-pond`      | `host/`      | pond bed, water, pointer, depth, relay, curtain, shoal panel, overlay; hostee shell      |
@@ -47,22 +47,24 @@ The lib owns the **whole simulation**: body, physics, steering brain, the frame 
 ## Commands (from repo root)
 
 ```bash
+# run-many runs each target's `install` (and other dependsOn) first; `run` runs the target alone
 # lib: build + pack + reinstall into ALL consumers (ALWAYS run after editing lib/src)
-npx nx run demo-koi-lib:refresh
-npx nx run demo-koi-lib:verify          # fail loudly when tarball/consumer lock drifted
-npx nx run demo-koi-lib:build           # tsc only; refresh does build+pack+install
+npm run hf -- run-many -t refresh -p demo-koi-lib
+# fail loudly when tarball/consumer lock drifted
+npm run hf -- run-many -t verify -p demo-koi-lib
+# tsc only; refresh does build+pack+install
+npm run hf -- run-many -t build -p demo-koi-lib
 
 # fish shells: repack all eight + reinstall into host (after inner-contract or fish feature.config changes)
-npx nx run demo-koi-pond:refresh-fish-shells
+npm run hf -- run-many -t refresh-fish-shells -p demo-koi-pond
 
-# the whole family
-npx nx run-many -t test build lint typecheck -p demo-koi-lib demo-koi-pond demo-koi-fish-*
-npx nx run-many -t build -p demo-koi-*  # composed site → dist/apps/demos/koi-pond/site
+# the whole family (no demo project carries a `test` or `lint` target)
+npm run hf -- run-many -t typecheck,build -p 'demo-koi-*'
+# composed site → dist/apps/demos/koi-pond/site
+npm run hf -- run-many -t build -p 'demo-koi-*'
 
-# per project (only demo-koi-lib and demo-koi-pond carry a `test` target)
-npx nx test demo-koi-lib
-npx nx test demo-koi-pond
-npx nx run demo-koi-fish-vanilla:build
+# per project
+npm run hf -- run-many -t build -p demo-koi-fish-vanilla
 ```
 
 **Editing `lib/src` without `:refresh` ships stale code.** A bare `npm install` no-ops on a same-version repack (warm cache reports "up to date"); `refresh` installs by explicit path, the only invocation that re-reads the tarball. After `:refresh`, run `npm install` inside a fish only if adding a _new_ dep.
@@ -71,11 +73,13 @@ npx nx run demo-koi-fish-vanilla:build
 
 ```bash
 # composed pond on one origin (host + fish sub-paths), SDK dev server
-npx nx run demo-koi-pond:dev-hosted     # app :4282, debug UI :4290
-npx nx run demo-koi-pond:dev            # vite, host alone (fish frames 404 — use dev-hosted)
+# app :4282, debug UI :4290
+npm run hf -- run-many -t dev-hosted -p demo-koi-pond
+# vite, host alone (fish frames 404: use dev-hosted)
+npm run hf -- run-many -t dev -p demo-koi-pond
 
 # serve the BUILT composed site (plain static server — NEVER serve -s)
-npx nx run-many -t build -p demo-koi-*
+npm run hf -- run-many -t build -p 'demo-koi-*'
 npx http-server dist/apps/demos/koi-pond/site -p 4288
 ```
 
@@ -105,8 +109,10 @@ Panel rows carry `data-connected`/`data-hovered`; `.koi-layer[data-instance]` z-
 - **Gallery shell** (only needed if the _outer contract_ or `feature.config.ts` changes — not for host scene edits):
 
 ```bash
-npx nx run demo-koi-pond:pack-shell     # hf build → dist/apps/demos/koi-pond/shell/*.tgz
-npx nx run docs-site:refresh-shell      # packs all demo shells + copies to docs-site/vendor + explicit-path install
+# hf build → dist/apps/demos/koi-pond/shell/*.tgz
+npm run hf -- run-many -t pack-shell -p demo-koi-pond
+# packs all demo shells + copies to docs-site/vendor + explicit-path install
+npm run hf -- run-many -t refresh-shell -p docs-site
 ```
 
 Vendored shell + touched `package.json` + `package-lock.json` land **together** (a tarball without its locks fails `npm ci` EINTEGRITY on a cold cache). The koi shell name must stay in docs-site `lint.config.ts` `ignoredDependencies` or lint `--fix` deletes the dep.
@@ -172,13 +178,13 @@ Fish sizing: `FISH_LENGTH_RATIO` 0.36 of the world's shorter axis (clamp 130..56
 - **Debug UI port**: the koi host pins it with `debug.port: 4290` in `hf-dev.config.ts`.
 - **Per-fish three.js** (~180 kB gzip each): inherent to independent apps; a shared chunk breaks the isolation the demo proves. Curtain covers the load. Not a bug.
 - **Unit tests live in `demo-koi-lib` and `demo-koi-pond` only.** The eight `fish-*` apps carry no vitest, no `test` target, and no test devDeps by design. Do not add unit tests back to a fish app. Keep the lib's specs mutation-proven (disable avoidance → boundary specs fail) across all seeds, and never write `?.foo()).not.toBe(null)` (passes on absent nodes). Canvas grammar is asserted through `scene/__tests__/overlay-recorder.ts`, a recording 2D context.
-- **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists from the owning project's directory so its own config applies (`cd apps/docs-site && node ../../tools/lint/bin/lint.ts <files>`); the workspace installs no `eslint`, so `npx eslint` would download one.
+- **Devcontainer**: ten `npm install`s at `parallel:1`; full `npm run hf -- run docs-site:lint` can SIGKILL; lint targeted file lists from the owning project's directory so its own config applies (`cd apps/docs-site && node ../../tools/lint/bin/lint.ts <files>`); the workspace installs no `eslint`, so `npx eslint` would download one.
 
 ## Checklist
 
 - [ ] Edited `lib/src`? → `demo-koi-lib:refresh` then `:verify`
 - [ ] Changed the inner contract or a fish `feature.config.ts`? → the bump pipeline above, tarballs + package.json + lock together
-- [ ] Scope = Nx project name; one project per commit; no version/changelog/tag files
+- [ ] Scope = project name; one project per commit; no version/changelog/tag files
 - [ ] Comments cite no roadmap docs or tracking IDs; shipped prose is present-state and em-dash-free in READMEs and JSDoc
-- [ ] `npx nx run-many -t test build lint typecheck -p demo-koi-*` green
+- [ ] `npm run hf -- run-many -t typecheck,build -p 'demo-koi-*'` green
 - [ ] Serving built site by hand → `http-server`, never `serve -s`

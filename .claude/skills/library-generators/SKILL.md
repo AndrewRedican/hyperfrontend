@@ -13,25 +13,33 @@ All support `--dry-run`.
 
 ```bash
 # Create internal library
-nx generate @hyperfrontend/package:library --name=my-utils --type=util --description="..."
+npm run hf -- generate library --name=my-utils --type=util --description="..."
 
 # Create nested (libs/utils/my)
-nx generate @hyperfrontend/package:library --name=my-utils --directory=libs/utils --type=util --description="..."
+npm run hf -- generate library --name=my-utils --directory=libs/utils \
+  --type=util --description="..."
 
 # Create publishable
-nx generate @hyperfrontend/package:library --name=my-utils --type=util --description="..." --publishable --compatibility=isomorphic
+npm run hf -- generate library --name=my-utils --type=util --description="..." \
+  --publishable --compatibility=isomorphic
 
 # Promote to publishable
-nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils --compatibility=isomorphic
+npm run hf -- generate make-publishable --project=lib-my-utils \
+  --compatibility=isomorphic
 
 # Choose where the docs site lists it (both default: utils for libs/utils/*, core for type:core, else supporting; utilities for a utility, else standalone)
-nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils --compatibility=node-only --docsCategory=core --ecosystemTier=tooling
+npm run hf -- generate make-publishable --project=lib-my-utils \
+  --compatibility=node-only --docsCategory=core --ecosystemTier=tooling
 
 # Rename
-nx generate @hyperfrontend/package:rename --project=lib-my-utils --newName=my-helpers
+npm run hf -- generate rename --project=lib-my-utils --newName=my-helpers
 
 # Move
-nx generate @hyperfrontend/package:move --project=lib-my-utils --destination=libs/utils
+npm run hf -- generate move --project=lib-my-utils --destination=libs/utils
+
+# Preview any of them without writing
+npm run hf -- generate library --name=my-utils --type=util --description="..." \
+  --dry-run
 ```
 
 ---
@@ -58,7 +66,7 @@ Besides the project's own files, the E2E project and the status workflow, the ge
 
 `package.json` keeps the `engines`, `peerDependencies` and `peerDependenciesMeta` the project already declares; the README's Node badge and compatibility row read the declared floor.
 
-**Left to do by hand**: record the package banner and runtime strip (`npx nx media tool-media --scene=banner-{slug} --scene=runtimes-{slug}`), replace the README template's placeholder sections, and add `fallbackFeatures` to the docs page if the README cannot supply key features. Leave `package.json` at version `0.0.0` and never seed a `CHANGELOG.md`: the versioning flow computes the first version from the commits and writes the changelog with it, and until then the `releases` page answers not found and the sitemap check skips it.
+**Left to do by hand**: record the package banner and runtime strip (`npm run hf -- run tool-media:media --scene=banner-{slug} --scene=runtimes-{slug}`), replace the README template's placeholder sections, and add `fallbackFeatures` to the docs page if the README cannot supply key features. Leave `package.json` at version `0.0.0` and never seed a `CHANGELOG.md`: the versioning flow computes the first version from the commits and writes the changelog with it, and until then the `releases` page answers not found and the sitemap check skips it.
 
 The transforms live in `tools/package/src/generators/make-publishable/lib/` as pure functions with specs beside them; the CI entries are the ones `lib-ci-workflows` checks, and the docs-site entries are the ones `docs-site-libraries`, `docs-site-routes`, `docs-site-secondary-entries` and `docs-site-library-docs` check.
 

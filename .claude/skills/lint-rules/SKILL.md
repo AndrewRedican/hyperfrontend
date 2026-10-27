@@ -5,7 +5,7 @@ description: Create lint rules for the hyperfrontend monorepo, in the @hyperfron
 
 # Lint Rules Skill
 
-The engine and every generally useful rule are the publishable package `@hyperfrontend/linter` (`libs/linter`, Nx `lib-linter`): its own parsers, no external packages. The workspace's own rules (`workspace/*`, `projects/*`) and the project graph live in `tools/lint` (Nx `tool-lint`), which runs the package from source. A rule is one file and one spec. REUSE the shared helpers and services. Follow the existing rules.
+The engine and every generally useful rule are the publishable package `@hyperfrontend/linter` (`libs/linter`, project `lib-linter`): its own parsers, no external packages. The workspace's own rules (`workspace/*`, `projects/*`) and the project graph live in `tools/lint` (project `tool-lint`), which runs the package from source. A rule is one file and one spec. REUSE the shared helpers and services. Follow the existing rules.
 
 **Where a rule goes.** A rule any project could use belongs in the package: a bare id for a core rule or a convention, or a family prefix (`typescript/`, `jsdoc/`, `react/`, `react-hooks/`, `package-json/`). A rule that enforces this repository's layout, names or release practice is a `workspace/` rule; one that reads the project graph is a `projects/` rule. A packaged rule takes a repository's specifics as options, set in `lint.base.config.ts`, never as defaults.
 
@@ -75,13 +75,13 @@ export default defineRule<undefined, Node>({
 
 ### Services
 
-| Need                            | Call                                                                                    |
-| ------------------------------- | --------------------------------------------------------------------------------------- |
-| Scopes, variables, references   | `scopeAnalysisOf(context)`, `scopeOf` (`/helpers`; `libs/linter/src/scope/analysis.ts`) |
-| Code paths                      | `flowAnalysisOf(context)` (`libs/linter/src/flow/analysis.ts`, packaged rules only)     |
-| Project graph (as Nx builds it) | `workspaceGraph(root)` (`@hyperfrontend/workspace/graph`, workspace rules only)         |
-| Regular expression structure    | `parse`, `validate` (`libs/linter/src/regex/`, packaged rules only)                     |
-| JSDoc blocks and types          | `libs/linter/src/jsdoc/` (`parse.ts`, `attach.ts`, `types.ts`, packaged rules only)     |
+| Need                          | Call                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| Scopes, variables, references | `scopeAnalysisOf(context)`, `scopeOf` (`/helpers`; `libs/linter/src/scope/analysis.ts`) |
+| Code paths                    | `flowAnalysisOf(context)` (`libs/linter/src/flow/analysis.ts`, packaged rules only)     |
+| Project graph (owned)         | `workspaceGraph(root)` (`@hyperfrontend/workspace/graph`, workspace rules only)         |
+| Regular expression structure  | `parse`, `validate` (`libs/linter/src/regex/`, packaged rules only)                     |
+| JSDoc blocks and types        | `libs/linter/src/jsdoc/` (`parse.ts`, `attach.ts`, `types.ts`, packaged rules only)     |
 
 Each is computed once per file or process and shared by every rule.
 
@@ -132,7 +132,7 @@ testRule(rule, {
 - Rules that read the workspace use a disposable workspace written into the temporary directory from a `__test-utils__` module (for instance `createLibraryWorkspace()`), created at module level and removed by a final `it('removes the disposable workspace', …)`; `afterAll` is not available. Never keep test material as files at rest: `workspace/no-test-fixtures` reports fixture directories and any non-code file under `__test-utils__`.
 - Test names are assertive: `reports X`, `allows Y`, never `should …`.
 - A workspace rule's spec imports `testRule` from `@hyperfrontend/linter/testing`.
-- 100 % lines, branches and functions, measured by `npx nx test lib-linter` for packaged rules and `npx nx test tool-lint` for workspace rules. One spec alone: see the single-spec recipe in memory (`node --import libs/testing/src/hooks/index.ts --test --experimental-test-coverage …` from the project root). Uncoverable branches: the `lint-coverage` skill.
+- 100 % lines, branches and functions, measured by `npm run hf -- run lib-linter:test` for packaged rules and `npm run hf -- run tool-lint:test` for workspace rules. One spec alone: see the single-spec recipe in memory (`node --import libs/testing/src/hooks/index.ts --test --experimental-test-coverage …` from the project root). Uncoverable branches: the `lint-coverage` skill.
 
 ---
 

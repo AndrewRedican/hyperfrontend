@@ -13,7 +13,7 @@ description: Achieve 100% code coverage for lint rules and the linter in libs/li
 | Spec helper   | `libs/linter/src/testing/rule-tester.ts` (`@hyperfrontend/linter/testing`)                      |
 | Coverage gate | `libs/linter/test.config.ts` and `tools/lint/test.config.ts` (100 / 100 / 100 over each `src/`) |
 
-Run `npx nx test lib-linter` or `npx nx test tool-lint`; the report lists every file under the threshold, with the uncovered lines, and fails on a file no spec loads. For one spec, run it alone from the project root with `--experimental-test-coverage --test-coverage-include=<file>` and an lcov reporter, and read the `BRDA:…,0` and `DA:…,0` lines.
+Run `npm run hf -- run lib-linter:test` or `npm run hf -- run tool-lint:test`; the report lists every file under the threshold, with the uncovered lines, and fails on a file no spec loads. For one spec, run it alone from the project root with `--experimental-test-coverage --test-coverage-include=<file>` and an lcov reporter, and read the `BRDA:…,0` and `DA:…,0` lines.
 
 ---
 

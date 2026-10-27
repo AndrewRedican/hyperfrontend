@@ -49,10 +49,10 @@ Each phase **MUST** be independently verifiable.
 Insert after each phase. Replace `PROJECT` with actual project name:
 
 ```bash
-npx nx test PROJECT
-npx nx lint PROJECT --fix
-npx nx typecheck PROJECT
-npx nx format:write --projects=PROJECT
+npm run hf -- run PROJECT:test
+npm run hf -- run PROJECT:lint --fix
+npm run hf -- run PROJECT:typecheck
+npm run hf -- format --write
 ```
 
 Fix all IDE-reported errors before proceeding.
@@ -76,5 +76,5 @@ A plan under `roadmap/` describes what is still to do. When a milestone lands, d
 - [ ] Each phase independently verifiable
 - [ ] File paths complete and accurate
 - [ ] Unit tests included only if project has existing `*.spec.ts`
-- [ ] Verification commands use correct `npx nx` syntax
+- [ ] Verification commands use the `npm run hf --` syntax
 - [ ] Plan saved to `roadmap/*.md`

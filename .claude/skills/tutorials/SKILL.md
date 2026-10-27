@@ -15,7 +15,7 @@ Understanding why → `explanation`
 
 ## Metadata
 
-A tutorial ships as a guide unit: `apps/docs-site/content/guides/<slug>/` holding `guide.md` and `meta.json`. Guides are docs-site editorial artifacts. A tutorial may teach a package, use its APIs, and link to its reference pages, but it never lives inside that package: nothing goes under `libs/<lib>/docs/`, because a file inside a publishable project makes Nx, CI, versioning, and publishing treat the package itself as changed. Read `meta.json` before writing and confirm `"type": "tutorial"`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
+A tutorial ships as a guide unit: `apps/docs-site/content/guides/<slug>/` holding `guide.md` and `meta.json`. Guides are docs-site editorial artifacts. A tutorial may teach a package, use its APIs, and link to its reference pages, but it never lives inside that package: nothing goes under `libs/<lib>/docs/`, because a file inside a publishable project makes CI, versioning, and publishing treat the package itself as changed. Read `meta.json` before writing and confirm `"type": "tutorial"`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
 
 What the body must corroborate:
 
