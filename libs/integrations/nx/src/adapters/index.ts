@@ -1,6 +1,5 @@
 /**
- * The only code that calls Nx: loading a workspace's `@nx/devkit`, running its `nx` headless, and
- * reading the graph Nx computes.
+ * The only code that reaches a workspace's Nx: loading its `@nx/devkit` without a static import.
  *
  * @module @hyperfrontend/integration-nx/adapters
  */

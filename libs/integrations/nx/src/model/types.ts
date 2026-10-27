@@ -155,7 +155,7 @@ export interface WorkspaceProject {
   readonly targets: Readonly<Record<string, TargetDefinition>>
 }
 
-/** One target of one project: what the pipeline selects and Nx runs. */
+/** One target of one project: what the pipeline selects and the workspace runner runs. */
 export interface TaskRef {
   /** The project's name. */
   readonly project: string
