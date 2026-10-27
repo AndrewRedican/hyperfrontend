@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/generators.schema.json",
   "generators": {
     "library": {
       "factory": "./src/generators/library/generator",

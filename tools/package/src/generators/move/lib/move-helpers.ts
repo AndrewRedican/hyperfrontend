@@ -41,8 +41,6 @@ interface MovedTargets {
 
 /** A moved project.json as far as the move rewrites it. */
 interface MovedProjectJson extends NamedJson {
-  /** The schema reference, relative to the project */
-  $schema?: string
   /** The targets */
   targets?: MovedTargets
 }
@@ -184,8 +182,6 @@ export function updateProjectJson(tree: Tree, options: NormalizedOptions): void 
   const projectJsonPath = joinPathFragments(options.newProjectRoot, 'project.json')
 
   updateJson<MovedProjectJson>(tree, projectJsonPath, (json) => {
-    json.$schema = `${options.newOffsetFromRoot}node_modules/nx/schemas/project-schema.json`
-
     if (options.updateName) {
       json.name = options.newProjectName
       replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
