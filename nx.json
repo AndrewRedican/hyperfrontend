@@ -63,7 +63,8 @@
       "executor": "@hyperfrontend/package:publish",
       "options": {
         "access": "public",
-        "tag": "latest"
+        "tag": "latest",
+        "provenance": true
       }
     },
     "typecheck": {
