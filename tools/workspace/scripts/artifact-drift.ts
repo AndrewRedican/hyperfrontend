@@ -61,14 +61,15 @@ function npm(args: readonly string[], cwd: string): string {
  * @returns The report lines
  */
 function report(project: ProjectRecord): string[] {
-  // why: Nx still executes a build until the owned runner replaces the spawn; headless, without its daemon or cloud
   if (!values['skip-build'])
-    execFileSync('npx', ['nx', 'run', `${project.name}:build`], {
-      cwd: root,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-      env: { ...process.env, NX_DAEMON: 'false', NX_NO_CLOUD: 'true', NX_TUI: 'false' },
-    })
+    execFileSync(
+      process.execPath,
+      ['--import', './tools/lint/src/runtime/aliases.ts', 'tools/workspace/bin/hf.ts', 'run', `${project.name}:build`],
+      {
+        cwd: root,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    )
   const dist = join(root, 'dist', project.root)
   const pack = parsePackJson(npm(['pack', '--dry-run', '--json', '--ignore-scripts'], dist))
   const local = createMap(pack.files.map((file) => [file.path, hashContent(readFileSync(join(dist, file.path)))] as const))
