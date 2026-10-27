@@ -22,7 +22,7 @@ import { childrenOf, parseCode } from '@hyperfrontend/linter/helpers'
 import { readAliases, readJson } from './workspace'
 
 /** Where the remembered imports live under the workspace. */
-const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports.json')
+export const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports.json')
 
 /** The extensions of the files whose imports count. */
 const CODE_EXTENSIONS = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/

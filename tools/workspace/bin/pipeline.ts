@@ -38,6 +38,7 @@ import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { formatAffected } from '../src/graph/affected/explain'
 import { selectAffected } from '../src/graph/affected/select'
 import { changeSet } from '../src/graph/changes'
+import { previousGraph } from '../src/graph/revision'
 import { buildState } from '../src/graph/store/state'
 import { chainChecks, githubChecks } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
@@ -226,6 +227,7 @@ async function plan(local: boolean): Promise<Plan> {
     changes,
     main: values.main,
     drift,
+    previous: previousGraph(root as string, changes),
   })
 }
 
@@ -566,10 +568,12 @@ if (command === 'plan') {
   record()
 } else if (command === 'affected') {
   if (values.target === undefined) throw createError('affected needs --target <target>')
+  const changes = changeSet(root, values.base ?? 'main', values.head ?? null)
   const set = selectAffected({
     graph: graphOf(),
-    changes: changeSet(root, values.base ?? 'main', values.head ?? null),
+    changes,
     targets: [values.target],
+    previous: previousGraph(root, changes),
   }).get(values.target)
   if (set === undefined) throw createError(`no target ${values.target}`)
   if (values.json) say(stringify(set, null, 2))

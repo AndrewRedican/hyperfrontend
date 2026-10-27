@@ -1,7 +1,7 @@
 /**
  * Prints and persists the owned workspace graph. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts <command>`, or
- * `npx nx run tool-workspace:graph -- <command>`, where the command is `projects [--json]`,
+ * `npm run hf -- graph <command>`, where the command is `projects [--json]`,
  * `graph [--json]`, `explain <project>`, `explain <project:target> [--base <ref>] [--head <ref>]`,
  * `build [--force]`, `verify`, `status [--json]` or
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain]`.
@@ -26,6 +26,7 @@ import { selectAffected } from '../src/graph/affected/select'
 import { workspaceGraph } from '../src/graph/build'
 import { changeSet } from '../src/graph/changes'
 import { compareText } from '../src/graph/order'
+import { previousGraph } from '../src/graph/revision'
 import { printableProject } from '../src/graph/store/serialize'
 import { buildState, stateStatus, verifyState } from '../src/graph/store/state'
 
@@ -131,7 +132,8 @@ function build(force: boolean, report: (line: string) => void = (line) => proces
  * @returns The affected set
  */
 function affected(graph: WorkspaceGraph, target: string): AffectedSet {
-  const sets = selectAffected({ graph, changes: changeSet(root as string, values.base, values.head ?? null), targets: [target] })
+  const changes = changeSet(root as string, values.base, values.head ?? null)
+  const sets = selectAffected({ graph, changes, targets: [target], previous: previousGraph(root as string, changes) })
   return sets.get(target) as AffectedSet
 }
 
