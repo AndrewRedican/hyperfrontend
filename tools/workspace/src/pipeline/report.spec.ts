@@ -186,6 +186,12 @@ describe('chainTable', () => {
       '| `lib-a:build` | ⏭️ skipped |  | prerequisite-failed: lib-a:typecheck |',
     ])
   })
+
+  it('escapes backslashes and pipes in a detail', () => {
+    const chain = PLAN.chains[0] as Chain
+    const failed: TaskResult = { ...(RUN.tasks[0] as TaskResult), detail: 'C:\\x | y' }
+    expect(chainTable(chain, [failed]).slice(-1)).toEqual(['| `lib-a:typecheck` | ❌ failure | 2.5s | C:\\\\x \\| y |'])
+  })
 })
 
 describe('timelineLines', () => {

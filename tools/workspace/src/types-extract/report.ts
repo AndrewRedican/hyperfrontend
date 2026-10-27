@@ -44,13 +44,13 @@ const REASONS: Readonly<Record<string, string>> = {
 }
 
 /**
- * A table cell: pipes escaped, empty shown as a dash.
+ * A table cell: backslashes and pipes escaped, empty shown as a dash.
  *
  * @param text - The raw text of the cell
  * @returns The text, safe inside a table row
  */
 function cell(text: string): string {
-  return text === '' ? '-' : text.replace(/\|/g, '\\|').replace(/\n/g, ' ')
+  return text === '' ? '-' : text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
 
 /**

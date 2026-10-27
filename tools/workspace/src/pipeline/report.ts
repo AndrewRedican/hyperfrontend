@@ -35,10 +35,10 @@ export function formatDuration(ms: number): string {
  * Text safe inside a table cell.
  *
  * @param text - Any text
- * @returns The text with pipes and newlines replaced
+ * @returns The text with backslashes and pipes escaped and newlines replaced
  */
 function cell(text: string): string {
-  return text.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
 }
 
 /**

@@ -40,6 +40,18 @@ describe('renderReport', () => {
     )
   })
 
+  it('escapes a backslash ahead of the pipe in a cell', () => {
+    const entry: ReportContext['entries'][number] = {
+      output: 'out/c.ts',
+      declaration: 'C',
+      reference: 'x \\| y',
+      position: 'alias',
+      reason: 'typeof',
+      replacement: 'unknown',
+    }
+    expect(renderReport({ ...CONTEXT, entries: [entry] })).toContain('| C | x \\\\\\| y | alias | typeof | unknown |')
+  })
+
   it('explains every reason in alphabetical order', () => {
     const legend = report.slice(report.indexOf('## Reasons'), report.indexOf('## out/a.ts'))
     expect(
