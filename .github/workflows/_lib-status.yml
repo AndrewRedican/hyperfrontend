@@ -16,7 +16,7 @@ on:
   workflow_call:
     inputs:
       project-name:
-        description: 'Nx project name (e.g., lib-nexus, lib-logging)'
+        description: 'Project name from project.json (e.g., lib-nexus, lib-logging)'
         required: true
         type: string
       library-path:
