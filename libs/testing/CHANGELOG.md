@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/AndrewRedican/hyperfrontend/compare/39ff2bee8839058dfa45401b99b370470aa79521...d73ee1ad0f2fcba4ed11ea6ba6644eb551c2419a) - 2026-10-27
+
+### Bug Fixes
+
+- pass consumer run arguments and result path through the environment
+
 ## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/f83ba11a155be922f200d00abb89c39d1e3982c7...2faa3ba57520a4e3248ea899da0d5266eb3c9a01) - 2026-10-25
 
 ### Features

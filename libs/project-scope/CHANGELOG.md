@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/AndrewRedican/hyperfrontend/compare/f83ba11a155be922f200d00abb89c39d1e3982c7...d73ee1ad0f2fcba4ed11ea6ba6644eb551c2419a) - 2026-10-27
+
+### Bug Fixes
+
+- walk each directory once when following symlinks
+
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...1e12b8201eb30b82352b2f4d88d5f7663991f358) - 2026-10-24
 
 ### Features

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/48c68a5121e56df2ff34e82df2c97002142a8538...d73ee1ad0f2fcba4ed11ea6ba6644eb551c2419a) - 2026-10-27
+
+### Bug Fixes
+
+- rethrow what is not the parser's own failure
+
 ## [1.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...7a5eed4290fa24dc4a4942c8199fae010dd93aaf) - 2026-10-22
 
 ### Features
