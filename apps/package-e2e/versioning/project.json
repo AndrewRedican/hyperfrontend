@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-versioning",
   "description": "E2E tests for @hyperfrontend/versioning package outputs",
   "sourceRoot": "{projectRoot}/src",
