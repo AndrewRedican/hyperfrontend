@@ -9,6 +9,7 @@ export type { ConfigurationKind } from './affected/rules'
 export type { SelectOptions } from './affected/select'
 export type { FileFilter, ProjectInput, RoleFilter, TaskInputs } from './affected/targets'
 export type { BuildOptions, WorkspaceGraph } from './build'
+export type { Prerequisite } from './depends-on'
 export type { ImportTable } from './imports'
 export type {
   Configured,
@@ -75,6 +76,7 @@ export { selectAffected } from './affected/select'
 export { fileFilterOf, relevantKinds, roleFilterOf, taskInputs, TYPE_BLIND_TARGETS } from './affected/targets'
 export { buildGraph, workspaceGraph } from './build'
 export { changeSet, parseNameStatus } from './changes'
+export { libraryOfE2e, prerequisitesOf } from './depends-on'
 export { entriesOfProject, exportTarget } from './entries'
 export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 export {

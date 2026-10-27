@@ -389,7 +389,7 @@ describe('dependsOn', () => {
     expect([...selectAffected({ graph: item.graph, changes: item.changes, targets: ['e2e'] }).keys()]).toEqual(['build', 'e2e'])
   })
 
-  it('follows the object forms and a dependency on the same target', () => {
+  it("follows another project's target and the same target of the dependencies", () => {
     const item = analyse('unused-entry-edit')
     const configured = (name: string, dependsOn: readonly unknown[]): WorkspaceGraph['projects'] => {
       const project = item.graph.projects.get(name)
@@ -404,13 +404,7 @@ describe('dependsOn', () => {
     }
     const graph: WorkspaceGraph = {
       ...item.graph,
-      projects: configured('app-consumer', [
-        { target: 'build', projects: 'lib-alpha' },
-        { target: 'build', dependencies: true },
-        { target: 'build' },
-        { projects: ['lib-alpha'] },
-        '^e2e',
-      ]),
+      projects: configured('app-consumer', ['lib-alpha:build', '^e2e']),
     }
     const set = selectAffected({ graph, changes: item.changes, targets: ['e2e'] }).get('e2e') as AffectedSet
     const dependent = (reasons: readonly { rule: string; path: readonly string[] }[]): string =>
@@ -422,6 +416,33 @@ describe('dependsOn', () => {
       'app-consumer:e2e task:lib-alpha:build',
       'e2e-alpha:e2e task:lib-alpha:build',
     ])
+  })
+
+  it('follows a project:target string to the task of the project it names', () => {
+    const item = analyse('unused-entry-edit')
+    const projects = createMap(
+      [...item.graph.projects].map(([key, value]) =>
+        key === 'app-consumer'
+          ? [
+              key,
+              {
+                ...value,
+                configuration: {
+                  ...value.configuration,
+                  targets: { ...value.configuration?.targets, e2e: { dependsOn: ['lib-alpha:test'] } },
+                },
+              },
+            ]
+          : [key, value]
+      )
+    )
+    const set = selectAffected({ graph: { ...item.graph, projects }, changes: item.changes, targets: ['e2e'] }).get('e2e') as AffectedSet
+    expect(
+      set.selected
+        .find((decision) => decision.task === 'app-consumer:e2e')
+        ?.reasons.filter((reason) => reason.rule === 'dependent-task')
+        .map((reason) => `${reason.path.join(' ')}: ${reason.message}`)
+    ).toEqual(['task:lib-alpha:test: app-consumer:e2e runs after lib-alpha:test, which is selected'])
   })
 
   it('follows a dependency on the same target of the dependencies, selected or not', () => {

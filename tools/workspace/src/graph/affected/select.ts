@@ -10,7 +10,7 @@
 
 import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { WorkspaceGraph } from '../build'
-import type { Edge, EdgeGroup, EdgePath, ProjectEdge, ProjectRecord, ToolNode } from '../model'
+import type { Edge, EdgeGroup, EdgePath, ProjectRecord, ToolNode } from '../model'
 import type { Role } from '../roles'
 import type { AffectedSet, ChangeSet, ChangeStatus, Reason, ReasonRule, TaskDecision } from '../selection'
 import type { Closure, Hop } from './closure'
@@ -18,7 +18,7 @@ import type { TaskInputs } from './targets'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
-import { targetDependsOn } from '../inputs'
+import { prerequisitesOf } from '../depends-on'
 import { compareText } from '../order'
 import { roleOf } from '../roles'
 import { ReasonRule as Rules } from '../selection'
@@ -47,14 +47,6 @@ interface ChangedPath {
   readonly status: ChangeStatus
   /** Whether the path is the previous path of a rename. */
   readonly renamed: boolean
-}
-
-/** A task another task runs after. */
-interface DependencyTask {
-  /** `<project>:<target>`. */
-  readonly id: string
-  /** The target. */
-  readonly target: string
 }
 
 /** What one changed file means for one task. */
@@ -134,37 +126,6 @@ function changedPaths(changes: ChangeSet): ChangedPath[] {
     } else paths.push({ path: change.path, status: change.status, renamed: false })
   }
   return paths.sort((left, right) => compareText(left.path, right.path))
-}
-
-/**
- * The targets a `dependsOn` entry names and whose tasks.
- *
- * @param graph - The graph the projects belong to
- * @param project - The depending project
- * @param target - The depending target
- * @returns The tasks depended on that exist
- */
-function dependencyTasks(graph: WorkspaceGraph, project: ProjectRecord, target: string): DependencyTask[] {
-  const tasks = createMap<string, DependencyTask>()
-  for (const entry of targetDependsOn(graph.root, project, target)) {
-    const name = typeof entry === 'string' ? (entry.startsWith('^') ? entry.slice(1) : entry) : (entry.target ?? target)
-    const named = typeof entry === 'string' ? undefined : entry.projects
-    const dependencies = typeof entry === 'string' ? entry.startsWith('^') : entry.dependencies === true
-    const candidates =
-      named !== undefined
-        ? typeof named === 'string'
-          ? [named]
-          : named
-        : dependencies
-          ? (graph.edges.get(project.name) as readonly ProjectEdge[]).map((edge) => edge.target)
-          : [project.name]
-    for (const candidate of candidates) {
-      const depended = graph.projects.get(candidate)
-      if (depended !== undefined && hasTarget(depended, name))
-        tasks.set(`${candidate}:${name}`, { id: `${candidate}:${name}`, target: name })
-    }
-  }
-  return [...tasks.values()]
 }
 
 /**
@@ -416,7 +377,7 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
       for (const project of projects) {
         const task = `${project.name}:${target}`
         const decision = decisions.get(task) as Decision
-        for (const dependency of dependencyTasks(graph, project, target)) {
+        for (const dependency of prerequisitesOf(graph, project, target)) {
           if (decision.reasons.some((item) => item.rule === Rules.DependentTask && item.path[0] === `task:${dependency.id}`)) continue
           const selected =
             dependency.target === target
