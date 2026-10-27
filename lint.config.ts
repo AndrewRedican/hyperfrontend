@@ -164,6 +164,6 @@ export default [
     },
   },
   {
-    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/'],
+    ignores: ['docs/', 'dist/', 'coverage/', 'tmp/'],
   },
 ]

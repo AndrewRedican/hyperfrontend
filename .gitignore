@@ -44,16 +44,11 @@ Thumbs.db
 # generated reports
 lint-output.txt
 
-# nx
-.nx/cache
-.nx/workspace-data
+# framework caches
 .angular/cache
 .verdaccio/storage
 
 _
 .claude/worktrees
-.nx/polygraph
-.nx/self-healing
-.nx/migrate-runs
 # Owned graph and replay state
 .hf/
