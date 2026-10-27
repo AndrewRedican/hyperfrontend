@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-koi-workbench",
   "description": "Koi pond development workbench — renders one koi from the shared model in isolation, with live geometry, movement and appearance controls. Not part of the deployed pond.",
   "sourceRoot": "apps/demos/koi-pond/workbench/src",
