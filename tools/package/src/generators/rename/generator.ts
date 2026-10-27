@@ -98,7 +98,7 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
 }
 
 /**
- * Nx generator that renames a project and updates all references.
+ * Generator that renames a project and updates all references.
  *
  * This generator:
  * 1. Updates project.json with new name
@@ -111,13 +111,13 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
  * Note: This generator does NOT rename the project folder. Use the move generator
  * to also relocate the project.
  *
- * @param tree - The Nx virtual file system tree
+ * @param tree - The virtual file system tree
  * @param options - Configuration options
  * @returns A promise that resolves when the generator completes
  *
  * @example Rename a library
  * ```bash
- * nx generate @hyperfrontend/package:rename lib-my-utils new-utils
+ * npm run hf -- generate rename lib-my-utils new-utils
  * ```
  */
 export async function renameGenerator(tree: Tree, options: RenameGeneratorSchema): Promise<void> {

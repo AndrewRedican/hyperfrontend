@@ -1,6 +1,6 @@
 # @hyperfrontend/package
 
-Nx plugin providing executors for building, type-checking, versioning, and publishing hyperfrontend library packages.
+Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's `hf` command line.
 
 ## Executors
 
@@ -88,14 +88,15 @@ Batch versioning executor for all affected libraries. This is the recommended ap
 
 ```bash
 # Preview batch version changes
-npx nx version-batch --dryRun
+npm run hf -- run @hyperfrontend/workspace:version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
-npx nx version-batch
+npm run hf -- run @hyperfrontend/workspace:version:all
 
 # Release a change to the package artifact that no commit type would release,
 # such as a readme: a forced patch, calculated from each published version
-npx nx version:all --releaseAs=patch --libraries=lib-logging,lib-nexus
+npm run hf -- run @hyperfrontend/workspace:version:all \
+  --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
 
 A forced bump is for a change that lives in the package artifact rather than its code. The version identifies the artifact, and the readme is part of it, but a `docs` commit never bumps on its own; naming the libraries and the bump is what says the change is worth shipping. The changelog entry then lists every commit attributed to the package since its last release, `docs` and `chore` included, so it says what changed rather than that nothing did.
@@ -164,9 +165,9 @@ The version executor uses a custom conventional commits preset:
 ## Development
 
 ```bash
-# Build the plugin
-npx nx build package
+# Check and test the plugin
+npm run hf -- run-many -t typecheck,test -p tool-package
 
-# Test with a library
-npx nx build lib-logging
+# Try it on a library
+npm run hf -- run lib-logging:build
 ```

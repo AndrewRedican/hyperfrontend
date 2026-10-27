@@ -47,8 +47,8 @@ function parseArguments(argv: string[]): CliArguments {
  *
  * This runs as its own process, started with the runtime's resolution hooks preloaded, so
  * the configuration is evaluated by the same runtime that will execute the tests rather
- * than by whatever loader Nx happens to have installed. The hooks are also what resolve
- * the runtime's own name here, since the workspace consumes it from source.
+ * than by whatever loader the process running the executor has installed. The hooks are
+ * also what resolve the runtime's own name here, since the workspace consumes it from source.
  */
 async function main(): Promise<void> {
   const args = parseArguments(process.argv.slice(2))

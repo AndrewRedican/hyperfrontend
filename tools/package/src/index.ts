@@ -1,7 +1,9 @@
 /**
- * Entry point for the `@hyperfrontend/package` Nx plugin.
+ * Entry point for `@hyperfrontend/package`.
  *
- * This plugin provides build executors for hyperfrontend library packages.
+ * Executors and generators for building, type-checking, versioning, and
+ * publishing hyperfrontend library packages, run through the workspace's `hf`
+ * command line.
  *
  * @see executors.json for available executors
  * @see generators.json for available generators

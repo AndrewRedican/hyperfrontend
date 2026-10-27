@@ -101,7 +101,7 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
   logger.warn('=== E2E Project Folder Move Required ===')
   logger.warn(`E2E project files updated in: ${currentE2ERoot}`)
   logger.warn(`Please move the folder to match the new name:`)
-  logger.warn(`  nx generate @hyperfrontend/package:move e2e-${currentLibName} ${newE2ERoot.replace(`${posix.sep}${newLibName}`, '')}`)
+  logger.warn(`  npm run hf -- generate move e2e-${currentLibName} ${newE2ERoot.replace(`${posix.sep}${newLibName}`, '')}`)
   logger.warn(`  (or manually: mv ${currentE2ERoot} ${newE2ERoot})`)
   logger.warn('')
 }

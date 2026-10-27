@@ -7,10 +7,10 @@ import type { TestConfig } from '@hyperfrontend/testing/runner'
  * libraries a version batch runs over, the compatibility document refresh a
  * version run folds into its commit, and the text transforms that register a
  * publishable package across the workspace. The executors themselves are
- * driven by Nx and exercised by every library build, and the generators by
- * the workspace's e2e suites; the tree helpers the generators run on are
- * tested on memory trees and a temporary directory. The modules under test
- * are pure enough to hold to full coverage.
+ * driven by the workspace runner (`hf run`) and exercised by every library
+ * build, and the generators by the workspace's e2e suites; the tree helpers
+ * the generators run on are tested on memory trees and a temporary
+ * directory. The modules under test are pure enough to hold to full coverage.
  */
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
