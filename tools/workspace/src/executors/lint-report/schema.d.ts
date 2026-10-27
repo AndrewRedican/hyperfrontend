@@ -8,11 +8,6 @@ export interface LintReportExecutorOptions {
   outputPath?: string
 
   /**
-   * Only lint affected projects instead of all.
-   */
-  affected?: boolean
-
-  /**
    * Number of files to suggest fixing first (quick wins).
    */
   maxFixes?: number

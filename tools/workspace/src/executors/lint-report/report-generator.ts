@@ -149,7 +149,7 @@ function renderCrashes(out: string[], crashes: CrashedProject[]): void {
       continue
     }
 
-    out.push(`**${project}** \`npx nx run ${project}:lint --fix\` ${failure}`)
+    out.push(`**${project}** \`npm run hf -- run ${project}:lint --fix\` ${failure}`)
     out.push('')
     out.push('```')
     out.push(tail || '(no output captured)')
@@ -192,7 +192,7 @@ export function generateReport(legendList: LegendEntry[], fileMap: Map<string, F
   out.push('1. Fix ERRORS only (ignore warnings for now)')
   out.push(`2. Start with the first ${min(config.maxFixes, filesWithErrors)} files below to establish fix patterns`)
   out.push('3. Apply discovered patterns to remaining files')
-  out.push('4. Re-run `nx run @hyperfrontend/workspace:lint:all` to verify progress')
+  out.push('4. Re-run `npm run hf -- run @hyperfrontend/workspace:lint:all` to verify progress')
   out.push('5. Do NOT run commands or ask the user to do anything else until all errors are fixed')
   out.push(
     '6. Do NOT stop until all errors are fixed (warnings can be ignored for now), the user will run the command again at the end to verify'

@@ -26,7 +26,7 @@ export function stripAnsi(str: string): string {
 /**
  * Parse raw lint output into structured entries.
  *
- * @param raw - Raw lint output from nx
+ * @param raw - Raw output of the lint run
  * @param workspaceRoot - Workspace root path
  * @returns Array of parsed lint entries
  */
@@ -76,17 +76,17 @@ export function parseLintOutput(raw: string, workspaceRoot: string): LintEntry[]
 }
 
 /**
- * Read the projects whose lint task Nx listed as failed.
+ * Read the projects whose lint task the run's summary lists as failed, from lines such as `  failed    lib-a:lint (1.2 s)`.
  *
- * @param raw - Raw lint output from nx
- * @returns Project names in the order Nx listed them
+ * @param raw - Raw output of the lint run
+ * @returns Project names in the order the summary lists them
  */
 export function parseFailedProjects(raw: string): string[] {
   const projects = createSet<string>()
 
   for (const line of stripAnsi(raw).split(/\r?\n/)) {
-    const match = line.trim().match(/^- (\S+):lint$/)
-    if (match?.[1] !== undefined) projects.add(match[1])
+    const [status, task, duration] = line.trim().split(/\s+/)
+    if (status === 'failed' && task?.endsWith(':lint') && duration?.startsWith('(')) projects.add(task.slice(0, -':lint'.length))
   }
 
   return [...projects]

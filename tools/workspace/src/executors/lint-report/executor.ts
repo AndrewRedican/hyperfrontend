@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries as objectEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '../../lib/logger'
+import { ALIAS_HOOK, HF_ENTRY } from '../../pipeline/commands'
 import { parseLintOutput, parseFailedProjects, findCrashSuspects, buildLegend, groupByFile, stripAnsi } from './parser'
 import { generateReport } from './report-generator'
 
@@ -108,20 +109,29 @@ function describeFailure(error: ExecError): string {
 }
 
 /**
- * Run one lint command through npx and capture how it ended.
+ * The command line a person types for a workspace command, as the report shows it.
  *
- * @param args - Arguments passed to npx
- * @param cwd - Directory to run in
+ * @param args - Arguments of the workspace command line
+ * @returns The command through the root `hf` script
+ */
+function displayed(args: readonly string[]): string {
+  return ['npm', 'run', 'hf', '--', ...args].join(' ')
+}
+
+/**
+ * Run one workspace command line on the running Node.js and capture how it ended.
+ *
+ * @param args - Arguments of the workspace command line
+ * @param cwd - Workspace root
  * @returns Captured output and failure description
  */
-function runLint(args: string[], cwd: string): LintRun {
+function runLint(args: readonly string[], cwd: string): LintRun {
   try {
-    const raw = execFileSync('npx', args, {
+    const raw = execFileSync(process.execPath, ['--import', ALIAS_HOOK, HF_ENTRY, ...args], {
       env: { ...process.env, CI: '1' },
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
       cwd,
-      shell: process.platform === 'win32',
     })
     return { raw, failure: null }
   } catch (err: unknown) {
@@ -185,7 +195,7 @@ function isolateCrashes(suspects: string[], cwd: string): IsolationResult {
     }
 
     logger.info(`Rerunning ${project}:lint on its own...`)
-    const rerun = runLint(['nx', 'run', `${project}:lint`, '--fix'], cwd)
+    const rerun = runLint(['run', `${project}:lint`, '--fix'], cwd)
     raw += `\n${rerun.raw}`
 
     if (rerun.failure === null) {
@@ -204,7 +214,7 @@ function isolateCrashes(suspects: string[], cwd: string): IsolationResult {
 /**
  * Lint report executor for generating LLM-optimized lint reports.
  *
- * Runs `nx run-many -t=lint` and transforms the output into a structured
+ * Runs every project's `lint` task through the workspace command line and transforms the output into a structured
  * report optimized for LLM consumption with:
  * - Legend at top with rule documentation links
  * - Files sorted by quick wins (fewest errors first)
@@ -222,15 +232,13 @@ function isolateCrashes(suspects: string[], cwd: string): IsolationResult {
  */
 export default async function lintReportExecutor(options: LintReportExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const outputPath = options.outputPath ?? 'lint-output.txt'
-  const affected = options.affected ?? false
   const maxFixes = options.maxFixes ?? 5
   const failOnError = options.failOnError ?? false
   const reportPath = join(context.root, outputPath)
 
   logger.info('Running lint...')
 
-  const target = affected ? 'affected' : 'run-many'
-  const args = ['nx', target, '-t=lint', '--fix']
+  const args = ['run-many', '-t', 'lint', '--all', '--fix']
   const run = runLint(args, context.root)
 
   logger.info('Parsing lint output...')
@@ -241,7 +249,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
     const failedProjects = parseFailedProjects(run.raw)
 
     if (failedProjects.length === 0 && !entries.some((e) => e.severity === 'error')) {
-      writeFileSync(reportPath, generateCrashReport(['npx', ...args].join(' '), run.failure, run.raw))
+      writeFileSync(reportPath, generateCrashReport(displayed(args), run.failure, run.raw))
       logger.error(
         `Lint did not complete: the lint command ${run.failure} without reporting any lint error. See ${outputPath} for details.`
       )
