@@ -21,31 +21,33 @@ A **scripted scene** has nothing to point at, because the recorder draws it. A s
 
 ## Commands
 
-| Command                                    | What it does                                                    |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `npx nx media tool-media`                  | Record every scene                                              |
-| `npx nx media tool-media --scene=koi-pond` | Record one scene                                                |
-| `npx nx run tool-media:preview -- ...`     | Draw chosen moments of a scripted scene onto one contact sheet  |
-| `npx nx run tool-media:check`              | Verify committed assets against their scenes, without a browser |
-| `npx nx run tool-media:doctor`             | Report which browsers and encoders this machine has             |
-| `npx nx run tool-media:shot -- ...`        | Take one screenshot, no scene file involved                     |
+| Command                                               | What it does                                                    |
+| ----------------------------------------------------- | --------------------------------------------------------------- |
+| `npm run hf -- run tool-media:media`                  | Record every scene                                              |
+| `npm run hf -- run tool-media:media --scene=koi-pond` | Record one scene                                                |
+| `npm run hf -- run tool-media:preview ...`            | Draw chosen moments of a scripted scene onto one contact sheet  |
+| `npm run hf -- run tool-media:check`                  | Verify committed assets against their scenes, without a browser |
+| `npm run hf -- run tool-media:doctor`                 | Report which browsers and encoders this machine has             |
+| `npm run hf -- run tool-media:shot ...`               | Take one screenshot, no scene file involved                     |
+
+The options after the task reach the recorder's command line; `hf run` takes them as `--name=value` or `--name` alone.
 
 Run `npx tsx src/cli/main.ts --help` from this directory for the full option list.
 
-Nothing runs the recorder but these commands. No build, publish or documentation target depends on `media`, and Nx never caches it, because two recordings of one scene differ byte for byte even when the scene has not changed. An asset is regenerated when someone decides it should be, by recording the scene (one, or all of them) and committing what landed; everything else that needs the asset reads the committed file. `check` is the target for everywhere else, because it verifies without recording.
+Nothing runs the recorder but these commands. No build, publish or documentation target depends on `media`, and nothing caches it, because two recordings of one scene differ byte for byte even when the scene has not changed. An asset is regenerated when someone decides it should be, by recording the scene (one, or all of them) and committing what landed; everything else that needs the asset reads the committed file. `check` is the target for everywhere else, because it verifies without recording.
 
 ## Taking a screenshot
 
 The fastest way to see what a page actually renders. It writes wherever you point it, is never budgeted, and never touches the asset tree.
 
 ```bash
-npx nx run tool-media:shot -- \
-  --url http://localhost:4288/ \
-  --out /tmp/pond.png \
-  --viewport 1440x810 \
-  --wait '.koi-shoal-pill .koi-shoal-dot[data-connected="true"]' \
-  --settle 2000 \
-  --selector '#pond' \
+npm run hf -- run tool-media:shot \
+  --url=http://localhost:4288/ \
+  --out=/tmp/pond.png \
+  --viewport=1440x810 \
+  --wait='.koi-shoal-pill .koi-shoal-dot[data-connected="true"]' \
+  --settle=2000 \
+  --selector='#pond' \
   --console
 ```
 
@@ -65,7 +67,7 @@ export default defineBrowserScene({
   outputs: ['gif'],
   viewport: { width: 1440, height: 810 },
   serve: {
-    build: ['npx', 'nx', 'build', 'my-app'],
+    build: ['npm', 'run', 'hf', '--', 'run', 'my-app:build'],
     command: ['npx', 'http-server', '{root}', '-p', '{port}', '-c-1'],
     root: 'dist/apps/my-app',
   },
@@ -128,12 +130,12 @@ export default defineBrowserScene({
 Recording a scene in every variant takes minutes; a contact sheet of four moments takes seconds, and it answers the questions a recording would be asked: whether a line wraps, whether a column overflows, whether the caption lands on top of a row.
 
 ```bash
-npx nx run tool-media:preview -- \
+npm run hf -- run tool-media:preview \
   --scene=project-scope-detect \
   --at=every:4 \
   --out=tmp/sheet.png
 
-npx nx run tool-media:preview -- \
+npm run hf -- run tool-media:preview \
   --scene=questions-prompt \
   --theme=light \
   --at=1200,7400 \
@@ -206,7 +208,7 @@ Every variant carries a byte budget: the workspace's `defaults.gif.maxBytes` for
 
 ### Profiles
 
-A scene is composed for a target rather than made once and scaled. `npx nx run tool-media:doctor` prints the list.
+A scene is composed for a target rather than made once and scaled. `npm run hf -- run tool-media:doctor` prints the list.
 
 | Profile     | Size    | For                                                              |
 | ----------- | ------- | ---------------------------------------------------------------- |
@@ -417,7 +419,7 @@ Neither wins everywhere. On flat interface scenes sharp has produced the smaller
 ## Verifying committed assets
 
 ```bash
-npx nx run tool-media:check
+npm run hf -- run tool-media:check
 ```
 
 Identical scenes produce different bytes on every run, so an asset can never be verified by regenerating it and comparing. What `check` verifies instead is that the file exists, is within its budget, matches the size its audit record claims, and was produced from the scene as it stands today. It needs no browser and no encoder, which makes it the part of this pipeline that is safe to run anywhere.
