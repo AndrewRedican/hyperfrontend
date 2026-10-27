@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "lib-json-utils",
   "description": "Zero-dependency JSON Schema validation and generation utilities.",
   "sourceRoot": "{projectRoot}/src",
