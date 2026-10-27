@@ -293,8 +293,9 @@ nothing in it that the per-document files do not already serve.
 
 Each page advertises its counterpart through `alternates.types` in its metadata, as
 `<link rel="alternate" type="text/markdown">`. The files are served as
-`text/plain; charset=utf-8` (see `next.config.js` and `vercel.json`): browsers download
-`text/markdown` instead of showing it, and plain text reads correctly in every consumer.
+`text/plain; charset=utf-8` (see `next.config.js` and the repository root's `vercel.json`):
+browsers download `text/markdown` instead of showing it, and plain text reads correctly in
+every consumer.
 
 ### Document companion
 
