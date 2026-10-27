@@ -56,8 +56,8 @@ const config: TypesExtractConfig = {
   header: {
     // why: the barrel is linted, and a bare package scope in a JSDoc block would be rewritten by the escape-package-tags fixer.
     tool: 'the types-extract tool of tools/workspace',
-    regenerate: 'npx nx run tool-workspace:types-extract',
-    check: 'npx nx run tool-workspace:types-extract-check',
+    regenerate: 'npm run hf -- run tool-workspace:types-extract',
+    check: 'npm run hf -- run tool-workspace:types-extract-check',
   },
   index: 'libs/integrations/nx/src/compat/index.ts',
   indexModule: '@hyperfrontend/integration-nx/compat',
