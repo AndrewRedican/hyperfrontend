@@ -1,12 +1,46 @@
+import type { ChildProcess } from 'node:child_process'
+import type { Spawn } from './execute'
 import type { PlanTask } from './model'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { executeTask, logPathOf, replayLines, runCommand, shellSafe } from './execute'
 
 const directory = useTempDir({ prefix: 'execute-' })
+
+/** A command that runs until something ends it. */
+const LINGERING = ['node', '-e', 'setTimeout(() => undefined, 60000)']
+
+/**
+ * Pauses.
+ *
+ * @param ms - How long, in milliseconds
+ * @returns Resolves after the pause
+ */
+function pause(ms: number): Promise<void> {
+  return createPromise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+/**
+ * A process boundary that starts the command for real, without a shell, and records each start.
+ *
+ * @param started - Receives every child started, in order
+ * @returns The boundary
+ */
+function recordingSpawn(started: ChildProcess[]): Spawn {
+  return (command, args, spawnOptions) => {
+    const child = spawn(command, args, { ...spawnOptions, shell: false })
+    started.push(child)
+    return child
+  }
+}
 
 /**
  * A task running a Node.js one-liner.
@@ -71,15 +105,124 @@ describe('runCommand', () => {
   })
 
   it('ends a command that outlives its time limit', async () => {
-    const result = await runCommand(['node', '-e', 'setTimeout(() => undefined, 60000)'], { cwd: directory.path, timeoutMs: 50 })
-    expect({ timedOut: result.timedOut, signal: result.signal }).toEqual({ timedOut: true, signal: 'SIGTERM' })
+    const result = await runCommand(LINGERING, { cwd: directory.path, timeoutMs: 50 })
+    expect({ timedOut: result.timedOut, ended: result.signal !== null || result.exitCode !== 0 }).toEqual({ timedOut: true, ended: true })
   })
 
   it('ends a command when the signal aborts', async () => {
     const controller = new AbortController()
-    const pending = runCommand(['node', '-e', 'setTimeout(() => undefined, 60000)'], { cwd: directory.path, signal: controller.signal })
+    const pending = runCommand(LINGERING, { cwd: directory.path, signal: controller.signal })
     controller.abort()
-    expect((await pending).signal).toBe('SIGTERM')
+    const result = await pending
+    expect(result.signal !== null || result.exitCode !== 0).toBe(true)
+  })
+
+  it('ends the processes a command started when the signal aborts', async () => {
+    const beat = join(directory.path, 'beat.txt')
+    const grandchild = join(directory.path, 'grandchild.cjs')
+    const parent = join(directory.path, 'parent.cjs')
+    writeFileSync(
+      grandchild,
+      `let beats = 0\nsetInterval(() => require('node:fs').writeFileSync(${stringify(beat)}, \`\${++beats}\`), 20)\n`
+    )
+    writeFileSync(
+      parent,
+      `require('node:child_process').spawn(process.execPath, [${stringify(grandchild)}], { stdio: 'ignore' })\nsetInterval(() => undefined, 1000)\n`
+    )
+    const controller = new AbortController()
+    const pending = runCommand(['node', parent], { cwd: directory.path, signal: controller.signal })
+    for (let waited = 0; !existsSync(beat) && waited < 5000; waited += 25) await pause(25)
+    controller.abort()
+    await pending
+    await pause(200)
+    const before = readFileSync(beat, 'utf8')
+    await pause(300)
+    expect(readFileSync(beat, 'utf8')).toBe(before)
+  })
+
+  it('starts the command as the leader of its own process group on POSIX', async () => {
+    const options: unknown[] = []
+    await runCommand(['node', '-e', '1'], {
+      cwd: directory.path,
+      platform: 'linux',
+      spawn: (command, args, spawnOptions) => {
+        options.push(spawnOptions.detached)
+        return spawn(command, args, spawnOptions)
+      },
+    })
+    expect(options).toEqual([true])
+  })
+
+  it('signals the process group of the command on POSIX', async () => {
+    const started: ChildProcess[] = []
+    const signals: unknown[] = []
+    const controller = new AbortController()
+    const pending = runCommand(LINGERING, {
+      cwd: directory.path,
+      platform: 'linux',
+      signal: controller.signal,
+      spawn: recordingSpawn(started),
+      kill: (pid, signal) => {
+        signals.push([pid, signal])
+        started[0]?.kill(signal)
+      },
+    })
+    controller.abort()
+    await pending
+    expect(signals).toEqual([[-(started[0]?.pid as number), 'SIGTERM']])
+  })
+
+  it('takes a process group that is already gone as ended', async () => {
+    const started: ChildProcess[] = []
+    const controller = new AbortController()
+    const pending = runCommand(LINGERING, {
+      cwd: directory.path,
+      platform: 'linux',
+      signal: controller.signal,
+      spawn: recordingSpawn(started),
+      kill: () => {
+        started[0]?.kill('SIGTERM')
+        throw new Error('kill ESRCH')
+      },
+    })
+    controller.abort()
+    expect((await pending).error).toBeNull()
+  })
+
+  it('signals nothing for a command that never started', async () => {
+    const signals: unknown[] = []
+    const controller = new AbortController()
+    controller.abort()
+    await runCommand(['definitely-not-a-command-' + process.pid], {
+      cwd: directory.path,
+      platform: 'linux',
+      signal: controller.signal,
+      kill: (pid, signal) => signals.push([pid, signal]),
+    })
+    expect(signals).toEqual([])
+  })
+
+  it('ends the process tree through taskkill on Windows', async () => {
+    const started: ChildProcess[] = []
+    const requests: unknown[] = []
+    const controller = new AbortController()
+    const pending = runCommand(LINGERING, {
+      cwd: directory.path,
+      platform: 'win32',
+      signal: controller.signal,
+      spawn: (command, args, spawnOptions) => {
+        if (command !== 'taskkill') return recordingSpawn(started)(command, args, spawnOptions)
+        requests.push([command, args])
+        started[0]?.kill('SIGTERM')
+        // why: a taskkill that cannot start must not crash the run, so the stand-in reports an error as soon as one is listened for
+        return {
+          on: (_event: string, listener: (error: Error) => void) => listener(new Error('spawn taskkill ENOENT')),
+        } as unknown as ChildProcess
+      },
+    })
+    controller.abort()
+    await pending
+    expect(requests).toEqual([['taskkill', ['/pid', `${started[0]?.pid}`, '/T', '/F']]])
   })
 
   it('never starts a command whose signal is already aborted', async () => {
@@ -95,11 +238,11 @@ describe('runCommand', () => {
       cwd: directory.path,
       platform: 'win32',
       spawn: (command, args, spawnOptions) => {
-        options.push([command, args, spawnOptions.shell])
+        options.push([command, args, spawnOptions.shell, spawnOptions.detached])
         return spawn(command, args, { ...spawnOptions, shell: false })
       },
     })
-    expect(options).toEqual([['node', ['-e', '1'], true]])
+    expect(options).toEqual([['node', ['-e', '1'], true, false]])
   })
 })
 

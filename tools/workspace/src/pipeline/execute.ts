@@ -36,6 +36,9 @@ export interface CommandResult {
 /** Starts a child process; `spawn` unless a test supplies another. */
 export type Spawn = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess
 
+/** Sends a signal to a process, or to a process group when the id is negative; `process.kill` unless a test supplies another. */
+export type Kill = (pid: number, signal: NodeJS.Signals) => void
+
 /** How a command runs. */
 export interface CommandOptions {
   /** The working directory. */
@@ -48,6 +51,8 @@ export interface CommandOptions {
   readonly timeoutMs?: number
   /** The process boundary. */
   readonly spawn?: Spawn
+  /** How a process group is signalled. */
+  readonly kill?: Kill
   /** The platform the command runs on; the process's own unless a test names another. */
   readonly platform?: string
 }
@@ -94,6 +99,29 @@ export function shellSafe(args: readonly string[], platform: string): string[] {
 }
 
 /**
+ * Ends a child process together with every process it started: its process group on POSIX, its
+ * process tree through `taskkill` on Windows, where the child is the shell that started the command.
+ *
+ * @param child - The child process
+ * @param platform - `win32` or another platform name
+ * @param start - Starts `taskkill` on Windows
+ * @param kill - Signals the process group elsewhere
+ */
+function endTree(child: ChildProcess, platform: string, start: Spawn, kill: Kill): void {
+  const { pid } = child
+  if (pid === undefined) return
+  if (platform === 'win32') {
+    start('taskkill', ['/pid', `${pid}`, '/T', '/F'], { stdio: 'ignore', windowsHide: true }).on('error', () => undefined)
+    return
+  }
+  try {
+    kill(-pid, 'SIGTERM')
+  } catch {
+    // why: a group whose last process has exited is already what stopping asks for
+  }
+}
+
+/**
  * Runs a command to its end.
  *
  * @param command - The argument vector
@@ -104,6 +132,7 @@ export function runCommand(command: readonly string[], options: CommandOptions):
   const platform = options.platform ?? process.platform
   const [file, ...args] = shellSafe(command, platform)
   const start = options.spawn ?? (spawn as Spawn)
+  const kill: Kill = options.kill ?? process.kill
   return createPromise((resolve) => {
     const chunks: string[] = []
     const stdout: string[] = []
@@ -115,11 +144,11 @@ export function runCommand(command: readonly string[], options: CommandOptions):
       env: { ...process.env, ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: platform === 'win32',
+      // why: on POSIX the command leads its own process group so stopping it reaches every process it started; Windows keeps the shared console, whose Ctrl-C reaches them all
+      detached: platform !== 'win32',
       windowsHide: true,
     })
-    const stop = (): void => {
-      child.kill('SIGTERM')
-    }
+    const stop = (): void => endTree(child, platform, start, kill)
     const timer =
       options.timeoutMs === undefined
         ? undefined
