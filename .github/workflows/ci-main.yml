@@ -35,7 +35,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0 # why: the plan compares the push with the previous head of main
+          fetch-depth: 0 # why: the plan walks main's first parents back to the newest planned commit
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -56,9 +56,9 @@ jobs:
         id: plan
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        # why: the previous head of main is the base; a force-push, a first push or a dispatch without one plans everything, as does the full input
+        # why: the newest first parent a run planned is the base, so a push whose run was cancelled while pending is planned by the next; with none in reach everything is planned, as with the full input
         run: |
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "${{ github.event.before }}" --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
+          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --planned-base --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload the plan and the graph
