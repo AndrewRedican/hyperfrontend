@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-koi-lib",
   "description": "Shared koi model, contract, and geometry consumed by the pond host and the seven fish apps as a packed tarball.",
   "sourceRoot": "apps/demos/koi-pond/lib/src",
@@ -20,8 +19,6 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
-      "cache": false,
-      "outputs": ["{projectRoot}/dist"],
       "options": {
         "command": "npm run build"
       }
@@ -37,7 +34,6 @@
     "refresh": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
-      "cache": false,
       "options": {
         "command": "node ../tools/refresh-lib.mjs",
         "cwd": "apps/demos/koi-pond/lib"
@@ -46,7 +42,6 @@
     "verify": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
-      "cache": false,
       "options": {
         "command": "node ../tools/refresh-lib.mjs --check",
         "cwd": "apps/demos/koi-pond/lib"
