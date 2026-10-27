@@ -71,9 +71,10 @@ export function TokenField({ onChange, remaining }: TokenFieldProps) {
         {remaining === null ? '' : ` · ${remaining} requests left this hour`}
       </summary>
       <p className="mt-2 text-slate-600 dark:text-slate-400">
-        GitHub answers sixty requests an hour to a browser without a token, which is enough to follow one run at this page&apos;s pace. A
-        fine-grained token with no permissions at all lifts that to five thousand. It stays in this browser&apos;s storage and is sent to
-        GitHub only.
+        GitHub answers sixty requests an hour to a browser without a token, which is enough to follow one run at this page&apos;s pace: it
+        spaces its reads a few minutes apart to stay within them, and the line under the run says when it reads next. A fine-grained token
+        with no permissions at all lifts the limit to five thousand, and the page then reads every minute. The token stays in this
+        browser&apos;s storage and is sent to GitHub only.
       </p>
       <form
         className="mt-2 flex flex-wrap gap-2"

@@ -1,27 +1,59 @@
 import { TOKEN_STORAGE_KEY } from './sources'
 
+/** The rate limit GitHub reported with a response, each part null when the response did not say. */
+export interface RateLimit {
+  /** The requests allowed in the hour */
+  limit: number | null
+  /** The requests left in the hour */
+  remaining: number | null
+  /** When the hour's requests renew, in epoch milliseconds */
+  resetAt: number | null
+}
+
+/** The rate limit of a request that never got a response. */
+export const NO_RATE: RateLimit = { limit: null, remaining: null, resetAt: null }
+
 /** What a request answered, with the rate limit GitHub reported. */
 export interface Fetched<Value> {
   /** The parsed body */
   value: Value
-  /** The requests left in the hour, or null when the response did not say */
-  remaining: number | null
+  /** The rate limit the response reported */
+  rate: RateLimit
 }
 
 /** A request that did not succeed. */
 export class FetchFailure extends Error {
   /** The status code, or 0 when the request never completed */
   readonly status: number
+  /** The rate limit the response reported, such as none left when GitHub refused the request for it */
+  readonly rate: RateLimit
 
   /**
    * A failure named after the request that failed.
    * @param status - The status code
    * @param url - The address asked
+   * @param rate - The rate limit the response reported
    */
-  constructor(status: number, url: string) {
+  constructor(status: number, url: string, rate: RateLimit = NO_RATE) {
     super(status === 0 ? `could not reach ${url}` : `${url} answered ${status}`)
     this.status = status
+    this.rate = rate
   }
+}
+
+/**
+ * The rate limit a response's headers report.
+ *
+ * @param response - What GitHub answered, successful or not
+ * @returns The limit, the requests left and when they renew
+ */
+function rateOf(response: Response): RateLimit {
+  const header = (name: string) => {
+    const value = response.headers.get(name)
+    return value === null ? null : Number(value)
+  }
+  const reset = header('x-ratelimit-reset')
+  return { limit: header('x-ratelimit-limit'), remaining: header('x-ratelimit-remaining'), resetAt: reset === null ? null : reset * 1000 }
 }
 
 /**
@@ -48,7 +80,7 @@ export interface FetchOptions {
  *
  * @param url - The address asked
  * @param options - The reader's token and an abort signal
- * @returns The parsed body and the rate limit left
+ * @returns The parsed body and the rate limit the response reported
  * @throws {FetchFailure} When the response is not 2xx or the request fails
  */
 export async function fetchJson<Value>(url: string, options: FetchOptions = {}): Promise<Fetched<Value>> {
@@ -62,9 +94,8 @@ export async function fetchJson<Value>(url: string, options: FetchOptions = {}):
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new FetchFailure(0, url)
   }
-  if (!response.ok) throw new FetchFailure(response.status, url)
-  const remaining = response.headers.get('x-ratelimit-remaining')
-  return { value: (await response.json()) as Value, remaining: remaining === null ? null : Number(remaining) }
+  if (!response.ok) throw new FetchFailure(response.status, url, rateOf(response))
+  return { value: (await response.json()) as Value, rate: rateOf(response) }
 }
 
 /**

@@ -21,7 +21,7 @@ export const PIPELINE_ROUTE = '/docs/contributing/pipeline/'
 /** Where a reader's optional GitHub token is kept, in their own browser alone. */
 export const TOKEN_STORAGE_KEY = 'hyperfrontend-github-token'
 
-/** How often a running pipeline is re-read, in milliseconds. */
+/** The shortest interval between two reads of a running pipeline, in milliseconds: the pace a token's budget allows. */
 export const LIVE_POLL_MS = 60_000
 
 /** The workflow whose runs the live view lists. */

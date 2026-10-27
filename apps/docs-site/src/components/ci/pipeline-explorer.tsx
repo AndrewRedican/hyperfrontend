@@ -1,13 +1,20 @@
 'use client'
 
-import type { Environment, GitHubRun, RunIndex, RunIndexEntry, RunRecord, RunsPage } from '@/lib/ci/model'
+import type { RateLimit } from '@/lib/ci/fetch'
+import type { CheckRunsPage, Environment, GitHubRun, JobsPage, RunIndex, RunIndexEntry, RunRecord, RunsPage } from '@/lib/ci/model'
 import type { TimelineTask } from '@/lib/ci/pipeline-view'
+import type { PollPace } from '@/lib/ci/poll'
+import type { LiveReading } from './live-view'
 import type { Status } from './status-line'
-import { FetchFailure, fetchJson } from '@/lib/ci/fetch'
+import { FetchFailure, NO_RATE, fetchJson } from '@/lib/ci/fetch'
 import { formatDuration, formatWhen, outcomeCounts, outcomeMark, shortSha, skippedByRule, timelineOf } from '@/lib/ci/pipeline-view'
+import { CHECK_RUNS_PER_PAGE, laterPages, pollPace } from '@/lib/ci/poll'
 import { API_URL, CI_WORKFLOW_FILE, PR_WORKFLOW_FILE, RECORDS_BRANCH, RECORDS_URL } from '@/lib/ci/sources'
 import { useCallback, useEffect, useState } from 'react'
-import { LiveView } from './live-view'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { LiveView, formatClock } from './live-view'
 import { OUTCOME_COLOUR, RunTimeline } from './run-timeline'
 import { StatusLine, TokenField } from './status-line'
 
@@ -269,7 +276,9 @@ interface LiveRunsProps {
 }
 
 /**
- * The newest runs of the two pipeline workflows on GitHub, and the one the reader follows.
+ * The newest runs of the two pipeline workflows on GitHub, and the one the reader follows: the list,
+ * the followed run and its commit's check runs are read together, at the pace the reader's rate
+ * limit allows, until the followed run completes.
  * @param props - See {@link LiveRunsProps}.
  * @param props.token
  * @param props.onRemaining
@@ -278,27 +287,71 @@ interface LiveRunsProps {
 function LiveRuns({ token, onRemaining }: LiveRunsProps) {
   const [runs, setRuns] = useState<GitHubRun[] | null>(null)
   const [status, setStatus] = useState<Status>({ message: 'Listing the runs on GitHub…', error: false })
-  const [followed, setFollowed] = useState<GitHubRun | null>(null)
+  const [chosen, setChosen] = useState<number | null>(null)
+  const [reading, setReading] = useState<LiveReading | null>(null)
+  const [pace, setPace] = useState<PollPace | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchJson<RunsPage>(`${API_URL}/actions/runs?per_page=40`, { token, signal: controller.signal })
-      .then(({ value, remaining }) => {
-        const listed = value.workflow_runs
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let followed = chosen
+    const poll = async () => {
+      let requests = 0
+      let rate: RateLimit = NO_RATE
+      const get = async <Value,>(path: string): Promise<Value> => {
+        requests += 1
+        try {
+          const fetched = await fetchJson<Value>(`${API_URL}/${path}`, { token, signal: controller.signal })
+          rate = fetched.rate
+          return fetched.value
+        } catch (error) {
+          if (error instanceof FetchFailure) rate = error.rate
+          throw error
+        }
+      }
+      let next: PollPace | null = null
+      try {
+        const listed = (await get<RunsPage>('actions/runs?per_page=40')).workflow_runs
           .filter((run) => run.path.endsWith(CI_WORKFLOW_FILE) || run.path.endsWith(PR_WORKFLOW_FILE))
           .slice(0, 15)
+        followed ??= (listed.find((run) => run.status !== 'completed') ?? listed[0])?.id ?? null
+        const run =
+          listed.find((entry) => entry.id === followed) ?? (followed === null ? null : await get<GitHubRun>(`actions/runs/${followed}`))
+        let found: LiveReading | null = null
+        if (run !== null) {
+          const checks = `commits/${run.head_sha}/check-runs?per_page=${CHECK_RUNS_PER_PAGE}&page=`
+          const first = await get<CheckRunsPage>(`${checks}1`)
+          const [later, jobs] = await promiseAll([
+            promiseAll(laterPages(first.total_count).map((page) => get<CheckRunsPage>(`${checks}${page}`))),
+            get<JobsPage>(`actions/runs/${run.id}/jobs?per_page=100`),
+          ])
+          found = { run, checkRuns: [first, ...later].flatMap((page) => page.check_runs), jobs: jobs.jobs, readAt: dateNow() }
+        }
+        if (controller.signal.aborted) return
         setRuns(listed)
-        onRemaining(remaining)
+        setReading(found)
         setStatus({ message: null, error: false })
-        setFollowed((current) => current ?? listed.find((run) => run.status !== 'completed') ?? listed[0] ?? null)
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === 'AbortError') return
-        setStatus({ message: `The runs could not be listed: ${error instanceof Error ? error.message : String(error)}`, error: true })
-      })
-    return () => controller.abort()
-  }, [token, onRemaining])
+        if (found !== null && found.run.status !== 'completed') next = pollPace(requests, rate, dateNow())
+      } catch (error) {
+        if (controller.signal.aborted) return
+        next = pollPace(requests, rate, dateNow())
+        setStatus({
+          message: `The runs could not be read: ${error instanceof Error ? error.message : String(error)}; trying again at ${formatClock(next.at)}.`,
+          error: true,
+        })
+      }
+      onRemaining(rate.remaining)
+      setPace(next)
+      if (next !== null) timer = setTimeout(() => void poll(), next.at - dateNow())
+    }
+    void poll()
+    return () => {
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [token, chosen, onRemaining])
 
+  const followedId = chosen ?? reading?.run.id ?? null
   return (
     <>
       <StatusLine message={status.message} error={status.error} />
@@ -308,8 +361,8 @@ function LiveRuns({ token, onRemaining }: LiveRunsProps) {
             <li key={run.id}>
               <button
                 type="button"
-                onClick={() => setFollowed(run)}
-                className={`rounded-lg border px-3 py-1.5 text-left text-xs ${followed?.id === run.id ? 'border-slate-900 dark:border-white' : 'border-slate-200 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500'}`}
+                onClick={() => setChosen(run.id)}
+                className={`rounded-lg border px-3 py-1.5 text-left text-xs ${followedId === run.id ? 'border-slate-900 dark:border-white' : 'border-slate-200 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500'}`}
               >
                 <span className="font-medium text-slate-900 dark:text-white">
                   #{run.run_number} {run.path.endsWith(PR_WORKFLOW_FILE) ? 'pr' : 'ci'}
@@ -322,7 +375,7 @@ function LiveRuns({ token, onRemaining }: LiveRunsProps) {
           ))}
         </ul>
       )}
-      {followed === null ? null : <LiveView run={followed} token={token} onRemaining={onRemaining} />}
+      {reading === null ? null : <LiveView reading={reading} pace={pace} />}
     </>
   )
 }

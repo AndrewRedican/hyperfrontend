@@ -416,6 +416,8 @@ export interface CheckRunOutput {
 
 /** One page of a commit's check runs. */
 export interface CheckRunsPage {
+  /** How many check runs the commit has, across every page */
+  total_count: number
   /** The check runs */
   check_runs: GitHubCheckRun[]
 }
