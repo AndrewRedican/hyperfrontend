@@ -377,6 +377,11 @@ async function runEnvironment(
   const settled = createMap<string, TaskResult>()
   const startedChains = createSet<string>()
   const hooks: Promise<void>[] = []
+  const open = (chain: Chain): void => {
+    if (checks === null || startedChains.has(chain.project)) return
+    startedChains.add(chain.project)
+    hooks.push(checks.onStart(chain))
+  }
   const started = dateNow()
   const snapshot = (complete: boolean, members: readonly TaskResult[]): RunResults => {
     const ended = dateNow()
@@ -412,11 +417,7 @@ async function runEnvironment(
     signal: controller.signal,
     onStart: (task) => {
       say(`▶ ${task.id}`)
-      const chain = chainOf.get(task.id) as Chain
-      if (checks !== null && !startedChains.has(chain.project)) {
-        startedChains.add(chain.project)
-        hooks.push(checks.onStart(chain))
-      }
+      open(chainOf.get(task.id) as Chain)
     },
     onEnd: (task, result) => {
       settled.set(task.id, toTaskResult(task, result))
@@ -433,6 +434,8 @@ async function runEnvironment(
         )
       )
       if (checks === null) return
+      // why: a chain whose tasks all end unstarted (skipped or cancelled) never saw onStart, and every planned chain ends with a concluded check run
+      open(chain)
       const ended = chain.tasks.filter((member) => settled.has(member.id)).map((member) => settled.get(member.id) as TaskResult)
       hooks.push(ended.length === chain.tasks.length ? checks.onEnd(chain, ended) : checks.onTask(chain, ended))
     },
