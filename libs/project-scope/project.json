@@ -1,5 +1,4 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "lib-project-scope",
   "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
   "sourceRoot": "{projectRoot}/src",
