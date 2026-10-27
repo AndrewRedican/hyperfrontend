@@ -1,9 +1,16 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { declaredFloor, majorOf, nodeCommand, nxCommand, targetRank } from './commands'
+import { declaredFloor, majorOf, nodeCommand, PROBE_SCRIPT, targetRank, taskCommand } from './commands'
 
-describe('nxCommand', () => {
-  it('runs the task through npx nx run', () => {
-    expect(nxCommand('lib-a:build')).toEqual(['npx', 'nx', 'run', 'lib-a:build'])
+describe('taskCommand', () => {
+  it('runs one target of a project through the owned single-task entry, with the alias hook', () => {
+    expect(taskCommand('lib-a:build')).toEqual([
+      'node',
+      '--import',
+      './tools/lint/src/runtime/aliases.ts',
+      'tools/workspace/bin/hf.ts',
+      'run',
+      'lib-a:build',
+    ])
   })
 })
 
@@ -14,6 +21,36 @@ describe('nodeCommand', () => {
 
   it('fetches the named release through npx', () => {
     expect(nodeCommand('18.0.0', 'tools/probe.mjs')).toEqual(['npx', '-y', '-p', 'node@18.0.0', 'node', 'tools/probe.mjs'])
+  })
+
+  it.each([
+    ['the probe on the workspace Node.js', null, PROBE_SCRIPT, ['node', 'tools/workspace/scripts/probe-node-floor.mjs']],
+    [
+      'the probe on a floor release',
+      '20.1.0',
+      PROBE_SCRIPT,
+      ['npx', '-y', '-p', 'node@20.1.0', 'node', 'tools/workspace/scripts/probe-node-floor.mjs'],
+    ],
+    [
+      'the smoke on the floor release',
+      '20.1.0',
+      'apps/alpha-e2e/scripts/consumer-smoke.mjs',
+      ['npx', '-y', '-p', 'node@20.1.0', 'node', 'apps/alpha-e2e/scripts/consumer-smoke.mjs'],
+    ],
+    [
+      'the smoke on the newest release of the major',
+      '20',
+      'apps/alpha-e2e/scripts/consumer-smoke.mjs',
+      ['npx', '-y', '-p', 'node@20', 'node', 'apps/alpha-e2e/scripts/consumer-smoke.mjs'],
+    ],
+    [
+      'the smoke on the workspace Node.js',
+      null,
+      'apps/beta-e2e/scripts/consumer-smoke.mjs',
+      ['node', 'apps/beta-e2e/scripts/consumer-smoke.mjs'],
+    ],
+  ])('runs %s', (_kind: string, release: string | null, script: string, expected: readonly string[]) => {
+    expect(nodeCommand(release, script)).toEqual(expected)
   })
 })
 

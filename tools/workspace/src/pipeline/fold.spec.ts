@@ -3,8 +3,9 @@ import type { PlanReason, PlanTask } from './model'
 import { after as afterAll } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { libraryOfE2e } from '../graph/depends-on'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
-import { buildChains, e2eProjectsOf, isPublishable, libraryOfE2e, linuxTasks, upstreamPackages, windowsTasks, withNeeds } from './fold'
+import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, upstreamPackages, windowsTasks, withNeeds } from './fold'
 import { planReason } from './model'
 
 const workspace = createPipelineWorkspace()
@@ -89,7 +90,111 @@ describe('upstreamPackages', () => {
 
 describe('linuxTasks', () => {
   it('folds an e2e task into the chain of the library it tests', () => {
-    expect(placed(linuxTasks(graph, selection('e2e-alpha:e2e'), false))).toEqual(['e2e-alpha:e2e in lib-alpha'])
+    expect(linuxTasks(graph, selection('e2e-alpha:e2e'), false).find((task) => task.id === 'e2e-alpha:e2e')?.project).toBe('lib-alpha')
+  })
+
+  it('gives an e2e task the build of its library, with the probe and smokes that follow every library build', () => {
+    expect(placed(linuxTasks(graph, selection('e2e-alpha:e2e'), false))).toEqual([
+      'e2e-alpha:e2e in lib-alpha',
+      'lib-alpha:build in lib-alpha',
+      'lib-alpha:probe in lib-alpha',
+      'lib-alpha:smoke-floor in lib-alpha',
+      'lib-alpha:smoke-major in lib-alpha',
+    ])
+  })
+
+  it('plans no build of the other workspace packages an e2e task reaches', () => {
+    expect(
+      linuxTasks(graph, selection('e2e-alpha:e2e'), false)
+        .filter((task) => task.target === 'build')
+        .map((task) => task.id)
+    ).toEqual(['lib-alpha:build'])
+  })
+
+  it('plans one build for every task needing it, naming them', () => {
+    expect(
+      linuxTasks(graph, selection('e2e-alpha:e2e', 'lib-alpha:publish'), true)
+        .filter((task) => task.target === 'build')
+        .map((task) => ({ id: task.id, reasons: task.reasons }))
+    ).toEqual([
+      {
+        id: 'lib-alpha:build',
+        reasons: [
+          {
+            rule: 'pipeline-task',
+            file: null,
+            path: ['e2e-alpha:e2e', 'lib-alpha:publish'],
+            message: 'needed first by e2e-alpha:e2e, lib-alpha:publish',
+          },
+        ],
+      },
+    ])
+  })
+
+  it('keeps the selection reasons of a prerequisite selected on its own', () => {
+    expect(
+      linuxTasks(graph, selection('e2e-alpha:e2e', 'lib-alpha:build'), false)
+        .find((task) => task.id === 'lib-alpha:build')
+        ?.reasons.map((reason) => reason.rule)
+    ).toEqual(['changed-input'])
+  })
+
+  it('plans one install for every task of the project needing it', () => {
+    expect(
+      linuxTasks(graph, selection('demo-one:build', 'demo-one:typecheck'), false)
+        .filter((task) => task.target === 'install')
+        .map((task) => ({ id: task.id, project: task.project, reasons: task.reasons.map((reason) => [reason.message, reason.path]) }))
+    ).toEqual([
+      {
+        id: 'demo-one:install',
+        project: 'demo-one',
+        reasons: [['needed first by demo-one:build, demo-one:typecheck', ['demo-one:build', 'demo-one:typecheck']]],
+      },
+    ])
+  })
+
+  it('plans the task of another project a project:target prerequisite names, with what it needs first', () => {
+    expect(placed(linuxTasks(graph, selection('demo-two:build'), false))).toEqual([
+      'demo-one:install in demo-one',
+      'demo-one:verify in demo-one',
+      'demo-two:build in demo-two',
+      'demo-two:install in demo-two',
+    ])
+  })
+
+  it('runs every task of a project target through the owned task command', () => {
+    expect(linuxTasks(graph, selection('demo-two:build'), false).map((task) => `${task.id}: ${task.command.join(' ')}`)).toEqual([
+      'demo-two:build: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run demo-two:build',
+      'demo-two:install: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run demo-two:install',
+      'demo-one:verify: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run demo-one:verify',
+      'demo-one:install: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts run demo-one:install',
+    ])
+  })
+
+  it('weighs an added library build heavy and an added install light', () => {
+    expect(
+      linuxTasks(graph, selection('e2e-alpha:e2e', 'demo-one:build'), false)
+        .filter((task) => task.target === 'build' || task.target === 'install')
+        .map((task) => `${task.id} ${task.weight}`)
+    ).toEqual(['demo-one:build light', 'lib-alpha:build heavy', 'demo-one:install light'])
+  })
+
+  it('keeps the dependsOn entries of an e2e task beside its library build', () => {
+    const other = createPipelineWorkspace({
+      ...PIPELINE_WORKSPACE,
+      'apps/beta-e2e/project.json':
+        '{ "name": "e2e-beta", "implicitDependencies": ["lib-beta"], "targets": { "seed": {}, "e2e": { "dependsOn": ["^build", "seed"] } } }',
+    })
+    try {
+      expect(placed(linuxTasks(other.graph, selection('e2e-beta:e2e'), false))).toEqual([
+        'e2e-beta:e2e in lib-beta',
+        'e2e-beta:seed in e2e-beta',
+        'lib-beta:build in lib-beta',
+        'lib-beta:probe in lib-beta',
+      ])
+    } finally {
+      other.remove()
+    }
   })
 
   it('keeps an e2e task that tests no library in its own chain', () => {
@@ -197,11 +302,34 @@ describe('windowsTasks', () => {
     ])
   })
 
+  it('adds the tasks the copied tasks need first', () => {
+    const other = createPipelineWorkspace({
+      ...PIPELINE_WORKSPACE,
+      'tools/tooling/project.json': '{ "name": "tool-ling", "targets": { "install": {}, "test": { "dependsOn": ["install"] } } }',
+    })
+    try {
+      expect(
+        windowsTasks(other.graph, linuxTasks(other.graph, selection('tool-ling:test'), false)).map(
+          (task) => `${task.id} ${task.environment}`
+        )
+      ).toEqual(['tool-ling:test windows', 'tool-ling:install windows'])
+    } finally {
+      other.remove()
+    }
+  })
+
   it('copies the build and the smokes of a library with a consumer smoke', () => {
     expect(windowsTasks(graph, linuxTasks(graph, selection('lib-alpha:build', 'lib-beta:build'), false)).map((task) => task.id)).toEqual([
       'lib-alpha:build',
       'lib-alpha:smoke-floor',
       'lib-alpha:smoke-major',
+    ])
+  })
+
+  it('gives a copied build the smokes it is there for as its reason, in place of the Linux tasks needing it', () => {
+    const build = windowsTasks(graph, linuxTasks(graph, selection('e2e-alpha:e2e'), false)).find((task) => task.id === 'lib-alpha:build')
+    expect(build?.reasons.map((reason) => `${reason.rule}: ${reason.message}`)).toEqual([
+      'pipeline-task: needed first by lib-alpha:smoke-floor, lib-alpha:smoke-major',
     ])
   })
 })
@@ -249,6 +377,29 @@ describe('withNeeds', () => {
   })
 })
 
+describe('withNeeds across projects', () => {
+  const needs = createMap(
+    withNeeds(graph, linuxTasks(graph, selection('demo-two:build', 'demo-one:typecheck'), false)).map(
+      (task) => [task.id, task.needs] as const
+    )
+  )
+
+  it.each([
+    ['demo-two:build', ['demo-one:verify', 'demo-two:install']],
+    ['demo-two:install', []],
+    ['demo-one:verify', ['demo-one:install']],
+    ['demo-one:typecheck', ['demo-one:install']],
+    ['demo-one:install', []],
+  ])('%s needs %s', (id, expected) => {
+    expect(needs.get(id)).toEqual(expected)
+  })
+
+  it('runs a verify after the build of its project when the plan builds it', () => {
+    const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-two:build', 'demo-one:build'), false))
+    expect(tasks.find((task) => task.id === 'demo-one:verify')?.needs).toEqual(['demo-one:build', 'demo-one:install'])
+  })
+})
+
 describe('buildChains', () => {
   it('groups the tasks by environment and project, needs first', () => {
     const linux = linuxTasks(graph, selection('lib-alpha:publish', 'e2e-alpha:e2e', 'lib-alpha:test', 'lib-alpha:typecheck'), true)
@@ -256,6 +407,14 @@ describe('buildChains', () => {
     expect(chains.map((chain) => `${chain.environment} ${chain.project}: ${chain.tasks.map((task) => task.target).join(' ')}`)).toEqual([
       'linux lib-alpha: typecheck test build e2e probe smoke-floor smoke-major publish',
       'windows lib-alpha: typecheck test build smoke-floor smoke-major',
+    ])
+  })
+
+  it('orders a chain by its own needs alone when a task needs another chain', () => {
+    const chains = buildChains(withNeeds(graph, linuxTasks(graph, selection('demo-two:build', 'demo-one:build'), false)))
+    expect(chains.map((chain) => `${chain.project}: ${chain.tasks.map((task) => task.target).join(' ')}`)).toEqual([
+      'demo-one: install build verify',
+      'demo-two: install build',
     ])
   })
 

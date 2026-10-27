@@ -37,7 +37,7 @@ export const PipelineRule = freeze({
   RegistryDrift: 'registry-drift',
   /** The task moved into the chain of the library it tests. */
   Folded: 'folded',
-  /** A task the pipeline runs after a build: a probe, a smoke, a publish, or the build they need. */
+  /** A task the pipeline adds: a probe or a smoke after a build, or a task another planned task needs first. */
   PipelineTask: 'pipeline-task',
   /** A prerequisite did not succeed. */
   PrerequisiteFailed: 'prerequisite-failed',
@@ -86,7 +86,7 @@ export interface SkippedTask {
 
 /** One task of a plan. */
 export interface PlanTask {
-  /** `<project>:<target>`, the id Nx runs the task by, or the pipeline's own task name. */
+  /** `<project>:<target>`: a target of the project, or one of the pipeline's own targets. */
   readonly id: string
   /** The chain's project, which is the library for a folded e2e task. */
   readonly project: string
@@ -203,14 +203,6 @@ export interface RunResults {
  */
 export function planReason(rule: PlanRule, message: string, path: readonly string[] = []): PlanReason {
   return { rule, file: null, path, message }
-}
-
-/** The two parts of a task id. */
-export interface TaskName {
-  /** The project. */
-  readonly project: string
-  /** The target. */
-  readonly target: string
 }
 
 /** The two parts of a task id. */

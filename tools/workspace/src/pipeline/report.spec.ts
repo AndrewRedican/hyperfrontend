@@ -1,5 +1,6 @@
 import type { Chain, Plan, PlanTask, RunResults, TaskResult } from './model'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { taskCommand } from './commands'
 import { planReason } from './model'
 import { chainTable, describePlanReason, formatDuration, planSummary, runSummary, timelineLines, totalsLine } from './report'
 
@@ -20,7 +21,7 @@ function task(project: string, target: string, needs: readonly string[] = []): P
     needs,
     weight: target === 'build' ? 'heavy' : 'light',
     reasons: [{ rule: 'changed-input', file: `${project}/src/index.ts`, path: [], message: 'the file is an input of the task' }],
-    command: ['npx', 'nx', 'run', `${project}:${target}`],
+    command: taskCommand(`${project}:${target}`),
     env: {},
   }
 }

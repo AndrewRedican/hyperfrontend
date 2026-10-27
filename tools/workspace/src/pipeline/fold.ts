@@ -1,9 +1,10 @@
 /**
- * How a selection becomes tasks: an e2e task joins the chain of the library it tests, a built
- * publishable library gains its floor probe and, when its e2e project ships a consumer smoke,
- * its smokes, a published library gains the build its publish needs, the Windows environment
- * takes the typecheck, lint and test of the libraries and tools, and every task learns what it
- * needs.
+ * How a selection becomes tasks: an e2e task joins the chain of the library it tests, every task
+ * gains the tasks it needs first as tasks of its own (what its `dependsOn` names, the build of
+ * the library an e2e task tests, the build a publish publishes), each planned once however many
+ * tasks need it, a built publishable library gains its floor probe and, when its e2e project
+ * ships a consumer smoke, its smokes, the Windows environment takes the typecheck, lint and test
+ * of the libraries and tools, and every task learns what it needs.
  *
  * @module pipeline/fold
  */
@@ -15,10 +16,10 @@ import { posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { targetDependsOn } from '../graph/inputs'
+import { libraryOfE2e, prerequisitesOf } from '../graph/depends-on'
 import { compareText } from '../graph/order'
 import { hasTarget } from '../graph/workspace'
-import { declaredFloor, majorOf, nodeCommand, nxCommand, PipelineTarget, PROBE_SCRIPT, SMOKE_SCRIPT, targetRank } from './commands'
+import { declaredFloor, majorOf, nodeCommand, PipelineTarget, PROBE_SCRIPT, SMOKE_SCRIPT, targetRank, taskCommand } from './commands'
 import { Environment as Environments, PipelineRule, planReason, splitTaskId, Weight } from './model'
 
 /** The targets the Windows environment runs for every library and tool. */
@@ -27,8 +28,16 @@ const WINDOWS_TARGETS = createSet(['typecheck', 'lint', 'test'])
 /** The projects the Windows environment covers. */
 const WINDOWS_PROJECTS = /^(lib|tool)-/
 
-/** The targets that run after a chain's build. */
-const AFTER_BUILD = createSet<string>(['e2e', PipelineTarget.Probe, PipelineTarget.SmokeFloor, PipelineTarget.SmokeMajor, 'publish'])
+/** The targets that run after a chain's build, when the plan builds it. */
+const AFTER_BUILD = createSet<string>([
+  'e2e',
+  PipelineTarget.Probe,
+  PipelineTarget.SmokeFloor,
+  PipelineTarget.SmokeMajor,
+  'publish',
+  // why: a verify rebuilds the output it checks, so it must never run beside the build writing the same directory
+  'verify',
+])
 
 /** What a task is made of before its needs are known. */
 type TaskFields = Omit<PlanTask, 'needs' | 'env'> & Partial<Pick<PlanTask, 'env'>>
@@ -51,21 +60,6 @@ function task(fields: TaskFields): PlanTask {
  */
 export function isPublishable(project: ProjectRecord): boolean {
   return project.manifest !== null && project.manifest.private !== true && hasTarget(project, 'publish')
-}
-
-/**
- * The library an e2e project tests.
- *
- * @param graph - The graph the projects belong to
- * @param project - A project with an e2e target
- * @returns The first implicit dependency with a build target, or null
- */
-export function libraryOfE2e(graph: WorkspaceGraph, project: ProjectRecord): ProjectRecord | null {
-  for (const name of project.implicitDependencies) {
-    const candidate = graph.projects.get(name)
-    if (candidate !== undefined && hasTarget(candidate, 'build')) return candidate
-  }
-  return null
 }
 
 /**
@@ -161,8 +155,83 @@ function afterBuild(graph: WorkspaceGraph, library: ProjectRecord, environment: 
 }
 
 /**
+ * A task of a project's target: an e2e task in the chain of the library it tests, any other in
+ * its own project's chain; heavy for a library build, light otherwise.
+ *
+ * @param graph - The graph the projects belong to
+ * @param id - `<project>:<target>`, of a project the graph knows
+ * @param reasons - Why the task is in the plan
+ * @param environment - Where the task runs
+ * @returns The task, without needs
+ */
+function projectTask(graph: WorkspaceGraph, id: string, reasons: readonly PlanReason[], environment: Environment): PlanTask {
+  const { project: name, target } = splitTaskId(id)
+  const project = graph.projects.get(name) as ProjectRecord
+  const library = target === 'e2e' ? libraryOfE2e(graph, project) : null
+  const folded =
+    library === null
+      ? []
+      : [planReason(PipelineRule.Folded, `runs in the chain of ${library.name}, the library it tests`, [`${library.name}:build`])]
+  return task({
+    id,
+    project: library?.name ?? name,
+    target,
+    environment,
+    weight: target === 'build' && project.type === 'lib' ? Weight.Heavy : Weight.Light,
+    reasons: [...reasons, ...folded],
+    command: taskCommand(id),
+  })
+}
+
+/**
+ * The tasks a task needs first, as its `dependsOn` names them.
+ *
+ * @param graph - The graph the projects belong to
+ * @param item - The task, of a project the graph knows
+ * @returns The task ids, each once
+ */
+function prerequisiteIds(graph: WorkspaceGraph, item: PlanTask): string[] {
+  const { project: name, target } = splitTaskId(item.id)
+  return prerequisitesOf(graph, graph.projects.get(name) as ProjectRecord, target).map((prerequisite) => prerequisite.id)
+}
+
+/**
+ * Adds the tasks the tasks of one environment need first, transitively and each once. A task
+ * already planned keeps its reasons; a task added runs the owned task command, joins its own
+ * project's chain and carries a reason naming the tasks that need it.
+ *
+ * @param graph - The graph the projects belong to
+ * @param tasks - The environment's tasks by id, which the added tasks join
+ * @param environment - Where the tasks run
+ */
+function addPrerequisites(graph: WorkspaceGraph, tasks: Map<string, PlanTask>, environment: Environment): void {
+  const dependents = createMap<string, string[]>()
+  const queue = [...tasks.values()]
+  // why: the loop also visits the tasks it appends, so the prerequisites of an added task are added too.
+  for (const item of queue) {
+    for (const id of prerequisiteIds(graph, item)) {
+      const known = tasks.get(id)
+      if (known !== undefined && !dependents.has(id)) continue
+      dependents.set(id, [...(dependents.get(id) ?? []), item.id])
+      if (known !== undefined) continue
+      const added = projectTask(graph, id, [], environment)
+      tasks.set(id, added)
+      queue.push(added)
+    }
+  }
+  for (const [id, needing] of dependents) {
+    const added = tasks.get(id) as PlanTask
+    const names = [...needing].sort(compareText)
+    tasks.set(id, {
+      ...added,
+      reasons: [planReason(PipelineRule.PipelineTask, `needed first by ${names.join(', ')}`, names), ...added.reasons],
+    })
+  }
+}
+
+/**
  * The Linux tasks of a selection: one per selected task, e2e tasks folded into their library's
- * chain, then the probes, smokes and builds the pipeline adds.
+ * chain, then every task they need first, then the probes and smokes after the library builds.
  *
  * @param graph - The graph the projects belong to
  * @param selected - The selected task ids with their reasons
@@ -176,78 +245,53 @@ export function linuxTasks(graph: WorkspaceGraph, selected: ReadonlyMap<string, 
     const project = graph.projects.get(name)
     if (project === undefined) continue
     if (target === 'publish' && (!main || !isPublishable(project))) continue
-    const library = target === 'e2e' ? libraryOfE2e(graph, project) : null
-    const folded =
-      library === null
-        ? []
-        : [planReason(PipelineRule.Folded, `runs in the chain of ${library.name}, the library it tests`, [`${library.name}:build`])]
-    tasks.set(
-      id,
-      task({
-        id,
-        project: library?.name ?? name,
-        target,
-        environment: Environments.Linux,
-        weight: target === 'build' && project.type === 'lib' ? Weight.Heavy : Weight.Light,
-        reasons: [...reasons, ...folded],
-        command: nxCommand(id),
-      })
-    )
+    tasks.set(id, projectTask(graph, id, reasons, Environments.Linux))
   }
-  for (const item of [...tasks.values()]) {
-    if (item.target !== 'publish' || tasks.has(`${item.project}:build`)) continue
-    const build = `${item.project}:build`
-    tasks.set(
-      build,
-      task({
-        id: build,
-        project: item.project,
-        target: 'build',
-        environment: Environments.Linux,
-        weight: Weight.Heavy,
-        reasons: [planReason(PipelineRule.PipelineTask, `builds what ${item.id} publishes`, [item.id])],
-        command: nxCommand(build),
-      })
-    )
-  }
+  addPrerequisites(graph, tasks, Environments.Linux)
   for (const item of [...tasks.values()]) {
     if (item.target !== 'build') continue
-    const library = graph.projects.get(item.project)
-    if (library === undefined) continue
-    for (const added of afterBuild(graph, library, Environments.Linux, false)) tasks.set(added.id, added)
+    for (const added of afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, Environments.Linux, false))
+      tasks.set(added.id, added)
   }
   return [...tasks.values()]
 }
 
 /**
  * The Windows tasks: the typecheck, lint and test of every library and tool among the Linux
- * tasks, and the build and smokes of a library whose e2e project ships a consumer smoke.
+ * tasks, the build and smokes of a library whose e2e project ships a consumer smoke, and every
+ * task they need first.
  *
  * @param graph - The graph the projects belong to
  * @param linux - What the Linux environment runs
  * @returns The tasks, without needs
  */
 export function windowsTasks(graph: WorkspaceGraph, linux: readonly PlanTask[]): PlanTask[] {
-  const tasks: PlanTask[] = []
+  const tasks = createMap<string, PlanTask>()
   for (const item of linux) {
-    if (WINDOWS_TARGETS.has(item.target) && WINDOWS_PROJECTS.test(item.project)) tasks.push({ ...item, environment: Environments.Windows })
+    if (WINDOWS_TARGETS.has(item.target) && WINDOWS_PROJECTS.test(item.project))
+      tasks.set(item.id, { ...item, environment: Environments.Windows })
   }
   for (const item of linux) {
     if (item.target !== 'build') continue
-    const library = graph.projects.get(item.project)
-    if (library === undefined) continue
-    const smokes = afterBuild(graph, library, Environments.Windows, true)
+    const smokes = afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, Environments.Windows, true)
     if (smokes.length === 0) continue
-    tasks.push({ ...item, environment: Environments.Windows }, ...smokes)
+    const names = smokes.map((smoke) => smoke.id).sort(compareText)
+    // why: the Linux build's own prerequisite reason names Linux tasks; on Windows the build is there for the smokes
+    const reasons = [
+      planReason(PipelineRule.PipelineTask, `needed first by ${names.join(', ')}`, names),
+      ...item.reasons.filter((reason) => reason.rule !== PipelineRule.PipelineTask),
+    ]
+    for (const added of [{ ...item, environment: Environments.Windows, reasons }, ...smokes]) tasks.set(added.id, added)
   }
-  return tasks
+  addPrerequisites(graph, tasks, Environments.Windows)
+  return [...tasks.values()]
 }
 
 /**
  * The tasks with their needs: a build after its chain's typecheck, what runs after a build
  * after it, a publish after everything else of its chain and after the publishes of the packages
- * it depends on, and a task after the same project's tasks its `dependsOn` names, whenever the
- * task needed is in the same environment.
+ * it depends on, and a task after every task it needs first (what its `dependsOn` names, another
+ * project's task included), whenever the task needed is in the same environment.
  *
  * @param graph - The graph the projects belong to
  * @param tasks - The tasks of every environment
@@ -261,22 +305,18 @@ export function withNeeds(graph: WorkspaceGraph, tasks: readonly PlanTask[]): Pl
     const own = (target: string): string => `${item.project}:${target}`
     if (item.target === 'build' && has(item.environment, own('typecheck'))) needs.add(own('typecheck'))
     if (AFTER_BUILD.has(item.target) && has(item.environment, own('build'))) needs.add(own('build'))
-    const { project: name, target } = splitTaskId(item.id)
-    const project = graph.projects.get(name)
-    if (item.target === 'publish' && project !== undefined) {
+    if (item.target === 'publish') {
       for (const other of tasks) {
         if (other.environment === item.environment && other.project === item.project && other.id !== item.id && other.target !== 'publish')
           needs.add(other.id)
       }
+      const project = graph.projects.get(item.project) as ProjectRecord
       for (const upstream of upstreamPackages(graph, project)) {
         if (upstream.name !== project.name && has(item.environment, `${upstream.name}:publish`)) needs.add(`${upstream.name}:publish`)
       }
     }
-    if (project !== undefined) {
-      for (const entry of targetDependsOn(graph.root, project, target)) {
-        if (typeof entry === 'string' && !entry.startsWith('^') && entry !== target && has(item.environment, `${name}:${entry}`))
-          needs.add(`${name}:${entry}`)
-      }
+    for (const id of prerequisiteIds(graph, item)) {
+      if (has(item.environment, id)) needs.add(id)
     }
     return { ...item, needs: [...needs].sort(compareText) }
   })

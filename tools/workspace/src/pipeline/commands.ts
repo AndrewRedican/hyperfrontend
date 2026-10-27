@@ -1,13 +1,15 @@
 /**
- * The commands a plan task runs: an Nx task through `npx nx run`, and the pipeline's own tasks
- * (the floor probe and the consumer smoke) through the Node.js release they are meant for.
+ * The commands a plan task runs: a target of a project through the workspace's own command line,
+ * which runs that one task and none of the tasks it needs (the plan lists those as tasks of their
+ * own), and the pipeline's own tasks (the floor probe and the consumer smoke) through the Node.js
+ * release they are meant for.
  *
  * @module pipeline/commands
  */
 
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
-/** The targets the pipeline runs itself rather than through Nx. */
+/** The targets the pipeline runs itself rather than as a target of a project. */
 export const PipelineTarget = freeze({
   /** Loads every entry of a built package on the floor release it declares. */
   Probe: 'probe',
@@ -19,6 +21,12 @@ export const PipelineTarget = freeze({
 
 /** One of the pipeline's own targets. */
 export type PipelineTarget = (typeof PipelineTarget)[keyof typeof PipelineTarget]
+
+/** The module hook that resolves the workspace's TypeScript sources and path aliases, workspace-relative. */
+export const ALIAS_HOOK = './tools/lint/src/runtime/aliases.ts'
+
+/** The workspace's own command line, workspace-relative. */
+export const HF_ENTRY = 'tools/workspace/bin/hf.ts'
 
 /** The floor probe, workspace-relative. */
 export const PROBE_SCRIPT = 'tools/workspace/scripts/probe-node-floor.mjs'
@@ -41,13 +49,14 @@ const TARGET_RANK: Readonly<Record<string, number>> = freeze({
 })
 
 /**
- * The command running an Nx task.
+ * The command running one target of a project on the workspace's Node.js, alone: nothing it
+ * depends on runs first.
  *
  * @param id - `<project>:<target>`
  * @returns The argument vector
  */
-export function nxCommand(id: string): string[] {
-  return ['npx', 'nx', 'run', id]
+export function taskCommand(id: string): string[] {
+  return ['node', '--import', ALIAS_HOOK, HF_ENTRY, 'run', id]
 }
 
 /**

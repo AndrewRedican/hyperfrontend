@@ -1,8 +1,10 @@
 /**
  * A disposable workspace for the pipeline specs: two publishable libraries, one depending on
  * the other as a peer, a private library, a tool, an e2e project per library (one shipping a
- * consumer smoke), an e2e project naming no library, a demo the lint plugin excludes, an
- * application and the root project. Written as code so no test material rests in the tree.
+ * consumer smoke, and one whose spec imports the private library), an e2e project naming no
+ * library, two demos the lint plugin excludes (each with an install its other targets depend
+ * on, the second building after the first one's verify), an application and the root project.
+ * Written as code so no test material rests in the tree.
  *
  * @module pipeline/__test-utils__/workspace
  */
@@ -117,6 +119,7 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
     targets: { e2e: { dependsOn: ['^build'] } },
   }),
   'apps/alpha-e2e/scripts/consumer-smoke.mjs': 'process.exit(0)\n',
+  'apps/alpha-e2e/src/esm.spec.ts': "import { check } from '@fixture/testing'\nexport const loaded = check(true)\n",
   'apps/beta-e2e/project.json': json({
     name: 'e2e-beta',
     projectType: 'application',
@@ -132,9 +135,20 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
   'apps/demos/one/project.json': json({
     name: 'demo-one',
     projectType: 'application',
-    targets: { install: {}, build: { dependsOn: ['install'] }, typecheck: { dependsOn: ['install'] } },
+    targets: {
+      install: {},
+      build: { dependsOn: ['install'] },
+      typecheck: { dependsOn: ['install'] },
+      verify: { dependsOn: ['install'] },
+    },
   }),
   'apps/demos/one/src/main.ts': 'export const demo = 1\n',
+  'apps/demos/two/project.json': json({
+    name: 'demo-two',
+    projectType: 'application',
+    targets: { install: {}, build: { dependsOn: ['install', 'demo-one:verify'] } },
+  }),
+  'apps/demos/two/src/main.ts': 'export const demo = 2\n',
   'apps/site/project.json': json({ name: 'app-site', projectType: 'application', targets: { build: {}, typecheck: {}, lint: {} } }),
   'apps/site/src/main.ts': "import { beta } from '@fixture/beta'\nexport const site = beta\n",
 })

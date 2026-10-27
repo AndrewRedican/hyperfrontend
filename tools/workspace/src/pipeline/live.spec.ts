@@ -1,6 +1,7 @@
 import type { Chain, Plan, PlanTask } from './model'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { taskCommand } from './commands'
 import { CHECK_TEXT_LIMIT, clip, compactPlan, planCheckOutput } from './live'
 
 /**
@@ -20,7 +21,7 @@ function task(project: string, target: string, needs: string[] = []): PlanTask {
     needs,
     weight: target === 'build' ? 'heavy' : 'light',
     reasons: [{ rule: 'changed-input', file: `libs/${project}/src/index.ts`, path: [], message: 'an own file changed' }],
-    command: ['npx', 'nx', 'run', `${project}:${target}`],
+    command: taskCommand(`${project}:${target}`),
     env: {},
   }
 }

@@ -38,8 +38,34 @@ describe('createPlan', () => {
       'linux e2e-beta: lint',
       'linux e2e-alpha: lint',
       'linux e2e-orphan: lint e2e',
-      'linux demo-one: typecheck build',
+      'linux demo-one: install typecheck build verify',
+      'linux demo-two: install build',
       'linux workspace: lint',
+    ])
+  })
+
+  it('plans the build of a project whose project:target prerequisite the change selects, after that prerequisite', () => {
+    const plan = createPlan({ graph, changes: modified('apps/demos/one/src/main.ts'), main: false })
+    expect(
+      plan.chains.flatMap((chain) =>
+        chain.tasks.map((task) => `${task.id} after ${task.needs.length === 0 ? 'nothing' : task.needs.join(', ')}`)
+      )
+    ).toEqual([
+      'demo-one:install after nothing',
+      'demo-one:typecheck after demo-one:install',
+      'demo-one:build after demo-one:install, demo-one:typecheck',
+      'demo-one:verify after demo-one:build, demo-one:install',
+      'demo-two:install after nothing',
+      'demo-two:build after demo-one:verify, demo-two:install',
+    ])
+  })
+
+  it('gives every e2e task the change reaches the build of its library, and no other build', () => {
+    expect(chains(createPlan({ graph, changes: modified('libs/testing/src/index.ts'), main: false }))).toEqual([
+      'linux lib-alpha: build e2e probe smoke-floor smoke-major',
+      'windows lib-alpha: build smoke-floor smoke-major',
+      'linux lib-testing: typecheck lint test build',
+      'windows lib-testing: typecheck lint test',
     ])
   })
 
