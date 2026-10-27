@@ -56,7 +56,7 @@ export interface ScheduleOptions<Task extends ScheduleTask> {
   readonly parallel: number
   /** How many heavy tasks run at once. */
   readonly heavy: number
-  /** Runs one task; never rejects. */
+  /** Runs one task; a throw or a rejection ends the task as a failure naming the error. */
   readonly run: (task: Task) => Promise<RunOutcome>
   /** Cancels what has not started. */
   readonly signal?: AbortSignal
@@ -105,7 +105,23 @@ function unrun(id: string, outcome: OutcomeKind, detail: string): ScheduleResult
 }
 
 /**
- * Runs a schedule to completion.
+ * Runs one task, turning a runner that throws or rejects into a failed task.
+ *
+ * @param run - The runner the schedule was given
+ * @param task - The task to run
+ * @returns What the task ended as
+ */
+async function attempt<Task>(run: (task: Task) => Promise<RunOutcome>, task: Task): Promise<RunOutcome> {
+  try {
+    return await run(task)
+  } catch (error) {
+    return { outcome: Outcome.Failure, exitCode: null, log: null, detail: String(error) }
+  }
+}
+
+/**
+ * Runs a schedule to completion, giving every task a result whatever order the tasks are listed
+ * in; a runner that throws or rejects fails its task, not the schedule.
  *
  * @param options - The tasks, the budgets, the runner and the hooks
  * @returns Every task's result, by id
@@ -129,7 +145,7 @@ export async function runSchedule<Task extends ScheduleTask>(options: ScheduleOp
     options.onStart?.(task)
     running.set(
       task.id,
-      options.run(task).then((outcome) => {
+      attempt(options.run, task).then((outcome) => {
         slots[task.weight] -= 1
         running.delete(task.id)
         const endedAt = now()
@@ -147,16 +163,21 @@ export async function runSchedule<Task extends ScheduleTask>(options: ScheduleOp
     )
   }
   while (pending.size > 0 || running.size > 0) {
-    for (const task of [...pending.values()]) {
-      if (options.signal?.aborted === true) {
-        pending.delete(task.id)
-        finish(task, unrun(task.id, Outcome.Cancelled, `${PipelineRule.Cancelled}: the run was interrupted before the task started`))
-        continue
-      }
-      const failed = task.needs.find((need) => results.has(need) && results.get(need)?.outcome !== Outcome.Success)
-      if (failed !== undefined) {
-        pending.delete(task.id)
-        finish(task, unrun(task.id, Outcome.Skipped, `${PipelineRule.PrerequisiteFailed}: ${failed}`))
+    // why: a dependent can be listed before the prerequisite it waits on, so the pass repeats until it skips nothing
+    for (let settled = false; !settled; ) {
+      settled = true
+      for (const task of [...pending.values()]) {
+        if (options.signal?.aborted === true) {
+          pending.delete(task.id)
+          finish(task, unrun(task.id, Outcome.Cancelled, `${PipelineRule.Cancelled}: the run was interrupted before the task started`))
+          continue
+        }
+        const failed = task.needs.find((need) => results.has(need) && results.get(need)?.outcome !== Outcome.Success)
+        if (failed !== undefined) {
+          pending.delete(task.id)
+          finish(task, unrun(task.id, Outcome.Skipped, `${PipelineRule.PrerequisiteFailed}: ${failed}`))
+          settled = false
+        }
       }
     }
     const ready = [...pending.values()]

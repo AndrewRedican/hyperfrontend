@@ -1,5 +1,6 @@
 import type { RunOutcome } from './execute'
 import type { ScheduleResult, ScheduleTask } from './schedule'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createDeferred, describe, expect, it, sleep } from '@hyperfrontend/testing'
 import { runSchedule, validateSchedule } from './schedule'
@@ -85,6 +86,59 @@ describe('runSchedule', () => {
       run: immediate,
     })
     expect(outcomes(results)).toEqual(['a failure', 'b skipped', 'c skipped', 'd success'])
+  })
+
+  it('skips every dependent of a deep failure when dependents are listed before their prerequisites', async () => {
+    const results = await runSchedule({
+      tasks: [task('e', ['d']), task('d', ['c']), task('c', ['b']), task('b', ['a'], { ends: 'failure' }), task('a'), task('f')],
+      parallel: 1,
+      heavy: 1,
+      run: immediate,
+    })
+    expect(outcomes(results)).toEqual(['a success', 'b failure', 'c skipped', 'd skipped', 'e skipped', 'f success'])
+  })
+
+  it('fails a task whose runner rejects, naming the error, and runs the rest', async () => {
+    const results = await runSchedule({
+      tasks: [task('a'), task('b', ['a']), task('c')],
+      parallel: 1,
+      heavy: 1,
+      now: () => 0,
+      run: async (item) => {
+        if (item.id === 'a') throw createError('boom')
+        return immediate(item)
+      },
+    })
+    expect({ a: results.get('a'), all: outcomes(results) }).toEqual({
+      a: { id: 'a', outcome: 'failure', exitCode: null, detail: 'Error: boom', startedAt: 0, endedAt: 0, durationMs: 0, log: null },
+      all: ['a failure', 'b skipped', 'c success'],
+    })
+  })
+
+  it('fails a task whose runner throws synchronously, naming the error, and runs the rest', async () => {
+    const results = await runSchedule({
+      tasks: [task('a'), task('b', ['a']), task('c')],
+      parallel: 1,
+      heavy: 1,
+      now: () => 0,
+      run: (item) => {
+        if (item.id === 'a') throw createError('thrown before any promise')
+        return immediate(item)
+      },
+    })
+    expect({ a: results.get('a'), all: outcomes(results) }).toEqual({
+      a: {
+        id: 'a',
+        outcome: 'failure',
+        exitCode: null,
+        detail: 'Error: thrown before any promise',
+        startedAt: 0,
+        endedAt: 0,
+        durationMs: 0,
+        log: null,
+      },
+      all: ['a failure', 'b skipped', 'c success'],
+    })
   })
 
   it('names the prerequisite that failed', async () => {
