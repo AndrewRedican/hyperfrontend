@@ -1,5 +1,4 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "tool-media",
   "description": "Configuration-driven recorder that captures browser and terminal sessions and emits size-budgeted GIFs and stills.",
   "sourceRoot": "{projectRoot}/src",
@@ -8,7 +7,6 @@
   "targets": {
     "media": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts record",
         "cwd": "tools/media"
@@ -16,7 +14,6 @@
     },
     "shot": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts shot",
         "cwd": "tools/media"
@@ -24,7 +21,6 @@
     },
     "preview": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts preview",
         "cwd": "tools/media"
@@ -32,7 +28,6 @@
     },
     "check": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts check",
         "cwd": "tools/media"
@@ -40,7 +35,6 @@
     },
     "doctor": {
       "executor": "nx:run-commands",
-      "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts doctor",
         "cwd": "tools/media"

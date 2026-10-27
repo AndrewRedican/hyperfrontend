@@ -9,8 +9,6 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 interface Target {
   /** The executor that runs it. */
   executor?: string
-  /** Whether Nx may replay a cached run instead of running it. */
-  cache?: boolean
   /** Targets that run first. */
   dependsOn?: readonly unknown[]
   /** What the executor is handed. */
@@ -31,7 +29,7 @@ const GENERATING = ['media', 'shot', 'preview']
 describe('the recorder project', () => {
   it('generates media only through targets someone runs by hand', () => {
     expect(entries(project.targets).filter(([, target]) => target.options?.command?.includes('src/cli/main.ts') === true)).toEqual(
-      expect.arrayContaining(GENERATING.map((name) => [name, expect.objectContaining({ executor: 'nx:run-commands', cache: false })]))
+      expect.arrayContaining(GENERATING.map((name) => [name, expect.objectContaining({ executor: 'nx:run-commands' })]))
     )
   })
 
@@ -41,9 +39,5 @@ describe('the recorder project', () => {
 
   it('never runs a generating target because another target ran', () => {
     expect(entries(project.targets).filter(([, target]) => target.dependsOn !== undefined)).toEqual([])
-  })
-
-  it('never caches a generating run, because two runs of one scene differ', () => {
-    expect(GENERATING.map((name) => [name, project.targets[name]?.cache])).toEqual(GENERATING.map((name) => [name, false]))
   })
 })
