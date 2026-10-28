@@ -5,8 +5,9 @@
  */
 
 import type { Node } from '../../code/model'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '../../engine/rule'
-import { sameTokens } from './shared/tokens'
+import { tokenKey } from './shared/tokens'
 
 export default defineRule<undefined, Node>({
   id: 'no-duplicate-case',
@@ -14,14 +15,16 @@ export default defineRule<undefined, Node>({
   fixable: false,
   create: (context) => ({
     SwitchStatement(node) {
-      const seen: Node[] = []
+      // why: keyed by what is written, a switch of thousands of cases costs one lookup per case rather than a comparison against every earlier one.
+      const seen = createSet<string>()
       for (const switchCase of node.cases as readonly Node[]) {
         const test = switchCase.test as Node | null
         if (test === null) continue
-        if (seen.some((earlier) => sameTokens(context.tree, context.file, earlier, test))) {
+        const key = tokenKey(context.tree, context.file, test)
+        if (seen.has(key)) {
           context.report({ start: switchCase.start, end: switchCase.end, message: 'Duplicate case label.' })
         } else {
-          seen.push(test)
+          seen.add(key)
         }
       }
     },

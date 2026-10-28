@@ -156,3 +156,11 @@ describe('findVariable', () => {
     expect(findVariable(inner as never, 'b')).toBeNull()
   })
 })
+
+describe('analyzeScopes on a script of many unresolved references', () => {
+  it('leaves more references through the global scope than one call accepts as arguments', () => {
+    const language = { ...DEFAULT_LANGUAGE, sourceType: 'script' as const }
+    const tree = parseCode('g();'.repeat(200000), '.js', 'script').tree as Node
+    expect(analyzeScopes(tree, language).global.through).toHaveLength(200000)
+  })
+})

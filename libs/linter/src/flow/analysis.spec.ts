@@ -57,3 +57,17 @@ describe('flowAnalysisOf', () => {
     expect(flowAnalysisOf(context(tree))).toBe(flowAnalysisOf(context(tree)))
   })
 })
+
+describe('analyzeFlow on a program of many segments', () => {
+  it('ends a path in more heads than one call accepts as arguments', () => {
+    let cases = ''
+    for (let index = 0; index < 200000; index += 1) cases += `case ${index}: break;`
+    const tree = parseCode(`function f(x) { switch (x) { ${cases} } }`, '.js').tree as Node
+    expect(analyzeFlow(tree).paths[1]?.final.length).toBeGreaterThanOrEqual(200000)
+  })
+
+  it('carries more segments than one call accepts from a catch block to the enclosing try', () => {
+    const tree = parseCode(`try { try {} catch (e) { ${'if (x) {}'.repeat(200000)} } } catch {}`, '.js').tree as Node
+    expect(analyzeFlow(tree).paths[0]?.segments.length).toBeGreaterThan(200000)
+  })
+})

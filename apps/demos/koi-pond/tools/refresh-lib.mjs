@@ -200,7 +200,7 @@ function check() {
     rmSync(temp, { recursive: true, force: true })
   }
   if (failures.length > 0) {
-    process.stderr.write(`${failures.join('\n')}\nRun: npx nx run demo-koi-lib:refresh\n`)
+    process.stderr.write(`${failures.join('\n')}\nRun: npm run hf -- run-many -t refresh -p demo-koi-lib\n`)
     process.exit(1)
   }
   process.stdout.write('Koi lib tarball and consumer locks are in sync\n')

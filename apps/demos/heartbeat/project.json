@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-heartbeat",
   "description": "Heartbeat demonstration — an anatomical heart built as a self-contained hyperfrontend feature (React), observed same-origin by a vanilla-TS ECG host page.",
   "sourceRoot": "apps/demos/heartbeat/src",
@@ -35,8 +34,6 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
-      "cache": false,
-      "outputs": ["{workspaceRoot}/dist/apps/demos/heartbeat/app"],
       "options": {
         "command": "npm run build"
       }
@@ -52,7 +49,6 @@
     "pack-shell": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
-      "outputs": ["{workspaceRoot}/dist/apps/demos/heartbeat/shell"],
       "options": {
         "command": "npx hf build --ci --out ../../../dist/apps/demos/heartbeat/shell",
         "cwd": "apps/demos/heartbeat"

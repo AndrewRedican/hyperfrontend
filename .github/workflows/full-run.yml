@@ -1,0 +1,29 @@
+name: full-run
+
+on:
+  schedule:
+    # Weekly, Monday early morning UTC: the merges of the week are on main and
+    # nothing else runs at that hour.
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+
+# The one job dispatches the ci workflow; nothing is written to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: full-run
+  cancel-in-progress: false
+
+jobs:
+  full-run:
+    name: full-run
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # why: dispatches the ci workflow with every task of every project
+    steps:
+      - name: Run every task of every project on main
+        # why: the pull-request and main plans run what a change reaches; this weekly run is the net under the narrower selection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci-main.yml --repo "$GITHUB_REPOSITORY" --ref main -f full=true

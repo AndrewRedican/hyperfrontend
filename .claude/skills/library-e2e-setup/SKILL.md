@@ -48,7 +48,7 @@ Generator creates: `project.json`, `package.json`, `tsconfig.json`, `src/{esm,cj
 ## Run
 
 ```bash
-nx e2e e2e-lib-<name>
+npm run hf -- run-many -t e2e -p e2e-lib-<name>
 ```
 
 ```

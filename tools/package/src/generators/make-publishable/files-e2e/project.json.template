@@ -1,5 +1,4 @@
 {
-  "$schema": "<%= e2eOffsetFromRoot %>node_modules/nx/schemas/project-schema.json",
   "name": "<%= e2eProjectName %>",
   "description": "E2E tests for <%= packageName %> package outputs",
   "sourceRoot": "{projectRoot}/src",

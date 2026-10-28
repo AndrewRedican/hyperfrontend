@@ -62,7 +62,7 @@ Inspect each low-count entry (`git grep -n -F "$pkg"`):
 
 ```bash
 mv node_modules/ts-node /tmp/ts-node-bak
-npx nx test lib-json-utils --skipNxCache   # narrowest consuming target
+npm run hf -- run lib-json-utils:test   # narrowest consuming target
 mv /tmp/ts-node-bak node_modules/ts-node
 ```
 
@@ -70,7 +70,7 @@ Failure naming the package → keep. Clean pass → removable.
 
 ## Redundant direct declarations
 
-Other parents in `npm ls` (deduped) → direct entry redundant; package survives its removal (`@nx/js` root, `vue-eslint-parser` clock). Keep deliberate version pins.
+Other parents in `npm ls` (deduped) → direct entry redundant; package survives its removal (`vue-eslint-parser` clock). Keep deliberate version pins.
 
 ## After editing package.json
 
@@ -83,11 +83,11 @@ Inert-override removal = zero lock churn. Non-empty diff → not inert; stop, re
 
 ## Verify
 
-| Audited   | Commands                                                                                                    |
-| --------- | ----------------------------------------------------------------------------------------------------------- |
-| Root      | `npx nx test lib-json-utils --skipNxCache` (jest + ts-node + ts-jest)                                       |
-| docs-site | `npx tsc --noEmit` + `node ../../tools/lint/bin/lint.ts package.json` — **never `nx lint docs-site`** (OOM) |
-| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`                              |
+| Audited   | Commands                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Root      | `npm run hf -- run lib-json-utils:test`                                                                                   |
+| docs-site | `npx tsc --noEmit` + `node ../../tools/lint/bin/lint.ts package.json`; **never `npm run hf -- run docs-site:lint`** (OOM) |
+| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`                                            |
 
 Removed a `@types/*` → type-check mandatory. Leave everything uncommitted.
 

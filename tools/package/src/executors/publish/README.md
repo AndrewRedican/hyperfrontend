@@ -25,13 +25,13 @@ The `@hyperfrontend/package:publish` executor publishes built library packages t
 
 ```bash
 # Publish a single library
-npx nx publish lib-cryptography
+npm run hf -- run-many -t publish -p lib-cryptography
 
 # Preview what would be published
-npx nx publish lib-cryptography --dryRun
+npm run hf -- run-many -t publish -p lib-cryptography --dryRun
 
 # Publish all affected libraries
-npx nx affected -t publish --base=main
+npm run hf -- affected -t publish --base=main
 ```
 
 ---
@@ -42,20 +42,20 @@ npx nx affected -t publish --base=main
 
 ```bash
 # Publish to npm
-npx nx publish lib-cryptography
+npm run hf -- run-many -t publish -p lib-cryptography
 
 # Publish with a specific tag
-npx nx publish lib-cryptography --tag=beta
+npm run hf -- run-many -t publish -p lib-cryptography --tag=beta
 
 # Publish with restricted access (private package)
-npx nx publish lib-cryptography --access=restricted
+npm run hf -- run-many -t publish -p lib-cryptography --access=restricted
 ```
 
 ### Dry Run
 
 ```bash
 # See what would be published without actually publishing
-npx nx publish lib-cryptography --dryRun
+npm run hf -- run-many -t publish -p lib-cryptography --dryRun
 ```
 
 Output shows:
@@ -69,14 +69,14 @@ Output shows:
 
 ```bash
 # Publish to a private registry
-npx nx publish lib-cryptography --registry=https://registry.mycompany.com
+npm run hf -- run-many -t publish -p lib-cryptography --registry=https://registry.mycompany.com
 ```
 
 ### With 2FA
 
 ```bash
 # Publish with one-time password
-npx nx publish lib-cryptography --otp=123456
+npm run hf -- run-many -t publish -p lib-cryptography --otp=123456
 ```
 
 ---
@@ -85,13 +85,14 @@ npx nx publish lib-cryptography --otp=123456
 
 All options can be passed via CLI flags or configured in `project.json`:
 
-| Option     | Type    | Default    | Description                                   |
-| ---------- | ------- | ---------- | --------------------------------------------- |
-| `dryRun`   | boolean | `false`    | Preview publish without actually publishing   |
-| `registry` | string  | npm config | Custom npm registry URL                       |
-| `tag`      | string  | `latest`   | npm dist-tag (e.g., `latest`, `next`, `beta`) |
-| `access`   | string  | `public`   | Access level: `public` or `restricted`        |
-| `otp`      | string  | -          | One-time password for npm 2FA                 |
+| Option       | Type    | Default    | Description                                                                                                                         |
+| ------------ | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `dryRun`     | boolean | `false`    | Preview publish without actually publishing                                                                                         |
+| `registry`   | string  | npm config | Custom npm registry URL                                                                                                             |
+| `tag`        | string  | `latest`   | npm dist-tag (e.g., `latest`, `next`, `beta`)                                                                                       |
+| `access`     | string  | `public`   | Access level: `public` or `restricted`                                                                                              |
+| `otp`        | string  | -          | One-time password for npm 2FA                                                                                                       |
+| `provenance` | boolean | `false`    | Publish with `--provenance`, signing an attestation of the build (needs an OIDC token, as on GitHub Actions with `id-token: write`) |
 
 ---
 
@@ -162,7 +163,7 @@ In CI, set this as a secret:
 - name: Publish
   env:
     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  run: npx nx publish lib-cryptography
+  run: npm run hf -- run-many -t publish -p lib-cryptography
 ```
 
 ---
@@ -193,8 +194,8 @@ publish:
         registry-url: 'https://registry.npmjs.org'
 
     - run: npm ci
-    - run: npx nx build lib-cryptography
-    - run: npx nx publish lib-cryptography
+    - run: npm run hf -- run lib-cryptography:build
+    - run: npm run hf -- run lib-cryptography:publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
@@ -207,7 +208,7 @@ publish:
 
 **Cause:** Package hasn't been built yet.
 
-**Solution:** Run `npx nx build <project>` first, or add `dependsOn: ["build"]` to the publish target.
+**Solution:** Run `npm run hf -- run <project>:build` first, or run the publish through `npm run hf -- run-many -t publish -p <project>`, which builds first because the publish target depends on `build`.
 
 ### "package.json not found in dist"
 

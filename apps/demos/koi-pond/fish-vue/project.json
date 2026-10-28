@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-koi-fish-vue",
   "description": "Koi pond — the Vue koi, a standalone hostee feature rendering one fish inside a host-owned transparent full-viewport frame.",
   "sourceRoot": "apps/demos/koi-pond/fish-vue/src",
@@ -35,8 +34,6 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
-      "cache": false,
-      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site/fish-vue"],
       "options": {
         "command": "npm run build"
       }
@@ -52,7 +49,6 @@
     "pack-shell": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
-      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/fish-shell/vue"],
       "options": {
         "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/vue",
         "cwd": "apps/demos/koi-pond/fish-vue"

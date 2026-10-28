@@ -15,10 +15,9 @@ import { defineRule } from '@hyperfrontend/linter'
 import { isString, rootObject } from '@hyperfrontend/linter/helpers'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { eq, parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
-import { workspaceGraph } from '../../graph/build.ts'
-import { readJson } from '../../graph/workspace.ts'
+import { readJson, selfInputs, workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
-import { inputFiles, selfInputs, usedPackages } from './shared/dependencies.ts'
+import { inputFiles, usedPackages } from './shared/dependencies.ts'
 
 /** The rule's options. */
 export interface DependencyChecksOptions {

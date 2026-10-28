@@ -77,4 +77,4 @@ Test each sentence: delete it. Reader loses something they need now? Keep it.
 - [ ] Each section within budget; no filler from the list above
 - [ ] Quick Start verified against the published package
 - [ ] No em dashes (`grep —`)
-- [ ] `npx nx lint:all` passes
+- [ ] `npm run hf -- run @hyperfrontend/workspace:lint:all` passes

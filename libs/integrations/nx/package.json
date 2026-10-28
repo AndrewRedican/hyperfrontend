@@ -1,0 +1,15 @@
+{
+  "name": "@hyperfrontend/integration-nx",
+  "version": "0.0.0",
+  "description": "The workspace's Nx boundary: generated upstream-compatible declarations, the owned configuration vocabulary, the manifest shapes Nx discovers, and the only adapters that call Nx.",
+  "license": "MIT",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    "./adapters": "./src/adapters/index.js",
+    "./compat": "./src/compat/index.js",
+    "./manifests": "./src/manifests/index.js",
+    "./model": "./src/model/index.js",
+    "./package.json": "./package.json"
+  }
+}

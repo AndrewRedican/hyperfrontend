@@ -1,8 +1,7 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
 import type { VersionBatchExecutorSchema } from './schema'
-import { createProjectGraphAsync } from '@nx/devkit'
-import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
+import { workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { getLogger } from '../version/lib/logger'
 import { runVersionForProject } from '../version/lib/run-version-for-project'
@@ -92,12 +91,12 @@ export default async function versionBatchExecutor(
       return { success: false }
     }
 
-    const projectGraph = await createProjectGraphAsync()
-    logger.debug(`Loaded project graph with ${keys(projectGraph.nodes).length} nodes`)
+    const graph = workspaceGraph(workspaceRoot)
+    logger.debug(`Loaded workspace graph with ${graph.projects.size} projects`)
 
     // why: a forced bump names its libraries, so affected detection is not consulted for it
-    const affected = releaseAs === undefined ? await getAffectedLibraries(workspaceRoot, projectGraph, base, head) : []
-    const selection = selectLibraries(libraries, releaseAs, affected, (name) => hasVersionTarget(projectGraph, name))
+    const affected = releaseAs === undefined ? await getAffectedLibraries(workspaceRoot, graph, base, head) : []
+    const selection = selectLibraries(libraries, releaseAs, affected, (name) => hasVersionTarget(graph, name))
     if (selection.ok === false) {
       logger.error(selection.reason)
       return { success: false }
@@ -132,8 +131,8 @@ export default async function versionBatchExecutor(
         break
       }
 
-      const project = projectGraph.nodes[lib]
-      if (!project) {
+      const project = graph.projects.get(lib)
+      if (project === undefined) {
         logger.warn(`Project ${lib} not found in graph, skipping`)
         continue
       }
@@ -144,8 +143,8 @@ export default async function versionBatchExecutor(
         const result = await runVersionForProject({
           projectName: lib,
           workspaceRoot,
-          projectRoot: project.data.root,
-          projectGraph,
+          projectRoot: project.root,
+          projectGraph: context.projectGraph,
           skipCommit: true,
           skipTag: true,
           dryRun: false,

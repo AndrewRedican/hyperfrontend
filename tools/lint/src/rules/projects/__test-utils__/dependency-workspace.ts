@@ -1,7 +1,8 @@
 /**
  * A disposable git workspace for the dependency specs: a buildable library importing an npm
  * package, a buildable and an unbuildable workspace library, a missing package, a nested install,
- * a library pinning a prerelease beside a package installed at no version, and the root project.
+ * a load whose specifier is an expression, a library pinning a prerelease beside a package installed
+ * at no version, and the root project.
  *
  * @module rules/projects/__test-utils__/dependency-workspace
  */
@@ -51,6 +52,7 @@ const FILES: Readonly<Record<string, string>> = {
   'libs/lib/src/index.ts': "import 'left-pad'\nimport 'node:fs'\nimport 'unknown-package'\nimport '@ws/lib'\nimport '../../../root-file'\n",
   'libs/lib/src/dep-user.ts': "import { dep } from '@ws/dep'\nimport { nobuild } from '@ws/nobuild'\nexport const both = [dep, nobuild]\n",
   'libs/lib/src/nested/use.ts': "import 'inner'\nimport 'hoisted'\nimport 'versionless'\n",
+  'libs/lib/src/loader.ts': 'export const load = (name: string) => import(name)\n',
   'libs/lib/src/nested/node_modules/inner/package.json': stringify({ name: 'inner', version: '0.0.1' }),
   'libs/lib/src/nested/node_modules/hoisted/package.json': stringify({ name: 'hoisted', version: '9.9.9' }),
   'libs/lib/src/nested/node_modules/versionless/package.json': stringify({ name: 'versionless' }),

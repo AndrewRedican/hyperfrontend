@@ -1,4 +1,4 @@
-import type { ProjectGraph } from '@nx/devkit'
+import type { ProjectGraph } from '@hyperfrontend/integration-nx/compat'
 import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning/flow/models'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'

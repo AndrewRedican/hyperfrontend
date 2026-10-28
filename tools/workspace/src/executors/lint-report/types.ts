@@ -59,7 +59,7 @@ export interface FileStats {
  * Project whose lint task failed without reporting any lint error.
  */
 export interface CrashedProject {
-  /** Nx project name. */
+  /** Project name. */
   project: string
 
   /** Phrase describing how the lint command ended, null when the project was not rerun on its own. */

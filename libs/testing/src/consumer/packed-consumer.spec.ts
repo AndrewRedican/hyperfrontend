@@ -116,6 +116,17 @@ describe('createPackedConsumer', () => {
     )
   })
 
+  it('hands over an argument that would break a script it was spliced into, under both module systems', () => {
+    const text = '\'"`${x}` */ </script> \\ \u2028\u2029'
+    assert.deepEqual(
+      [
+        consumer.run((args: { text: string }) => args.text, { args: { text } }),
+        consumer.run((args: { text: string }) => args.text, { args: { text }, kind: 'require' }),
+      ],
+      [text, text]
+    )
+  })
+
   it('carries an undefined result as null', () => {
     assert.equal(
       consumer.run(() => undefined),

@@ -1,6 +1,6 @@
 # Project rules
 
-Lint rules that read the workspace's project graph, the one Nx would build, computed by the linter itself (`src/graph/`); the rules live in `src/rules/projects/`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
+Lint rules that read the workspace's project graph, the one Nx would build, built by `@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`); the rules live in `src/rules/projects/`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
 
 | Rule                                               | Checks                                                              | Files                        |
 | -------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
@@ -10,13 +10,13 @@ Lint rules that read the workspace's project graph, the one Nx would build, comp
 
 ## The project graph
 
-`src/graph/` builds, once per lint process, the graph Nx would build, and the rules read it:
+`@hyperfrontend/workspace/graph` (`tools/workspace/src/graph/`) builds, once per lint process, the graph Nx would build, and the rules read it:
 
 - **Projects**: every directory holding a `project.json` or a `package.json` among the files Git tracks or would track, less what `.nxignore` excludes. Names, types, tags and targets follow Nx: a `package.json` beside a `project.json` adds its scripts as targets and `npm:` tags from `private` and `keywords`.
 - **npm packages**: the root `package-lock.json`, one node per name and version.
 - **Dependencies**: each code file's imports, read with the linter's own parser under Nx's rules, so a `require` inside a function or an `import()` counts as dynamic exactly when Nx counts it so; each `package.json`'s dependencies; and `implicitDependencies`.
 
-Imports are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. Like Nx's cached graph, the graph reflects the files on disk, not unsaved editor buffers. `node tools/lint/scripts/graph-oracle.ts --graph <file written by nx graph --file>` compares it with Nx's.
+Imports are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. Like Nx's cached graph, the graph reflects the files on disk, not unsaved editor buffers.
 
 ## module-boundaries
 

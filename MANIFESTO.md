@@ -22,7 +22,7 @@ If this sounds idealistic, that's fine. Good software often starts that way.
 
 ## Scope Boundaries
 
-I'm one person, and even with a small group of future maintainers, there's only so much we can realistically build and maintain well. These boundaries exist to keep the project focused and sustainable.
+I'm one person, and even with a small group of future maintainers, there's only so much we can realistically build and maintain well. These boundaries exist to [keep the project focused and sustainable](https://www.hyperfrontend.dev/articles/complete-architectural-sovereignty/#ownership-is-not-an-obligation-to-everyone).
 
 ### Framework-Specific Adapters
 
@@ -176,7 +176,7 @@ tarball or package, read its `metadata.json`, and scaffold a typed integration p
 host's own idiom:
 
 ```bash
-npx nx g @hyperfrontend/features:add --feature=my-feature --host=my-host
+npx hf add my-feature --host=my-host
 ```
 
 The feature side of this already exists: `hf init`, `hf build`, and the Nx `feature` generator and

@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-cryptography",
   "description": "E2E tests for @hyperfrontend/cryptography package outputs",
   "sourceRoot": "{projectRoot}/src",

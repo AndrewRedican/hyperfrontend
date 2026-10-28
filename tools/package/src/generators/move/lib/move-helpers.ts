@@ -1,12 +1,49 @@
-import type { Tree } from '@nx/devkit'
+import type { NamedJson } from '../../../lib/json-updaters'
+import type { Tree } from '../../../lib/tree/tree'
 import type { MoveGeneratorSchema } from '../schema'
-import { joinPathFragments, names, offsetFromRoot, readProjectConfiguration, updateJson, visitNotIgnoredFiles } from '@nx/devkit'
 import { updateContentReferences as updateContentRefsShared } from '../../../lib/content-updaters'
 import { replaceDescriptionPackageName } from '../../../lib/json-updaters'
 import { derivePackageName, deriveProjectNameFromPath, getDirectoryName } from '../../../lib/naming-utils'
 import { getPackageNameFromProject } from '../../../lib/package-json-utils'
 import { updateProjectReferences as updateProjectRefsShared } from '../../../lib/project-references'
+import { names } from '../../../lib/tree/names'
+import { joinPathFragments, offsetFromRoot } from '../../../lib/tree/paths'
+import { readProjectConfiguration } from '../../../lib/tree/projects'
+import { updateJson } from '../../../lib/tree/tree'
+import { visitNotIgnoredFiles } from '../../../lib/tree/walk'
 import { moveTsConfigPaths } from '../../../lib/tsconfig-utils'
+
+/** A bundle's options as far as its global name goes. */
+interface GlobalNamed {
+  /** The name the bundle registers on the global object */
+  globalName?: string
+}
+
+/** The bundles of a build as far as their global names go. */
+interface BundleOptions {
+  /** The iife bundle */
+  iife?: GlobalNamed
+  /** The umd bundle */
+  umd?: GlobalNamed
+}
+
+/** A build target as far as its bundles go. */
+interface BuildTarget {
+  /** Its options */
+  options?: BundleOptions
+}
+
+/** The targets of a moved project as far as the move rewrites them. */
+interface MovedTargets {
+  /** The build target */
+  build?: BuildTarget
+}
+
+/** A moved project.json as far as the move rewrites it. */
+interface MovedProjectJson extends NamedJson {
+  /** The targets */
+  targets?: MovedTargets
+}
 
 /** Normalized options for move generator. */
 export interface NormalizedOptions {
@@ -144,9 +181,7 @@ export function deleteDirectory(tree: Tree, directory: string): void {
 export function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
   const projectJsonPath = joinPathFragments(options.newProjectRoot, 'project.json')
 
-  updateJson(tree, projectJsonPath, (json) => {
-    json.$schema = `${options.newOffsetFromRoot}node_modules/nx/schemas/project-schema.json`
-
+  updateJson<MovedProjectJson>(tree, projectJsonPath, (json) => {
     if (options.updateName) {
       json.name = options.newProjectName
       replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
@@ -179,7 +214,7 @@ export function updatePackageJson(tree: Tree, options: NormalizedOptions): void 
     return
   }
 
-  updateJson(tree, packageJsonPath, (json) => {
+  updateJson<NamedJson>(tree, packageJsonPath, (json) => {
     if (options.updateName) {
       json.name = options.newPackageName
       replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)

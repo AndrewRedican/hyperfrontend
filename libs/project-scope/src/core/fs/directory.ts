@@ -1,5 +1,6 @@
-import { readdirSync, mkdirSync, rmSync, existsSync } from 'node:fs'
+import { readdirSync, mkdirSync, rmSync, existsSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createScopedLogger } from '../logger'
 import { createFileSystemError } from './read'
 import { isDirectory as checkIsDirectory } from './stat'
@@ -117,6 +118,8 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
   })
 
   const results: DirectoryEntry[] = []
+  // why: a followed symlink can lead back into a directory already walked; the real paths entered tell a revisit from a first visit.
+  const visited = createSet<string>()
 
   /**
    * Recursively walk directories and collect entries.
@@ -130,13 +133,21 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
       return
     }
 
+    let realPath: string
     let entries: DirectoryEntry[]
     try {
+      realPath = realpathSync(currentPath)
       entries = readDirectory(currentPath)
     } catch {
       fsDirLogger.debug('Skipping inaccessible directory', { path: currentPath })
       return
     }
+
+    if (visited.has(realPath)) {
+      fsDirLogger.debug('Skipping directory already walked', { path: currentPath, realPath })
+      return
+    }
+    visited.add(realPath)
 
     for (const entry of entries) {
       if (!includeHidden && entry.name.startsWith('.')) {

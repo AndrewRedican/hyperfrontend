@@ -33,10 +33,11 @@ export const REQUIRE_JSDOC = {
 /** The tag rules of the libraries' dependency graph. */
 export const DEPENDENCY_CONSTRAINTS = [
   { sourceTag: 'type:core', onlyDependOnLibsWithTags: [] },
-  { sourceTag: 'type:util', onlyDependOnLibsWithTags: ['type:core', 'type:util'] },
+  { sourceTag: 'type:util', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:integration'] },
   { sourceTag: 'type:feature', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:feature'] },
-  { sourceTag: 'type:protocol', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:protocol'] },
+  { sourceTag: 'type:protocol', onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:protocol', 'type:integration'] },
   { sourceTag: 'type:app', onlyDependOnLibsWithTags: ['type:util'] },
+  { sourceTag: 'type:integration', onlyDependOnLibsWithTags: ['type:core', 'type:util'] },
   { sourceTag: 'type:demo', onlyDependOnLibsWithTags: [] },
   { sourceTag: 'scope:standalone', onlyDependOnLibsWithTags: [] },
 ]

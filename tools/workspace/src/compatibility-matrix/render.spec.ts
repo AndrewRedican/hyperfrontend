@@ -45,7 +45,7 @@ describe('renderCompatibilityDocument', () => {
 
     expect({ title: lines[0], note: lines[2] }).toEqual({
       title: '# Library Compatibility Matrix',
-      note: expect.stringMatching(/> Generated from each.*npx nx lint:all/),
+      note: expect.stringMatching(/> Generated from each.*npm run hf -- run @hyperfrontend\/workspace:lint:all/),
     })
   })
 

@@ -112,6 +112,8 @@ const DEFAULT_INSTALL_TIMEOUT = 300_000
 const DEFAULT_RUN_TIMEOUT = 120_000
 const WORK_DIR = '.hf-consumer'
 const KINDS: readonly ModuleKind[] = ['import', 'require']
+const ARGS_ENV = 'HF_CONSUMER_ARGS'
+const RESULT_ENV = 'HF_CONSUMER_RESULT'
 
 /**
  * Builds the arguments npm receives, quoted where a Windows shell is in the way.
@@ -236,17 +238,18 @@ function firstLines(stderr: string): string {
  *
  * @param kind - The module system of the script.
  * @param source - The function's source text.
- * @param args - The JSON text of the argument.
- * @param resultPath - Where the script writes the JSON result.
  * @returns The script's source.
  */
-function runnerSource(kind: ModuleKind, source: string, args: string, resultPath: string): string {
+function runnerSource(kind: ModuleKind, source: string): string {
+  // why: the argument and result paths arrive through the environment so no value but the function's own source is spliced into the script.
   // why: the result goes to a file rather than stdout so whatever the package under test prints cannot corrupt it.
-  const save = `(result) => writeFileSync(${JSON.stringify(resultPath)}, JSON.stringify(result === undefined ? null : result))`
+  const paths = `const { ${ARGS_ENV}: argsPath, ${RESULT_ENV}: resultPath } = process.env`
+  const call = `fn(JSON.parse(readFileSync(argsPath, 'utf8')))`
+  const save = `(result) => writeFileSync(resultPath, JSON.stringify(result === undefined ? null : result))`
   if (kind === 'import') {
-    return `import { writeFileSync } from 'node:fs'\nconst fn = (${source})\n;(${save})(await fn(${args}))\n`
+    return `import { readFileSync, writeFileSync } from 'node:fs'\n${paths}\nconst fn = (${source})\n;(${save})(await ${call})\n`
   }
-  return `'use strict'\nconst { writeFileSync } = require('node:fs')\nconst fn = (${source})\nPromise.resolve(fn(${args})).then(${save})\n`
+  return `'use strict'\nconst { readFileSync, writeFileSync } = require('node:fs')\n${paths}\nconst fn = (${source})\nPromise.resolve(${call}).then(${save})\n`
 }
 
 /**
@@ -289,9 +292,10 @@ export function createPackedConsumer(options: PackedConsumerOptions): PackedCons
     const kind = runOptions.kind ?? 'import'
     runs += 1
     const script = writeFile(root, join(WORK_DIR, `run-${runs}.${kind === 'import' ? 'mjs' : 'cjs'}`), '')
+    const argsPath = writeFile(root, join(WORK_DIR, `args-${runs}.json`), JSON.stringify(runOptions.args ?? null))
     const resultPath = join(root, WORK_DIR, `result-${runs}.json`)
-    writeFileSync(script, runnerSource(kind, fn.toString(), JSON.stringify(runOptions.args ?? null), resultPath))
-    const result = node([script], runOptions)
+    writeFileSync(script, runnerSource(kind, fn.toString()))
+    const result = node([script], { ...runOptions, env: { ...runOptions.env, [ARGS_ENV]: argsPath, [RESULT_ENV]: resultPath } })
     if (result.status !== 0) {
       throw new Error(`consumer.run: the child exited with ${result.status ?? 'a signal'}\n${result.stderr}`)
     }

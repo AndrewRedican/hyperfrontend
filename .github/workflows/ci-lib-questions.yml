@@ -2,7 +2,7 @@ name: lib-questions
 
 on:
   workflow_run:
-    workflows: [libraries]
+    workflows: [ci]
     types: [completed]
     branches: [main]
 

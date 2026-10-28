@@ -11,8 +11,6 @@ build/
 .turbo/
 /dist
 /coverage
-/.nx/cache
-/.nx/workspace-data
 
 # Package manager
 .npm/
@@ -40,9 +38,17 @@ LIBRARY_COMPATIBILITY.md
 # Changelogs
 **/CHANGELOG.md
 
-.nx/self-healing
 # Research notes kept verbatim as written (apps/docs-site/notes)
 apps/docs-site/notes/
 
 # Recorded scene files: their sha256 binds a media asset, so a reformat invalidates the recording
 tools/media/scenes/
+.hf/
+# Generated from upstream Nx sources by tools/workspace types-extract; checked byte for byte
+libs/integrations/nx/src/compat/executor.ts
+libs/integrations/nx/src/compat/graph.ts
+libs/integrations/nx/src/compat/tree.ts
+libs/integrations/nx/src/compat/plugin.ts
+libs/integrations/nx/src/compat/index.ts
+libs/integrations/nx/src/compat/REPORT.md
+libs/integrations/nx/src/compat/NOTICE.md

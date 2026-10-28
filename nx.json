@@ -1,12 +1,6 @@
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "parallel": 1,
-  "tui": {
-    "enabled": false
-  },
   "targetDefaults": {
     "lint": {
-      "cache": true,
       "inputs": [
         "default",
         "{workspaceRoot}/lint.config.ts",
@@ -16,13 +10,12 @@
         "{projectRoot}/lint.config.ts",
         "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
-        "{workspaceRoot}/tools/lint/config/**/*"
+        "{workspaceRoot}/tools/lint/config/**/*",
+        "{workspaceRoot}/tools/workspace/src/graph/**/*"
       ]
     },
     "@hyperfrontend/package:test": {
-      "cache": true,
-      "inputs": ["default", "^production"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "inputs": ["default", "^production"]
     },
     "version": {
       "executor": "@hyperfrontend/package:version",
@@ -35,6 +28,7 @@
       }
     },
     "version-check": {
+      "inputs": ["{projectRoot}/**/*"],
       "executor": "@hyperfrontend/package:version-check",
       "options": {
         "scopeFiltering": {
@@ -44,10 +38,9 @@
       }
     },
     "build": {
-      "cache": true,
       "inputs": [
         "default",
-        "^default",
+        "^production",
         "{workspaceRoot}/assets/media/*/*.json",
         {
           "projects": ["tool-package", "lib-builder"],
@@ -55,7 +48,6 @@
         }
       ],
       "executor": "@hyperfrontend/package:build",
-      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/{projectRoot}"
       }
@@ -65,17 +57,16 @@
       "executor": "@hyperfrontend/package:publish",
       "options": {
         "access": "public",
-        "tag": "latest"
+        "tag": "latest",
+        "provenance": true
       }
     },
     "typecheck": {
-      "cache": true,
-      "inputs": ["default", "^default"],
+      "inputs": ["default", "^production"],
       "executor": "@hyperfrontend/package:typecheck"
     },
     "audit": {
-      "cache": true,
-      "inputs": ["dependencyState", { "runtime": "date -u +%F" }],
+      "inputs": ["dependencyState"],
       "executor": "nx:run-commands",
       "options": {
         "command": "npm audit --audit-level=moderate",
@@ -108,18 +99,7 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
-  "pluginsConfig": {
-    "@nx/js": {
-      "analyzeSourceFiles": true
-    }
-  },
-  "plugins": [
-    {
-      "plugin": "./tools/lint/src/nx/plugin.ts",
-      "exclude": ["apps/demos/**/*"]
-    }
-  ],
-  "nxCloudId": "6991685ccc04119366337805",
-  "neverConnectToCloud": false,
-  "analytics": false
+  "lint": {
+    "exclude": ["apps/demos/**/*"]
+  }
 }

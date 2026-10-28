@@ -1,18 +1,26 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from '../../lib/tree/tree'
 import type { DocsCategory, EcosystemTierId } from './lib/library-facts'
 import type { CompatibilityProfile, MakePublishableGeneratorSchema } from './schema'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { formatFiles, generateFiles, names, offsetFromRoot, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '../../lib/logger'
 import { derivePackageName } from '../../lib/naming-utils'
 import { readPackageJsonInfo } from '../../lib/package-json-utils'
+import { formatFiles } from '../../lib/tree/format'
+import { names } from '../../lib/tree/names'
+import { joinPathFragments, offsetFromRoot } from '../../lib/tree/paths'
+import { readProjectConfiguration } from '../../lib/tree/projects'
+import { generateFiles } from '../../lib/tree/templates'
+import { updateJson } from '../../lib/tree/tree'
 import { defaultEcosystemTier } from './lib/library-facts'
 import { DEFAULT_NODE_ENGINE, DEFAULT_NPM_ENGINE, compactVersion, nodeFloorOf } from './lib/node-floor'
 import { collectLibraryFacts, registerLibrary } from './registrations'
+
+/** The generator's templates, relative to the workspace root. */
+const TEMPLATES = 'tools/package/src/generators/make-publishable'
 
 /**
  * The level a package's support for one runtime is declared at. Profiles only
@@ -73,6 +81,80 @@ const BROWSER_BUNDLE_FORMATS = ['iife', 'umd'] as const
 const SUPPORT_GLYPHS: Record<SupportLevel, string> = {
   full: '\u2705',
   none: '\u274c',
+}
+
+/**
+ * The parts of a project.json this generator rewrites.
+ */
+interface PublishableProjectJson {
+  /** The module-boundary tags */
+  tags?: string[]
+  /** The targets, by name */
+  targets?: Record<string, unknown>
+  /** Free-form metadata, the compatibility block among it */
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * The parts of a package.json this generator rewrites.
+ */
+interface PublishablePackageJson {
+  /** Whether npm refuses to publish the package */
+  private?: boolean
+  /** The license identifier */
+  license?: string
+  /** Whether a bundler may drop unused modules */
+  sideEffects?: boolean
+  /** The runtimes the package declares */
+  engines?: Record<string, string>
+  /** The exports map */
+  exports?: Record<string, unknown>
+  /** The npm keywords */
+  keywords?: string[]
+  /** Where sponsorship goes */
+  funding?: Funding
+}
+
+/**
+ * Where a package's sponsorship goes.
+ */
+interface Funding {
+  /** The platform */
+  type: string
+  /** The page */
+  url: string
+}
+
+/**
+ * The options of an e2e target as far as the bundle formats go.
+ */
+interface E2eOptions {
+  /** The bundle formats the suite loads */
+  formats?: string[]
+}
+
+/**
+ * The e2e target of a project, as far as its options go.
+ */
+interface E2eTarget {
+  /** Its options */
+  options: E2eOptions
+}
+
+/**
+ * The targets of an e2e project.
+ */
+interface E2eTargets {
+  /** The e2e target */
+  e2e: E2eTarget
+}
+
+/**
+ * The e2e project's project.json as far as the bundle formats go.
+ */
+interface E2eProjectJson {
+  /** The targets */
+  targets: E2eTargets
 }
 
 /**
@@ -188,17 +270,17 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
 function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
   const projectJsonPath = joinPathFragments(options.projectRoot, 'project.json')
 
-  updateJson(tree, projectJsonPath, (json) => {
-    const tags = (json.tags || []) as string[]
+  updateJson<PublishableProjectJson>(tree, projectJsonPath, (json) => {
+    const tags = json.tags ?? []
     const newTags = tags.filter((tag: string) => !tag.startsWith('scope:')).concat('scope:public')
     json.tags = newTags
 
-    const existingTargets = (json.targets ?? {}) as Record<string, unknown>
+    const existingTargets = json.targets ?? {}
 
     // why: metadata sits between tags and targets in every hand-written publishable project.json, and a new key only lands there if targets is removed and re-added after it
     delete json.targets
 
-    const metadata = (json.metadata ?? {}) as Record<string, unknown>
+    const metadata = json.metadata ?? {}
     // why: a re-run refreshes the environments and keeps what was added by hand beside them, such as the note
     json.metadata = {
       ...metadata,
@@ -258,12 +340,12 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): string {
   const packageJsonPath = joinPathFragments(options.projectRoot, 'package.json')
   let nodeEngine = DEFAULT_NODE_ENGINE
 
-  updateJson(tree, packageJsonPath, (json) => {
+  updateJson<PublishablePackageJson>(tree, packageJsonPath, (json) => {
     delete json.private
 
     json.license = json.license || 'MIT'
     json.sideEffects = false
-    const engines = (json.engines ?? {}) as Record<string, string>
+    const engines = json.engines ?? {}
     nodeEngine = engines['node'] ?? DEFAULT_NODE_ENGINE
     json.engines = {
       ...engines,
@@ -338,7 +420,7 @@ function createE2EProject(tree: Tree, options: NormalizedOptions, keepExisting: 
   const existingSpecs = BROWSER_BUNDLE_FORMATS.filter((format) =>
     tree.exists(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
   )
-  writeTemplates(tree, join(__dirname, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
+  writeTemplates(tree, join(tree.root, TEMPLATES, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
 
   if (options.compatibility.browser !== 'none') return
 
@@ -348,7 +430,7 @@ function createE2EProject(tree: Tree, options: NormalizedOptions, keepExisting: 
     tree.delete(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
   }
 
-  updateJson(tree, joinPathFragments(options.e2eProjectRoot, 'project.json'), (json) => {
+  updateJson<E2eProjectJson>(tree, joinPathFragments(options.e2eProjectRoot, 'project.json'), (json) => {
     json.targets.e2e.options.formats = ['cjs', 'esm']
     return json
   })
@@ -375,7 +457,7 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeF
     template: '',
   }
 
-  writeTemplates(tree, join(__dirname, 'files'), options.projectRoot, templateOptions, keepExisting)
+  writeTemplates(tree, join(tree.root, TEMPLATES, 'files'), options.projectRoot, templateOptions, keepExisting)
 }
 
 /**
@@ -393,7 +475,7 @@ function createCIWorkflow(tree: Tree, options: NormalizedOptions): void {
 
 on:
   workflow_run:
-    workflows: [libraries]
+    workflows: [ci]
     types: [completed]
     branches: [main]
 
@@ -413,8 +495,8 @@ jobs:
 }
 
 /**
- * Register the library everywhere the workspace lists its packages: the CI
- * workflows, the root README's packages table and the docs site.
+ * Register the library everywhere the workspace lists its packages: the main
+ * CI workflow, the root README's packages table and the docs site.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
@@ -444,12 +526,12 @@ function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
  */
 function recordReadmeMedia(options: NormalizedOptions): void {
   logger.info(
-    `Note: Record the package banner and runtime strip: npx nx media tool-media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
+    `Note: Record the package banner and runtime strip: npm run hf -- run tool-media:media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
   )
 }
 
 /**
- * Nx generator that converts an internal library to a publishable library.
+ * Generator that converts an internal library to a publishable library.
  *
  * This generator:
  * 1. Updates project.json with build, version, and publish targets, keeping any target it does not write
@@ -459,29 +541,29 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * 5. Generates publishable README with required structure, its Node.js badge reading the declared floor
  * 6. Creates E2E project in apps/package-e2e/
  * 7. Creates CI workflow status file
- * 8. Adds the path filter, matrix entry and coverage upload to the shared CI workflows
+ * 8. Adds the coverage upload to the main CI workflow
  * 9. Lists the package in the root README's packages table, in the order the docs-site index presents the packages
  * 10. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
  * 11. Names the one step left for a human: recording the readme media
  *
- * @param tree - The Nx virtual file system tree
+ * @param tree - The virtual file system tree
  * @param options - Configuration options
  * @returns A promise that resolves when the generator completes
  * @throws {Error} When no runtime compatibility profile was given.
  *
  * @example Make a library publishable
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=isomorphic
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=isomorphic
  * ```
  *
  * @example With custom global name and bundle entry
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
  * ```
  *
  * @example Placed on a chosen level of the docs-site hierarchy and section of its index
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
+ * npm run hf -- generate make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {

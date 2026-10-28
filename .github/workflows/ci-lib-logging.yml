@@ -1,10 +1,10 @@
 # Build status reporter for lib-logging
-# This workflow does NOT build - it reports status from ci-libraries.yml matrix build
+# This workflow does NOT build - it reports the outcome of the library's tasks in the ci workflow's results on main
 name: lib-logging
 
 on:
   workflow_run:
-    workflows: [libraries]
+    workflows: [ci]
     types: [completed]
     branches: [main]
 

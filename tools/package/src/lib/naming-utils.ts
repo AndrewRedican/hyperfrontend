@@ -1,5 +1,5 @@
 import { posix } from 'node:path'
-import { names } from '@nx/devkit'
+import { names } from './tree/names'
 
 /**
  * Extract the directory name from a full path.

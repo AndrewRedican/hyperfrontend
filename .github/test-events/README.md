@@ -30,12 +30,12 @@ npm install -g @openedition/act
 # Test the complete PR workflow
 act pull_request -W .github/workflows/ci-pr.yml -e .github/test-events/pr-opened.json
 
-# Test a specific job
-act pull_request -j setup -W .github/workflows/ci-pr.yml
-act pull_request -j format -W .github/workflows/ci-pr.yml
-act pull_request -j lint -W .github/workflows/ci-pr.yml
-act pull_request -j build -W .github/workflows/ci-pr.yml
-act pull_request -j test -W .github/workflows/ci-pr.yml
+# Test a specific job: plan checks formatting and plans the change,
+# environment runs the plan's typecheck, lint, test, build and e2e tasks
+act pull_request -j plan -W .github/workflows/ci-pr.yml
+act pull_request -j binary-budget -W .github/workflows/ci-pr.yml
+act pull_request -j version-check -W .github/workflows/ci-pr.yml
+act pull_request -j environment -W .github/workflows/ci-pr.yml
 ```
 
 ### Test Main Branch Workflow
@@ -45,27 +45,21 @@ act pull_request -j test -W .github/workflows/ci-pr.yml
 act push -W .github/workflows/ci-main.yml -e .github/test-events/push-main.json
 
 # Test a specific job
-act push -j format -W .github/workflows/ci-main.yml
-act push -j lint -W .github/workflows/ci-main.yml
-act push -j build -W .github/workflows/ci-main.yml
-act push -j test -W .github/workflows/ci-main.yml
+act push -j plan -W .github/workflows/ci-main.yml
 ```
 
 ### Test Custom Actions
 
 ```bash
-# Test setup-monorepo action
-act -j setup -W .github/workflows/ci-pr.yml
-
-# Test nx-affected action (requires a branch with changes)
-git checkout -b test-affected
+# Test setup-monorepo action and the plan (requires a branch with changes)
+git checkout -b test-plan
 # Make some changes
 git add .
 git commit -m "Test changes"
-act pull_request -j setup -W .github/workflows/ci-pr.yml
+act pull_request -j plan -W .github/workflows/ci-pr.yml
 
-# Test run-checks action
-act pull_request -j format -W .github/workflows/ci-pr.yml
+# Test version-check action
+act pull_request -j version-check -W .github/workflows/ci-pr.yml
 ```
 
 ### Test Security Workflow

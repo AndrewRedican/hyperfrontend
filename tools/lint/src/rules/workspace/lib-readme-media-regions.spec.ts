@@ -142,7 +142,7 @@ testRule(rule, {
         [0, MISSING_REGION.replaceAll('gamma', 'delta')],
         [
           1,
-          'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-delta. Record it: npx nx media tool-media --scene=banner-delta',
+          'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-delta. Record it: npm run hf -- run tool-media:media --scene=banner-delta',
         ],
       ],
       join(root, 'libs/delta/README.md')
@@ -153,7 +153,7 @@ testRule(rule, {
       [
         [
           0,
-          'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-delta. Record it: npx nx media tool-media --scene=banner-delta',
+          'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-delta. Record it: npm run hf -- run tool-media:media --scene=banner-delta',
         ],
         [0, MISSING_REGION.replaceAll('gamma', 'delta')],
       ],
@@ -166,7 +166,7 @@ testRule(rule, {
       errors: [
         {
           message:
-            'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-@ws/x. Record it: npx nx media tool-media --scene=banner-@ws/x',
+            'The distribution readme opens with the package banner in place of this title, and no portable banner.gif, banner.webp or banner.png is recorded under assets/media/banner-@ws/x. Record it: npm run hf -- run tool-media:media --scene=banner-@ws/x',
           line: 1,
           column: 1,
           endLine: 1,

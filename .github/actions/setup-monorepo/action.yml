@@ -1,20 +1,12 @@
 name: 'Setup Monorepo'
-description: 'Sets up Node.js environment, caches dependencies and Nx cache, and installs packages for the monorepo'
+description: 'Sets up Node.js, caches the npm download directory and installs the packages of the monorepo'
 outputs:
   cache-hit:
     description: 'Whether npm cache was hit'
     value: ${{ steps.cache-npm.outputs.cache-hit }}
-  nx-cache-hit:
-    description: 'Whether Nx cache was hit'
-    value: ${{ steps.cache-nx.outputs.cache-hit }}
 runs:
   using: 'composite'
   steps:
-    - name: Configure Nx Cloud
-      shell: bash
-      run: |
-        [[ $(jq -r '.neverConnectToCloud // false' nx.json) == "true" ]] && echo "NX_NO_CLOUD=true" >> $GITHUB_ENV || true
-
     - name: Setup Node.js
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
@@ -28,18 +20,6 @@ runs:
         key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-npm-
-
-    - name: Cache Nx
-      id: cache-nx
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
-      with:
-        path: |
-          .nx/cache
-          node_modules/.cache/nx
-        key: ${{ runner.os }}-nx-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-nx-${{ hashFiles('**/package-lock.json') }}-
-          ${{ runner.os }}-nx-
 
     - name: Install dependencies
       shell: bash

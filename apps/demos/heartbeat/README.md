@@ -74,16 +74,19 @@ Heartbeat **sound** is a synthesized lub-dub (`src/audio/heartbeat-audio.ts`, We
 ## Working on it
 
 ```bash
-npx nx run demo-heartbeat:install    # npm install in this directory
-npx nx run demo-heartbeat:dev        # vite build --watch + dev servers (dev host on :4281)
-npx nx test demo-heartbeat           # vitest (rhythm engine, wiring, bpm, ecg)
-npx nx typecheck demo-heartbeat      # tsc --build
-npx nx lint demo-heartbeat           # oxlint + eslint (app-local)
-npx nx run demo-heartbeat:build      # type-check + vite build → dist/apps/demos/heartbeat/app/
-npx nx run demo-heartbeat:pack-shell # hf build → self-contained shell tarball in dist/apps/demos/heartbeat/shell/
+# npm install in this directory
+npm run hf -- run demo-heartbeat:install
+# vite build --watch + dev servers (dev host on :4281)
+npm run hf -- run-many -t dev -p demo-heartbeat
+# tsc --build
+npm run hf -- run-many -t typecheck -p demo-heartbeat
+# type-check + vite build → dist/apps/demos/heartbeat/app/
+npm run hf -- run-many -t build -p demo-heartbeat
+# hf build → self-contained shell tarball in dist/apps/demos/heartbeat/shell/
+npm run hf -- run-many -t pack-shell -p demo-heartbeat
 ```
 
-To drive the full pair locally: `npx nx run demo-heartbeat:build`, then `npm run preview` in this directory and open `/host/`; the host page embeds the feature from the same preview origin. Under `hf dev` (`:4281`) the host page is at `/host/` (the dev server resolves directory URLs to their `index.html`).
+To drive the full pair locally: `npm run hf -- run-many -t build -p demo-heartbeat`, then `npm run preview` in this directory and open `/host/`; the host page embeds the feature from the same preview origin. Under `hf dev` (`:4281`) the host page is at `/host/` (the dev server resolves directory URLs to their `index.html`).
 
 ## SDK workarounds
 

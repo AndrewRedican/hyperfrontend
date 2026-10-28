@@ -7,12 +7,11 @@
  */
 
 import type { Node } from '@hyperfrontend/linter'
-import type { WorkspaceGraph } from '../../../graph/build.ts'
-import type { ProjectRecord } from '../../../graph/model.ts'
+import type { ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import { existsSync } from 'node:fs'
 import { basename, dirname, join, posix } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
-import { fileOf, substituteWildcard } from '../../../graph/resolve.ts'
+import { fileOf, substituteWildcard } from '@hyperfrontend/workspace/graph'
 import { moduleExports } from '../../workspace/shared/exports-index.ts'
 
 /** One name to import from one module. */

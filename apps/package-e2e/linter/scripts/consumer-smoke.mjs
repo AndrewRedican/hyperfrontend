@@ -6,7 +6,7 @@
  * and passes its `testRule` tests. Plain JavaScript with no dependencies, so it runs on the
  * package's floor release.
  *
- * Usage, from the workspace root after `npx nx build lib-linter`:
+ * Usage, from the workspace root after `npm run hf -- run lib-linter:build`:
  *
  *   node apps/package-e2e/linter/scripts/consumer-smoke.mjs
  */

@@ -146,7 +146,7 @@ export default [
     },
   },
   {
-    files: ['.github/workflows/ci-libraries.yml'],
+    files: ['.github/workflows/ci-main.yml'],
     rules: {
       'workspace/lib-ci-workflows': 'error',
     },
@@ -164,6 +164,6 @@ export default [
     },
   },
   {
-    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/'],
+    ignores: ['docs/', 'dist/', 'coverage/', 'tmp/'],
   },
 ]

@@ -1,6 +1,6 @@
 ---
 name: commit-messages
-description: Write conventional commits for the hyperfrontend monorepo — types, scopes (Nx project names), one-line subjects, atomic commits, versioning-harness boundaries. Use when committing, splitting work into commits, choosing a commit scope/type, or asked about commit format.
+description: Write conventional commits for the hyperfrontend monorepo — types, scopes (project.json names), one-line subjects, atomic commits, versioning-harness boundaries. Use when committing, splitting work into commits, choosing a commit scope/type, or asked about commit format.
 ---
 
 # Commit Messages
@@ -21,14 +21,14 @@ Format: `type(scope): subject` — one line, lowercase subject, no period, imper
 
 `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
 
-Version impact (computed at pre-push by `nx version:all` — never by hand): `feat` → minor · `fix`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump.
+Version impact (computed at pre-push by the root `version:all` target, never by hand): `feat` → minor · `fix`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump.
 
 ## Scopes
 
-**A scope MUST be an Nx project name exactly as written in that project's `project.json` `name` field.**
+**A scope MUST be a project name exactly as written in that project's `project.json` `name` field.**
 
 ```bash
-npx nx show projects | grep <hint>        # verify before committing
+npm run -s hf -- show projects | grep <hint>   # verify before committing
 ```
 
 ✓ `lib-features` `lib-nexus` `e2e-lib-features` `demo-clock` `docs-site` `tool-app`
@@ -51,7 +51,7 @@ Each commit is self-contained: it compiles, its tests pass, and it makes one log
 ## Committing
 
 - `git commit -m "type(scope): subject"` or `npx cz` — both fine when the message meets the rules above.
-- **`--no-verify` is forbidden.** Hooks are the contract: pre-commit formats (auto-stages fixes), commit-msg runs `npx cl`, pre-push runs typecheck/lint/test/build/e2e + `nx version:all`.
+- **`--no-verify` is forbidden.** Hooks are the contract: pre-commit formats (auto-stages fixes), commit-msg runs `npx cl`, pre-push runs typecheck/lint/test/build/e2e + the root `version:all` target.
 
 ## Never commit by hand
 

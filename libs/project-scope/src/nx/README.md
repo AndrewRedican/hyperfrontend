@@ -48,21 +48,32 @@ console.log('NX JSON:', info.nxJson) // Full nx.json content
 Read and parse NX project configuration.
 
 ```typescript
-import { readNxProjectConfig, findNxProjects } from '@hyperfrontend/project-scope'
+import { buildSimpleProjectGraph, discoverNxProjects, getProjectConfig, readProjectJson } from '@hyperfrontend/project-scope'
 
-// Read single project config
-const config = readNxProjectConfig('./libs/my-lib')
-console.log('Name:', config.name)
-console.log('Type:', config.projectType) // 'library' | 'application'
-console.log('Source root:', config.sourceRoot)
-console.log('Tags:', config.tags)
-console.log('Targets:', Object.keys(config.targets ?? {}))
-
-// Find all projects in workspace
-const projects = findNxProjects('./my-monorepo')
-for (const project of projects) {
-  console.log(`${project.name} (${project.projectType})`)
+// Read a project's project.json (null when the file is missing)
+const config = readProjectJson('./libs/my-lib')
+if (config) {
+  console.log('Name:', config.name)
+  console.log('Type:', config.projectType) // 'library' | 'application'
+  console.log('Source root:', config.sourceRoot)
+  console.log('Tags:', config.tags)
+  console.log('Targets:', Object.keys(config.targets ?? {}))
 }
+
+// Read project.json, or the package.json `nx` field when there is none; root defaults to the path relative to the workspace
+const resolved = getProjectConfig('./my-monorepo/libs/my-lib', './my-monorepo')
+console.log('Root:', resolved?.root) // 'libs/my-lib'
+
+// Find every project in the workspace: a Map of project name to configuration
+const projects = discoverNxProjects('./my-monorepo')
+for (const [name, project] of projects) {
+  console.log(`${name} (${project.projectType})`)
+}
+
+// Build a graph of the projects and their implicit dependencies
+const graph = buildSimpleProjectGraph('./my-monorepo', projects)
+console.log('Projects:', Object.keys(graph.nodes))
+console.log('Depends on:', graph.dependencies['my-app'])
 ```
 
 ## NX Configuration Files

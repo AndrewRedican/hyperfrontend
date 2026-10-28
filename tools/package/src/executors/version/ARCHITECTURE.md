@@ -125,7 +125,7 @@ Version bumps happen **locally** via lefthook pre-push hooks, not in CI:
 flowchart TD
     A[Developer commits] --> B[git push]
     B --> C[lefthook pre-push]
-    C --> D[nx version:all]
+    C --> D[hf run @hyperfrontend/workspace:version:all]
     D --> E[Version each affected library]
     E --> F["Commit: chore: update versions for lib-a, lib-b"]
     F --> G[Push proceeds with version commit]
@@ -133,7 +133,7 @@ flowchart TD
 
 The `version-batch` executor:
 
-- Detects affected libraries programmatically using Nx project graph
+- Detects affected libraries programmatically using the workspace graph (`@hyperfrontend/workspace/graph`)
 - Runs versioning for each affected library
 - Creates a single batch commit for all changes
 - Handles rollback on failure
@@ -146,7 +146,7 @@ CI validates that version bumps were correctly applied using the **version-check
 flowchart TD
     A[PR pushed<br/>includes version commit] --> B[ci-status passes]
     B --> C[version-check job]
-    C --> D[nx version-check lib-xxx]
+    C --> D[hf run lib-xxx:version-check]
     D --> E{Versions match?}
     E -->|Yes| F[✅ Pass]
     E -->|No| G[❌ Fail + PR comment<br/>with remediation steps]

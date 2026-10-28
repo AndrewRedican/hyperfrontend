@@ -539,10 +539,9 @@ flowchart TB
 
 **Key Components:**
 
-- `discover/` - Project discovery
-- `package-json/` - Package.json read/write
-- `project/` - Project configuration
-- `nx/` - Nx workspace integration
+- `discovery/` - Package discovery, dependency graph building and changelog location
+- `models/` - Project and workspace models
+- `operations/` - Cascade bump calculation, batch package.json updates and validation
 
 **Architecture:**
 

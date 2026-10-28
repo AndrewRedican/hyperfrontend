@@ -217,7 +217,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
       type: 'version-mismatch',
       expected: expected.version,
       actual: actual.version,
-      remedy: `Run: npx nx version ${projectName}\nOr push again to trigger lefthook versioning`,
+      remedy: `Run: npm run hf -- run ${projectName}:version\nOr push again to trigger lefthook versioning`,
     })
   }
 
@@ -227,7 +227,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
       type: 'changelog-missing',
       expected: `Entry for version ${expected.version}`,
       actual: 'No entry found',
-      remedy: `Run: npx nx version ${projectName}\nThis will generate the changelog entry`,
+      remedy: `Run: npm run hf -- run ${projectName}:version\nThis will generate the changelog entry`,
     })
   } else if (expected.changelogEntry && actual.changelogEntry) {
     // why: the date and compare URL are stamped when an entry is generated, so a committed entry that is still waiting to be published legitimately carries an older stamp than the one regenerated here.

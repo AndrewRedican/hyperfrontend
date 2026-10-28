@@ -1,0 +1,9 @@
+{
+  "sources": {
+    "nx": {
+      "repo": "nrwl/nx",
+      "ref": "23.3.0",
+      "sha": "2b305ee85b8db033e4ab998f31282cbff66ac2a8"
+    }
+  }
+}

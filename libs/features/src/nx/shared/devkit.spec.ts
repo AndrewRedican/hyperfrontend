@@ -1,12 +1,28 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { loadDevkit } from './devkit'
 
-const WORKSPACE_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
+const directory = useTempDir({ prefix: 'devkit-' })
+
+/**
+ * Installs a stand-in `@nx/devkit` under the temporary workspace, exporting the members the loader checks.
+ *
+ * @returns The temporary workspace root
+ */
+function installStubDevkit(): string {
+  const packageRoot = join(directory.path, 'node_modules', '@nx', 'devkit')
+  mkdirSync(packageRoot, { recursive: true })
+  writeFileSync(join(packageRoot, 'package.json'), JSON.stringify({ name: '@nx/devkit', version: '0.0.0', main: 'index.js' }))
+  writeFileSync(join(packageRoot, 'index.js'), 'exports.formatFiles = async () => {}\nexports.installPackagesTask = () => {}\n')
+  writeFileSync(join(directory.path, 'package.json'), JSON.stringify({ name: 'consumer', private: true }))
+  return directory.path
+}
 
 describe('loadDevkit', () => {
-  it('resolves the repository-installed @nx/devkit with callable members', () => {
-    expect(loadDevkit(WORKSPACE_ROOT)).toEqual(
+  it('resolves an installed @nx/devkit with callable members', () => {
+    expect(loadDevkit(installStubDevkit())).toEqual(
       expect.objectContaining({ formatFiles: expect.any(Function), installPackagesTask: expect.any(Function) })
     )
   })

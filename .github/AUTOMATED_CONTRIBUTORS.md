@@ -26,7 +26,7 @@ The system automatically detects contribution types based on file patterns:
 | **tool**          | Configuration and tooling | `lint.config.ts`, `tsconfig.json`, `scripts/`         |
 | **design**        | Design and styling        | `*.css`, `*.scss`, `assets/`, `*.svg`, `packages/ui/` |
 | **example**       | Examples and demos        | `examples/`, `demos/`, sample files                   |
-| **plugin**        | Plugin development        | `plugins/`, `packages/nx-plugin/`                     |
+| **plugin**        | Plugin development        | `plugins/`                                            |
 
 The bot provides a **non-intrusive advisory comment** with:
 

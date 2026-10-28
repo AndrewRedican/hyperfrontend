@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { TestExecutorOptions } from './schema'
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -8,17 +8,18 @@ import { logger } from '../../lib/logger'
 import { resolveTestingEntry } from '../../lib/testing-runtime'
 
 /**
- * The process entry the executor spawns, beside this module. It loads the project's
- * configuration and hands it to the runtime's runner.
+ * The process entry the executor spawns, beside this module and workspace-relative, since the
+ * executor runs from the workspace's own sources. It loads the project's configuration and hands
+ * it to the runtime's runner.
  */
-const RUNNER_CLI = join(__dirname, 'runner-cli.ts')
+const RUNNER_CLI = 'tools/package/src/executors/test/runner-cli.ts'
 
 /**
  * Test executor for workspace projects.
  *
  * Runs the project's suites on Node's built-in test runner. The runner is started as its
  * own process so the project's `test.config.ts` is evaluated by the same runtime that
- * executes the tests, rather than by whatever TypeScript loader Nx has installed.
+ * executes the tests, rather than by whatever TypeScript loader the calling process has installed.
  *
  * @param options - Executor options naming the test configuration and coverage directory
  * @param context - Executor context providing project information
@@ -60,7 +61,7 @@ export default async function testExecutor(options: TestExecutorOptions, context
       // why: Node reads a preload value as a module specifier, and a Windows absolute path parses as a URL whose scheme is the drive letter.
       '--import',
       pathToFileURL(resolveTestingEntry(workspaceRoot, 'hooks')).href,
-      RUNNER_CLI,
+      join(workspaceRoot, RUNNER_CLI),
       workspaceRoot,
       projectRoot,
       coverageDirectory,

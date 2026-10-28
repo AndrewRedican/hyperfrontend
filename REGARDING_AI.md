@@ -12,7 +12,7 @@ AI has measurably improved the development speed of this project. Certain tasks 
 
 But the gains are uneven and frequently overstated.
 
-Generating code quickly is not the same as producing reliable software. Verification still takes time. Integration still requires care. Edge cases still exist. Anyone claiming dramatic productivity improvements without acknowledging the cost of verification is describing only half the reality.
+Generating code quickly is not the same as producing reliable software. Verification still takes time. Integration still requires care. Edge cases still exist. Anyone claiming dramatic productivity improvements without acknowledging [the cost of verification](https://www.hyperfrontend.dev/articles/complete-architectural-sovereignty/#ai-changes-the-equation-but-not-the-mathematics) is describing only half the reality.
 
 ### Trust, but Verify
 

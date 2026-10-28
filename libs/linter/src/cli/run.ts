@@ -76,10 +76,25 @@ export async function run(argv: readonly string[], environment: RunEnvironment):
     })
   } catch (error) {
     environment.writeError(`${errorText(error)}\n`)
+    const cause = innermostCause(error)
+    if (cause !== null) environment.writeError(`${cause.stack}\n`)
     return 2
   }
   if (options.fix) for (const result of report.results) if (result.output !== null) writeFileSync(result.filePath, result.output)
   const results = report.results.map((result) => ({ ...result, output: options.fixDryRun ? result.output : null }))
   environment.write(options.format === 'json' ? `${formatJson(results)}\n` : formatStylish(results))
   return report.errorCount > 0 || (options.maxWarnings >= 0 && report.warningCount > options.maxWarnings) ? 1 : 0
+}
+
+/**
+ * The error at the end of a failure's chain of causes, whose stack names the stage that failed.
+ *
+ * @param error - What the lint run threw
+ * @returns The innermost cause, or null when the failure has none
+ */
+function innermostCause(error: unknown): Error | null {
+  if (!(error instanceof Error) || !(error.cause instanceof Error)) return null
+  let cause = error.cause
+  while (cause.cause instanceof Error) cause = cause.cause
+  return cause
 }

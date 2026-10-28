@@ -1,5 +1,5 @@
-import type { Tree } from '@nx/devkit'
-import { joinPathFragments } from '@nx/devkit'
+import type { Tree } from './tree/tree'
+import { joinPathFragments } from './tree/paths'
 
 /**
  * Options for updating content references.

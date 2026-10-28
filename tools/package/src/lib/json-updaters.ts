@@ -1,9 +1,17 @@
 /**
  * JSON object with an optional description field.
  */
-interface JsonWithDescription {
+export interface JsonWithDescription {
   /** Optional description text */
   description?: unknown
+}
+
+/**
+ * A project or package manifest as far as a rename reads it.
+ */
+export interface NamedJson extends JsonWithDescription {
+  /** The project or package name */
+  name?: string
 }
 
 /**

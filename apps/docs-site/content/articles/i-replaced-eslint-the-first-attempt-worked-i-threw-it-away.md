@@ -7,7 +7,7 @@ readingTime: '6 min read'
 category: 'field-notes'
 tags: 'linting, eslint, dependencies, supply chain, parsers, ai-assisted engineering, tooling'
 packages: '@hyperfrontend/linter'
-related: 'i-replaced-jest-with-1200-lines-of-code'
+related: 'i-replaced-jest-with-1200-lines-of-code, complete-architectural-sovereignty'
 heroImage: '/articles/i-replaced-eslint-the-first-attempt-worked-i-threw-it-away/hero.webp'
 ---
 

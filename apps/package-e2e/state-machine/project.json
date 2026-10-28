@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-state-machine",
   "description": "E2E tests for @hyperfrontend/state-machine package outputs",
   "sourceRoot": "{projectRoot}/src",

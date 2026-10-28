@@ -136,7 +136,7 @@ inside that package: association is declared in `meta.json` via `packages`, whos
 entry is the package the guide is primarily about and whose remaining entries let a
 cross-cutting guide name every package it involves. Every entry must be a documented
 package or the build fails. Nothing about a guide belongs in a publishable project tree,
-so editing one cannot mark a library changed for Nx, CI, versioning, or publishing.
+so editing one cannot mark a library changed for CI, versioning, or publishing.
 
 Slugs are global and flat: the directory name is the URL. Grouping folders are
 deliberately absent, because `meta.json` already carries the taxonomy the site filters
@@ -271,7 +271,7 @@ counted since, so the published page is current without a commit for every day.
 The committed dataset is refreshed on purpose, not as part of a build:
 
 ```bash
-npm run refresh-downloads            # or: npx nx run docs-site:refresh-downloads
+npm run refresh-downloads            # or, from the root: npm run hf -- run docs-site:refresh-downloads
 npm run refresh-downloads -- --force # run even when already refreshed today
 ```
 
@@ -293,8 +293,9 @@ nothing in it that the per-document files do not already serve.
 
 Each page advertises its counterpart through `alternates.types` in its metadata, as
 `<link rel="alternate" type="text/markdown">`. The files are served as
-`text/plain; charset=utf-8` (see `next.config.js` and `vercel.json`): browsers download
-`text/markdown` instead of showing it, and plain text reads correctly in every consumer.
+`text/plain; charset=utf-8` (see `next.config.js` and the repository root's `vercel.json`):
+browsers download `text/markdown` instead of showing it, and plain text reads correctly in
+every consumer.
 
 ### Document companion
 

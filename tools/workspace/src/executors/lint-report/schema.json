@@ -9,11 +9,6 @@
       "description": "Output file path relative to workspace root.",
       "default": "lint-output.txt"
     },
-    "affected": {
-      "type": "boolean",
-      "description": "Only lint affected projects instead of all.",
-      "default": false
-    },
     "maxFixes": {
       "type": "number",
       "description": "Number of files to suggest fixing first (quick wins).",

@@ -6,92 +6,17 @@
  * @module rules/projects/shared/dependencies
  */
 
-import type { WorkspaceGraph } from '../../../graph/build.ts'
-import type { FileImport, ProjectRecord } from '../../../graph/model.ts'
+import type { FileImport, ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
-import { readJson } from '../../../graph/workspace.ts'
-
-/** An input of a target, as `nx.json` and `project.json` write it. */
-export type InputDefinition = string | InputObject
-
-/** An input written as an object. */
-export interface InputObject {
-  /** A file pattern. */
-  readonly fileset?: string
-  /** A named input. */
-  readonly input?: string
-  /** Whether the input is the dependencies' rather than the project's. */
-  readonly dependencies?: boolean
-  /** Whose input it is: `self`, `dependencies` or a list of projects. */
-  readonly projects?: string | readonly string[]
-}
-
-/** A target's configuration, as far as its inputs are read. */
-interface TargetConfiguration {
-  /** The inputs. */
-  readonly inputs?: readonly InputDefinition[]
-}
-
-/** The workspace configuration, as far as the inputs are read. */
-interface NxConfiguration {
-  /** The named inputs. */
-  readonly namedInputs?: Readonly<Record<string, readonly InputDefinition[]>>
-  /** The defaults of each target. */
-  readonly targetDefaults?: Readonly<Record<string, TargetConfiguration>>
-}
 
 /** An installed package's manifest, as far as its version is read. */
 interface InstalledManifest {
   /** The installed version. */
   readonly version?: unknown
-}
-
-/** The workspace configurations read so far, by root. */
-const configurations = createMap<string, NxConfiguration>()
-
-/**
- * The file patterns of a target's own inputs, named inputs expanded, the dependencies' left out.
- *
- * @param root - The workspace root
- * @param project - The graph node whose target is read
- * @param target - The target's name
- * @returns The patterns, `{projectRoot}` still unreplaced
- */
-export function selfInputs(root: string, project: ProjectRecord, target: string): string[] {
-  let nx = configurations.get(root)
-  if (nx === undefined) {
-    nx = readJson<NxConfiguration>(join(root, 'nx.json')) ?? {}
-    configurations.set(root, nx)
-  }
-  const named: Readonly<Record<string, readonly InputDefinition[]>> = {
-    default: ['{projectRoot}/**/*'],
-    ...nx.namedInputs,
-    ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
-  }
-  const configured = (project.configuration?.targets?.[target] as TargetConfiguration).inputs ??
-    nx.targetDefaults?.[target]?.inputs ?? ['default']
-  const own = configured.filter((input) => {
-    if (typeof input === 'string') return !input.startsWith('^')
-    if (input.fileset !== undefined) return input.dependencies !== true
-    return input.dependencies !== true && (input.projects === undefined || input.projects === 'self')
-  })
-  const patterns: string[] = []
-  const expand = (inputs: readonly InputDefinition[]): void => {
-    for (const input of inputs) {
-      if (typeof input === 'string') {
-        const inner = named[input]
-        if (inner === undefined) patterns.push(input)
-        else expand(inner)
-      } else if (input.fileset !== undefined) patterns.push(input.fileset)
-      else if (input.input !== undefined) expand(named[input.input] ?? [])
-    }
-  }
-  expand(own)
-  return patterns
 }
 
 /**
@@ -152,7 +77,9 @@ export function usedPackages(graph: WorkspaceGraph, project: ProjectRecord, file
   const manifest = posix.join(project.root, 'package.json')
   for (const file of files) {
     if (file === manifest) continue
-    for (const { specifier } of graph.imports.get(file) ?? ([] as readonly FileImport[])) {
+    for (const { specifier, kind } of graph.imports.get(file) ?? ([] as readonly FileImport[])) {
+      // why: a load whose specifier is an expression names no package; its text is not a specifier to resolve.
+      if (kind === 'unresolved') continue
       const resolution = graph.resolve(file, specifier)
       if (resolution.kind === 'npm') {
         const version = installedVersion(graph, file, resolution.name)

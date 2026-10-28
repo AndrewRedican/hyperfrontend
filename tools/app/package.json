@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/app",
   "version": "0.0.0",
-  "description": "Nx plugin providing executors for hyperfrontend application projects with self-contained dependencies.",
+  "description": "Executors for hyperfrontend application projects with self-contained dependencies, run through the workspace's hf command line.",
   "private": true,
   "generators": "./generators.json",
   "executors": "./executors.json"

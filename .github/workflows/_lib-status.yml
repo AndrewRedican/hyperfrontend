@@ -1,7 +1,11 @@
 # Library Status Reporter Template
 #
-# This reusable workflow reports build status for individual libraries WITHOUT rebuilding.
-# It checks if the library was built successfully in ci-libraries.yml matrix build.
+# This reusable workflow reports a library's CI status WITHOUT rebuilding.
+# Every run of the `ci` workflow (ci-main.yml) on main uploads the Linux
+# environment's results as the `pipeline-results-linux` artifact; this workflow
+# reads the newest results that carry a task of the library and reports their
+# outcome. A run without the artifact, or without a task of the library (the
+# merge did not touch it), is walked past to the previous completed run.
 #
 # Used by individual ci-lib-*.yml workflows to provide per-project build badges
 # while avoiding redundant builds.
@@ -12,7 +16,7 @@ on:
   workflow_call:
     inputs:
       project-name:
-        description: 'Nx project name (e.g., lib-nexus, lib-logging)'
+        description: 'Project name from project.json (e.g., lib-nexus, lib-logging)'
         required: true
         type: string
       library-path:
@@ -20,7 +24,7 @@ on:
         required: true
         type: string
 
-# Permissions needed to query workflow runs via GitHub API
+# Permissions needed to list workflow runs and download their artifacts via the GitHub API
 permissions:
   actions: read
 
@@ -29,53 +33,66 @@ jobs:
     name: status
     runs-on: ubuntu-latest
     steps:
-      - name: Check library build status
+      - name: List the newest completed ci runs on main
+        id: runs
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const projectName = '${{ inputs.project-name }}';
-            const libraryPath = '${{ inputs.library-path }}';
-
-            // Get the latest ci-libraries workflow run on main
             const { data: runs } = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'ci-libraries.yml',
+              workflow_id: 'ci-main.yml',
               branch: 'main',
               status: 'completed',
-              per_page: 5
+              per_page: 10
             });
 
             if (runs.workflow_runs.length === 0) {
-              core.info(`No ci-libraries.yml runs found. Assuming first run.`);
-              return; // Pass - no previous runs to check
+              core.info('No completed ci run on main found. Assuming first run.');
             }
 
-            // Find the most recent run that included this library
-            for (const run of runs.workflow_runs) {
-              // Get jobs for this run
-              const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: run.id
-              });
+            // why: newest first, so the walk below reads the library's latest results before any older ones
+            core.setOutput('ids', runs.workflow_runs.map((run) => `${run.id}:${run.run_number}`).join(' '));
 
-              // Look for a job with our project name
-              const libraryJob = jobs.jobs.find(job =>
-                job.name.includes(projectName) || job.name.includes(libraryPath)
-              );
+      - name: Report the library's outcome from the newest results that ran it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_NAME: ${{ inputs.project-name }}
+          LIBRARY_PATH: ${{ inputs.library-path }}
+          RUN_IDS: ${{ steps.runs.outputs.ids }}
+        run: |
+          set -euo pipefail
 
-              if (libraryJob) {
-                if (libraryJob.conclusion === 'success') {
-                  core.info(`✅ ${projectName} build passed in run #${run.run_number}`);
-                  return; // Success
-                } else if (libraryJob.conclusion === 'failure') {
-                  core.setFailed(`❌ ${projectName} build failed in run #${run.run_number}`);
-                  return;
-                }
-                // If skipped or other status, continue checking older runs
-              }
-            }
+          if [ -z "$RUN_IDS" ]; then
+            echo "No completed ci run on main yet. Status: passing."
+            exit 0
+          fi
 
-            // No matching job found in recent runs - library wasn't modified
-            core.info(`ℹ️ ${projectName} not modified in recent runs. Status: passing.`);
+          for entry in $RUN_IDS; do
+            run_id="${entry%%:*}"
+            run_number="${entry##*:}"
+            results="results/$run_id/results-linux.json"
+
+            # why: a run whose plan had no Linux work, or that was cancelled, uploads no results; the previous run decides
+            if ! gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name pipeline-results-linux --dir "results/$run_id" >/dev/null 2>&1; then
+              echo "Run #$run_number uploaded no pipeline-results-linux artifact; checking the previous run."
+              continue
+            fi
+
+            tasks="$(jq -r --arg project "$PROJECT_NAME" '[.tasks[] | select(.project == $project) | "\(.target): \(.outcome)"] | join(", ")' "$results")"
+            if [ -z "$tasks" ]; then
+              echo "Run #$run_number ran no task of $PROJECT_NAME; checking the previous run."
+              continue
+            fi
+
+            failed="$(jq -r --arg project "$PROJECT_NAME" '[.tasks[] | select(.project == $project and .outcome != "success") | "\(.target): \(.outcome)"] | join(", ")' "$results")"
+            if [ -z "$failed" ]; then
+              echo "$PROJECT_NAME ($LIBRARY_PATH) passed in run #$run_number: $tasks"
+              exit 0
+            fi
+
+            echo "::error::$PROJECT_NAME ($LIBRARY_PATH) failed in run #$run_number: $failed"
+            exit 1
+          done
+
+          echo "$PROJECT_NAME ($LIBRARY_PATH) ran in none of the newest completed ci runs on main. Status: passing."

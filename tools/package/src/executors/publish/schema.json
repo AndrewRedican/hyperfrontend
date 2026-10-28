@@ -27,6 +27,11 @@
     "otp": {
       "type": "string",
       "description": "One-time password for npm 2FA."
+    },
+    "provenance": {
+      "type": "boolean",
+      "description": "Publish with --provenance, attaching a provenance statement npm signs with the CI identity token. A dry run passes the flag too; npm signs only when it uploads.",
+      "default": false
     }
   },
   "required": []

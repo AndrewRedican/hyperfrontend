@@ -112,7 +112,7 @@ export async function lint(request: LintRequest): Promise<LintReport> {
       )
       results.push({ filePath: file.path, messages: outcome.messages, output: outcome.output })
     } catch (error) {
-      throw createError(`Error while linting ${file.path}: ${errorText(error)}`)
+      throw createError(`Error while linting ${file.path}: ${errorText(error)}`, { cause: error })
     }
   }
   return {

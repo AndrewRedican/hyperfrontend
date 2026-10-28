@@ -19,7 +19,7 @@
  * self-executing scripts that read their job from argv when they believe they
  * are the main module.
  *
- * Usage, from the workspace root after `npx nx run-many -t build`:
+ * Usage, from the workspace root after `npm run hf -- run-many -t build --all`:
  *
  *   node tools/workspace/scripts/probe-node-floor.mjs
  *   npx -y -p node@18.0.0 node tools/workspace/scripts/probe-node-floor.mjs

@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-lib-project-scope",
   "description": "E2E tests for @hyperfrontend/project-scope package outputs",
   "sourceRoot": "{projectRoot}/src",

@@ -15,27 +15,28 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 
 ```bash
 # Version a single library
-npx nx version lib-cryptography
+npm run hf -- run lib-cryptography:version
 
 # Dry run to see what would happen
-npx nx version lib-cryptography --dryRun
+npm run hf -- run lib-cryptography:version --dryRun
 
 # Force a specific bump type
-npx nx version lib-cryptography --releaseAs=minor
+npm run hf -- run lib-cryptography:version --releaseAs=minor
 ```
 
 For batch versioning of all affected libraries, use the `version:all` target:
 
 ```bash
 # Preview batch versioning
-npx nx version:all --dryRun
+npm run hf -- run @hyperfrontend/workspace:version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
-npx nx version:all
+npm run hf -- run @hyperfrontend/workspace:version:all
 
 # Force a patch on named libraries, for a change to the package artifact
 # (a readme, say) that no commit type would release on its own
-npx nx version:all --releaseAs=patch --libraries=lib-logging,lib-nexus
+npm run hf -- run @hyperfrontend/workspace:version:all \
+  --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
 
 ## Options
@@ -102,7 +103,7 @@ This is controlled by the `updateDependents` option (default: true).
 
 Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
 
-1. lefthook runs `nx version:all` which detects affected libraries
+1. lefthook runs the pipeline (typecheck, lint, test, build and e2e of what the push reaches), then the root project's `version:all` target, which detects affected libraries
 2. For each affected library, package.json and CHANGELOG.md are updated
 3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
 4. Push proceeds with the version commit included
@@ -114,7 +115,7 @@ See [lefthook.yml](../../../../lefthook.yml) for the hook configuration.
 CI validates that version bumps were correctly applied using the **version-check** executor:
 
 ```bash
-npx nx version-check lib-xxx
+npm run hf -- run lib-xxx:version-check
 # Outputs: ✅ lib-xxx: version 2.1.0 matches expected
 # Or:      ❌ lib-xxx: version mismatch (with remediation steps)
 ```

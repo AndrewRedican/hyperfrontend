@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionCheckExecutorSchema } from './schema'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { isVersionCommit } from '../version/lib/is-version-commit'
@@ -96,7 +96,7 @@ export default async function versionCheckExecutor(
       logger.log('')
       logger.log('To fix this issue:')
       logger.log('  1. Pull latest changes: git pull origin <branch>')
-      logger.log(`  2. Run versioning: npx nx version ${projectName}`)
+      logger.log(`  2. Run versioning: npm run hf -- run ${projectName}:version`)
       logger.log('  3. Commit the changes: git add . && git commit --amend --no-edit')
       logger.log('  4. Push: git push --force-with-lease')
       logger.log('')

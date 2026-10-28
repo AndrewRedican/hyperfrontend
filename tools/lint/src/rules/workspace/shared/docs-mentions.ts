@@ -65,7 +65,26 @@ const KEYWORDS = createSet(
 )
 
 /** The command-line tools a mention may name on their own. */
-const COMMANDS = createSet('bash cat cd curl docker git hf ls node npm npx nx pnpm rollup sh tsc vite yarn'.split(' '))
+const COMMANDS = createSet([
+  'bash',
+  'cat',
+  'cd',
+  'curl',
+  'docker',
+  'git',
+  'hf',
+  'ls',
+  'node',
+  'npm',
+  'npx',
+  'nx',
+  'pnpm',
+  'rollup',
+  'sh',
+  'tsc',
+  'vite',
+  'yarn',
+])
 
 /** The names the platform defines: language built-ins, browser and Node globals, Node modules and elements. */
 const PLATFORM = createSet(

@@ -1,6 +1,6 @@
-import type { Tree } from '@nx/devkit'
+import type { NamedJson } from '../../lib/json-updaters'
+import type { Tree } from '../../lib/tree/tree'
 import type { RenameGeneratorSchema } from './schema'
-import { formatFiles, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { checkCIWorkflow } from '../../lib/ci-helpers'
 import { updateContentReferences } from '../../lib/content-updaters'
@@ -9,6 +9,10 @@ import { replaceDescriptionPackageName } from '../../lib/json-updaters'
 import { logger } from '../../lib/logger'
 import { derivePackageName, deriveProjectName, extractProjectPrefix } from '../../lib/naming-utils'
 import { updateProjectReferences } from '../../lib/project-references'
+import { formatFiles } from '../../lib/tree/format'
+import { joinPathFragments } from '../../lib/tree/paths'
+import { readProjectConfiguration } from '../../lib/tree/projects'
+import { updateJson } from '../../lib/tree/tree'
 import { renameTsConfigPaths } from '../../lib/tsconfig-utils'
 
 /**
@@ -66,7 +70,7 @@ function normalizeOptions(tree: Tree, options: RenameGeneratorSchema): Normalize
 function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
   const projectJsonPath = joinPathFragments(options.currentProjectRoot, 'project.json')
 
-  updateJson(tree, projectJsonPath, (json) => {
+  updateJson<NamedJson>(tree, projectJsonPath, (json) => {
     json.name = options.newProjectName
     replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
     return json
@@ -86,7 +90,7 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
     return
   }
 
-  updateJson(tree, packageJsonPath, (json) => {
+  updateJson<NamedJson>(tree, packageJsonPath, (json) => {
     json.name = options.newPackageName
     replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
     return json
@@ -94,7 +98,7 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
 }
 
 /**
- * Nx generator that renames a project and updates all references.
+ * Generator that renames a project and updates all references.
  *
  * This generator:
  * 1. Updates project.json with new name
@@ -107,13 +111,13 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
  * Note: This generator does NOT rename the project folder. Use the move generator
  * to also relocate the project.
  *
- * @param tree - The Nx virtual file system tree
+ * @param tree - The virtual file system tree
  * @param options - Configuration options
  * @returns A promise that resolves when the generator completes
  *
  * @example Rename a library
  * ```bash
- * nx generate @hyperfrontend/package:rename lib-my-utils new-utils
+ * npm run hf -- generate rename lib-my-utils new-utils
  * ```
  */
 export async function renameGenerator(tree: Tree, options: RenameGeneratorSchema): Promise<void> {

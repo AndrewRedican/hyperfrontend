@@ -1,10 +1,16 @@
-import type { Tree } from '@nx/devkit'
+import type { Tree } from '../../lib/tree/tree'
 import type { LibraryGeneratorSchema } from './schema'
 import { join } from 'node:path'
-import { formatFiles, generateFiles, joinPathFragments, names, offsetFromRoot } from '@nx/devkit'
 import { derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
+import { formatFiles } from '../../lib/tree/format'
+import { names } from '../../lib/tree/names'
+import { joinPathFragments, offsetFromRoot } from '../../lib/tree/paths'
+import { generateFiles } from '../../lib/tree/templates'
 import { addTsConfigPath } from '../../lib/tsconfig-utils'
 import { makePublishableGenerator } from '../make-publishable/generator'
+
+/** The generator's templates, relative to the workspace root. */
+const TEMPLATES = 'tools/package/src/generators/library'
 
 /**
  * Computed options derived from user input.
@@ -93,14 +99,14 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
     dot: '.',
   }
 
-  generateFiles(tree, join(__dirname, 'files'), options.projectRoot, templateOptions)
+  generateFiles(tree, join(tree.root, TEMPLATES, 'files'), options.projectRoot, templateOptions)
 }
 
 /**
- * Nx generator that creates a new hyperfrontend library.
+ * Generator that creates a new hyperfrontend library.
  *
  * Creates a standardized library structure with:
- * - project.json with proper Nx configuration
+ * - project.json with the project's targets and tags
  * - package.json with required fields
  * - TypeScript configuration files
  * - ESLint configuration
@@ -114,24 +120,24 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  * docs site. An internal library declares no compatibility, because it is
  * never published for anyone to read it.
  *
- * @param tree - The Nx virtual file system tree
+ * @param tree - The virtual file system tree
  * @param options - Configuration options for the library
  * @returns A promise that resolves when the generator completes
  * @throws {Error} When publishable is true and no compatibility profile was given.
  *
  * @example Create an internal utility library
  * ```bash
- * nx generate @hyperfrontend/package:library my-lib --type=util
+ * npm run hf -- generate library --name=my-lib --type=util
  * ```
  *
  * @example Create a publishable library
  * ```bash
- * nx generate @hyperfrontend/package:library my-lib --type=util --publishable --compatibility=isomorphic
+ * npm run hf -- generate library --name=my-lib --type=util --publishable --compatibility=isomorphic
  * ```
  *
  * @example Create a nested library under utils
  * ```bash
- * nx generate @hyperfrontend/package:library my-utils --directory=libs/utils
+ * npm run hf -- generate library --name=my-utils --directory=libs/utils
  * ```
  */
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSchema): Promise<void> {

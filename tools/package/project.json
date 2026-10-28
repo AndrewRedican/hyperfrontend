@@ -1,7 +1,6 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "tool-package",
-  "description": "Nx plugin providing build executors for hyperfrontend library packages.",
+  "description": "Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's hf command line.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:util", "scope:internal"],

@@ -1,16 +1,16 @@
 {
   "name": "@hyperfrontend/package",
   "version": "0.0.0",
-  "description": "Nx plugin providing build executors for hyperfrontend library packages.",
+  "description": "Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's hf command line.",
   "private": true,
   "dependencies": {
     "@hyperfrontend/builder": "0.5.4",
-    "@hyperfrontend/testing": "0.3.0"
+    "@hyperfrontend/testing": "0.3.1"
   },
   "devDependencies": {
-    "@hyperfrontend/project-scope": "0.4.0",
-    "@nx/devkit": "23.3.0",
+    "@hyperfrontend/project-scope": "0.4.1",
     "@types/node": "25.9.9",
+    "prettier": "3.8.0",
     "typescript": "5.9.3"
   },
   "generators": "./generators.json",

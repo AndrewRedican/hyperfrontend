@@ -1,5 +1,4 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "lib-versioning",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "sourceRoot": "{projectRoot}/src",

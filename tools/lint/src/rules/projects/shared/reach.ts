@@ -5,8 +5,7 @@
  * @module rules/projects/shared/reach
  */
 
-import type { WorkspaceGraph } from '../../../graph/build.ts'
-import type { Edge, ProjectRecord } from '../../../graph/model.ts'
+import type { ProjectEdge, ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
@@ -35,7 +34,7 @@ function reachOf(graph: WorkspaceGraph): Reach {
   for (const name of graph.projects.keys()) {
     next.set(
       name,
-      (graph.edges.get(name) as readonly Edge[]).map((edge) => edge.target).filter((target) => graph.projects.has(target))
+      (graph.edges.get(name) as readonly ProjectEdge[]).map((edge) => edge.target).filter((target) => graph.projects.has(target))
     )
   }
   const reached = createMap<string, ReadonlySet<string>>()
@@ -91,7 +90,7 @@ export function pathBetween(graph: WorkspaceGraph, from: string, to: string): st
  */
 export function reachesDynamically(graph: WorkspaceGraph, from: string, to: string, visited: readonly string[] = []): boolean {
   if (visited.includes(from)) return false
-  return (graph.edges.get(from) as readonly Edge[]).some(
+  return (graph.edges.get(from) as readonly ProjectEdge[]).some(
     (edge) => edge.type === 'dynamic' && (edge.target === to || reachesDynamically(graph, edge.target, to, [...visited, from]))
   )
 }
@@ -107,7 +106,7 @@ export function reachesDynamically(graph: WorkspaceGraph, from: string, to: stri
  */
 export function filesImporting(graph: WorkspaceGraph, from: string, to: string, dynamicOnly: boolean): string[] {
   const drawing = createSet<string>()
-  for (const edge of graph.edges.get(from) as readonly Edge[]) {
+  for (const edge of graph.edges.get(from) as readonly ProjectEdge[]) {
     if (edge.target === to && (!dynamicOnly || edge.type === 'dynamic')) for (const file of edge.files) drawing.add(file)
   }
   return (graph.projects.get(from) as ProjectRecord).files.filter((file) => drawing.has(file))

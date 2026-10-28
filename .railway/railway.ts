@@ -6,7 +6,7 @@ export default defineRailway(() => {
   const koiVue = service('koi vue', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-vue',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vue',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-vue/**'],
@@ -19,7 +19,7 @@ export default defineRailway(() => {
   const koiPond = service('koi-pond', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx run-many -t build -p demo-koi-pond demo-koi-fish-*',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-pond,demo-koi-fish-*',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/host/**', '/apps/demos/koi-pond/lib/**'],
@@ -31,7 +31,7 @@ export default defineRailway(() => {
   const heartbeat = service('heartbeat', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-heartbeat',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-heartbeat',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/heartbeat/**'],
@@ -44,7 +44,7 @@ export default defineRailway(() => {
   const koiAngular = service('koi-angular', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-angular',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-angular',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-angular/**'],
@@ -56,7 +56,7 @@ export default defineRailway(() => {
   const koiSolid = service('koi solid', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-solid',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-solid',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-solid/**'],
@@ -69,7 +69,7 @@ export default defineRailway(() => {
   const koiLit = service('koi lit', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-lit',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-lit',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-lit/**'],
@@ -82,7 +82,7 @@ export default defineRailway(() => {
   const koiPreact = service('koi-preact', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-preact',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-preact',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-preact/**'],
@@ -95,7 +95,7 @@ export default defineRailway(() => {
   const clock = service('clock', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-clock',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-clock',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/clock/**'],
@@ -109,7 +109,7 @@ export default defineRailway(() => {
   const koiSvelte = service('koi svelte', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-svelte',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-svelte',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-svelte/**'],
@@ -122,7 +122,7 @@ export default defineRailway(() => {
   const koiReact = service('koi react', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-react',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-react',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-react/**'],
@@ -135,7 +135,7 @@ export default defineRailway(() => {
   const koiVanilla = service('koi-vanilla', {
     source: hyperfrontend,
     build: {
-      buildCommand: 'npm i && npx nx build demo-koi-fish-vanilla',
+      buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vanilla',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
       watchPatterns: ['/apps/demos/koi-pond/fish-vanilla/**', '/apps/demos/koi-pond/lib/**'],

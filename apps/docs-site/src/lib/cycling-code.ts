@@ -77,8 +77,8 @@ export interface Textual {
  *
  * @example
  * ```typescript
- * visibleTokens([{ content: 'npx', style: '' }, { content: ' nx', style: '' }], 4)
- * // [{ content: 'npx', style: '' }, { content: ' ', style: '' }]
+ * visibleTokens([{ content: 'npm', style: '' }, { content: ' run', style: '' }], 4)
+ * // [{ content: 'npm', style: '' }, { content: ' ', style: '' }]
  * ```
  */
 export function visibleTokens<T extends Textual>(tokens: readonly T[], shown: number): T[] {

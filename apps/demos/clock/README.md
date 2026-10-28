@@ -47,17 +47,21 @@ The contract carries `version: 0.3.0` (gated for compatibility at the handshake)
 ## Working on it
 
 ```bash
-npx nx run demo-clock:install    # npm install in this directory
-npx nx run demo-clock:dev        # vite build --watch + dev servers (dev host on :4280)
-npx nx test demo-clock           # vitest (physics, time, alarms, wiring, a11y/axe)
-npx nx typecheck demo-clock      # vue-tsc
-npx nx lint demo-clock           # oxlint + eslint (app-local)
-npx nx run demo-clock:build      # type-check + vite build → dist/apps/demos/clock/app/
-npx nx run demo-clock:pack-shell # hf build → self-contained shell tarball in dist/apps/demos/clock/shell/
-npx nx run docs-site:refresh-shell # re-pack, re-vendor, and reinstall the tarball in the docs-site
+# npm install in this directory
+npm run hf -- run demo-clock:install
+# vite build --watch + dev servers (dev host on :4280)
+npm run hf -- run-many -t dev -p demo-clock
+# vue-tsc
+npm run hf -- run-many -t typecheck -p demo-clock
+# type-check + vite build → dist/apps/demos/clock/app/
+npm run hf -- run-many -t build -p demo-clock
+# hf build → self-contained shell tarball in dist/apps/demos/clock/shell/
+npm run hf -- run-many -t pack-shell -p demo-clock
+# re-pack, re-vendor, and reinstall the tarball in the docs-site
+npm run hf -- run-many -t refresh-shell -p docs-site
 ```
 
-To see the full host↔hostee wiring locally before any deploy: run `npx nx run demo-clock:dev`
+To see the full host↔hostee wiring locally before any deploy: run `npm run hf -- run-many -t dev -p demo-clock`
 (serves the built app at `http://localhost:4280/`) alongside the docs-site's `npm run dev`. The
 docs-site's committed `.env.development` points its embeds at that port, while production builds
 keep the deployed origin.

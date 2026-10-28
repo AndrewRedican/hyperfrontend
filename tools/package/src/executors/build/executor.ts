@@ -1,5 +1,5 @@
-import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { AssetSpec, BinConfig, BuildConfig, CjsConfig, EsmConfig, IifeConfig, PackageJson, UmdConfig } from '@hyperfrontend/builder/models'
+import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import { build } from '@hyperfrontend/builder'
 import { byPrefix } from '@hyperfrontend/builder/presets'
 import { logger } from '@hyperfrontend/logging'

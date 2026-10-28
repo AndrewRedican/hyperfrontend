@@ -7,127 +7,86 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 ### CI - Pull Request ([ci-pr.yml](./ci-pr.yml))
 
 **Trigger**: Pull requests to `main` branch
-**Purpose**: Fast validation of changes using Nx affected calculations
-
-**Features**:
-
-- Calculates affected projects based on git changes
-- Runs checks only on affected projects (format, lint, build, test)
-- Optimized for speed (<10 minutes typical)
-- Cancels in-progress runs when new commits are pushed
-- Read-only permissions by default
-- Uploads build artifacts for reuse
-
-**Jobs**:
-
-- `setup`: Calculates affected projects using Nx
-- `format`: Format checking (affected only)
-- `lint`: Linting (affected only)
-- `typecheck`: Type checking (affected only)
-- `build`: Build with artifact upload (affected only)
-- `test`: Testing with coverage upload (affected only)
-- `e2e`: E2E tests (affected only)
-- `node-floor`: Loads every built package entry on each distinct Node.js floor the packages declare, one probe run per floor on that exact release (affected only)
-- `ci-status`: Aggregates results and provides final status
-- `version-check`: Validates version bumps were applied locally (runs after ci-status)
-
-### CI - Main Branch ([ci-main.yml](./ci-main.yml))
-
-**Trigger**: Pushes to `main` branch
-**Purpose**: Comprehensive validation of all projects
-
-**Features**:
-
-- Runs checks on ALL projects (not just affected)
-- Includes coverage threshold checking
-- Does not cancel in-progress runs (safer for main branch)
-- Longer retention for coverage reports (30 days)
-- Uploads build artifacts for publishing
-- Automated npm publishing and GitHub releases
-
-**Jobs**:
-
-- `setup`: Installs dependencies and prepares the workspace
-- `format`: Format checking (all projects)
-- `lint`: Linting (all projects)
-- `typecheck`: Type checking (all projects)
-- `build`: Build with artifact upload (all projects)
-- `test`: Testing with coverage thresholds (all projects)
-- `e2e`: E2E tests (all projects)
-- `node-floor`: Loads every built package entry on each distinct Node.js floor the packages declare, one probe run per floor on that exact release (all projects)
-- `ci-status`: Aggregates results and provides final status
-- `push-tags`: Creates and pushes version tags
-- `publish`: Publishes affected libraries to npm
-- `create-github-release`: Creates GitHub releases with changelog
-
-### CI - Libraries ([ci-libraries.yml](./ci-libraries.yml))
-
-**Trigger**: Pushes to `main` branch affecting `libs/**`
-**Purpose**: Matrix CI for detecting and running multiple library changes together
-
-**Features**:
-
-- Uses `dorny/paths-filter` to detect which libraries changed
-- Runs CI only for affected libraries using a dynamic matrix
-- Efficient: only builds/tests what changed
-- Same permissions and security model as other workflows
-
-**Jobs**:
-
-- `detect-changes`: Determines which libraries were modified
-- `ci`: Matrix job that runs `_lib-ci.yml` template for each changed library
-
-### Individual Library CI (ci-lib-\*.yml)
-
-**Trigger**: `workflow_run` - fires after `ci-libraries.yml` completes
-**Purpose**: Per-project build badges WITHOUT redundant builds
-
-**Files** (15 total):
-
-- Core: `ci-lib-cryptography.yml`, `ci-lib-logging.yml`, `ci-lib-network-protocol.yml`, `ci-lib-nexus.yml`, `ci-lib-state-machine.yml`, `ci-lib-web-worker.yml`
-- Utils: `ci-lib-data-utils.yml`, `ci-lib-function-utils.yml`, `ci-lib-immutable-api-utils.yml`, `ci-lib-json-utils.yml`, `ci-lib-list-utils.yml`, `ci-lib-random-generator-utils.yml`, `ci-lib-string-utils.yml`, `ci-lib-time-utils.yml`, `ci-lib-ui-utils.yml`
+**Purpose**: Run exactly the tasks the change reaches, planned by the owned workspace graph
 
 **How it works**:
 
-1. `ci-libraries.yml` does the actual matrix build (typecheck, build, test)
+1. The `plan` job builds the graph state cold, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan and the graph are uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, published as the `pipeline plan` check run on the head commit, and set the `environments` matrix.
+2. `version-check` checks, without changing anything, the version of every library owning a changed file (every library when a global configuration file changes), and gates the environments; the pre-push hook is what bumps versions.
+3. One `linux` job and, when any library or tool is selected, one `windows` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task of a project runs alone through `tools/workspace/bin/hf.ts run <project>:<target>`, in its own process group so a cancel ends everything it started (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows chains carry typecheck, lint and test of the libraries and tools, plus the linter build and smoke, and compare the graph-state digest with Linux.
+4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
+5. `status` aggregates `binary-budget`, `plan`, `version-check` and the environments, and passes when the plan finds nothing to run.
+
+**Features**:
+
+- Cancels in-progress runs when new commits are pushed
+- Read-only permissions by default; the environments add `checks: write` for the chain check runs
+- The `run` step gets `GITHUB_TOKEN`, which the chain check runs and, on main, the wait for the Windows job read; GitHub sets no token in the environment by itself
+- An `always()` step runs `pipeline finalize` after the run: a job killed by its time limit or a cancel still leaves `results-<os>.json` (rewritten after every task) and no check run in progress
+- Uploads build artifacts and coverage for reuse
+
+**Jobs**:
+
+- `plan`: Graph state, format check, the plan and the matrix
+- `binary-budget`: The binary budget of the pull request, whether or not any task runs
+- `version-check`: Validates version bumps were applied locally
+- `linux`, `windows`: Run the plan
+- `status`: Aggregates results and provides final status
+
+### CI - Main Branch ([ci-main.yml](./ci-main.yml))
+
+**Trigger**: Pushes to `main` branch, and `workflow_dispatch` with `full` to run every task of every project
+**Purpose**: The same plan as a pull request, from the previous head of `main`, plus publishing
+
+**How it works**:
+
+1. `plan` selects from `github.event.before` to the pushed head (a force-push, a first push or a dispatch without one plans everything), adds a `publish` task after every selected build of a publishable library, and adds a whole chain for any publishable library whose current version npm positively reports absent (registry drift), so a publish that failed on an earlier push is retried.
+2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for the `windows` job to conclude through the jobs API; a Windows failure or a 20-minute timeout skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each `hf run <lib>:publish`, whose executor skips a version already on npm and asks npm for provenance.
+3. Codecov uploads, the `dist` artifact and the results come from the Linux environment.
+4. `records` writes the run's plan and results, the run index and the graph's explorer document to the `ci-records` branch whenever the plan had work, whatever the environments concluded; the docs-site's dependency and pipeline explorers read that branch. The branch is a data store, never merged: each record replaces it with one parentless commit, it keeps the records of the 50 runs the index lists, and each task keeps its first 5 reasons (the `pipeline-plan` artifact has them all). It is created once by hand with a `vercel.json` that turns Vercel deployments off for it; the job fails if it is missing.
+5. `push-tags`, `github-release` and `dispatch-native-builds` follow a green environment matrix as before.
+
+**Features**:
+
+- Does not cancel in-progress runs (safer for main branch)
+- Longer retention for the plan, the results and coverage (30 days)
+- Automated npm publishing, GitHub releases and native binary dispatch
+
+**Jobs**:
+
+- `plan`: Graph state, format check, the plan with publishes and registry drift
+- `linux`, `windows`: Run the plan; the Linux one publishes
+- `records`: Pushes the run's record and the graph to `ci-records` (`contents: write`)
+- `status`: Aggregates results and provides final status
+- `push-tags`: Creates and pushes version tags
+- `create-github-release`: Creates GitHub releases with changelog
+- `dispatch-native-builds`: Dispatches the native binary workflows for new tags
+
+### Individual Library CI (ci-lib-\*.yml)
+
+**Trigger**: `workflow_run` - fires after `ci-main.yml` completes
+**Purpose**: Per-project build badges WITHOUT redundant builds
+
+**How it works**:
+
+1. `ci-main.yml` runs the plan and uploads `pipeline-results-linux`
 2. When it completes, individual `ci-lib-*.yml` workflows trigger via `workflow_run`
-3. Each individual workflow uses `_lib-status.yml` template to check if its library passed
+3. Each individual workflow uses `_lib-status.yml` template to read the library's chain outcome from the results of the newest runs
 4. No building happens - just status reporting for badges
-
-**Benefits**:
-
-- Project-specific build badges in README files
-- No redundant builds (all work done in matrix build)
-- Lightweight status checks via GitHub API
 
 ### Library Status Reporter ([\_lib-status.yml](./_lib-status.yml))
 
 **Trigger**: Called by `ci-lib-*.yml` workflows via `workflow_call`
-**Purpose**: Reusable template to check build status from matrix build
+**Purpose**: Reusable template to report a library's chain outcome from the main run's results
 
 **Inputs**:
 
-- `project-name`: Nx project name (e.g., lib-nexus)
+- `project-name`: project name from `project.json` (e.g., lib-nexus)
 - `library-path`: Path to library (e.g., libs/nexus)
 
 **Jobs**:
 
-- `check-status`: Queries GitHub API to find library build result from `ci-libraries.yml`
-
-### Library CI Template ([\_lib-ci.yml](./_lib-ci.yml))
-
-**Trigger**: Called by other workflows via `workflow_call`
-**Purpose**: Reusable template for library CI
-
-**Inputs**:
-
-- `project-name`: Nx project name (e.g., lib-nexus)
-- `coverage-path`: Path to lcov.info file
-- `coverage-flag`: Codecov flag name
-
-**Jobs**:
-
-- `build`: Typecheck, build, test with coverage upload to Codecov
+- `check-status`: Downloads `pipeline-results-linux` from the newest completed `ci` runs on `main` and reports the project's chain outcome, walking back while the project had no chain
 
 ### Downloads Freshness ([downloads-freshness.yml](./downloads-freshness.yml))
 
@@ -155,6 +114,27 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `freshness`: Compares the published frontier with npm's and triggers a production build only when they differ
 
+### Full Run ([full-run.yml](./full-run.yml))
+
+**Trigger**:
+
+- Weekly schedule (Monday 05:30 UTC)
+- Manual dispatch
+
+**Purpose**: Run every task of every project once a week: the net under the narrower pull-request and main plans
+
+**How it works**:
+
+1. Dispatches `ci-main.yml` on `main` with `full: true`, so its plan runs everything instead of what the last push reached
+
+**Features**:
+
+- Read-only repository permissions; `actions: write` for the dispatch alone
+
+**Jobs**:
+
+- `full-run`: Dispatches the weekly full run of `ci-main.yml`
+
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
 
 **Trigger**:
@@ -181,47 +161,23 @@ All custom actions are located in [`.github/actions/`](../actions/):
 
 ### setup-monorepo
 
-Sets up the Node.js environment, caches npm dependencies and Nx cache, and installs packages.
+Sets up the Node.js environment, caches the npm download directory and installs packages. No task output is cached anywhere: the owner decided on 2026-10-26 that the plan runs what a change genuinely reaches and nothing is restored from an earlier run, on CI or locally.
 
 **Outputs**:
 
 - `cache-hit`: Whether npm cache was hit
-- `nx-cache-hit`: Whether Nx cache was hit
 
 **Features**:
 
-- npm dependency caching (`~/.npm`)
-- Nx build cache (`.nx/cache`, `node_modules/.cache/nx`)
-- Cache key includes `package-lock.json` hash and commit SHA
-- Fallback to previous caches for faster cold starts
+- npm dependency caching (`~/.npm`), keyed by the `package-lock.json` hash
 
 **Note**: Node.js version comes from `.nvmrc`, the one pin every environment reads.
 
-### nx-affected
+### version-check
 
-Calculates affected projects using Nx based on git changes.
+Checks the version of every library owning a changed file (every library when a global configuration file changes), selected through the owned graph with `pipeline affected --target version-check --projects`, and keeps one comment on the pull request. It changes nothing: the pre-push hook bumps versions.
 
-**Inputs**:
-
-- `base-ref` (required): Base git reference for comparison
-- `head-ref` (optional): Head git reference (default: HEAD)
-- `targets` (optional): Comma-separated list of targets to check
-
-**Outputs**:
-
-- `affected-projects`: Comma-separated list of affected project names
-- `has-affected`: Boolean indicating if there are any affected projects
-- `projects-json`: JSON array of affected project names
-
-### run-checks
-
-Runs specific checks (format, lint, test, build, e2e) for all or affected projects.
-
-**Inputs**:
-
-- `check-type` (required): Type of check (format, lint, test, build, e2e)
-- `affected-only` (optional): Whether to run only on affected projects
-- `affected-projects` (optional): Comma-separated list of affected projects
+The selection and execution of work are not actions: `tools/workspace/bin/pipeline.ts` plans and runs, and the workflow files hold only what GitHub itself must read. See [`tools/workspace/README.md`](../../tools/workspace/README.md).
 
 ## Security Features
 
@@ -264,8 +220,8 @@ act pull_request -W .github/workflows/ci-pr.yml
 # Test main branch workflow
 act push -W .github/workflows/ci-main.yml
 
-# Test specific job
-act pull_request -j format -W .github/workflows/ci-pr.yml
+# Test specific job (the plan job checks formatting and plans the change)
+act pull_request -j plan -W .github/workflows/ci-pr.yml
 ```
 
 ## Performance Metrics
@@ -274,14 +230,12 @@ act pull_request -j format -W .github/workflows/ci-pr.yml
 
 - PR workflows: < 10 minutes
 - Main branch workflows: < 15 minutes
-- Cache hit rate: > 50%
 
 **Optimizations**:
 
-- Nx affected calculations reduce PR check time
-- npm dependency caching
-- Parallel execution (up to 3 concurrent tasks)
-- Job-level parallelization
+- The owned plan runs only the tasks a change reaches, with a reason per task and per skip
+- The scheduler runs independent tasks concurrently inside each environment and skips the dependents of a failure
+- npm dependency caching; no task output is cached
 
 ## Troubleshooting
 
@@ -291,17 +245,16 @@ act pull_request -j format -W .github/workflows/ci-pr.yml
 - Verify workflow trigger conditions match your branch/event
 - Check workflow file syntax with `act --list`
 
-### Cache Not Working
+### npm Cache Not Working
 
 - Clear the cache: Go to Actions → Caches → Delete cache
 - Verify `package-lock.json` hasn't changed unexpectedly
-- Check cache key generation in workflow logs
 
-### Affected Calculation Issues
+### Plan Issues
 
 - Ensure `fetch-depth: 0` is set in checkout step
-- Verify base-ref points to the correct branch
-- Check Nx configuration in `nx.json`
+- Read the `plan` job summary: every task lists the reason it runs, every skipped task the rule that made the skip safe
+- `npm run hf -- graph affected --target <t> --explain` and `npm run hf -- graph explain <project:target>` answer locally why a task is in or out
 
 ### Failed Jobs
 
@@ -359,7 +312,7 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 
 **Important Notes**:
 
-- The `version-check` job runs after all CI checks pass (validation only, no commits)
+- The `version-check` job runs after the plan and gates the environments (validation only, no commits)
 - Version bumps are applied locally via lefthook pre-push hooks
 - CI validates that expected versions match committed versions
 - Uses GITHUB_TOKEN with read-only contents permission
@@ -370,7 +323,6 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 
 - Review and merge Dependabot PRs
 - Check workflow performance metrics
-- Monitor cache hit rates
 
 ### Monthly Tasks
 
@@ -383,11 +335,9 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 - Review security scan results
 - Update documentation
 - Optimize slow workflows
-- Consider Nx Cloud for further optimization
 
 ## Future Enhancements
 
 Planned but not yet implemented:
 
 - Demo app deployments
-- Nx Cloud integration for remote caching (cross-workflow/cross-branch)

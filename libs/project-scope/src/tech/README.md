@@ -178,13 +178,13 @@ for (const detector of monorepoDetectors) {
 
 #### Supported Monorepo Tools
 
-| Tool            | Detection Sources                                                    |
-| --------------- | -------------------------------------------------------------------- |
-| NX              | `nx.json`, `@nx/workspace` package                                   |
-| Turborepo       | `turbo.json`, [`turbo`](https://www.npmjs.com/package/turbo) package |
-| Lerna           | `lerna.json`, [`lerna`](https://www.npmjs.com/package/lerna) package |
-| Rush            | `rush.json`                                                          |
-| PNPM Workspaces | `pnpm-workspace.yaml`                                                |
+| Tool            | Detection Sources                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| NX              | `nx.json`, [`nx`](https://www.npmjs.com/package/nx) package, `apps/` or `libs/` folders, any `@nx/*` or `@nrwl/*` package |
+| Turborepo       | `turbo.json`, [`turbo`](https://www.npmjs.com/package/turbo) package                                                      |
+| Lerna           | `lerna.json`, [`lerna`](https://www.npmjs.com/package/lerna) package                                                      |
+| Rush            | `rush.json`                                                                                                               |
+| PNPM Workspaces | `pnpm-workspace.yaml`                                                                                                     |
 
 ## Detection Result Structure
 

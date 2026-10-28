@@ -1,10 +1,10 @@
 # @hyperfrontend/lint
 
-The workspace's lint integration: [`@hyperfrontend/linter`](../../libs/linter/README.md) run from its TypeScript source, the workspace's own rule families, the project graph those rules read, and the Nx plugin that gives every project a `lint` target.
+The workspace's lint integration: the workspace's own rule families, and [`@hyperfrontend/linter`](../../libs/linter/README.md) run from its TypeScript source.
 
 ## Running it
 
-Each project's Nx `lint` target runs `node <rel>/tools/lint/bin/lint.ts .` from the project root; `npx nx lint:all` runs them all and writes the report. From any directory:
+Every project but the workspace root gets a `lint` target, inferred by the workspace graph, that runs `node <rel>/tools/lint/bin/lint.ts .` from the project root; projects under the `lint.exclude` globs of `nx.json` get none. `npm run hf -- run @hyperfrontend/workspace:lint:all` runs them all and writes the report. From any directory:
 
 ```bash
 node tools/lint/bin/lint.ts [--fix | --fix-dry-run] [--format stylish|json] \
@@ -23,7 +23,7 @@ Every project's `lint.config.ts` spreads the root `lint.base.config.ts` before i
 | Family        | What it checks                                                                                                                                                  |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workspace/*` | This repository's conventions: library manifests and READMEs, the docs site's registrations, CI workflows, the portable-path helpers, logging and editor policy |
-| `projects/*`  | Module boundaries, declared dependencies and Nx plugin manifests, on the project graph in `src/graph/`                                                          |
+| `projects/*`  | Module boundaries, declared dependencies and Nx plugin manifests, on the workspace graph of `@hyperfrontend/workspace/graph`                                    |
 
 A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from `@hyperfrontend/linter`; the id names the file, and `config/families.ts` registers every file it finds. Its spec beside it lists valid and invalid cases with `testRule` from `@hyperfrontend/linter/testing`. The rules import only the package's public entries. Their documentation is in `docs/rules/`, and the `lint-rules` skill has the details.
 
@@ -33,17 +33,14 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 - `config/`: the families and the workspace's own settings.
 - `src/runtime/aliases.ts`: the resolution hook that loads workspace libraries from source.
 - `src/rules/workspace/`, `src/rules/projects/`: the workspace's rules, with specs and fixtures.
-- `src/graph/`: the project graph Nx would build: projects, their files and tags, each code file's imports and the edges they draw, cached under `node_modules/.cache/hyperfrontend-lint/`.
-- `src/nx/plugin.ts`: the Nx plugin inferring each project's `lint` target.
-- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `graph-oracle.ts` compares the graph with the file `nx graph --file` writes, `bench.ts` times the linter.
+- `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `bench.ts` times the linter.
 
 ## Commands
 
 ```bash
-npx nx test tool-lint
-npx nx typecheck tool-lint
+npm run hf -- run tool-lint:test
+npm run hf -- run tool-lint:typecheck
 node tools/lint/scripts/parser-oracle.ts
-node tools/lint/scripts/graph-oracle.ts --graph <file written by nx graph --file>
 node tools/lint/scripts/bench.ts
 ```
 
