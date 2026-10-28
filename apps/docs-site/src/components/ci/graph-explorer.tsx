@@ -2,7 +2,7 @@
 
 import type { CanvasEdge, CanvasGraph, GraphFilters, ResourceKind } from '@/lib/ci/graph-view'
 import type { EdgeKind, ExplorerDocument, ExplorerLink, ExplorerProject, Role } from '@/lib/ci/model'
-import type { Status } from './status-line'
+import type { Pending } from './placeholder'
 import { fetchJson } from '@/lib/ci/fetch'
 import {
   ALL_KINDS,
@@ -24,7 +24,8 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { ConnectionView } from './connection-view'
 import { FAMILY_COLOUR, GraphCanvas, KIND_DASH } from './graph-canvas'
-import { StatusLine, Toggle } from './status-line'
+import { Placeholder, pendingOf } from './placeholder'
+import { Toggle } from './status-line'
 
 /** The selected project's node id, or nothing. */
 type Selection = string | null
@@ -51,28 +52,27 @@ function flipped<Member>(set: ReadonlySet<Member>, member: Member): Set<Member> 
  */
 export function GraphExplorer() {
   const [document, setDocument] = useState<ExplorerDocument | null>(null)
-  const [status, setStatus] = useState<Status>({ message: 'Loading the graph…', error: false })
+  const [pending, setPending] = useState<Pending>({ state: 'loading', detail: null })
+  const [attempt, setAttempt] = useState(0)
   const [filters, setFilters] = useState<GraphFilters>(DEFAULT_FILTERS)
   const [query, setQuery] = useState('')
   const [selection, setSelection] = useState<Selection>(null)
 
   useEffect(() => {
     const controller = new AbortController()
+    setPending({ state: 'loading', detail: null })
     fetchJson<ExplorerDocument>(`${RECORDS_URL}/graph/latest.json`, { signal: controller.signal })
       .then(({ value }) => {
         if (value.schema !== 1) throw createError('the graph document has a schema this page does not read')
         setDocument(value)
-        setStatus({ message: null, error: false })
+        setPending(null)
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
-        setStatus({
-          message: `The graph could not be loaded: ${error instanceof Error ? error.message : String(error)}. The main workflow writes it to the ${'ci-records'} branch after each run.`,
-          error: true,
-        })
+        setPending(pendingOf(error))
       })
     return () => controller.abort()
-  }, [])
+  }, [attempt])
 
   const canvas: CanvasGraph | null = useMemo(() => (document === null ? null : buildCanvas(document, filters)), [document, filters])
   const matched = useMemo(() => {
@@ -97,12 +97,25 @@ export function GraphExplorer() {
     <div className="ci-explorer">
       {document === null ? null : (
         <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
-          {document.projects.length} projects, {document.entries.length} entries, {document.links.length} folded links from the graph built
-          at commit <code className="font-mono text-xs">{shortSha(document.sha)}</code> on {formatWhen(document.generatedAt)}.
-          {canvas === null ? '' : ` Drawing ${canvas.nodes.length} nodes and ${canvas.edges.length} edges.`}
+          {document.projects.length} projects · {document.links.length} links ·{' '}
+          <code className="font-mono text-xs">{shortSha(document.sha)}</code> · {formatWhen(document.generatedAt)}
         </p>
       )}
-      <StatusLine message={status.message} error={status.error} />
+      {pending === null ? null : (
+        <Placeholder
+          state={pending.state}
+          motif="graph"
+          title={
+            pending.state === 'loading'
+              ? 'Loading the graph'
+              : pending.state === 'empty'
+                ? 'No graph recorded yet'
+                : 'The graph could not be loaded'
+          }
+          detail={pending.state === 'empty' ? 'It appears after the next pipeline run on main.' : pending.detail}
+          onRetry={pending.state === 'error' ? () => setAttempt((count) => count + 1) : null}
+        />
+      )}
 
       {document === null || canvas === null ? null : (
         <>

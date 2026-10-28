@@ -8,6 +8,7 @@ import { environmentJob, liveProgress, liveRun } from '@/lib/ci/live'
 import { formatDuration, outcomeMark, shortSha } from '@/lib/ci/pipeline-view'
 import { useState } from 'react'
 import { InlineIcon } from './node-icon'
+import { Placeholder } from './placeholder'
 import { OUTCOME_COLOUR } from './run-timeline'
 
 /** What one read of a followed run found. */
@@ -107,17 +108,15 @@ export function LiveView({ reading, pace }: LiveViewProps) {
         })}
         <span className="text-xs">
           read {formatClock(readAt)}
-          {pace === null
-            ? ''
-            : pace.waitsForReset
-              ? `, again at ${formatClock(pace.at)} once GitHub renews the hour's ${pace.limit} requests`
-              : `, again at ${formatClock(pace.at)}: a read of ${pace.requests} requests every ${formatDuration(pace.everyMs)} keeps within ${pace.limit} an hour`}
+          {pace === null ? '' : `, next ${formatClock(pace.at)}${pace.waitsForReset ? ' (rate limit)' : ''}`}
         </span>
       </div>
       {live.plan === null ? (
-        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-          The run has not published its plan yet, or predates the plan check run; {checkRuns.length} check runs are on the commit.
-        </p>
+        <Placeholder
+          state={run.status === 'completed' ? 'empty' : 'loading'}
+          motif="pipeline"
+          title={run.status === 'completed' ? 'This run published no plan' : 'Waiting for the plan'}
+        />
       ) : (
         <>
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">

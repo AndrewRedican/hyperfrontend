@@ -1278,6 +1278,28 @@
     --ci-grid: var(--color-slate-400);
   }
 
+  /* The placeholder drawing breathes while its data loads, each shape a beat behind the last. */
+  .ci-placeholder__pulse {
+    animation: ci-placeholder-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes ci-placeholder-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ci-placeholder__pulse {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+
   .trend-chart {
     position: relative;
     width: 100%;

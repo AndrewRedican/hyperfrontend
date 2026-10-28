@@ -5,16 +5,18 @@ import type { CheckRunsPage, Environment, GitHubRun, JobsPage, RunIndex, RunInde
 import type { TimelineTask } from '@/lib/ci/pipeline-view'
 import type { PollPace } from '@/lib/ci/poll'
 import type { LiveReading } from './live-view'
+import type { Pending } from './placeholder'
 import type { Status } from './status-line'
 import { FetchFailure, NO_RATE, fetchJson } from '@/lib/ci/fetch'
 import { formatDuration, formatWhen, outcomeCounts, outcomeMark, shortSha, skippedByRule, timelineOf } from '@/lib/ci/pipeline-view'
 import { CHECK_RUNS_PER_PAGE, laterPages, pollPace } from '@/lib/ci/poll'
-import { API_URL, CI_WORKFLOW_FILE, PR_WORKFLOW_FILE, RECORDS_BRANCH, RECORDS_URL } from '@/lib/ci/sources'
+import { API_URL, CI_WORKFLOW_FILE, PR_WORKFLOW_FILE, RECORDS_URL } from '@/lib/ci/sources'
 import { useCallback, useEffect, useState } from 'react'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { LiveView, formatClock } from './live-view'
+import { Placeholder, describeFailure, pendingOf } from './placeholder'
 import { OUTCOME_COLOUR, RunTimeline } from './run-timeline'
 import { StatusLine, TokenField } from './status-line'
 
@@ -62,51 +64,64 @@ export function PipelineExplorer() {
  */
 function RecordedRuns() {
   const [index, setIndex] = useState<RunIndex | null>(null)
-  const [status, setStatus] = useState<Status>({ message: 'Loading the recorded runs…', error: false })
+  const [indexPending, setIndexPending] = useState<Pending>({ state: 'loading', detail: null })
+  const [indexAttempt, setIndexAttempt] = useState(0)
   const [opened, setOpened] = useState<RunIndexEntry | null>(null)
   const [record, setRecord] = useState<RunRecord | null>(null)
+  const [recordPending, setRecordPending] = useState<Pending>(null)
+  const [recordAttempt, setRecordAttempt] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
+    setIndexPending({ state: 'loading', detail: null })
     fetchJson<RunIndex>(`${RECORDS_URL}/index.json`, { signal: controller.signal })
       .then(({ value }) => {
         setIndex(value)
-        setStatus({ message: null, error: false })
+        setIndexPending(value.runs.length === 0 ? { state: 'empty', detail: null } : null)
         setOpened(value.runs[0] ?? null)
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
-        setStatus({
-          message:
-            error instanceof FetchFailure && error.status === 404
-              ? `No run has been recorded yet: the main workflow writes the ${RECORDS_BRANCH} branch after its first run with this feature.`
-              : `The recorded runs could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
-          error: true,
-        })
+        setIndexPending(pendingOf(error))
       })
     return () => controller.abort()
-  }, [])
+  }, [indexAttempt])
 
   useEffect(() => {
     if (opened === null) return
     const controller = new AbortController()
     setRecord(null)
+    setRecordPending({ state: 'loading', detail: null })
     fetchJson<RunRecord>(`${RECORDS_URL}/runs/${opened.id}.json`, { signal: controller.signal })
-      .then(({ value }) => setRecord(value))
+      .then(({ value }) => {
+        setRecord(value)
+        setRecordPending(null)
+      })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
-        setStatus({
-          message: `Run #${opened.number} could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
-          error: true,
-        })
+        setRecordPending(pendingOf(error))
       })
     return () => controller.abort()
-  }, [opened])
+  }, [opened, recordAttempt])
 
   return (
     <>
-      <StatusLine message={status.message} error={status.error} />
-      {index === null ? null : (
+      {indexPending === null ? null : (
+        <Placeholder
+          state={indexPending.state}
+          motif="pipeline"
+          title={
+            indexPending.state === 'loading'
+              ? 'Loading recorded runs'
+              : indexPending.state === 'empty'
+                ? 'No runs recorded yet'
+                : 'The recorded runs could not be loaded'
+          }
+          detail={indexPending.state === 'empty' ? 'Runs on main appear here once they finish.' : indexPending.detail}
+          onRetry={indexPending.state === 'error' ? () => setIndexAttempt((count) => count + 1) : null}
+        />
+      )}
+      {index === null || index.runs.length === 0 ? null : (
         <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
@@ -143,7 +158,21 @@ function RecordedRuns() {
           </table>
         </div>
       )}
-      {opened !== null && record === null && status.message === null ? <StatusLine message={`Loading run #${opened.number}…`} /> : null}
+      {opened === null || recordPending === null ? null : (
+        <Placeholder
+          state={recordPending.state}
+          motif="pipeline"
+          title={
+            recordPending.state === 'loading'
+              ? `Loading run #${opened.number}`
+              : recordPending.state === 'empty'
+                ? `Run #${opened.number} has no record`
+                : `Run #${opened.number} could not be loaded`
+          }
+          detail={recordPending.detail}
+          onRetry={recordPending.state === 'error' ? () => setRecordAttempt((count) => count + 1) : null}
+        />
+      )}
       {record === null ? null : <RunView record={record} />}
     </>
   )
@@ -336,7 +365,7 @@ function LiveRuns({ token, onRemaining }: LiveRunsProps) {
         if (controller.signal.aborted) return
         next = pollPace(requests, rate, dateNow())
         setStatus({
-          message: `The runs could not be read: ${error instanceof Error ? error.message : String(error)}; trying again at ${formatClock(next.at)}.`,
+          message: `${describeFailure(error)} Trying again at ${formatClock(next.at)}.`,
           error: true,
         })
       }
@@ -354,8 +383,19 @@ function LiveRuns({ token, onRemaining }: LiveRunsProps) {
   const followedId = chosen ?? reading?.run.id ?? null
   return (
     <>
-      <StatusLine message={status.message} error={status.error} />
-      {runs === null ? null : (
+      {runs === null ? (
+        <Placeholder
+          state={status.error ? 'error' : 'loading'}
+          motif="pipeline"
+          title={status.error ? 'GitHub could not be read' : 'Reading runs from GitHub'}
+          detail={status.error ? status.message : null}
+        />
+      ) : runs.length === 0 ? (
+        <Placeholder state="empty" motif="pipeline" title="No pipeline runs on GitHub yet" />
+      ) : (
+        <StatusLine message={status.error ? `GitHub could not be read: ${status.message}` : null} error />
+      )}
+      {runs === null || runs.length === 0 ? null : (
         <ul className="mt-4 flex flex-wrap gap-2">
           {runs.map((run) => (
             <li key={run.id}>
