@@ -85,10 +85,24 @@ export interface ExecuteOptions {
   readonly platform?: string
 }
 
+/** The commands that are `.cmd` shims on Windows, which only a shell can launch. */
+const WINDOWS_SHIMS: readonly string[] = ['npm', 'npx']
+
+/**
+ * Whether a command needs a shell to start: only a Windows shim does. Every other command starts
+ * directly, so its arguments reach it as given, with no shell quoting to get wrong.
+ *
+ * @param command - The argument vector
+ * @param platform - `win32` or another platform name
+ * @returns True for `npm` and `npx` on Windows
+ */
+export function needsShell(command: readonly string[], platform: string): boolean {
+  return platform === 'win32' && WINDOWS_SHIMS.includes(command[0] as string)
+}
+
 /**
  * The arguments as a Windows shell receives them: each one holding a space is quoted, because
- * `npm` and `npx` are `.cmd` shims there that only a shell can launch, and the shell splits an
- * unquoted argument at every space.
+ * the shell splits an unquoted argument at every space.
  *
  * @param args - The arguments
  * @param platform - `win32` or another platform name
@@ -100,7 +114,7 @@ export function shellSafe(args: readonly string[], platform: string): string[] {
 
 /**
  * Ends a child process together with every process it started: its process group on POSIX, its
- * process tree through `taskkill` on Windows, where the child is the shell that started the command.
+ * process tree through `taskkill` on Windows, where the child may be the shell that started a shim.
  *
  * @param child - The child process
  * @param platform - `win32` or another platform name
@@ -130,7 +144,8 @@ function endTree(child: ChildProcess, platform: string, start: Spawn, kill: Kill
  */
 export function runCommand(command: readonly string[], options: CommandOptions): Promise<CommandResult> {
   const platform = options.platform ?? process.platform
-  const [file, ...args] = shellSafe(command, platform)
+  const shell = needsShell(command, platform)
+  const [file, ...args] = shell ? shellSafe(command, platform) : command
   const start = options.spawn ?? (spawn as Spawn)
   const kill: Kill = options.kill ?? process.kill
   return createPromise((resolve) => {
@@ -143,7 +158,7 @@ export function runCommand(command: readonly string[], options: CommandOptions):
       cwd: options.cwd,
       env: { ...process.env, ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: platform === 'win32',
+      shell,
       // why: on POSIX the command leads its own process group so stopping it reaches every process it started; Windows keeps the shared console, whose Ctrl-C reaches them all
       detached: platform !== 'win32',
       windowsHide: true,

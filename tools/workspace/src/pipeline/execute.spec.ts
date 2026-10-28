@@ -9,7 +9,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { executeTask, logPathOf, replayLines, runCommand, shellSafe } from './execute'
+import { executeTask, logPathOf, needsShell, replayLines, runCommand, shellSafe } from './execute'
 
 const directory = useTempDir({ prefix: 'execute-' })
 
@@ -232,9 +232,9 @@ describe('runCommand', () => {
     expect(result.stdout).not.toBe('ran')
   })
 
-  it('launches through a shell on Windows', async () => {
+  it('starts a command directly on Windows, its arguments unquoted', async () => {
     const options: unknown[] = []
-    await runCommand(['node', '-e', '1'], {
+    await runCommand(['node', '-e', 'process.stdout.write("a b")'], {
       cwd: directory.path,
       platform: 'win32',
       spawn: (command, args, spawnOptions) => {
@@ -242,7 +242,30 @@ describe('runCommand', () => {
         return spawn(command, args, { ...spawnOptions, shell: false })
       },
     })
-    expect(options).toEqual([['node', ['-e', '1'], true, false]])
+    expect(options).toEqual([['node', ['-e', 'process.stdout.write("a b")'], false, false]])
+  })
+
+  it('launches a shim through a shell on Windows, quoting what holds a space', async () => {
+    const options: unknown[] = []
+    await runCommand(['npx', '-p', 'a b'], {
+      cwd: directory.path,
+      platform: 'win32',
+      spawn: (command, args, spawnOptions) => {
+        options.push([command, args, spawnOptions.shell])
+        return spawn('node', ['-e', '1'], { ...spawnOptions, shell: false })
+      },
+    })
+    expect(options).toEqual([['npx', ['-p', '"a b"'], true]])
+  })
+})
+
+describe('needsShell', () => {
+  it('asks for a shell for npm and npx on Windows', () => {
+    expect([needsShell(['npm', 'view'], 'win32'), needsShell(['npx', '-y'], 'win32')]).toEqual([true, true])
+  })
+
+  it('starts everything else directly', () => {
+    expect([needsShell(['node', '-e', '1'], 'win32'), needsShell(['npx', '-y'], 'linux')]).toEqual([false, false])
   })
 })
 
