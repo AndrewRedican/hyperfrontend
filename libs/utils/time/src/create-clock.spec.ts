@@ -1,81 +1,88 @@
 import type { MockFn } from '@hyperfrontend/testing'
 import type { Clock } from './create-clock'
-import { beforeEach } from 'node:test'
+import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createClock } from './create-clock'
-import { sleep } from './sleep'
+
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
+  setInterval: (callback: () => void, delay: number) => setInterval(callback, delay),
+  clearInterval: (id: NodeJS.Timeout) => clearInterval(id),
+}))
 
 describe('createClock', () => {
   let callback: MockFn<[currentTime: Date], void>
   let clock: Clock
 
   beforeEach(() => {
+    jest.useFakeTimers()
     callback = jest.fn()
     clock = createClock(100)
   })
 
-  it('notifies subscribers with the current time', async () => {
+  afterEach(() => jest.useRealTimers())
+
+  it('notifies subscribers with the current time', () => {
     clock.subscribe(callback)
 
     clock.start()
-    await sleep(350)
+    jest.advanceTimersByTime(350)
     clock.stop()
 
     expect(callback.mock.calls).toEqual([[expect.any(Date)], [expect.any(Date)], [expect.any(Date)]])
   })
 
-  it('stops notifying subscribers after being stopped', async () => {
+  it('stops notifying subscribers after being stopped', () => {
     clock.start()
     clock.subscribe(callback)
 
-    await sleep(350)
+    jest.advanceTimersByTime(350)
     clock.stop()
-    await sleep(200)
+    jest.advanceTimersByTime(200)
 
     expect(callback).toHaveBeenCalledTimes(3)
   })
 
-  it('stops invoking callback after unsubscribing', async () => {
+  it('stops invoking callback after unsubscribing', () => {
     clock = createClock()
     clock.subscribe(callback)
     clock.start()
 
-    await sleep(clock.interval + 100)
+    jest.advanceTimersByTime(clock.interval + 100)
     clock.unsubscribe(callback)
 
-    await sleep(clock.interval + 100)
+    jest.advanceTimersByTime(clock.interval + 100)
     clock.stop()
 
-    expect(callback).toHaveBeenCalled()
+    expect(callback).toHaveBeenCalledTimes(1)
   })
 
-  it('does not start a new interval when already started', async () => {
+  it('does not start a new interval when already started', () => {
     clock.subscribe(callback)
     clock.start()
     clock.start()
 
-    await sleep(350)
+    jest.advanceTimersByTime(350)
     clock.stop()
 
     expect(callback).toHaveBeenCalledTimes(3)
   })
 
-  it('does nothing when stop is called while already stopped', async () => {
+  it('does nothing when stop is called while already stopped', () => {
     clock.subscribe(callback)
     clock.stop()
 
     expect(callback).not.toHaveBeenCalled()
   })
 
-  it('can be stopped and restarted multiple times', async () => {
+  it('can be stopped and restarted multiple times', () => {
     clock.subscribe(callback)
 
     clock.start()
-    await sleep(150)
+    jest.advanceTimersByTime(150)
     clock.stop()
 
     clock.start()
-    await sleep(150)
+    jest.advanceTimersByTime(150)
     clock.stop()
 
     expect(callback).toHaveBeenCalledTimes(2)
