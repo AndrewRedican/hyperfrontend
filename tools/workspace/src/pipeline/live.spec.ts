@@ -108,7 +108,7 @@ describe('planCheckOutput', () => {
   it('keeps the summary and the text within the limit of a plan twice as wide as this workspace can plan', () => {
     const output = planCheckOutput(wide(150))
     expect([
-      output.summary.length <= CHECK_TEXT_LIMIT,
+      new TextEncoder().encode(output.summary).length <= CHECK_TEXT_LIMIT,
       (output.text ?? '').length <= CHECK_TEXT_LIMIT,
       parse(output.text ?? '').truncated,
     ]).toEqual([true, true, false])
@@ -122,9 +122,21 @@ describe('clip', () => {
 
   it('cuts long text to the limit and says so', () => {
     const cut = clip('x'.repeat(200), 100)
-    expect({ length: cut.length, note: cut.endsWith('\n\n… truncated; the pipeline-plan artifact holds the whole plan.') }).toEqual({
-      length: 100,
+    expect({
+      bytes: new TextEncoder().encode(cut).length,
+      note: cut.endsWith('\n\n… truncated; the pipeline-plan artifact holds the whole plan.'),
+    }).toEqual({
+      bytes: 100,
       note: true,
+    })
+  })
+
+  it('counts the limit in UTF-8 bytes and never splits a character', () => {
+    const cut = clip('a → b\n'.repeat(50), 100)
+    expect({ bytes: new TextEncoder().encode(cut).length <= 100, whole: !cut.includes('�'), clipped: cut.startsWith('a → b\n') }).toEqual({
+      bytes: true,
+      whole: true,
+      clipped: true,
     })
   })
 })

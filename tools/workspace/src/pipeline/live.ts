@@ -8,13 +8,15 @@
 
 import type { CheckOutput } from './checks'
 import type { Chain, Environment, Plan, PlanMode, TaskResult, Weight } from './model'
+import { createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { planSummary } from './report'
 
 /** The schema of the state the check runs carry. */
 export const LIVE_SCHEMA = 1
 
-/** The most characters a check run's summary or text may hold. */
+/** The most UTF-8 bytes a check run's summary or text may hold. */
 export const CHECK_TEXT_LIMIT = 65535
 
 /** The name of the check run carrying the plan. */
@@ -97,16 +99,19 @@ export interface ChainState {
 }
 
 /**
- * Text cut to the check-run limit, with a line saying so when it was.
+ * Text cut to the check-run limit, with a line saying so when it was. GitHub counts the limit
+ * in UTF-8 bytes, so the cut never splits a character and the note's own bytes are reserved.
  *
  * @param text - Any text
- * @param limit - The most characters allowed
+ * @param limit - The most UTF-8 bytes allowed
  * @returns The text, or its head and a note
  */
 export function clip(text: string, limit: number = CHECK_TEXT_LIMIT): string {
-  if (text.length <= limit) return text
+  const encoder = createTextEncoder()
+  if (encoder.encode(text).length <= limit) return text
   const note = '\n\n… truncated; the pipeline-plan artifact holds the whole plan.'
-  return `${text.slice(0, limit - note.length)}${note}`
+  const { read } = encoder.encodeInto(text, createUint8Array(limit - encoder.encode(note).length))
+  return `${text.slice(0, read)}${note}`
 }
 
 /**
