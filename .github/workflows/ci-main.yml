@@ -32,15 +32,15 @@ jobs:
       has-work: ${{ steps.plan.outputs.has-work }}
       graph-digest: ${{ steps.graph-state.outputs.digest }}
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # why: the plan walks main's first parents back to the newest planned commit
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
-      - name: Build the graph state
+      - name: Graph state
         id: graph-state
         shell: bash
         # why: a cold build takes four seconds and nothing is restored, so the state is the commit's and nothing else's
@@ -49,10 +49,10 @@ jobs:
           $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
-      - name: Check the formatting of every file
+      - name: Format
         run: npm run -s hf -- format --check --all
 
-      - name: Plan the push
+      - name: Plan
         id: plan
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -61,7 +61,7 @@ jobs:
           node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --planned-base --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
-      - name: Upload the plan and the graph
+      - name: Upload plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pipeline-plan
@@ -71,7 +71,7 @@ jobs:
           retention-days: 30
 
   environment:
-    name: environment (${{ matrix.os }})
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.runner }}
     needs: [plan]
     if: needs.plan.outputs.has-work == 'true'
@@ -89,25 +89,25 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Keep line endings as committed
+      - name: Keep line endings
         if: matrix.os == 'windows'
         run: git config --global core.autocrlf false
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # why: the versioning and e2e executors read history
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
-      - name: Download the plan
+      - name: Download plan
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pipeline-plan
           path: .hf/pipeline
 
-      - name: Build the graph state and compare it with the Linux one
+      - name: Compare graph state
         if: matrix.os == 'windows'
         run: |
           # The persisted graph is portable: the same commit yields byte-identical state on both legs.
@@ -117,27 +117,27 @@ jobs:
           echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
-      - name: Configure npm authentication
+      - name: npm auth
         if: matrix.os == 'linux'
         run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Run the plan
+      - name: Run
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows job and the chain check runs go through the API; GitHub sets no token in the environment by itself
         # why: the publishes inside the Linux run wait for the Windows environment to conclude; the publish executor still skips versions already on npm
         # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
-        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "environment (windows)"
+        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "windows"
 
-      - name: Settle what a run that did not end left behind
+      - name: Settle
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
         # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
         run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
-      - name: Upload the results
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -148,7 +148,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Upload coverage reports
+      - name: Upload coverage
         if: always() && matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -213,7 +213,7 @@ jobs:
             fi
           done
 
-      - name: Upload build artifacts
+      - name: Upload dist
         if: matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -231,20 +231,20 @@ jobs:
     permissions:
       contents: write # why: the record is pushed to the ci-records branch, which no ruleset protects
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
-      - name: Download the plan, the graph and the results
+      - name: Download plan and results
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: pipeline-*
           path: .hf/pipeline
           merge-multiple: true
 
-      - name: Open the records branch
+      - name: Open records branch
         shell: bash
         run: |
           # The branch is an orphan: records alone, no history of the workspace. The first run creates it.
@@ -255,12 +255,12 @@ jobs:
             git worktree add --orphan .hf/records
           fi
 
-      - name: Write the record
+      - name: Write record
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts record --out .hf/records --run-id ${{ github.run_id }} --run-number ${{ github.run_number }} --attempt ${{ github.run_attempt }} --sha ${{ github.sha }} --ref ${{ github.ref }} --event ${{ github.event_name }} --url "$RUN_URL"
 
-      - name: Push the record
+      - name: Push record
         shell: bash
         working-directory: .hf/records
         run: |
@@ -276,7 +276,7 @@ jobs:
     needs: [plan, environment]
     if: always()
     steps:
-      - name: Check CI status
+      - name: Status
         run: |
           if [ "${{ needs.plan.result }}" != "success" ]; then
             echo "❌ The plan did not complete on main branch"
@@ -305,7 +305,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
@@ -403,7 +403,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
@@ -565,7 +565,7 @@ jobs:
       contents: read
       actions: write # required to dispatch the per-lib native workflow
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0

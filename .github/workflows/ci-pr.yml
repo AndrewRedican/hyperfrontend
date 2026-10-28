@@ -25,15 +25,15 @@ jobs:
       has-work: ${{ steps.plan.outputs.has-work }}
       graph-digest: ${{ steps.graph-state.outputs.digest }}
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # why: the plan reads the merge base with the base branch
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
-      - name: Build the graph state
+      - name: Graph state
         id: graph-state
         shell: bash
         # why: a cold build takes four seconds and nothing is restored, so the state is the commit's and nothing else's
@@ -42,10 +42,10 @@ jobs:
           $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
-      - name: Check the formatting of every file
+      - name: Format
         run: npm run -s hf -- format --check --all
 
-      - name: Plan the pull request
+      - name: Plan
         id: plan
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -53,7 +53,7 @@ jobs:
           node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
-      - name: Upload the plan and the graph
+      - name: Upload plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pipeline-plan
@@ -70,12 +70,12 @@ jobs:
       # why: the approval label is read when the job runs, so re-running it after labelling the pull request sees the label
       pull-requests: read
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # why: every commit the pull request adds is walked, not only its net diff
 
-      - name: Read the approval label
+      - name: Approval label
         id: approval
         env:
           GH_TOKEN: ${{ github.token }}
@@ -87,7 +87,7 @@ jobs:
             echo "flag=--allow-over-budget" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check the binary budget
+      - name: Binary budget
         env:
           BASE_REF: origin/${{ github.base_ref }}
           APPROVAL_FLAG: ${{ steps.approval.outputs.flag }}
@@ -102,13 +102,13 @@ jobs:
       contents: read # Read-only - no commits
       pull-requests: write # For failure comments
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           # Uses default GITHUB_TOKEN - no PAT needed for read-only validation
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
       - name: Validate versions
@@ -122,7 +122,7 @@ jobs:
           comment-on-success: 'false'
 
   environment:
-    name: environment (${{ matrix.os }})
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.runner }}
     needs: [plan, version-check]
     if: always() && needs.plan.outputs.has-work == 'true' && needs.version-check.result == 'success'
@@ -138,25 +138,25 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Keep line endings as committed
+      - name: Keep line endings
         if: matrix.os == 'windows'
         run: git config --global core.autocrlf false
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # why: the versioning and e2e executors read history
 
-      - name: Setup monorepo
+      - name: Setup
         uses: ./.github/actions/setup-monorepo
 
-      - name: Download the plan
+      - name: Download plan
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pipeline-plan
           path: .hf/pipeline
 
-      - name: Build the graph state and compare it with the Linux one
+      - name: Compare graph state
         if: matrix.os == 'windows'
         run: |
           # The persisted graph is portable: the same commit yields byte-identical state on both legs.
@@ -166,20 +166,20 @@ jobs:
           echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
-      - name: Run the plan
+      - name: Run
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the chain check runs are created through the API; GitHub sets no token in the environment by itself
         # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
         run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
 
-      - name: Settle what a run that did not end left behind
+      - name: Settle
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
         # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
         run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
-      - name: Upload the results
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -190,7 +190,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: Upload coverage reports
+      - name: Upload coverage
         if: always() && matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -199,7 +199,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Upload build artifacts
+      - name: Upload dist
         if: matrix.os == 'linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -214,7 +214,7 @@ jobs:
     needs: [plan, binary-budget, version-check, environment]
     if: always()
     steps:
-      - name: Check CI status
+      - name: Status
         run: |
           # why: the binary budget applies whether or not any project is affected, so it gates before that short-circuit
           if [ "${{ needs.binary-budget.result }}" != "success" ]; then
