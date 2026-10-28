@@ -247,13 +247,12 @@ jobs:
       - name: Open records branch
         shell: bash
         run: |
-          # The branch is an orphan: records alone, no history of the workspace. The first run creates it.
-          git fetch origin ci-records:refs/remotes/origin/ci-records || true
-          if git show-ref --verify --quiet refs/remotes/origin/ci-records; then
-            git worktree add --detach .hf/records origin/ci-records
-          else
-            git worktree add --orphan .hf/records
+          # The branch is created once by hand with the vercel.json that keeps Vercel from deploying it, so a missing branch is an error, not something to recreate.
+          if ! git fetch origin ci-records:refs/remotes/origin/ci-records; then
+            echo "::error::the ci-records branch is missing; create it with its vercel.json before recording"
+            exit 1
           fi
+          git worktree add --detach .hf/records origin/ci-records
 
       - name: Write record
         env:
@@ -267,8 +266,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "record run ${{ github.run_number }} (${{ github.sha }})" --quiet
-          git push origin HEAD:refs/heads/ci-records
+          # why: the branch holds the latest records and no history, so each record replaces it with one parentless commit; the lease refuses the push if anything else moved it since the fetch
+          LEASE=$(git rev-parse HEAD)
+          COMMIT=$(git commit-tree "$(git write-tree)" -m "record run ${{ github.run_number }} (${{ github.sha }})")
+          git push --force-with-lease="refs/heads/ci-records:$LEASE" origin "$COMMIT:refs/heads/ci-records"
 
   ci-status:
     name: status
