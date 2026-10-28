@@ -148,6 +148,11 @@ export function runCommand(command: readonly string[], options: CommandOptions):
   const [file, ...args] = shell ? shellSafe(command, platform) : command
   const start = options.spawn ?? (spawn as Spawn)
   const kill: Kill = options.kill ?? process.kill
+  // why: stopping a command just started races it on Windows, where taskkill is a process of its own, so an aborted signal never starts one
+  if (options.signal?.aborted === true)
+    return createPromise((resolve) =>
+      resolve({ exitCode: null, signal: null, output: '', stdout: '', stderr: '', timedOut: false, error: null })
+    )
   return createPromise((resolve) => {
     const chunks: string[] = []
     const stdout: string[] = []
@@ -200,8 +205,7 @@ export function runCommand(command: readonly string[], options: CommandOptions):
     child.on('close', (code, signal) =>
       finish({ exitCode: code, signal, output: chunks.join(''), stdout: stdout.join(''), stderr: stderr.join(''), timedOut, error: null })
     )
-    if (options.signal?.aborted) stop()
-    else options.signal?.addEventListener('abort', stop, { once: true })
+    options.signal?.addEventListener('abort', stop, { once: true })
   })
 }
 

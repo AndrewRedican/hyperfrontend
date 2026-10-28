@@ -192,13 +192,14 @@ describe('runCommand', () => {
   it('signals nothing for a command that never started', async () => {
     const signals: unknown[] = []
     const controller = new AbortController()
-    controller.abort()
-    await runCommand(['definitely-not-a-command-' + process.pid], {
+    const pending = runCommand(['definitely-not-a-command-' + process.pid], {
       cwd: directory.path,
       platform: 'linux',
       signal: controller.signal,
       kill: (pid, signal) => signals.push([pid, signal]),
     })
+    controller.abort()
+    await pending
     expect(signals).toEqual([])
   })
 
@@ -226,10 +227,15 @@ describe('runCommand', () => {
   })
 
   it('never starts a command whose signal is already aborted', async () => {
+    const started: ChildProcess[] = []
     const controller = new AbortController()
     controller.abort()
-    const result = await runCommand(['node', '-e', 'process.stdout.write("ran")'], { cwd: directory.path, signal: controller.signal })
-    expect(result.stdout).not.toBe('ran')
+    const result = await runCommand(['node', '-e', 'process.stdout.write("ran")'], {
+      cwd: directory.path,
+      signal: controller.signal,
+      spawn: recordingSpawn(started),
+    })
+    expect({ started: started.length, exitCode: result.exitCode, error: result.error }).toEqual({ started: 0, exitCode: null, error: null })
   })
 
   it('starts a command directly on Windows, its arguments unquoted', async () => {
