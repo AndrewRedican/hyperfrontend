@@ -157,7 +157,7 @@ export function liveRun(checkRuns: readonly GitHubCheckRun[]): LiveRun {
  * @returns The job, or null
  */
 export function environmentJob(jobs: readonly GitHubJob[], environment: Environment): GitHubJob | null {
-  return jobs.find((job) => job.name === `environment (${environment})`) ?? null
+  return jobs.find((job) => job.name === environment) ?? null
 }
 
 /**
