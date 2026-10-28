@@ -169,6 +169,8 @@ export interface TaskResult {
   readonly durationMs: number
   /** The log file, workspace-relative, or null when the task did not run. */
   readonly log: string | null
+  /** What a failed task printed that explains the failure, when it printed anything. */
+  readonly excerpt?: string
 }
 
 /** The results of one environment's run. */

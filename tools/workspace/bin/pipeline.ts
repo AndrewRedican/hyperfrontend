@@ -50,7 +50,7 @@ import { createPlan } from '../src/pipeline/plan'
 import { resolvePlannedBase } from '../src/pipeline/planned-base'
 import { writeRunRecord } from '../src/pipeline/records'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
-import { planSummary, runSummary } from '../src/pipeline/report'
+import { errorAnnotation, planSummary, runSummary, taskResult } from '../src/pipeline/report'
 import { runSchedule } from '../src/pipeline/schedule'
 import { githubJobs, siblingGate } from '../src/pipeline/siblings'
 
@@ -338,19 +338,6 @@ function checksOf(environment: Environment): ChainChecks | null {
 }
 
 /**
- * A task's result from the scheduler's.
- *
- * @param task - The planned task
- * @param result - What the scheduler recorded for it
- * @returns The result as the run file records it
- */
-function toTaskResult(task: RankedTask, result: ScheduleResult): TaskResult {
-  const { id, project, target, environment, reasons } = task
-  const { outcome, exitCode, detail, startedAt, endedAt, durationMs, log } = result
-  return { id, project, target, environment, reasons, outcome, exitCode, detail, startedAt, endedAt, durationMs, log }
-}
-
-/**
  * Runs the chains of one environment.
  *
  * @param planned - The plan
@@ -369,6 +356,7 @@ async function runEnvironment(
 ): Promise<RunResults> {
   const chains = planned.chains.filter((chain) => chain.environment === environment)
   const tasks: RankedTask[] = chains.flatMap((chain) => chain.tasks.map((task) => ({ ...task, order: chain.order })))
+  const readLog = (path: string): string => readFileSync(join(root as string, path), 'utf8')
   const chainOf = createMap<string, Chain>(tasks.map((task) => [task.id, chains.find((chain) => chain.project === task.project) as Chain]))
   const controller = new AbortController()
   const stop = (): void => controller.abort()
@@ -428,10 +416,13 @@ async function runEnvironment(
       open(chainOf.get(task.id) as Chain)
     },
     onEnd: (task, result) => {
-      settled.set(task.id, toTaskResult(task, result))
+      const finished = taskResult(task, result, readLog)
+      settled.set(task.id, finished)
       const text = result.log === null ? '' : readFileSync(join(root as string, result.log), 'utf8')
       const heading = `${task.id} (${result.outcome}${result.detail === null ? '' : `, ${result.detail}`}, ${round(result.durationMs / 1000)}s)`
       for (const line of replayLines(heading, text, grouped)) say(line)
+      // why: the replayed log is folded among hundreds of others, so a failure also raises an annotation the run page lists with its excerpt
+      if (grouped && finished.excerpt !== undefined) say(errorAnnotation(task.id, finished.excerpt))
       const chain = chainOf.get(task.id) as Chain
       // why: the file is rewritten after every task, so a job killed by its time limit still leaves what had ended
       writeJson(
@@ -453,7 +444,7 @@ async function runEnvironment(
   process.off('SIGTERM', stop)
   return snapshot(
     true,
-    tasks.map((task) => toTaskResult(task, results.get(task.id) as ScheduleResult))
+    tasks.map((task) => taskResult(task, results.get(task.id) as ScheduleResult, readLog))
   )
 }
 

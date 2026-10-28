@@ -2,10 +2,11 @@ import type { CheckApi } from './checks'
 import type { Chain, TaskResult } from './model'
 import type { FetchInit, FetchResponse } from './siblings'
 import { from as arrayFrom } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createDeferred, describe, expect, flushPromises, it } from '@hyperfrontend/testing'
-import { chainChecks, chainConclusion, chainOutput, checkName, githubChecks } from './checks'
+import { CHECK_ATTEMPTS, CheckRefusal, chainChecks, chainConclusion, chainOutput, checkName, githubChecks } from './checks'
 
 /** A chain of one build. */
 const CHAIN: Chain = {
@@ -141,9 +142,107 @@ describe('githubChecks', () => {
     const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async () => respond(403, {}))
     await expect(api?.create('lib-a (linux)', 'abc')).rejects.toThrow('POST https://api.github.com/repos/o/r/check-runs answered 403')
   })
+
+  it('never retries a refusal', async () => {
+    const waits: number[] = []
+    const api = githubChecks(
+      { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' },
+      async () => respond(422, {}),
+      async (ms) => {
+        waits.push(ms)
+      }
+    )
+    const failure = await api?.update(7, { title: 't', summary: 's' }).then(
+      () => null,
+      (error: unknown) => error
+    )
+    expect({ refusal: failure instanceof CheckRefusal, status: (failure as CheckRefusal).status, waits }).toEqual({
+      refusal: true,
+      status: 422,
+      waits: [],
+    })
+  })
+
+  it('retries an update that got no answer, then sends it', async () => {
+    const waits: number[] = []
+    let calls = 0
+    const api = githubChecks(
+      { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' },
+      async () => {
+        calls += 1
+        if (calls === 1) throw new Error('fetch failed')
+        return respond(200, {})
+      },
+      async (ms) => {
+        waits.push(ms)
+      }
+    )
+    await api?.update(7, { title: 't', summary: 's' })
+    expect({ calls, waits }).toEqual({ calls: 2, waits: [1000] })
+  })
+
+  it('gives a completion up after the last server error, as no refusal', async () => {
+    const waits: number[] = []
+    let calls = 0
+    const api = githubChecks(
+      { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' },
+      async () => {
+        calls += 1
+        return respond(503, {})
+      },
+      async (ms) => {
+        waits.push(ms)
+      }
+    )
+    const failure = await api?.complete(7, 'success', { title: 't', summary: 's' }).then(
+      () => null,
+      (error: unknown) => error
+    )
+    expect({ calls, waits, refusal: failure instanceof CheckRefusal, message: (failure as Error).message }).toEqual({
+      calls: CHECK_ATTEMPTS,
+      waits: [1000, 2000],
+      refusal: false,
+      message: 'PATCH https://api.github.com/repos/o/r/check-runs/7 answered 503',
+    })
+  })
+
+  it('sends a create once, whatever the answer', async () => {
+    let calls = 0
+    const api = githubChecks(
+      { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' },
+      async () => {
+        calls += 1
+        throw new Error('fetch failed')
+      },
+      async () => undefined
+    )
+    const failure = await api?.create('lib-a (linux)', 'abc').then(
+      () => null,
+      (error: unknown) => error
+    )
+    expect({ message: (failure as Error).message, calls }).toEqual({ message: 'fetch failed', calls: 1 })
+  })
+
+  it('waits a second before retrying by default', async () => {
+    let calls = 0
+    const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async () => {
+      calls += 1
+      return calls === 1 ? respond(502, {}) : respond(200, {})
+    })
+    const started = dateNow()
+    await api?.update(7, { title: 't', summary: 's' })
+    expect(dateNow() - started).toBeGreaterThanOrEqual(900)
+  })
 })
 
 describe('chainOutput', () => {
+  it('shows what each failed task printed under the table', () => {
+    const output = chainOutput(CHAIN, [{ ...result('failure'), excerpt: '✖ a spec failed' }], 'done')
+    expect(output.summary).toContain(
+      '### Failures\n\n<details open><summary><code>lib-a:build</code></summary>\n\n````text\n✖ a spec failed\n````'
+    )
+  })
+
   it('carries the table and the chain state', () => {
     expect(chainOutput(CHAIN, [result('success')], 'done')).toEqual({
       title: 'done',
@@ -189,7 +288,7 @@ describe('chainChecks', () => {
       calls,
       api: {
         create: async (name, headSha) => {
-          if (failing) throw new Error('forbidden')
+          if (failing) throw new CheckRefusal('POST', 'check-runs', 403)
           calls.push(['create', name, headSha])
           return 9
         },
@@ -253,7 +352,7 @@ describe('chainChecks', () => {
     await hooks.onStart(CHAIN)
     await hooks.onStart({ ...CHAIN, project: 'lib-b' })
     await hooks.onEnd(CHAIN, [result('success')])
-    expect({ notices, calls }).toEqual({ notices: ['check runs are off for this run: forbidden'], calls: [] })
+    expect({ notices, calls }).toEqual({ notices: ['check runs are off for this run: POST check-runs answered 403'], calls: [] })
   })
 
   it('speaks once when several chains are refused at the same time', async () => {
@@ -261,10 +360,10 @@ describe('chainChecks', () => {
     const { api } = recording(true)
     const hooks = chainChecks(api, 'abc', (message) => notices.push(message))
     await promiseAll([hooks.onStart(CHAIN), hooks.onStart({ ...CHAIN, project: 'lib-b' })])
-    expect(notices).toEqual(['check runs are off for this run: forbidden'])
+    expect(notices).toEqual(['check runs are off for this run: POST check-runs answered 403'])
   })
 
-  it('describes a refusal that is not an error', async () => {
+  it('describes a failure that is not an error, costing only its chain', async () => {
     const notices: string[] = []
     const hooks = chainChecks(
       { create: async () => Promise.reject('nope'), update: async () => undefined, complete: async () => undefined },
@@ -272,7 +371,48 @@ describe('chainChecks', () => {
       (message) => notices.push(message)
     )
     await hooks.onStart(CHAIN)
-    expect(notices).toEqual(['check runs are off for this run: nope'])
+    await hooks.onEnd(CHAIN, [result('success')])
+    expect(notices).toEqual(['the check run of lib-a (linux) missed a request: nope'])
+  })
+
+  it('keeps the other chains when a create gets no answer', async () => {
+    const notices: string[] = []
+    const { api, calls } = recording()
+    const hooks = chainChecks(
+      {
+        ...api,
+        create: async (name, headSha) => (name.startsWith('lib-b') ? Promise.reject(new Error('fetch failed')) : api.create(name, headSha)),
+      },
+      'abc',
+      (message) => notices.push(message)
+    )
+    await hooks.onStart(CHAIN)
+    await hooks.onStart({ ...CHAIN, project: 'lib-b' })
+    await hooks.onEnd({ ...CHAIN, project: 'lib-b' }, [result('success')])
+    await hooks.onEnd(CHAIN, [result('success')])
+    expect({ notices, calls }).toEqual({
+      notices: ['the check run of lib-b (linux) missed a request: fetch failed'],
+      calls: [
+        ['create', 'lib-a (linux)', 'abc'],
+        ['complete', 9, 'success', '1 tasks, success'],
+      ],
+    })
+  })
+
+  it('still completes a check run whose update got no answer', async () => {
+    const notices: string[] = []
+    const { api, calls } = recording()
+    const hooks = chainChecks({ ...api, update: async () => Promise.reject(new Error('fetch failed')) }, 'abc', (message) =>
+      notices.push(message)
+    )
+    const chain = { ...CHAIN, tasks: [...CHAIN.tasks, { ...(CHAIN.tasks[0] as Chain['tasks'][number]), id: 'lib-a:test' }] }
+    await hooks.onStart(chain)
+    await hooks.onTask(chain, [result('success')])
+    await hooks.onEnd(chain, [result('success'), result('success')])
+    expect({ notices, calls: calls.map((call) => (call as unknown[])[0]) }).toEqual({
+      notices: ['the check run of lib-a (linux) missed a request: fetch failed'],
+      calls: ['create', 'complete'],
+    })
   })
 
   /** Settles a request the fake API holds: answered, or refused when told so. */
@@ -305,7 +445,7 @@ describe('chainChecks', () => {
       log.push(call)
       held.push((refused) => {
         log.push([refused ? 'refused' : 'answered', call[1]])
-        if (refused) deferred.reject(new Error('refused'))
+        if (refused) deferred.reject(new CheckRefusal('PATCH', 'check-runs', 403))
         else deferred.resolve(value)
       })
       return deferred.promise
@@ -478,7 +618,10 @@ describe('chainChecks', () => {
     const pending = [hooks.onStart(chain), hooks.onTask(chain, ended(1)), hooks.onEnd(chain, ended(4))]
     await release(held, 'oldest', true)
     await promiseAll(pending)
-    expect({ notices, sent }).toEqual({ notices: ['check runs are off for this run: refused'], sent: [['create', 1]] })
+    expect({ notices, sent }).toEqual({
+      notices: ['check runs are off for this run: PATCH check-runs answered 403'],
+      sent: [['create', 1]],
+    })
   })
 
   it('sends no waiting update once another chain is refused', async () => {
@@ -523,7 +666,7 @@ describe('chainChecks', () => {
     await release(held, 'oldest', true)
     await promiseAll(pending)
     expect({ notices, sent }).toEqual({
-      notices: ['check runs are off for this run: refused'],
+      notices: ['check runs are off for this run: PATCH check-runs answered 403'],
       sent: [
         ['create', 1],
         ['update', 1, '1 of 4 tasks ended'],

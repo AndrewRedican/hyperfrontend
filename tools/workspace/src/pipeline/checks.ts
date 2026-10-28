@@ -1,10 +1,12 @@
 /**
  * One check run per chain on the pull request: created when the chain's first task starts,
- * updated with its ended tasks as each one ends, and completed with the chain's conclusion and a
- * table of its tasks. A chain's requests go out one after another, the completion always last.
- * Best-effort: a token without the permission disables the check runs after one notice, and
- * nothing else depends on them. The ids are reported as they are created and completed, so a run
- * that is killed can still settle them.
+ * updated with its ended tasks as each one ends, and completed with the chain's conclusion, a
+ * table of its tasks and the output of each failed one. A chain's requests go out one after
+ * another, the completion always last. Best-effort: a refusal, such as a token without the
+ * permission, disables the check runs after one notice; a request that got no answer or a server
+ * error is retried when it is an update, and otherwise costs only that request, or that chain's
+ * check run when it was the create. Nothing else depends on them. The ids are reported as they
+ * are created and completed, so a run that is killed can still settle them.
  *
  * @module pipeline/checks
  */
@@ -16,9 +18,11 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { chainState } from './live'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { chainState, clip } from './live'
 import { Outcome } from './model'
-import { chainTable } from './report'
+import { chainTable, failureLines } from './report'
 import { githubHeaders } from './siblings'
 
 /** What a check run shows. */
@@ -29,6 +33,39 @@ export interface CheckOutput {
   readonly summary: string
   /** The machine-readable text, when there is one. */
   readonly text?: string
+}
+
+/** How many times an update or completion is sent before it is given up. */
+export const CHECK_ATTEMPTS = 3
+
+/** A check-run request GitHub answered with a refusal, which no retry changes. */
+export class CheckRefusal extends Error {
+  /** The status GitHub answered. */
+  readonly status: number
+
+  /**
+   * A refusal named after the request.
+   *
+   * @param method - The HTTP method of the refused request
+   * @param url - The address it was sent to
+   * @param status - The status GitHub answered
+   */
+  constructor(method: string, url: string, status: number) {
+    super(`${method} ${url} answered ${status}`)
+    this.status = status
+  }
+}
+
+/**
+ * Waits before a retry.
+ *
+ * @param ms - How long
+ * @returns Resolves after the wait
+ */
+function pause(ms: number): Promise<void> {
+  return createPromise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
 
 /** The check-run endpoints the chains use. */
@@ -72,6 +109,8 @@ interface ChainQueue {
   queued: Promise<void> | null
   /** Whether the completion is queued. */
   ending: boolean
+  /** Whether the create failed, which leaves the chain without a check run. */
+  dead: boolean
 }
 
 /** The id a created check run answers with. */
@@ -85,16 +124,25 @@ interface Created {
  *
  * @param env - The GitHub environment
  * @param request - The request function
+ * @param wait - Waits before a retry
  * @returns The API, or null when the environment lacks the token or repository
  */
-export function githubChecks(env: GitHubEnvironment, request: FetchLike): CheckApi | null {
+export function githubChecks(env: GitHubEnvironment, request: FetchLike, wait: (ms: number) => Promise<void> = pause): CheckApi | null {
   const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repository } = env
   if (token === undefined || repository === undefined) return null
   const base = `${env.GITHUB_API_URL ?? 'https://api.github.com'}/repos/${repository}/check-runs`
-  const send = async (url: string, method: string, body: unknown): Promise<string> => {
-    const response = await request(url, { method, headers: githubHeaders(token), body: stringify(body) })
-    if (!response.ok) throw createError(`${method} ${url} answered ${response.status}`)
-    return response.text()
+  // why: a create sent twice can leave a second check run that nothing completes, so only the idempotent PATCH is retried
+  const send = async (url: string, method: string, body: unknown, attempt = 1): Promise<string> => {
+    try {
+      const response = await request(url, { method, headers: githubHeaders(token), body: stringify(body) })
+      if (response.ok) return response.text()
+      if (response.status < 500) throw new CheckRefusal(method, url, response.status)
+      throw createError(`${method} ${url} answered ${response.status}`)
+    } catch (error) {
+      if (error instanceof CheckRefusal || attempt >= (method === 'PATCH' ? CHECK_ATTEMPTS : 1)) throw error
+    }
+    await wait(attempt * 1000)
+    return send(url, method, body, attempt + 1)
   }
   return {
     create: async (name, headSha) =>
@@ -144,7 +192,9 @@ export function chainConclusion(results: readonly TaskResult[]): string {
  * @returns The output, its text the chain's state as JSON
  */
 export function chainOutput(chain: Chain, results: readonly TaskResult[], title: string): CheckOutput {
-  return { title, summary: chainTable(chain, results).join('\n'), text: chainState(chain, results) }
+  const failures = failureLines(results)
+  const lines = [...chainTable(chain, results), ...(failures.length === 0 ? [] : ['', ...failures])]
+  return { title, summary: clip(lines.join('\n')), text: chainState(chain, results) }
 }
 
 /**
@@ -170,26 +220,36 @@ export function chainChecks(
   const queues = createMap<string, ChainQueue>()
   let enabled = true
   const publish = (): void => onRecords(fromEntries(records))
-  const settle = async (request: Promise<unknown>): Promise<void> => {
-    try {
-      await request
-    } catch (error) {
-      // why: several chains start at once and a chain's queued requests share its refusal, so the first one speaks and switches the rest off.
+  const report = (error: unknown, name: string): void => {
+    const message = error instanceof Error ? error.message : String(error)
+    // why: several chains start at once, so the first refusal speaks and switches the rest off; anything else costs only its own request
+    if (error instanceof CheckRefusal) {
       if (!enabled) return
       enabled = false
-      notice(`check runs are off for this run: ${error instanceof Error ? error.message : String(error)}`)
-    }
+      notice(`check runs are off for this run: ${message}`)
+    } else if (enabled) notice(`the check run of ${name} missed a request: ${message}`)
   }
   const open = (chain: Chain): ChainQueue | null => {
     const queue = queues.get(checkName(chain))
-    return queue === undefined || queue.ending || !enabled ? null : queue
+    return queue === undefined || queue.ending || queue.dead || !enabled ? null : queue
   }
-  const enqueue = (queue: ChainQueue, request: (id: number) => Promise<void>): Promise<void> => {
-    queue.tail = queue.tail.then(async (id) => {
+  const enqueue = (queue: ChainQueue, name: string, request: (id: number) => Promise<void>): Promise<void> => {
+    const previous = queue.tail
+    const sent = previous.then(async (id) => {
       await request(id)
       return id
     })
-    return settle(queue.tail)
+    // why: a failed update must not hold back the chain's later requests, so the queue moves on from the id whatever the request did
+    queue.tail = sent.catch(() => previous)
+    // why: after a failed create the tail rejects with it, which the create already reported, so a tail nothing follows must not surface as unhandled
+    queue.tail.catch(() => undefined)
+    return sent.then(
+      () => undefined,
+      (error: unknown) => {
+        // why: requests queued behind a create that failed fail with it, and the create already spoke
+        if (!queue.dead) report(error, name)
+      }
+    )
   }
   return {
     onStart: async (chain) => {
@@ -200,15 +260,22 @@ export function chainChecks(
         publish()
         return id
       })
-      queues.set(name, { tail: created, latest: null, queued: null, ending: false })
-      return settle(created)
+      const queue: ChainQueue = { tail: created, latest: null, queued: null, ending: false, dead: false }
+      queues.set(name, queue)
+      return created.then(
+        () => undefined,
+        (error: unknown) => {
+          queue.dead = true
+          report(error, name)
+        }
+      )
     },
     onTask: async (chain, results) => {
       const queue = open(chain)
       if (queue === null) return
       queue.latest = chainOutput(chain, results, `${results.length} of ${chain.tasks.length} tasks ended`)
       if (queue.queued !== null) return queue.queued
-      queue.queued = enqueue(queue, async (id) => {
+      queue.queued = enqueue(queue, checkName(chain), async (id) => {
         const output = queue.latest
         queue.latest = null
         queue.queued = null
@@ -222,7 +289,7 @@ export function chainChecks(
       queue.ending = true
       queue.latest = null
       const conclusion = chainConclusion(results)
-      return enqueue(queue, async (id) => {
+      return enqueue(queue, checkName(chain), async (id) => {
         if (!enabled) return
         await api.complete(id, conclusion, chainOutput(chain, results, `${results.length} tasks, ${conclusion}`))
         records.set(checkName(chain), { id, completed: true })

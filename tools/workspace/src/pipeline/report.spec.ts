@@ -2,7 +2,19 @@ import type { Chain, Plan, PlanTask, RunResults, TaskResult } from './model'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { taskCommand } from './commands'
 import { planReason } from './model'
-import { chainTable, describePlanReason, formatDuration, planSummary, runSummary, timelineLines, totalsLine } from './report'
+import {
+  chainTable,
+  describePlanReason,
+  errorAnnotation,
+  failureExcerpt,
+  failureLines,
+  formatDuration,
+  planSummary,
+  runSummary,
+  taskResult,
+  timelineLines,
+  totalsLine,
+} from './report'
 
 /**
  * A task.
@@ -241,5 +253,77 @@ describe('runSummary', () => {
 
   it('ends with the timeline', () => {
     expect(runSummary(RUN, PLAN).slice(-1)).toEqual(['```'])
+  })
+
+  it('shows what each failed task printed before the timeline', () => {
+    const run = { ...RUN, tasks: RUN.tasks.map((task, index) => (index === 0 ? { ...task, excerpt: 'error TS2322' } : task)) }
+    const lines = runSummary(run, PLAN)
+    expect(lines.indexOf('### Failures') < lines.indexOf('```mermaid') && lines.includes('error TS2322')).toBe(true)
+  })
+})
+
+describe('failureExcerpt', () => {
+  it('starts at the list of failing tests and stops at the coverage table', () => {
+    const log = [
+      '▶ suite',
+      '  ✔ passes',
+      '✖ failing tests:',
+      '',
+      '✖ breaks (1ms)',
+      '  AssertionError',
+      'file | line % | branch %',
+      '---',
+    ].join('\r\n')
+    expect(failureExcerpt(log)).toBe('✖ failing tests:\n\n✖ breaks (1ms)\n  AssertionError')
+  })
+
+  it('keeps the last lines of any other output', () => {
+    expect(failureExcerpt('one\ntwo\nthree\n', 2)).toBe('two\nthree')
+  })
+
+  it('keeps no more than the limit of a long list of failing tests', () => {
+    expect(failureExcerpt('✖ failing tests:\na\nb\nc', 2)).toBe('✖ failing tests:\na')
+  })
+
+  it('answers null for a task that printed nothing', () => {
+    expect(failureExcerpt(' \n')).toBeNull()
+  })
+})
+
+describe('errorAnnotation', () => {
+  it('carries the excerpt on one line, escaping what a workflow command reads', () => {
+    expect(errorAnnotation('lib-a:test', '100% broke,\r\nhere')).toBe('::error title=lib-a%3Atest failed::100%25 broke,%0D%0Ahere')
+  })
+
+  it('escapes the commas of the title', () => {
+    expect(errorAnnotation('a,b', 'x')).toBe('::error title=a%2Cb failed::x')
+  })
+})
+
+describe('failureLines', () => {
+  it('adds nothing when no task carries an excerpt', () => {
+    expect(failureLines(RUN.tasks)).toEqual([])
+  })
+})
+
+describe('taskResult', () => {
+  const scheduled = { id: 'lib-a:test', exitCode: 1, detail: null, startedAt: 0, endedAt: 5, durationMs: 5, log: 'logs/lib-a__test.log' }
+
+  it("carries the excerpt of a failed task's log", () => {
+    const result = taskResult(task('lib-a', 'test'), { ...scheduled, outcome: 'failure' }, () => 'boom')
+    expect(result.excerpt).toBe('boom')
+  })
+
+  it('reads no log for a task that did not fail', () => {
+    const read: string[] = []
+    const result = taskResult(task('lib-a', 'test'), { ...scheduled, outcome: 'success', exitCode: 0 }, (path) => {
+      read.push(path)
+      return 'fine'
+    })
+    expect({ read, excerpt: 'excerpt' in result }).toEqual({ read: [], excerpt: false })
+  })
+
+  it('carries no excerpt for a failed task that printed nothing', () => {
+    expect('excerpt' in taskResult(task('lib-a', 'test'), { ...scheduled, outcome: 'failure' }, () => '')).toBe(false)
   })
 })
