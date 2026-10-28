@@ -135,8 +135,10 @@ export interface PlanTask {
   needs: string[]
   /** The slot the task occupies */
   weight: Weight
-  /** Why the task is in the plan */
+  /** Why the task is in the plan, the first few a record keeps */
   reasons: PlanReason[]
+  /** How many more reasons the plan gave than the record keeps */
+  reasonsOmitted: number
 }
 
 /** One project on one environment. */
@@ -155,8 +157,10 @@ export interface Chain {
 export interface SkippedTask {
   /** The task id */
   task: string
-  /** Why it was safe to leave out */
+  /** Why it was safe to leave out, the first few a record keeps */
   reasons: PlanReason[]
+  /** How many more reasons the plan gave than the record keeps */
+  reasonsOmitted: number
 }
 
 /** A plan. */

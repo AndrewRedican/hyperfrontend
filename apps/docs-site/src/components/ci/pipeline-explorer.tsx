@@ -273,6 +273,9 @@ function RunView({ record }: RunViewProps) {
                 {reason.file === null ? '' : <span className="font-mono text-xs"> ({reason.file})</span>}
               </li>
             ))}
+            {selected.task.reasonsOmitted === 0 ? null : (
+              <li className="text-slate-500 dark:text-slate-400">+{selected.task.reasonsOmitted} more</li>
+            )}
           </ul>
         </div>
       )}
