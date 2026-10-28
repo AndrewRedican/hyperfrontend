@@ -1,21 +1,74 @@
 /**
  * The record of a run the main workflow keeps on the `ci-records` branch: the plan and every
  * environment's results under `runs/<run id>.json`, and `index.json`, the newest runs first,
- * each with the little a list needs.
+ * each with the little a list needs. A record keeps each task's first reasons only, and the
+ * branch keeps the record of every run the index lists and no other.
  *
  * @module pipeline/records
  */
 
 import type { ExplorerDocument } from './explorer'
-import type { Environment, Outcome as OutcomeKind, Plan, PlanMode, RunResults } from './model'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import type {
+  Chain,
+  Environment,
+  Outcome as OutcomeKind,
+  Plan,
+  PlanMode,
+  PlanReason,
+  PlanTask,
+  RunResults,
+  SkippedTask,
+  TaskResult,
+} from './model'
+import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { Outcome } from './model'
 
 /** The schema of the records. */
 export const RECORDS_SCHEMA = 1
 
-/** How many runs the index keeps. */
-export const INDEX_LIMIT = 500
+/** How many runs the index keeps, and so how many run records the branch holds. */
+export const INDEX_LIMIT = 50
+
+/** How many reasons a record keeps for each task; the run's `pipeline-plan` artifact holds them all. */
+export const REASON_LIMIT = 5
+
+/** The reasons a record keeps for a task. */
+export interface RecordedReasons {
+  /** The first reasons, up to the limit. */
+  readonly reasons: readonly PlanReason[]
+  /** How many more the plan gave. */
+  readonly reasonsOmitted: number
+}
+
+/** A task of a recorded plan. */
+export type RecordedTask = Omit<PlanTask, 'reasons'> & RecordedReasons
+
+/** A skipped task of a recorded plan. */
+export type RecordedSkip = Omit<SkippedTask, 'reasons'> & RecordedReasons
+
+/** A chain of a recorded plan. */
+export interface RecordedChain extends Omit<Chain, 'tasks'> {
+  /** The tasks, prerequisites first. */
+  readonly tasks: readonly RecordedTask[]
+}
+
+/** A plan as a record keeps it: every task, with its first reasons. */
+export interface RecordedPlan extends Omit<Plan, 'chains' | 'skipped'> {
+  /** The chains, in scheduling order. */
+  readonly chains: readonly RecordedChain[]
+  /** The tasks the selection skipped. */
+  readonly skipped: readonly RecordedSkip[]
+}
+
+/** A task's result as a record keeps it: without the reasons its plan task gives. */
+export type RecordedResult = Omit<TaskResult, 'reasons'>
+
+/** An environment's results as a record keeps them. */
+export interface RecordedResults extends Omit<RunResults, 'tasks'> {
+  /** What every task ended as. */
+  readonly tasks: readonly RecordedResult[]
+}
 
 /** Which workflow run a record is of. */
 export interface RunIdentity {
@@ -59,9 +112,9 @@ export interface RunRecord {
   /** When the record was written, epoch milliseconds. */
   readonly recordedAt: number
   /** The plan the run executed. */
-  readonly plan: Plan
+  readonly plan: RecordedPlan
   /** Each environment's results, when the run uploaded them. */
-  readonly results: Partial<Record<Environment, RunResults>>
+  readonly results: Partial<Record<Environment, RecordedResults>>
 }
 
 /** One run as the index lists it. */
@@ -100,7 +153,61 @@ export interface RunIndex {
  * @returns The record, stamped with its schema
  */
 export function runRecord(run: RunIdentity, plan: Plan, results: Partial<Record<Environment, RunResults>>, recordedAt: number): RunRecord {
-  return { schema: RECORDS_SCHEMA, run, recordedAt, plan, results }
+  const kept: Partial<Record<Environment, RecordedResults>> = {}
+  for (const environment of keys(results) as Environment[]) {
+    const found = results[environment] as RunResults
+    kept[environment] = { ...found, tasks: found.tasks.map(withoutReasons) }
+  }
+  return { schema: RECORDS_SCHEMA, run, recordedAt, plan: recordedPlan(plan), results: kept }
+}
+
+/**
+ * A task's result without its reasons, which its plan task already gives.
+ *
+ * @param result - What the task ended as
+ * @returns The result as a record keeps it
+ */
+function withoutReasons(result: TaskResult): RecordedResult {
+  const { id, project, target, environment, outcome, exitCode, detail, startedAt, endedAt, durationMs, log } = result
+  return { id, project, target, environment, outcome, exitCode, detail, startedAt, endedAt, durationMs, log }
+}
+
+/**
+ * Reasons cut to the limit, counting what was left out.
+ *
+ * @param reasons - Every reason
+ * @param limit - How many to keep
+ * @returns The first reasons and how many more there were
+ */
+function capped(reasons: readonly PlanReason[], limit: number): RecordedReasons {
+  return { reasons: reasons.slice(0, limit), reasonsOmitted: reasons.length > limit ? reasons.length - limit : 0 }
+}
+
+/**
+ * A plan as a record keeps it: every task and skip with its first reasons.
+ *
+ * @param plan - The plan the run executed
+ * @param limit - How many reasons to keep for each task
+ * @returns The plan with its reasons cut
+ */
+export function recordedPlan(plan: Plan, limit: number = REASON_LIMIT): RecordedPlan {
+  return {
+    ...plan,
+    chains: plan.chains.map((chain) => ({ ...chain, tasks: chain.tasks.map((task) => ({ ...task, ...capped(task.reasons, limit) })) })),
+    skipped: plan.skipped.map((skip) => ({ ...skip, ...capped(skip.reasons, limit) })),
+  }
+}
+
+/**
+ * The run records the branch holds that the index no longer lists.
+ *
+ * @param index - The index after the run was listed
+ * @param files - The names in the `runs` directory
+ * @returns Their paths, relative to the records directory; names that are not run records are left alone
+ */
+export function staleRuns(index: RunIndex, files: readonly string[]): string[] {
+  const listed = createSet(index.runs.map((run) => `${run.id}.json`))
+  return files.filter((name) => /^\d+\.json$/.test(name) && !listed.has(name)).map((name) => `runs/${name}`)
 }
 
 /**
@@ -173,10 +280,15 @@ export interface RecordStore {
   readonly write: (path: string, value: unknown) => void
   /** The index so far, or null for none. */
   readonly readIndex: () => RunIndex | null
+  /** The names in a directory relative to the records directory, or none when it is absent. */
+  readonly list: (directory: string) => readonly string[]
+  /** Removes a file at a path relative to the records directory. */
+  readonly remove: (path: string) => void
 }
 
 /**
- * Writes a run's record, the index with it listed, and the graph the plan was made from.
+ * Writes a run's record, the index with it listed, and the graph the plan was made from, then
+ * removes the records of the runs the index no longer lists.
  *
  * @param options - The run, the plan, the results, the explorer document and the time
  * @param store - Where the records live
@@ -188,5 +300,6 @@ export function writeRunRecord(options: RecordOptions, store: RecordStore): RunI
   const index = updateIndex(store.readIndex(), indexEntry(record))
   store.write('index.json', index)
   if (options.explorer !== null) store.write('graph/latest.json', options.explorer)
+  for (const path of staleRuns(index, store.list('runs'))) store.remove(path)
   return index
 }

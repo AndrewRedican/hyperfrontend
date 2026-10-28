@@ -22,7 +22,7 @@ import type { Chain, Environment, Plan, PlanTask, RunResults, TaskResult } from 
 import type { RunIndex } from '../src/pipeline/records'
 import type { ScheduleResult } from '../src/pipeline/schedule'
 import { execFileSync } from 'node:child_process'
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { availableParallelism, totalmem } from 'node:os'
 import { dirname, isAbsolute, join } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -543,7 +543,12 @@ function record(): void {
       explorer: envelope === null ? null : explorerDocument(envelope.body, identity.sha, recordedAt),
       recordedAt,
     },
-    { write: (path, value) => writeJson(join(out, path), value), readIndex: () => readJsonIfPresent<RunIndex>(join(out, 'index.json')) }
+    {
+      write: (path, value) => writeJson(join(out, path), value),
+      readIndex: () => readJsonIfPresent<RunIndex>(join(out, 'index.json')),
+      list: (directory) => (existsSync(resolvePath(join(out, directory))) ? readdirSync(resolvePath(join(out, directory))) : []),
+      remove: (path) => rmSync(resolvePath(join(out, path)), { force: true }),
+    }
   )
   say(`recorded run ${identity.number} (${index.runs.length} in the index)`)
 }
