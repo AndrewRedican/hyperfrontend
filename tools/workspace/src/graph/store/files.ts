@@ -12,6 +12,7 @@ import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { matchesAny } from '@hyperfrontend/linter/helpers'
+import { gitEnvironment } from '../git'
 import { compareText } from '../order'
 import { nxIgnores } from '../workspace'
 import { blobHashes } from './hashes'
@@ -38,7 +39,7 @@ const LIST_BUFFER = 64 * 1024 * 1024
  * @returns The non-empty fields
  */
 function gitFields(root: string, args: readonly string[]): string[] {
-  return execFileSync('git', [...args], { cwd: root, encoding: 'utf8', maxBuffer: LIST_BUFFER })
+  return execFileSync('git', [...args], { cwd: root, encoding: 'utf8', env: gitEnvironment(root), maxBuffer: LIST_BUFFER })
     .split('\0')
     .filter((field) => field !== '')
 }

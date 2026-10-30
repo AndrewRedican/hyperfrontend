@@ -73,6 +73,15 @@ describe('discoverProjects', () => {
     })
   })
 
+  it('infers a lint target that runs after the install of a project that installs its own packages', () => {
+    const installing = createTempDir({
+      prefix: 'lint-install-',
+      tree: { 'apps/site/project.json': '{ "name": "site", "targets": { "install": { "executor": "@hyperfrontend/app:install" } } }' },
+    })
+    const projects = discoverProjects(installing.path, ['apps/site/project.json'])
+    expect(projects.get('site')?.configuration?.targets?.['lint']?.dependsOn).toEqual(['install'])
+  })
+
   it('leaves a declared lint target as it is', () => {
     expect(discoverProjects(root, listFiles(root)).get('lib-a')?.configuration?.targets?.['lint']).toEqual({})
   })

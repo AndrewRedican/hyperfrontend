@@ -14,6 +14,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { compileGlob, matchesAny } from '@hyperfrontend/linter/helpers'
+import { gitEnvironment } from './git'
 
 /** The project files found in one directory. */
 interface ProjectFiles {
@@ -88,6 +89,7 @@ export function listFiles(root: string): string[] {
   const listed = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], {
     cwd: root,
     encoding: 'utf8',
+    env: gitEnvironment(root),
     maxBuffer: LIST_BUFFER,
   })
   const ignores = nxIgnores(root)
@@ -233,7 +235,8 @@ function lintExclusions(root: string): ReturnType<typeof compileGlob>[] {
 
 /**
  * Gives every project but the workspace root a `lint` target where it declares none, leaving
- * out the projects whose project files `nx.json` lists under `lint.exclude`.
+ * out the projects whose project files `nx.json` lists under `lint.exclude`. A project with an
+ * `install` target lints after it.
  *
  * @param root - The workspace root, absolute
  * @param projects - The projects, by name
@@ -251,7 +254,12 @@ export function inferLintTargets(root: string, projects: ReadonlyMap<string, Pro
       inferred.set(name, project)
       continue
     }
-    const target: TargetRecord = { executor: 'nx:run-commands', options: { command: lintTarget(project.root).command, cwd: project.root } }
+    const target: TargetRecord = {
+      executor: 'nx:run-commands',
+      options: { command: lintTarget(project.root).command, cwd: project.root },
+      // why: the dependency rules read the versions a project installs for itself, so its lint waits for that install
+      ...(hasTarget(project, 'install') ? { dependsOn: ['install'] } : {}),
+    }
     const configuration: ProjectConfiguration = {
       ...(project.configuration ?? {}),
       targets: { ...(project.configuration?.targets ?? {}), lint: target },
