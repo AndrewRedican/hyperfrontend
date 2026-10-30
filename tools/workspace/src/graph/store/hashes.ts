@@ -15,6 +15,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { gitEnvironment } from '../git'
 import { compareText } from '../order'
 
 /** The largest output git may answer with. */
@@ -80,6 +81,7 @@ export function blobHashes(root: string, paths: readonly string[]): Map<string, 
   const output = execFileSync('git', ['hash-object', '--stdin-paths'], {
     cwd: root,
     encoding: 'utf8',
+    env: gitEnvironment(root),
     input: `${paths.join('\n')}\n`,
     maxBuffer: LIST_BUFFER,
   })

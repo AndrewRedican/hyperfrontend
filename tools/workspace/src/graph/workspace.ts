@@ -14,6 +14,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { compileGlob, matchesAny } from '@hyperfrontend/linter/helpers'
+import { gitEnvironment } from './git'
 
 /** The project files found in one directory. */
 interface ProjectFiles {
@@ -88,6 +89,7 @@ export function listFiles(root: string): string[] {
   const listed = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], {
     cwd: root,
     encoding: 'utf8',
+    env: gitEnvironment(root),
     maxBuffer: LIST_BUFFER,
   })
   const ignores = nxIgnores(root)
