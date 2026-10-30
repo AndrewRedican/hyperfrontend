@@ -235,7 +235,8 @@ function lintExclusions(root: string): ReturnType<typeof compileGlob>[] {
 
 /**
  * Gives every project but the workspace root a `lint` target where it declares none, leaving
- * out the projects whose project files `nx.json` lists under `lint.exclude`.
+ * out the projects whose project files `nx.json` lists under `lint.exclude`. A project with an
+ * `install` target lints after it.
  *
  * @param root - The workspace root, absolute
  * @param projects - The projects, by name
@@ -253,7 +254,12 @@ export function inferLintTargets(root: string, projects: ReadonlyMap<string, Pro
       inferred.set(name, project)
       continue
     }
-    const target: TargetRecord = { executor: 'nx:run-commands', options: { command: lintTarget(project.root).command, cwd: project.root } }
+    const target: TargetRecord = {
+      executor: 'nx:run-commands',
+      options: { command: lintTarget(project.root).command, cwd: project.root },
+      // why: the dependency rules read the versions a project installs for itself, so its lint waits for that install
+      ...(hasTarget(project, 'install') ? { dependsOn: ['install'] } : {}),
+    }
     const configuration: ProjectConfiguration = {
       ...(project.configuration ?? {}),
       targets: { ...(project.configuration?.targets ?? {}), lint: target },
