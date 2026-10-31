@@ -105,7 +105,7 @@ Panel rows carry `data-connected`/`data-hovered`; `.koi-layer[data-instance]` z-
 ## Build & deploy
 
 - **Composed site**: host builds to `dist/apps/demos/koi-pond/site/` (`emptyOutDir:false`, base `/`); each fish to `.../site/fish-<fw>/` (`emptyOutDir:true`, base `/fish-<fw>/`). Dev origin (`dev-hosted`) matches prod exactly.
-- **Deploy**: one Railway service, GitHub-integration auto-deploy on merge to `main` (dashboard-owned — never propose in-repo deploy CI). `host/project.json` `metadata.deploy`: service `hyperfrontend-demo-koi-pond`, origin `https://demo-koi-pond-production.up.railway.app`, `publishDir: dist/apps/demos/koi-pond/site`. Build root must be at/above `apps/demos/koi-pond` so `../vendor` is in context; host must **not** SPA-rewrite. Origin also in `host/feature.config.ts` `url` and docs-site `demo-manifest.ts` fallback — all three move together.
+- **Deploy**: one Railway service configured in `.railway/railway.ts`, GitHub-integration deploy on merge to `main` (moving under the owned pipeline; see `_/open-work.md`). `host/project.json` `metadata.deploy`: service `koi-pond`, origin `https://demo-koi-pond-production.up.railway.app`, `publishDir: dist/apps/demos/koi-pond/site`. Build root must be at/above `apps/demos/koi-pond` so `../vendor` is in context; host must **not** SPA-rewrite. Origin also in `host/feature.config.ts` `url` and docs-site `demo-manifest.ts` fallback — all three move together.
 - **Gallery shell** (only needed if the _outer contract_ or `feature.config.ts` changes — not for host scene edits):
 
 ```bash
