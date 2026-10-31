@@ -2,17 +2,29 @@ import { defineRailway, github, project, service } from 'railway/iac'
 
 export default defineRailway(() => {
   const hyperfrontend = github('AndrewRedican/hyperfrontend', { checkSuites: true, rootDirectory: '/' })
+  // why: every service builds through the root install and the hf runner, so a change to either must redeploy it even when the demo's own files did not change
+  const toolchain = [
+    '/package.json',
+    '/package-lock.json',
+    '/nx.json',
+    '/tsconfig.base.json',
+    '/tools/app/**',
+    '/tools/workspace/bin/**',
+    '/tools/workspace/src/**',
+    '/tools/lint/src/runtime/**',
+  ]
 
-  const koiVue = service('koi vue', {
+  const koiVue = service('koi-vue', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vue',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-vue/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-vue/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vue --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'exquisite-caring' },
@@ -23,10 +35,11 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-pond,demo-koi-fish-*',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/host/**', '/apps/demos/koi-pond/lib/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
@@ -36,13 +49,13 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-heartbeat',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/heartbeat/**'],
+      watchPatterns: [...toolchain, '/apps/demos/heartbeat/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/heartbeat/app --host 0.0.0.0',
     healthcheck: '/',
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
-    deploy: { preDeployCommand: [] },
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } }, preDeployCommand: [] },
   })
   const koiAngular = service('koi-angular', {
     source: hyperfrontend,
@@ -50,37 +63,45 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-angular',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-angular/**'],
+      watchPatterns: [
+        ...toolchain,
+        '/apps/demos/koi-pond/lib/**',
+        '/apps/demos/koi-pond/fish-angular/**',
+        '/apps/demos/koi-pond/vendor/**',
+      ],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-angular --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
-  const koiSolid = service('koi solid', {
+  const koiSolid = service('koi-solid', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-solid',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-solid/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-solid/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-solid --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'diplomatic-radiance' },
   })
-  const koiLit = service('koi lit', {
+  const koiLit = service('koi-lit', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-lit',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-lit/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-lit/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-lit --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'striking-kindness' },
@@ -91,10 +112,11 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-preact',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-preact/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-preact/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-preact --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'pure-presence' },
@@ -105,39 +127,41 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-clock',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/clock/**'],
+      watchPatterns: [...toolchain, '/apps/demos/clock/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/clock/app --host 0.0.0.0',
     healthcheck: '/',
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
-    deploy: { limitOverride: { containers: { cpu: 4, memoryBytes: 4000000000 } }, preDeployCommand: [] },
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } }, preDeployCommand: [] },
     networking: { privateNetworkEndpoint: 'demo-clock' },
   })
-  const koiSvelte = service('koi svelte', {
+  const koiSvelte = service('koi-svelte', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-svelte',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-svelte/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-svelte/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-svelte --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'peaceful-flow' },
   })
-  const koiReact = service('koi react', {
+  const koiReact = service('koi-react', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-react',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-react/**'],
+      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-react/**', '/apps/demos/koi-pond/vendor/**'],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-react --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'remarkable-amazement' },
@@ -148,10 +172,16 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vanilla',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: ['/apps/demos/koi-pond/fish-vanilla/**', '/apps/demos/koi-pond/lib/**'],
+      watchPatterns: [
+        ...toolchain,
+        '/apps/demos/koi-pond/fish-vanilla/**',
+        '/apps/demos/koi-pond/lib/**',
+        '/apps/demos/koi-pond/vendor/**',
+      ],
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vanilla --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
