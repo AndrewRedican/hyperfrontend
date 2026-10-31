@@ -7,7 +7,7 @@
   "metadata": {
     "deploy": {
       "provider": "railway",
-      "service": "koi svelte",
+      "service": "koi-svelte",
       "origin": "https://demo-koi-fish-svelte-production.up.railway.app",
       "boundary": "cross-site",
       "kind": "static",
