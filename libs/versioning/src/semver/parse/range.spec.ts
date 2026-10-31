@@ -789,3 +789,78 @@ describe('parseRange - x-range NaN handling', () => {
     expect(result.success).toBe(false)
   })
 })
+
+describe('parseRange - prerelease and build identifiers', () => {
+  const comparatorsOf = (input: string) => parseRangeStrict(input).sets[0]?.comparators ?? []
+  const version = (fields: Record<string, unknown>) => expect.objectContaining({ version: expect.objectContaining(fields) })
+
+  it('keeps prerelease identifiers on a comparator', () => {
+    expect(comparatorsOf('>=1.0.0-alpha.6')).toEqual([version({ major: 1, minor: 0, patch: 0, prerelease: ['alpha', '6'], build: [] })])
+  })
+
+  it('keeps build identifiers on a comparator', () => {
+    expect(comparatorsOf('1.0.0+build.7')).toEqual([version({ prerelease: [], build: ['build', '7'] })])
+  })
+
+  it('keeps prerelease and build identifiers together', () => {
+    expect(comparatorsOf('>=1.0.0-rc.1+sha.abc')).toEqual([version({ prerelease: ['rc', '1'], build: ['sha', 'abc'] })])
+  })
+
+  it('keeps a hyphen inside a prerelease identifier', () => {
+    expect(comparatorsOf('1.0.0-alpha-beta')).toEqual([version({ prerelease: ['alpha-beta'] })])
+  })
+
+  it('keeps prerelease identifiers behind a v prefix', () => {
+    expect(comparatorsOf('v1.0.0-alpha')).toEqual([version({ major: 1, prerelease: ['alpha'] })])
+  })
+
+  it('keeps prerelease identifiers on both hyphen range bounds', () => {
+    expect(comparatorsOf('1.0.0-alpha - 2.0.0-beta')).toEqual([
+      expect.objectContaining({ operator: '>=', version: expect.objectContaining({ major: 1, prerelease: ['alpha'] }) }),
+      expect.objectContaining({ operator: '<=', version: expect.objectContaining({ major: 2, prerelease: ['beta'] }) }),
+    ])
+  })
+
+  it('keeps the prerelease on a caret lower bound and none on the upper bound', () => {
+    expect(comparatorsOf('^1.0.0-alpha.1')).toEqual([
+      version({ major: 1, minor: 0, patch: 0, prerelease: ['alpha', '1'] }),
+      version({ major: 2, minor: 0, patch: 0, prerelease: [] }),
+    ])
+  })
+
+  it('keeps the prerelease on a tilde lower bound and none on the upper bound', () => {
+    expect(comparatorsOf('~1.0.0-alpha')).toEqual([
+      version({ major: 1, minor: 0, patch: 0, prerelease: ['alpha'] }),
+      version({ major: 1, minor: 1, patch: 0, prerelease: [] }),
+    ])
+  })
+
+  const INVALID = [
+    ['an empty prerelease', '1.0.0-'],
+    ['an empty build', '1.0.0+'],
+    ['an empty identifier between dots', '>=1.0.0-alpha..1'],
+    ['a prerelease identifier with a character outside letters, digits and hyphens', '1.0.0-al$pha'],
+    ['a build identifier with a character outside letters, digits and hyphens', '1.0.0+sha_1'],
+    ['an empty prerelease on a hyphen range bound', '1.0.0- - 2.0.0'],
+  ] as const
+
+  for (const [what, input] of INVALID) {
+    it(`rejects ${what}`, () => {
+      expect(parseRange(input)).toEqual(expect.objectContaining({ success: false }))
+    })
+  }
+})
+
+describe('parseRange - x-range with an empty leading segment', () => {
+  it('rejects a range that starts with two dots', () => {
+    expect(parseRange('../x')).toEqual(expect.objectContaining({ success: false, error: 'Invalid x-range: "../x"' }))
+  })
+
+  it('rejects a range that starts with a dot', () => {
+    expect(parseRange('.x')).toEqual(expect.objectContaining({ success: false }))
+  })
+
+  it('still treats an x in the leading segment as any version', () => {
+    expect(parseRange('x.1')).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
+  })
+})

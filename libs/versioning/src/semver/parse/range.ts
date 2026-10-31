@@ -343,6 +343,10 @@ function parseXRange(input: string, _operator: RangeOperator): ComparatorResult 
   const parts = input.split('.')
   const nums: number[] = []
 
+  if (parts[0] === '') {
+    return { success: false, error: `Invalid x-range: "${input}"` }
+  }
+
   for (const part of parts) {
     const lower = part.toLowerCase()
     if (lower === 'x' || lower === '*' || lower === '') {
@@ -414,7 +418,8 @@ function expandTildeRange(version: SemVer): ComparatorResult {
 
 /**
  * Parses a simple version string (no range operators).
- * More lenient - accepts partial versions.
+ * More lenient - accepts partial versions. Prerelease and build identifiers are kept, so a
+ * comparator such as `>=1.0.0-alpha.6` compares against the prerelease rather than `1.0.0`.
  *
  * @param input - Version string to parse
  * @returns Parsed SemVer or null if invalid
@@ -422,32 +427,28 @@ function expandTildeRange(version: SemVer): ComparatorResult {
 function parseSimpleVersion(input: string): SemVer | null {
   if (!input) return null
 
-  let pos = 0
+  const text = input[0] === 'v' || input[0] === 'V' ? input.slice(1) : input
+  const plusIdx = text.indexOf('+')
+  const withoutBuild = plusIdx === -1 ? text : text.slice(0, plusIdx)
+  const dashIdx = withoutBuild.indexOf('-')
+  const core = dashIdx === -1 ? withoutBuild : withoutBuild.slice(0, dashIdx)
 
-  if (input[pos] === 'v' || input[pos] === 'V') {
-    pos++
-  }
+  const prerelease = dashIdx === -1 ? [] : parseIdentifierList(withoutBuild.slice(dashIdx + 1))
+  if (prerelease === null) return null
 
-  const parts = input.slice(pos).split('.')
+  const build = plusIdx === -1 ? [] : parseIdentifierList(text.slice(plusIdx + 1))
+  if (build === null) return null
+
+  const parts = core.split('.')
   if (parts.length === 0) return null
 
   const nums: number[] = []
   for (const part of parts) {
-    const dashIdx = part.indexOf('-')
-    const plusIdx = part.indexOf('+')
-    let numPart = part
-
-    if (dashIdx !== -1) {
-      numPart = part.slice(0, dashIdx)
-    } else if (plusIdx !== -1) {
-      numPart = part.slice(0, plusIdx)
-    }
-
-    if (numPart === '' || numPart.toLowerCase() === 'x' || numPart === '*') {
+    if (part === '' || part.toLowerCase() === 'x' || part === '*') {
       break
     }
 
-    const num = parseInt(numPart, 10)
+    const num = parseInt(part, 10)
     if (globalIsNaN(num) || num < 0) return null
     nums.push(num)
   }
@@ -458,8 +459,31 @@ function parseSimpleVersion(input: string): SemVer | null {
     major: nums[0] as number,
     minor: nums[1] ?? 0,
     patch: nums[2] ?? 0,
-    prerelease: [],
-    build: [],
+    prerelease,
+    build,
     raw: input,
   })
+}
+
+/**
+ * Splits dot-separated prerelease or build identifiers.
+ * Every identifier must be non-empty and made of ASCII letters, digits and hyphens.
+ *
+ * @param text - The text after the `-` or `+` separator
+ * @returns The identifiers, or null if any identifier is invalid
+ */
+function parseIdentifierList(text: string): string[] | null {
+  const identifiers = text.split('.')
+
+  for (const identifier of identifiers) {
+    if (identifier === '') return null
+
+    for (let i = 0; i < identifier.length; i++) {
+      const code = identifier.charCodeAt(i)
+      const isAlphanumeric = (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122)
+      if (!isAlphanumeric && code !== 45) return null
+    }
+  }
+
+  return identifiers
 }

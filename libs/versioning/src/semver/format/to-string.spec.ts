@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createComparator, createComparatorSet, createRange } from '../models/range'
 import { createSemVer } from '../models/version'
+import { parseRangeStrict } from '../parse/range'
 import { format, formatSimple, formatRange, formatComparator } from './to-string'
 
 describe('format', () => {
@@ -102,5 +103,13 @@ describe('formatRange', () => {
     const set2 = createComparatorSet([createComparator('=', v2)])
     const range = createRange([set1, set2])
     expect(formatRange(range)).toBe('1.0.0 || 2.0.0')
+  })
+})
+
+describe('formatRange - parsed prerelease and build identifiers', () => {
+  it('round-trips a range whose comparators carry prerelease and build identifiers', () => {
+    const input = '>=1.0.0-alpha.6 <2.0.0 || 1.0.0+build.7'
+    const range = createRange(parseRangeStrict(input).sets)
+    expect(formatRange(range)).toBe(input)
   })
 })
