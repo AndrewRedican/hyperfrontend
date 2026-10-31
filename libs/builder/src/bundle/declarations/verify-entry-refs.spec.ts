@@ -2,7 +2,14 @@ import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { collectEntryRefs, collectExportedNames, findDanglingEntryRefs, verifyEntryTypeRefs } from './verify-entry-refs'
+import {
+  collectEntryRefs,
+  collectExportedNames,
+  collectReExports,
+  findAliasCycles,
+  findDanglingEntryRefs,
+  verifyEntryTypeRefs,
+} from './verify-entry-refs'
 
 const entryOf = (srcPath: string): EntryPoint => ({
   exportPath: srcPath === '' ? '.' : `./${srcPath}`,
@@ -108,6 +115,63 @@ describe('collectEntryRefs', () => {
   })
 })
 
+describe('collectReExports', () => {
+  it('records each re-exported name with the name the target must export', () => {
+    expect(collectReExports("export { A, B as C } from './b';")).toEqual([
+      { specifier: './b', exported: 'A', source: 'A' },
+      { specifier: './b', exported: 'C', source: 'B' },
+    ])
+  })
+
+  it('skips forms that forward no names', () => {
+    expect(collectReExports("export * from './a';\nexport * as ns from './b';\nimport { z } from './c';\nexport { z };")).toEqual([])
+  })
+})
+
+describe('findAliasCycles', () => {
+  const outputDir = useTempDir({ prefix: 'builder-verify-refs-' })
+
+  const writeEntry = (srcPath: string, source: string): string => outputDir.write(join(srcPath, 'index.d.ts'), source)
+
+  it('reports a name two entries re-export from each other, once', () => {
+    writeEntry('tech', "export { DetectionSource } from './monorepo';")
+    writeEntry(
+      'tech/monorepo',
+      "import { DetectionSource } from '..';\nexport { DetectionSource } from '..';\nexport interface MonorepoDetection {\n    detectedFrom: DetectionSource[];\n}"
+    )
+    expect(findAliasCycles(makeContext(outputDir.path, ['tech', 'tech/monorepo']))).toEqual([
+      [
+        { source: outputDir.resolve('tech', 'index.d.ts'), exported: 'DetectionSource', specifier: './monorepo' },
+        { source: outputDir.resolve('tech', 'monorepo', 'index.d.ts'), exported: 'DetectionSource', specifier: '..' },
+      ],
+    ])
+  })
+
+  it('follows a renamed re-export back to the name that aliases itself', () => {
+    writeEntry('tech', "export { Source as DetectionSource } from './monorepo';")
+    writeEntry('tech/monorepo', "export { DetectionSource as Source } from '..';")
+    expect(
+      findAliasCycles(makeContext(outputDir.path, ['tech', 'tech/monorepo'])).map((cycle) => cycle.map((hop) => hop.exported))
+    ).toEqual([['DetectionSource', 'Source']])
+  })
+
+  it('reports a cycle reached from an entry outside it once', () => {
+    writeEntry('a', "export { X } from '../b';")
+    writeEntry('b', "export { X } from '../c';")
+    writeEntry('c', "export { X } from '../b';")
+    writeEntry('d', "export { X } from '../b';")
+    expect(findAliasCycles(makeContext(outputDir.path, ['a', 'b', 'c', 'd'])).map((cycle) => cycle.map((hop) => hop.source))).toEqual([
+      [outputDir.resolve('b', 'index.d.ts'), outputDir.resolve('c', 'index.d.ts')],
+    ])
+  })
+
+  it('ignores bare specifiers, self references, paths outside the entry set, and a chain ending at a declaration', () => {
+    writeEntry('', "export { DetectionSource } from './shared/types';\nexport { Node } from 'typescript';\nexport { Self } from '.';")
+    writeEntry('host', "export { DetectionSource } from '..';")
+    expect(findAliasCycles(makeContext(outputDir.path, ['', 'host']))).toEqual([])
+  })
+})
+
 describe('findDanglingEntryRefs', () => {
   const outputDir = useTempDir({ prefix: 'builder-verify-refs-' })
 
@@ -172,6 +236,14 @@ describe('verifyEntryTypeRefs', () => {
     writeEntry('', "export type { EventHandler } from './shared/event-emitter';")
     writeEntry('host', "import { EventHandler } from '..';")
     expect(() => verifyEntryTypeRefs(makeContext(outputDir.path, ['', 'host']))).not.toThrow()
+  })
+
+  it('throws naming each hop of an alias cycle', () => {
+    writeEntry('tech', "export { DetectionSource } from './monorepo';")
+    writeEntry('tech/monorepo', "export { DetectionSource } from '..';")
+    expect(() => verifyEntryTypeRefs(makeContext(outputDir.path, ['tech', 'tech/monorepo']))).toThrow(
+      /1 declaration alias cycle\(s\)[\s\S]*TS2303[\s\S]*tech\/index\.d\.ts re-exports DetectionSource from '\.\/monorepo', and tech\/monorepo\/index\.d\.ts re-exports DetectionSource from '\.\.'/
+    )
   })
 
   it('throws naming the entry, the specifier, and the missing symbols', () => {

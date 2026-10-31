@@ -40,6 +40,30 @@ export interface EntryRef {
 }
 
 /**
+ * One `export { source as exported } from 'specifier'` element of a declaration file.
+ */
+export interface ReExport {
+  /** Specifier exactly as written in the declaration. */
+  specifier: string
+  /** The name the file exports. */
+  exported: string
+  /** The name the target module must export, `exported` itself when not renamed. */
+  source: string
+}
+
+/**
+ * One hop of an alias cycle: an entry `index.d.ts` re-exporting a name from a sibling entry.
+ */
+export interface AliasHop {
+  /** Absolute path of the `index.d.ts` holding the re-export. */
+  source: string
+  /** The name the file exports. */
+  exported: string
+  /** Specifier exactly as written in the declaration. */
+  specifier: string
+}
+
+/**
  * Parses a declaration file's text into a `ts.SourceFile`.
  *
  * Parent pointers are left unset: every statement this pass inspects is a
@@ -160,6 +184,33 @@ export const collectEntryRefs = (source: string): EntryRef[] => {
 }
 
 /**
+ * Collects every named re-export a declaration file makes from another module, one record per
+ * exported name, with the name the target must export when the element renames it.
+ *
+ * @param source - Raw text of the declaration file.
+ * @returns One record per re-exported name.
+ *
+ * @example Reading the names an entry forwards from its siblings
+ * ```typescript
+ * collectReExports("export { A, B as C } from './b';")
+ * // => [{ specifier: './b', exported: 'A', source: 'A' }, { specifier: './b', exported: 'C', source: 'B' }]
+ * ```
+ */
+export const collectReExports = (source: string): ReExport[] => {
+  const reExports: ReExport[] = []
+  for (const statement of parseDeclarations(source).statements) {
+    if (!ts.isExportDeclaration(statement)) continue
+    const specifier = specifierText(statement.moduleSpecifier)
+    const clause = statement.exportClause
+    if (specifier === null || clause === undefined || ts.isNamespaceExport(clause)) continue
+    for (const element of clause.elements) {
+      reExports.push({ specifier, exported: element.name.text, source: (element.propertyName ?? element.name).text })
+    }
+  }
+  return reExports
+}
+
+/**
  * Locates every entry `index.d.ts` the build emitted.
  *
  * @param context - Resolved build context.
@@ -221,12 +272,92 @@ export const findDanglingEntryRefs = (context: BuildContext): DanglingEntryRef[]
 }
 
 /**
- * Fails the build when the emitted entry declarations reference symbols a
- * sibling entry does not export, so a package can never publish a type surface
- * that silently resolves to `any` in consumer code.
+ * A cross-entry re-export as the cycle walk follows it, keyed by the exporting file and name.
+ */
+interface AliasEdge {
+  /** The hop the edge records. */
+  hop: AliasHop
+  /** The key of the file and name the re-export resolves to. */
+  next: string
+}
+
+/**
+ * Finds names the emitted entry declarations re-export around a cycle of entries.
+ *
+ * The per-entry d.ts pass attributes a non-entry source to the entry whose directory holds it,
+ * so an entry that forwards a name from a sibling while that sibling imports the same name back
+ * from it emits two re-exports pointing at each other. TypeScript rejects the pair as
+ * `TS2303 Circular definition of import alias` in any consumer that type-checks declarations,
+ * and `skipLibCheck` consumers silently read the name as an error type instead. This pass
+ * follows every cross-entry re-export from name to name and reports each cycle once, as the
+ * hops that form it in re-export order.
  *
  * @param context - Resolved build context.
- * @throws {Error} When any cross-entry reference names an unexported symbol.
+ * @returns One hop list per cycle; empty when no name aliases itself.
+ *
+ * @example Auditing the emitted declarations after the per-entry pass
+ * ```typescript
+ * const cycles = findAliasCycles(context)
+ * ```
+ */
+export const findAliasCycles = (context: BuildContext): AliasHop[][] => {
+  const indexPaths = emittedEntryIndexes(context)
+  const entryIndexes = createSet(indexPaths)
+  const edges = createMap<string, AliasEdge>()
+  for (const source of indexPaths) {
+    const dir = getDirname(source)
+    for (const reExport of collectReExports(readFileContent(source))) {
+      if (!reExport.specifier.startsWith('.')) continue
+      const target = join(dir, reExport.specifier, INDEX_DTS_NAME)
+      if (target === source || !entryIndexes.has(target)) continue
+      edges.set(`${source}\0${reExport.exported}`, {
+        hop: { source, exported: reExport.exported, specifier: reExport.specifier },
+        next: `${target}\0${reExport.source}`,
+      })
+    }
+  }
+  const settled = createSet<string>([])
+  const cycles: AliasHop[][] = []
+  for (const start of edges.keys()) {
+    const keys: string[] = []
+    const hops: AliasHop[] = []
+    let key = start
+    let edge = edges.get(key)
+    // why: a walk stops at a name an entry declares (no edge) or at a name an earlier walk settled, so every cycle is reported from one start alone
+    while (edge !== undefined && !settled.has(key)) {
+      const loop = keys.indexOf(key)
+      if (loop !== -1) {
+        cycles.push(hops.slice(loop))
+        break
+      }
+      keys.push(key)
+      hops.push(edge.hop)
+      key = edge.next
+      edge = edges.get(key)
+    }
+    for (const step of keys) settled.add(step)
+  }
+  return cycles
+}
+
+/**
+ * Renders one alias cycle as the hops that form it.
+ *
+ * @param context - Resolved build context, for output-relative paths.
+ * @param cycle - The hops in re-export order.
+ * @returns One line naming every hop.
+ */
+const describeCycle = (context: BuildContext, cycle: AliasHop[]): string =>
+  cycle.map((hop) => `${relativePath(context.outputPath, hop.source)} re-exports ${hop.exported} from '${hop.specifier}'`).join(', and ')
+
+/**
+ * Fails the build when the emitted entry declarations reference symbols a
+ * sibling entry does not export, or re-export a name around a cycle of entries,
+ * so a package can never publish a type surface that silently resolves to `any`
+ * in consumer code.
+ *
+ * @param context - Resolved build context.
+ * @throws {Error} When any cross-entry reference names an unexported symbol or aliases itself.
  *
  * @example Verifying the type surface after the declaration passes
  * ```typescript
@@ -236,8 +367,14 @@ export const findDanglingEntryRefs = (context: BuildContext): DanglingEntryRef[]
 export const verifyEntryTypeRefs = (context: BuildContext): void => {
   const dangling = findDanglingEntryRefs(context)
   if (dangling.length === 0) {
-    log.debug('entry type references resolve')
-    return
+    const cycles = findAliasCycles(context)
+    if (cycles.length === 0) {
+      log.debug('entry type references resolve')
+      return
+    }
+    throw createError(
+      `${cycles.length} declaration alias cycle(s) between entries, which TypeScript rejects as TS2303 in consumers that type-check declarations:\n${cycles.map((cycle) => `  ${describeCycle(context, cycle)}`).join('\n')}\nRe-export each name from the entry that declares it alone.`
+    )
   }
   const details = dangling
     .map(

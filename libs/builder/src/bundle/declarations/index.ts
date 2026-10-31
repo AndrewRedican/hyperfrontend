@@ -6,11 +6,18 @@
  */
 export type { GenerateDeclarationsResult } from './generate-declarations'
 export type { SiblingEntry, SiblingResolverInput } from './sibling-resolver'
-export type { DanglingEntryRef, EntryRef } from './verify-entry-refs'
+export type { AliasHop, DanglingEntryRef, EntryRef, ReExport } from './verify-entry-refs'
 export { runDtsPerEntry } from './dts-per-entry'
 export { runDtsPrePass } from './dts-pre-pass'
 export { flattenDeclarationPaths } from './flatten-paths'
 export { generateDeclarations } from './generate-declarations'
 export { pruneOrphanDeclarations } from './prune-orphan-dts'
 export { computeSiblingSpecifier, createSiblingExternalizePlugin, dtsPathFor, filterSiblings, findOwningSibling } from './sibling-resolver'
-export { collectEntryRefs, collectExportedNames, findDanglingEntryRefs, verifyEntryTypeRefs } from './verify-entry-refs'
+export {
+  collectEntryRefs,
+  collectExportedNames,
+  collectReExports,
+  findAliasCycles,
+  findDanglingEntryRefs,
+  verifyEntryTypeRefs,
+} from './verify-entry-refs'
