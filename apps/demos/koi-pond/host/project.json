@@ -4,6 +4,16 @@
   "sourceRoot": "apps/demos/koi-pond/host/src",
   "projectType": "application",
   "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "implicitDependencies": [
+    "demo-koi-fish-angular",
+    "demo-koi-fish-lit",
+    "demo-koi-fish-preact",
+    "demo-koi-fish-react",
+    "demo-koi-fish-solid",
+    "demo-koi-fish-svelte",
+    "demo-koi-fish-vanilla",
+    "demo-koi-fish-vue"
+  ],
   "metadata": {
     "deploy": {
       "provider": "railway",
