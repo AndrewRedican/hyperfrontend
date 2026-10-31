@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/69ac32113adab2e85b7e6f30548dde9783e45084...31232765ab8021a0768c29221f4dc6faba24e9d8) - 2026-10-31
+
+### Features
+
+- fail the build on a declaration alias cycle between entries
+
 ## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/39ff2bee8839058dfa45401b99b370470aa79521...c81187334a0bdb05c27f5bd7b81e2dedc6b909d9) - 2026-10-31
 
 ### Features
