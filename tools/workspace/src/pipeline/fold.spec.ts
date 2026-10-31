@@ -5,7 +5,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { libraryOfE2e } from '../graph/depends-on'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
-import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, upstreamPackages, windowsTasks, withNeeds } from './fold'
+import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, railwayService, upstreamPackages, windowsTasks, withNeeds } from './fold'
 import { planReason } from './model'
 
 const workspace = createPipelineWorkspace()
@@ -21,6 +21,17 @@ afterAll(() => workspace.remove())
  */
 function project(name: string): ProjectRecord {
   return graph.projects.get(name) as ProjectRecord
+}
+
+/**
+ * The first demo with other deploy metadata.
+ *
+ * @param deploy - What `metadata.deploy` holds
+ * @returns The record
+ */
+function withDeploy(deploy: Readonly<Record<string, unknown>>): ProjectRecord {
+  const record = project('demo-one')
+  return { ...record, configuration: { ...record.configuration, metadata: { deploy } } }
 }
 
 /**
@@ -61,6 +72,21 @@ describe('libraryOfE2e', () => {
 
   it('answers null when no implicit dependency builds', () => {
     expect(libraryOfE2e(graph, project('e2e-orphan'))).toBeNull()
+  })
+})
+
+describe('railwayService', () => {
+  it('names the service of a project deploying to Railway', () => {
+    expect(railwayService(project('demo-one'))).toBe('one')
+  })
+
+  it.each([
+    ['no metadata', project('demo-two')],
+    ['no configuration', { ...project('demo-two'), configuration: null }],
+    ['another provider', withDeploy({ provider: 'vercel', service: 'one' })],
+    ['no service name', withDeploy({ provider: 'railway', service: 1 })],
+  ])('answers null for a project with %s', (_, record) => {
+    expect(railwayService(record)).toBeNull()
   })
 })
 
@@ -269,6 +295,40 @@ describe('linuxTasks', () => {
     ])
   })
 
+  it('adds the deploy after the build of a demo that declares a Railway service on main', () => {
+    expect(placed(linuxTasks(graph, selection('demo-one:build'), true))).toEqual([
+      'demo-one:build in demo-one',
+      'demo-one:deploy in demo-one',
+      'demo-one:install in demo-one',
+    ])
+  })
+
+  it('drops the deploy off main', () => {
+    expect(placed(linuxTasks(graph, selection('demo-one:build'), false))).toEqual([
+      'demo-one:build in demo-one',
+      'demo-one:install in demo-one',
+    ])
+  })
+
+  it('leaves a built demo that declares no Railway service undeployed', () => {
+    expect(placed(linuxTasks(graph, selection('demo-two:build'), true))).toEqual([
+      'demo-one:install in demo-one',
+      'demo-one:verify in demo-one',
+      'demo-two:build in demo-two',
+      'demo-two:install in demo-two',
+    ])
+  })
+
+  it('deploys through the deploy script with the service in the environment', () => {
+    const deploy = linuxTasks(graph, selection('demo-one:build'), true).find((task) => task.target === 'deploy') as PlanTask
+    expect({ command: deploy.command, env: deploy.env, weight: deploy.weight, reasons: deploy.reasons }).toEqual({
+      command: ['node', 'tools/workspace/scripts/railway-deploy.mjs'],
+      env: { HF_DEPLOY_SERVICE: 'one' },
+      weight: 'light',
+      reasons: [planReason('pipeline-task', 'deploys the commit to the Railway service one', ['demo-one:build'])],
+    })
+  })
+
   it('weighs a library build heavy and everything else light', () => {
     expect(
       linuxTasks(graph, selection('lib-alpha:build', 'lib-alpha:test', 'app-site:build'), false).map((task) => `${task.id} ${task.weight}`)
@@ -397,6 +457,11 @@ describe('withNeeds across projects', () => {
   it('runs a verify after the build of its project when the plan builds it', () => {
     const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-two:build', 'demo-one:build'), false))
     expect(tasks.find((task) => task.id === 'demo-one:verify')?.needs).toEqual(['demo-one:build', 'demo-one:install'])
+  })
+
+  it('runs a deploy after every other task of its chain', () => {
+    const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-one:build', 'demo-one:typecheck'), true))
+    expect(tasks.find((task) => task.id === 'demo-one:deploy')?.needs).toEqual(['demo-one:build', 'demo-one:install', 'demo-one:typecheck'])
   })
 })
 

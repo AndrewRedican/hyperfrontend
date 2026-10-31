@@ -1,8 +1,8 @@
 /**
  * The commands a plan task runs: a target of a project through the workspace's own command line,
  * which runs that one task and none of the tasks it needs (the plan lists those as tasks of their
- * own), and the pipeline's own tasks (the floor probe and the consumer smoke) through the Node.js
- * release they are meant for.
+ * own), and the pipeline's own tasks: the floor probe and the consumer smoke through the Node.js
+ * release they are meant for, and the Railway deploy of a demo.
  *
  * @module pipeline/commands
  */
@@ -17,6 +17,8 @@ export const PipelineTarget = freeze({
   SmokeFloor: 'smoke-floor',
   /** Drives the packed package from a consumer on the newest release of the floor's major. */
   SmokeMajor: 'smoke-major',
+  /** Deploys the commit to the Railway service a demo declares. */
+  Deploy: 'deploy',
 } as const)
 
 /** One of the pipeline's own targets. */
@@ -34,6 +36,9 @@ export const PROBE_SCRIPT = 'tools/workspace/scripts/probe-node-floor.mjs'
 /** The consumer smoke an e2e project may ship, relative to the project root. */
 export const SMOKE_SCRIPT = 'scripts/consumer-smoke.mjs'
 
+/** The Railway deploy, workspace-relative. */
+export const DEPLOY_SCRIPT = 'tools/workspace/scripts/railway-deploy.mjs'
+
 /** The position of each target inside a chain, prerequisites first. */
 const TARGET_RANK: Readonly<Record<string, number>> = freeze({
   install: 0,
@@ -46,6 +51,7 @@ const TARGET_RANK: Readonly<Record<string, number>> = freeze({
   [PipelineTarget.SmokeFloor]: 7,
   [PipelineTarget.SmokeMajor]: 8,
   publish: 9,
+  [PipelineTarget.Deploy]: 10,
 })
 
 /**
@@ -102,5 +108,5 @@ export function majorOf(floor: string): string {
  * @returns Lower for a prerequisite; targets the pipeline does not order come last
  */
 export function targetRank(target: string): number {
-  return TARGET_RANK[target] ?? 10
+  return TARGET_RANK[target] ?? 11
 }
