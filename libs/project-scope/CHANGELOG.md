@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...31232765ab8021a0768c29221f4dc6faba24e9d8) - 2026-10-31
+## [0.4.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...88748aaa668a66fede2a04f4aa4b84a0fe6e4588) - 2026-10-31
 
 ### Bug Fixes
 
