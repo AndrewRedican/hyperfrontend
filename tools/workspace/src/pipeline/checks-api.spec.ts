@@ -69,6 +69,46 @@ describe('githubChecks', () => {
     })
   })
 
+  it('publishes a check run already completed, in one request', async () => {
+    const seen: [string, FetchInit][] = []
+    const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async (url: string, init: FetchInit) => {
+      seen.push([url, init])
+      return respond(201, { id: 7 })
+    })
+    await api?.publish('pipeline plan', 'abc', 'success', { title: '2 chains, 5 tasks', summary: 'plan', text: '{}' })
+    const [url, init] = seen[0] as [string, FetchInit]
+    expect({ requests: seen.length, url, method: init.method, body: parse(init.body ?? '') }).toEqual({
+      requests: 1,
+      url: 'https://api.github.com/repos/o/r/check-runs',
+      method: 'POST',
+      body: expect.objectContaining({
+        name: 'pipeline plan',
+        head_sha: 'abc',
+        status: 'completed',
+        conclusion: 'success',
+        output: { title: '2 chains, 5 tasks', summary: 'plan', text: '{}' },
+      }),
+    })
+  })
+
+  it('retries a publish that got no answer, then sends it', async () => {
+    const waits: number[] = []
+    let calls = 0
+    const api = githubChecks(
+      { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' },
+      async () => {
+        calls += 1
+        if (calls === 1) return respond(502, {})
+        return respond(201, { id: 7 })
+      },
+      async (ms) => {
+        waits.push(ms)
+      }
+    )
+    await api?.publish('pipeline plan', 'abc', 'success', { title: 't', summary: 's' })
+    expect({ calls, waits }).toEqual({ calls: 2, waits: [1000] })
+  })
+
   it('fails on a refused request', async () => {
     const api = githubChecks({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, async () => respond(403, {}))
     await expect(api?.create('lib-a (linux)', 'abc')).rejects.toThrow('POST https://api.github.com/repos/o/r/check-runs answered 403')

@@ -118,7 +118,7 @@ describe('chainChecks', () => {
    * @param failing - Whether every call fails
    * @returns The API and the calls
    */
-  function recording(failing = false): { api: CheckApi; calls: unknown[] } {
+  function recording(failing = false): { api: Omit<CheckApi, 'publish'>; calls: unknown[] } {
     const calls: unknown[] = []
     return {
       calls,
@@ -257,7 +257,7 @@ describe('chainChecks', () => {
   /** An API that answers each request only when the test lets it. */
   interface Holding {
     /** The API. */
-    readonly api: CheckApi
+    readonly api: Omit<CheckApi, 'publish'>
     /** What was sent, in order; check runs are numbered from 1 as they are created. */
     readonly sent: unknown[][]
     /** What was sent and answered, in order. */
