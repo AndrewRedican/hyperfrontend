@@ -24,6 +24,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vue --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'exquisite-caring' },
@@ -38,6 +39,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
@@ -53,7 +55,7 @@ export default defineRailway(() => {
     healthcheck: '/',
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
-    deploy: { preDeployCommand: [] },
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } }, preDeployCommand: [] },
   })
   const koiAngular = service('koi-angular', {
     source: hyperfrontend,
@@ -70,6 +72,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-angular --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
@@ -83,6 +86,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-solid --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'diplomatic-radiance' },
@@ -97,6 +101,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-lit --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'striking-kindness' },
@@ -111,6 +116,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-preact --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'pure-presence' },
@@ -127,7 +133,7 @@ export default defineRailway(() => {
     healthcheck: '/',
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
-    deploy: { limitOverride: { containers: { cpu: 4, memoryBytes: 4000000000 } }, preDeployCommand: [] },
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } }, preDeployCommand: [] },
     networking: { privateNetworkEndpoint: 'demo-clock' },
   })
   const koiSvelte = service('koi svelte', {
@@ -140,6 +146,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-svelte --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'peaceful-flow' },
@@ -154,6 +161,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-react --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'remarkable-amazement' },
@@ -173,6 +181,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vanilla --host 0.0.0.0',
     healthcheck: '/',
+    deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } } },
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
