@@ -14,7 +14,7 @@ export default defineRailway(() => {
     '/tools/lint/src/runtime/**',
   ]
 
-  const koiVue = service('koi vue', {
+  const koiVue = service('koi-vue', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vue',
@@ -76,7 +76,7 @@ export default defineRailway(() => {
     cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
-  const koiSolid = service('koi solid', {
+  const koiSolid = service('koi-solid', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-solid',
@@ -91,7 +91,7 @@ export default defineRailway(() => {
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'diplomatic-radiance' },
   })
-  const koiLit = service('koi lit', {
+  const koiLit = service('koi-lit', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-lit',
@@ -136,7 +136,7 @@ export default defineRailway(() => {
     deploy: { limitOverride: { containers: { cpu: 1, memoryBytes: 2000000000 } }, preDeployCommand: [] },
     networking: { privateNetworkEndpoint: 'demo-clock' },
   })
-  const koiSvelte = service('koi svelte', {
+  const koiSvelte = service('koi-svelte', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-svelte',
@@ -151,7 +151,7 @@ export default defineRailway(() => {
     replicas: { 'europe-west4-drams3a': 1 },
     networking: { privateNetworkEndpoint: 'peaceful-flow' },
   })
-  const koiReact = service('koi react', {
+  const koiReact = service('koi-react', {
     source: hyperfrontend,
     build: {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-react',
