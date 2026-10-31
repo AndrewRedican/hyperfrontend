@@ -147,4 +147,26 @@ describe('collectThirdPartyLicenses', () => {
     const result = collectThirdPartyLicenses(workspace.path, ['zeta', 'alpha', 'mike'])
     expect(result.map((e) => e.name)).toEqual(['alpha', 'mike', 'zeta'])
   })
+
+  it('carries every license, licence, copying and notice file verbatim, sorted by file name', () => {
+    const dep = join(nodeModules, 'foo')
+    writePkg(dep, { name: 'foo', license: 'LGPL-3.0-only' })
+    writeFileSync(join(dep, 'NOTICE'), 'notice text')
+    writeFileSync(join(dep, 'COPYING.LESSER'), 'lesser text')
+    writeFileSync(join(dep, 'COPYING'), 'gpl text')
+    writeFileSync(join(dep, 'LICENCE.txt'), 'licence text')
+    writeFileSync(join(dep, 'README.md'), 'readme')
+    expect(collectThirdPartyLicenses(workspace.path, ['foo'])[0].licenseTexts).toEqual([
+      { fileName: 'COPYING', content: 'gpl text' },
+      { fileName: 'COPYING.LESSER', content: 'lesser text' },
+      { fileName: 'LICENCE.txt', content: 'licence text' },
+      { fileName: 'NOTICE', content: 'notice text' },
+    ])
+  })
+
+  it('carries no license texts when the package ships no license file', () => {
+    const dep = join(nodeModules, 'foo')
+    writePkg(dep, { name: 'foo', license: 'MIT' })
+    expect(collectThirdPartyLicenses(workspace.path, ['foo'])[0].licenseTexts).toEqual([])
+  })
 })
