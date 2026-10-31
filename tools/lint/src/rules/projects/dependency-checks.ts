@@ -14,7 +14,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { defineRule } from '@hyperfrontend/linter'
 import { isString, rootObject } from '@hyperfrontend/linter/helpers'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
-import { eq, parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
+import { parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
 import { readJson, selfInputs, workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
 import { inputFiles, usedPackages } from './shared/dependencies.ts'
@@ -47,8 +47,7 @@ interface Manifest {
 
 /**
  * Whether an installed version satisfies a declared range; a range that does not parse is never
- * satisfied. An exact version is compared as a version, since the range parser drops its
- * prerelease identifiers.
+ * satisfied.
  *
  * @param installed - The installed version
  * @param range - The declared range
@@ -57,8 +56,6 @@ interface Manifest {
 function isSatisfied(installed: string, range: string): boolean {
   const version = parseVersion(installed).version
   if (version === undefined) return false
-  const pinned = parseVersion(range).version
-  if (pinned !== undefined) return eq(version, pinned)
   const parsed = parseRange(range).range
   return parsed !== undefined && satisfies(version, parsed)
 }
