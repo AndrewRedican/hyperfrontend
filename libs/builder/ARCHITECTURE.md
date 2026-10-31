@@ -177,7 +177,7 @@ Each sub-module is its own package entry point and ships its own README; follow 
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | [`package/json/`](./src/package/json/README.md)         | Synthesize `exports`, strip bundled/workspace deps, inherit fields, resolve CDN paths.     |
 | [`package/assets/`](./src/package/assets/README.md)     | Materialize asset specs (files/globs), gated by an optional condition predicate.           |
-| [`package/licenses/`](./src/package/licenses/README.md) | Collect external licenses and write `THIRD_PARTY_LICENSES.md`.                             |
+| [`package/licenses/`](./src/package/licenses/README.md) | Collect external and inlined licenses and write `THIRD_PARTY_LICENSES.md`.                 |
 | [`bin/script/`](./src/bin/script/README.md)             | Bundle `src/bin/<name>.ts`, prepend the shebang, append a bootstrap footer, chmod `0o755`. |
 | [`bin/native/`](./src/bin/native/README.md)             | Node SEA pipeline: config → blob → inject (postject) → codesign strip → platform guard.    |
 
@@ -399,7 +399,7 @@ interface BuildResult {
 
 - `json/`: `synthesizePackageJson()` builds `exports` from the emitted formats, strips bundled and workspace deps, inherits fields, and resolves CDN paths.
 - `assets/`: `copyAssets()` materializes file/glob specs, optionally gated by a condition predicate.
-- `licenses/`: `collectThirdPartyLicenses()` and `writeThirdPartyLicensesFile()` produce `THIRD_PARTY_LICENSES.md`.
+- `licenses/`: `collectThirdPartyLicenses()` lists the published dependencies, `collectBundledThirdPartyLicenses()` walks every third-party package the output inlines (bundled deps, their transitive deps, and the deps of inlined workspace packages), and `writeThirdPartyLicensesFile()` writes both, with license texts, to `THIRD_PARTY_LICENSES.md`.
 
 📖 [Full package/ documentation](./src/package/README.md)
 

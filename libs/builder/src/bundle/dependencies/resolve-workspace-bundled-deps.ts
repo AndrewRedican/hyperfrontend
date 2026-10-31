@@ -187,8 +187,13 @@ const firstResolvable = (paths: string[]): string | undefined => {
  *
  * @param fromPath - Absolute path to a `.ts` source file inside the dep.
  * @returns The dep's project-root directory, or `undefined` when no `package.json` ancestor exists.
+ *
+ * @example Finding the project that owns a mapped source file
+ * ```typescript
+ * findOwningProjectRoot('/abs/repo/libs/logging/src/index.ts') // => '/abs/repo/libs/logging'
+ * ```
  */
-const findOwningProjectRoot = (fromPath: string): string | undefined => {
+export const findOwningProjectRoot = (fromPath: string): string | undefined => {
   // why: walking with dirname keeps the drive root of a Windows path, which rebuilding the path from `/`-split segments loses.
   for (let dir = fromPath; dirname(dir) !== dir; dir = dirname(dir)) {
     if (exists(join(dir, 'package.json'))) return dir
