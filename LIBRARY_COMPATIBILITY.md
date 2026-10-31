@@ -217,7 +217,7 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.5.4` |
+| `@hyperfrontend/builder` | `0.6.0` |
 | `@hyperfrontend/cryptography` | `1.1.1` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
 | `@hyperfrontend/features` | `0.11.5` |

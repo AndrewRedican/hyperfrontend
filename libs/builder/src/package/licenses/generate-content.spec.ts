@@ -30,4 +30,44 @@ describe('generateThirdPartyLicensesContent', () => {
     const bIdx = lines.findIndex((l) => l.includes('`b`'))
     expect(aIdx).toBeLessThan(bIdx)
   })
+
+  it('omits the license texts section when no entry carries texts', () => {
+    expect(generateThirdPartyLicensesContent([{ name: 'foo', licenseType: 'MIT', licenseUrl: null, licenseTexts: [] }])).not.toContain(
+      '## License texts'
+    )
+  })
+
+  it('reproduces each license file under its package and file name in a fenced block', () => {
+    const md = generateThirdPartyLicensesContent([
+      {
+        name: 'foo',
+        licenseType: 'MIT',
+        licenseUrl: null,
+        licenseTexts: [{ fileName: 'LICENSE', content: 'MIT License\n\nCopyright x\n' }],
+      },
+    ])
+    expect(md).toContain('## License texts\n\n### `foo`\n\n#### LICENSE\n\n```text\nMIT License\n\nCopyright x\n```\n')
+  })
+
+  it('lists only the entries that carry texts in the license texts section', () => {
+    const md = generateThirdPartyLicensesContent([
+      { name: 'bare', licenseType: 'MIT', licenseUrl: null },
+      { name: 'foo', licenseType: 'MIT', licenseUrl: null, licenseTexts: [{ fileName: 'LICENSE', content: 'text' }] },
+    ])
+    expect(md).not.toContain('### `bare`')
+  })
+
+  it('fences a license text with more backticks than any run inside it', () => {
+    const md = generateThirdPartyLicensesContent([
+      { name: 'foo', licenseType: 'MIT', licenseUrl: null, licenseTexts: [{ fileName: 'LICENSE', content: 'see ```code``` here' }] },
+    ])
+    expect(md).toContain('````text\nsee ```code``` here\n````')
+  })
+
+  it('ends the body with a single trailing newline after license texts', () => {
+    const md = generateThirdPartyLicensesContent([
+      { name: 'foo', licenseType: 'MIT', licenseUrl: null, licenseTexts: [{ fileName: 'LICENSE', content: 'text\n\n' }] },
+    ])
+    expect(md.endsWith('```\n')).toBe(true)
+  })
 })

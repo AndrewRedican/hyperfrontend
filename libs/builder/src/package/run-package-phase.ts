@@ -1,27 +1,24 @@
 import type { BuildConfig, BuildContext, FormatOutputs } from '../models'
-import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { copyAssets } from './assets/copy-assets'
 import { readProjectPackageJson } from './json/read-package-json'
 import { synthesizePackageJson } from './json/synthesize'
 import { writeOutputPackageJson } from './json/write'
 import { collectThirdPartyLicenses } from './licenses/collect'
+import { collectBundledThirdPartyLicenses } from './licenses/collect-bundled'
 import { generateThirdPartyLicensesContent } from './licenses/generate-content'
 import { writeThirdPartyLicensesFile } from './licenses/write'
-
-const resolveThirdPartyLicensesFlag = (config: BuildConfig, ctx: BuildContext): boolean => {
-  if (typeof config.thirdPartyLicenses === 'boolean') return config.thirdPartyLicenses
-  return ctx.bundledDeps.length > 0
-}
-
-const collectLicenseDeps = (ctx: BuildContext, distDeps: string[]): string[] => from(createSet([...ctx.bundledDeps, ...distDeps]))
 
 /**
  * Runs the complete package phase: synthesizes and writes the dist
  * `package.json`, materializes any configured asset specs, and (when
  * `config.thirdPartyLicenses` is enabled, defaulting to `true` for builds
- * with at least one bundled dep) emits `THIRD_PARTY_LICENSES.md`.
+ * that inline third-party code) emits `THIRD_PARTY_LICENSES.md`.
+ *
+ * The license file lists the published `dependencies` plus every third-party
+ * package the output inlines: bundled dependencies, their transitive
+ * dependencies, and the dependencies of inlined workspace packages, each with
+ * its license and notice texts.
  *
  * The phase consumes:
  * - the source `package.json` (read fresh from `ctx.projectRoot`)
@@ -61,12 +58,17 @@ export const runPackagePhase = async (ctx: BuildContext, config: BuildConfig, fo
   writeOutputPackageJson(ctx.outputPath, distPkg)
   copyAssets(ctx.assets, ctx.outputPath, srcPkg)
 
-  if (resolveThirdPartyLicensesFlag(config, ctx)) {
-    const distDeps = keys(distPkg.dependencies ?? {})
-    const externals = collectLicenseDeps(ctx, distDeps)
-    const entries = collectThirdPartyLicenses(ctx.workspaceRoot, externals)
-    if (entries.length > 0) {
-      writeThirdPartyLicensesFile(ctx.outputPath, generateThirdPartyLicensesContent(entries))
-    }
+  if (config.thirdPartyLicenses === false) return
+  const distDeps = keys(distPkg.dependencies ?? {})
+  const bundled = collectBundledThirdPartyLicenses({
+    workspaceRoot: ctx.workspaceRoot,
+    projectRoot: ctx.projectRoot,
+    external: [...distDeps, ...keys(srcPkg.peerDependencies ?? {}), ...ctx.external],
+    isWorkspacePackage: ctx.isWorkspacePackage,
+  })
+  if (config.thirdPartyLicenses !== true && bundled.length === 0) return
+  const entries = [...collectThirdPartyLicenses(ctx.workspaceRoot, distDeps), ...bundled].sort((a, b) => a.name.localeCompare(b.name))
+  if (entries.length > 0) {
+    writeThirdPartyLicensesFile(ctx.outputPath, generateThirdPartyLicensesContent(entries))
   }
 }

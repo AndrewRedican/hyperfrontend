@@ -29,6 +29,7 @@
         "editor.tabSize": 2,
         "files.trimTrailingWhitespace": true,
         "git.useEditorAsCommitInput": false,
+        "typescript.tsdk": "node_modules/typescript/lib",
         "telemetry.telemetryLevel": "off",
         "gitlens.telemetry.enabled": false,
         "explorer.excludeGitIgnore": false,

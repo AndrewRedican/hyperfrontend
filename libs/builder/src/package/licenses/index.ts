@@ -4,7 +4,9 @@
  *
  * @module @hyperfrontend/builder/package/licenses
  */
-export type { ThirdPartyLicenseEntry } from './types'
+export type { CollectBundledThirdPartyLicensesOptions } from './collect-bundled'
+export type { LicenseText, ThirdPartyLicenseEntry } from './types'
 export { collectThirdPartyLicenses } from './collect'
+export { collectBundledThirdPartyLicenses } from './collect-bundled'
 export { generateThirdPartyLicensesContent } from './generate-content'
 export { writeThirdPartyLicensesFile } from './write'
