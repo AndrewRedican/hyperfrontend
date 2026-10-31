@@ -1,4 +1,4 @@
-import type { Comparator, Range } from '../models/range'
+import type { Comparator, ComparatorSet, Range } from '../models/range'
 import type { SemVer } from '../models/version'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
@@ -198,6 +198,10 @@ export function satisfiesComparator(version: SemVer, comparator: Comparator): bo
 /**
  * Checks if a version satisfies a range.
  *
+ * Prerelease versions follow npm's rule: a prerelease only satisfies a comparator set that names a
+ * prerelease of the same major.minor.patch, so `1.1.0-beta.1` does not satisfy `^1.0.0` or `*`,
+ * while `1.0.0-alpha.7` satisfies `>=1.0.0-alpha.6`.
+ *
  * @param version - Version to check
  * @param range - Range to test against
  * @returns True if version satisfies the range
@@ -205,27 +209,45 @@ export function satisfiesComparator(version: SemVer, comparator: Comparator): bo
  * @example Check if version satisfies a range
  * satisfies(parseVersion('1.2.3'), parseRange('^1.0.0')) // true
  * satisfies(parseVersion('2.0.0'), parseRange('^1.0.0')) // false
+ * satisfies(parseVersion('1.0.0-alpha.7'), parseRange('>=1.0.0-alpha.6')) // true
+ * satisfies(parseVersion('2.0.0-alpha.1'), parseRange('>=1.0.0-alpha.6')) // false
  */
 export function satisfies(version: SemVer, range: Range): boolean {
   if (range.sets.length === 0) {
-    return true
+    return version.prerelease.length === 0
   }
 
   for (const set of range.sets) {
-    let allSatisfied = true
-
-    if (set.comparators.length === 0) {
+    if (satisfiesSet(version, set)) {
       return true
     }
+  }
 
-    for (const comp of set.comparators) {
-      if (!satisfiesComparator(version, comp)) {
-        allSatisfied = false
-        break
-      }
+  return false
+}
+
+/**
+ * Checks if a version satisfies every comparator of a set, and, for a prerelease version, that
+ * the set admits prereleases of its major.minor.patch.
+ *
+ * @param version - Version to check
+ * @param set - Comparator set to test against
+ * @returns True if version satisfies the set
+ */
+function satisfiesSet(version: SemVer, set: ComparatorSet): boolean {
+  for (const comp of set.comparators) {
+    if (!satisfiesComparator(version, comp)) {
+      return false
     }
+  }
 
-    if (allSatisfied) {
+  if (version.prerelease.length === 0) {
+    return true
+  }
+
+  for (const comp of set.comparators) {
+    const bound = comp.version
+    if (bound.prerelease.length > 0 && bound.major === version.major && bound.minor === version.minor && bound.patch === version.patch) {
       return true
     }
   }

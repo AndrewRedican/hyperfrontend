@@ -1,4 +1,4 @@
-The cases under cases/jsdoc/ were adapted from the test suite of eslint-plugin-jsdoc 62.5.0, which carries this license.
+The spec cases under src/rules/jsdoc/ were adapted from the test suite of eslint-plugin-jsdoc 62.5.0, and the tag tables in src/jsdoc/tags.ts from its tag definitions; it carries this license.
 
 Copyright (c) 2018, Gajus Kuizinas (http://gajus.com/)
 All rights reserved.

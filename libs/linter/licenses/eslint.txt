@@ -1,4 +1,4 @@
-The cases under cases/javascript/ were adapted from the test suite of ESLint 9.39.4, which carries this license.
+The spec cases under src/rules/javascript/ were adapted from the test suite of ESLint 9.39.4, which carries this license.
 
 Copyright OpenJS Foundation and other contributors, <www.openjsf.org>
 
