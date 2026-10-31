@@ -54,6 +54,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-angular --host 0.0.0.0',
     healthcheck: '/',
+    cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
   })
   const koiSolid = service('koi solid', {
@@ -108,6 +109,7 @@ export default defineRailway(() => {
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/clock/app --host 0.0.0.0',
     healthcheck: '/',
+    cdn: { enabled: true },
     replicas: { 'europe-west4-drams3a': 1 },
     deploy: { limitOverride: { containers: { cpu: 4, memoryBytes: 4000000000 } }, preDeployCommand: [] },
     networking: { privateNetworkEndpoint: 'demo-clock' },
