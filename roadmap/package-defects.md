@@ -13,40 +13,14 @@ about the documentation once it lands.
 
 Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 
-| #    | Package                 | Defect                                                                  | Severity |
-| ---- | ----------------------- | ----------------------------------------------------------------------- | -------- |
-| D-04 | project-scope / builder | Declaration alias cycle: one symbol left, and no builder-side guard     | medium   |
-| D-09 | logging                 | A channel shares its level with its parent in both directions           | medium   |
-| D-10 | state-machine           | Nothing makes `init` run once under concurrent callers                  | medium   |
-| D-11 | versioning              | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
-| D-12 | ui-utils                | `syncElementDimensions` copies the source's inline `position`           | low      |
+| #    | Package       | Defect                                                                  | Severity |
+| ---- | ------------- | ----------------------------------------------------------------------- | -------- |
+| D-09 | logging       | A channel shares its level with its parent in both directions           | medium   |
+| D-10 | state-machine | Nothing makes `init` run once under concurrent callers                  | medium   |
+| D-11 | versioning    | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
+| D-12 | ui-utils      | `syncElementDimensions` copies the source's inline `position`           | low      |
 
 ---
-
-## D-04 — the declaration alias cycle still reaches project-scope, and the builder has no guard
-
-The ui-utils half of this entry is fixed. Its sources were relocated out of `src/lib/` into the
-ten sub-entry directories, so each entry's declarations are leaf declarations rather than a
-re-export cycle. A consumer compiling under `tsc` `NodeNext`, `strict`, `skipLibCheck: false`
-went from 77 `TS2303 Circular definition of import alias` errors to 0, and a probe that
-previously compiled silently now reports a real type error, confirming symbols are no longer
-degraded to error-`any`. That closes for consumers on the next ui-utils publish.
-
-What remains is the same class in two places. `project-scope@0.2.5` ships one instance:
-`DetectionSource` in `tech/index.d.ts` raises `TS2303`. A package-local fix exists (declare it
-where `tech/monorepo` owns it, or re-export it from the root via `./monorepo` only).
-
-The cause is builder-side: the declaration pass attributes a sibling's ownership by path prefix,
-so a symbol re-exported from two entries can be given an owner that points back at the importer.
-The durable fix is ownership by reachability in the sibling resolver, plus a `skipLibCheck: false`
-consumer typecheck in package-e2e so the whole class is caught on emit rather than by a reader.
-Both are follow-ups, not patches.
-
-**Docs follow-up.** The `js`-fence directive for ui-utils guides can be lifted once the relocated
-version publishes. The snippet in the shipped
-[style-a-widget-you-inject-into-someone-elses-page](../apps/docs-site/content/guides/style-a-widget-you-inject-into-someone-elses-page/guide.md)
-guide was compiled against the rebuilt declarations under `strict` and `skipLibCheck: false` and
-is clean at 0 errors, so it can move to `ts` fences at that point.
 
 ## D-09 — a logging channel shares its level with its parent in both directions
 
