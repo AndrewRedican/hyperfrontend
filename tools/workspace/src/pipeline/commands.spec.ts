@@ -74,12 +74,8 @@ describe('majorOf', () => {
 
 describe('targetRank', () => {
   it('orders the pipeline targets prerequisites first and the rest last', () => {
-    expect(['publish', 'typecheck', 'serve', 'build', 'install'].sort((left, right) => targetRank(left) - targetRank(right))).toEqual([
-      'install',
-      'typecheck',
-      'build',
-      'publish',
-      'serve',
-    ])
+    expect(
+      ['publish', 'typecheck', 'serve', 'deploy', 'build', 'install'].sort((left, right) => targetRank(left) - targetRank(right))
+    ).toEqual(['install', 'typecheck', 'build', 'publish', 'deploy', 'serve'])
   })
 })

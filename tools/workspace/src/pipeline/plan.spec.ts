@@ -112,6 +112,13 @@ describe('createPlan', () => {
     ])
   })
 
+  it('plans the deploy of a demo last in its chain on main', () => {
+    expect(chains(createPlan({ graph, changes: modified('apps/demos/one/src/main.ts'), main: true }))).toEqual([
+      'linux demo-one: install typecheck build verify deploy',
+      'linux demo-two: install build',
+    ])
+  })
+
   it('adds the whole chain of a drifted library on main', () => {
     const plan = createPlan({ graph, changes: modified('README.md'), main: true, drift: ['lib-alpha', 'lib-testing', 'lib-nobody'] })
     expect({ chains: chains(plan), drift: plan.drift }).toEqual({

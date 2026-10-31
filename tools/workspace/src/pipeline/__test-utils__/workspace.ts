@@ -3,7 +3,8 @@
  * the other as a peer, a private library, a tool, an e2e project per library (one shipping a
  * consumer smoke, and one whose spec imports the private library), an e2e project naming no
  * library, two demos the lint plugin excludes (each with an install its other targets depend
- * on, the second building after the first one's verify), an application and the root project.
+ * on, the first deploying to a Railway service, the second building after the first one's
+ * verify), an application and the root project.
  * Written as code so no test material rests in the tree.
  *
  * @module pipeline/__test-utils__/workspace
@@ -135,6 +136,7 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
   'apps/demos/one/project.json': json({
     name: 'demo-one',
     projectType: 'application',
+    metadata: { deploy: { provider: 'railway', service: 'one' } },
     targets: {
       install: {},
       build: { dependsOn: ['install'] },
