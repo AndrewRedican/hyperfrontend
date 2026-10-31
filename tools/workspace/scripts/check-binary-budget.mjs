@@ -42,7 +42,7 @@ import { parseArgs } from 'node:util'
 const MAX_FILE_BYTES = 2_000_000
 
 /** The most bytes of binary files one change may add before it needs approval. */
-const BUDGET_BYTES = 6 * 1024 * 1024
+const BUDGET_BYTES = 2 * 1024 * 1024
 
 /** File types counted toward the budget: images, video, audio, archives, documents, fonts and WebAssembly. */
 const BINARY_FILE =

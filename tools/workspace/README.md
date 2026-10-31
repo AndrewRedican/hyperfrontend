@@ -57,7 +57,7 @@ A package whose own `engines.node` floor is above the running release is listed 
 | Limit                  | Applies to                                                                 | Over it                                        |
 | ---------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
 | 2,000,000 bytes        | any single file, whatever its type                                         | always fails                                   |
-| 6 MiB per pull request | images, video, audio, archives, documents, fonts and WebAssembly, added up | fails unless approved, and warns when approved |
+| 2 MiB per pull request | images, video, audio, archives, documents, fonts and WebAssembly, added up | fails unless approved, and warns when approved |
 
 It runs in three places:
 
