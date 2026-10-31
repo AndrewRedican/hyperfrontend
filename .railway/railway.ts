@@ -1,18 +1,10 @@
 import { defineRailway, github, project, service } from 'railway/iac'
 
 export default defineRailway(() => {
-  const hyperfrontend = github('AndrewRedican/hyperfrontend', { checkSuites: true, rootDirectory: '/' })
-  // why: every service builds through the root install and the hf runner, so a change to either must redeploy it even when the demo's own files did not change
-  const toolchain = [
-    '/package.json',
-    '/package-lock.json',
-    '/nx.json',
-    '/tsconfig.base.json',
-    '/tools/app/**',
-    '/tools/workspace/bin/**',
-    '/tools/workspace/src/**',
-    '/tools/lint/src/runtime/**',
-  ]
+  // why: the owned pipeline deploys each demo itself, from the commit it checked, once the demo's own tasks have passed (tools/workspace/scripts/railway-deploy.mjs); Wait for CI stays off so that deploy never waits on the check suite of the run requesting it
+  const hyperfrontend = github('AndrewRedican/hyperfrontend', { checkSuites: false, rootDirectory: '/' })
+  // why: a push trigger cannot be switched off in the file, so every service watches a path no commit touches and Railway never queues a build of its own
+  const pipelineOwned = ['/.railway/pipeline-deploys/**']
 
   const koiVue = service('koi-vue', {
     source: hyperfrontend,
@@ -20,7 +12,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vue',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-vue/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vue --host 0.0.0.0',
     healthcheck: '/',
@@ -35,7 +27,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-pond,demo-koi-fish-*',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site --host 0.0.0.0',
     healthcheck: '/',
@@ -49,7 +41,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-heartbeat',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/heartbeat/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/heartbeat/app --host 0.0.0.0',
     healthcheck: '/',
@@ -63,12 +55,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-angular',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [
-        ...toolchain,
-        '/apps/demos/koi-pond/lib/**',
-        '/apps/demos/koi-pond/fish-angular/**',
-        '/apps/demos/koi-pond/vendor/**',
-      ],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-angular --host 0.0.0.0',
     healthcheck: '/',
@@ -82,7 +69,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-solid',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-solid/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-solid --host 0.0.0.0',
     healthcheck: '/',
@@ -97,7 +84,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-lit',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-lit/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-lit --host 0.0.0.0',
     healthcheck: '/',
@@ -112,7 +99,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-preact',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-preact/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-preact --host 0.0.0.0',
     healthcheck: '/',
@@ -127,7 +114,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-clock',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/clock/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/clock/app --host 0.0.0.0',
     healthcheck: '/',
@@ -142,7 +129,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-svelte',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-svelte/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-svelte --host 0.0.0.0',
     healthcheck: '/',
@@ -157,7 +144,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-react',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [...toolchain, '/apps/demos/koi-pond/lib/**', '/apps/demos/koi-pond/fish-react/**', '/apps/demos/koi-pond/vendor/**'],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-react --host 0.0.0.0',
     healthcheck: '/',
@@ -172,12 +159,7 @@ export default defineRailway(() => {
       buildCommand: 'npm i && npm run hf -- run-many -t build -p demo-koi-fish-vanilla',
       buildEnvironment: 'V3',
       builder: 'RAILPACK',
-      watchPatterns: [
-        ...toolchain,
-        '/apps/demos/koi-pond/fish-vanilla/**',
-        '/apps/demos/koi-pond/lib/**',
-        '/apps/demos/koi-pond/vendor/**',
-      ],
+      watchPatterns: pipelineOwned,
     },
     start: 'npx -y @hyperfrontend/features@0.11.5 serve --root dist/apps/demos/koi-pond/site/fish-vanilla --host 0.0.0.0',
     healthcheck: '/',
