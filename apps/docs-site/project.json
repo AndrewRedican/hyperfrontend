@@ -78,6 +78,16 @@
         "command": "npm run start"
       }
     },
-    "audit": {}
+    "audit": {
+      "executor": "nx:run-commands",
+      "inputs": ["dependencyState"],
+      "options": {
+        "command": "npm audit --audit-level=high",
+        "cwd": "apps/docs-site"
+      },
+      "metadata": {
+        "description": "Gated at high instead of the workspace's moderate while typedoc requires minimatch 10 (GHSA-g3hv-75wg-m249, moderate, pattern-driven DoS; every pattern here is repo-controlled). An override to minimatch 11 breaks typedoc, which calls the now-private matchOne. Delete this target so the default applies again once typedoc requires minimatch >=11.0.1."
+      }
+    }
   }
 }
