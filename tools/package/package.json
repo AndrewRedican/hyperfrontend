@@ -4,7 +4,7 @@
   "description": "Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's hf command line.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/builder": "0.5.4",
+    "@hyperfrontend/builder": "0.6.0",
     "@hyperfrontend/testing": "0.3.1"
   },
   "devDependencies": {

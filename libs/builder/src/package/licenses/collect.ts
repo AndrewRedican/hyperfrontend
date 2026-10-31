@@ -1,5 +1,5 @@
 import type { PackageJson } from '../../models'
-import type { ThirdPartyLicenseEntry } from './types'
+import type { LicenseText, ThirdPartyLicenseEntry } from './types'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { logger } from '@hyperfrontend/logging'
 import { exists, join, readDirectory, readFileContent, readJsonFile } from '@hyperfrontend/project-scope/core'
@@ -16,6 +16,13 @@ const findLicenseFile = (packageDir: string): string | null => {
   return match?.name ?? null
 }
 
+const readLicenseTexts = (packageDir: string): LicenseText[] =>
+  readDirectory(packageDir)
+    .filter((f) => f.isFile && /^(licen[cs]e|copying|notice)/i.test(f.name))
+    .map((f) => f.name)
+    .sort()
+    .map((fileName) => ({ fileName, content: readFileContent(join(packageDir, fileName)) }))
+
 const detectLicenseFromContent = (content: string): string | null => {
   if (matchPattern(content, 'MIT License')) return 'MIT'
   if (matchPattern(content, 'Apache License.*Version 2\\.0')) return 'Apache-2.0'
@@ -31,16 +38,22 @@ const detectLicenseFromContent = (content: string): string | null => {
 const resolvePackageDir = (workspaceRoot: string, depName: string): string =>
   depName.startsWith('@') ? join(workspaceRoot, 'node_modules', ...depName.split('/')) : join(workspaceRoot, 'node_modules', depName)
 
-const collectDependencyLicense = (depName: string, workspaceRoot: string): ThirdPartyLicenseEntry | null => {
-  const packageDir = resolvePackageDir(workspaceRoot, depName)
-  const pkgPath = join(packageDir, 'package.json')
-
-  if (!exists(pkgPath)) {
-    log.warn(`could not find package.json for ${depName}`)
-    return null
-  }
-
-  const pkg = readJsonFile<PackageJson>(pkgPath)
+/**
+ * Reads the license entry of one installed package: its type, a link to its
+ * license file upstream, and the verbatim text of every license and notice file
+ * it ships.
+ *
+ * @param depName - Package name recorded on the entry.
+ * @param packageDir - Absolute path to the installed package directory, which must hold a `package.json`.
+ * @returns The license entry for the package.
+ *
+ * @example Reading the license of a nested install
+ * ```typescript
+ * const entry = readDependencyLicense('magic-string', '/abs/repo/node_modules/rollup-plugin-dts/node_modules/magic-string')
+ * ```
+ */
+export const readDependencyLicense = (depName: string, packageDir: string): ThirdPartyLicenseEntry => {
+  const pkg = readJsonFile<PackageJson>(join(packageDir, 'package.json'))
   const licenseFileName = findLicenseFile(packageDir)
   let licenseType = typeof pkg.license === 'string' ? pkg.license : 'Unknown'
 
@@ -50,7 +63,18 @@ const collectDependencyLicense = (depName: string, workspaceRoot: string): Third
   }
 
   const licenseUrl = licenseFileName ? constructLicenseUrl(pkg.repository, licenseFileName) : null
-  return { name: depName, licenseType, licenseUrl }
+  return { name: depName, licenseType, licenseUrl, licenseTexts: readLicenseTexts(packageDir) }
+}
+
+const collectDependencyLicense = (depName: string, workspaceRoot: string): ThirdPartyLicenseEntry | null => {
+  const packageDir = resolvePackageDir(workspaceRoot, depName)
+
+  if (!exists(join(packageDir, 'package.json'))) {
+    log.warn(`could not find package.json for ${depName}`)
+    return null
+  }
+
+  return readDependencyLicense(depName, packageDir)
 }
 
 /**
@@ -63,7 +87,8 @@ const collectDependencyLicense = (depName: string, workspaceRoot: string): Third
  * `<workspaceRoot>/node_modules`, parses its `package.json`, scans for a LICENSE
  * file, and attempts to derive a canonical license URL from the upstream
  * repository field. Missing dependencies are logged at warn level and dropped
- * from the result.
+ * from the result. Each entry carries the verbatim text of the package's
+ * license and notice files.
  *
  * @param workspaceRoot - Absolute path to the workspace root containing
  * `node_modules`.

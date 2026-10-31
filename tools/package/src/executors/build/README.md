@@ -235,5 +235,5 @@ Each marker is one line, and a start marker carries only `name="value"` attribut
 - Package.json `exports` field regenerated based on built formats.
 - Workspace packages (matching `@hyperfrontend/*`) are filtered out of the published `dependencies` map by default.
 - `repository`, `bugs`, `homepage`, and `author` are inherited from the workspace root `package.json` if absent on the project.
-- A `THIRD_PARTY_LICENSES.md` file is emitted automatically when the published `dependencies` map is non-empty.
+- A `THIRD_PARTY_LICENSES.md` file is emitted automatically when the published `dependencies` map is non-empty or the output inlines third-party code. It lists both, with each inlined package's license and notice texts.
 - Memory monitoring is enabled with conservative defaults (warn at 512MB heap, critical at 768MB, growth warning at 50MB).

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/39ff2bee8839058dfa45401b99b370470aa79521...c81187334a0bdb05c27f5bd7b81e2dedc6b909d9) - 2026-10-31
+
+### Features
+
+- list every third-party package the output inlines in THIRD_PARTY_LICENSES.md
+
+### Bug Fixes
+
+- reproduce dependency license texts in THIRD_PARTY_LICENSES.md
+
 ## [0.5.4](https://github.com/AndrewRedican/hyperfrontend/compare/0fddb51472b558e4512b21a3a2e59747730085ff...2faa3ba57520a4e3248ea899da0d5266eb3c9a01) - 2026-10-25
 
 ### Bug Fixes

@@ -287,7 +287,11 @@ export interface BuildConfig {
    * entry fully self-contained.
    */
   dedupeSharedInternals?: boolean
-  /** Emit a third-party-licenses file. */
+  /**
+   * Emit `THIRD_PARTY_LICENSES.md`, listing the published dependencies and every
+   * third-party package the output inlines, with their license texts. Defaults to
+   * emitting it whenever the output inlines third-party code; `false` never emits it.
+   */
   thirdPartyLicenses?: boolean
   /** Enable the memory monitor; pass `true` for defaults or an options object for custom thresholds. */
   memoryMonitor?: boolean | MemoryMonitorOptions
