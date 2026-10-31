@@ -6,6 +6,7 @@ import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -537,25 +538,22 @@ function stripExternalSourceUrls(apiJsonPath: string): void {
  * strips the `libs/<name>/src/` prefix and makes all of them 404.
  *
  * @param lib - The library configuration
- * @returns True if TypeDoc succeeded, false otherwise
+ * @throws {Error} When the library has no entry points, an entry point is missing, or TypeDoc exits with an error
  */
-function generateTypeDoc(lib: LibraryConfig): boolean {
+function generateTypeDoc(lib: LibraryConfig): void {
   const libPath = join(WORKSPACE_ROOT, lib.srcPath)
 
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
 
   if (discoveredEntryPoints.length === 0) {
-    logger.log(`  ⚠ No entry points found for ${lib.name}`)
-    return false
+    throw createError(`No entry points found for ${lib.name} in ${join(libPath, 'package.json')}`)
   }
 
   const entryPoints = discoveredEntryPoints.map((ep) => join(libPath, ep))
 
   const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
-    logger.log(`  ⚠ Missing entry points for ${lib.name}:`)
-    missingEntryPoints.forEach((ep) => logger.log(`      - ${ep}`))
-    return false
+    throw createError(`Missing entry points for ${lib.name}:\n${missingEntryPoints.map((ep) => `  - ${ep}`).join('\n')}`)
   }
 
   const outputPath = join(API_OUTPUT, lib.slug, 'api.json')
@@ -593,11 +591,10 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
     logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync(process.execPath, [TYPEDOC_SCRIPT, ...args], { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     stripExternalSourceUrls(outputPath)
-    return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    logger.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg}`)
-    return false
+    // why: a library whose API bundle failed must fail the whole generation; returning quietly left the previous bundle on disk and the site shipped stale API pages
+    throw createError(`TypeDoc failed for ${lib.name}: ${errorMsg}`, { cause: error })
   }
 }
 
@@ -684,7 +681,7 @@ function generateDocs() {
 
     const architecture = extractArchitecture(lib)
 
-    const hasApi = generateTypeDoc(lib)
+    generateTypeDoc(lib)
 
     const { keywords, description } = extractPackageMetadata(lib)
     const facts = readPackageFacts(join(WORKSPACE_ROOT, lib.srcPath), lib.packageName)
@@ -715,7 +712,8 @@ function generateDocs() {
       category: lib.category,
       readme: readme.exists ? `${lib.slug}/readme.md` : null,
       architecture: architecture.exists ? `${lib.slug}/architecture.md` : null,
-      hasApi,
+      // why: generateTypeDoc throws on any failure, so every library that reaches the manifest has an API bundle
+      hasApi: true,
       keywords,
       description,
       version: facts.version,
