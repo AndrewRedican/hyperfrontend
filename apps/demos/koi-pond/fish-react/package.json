@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "0.11.4",
+    "@hyperfrontend/features": "0.11.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "three": "0.185.1"
