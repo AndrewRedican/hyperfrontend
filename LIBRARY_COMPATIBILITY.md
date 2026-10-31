@@ -237,4 +237,4 @@ flowchart TB
 | `@hyperfrontend/testing` | `0.3.1` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
-| `@hyperfrontend/versioning` | `0.9.2` |
+| `@hyperfrontend/versioning` | `0.9.3` |

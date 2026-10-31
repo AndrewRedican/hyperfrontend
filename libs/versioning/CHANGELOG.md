@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.3](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...9c973ebdccf4eb6fe9a4ed3e1dfaca4dda4d7dd3) - 2026-10-31
+
+### Bug Fixes
+
+- keep prerelease and build identifiers in range comparators
+
 ## [0.9.2](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...28ab8c85dd6b02b45c755c6ddbd19adc54645fe8) - 2026-10-14
 
 ### Bug Fixes
