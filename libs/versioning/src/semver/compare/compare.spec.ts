@@ -1,7 +1,8 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createComparator } from '../models/range'
+import { createComparator, createComparatorSet, createRange } from '../models/range'
 import { createSemVer } from '../models/version'
 import { parseRangeStrict } from '../parse/range'
+import { parseVersionStrict } from '../parse/version'
 import { compare, eq, lt, lte, gt, gte, neq, satisfies, satisfiesComparator, maxSatisfying, minSatisfying } from './compare'
 
 describe('compare', () => {
@@ -406,5 +407,78 @@ describe('compare - additional prerelease edge cases', () => {
     const a = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha', 'beta', '1'] })
     const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha', 'beta', '1'] })
     expect(compare(a, b)).toBe(0)
+  })
+})
+
+describe('satisfies - prerelease versions', () => {
+  const CASES: readonly (readonly [string, string, boolean])[] = [
+    ['1.0.0-alpha.6', '>=1.0.0-alpha.6', true],
+    ['1.0.0-alpha.7', '>=1.0.0-alpha.6', true],
+    ['1.0.0-alpha.5', '>=1.0.0-alpha.6', false],
+    ['2.0.0-alpha.1', '>=1.0.0-alpha.6', false],
+    ['1.0.1-alpha.1', '>=1.0.0-alpha.6', false],
+    ['1.0.0', '>=1.0.0-alpha.6', true],
+    ['2.0.0', '>=1.0.0-alpha.6', true],
+    ['1.0.0-alpha.6', '1.0.0-alpha.6', true],
+    ['1.0.0-alpha.7', '1.0.0-alpha.6', false],
+    ['1.0.0', '1.0.0+build.7', true],
+    ['1.0.0+build.8', '1.0.0+build.7', true],
+    ['1.0.0-beta', '~1.0.0-alpha', true],
+    ['1.0.1', '~1.0.0-alpha', true],
+    ['1.0.1-beta', '~1.0.0-alpha', false],
+    ['1.1.0-beta', '~1.0.0-alpha', false],
+    ['1.0.0-alpha.2', '^1.0.0-alpha.1', true],
+    ['1.5.0', '^1.0.0-alpha.1', true],
+    ['1.5.0-beta', '^1.0.0-alpha.1', false],
+    ['2.0.0-alpha', '^1.0.0-alpha.1', false],
+    ['1.1.0-beta.1', '^1.0.0', false],
+    ['1.0.0-beta', '1.0.0-alpha - 2.0.0-beta', true],
+    ['2.0.0-alpha', '1.0.0-alpha - 2.0.0-beta', true],
+    ['2.0.0-beta', '1.0.0-alpha - 2.0.0-beta', true],
+    ['2.0.0-gamma', '1.0.0-alpha - 2.0.0-beta', false],
+    ['1.5.0-rc', '1.0.0-alpha - 2.0.0-beta', false],
+    ['1.5.0', '1.0.0-alpha - 2.0.0-beta', true],
+    ['1.0.0-beta', '<1.0.0-rc', true],
+    ['0.9.0-beta', '<1.0.0-rc', false],
+    ['1.0.0-alpha', '<1.0.0', false],
+    ['1.0.0-alpha', '<=1.0.0', false],
+    ['1.0.0-alpha', '*', false],
+    ['1.0.0-alpha', '>=0.0.0', false],
+    ['1.0.0-alpha', '1.x', false],
+    ['1.0.0-alpha', '>=1.0.0-0', true],
+    ['1.0.0-alpha', '1.0.0-alpha || 2.0.0', true],
+    ['2.0.0-alpha', '1.0.0-alpha || 2.0.0', false],
+    ['1.0.0-alpha', '>=1.0.0-alpha <2.0.0', true],
+    ['1.5.0-beta', '>=1.0.0-alpha <2.0.0', false],
+    ['2.0.0-alpha', '>=1.0.0-alpha <2.0.0', false],
+    ['2.0.0-alpha', '>=1.0.0-alpha <2.0.0-beta', true],
+    ['1.0.0-alpha', '>1.0.0-alpha <1.0.0-beta', false],
+    ['1.0.0-alpha.1', '>1.0.0-alpha <1.0.0-beta', true],
+  ]
+
+  for (const [version, range, expected] of CASES) {
+    it(`${expected ? 'matches' : 'rejects'} ${version} against ${range}`, () => {
+      expect(satisfies(parseVersionStrict(version), parseRangeStrict(range))).toBe(expected)
+    })
+  }
+
+  it('treats a hand-built empty comparator set as a wildcard for a release', () => {
+    const range = createRange([createComparatorSet([])])
+    expect(satisfies(createSemVer({ major: 1, minor: 0, patch: 0 }), range)).toBe(true)
+  })
+
+  it('treats a hand-built empty comparator set as a wildcard for a prerelease', () => {
+    const range = createRange([createComparatorSet([])])
+    expect(satisfies(createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha'] }), range)).toBe(false)
+  })
+
+  const CANDIDATES = ['1.0.0-alpha.5', '1.0.0-alpha.6', '1.0.0-alpha.7', '1.0.0', '2.0.0-alpha.1'].map(parseVersionStrict)
+
+  it('selects the highest admitted version in maxSatisfying', () => {
+    expect(maxSatisfying(CANDIDATES, parseRangeStrict('>=1.0.0-alpha.6'))).toBe(CANDIDATES[3])
+  })
+
+  it('selects the lowest admitted version in minSatisfying', () => {
+    expect(minSatisfying(CANDIDATES, parseRangeStrict('>=1.0.0-alpha.6'))).toBe(CANDIDATES[1])
   })
 })

@@ -1,4 +1,4 @@
-The cases under cases/typescript/ were adapted from the test suite of typescript-eslint 8.53.1, which carries this license.
+The spec cases under src/rules/typescript/ were adapted from the test suite of typescript-eslint 8.53.1, and the language globals in src/scope/globals.ts from the library tables of its scope manager 8.65.0; both carry this license.
 
 MIT License
 
