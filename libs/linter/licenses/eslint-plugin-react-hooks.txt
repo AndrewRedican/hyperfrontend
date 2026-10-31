@@ -1,4 +1,4 @@
-The cases under cases/react-hooks/ were adapted from the test suite of eslint-plugin-react-hooks 5.1.0, which carries this license.
+The spec cases under src/rules/react-hooks/ were adapted from the test suite of eslint-plugin-react-hooks 5.1.0, which carries this license.
 
 MIT License
 
