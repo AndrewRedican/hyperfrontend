@@ -115,7 +115,10 @@ export default [
     rules: { 'no-inline-type-literal': 'error' },
   },
   { files: ['**/*.spec.ts'], rules: on('assertive-test-names jest-mock-after-imports') },
-  { files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'], rules: { 'one-assertion-per-test': 'error' } },
+  {
+    files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'],
+    rules: on('one-assertion-per-test workspace/no-sleep-before-call-assertion'),
+  },
   {
     files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}'],
     // why: the package e2e suites stand where a consumer stands, installing only the published package they exercise.
