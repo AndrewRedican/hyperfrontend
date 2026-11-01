@@ -14,7 +14,7 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
  * // => Uint8Array(16) with cryptographically secure random values
  * ```
  */
-export function getRandomValues(byteLength: number): Uint8Array {
+export function getRandomValues(byteLength: number): Uint8Array<ArrayBuffer> {
   if (!byteLength) {
     throw createError('Cannot generate random values without a byte length.')
   }
