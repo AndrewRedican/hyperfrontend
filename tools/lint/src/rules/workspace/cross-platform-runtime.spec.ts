@@ -418,7 +418,14 @@ testRule(rule, {
         "  return [x.replace(/\\\\/g, '/'), x.split('\\\\').join('/')]",
         '}',
       ],
-      [at('posixConversion', 1, 11), at('posixConversion', 4, 11), at('posixConversion', 4, 34)]
+      [at('posixConversion', 1, 11), at('posixConversion', 4, 11), at('posixConversion', 4, 34)],
+      [
+        'const a = x.split(sep).join(posix.sep)',
+        "import { join, sep, posix } from 'node:path'",
+        'function f(sep) {',
+        "  return [x.replace(/\\\\/g, '/'), x.split('\\\\').join('/')]",
+        '}',
+      ]
     ),
     invalid(
       'native paths given to path/posix functions',
@@ -472,6 +479,23 @@ testRule(rule, {
         at('relativeEscapes', 10, 19),
         at('relativeEscapes', 12, 27),
         at('relativeEscapes', 13, 16),
+      ],
+      [
+        "import { relative, sep, posix } from 'node:path'",
+        'function f() { return relative(a, b).split(sep).join(posix.sep) }',
+        'const o = { root: relative(a, b).split(sep).join(posix.sep) }',
+        'const list = [relative(a, b).split(sep).join(posix.sep) as string]',
+        'const g = () => relative(a, b).split(sep).join(posix.sep)',
+        'o.root = relative(a, b).split(sep).join(posix.sep)',
+        'set.add(relative(a, b).split(sep).join(posix.sep)!)',
+        "const same = relative(a, b).split(sep).join(posix.sep) === 'x/y'",
+        'const other = rel !== relative(a, b).split(sep).join(posix.sep)',
+        'const spec = `./${relative(a, b).split(sep).join(posix.sep)}`',
+        "const kept = relative(a, b) || '.'",
+        'function h() { return c ? relative(a, b).split(sep).join(posix.sep) : d }',
+        'const stored = relative(a, b).split(sep).join(posix.sep)',
+        'export default { stored }',
+        'const forwarded = stored',
       ]
     ),
     invalid(
