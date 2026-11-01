@@ -3,6 +3,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 // why: ESM `import … from '…'` and `export … from '…'` both reduce to the `from '<spec>'` token.
 const STATIC_FROM_RE = /from\s*['"]([^'"]+)['"]/g
+// why: a side-effect `import '<spec>'` carries no `from`, and Rollup keeps one wherever it shook every binding out of an import of a sibling chunk.
+const BARE_IMPORT_RE = /\bimport\s*['"]([^'"]+)['"]/g
 // why: CJS chunks reference siblings via `require('<spec>')`.
 const REQUIRE_LITERAL_RE = /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
 // why: literal dynamic `import('<spec>')` is a real edge; capturing it keeps over-approximation safe (a missed edge would delete a reachable chunk).
@@ -19,7 +21,7 @@ const collectInto = (source: string, re: RegExp, specifiers: Set<string>): void 
  * Extracts literal **relative** module specifiers referenced by a chunk's source.
  *
  * Scans ESM `from '…'` (covering both `import … from` and `export … from`),
- * CJS `require('…')`, and literal dynamic `import('…')`. Only specifiers that
+ * side-effect `import '…'`, CJS `require('…')`, and literal dynamic `import('…')`. Only specifiers that
  * start with `.` are returned: bare and node-builtin specifiers are never
  * edges into the `_dependencies/` tree. The scan deliberately over-approximates
  * (a spurious match merely keeps a chunk alive), so it is implemented with
@@ -36,6 +38,7 @@ const collectInto = (source: string, re: RegExp, specifiers: Set<string>): void 
 export const collectChunkSpecifiers = (source: string): string[] => {
   const specifiers = createSet<string>([])
   collectInto(source, STATIC_FROM_RE, specifiers)
+  collectInto(source, BARE_IMPORT_RE, specifiers)
   collectInto(source, REQUIRE_LITERAL_RE, specifiers)
   collectInto(source, IMPORT_LITERAL_RE, specifiers)
   return from(specifiers)

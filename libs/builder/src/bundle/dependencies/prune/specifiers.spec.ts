@@ -10,6 +10,13 @@ describe('collectChunkSpecifiers', () => {
     expect(collectChunkSpecifiers("export { a } from '../shared/index.mjs'")).toEqual(['../shared/index.mjs'])
   })
 
+  it('extracts relative ESM side-effect import specifiers', () => {
+    expect(collectChunkSpecifiers('import \'../timers/index.mjs\';\nimport"./minified.mjs"')).toEqual([
+      '../timers/index.mjs',
+      './minified.mjs',
+    ])
+  })
+
   it('extracts relative CJS require specifiers', () => {
     expect(collectChunkSpecifiers("var x = require('./dep/index.cjs')")).toEqual(['./dep/index.cjs'])
   })
