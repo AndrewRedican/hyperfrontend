@@ -14,7 +14,7 @@ const WORKSPACE_PACKAGE_PREFIXES = ['@hyperfrontend', '@nx']
 export default [
   { families: WORKSPACE_FAMILIES },
   { ignores: ['dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'] },
-  { files: CODE, rules: { ...CODE_RULES, ...on('typescript/no-unused-vars') } },
+  { files: CODE, rules: { ...CODE_RULES, ...on('typescript/no-unused-vars typescript/no-explicit-any typescript/no-non-null-assertion') } },
   { files: JAVASCRIPT, language: { globals: BROWSER_AND_NODE_GLOBALS } },
   { files: SCRIPT, rules: JSDOC_RULES },
   {
@@ -92,7 +92,7 @@ export default [
     files: SCRIPT,
     rules: {
       'escape-package-tags': ['error', { prefixes: WORKSPACE_PACKAGE_PREFIXES }],
-      'jsdoc/escape-inline-tags': ['warn', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
+      'jsdoc/escape-inline-tags': ['error', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
     },
   },
   { files: TYPESCRIPT, ignores: ['**/test.setup.ts', '**/libs/logging/**'], rules: { 'workspace/no-direct-console': 'error' } },
@@ -115,12 +115,13 @@ export default [
     rules: { 'no-inline-type-literal': 'error' },
   },
   { files: ['**/*.spec.ts'], rules: on('assertive-test-names jest-mock-after-imports') },
-  { files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'], rules: { 'one-assertion-per-test': 'error' } },
   {
-    files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}'],
-    // why: the package e2e suites stand where a consumer stands, installing only the published package they exercise.
-    ignores: ['apps/package-e2e/**'],
-    rules: { 'workspace/no-mkdtemp-in-tests': 'error' },
+    files: ['**/*.spec.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'],
+    rules: on('one-assertion-per-test workspace/no-sleep-before-call-assertion'),
+  },
+  {
+    files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}', 'apps/package-e2e/*/src/support/**/*.ts'],
+    rules: on('workspace/no-mkdtemp-in-tests workspace/no-signal-kill-in-tests'),
   },
   {
     files: ['**/*.ts'],

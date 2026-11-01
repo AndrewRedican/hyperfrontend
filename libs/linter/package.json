@@ -1,10 +1,10 @@
 {
   "name": "@hyperfrontend/linter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A linter for TypeScript, JavaScript, JSX, JSON and Markdown with its own parsers and no external runtime packages.",
   "license": "MIT",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.2",
+    "@hyperfrontend/immutable-api-utils": "1.0.3",
     "@hyperfrontend/json-utils": "1.1.1",
     "@hyperfrontend/versioning": "0.9.3"
   },

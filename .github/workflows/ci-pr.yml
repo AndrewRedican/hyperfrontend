@@ -126,8 +126,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: [plan, version-check]
     if: always() && needs.plan.outputs.has-work == 'true' && needs.version-check.result == 'success'
-    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds, so it gets the longer limit
-    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    # why: every environment builds and runs e2e, so they share one limit
+    timeout-minutes: 120
     permissions:
       contents: read
       checks: write # why: one check run per chain on the pull request, best-effort
@@ -157,13 +157,13 @@ jobs:
           path: .hf/pipeline
 
       - name: Compare graph state
-        if: matrix.os == 'windows'
+        if: matrix.os != 'linux'
         run: |
-          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
+          # The persisted graph is portable: the same commit yields byte-identical state on every leg.
           GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
           $GRAPH build --force
           DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
-          echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
+          echo "${{ matrix.os }} graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
       - name: Run

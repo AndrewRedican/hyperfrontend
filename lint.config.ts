@@ -82,6 +82,10 @@ export default [
     },
   },
   {
+    files: ['.devcontainer/**/devcontainer.json'],
+    rules: { 'workspace/no-vscode-extensions': ['error', { allow: ['anthropic.claude-code', 'github.vscode-github-actions'] }] },
+  },
+  {
     // context: no demo carries a lint target; these three only stop an editor resolving this config from reporting a shipped demo against rules it cannot satisfy from a consumer's seat.
     files: ['apps/demos/**/*.ts', 'apps/demos/**/*.tsx'],
     rules: {
@@ -149,6 +153,13 @@ export default [
     files: ['.github/workflows/ci-main.yml'],
     rules: {
       'workspace/lib-ci-workflows': 'error',
+    },
+  },
+  {
+    // context: the pipeline applies this file to production, so each service's serve pin must be the release its demo installs
+    files: ['.railway/railway.ts'],
+    rules: {
+      'workspace/railway-service-pins': 'error',
     },
   },
   {

@@ -19,8 +19,8 @@ import { encryptionConfig } from '../encryption-config'
  * ```
  */
 export function createEncrypt(
-  utf8StringToUint8Array: (text: string) => Uint8Array,
-  getRandomValues: (byteLength: number) => Uint8Array,
+  utf8StringToUint8Array: (text: string) => Uint8Array<ArrayBuffer>,
+  getRandomValues: (byteLength: number) => Uint8Array<ArrayBuffer>,
   generateKey: (password: string, salt: Uint8Array) => Promise<CryptoKey>,
   subtle: SubtleCrypto
 ): (message: string, password: string) => Promise<Uint8Array> {
@@ -34,11 +34,7 @@ export function createEncrypt(
     const salt = getRandomValues(16)
     const iv = getRandomValues(12)
     const key = await generateKey(password, salt)
-    const encryptedContent = await subtle.encrypt(
-      { ...encryptionConfig, iv: iv as unknown as ArrayBuffer },
-      key,
-      utf8StringToUint8Array(message) as BufferSource
-    )
+    const encryptedContent = await subtle.encrypt({ ...encryptionConfig, iv }, key, utf8StringToUint8Array(message))
     const buffer = createUint8Array(encryptedContent)
     const result = createUint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)
     result.set(salt, 0)

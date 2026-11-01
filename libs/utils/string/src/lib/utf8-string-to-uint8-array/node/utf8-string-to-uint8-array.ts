@@ -12,6 +12,6 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
  * // => Uint8Array([72, 101, 108, 108, 111])
  * ```
  */
-export function utf8StringToUint8Array(text: string): Uint8Array {
+export function utf8StringToUint8Array(text: string): Uint8Array<ArrayBuffer> {
   return createUint8Array(Buffer.from(text, 'utf8'))
 }

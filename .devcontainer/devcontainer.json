@@ -11,27 +11,13 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "eamodio.gitlens",
-        "DavidAnson.vscode-markdownlint",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "shd101wyy.markdown-preview-enhanced",
-        "github.vscode-github-actions",
-        "yzhang.markdown-all-in-one",
-        "ritwickdey.liveserver",
-        "anthropic.claude-code"
-      ],
+      "extensions": ["anthropic.claude-code", "github.vscode-github-actions"],
       "settings": {
-        "editor.formatOnSave": true,
-        "editor.formatOnPaste": true,
         "editor.tabSize": 2,
         "files.trimTrailingWhitespace": true,
         "git.useEditorAsCommitInput": false,
         "typescript.tsdk": "node_modules/typescript/lib",
         "telemetry.telemetryLevel": "off",
-        "gitlens.telemetry.enabled": false,
         "explorer.excludeGitIgnore": false,
         "files.exclude": {
           "**/.git": true,

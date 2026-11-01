@@ -75,12 +75,12 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: [plan]
     if: needs.plan.outputs.has-work == 'true'
-    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds and publishes, so it gets the longer limit
-    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    # why: the Linux publishes wait out the Windows and macOS jobs, up to their whole limit, so the Linux one gets room to publish after them
+    timeout-minutes: ${{ matrix.os == 'linux' && 150 || 120 }}
     permissions:
       contents: read
       checks: write # why: one check run per chain, best-effort
-      actions: read # why: the Linux environment reads the Windows job's conclusion before it publishes
+      actions: read # why: the Linux environment reads the Windows and macOS jobs' conclusions before it publishes
       id-token: write # why: npm provenance for the publishes
     strategy:
       fail-fast: false
@@ -108,13 +108,13 @@ jobs:
           path: .hf/pipeline
 
       - name: Compare graph state
-        if: matrix.os == 'windows'
+        if: matrix.os != 'linux'
         run: |
-          # The persisted graph is portable: the same commit yields byte-identical state on both legs.
+          # The persisted graph is portable: the same commit yields byte-identical state on every leg.
           GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
           $GRAPH build --force
           DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
-          echo "windows graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
+          echo "${{ matrix.os }} graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
 
       - name: npm auth
@@ -125,11 +125,11 @@ jobs:
 
       - name: Run
         env:
-          GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows job and the chain check runs go through the API; GitHub sets no token in the environment by itself
+          GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows and macOS jobs and the chain check runs go through the API; GitHub sets no token in the environment by itself
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }} # why: the deploy tasks inside the Linux run send the commit to the demo's Railway service with a project token of the production environment
-        # why: the publishes inside the Linux run wait for the Windows environment to conclude; the publish executor still skips versions already on npm
+        # why: the publishes inside the Linux run wait for the Windows and macOS environments to conclude; the publish executor still skips versions already on npm
         # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
-        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "windows"
+        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "windows,macos"
 
       - name: Settle
         if: always()

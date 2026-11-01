@@ -200,7 +200,13 @@ testRule(rule, {
     ),
     invalid('a require of another project by path', 'libs/util/src/x.ts', "require('../../core/src/index')", ACROSS),
     invalid('a require.resolve of another project by path', 'libs/util/src/x.ts', "require.resolve('../../core/src/index')", ACROSS),
-    invalid('an absolute workspace path', 'libs/util/src/x.ts', "import { core } from 'libs/core/src/index'", ACROSS),
+    invalid(
+      'an absolute workspace path, fixed to the alias',
+      'libs/util/src/x.ts',
+      "import { core } from 'libs/core/src/index'",
+      ACROSS,
+      "import { core } from '@ws/core';"
+    ),
     invalid('an absolute workspace path no project holds', 'libs/util/src/x.ts', "import { gone } from '/libs/gone/index'", ACROSS),
     invalid('a relative import of the root project', 'libs/util/src/x.ts', "export * from '../../../outside'", ACROSS),
     invalid(

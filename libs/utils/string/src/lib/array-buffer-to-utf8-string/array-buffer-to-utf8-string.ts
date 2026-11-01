@@ -1,9 +1,9 @@
 import { getUtf8Decoder } from '../utf8-decoder'
 
 /**
- * Converts an ArrayBuffer to a UTF-8 encoded string.
+ * Converts an ArrayBuffer or SharedArrayBuffer to a UTF-8 encoded string.
  *
- * @param uint8Array - The ArrayBuffer to convert
+ * @param buffer - The buffer to convert
  * @returns The decoded UTF-8 string
  *
  * @example Converting ArrayBuffer to string
@@ -14,6 +14,6 @@ import { getUtf8Decoder } from '../utf8-decoder'
  * // => 'Hello, World!'
  * ```
  */
-export function arrayBufferToUtf8String(uint8Array: ArrayBuffer): string {
-  return getUtf8Decoder().decode(uint8Array)
+export function arrayBufferToUtf8String(buffer: ArrayBufferLike): string {
+  return getUtf8Decoder().decode(buffer)
 }

@@ -20,7 +20,7 @@ import { keyStretchingConfig } from '../key-stretching-config'
  */
 export function createKeyGenerator(
   subtle: SubtleCrypto,
-  utf8StringToUint8Array: (text: string) => Uint8Array
+  utf8StringToUint8Array: (text: string) => Uint8Array<ArrayBuffer>
 ): (password: string, salt: Uint8Array) => Promise<CryptoKey> {
   return async function generateKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     if (getType(password) !== 'string') {
@@ -32,13 +32,9 @@ export function createKeyGenerator(
     if (!salt) {
       throw createError('Cannot generate key without a salt')
     }
-    const keyMaterial = await subtle.importKey(
-      'raw',
-      utf8StringToUint8Array(password) as BufferSource,
-      { name: keyStretchingConfig.name },
-      false,
-      ['deriveKey']
-    )
+    const keyMaterial = await subtle.importKey('raw', utf8StringToUint8Array(password), { name: keyStretchingConfig.name }, false, [
+      'deriveKey',
+    ])
     return subtle.deriveKey(
       {
         name: keyStretchingConfig.name,

@@ -20,6 +20,7 @@ import { createTracer } from './shared/cross-platform/origin.ts'
 import { checkedProject, isNodeProject } from './shared/cross-platform/project.ts'
 import {
   checkArray,
+  checkFileMode,
   checkFlagTemplate,
   checkImport,
   checkPathname,
@@ -143,6 +144,7 @@ export default defineRule<CrossPlatformOptions | undefined, Node>({
       },
       MemberExpression(node) {
         checkPathname(scan, node)
+        checkFileMode(scan, node)
       },
     }
   },

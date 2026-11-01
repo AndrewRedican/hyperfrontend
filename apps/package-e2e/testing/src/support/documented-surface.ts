@@ -63,7 +63,17 @@ export const JEST_METHODS = [
 export const HELPER_EXPORTS = {
   browser: ['createFakeWindow', 'createWindowPair', 'installResizeObserver'],
   fs: ['createTempDir', 'useTempDir', 'writeFile', 'writeTree'],
-  process: ['Keys', 'captureStdio', 'createCapturedOutput', 'createFakeChildProcess', 'createTtyInput', 'readAll', 'spawnSyncResult'],
+  process: [
+    'Keys',
+    'captureStdio',
+    'cleanSignalExit',
+    'createCapturedOutput',
+    'createFakeChildProcess',
+    'createTtyInput',
+    'readAll',
+    'sendSignal',
+    'spawnSyncResult',
+  ],
 }
 /** The functions the runner entry exports. */
 export const RUNNER_FUNCTIONS = ['runProjectTests', 'buildRunPlan', 'withDefaults']

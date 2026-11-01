@@ -98,7 +98,7 @@ export function LiveView({ reading, pace }: LiveViewProps) {
             }}
           />
         </div>
-        {(['linux', 'windows'] as const).map((environment) => {
+        {(['linux', 'windows', 'macos'] as const).map((environment) => {
           const job = environmentJob(jobs, environment)
           return (
             <span key={environment} className="rounded-full border border-slate-300 px-2 py-0.5 text-xs dark:border-slate-600">

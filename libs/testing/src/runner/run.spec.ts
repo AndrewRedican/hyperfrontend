@@ -1,9 +1,9 @@
 import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
+import { createTempDir } from '../fs/temp-dir'
 import { workspaceRelativePath } from './portable-paths'
 import { runProjectTests } from './run'
 
@@ -26,13 +26,7 @@ type Fixture = {
  * @returns Where the project and its coverage output live.
  */
 function createFixture(files: Record<string, string>): Fixture {
-  const projectRoot = mkdtempSync(join(tmpdir(), 'hf-runner-'))
-
-  for (const [relativePath, contents] of Object.entries(files)) {
-    mkdirSync(join(projectRoot, relativePath, '..'), { recursive: true })
-    writeFileSync(join(projectRoot, relativePath), contents)
-  }
-
+  const projectRoot = createTempDir({ prefix: 'hf-runner-', tree: files }).path
   return { projectRoot, coverageDir: join(projectRoot, 'coverage') }
 }
 
@@ -336,6 +330,39 @@ jest.mock('./src/dep', () => ({ label: () => 'mocked' }))
         coverageInclude: ['src/subject.ts'],
         environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], setupFiles: ['test.setup.ts'] }],
       }).success,
+      true
+    )
+  })
+
+  it('recognises a setup file when the project root is reached through a symbolic link', () => {
+    const fixture = createFixture({
+      'src/dep.ts': "export const label = (): string => 'real'\n",
+      'src/subject.ts': "import { label } from './dep'\nexport const describeIt = (): string => label()\n",
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { describeIt } from './subject'
+
+it('sees the project-wide replacement', () => {
+  assert.equal(describeIt(), 'mocked')
+})
+`,
+      'test.setup.ts': `import { jest } from '@hyperfrontend/testing'
+
+jest.mock('./src/dep', () => ({ label: () => 'mocked' }))
+`,
+    })
+    const alias = createTempDir({ prefix: 'hf-runner-alias-' }).resolve('project')
+    // why: a junction links a directory on Windows without the symlink privilege, and the type is ignored elsewhere.
+    symlinkSync(fixture.projectRoot, alias, 'junction')
+
+    assert.equal(
+      run(
+        { projectRoot: alias, coverageDir: join(alias, 'coverage') },
+        {
+          coverageInclude: ['src/subject.ts'],
+          environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], setupFiles: ['test.setup.ts'] }],
+        }
+      ).success,
       true
     )
   })

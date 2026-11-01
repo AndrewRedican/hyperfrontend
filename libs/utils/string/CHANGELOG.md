@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01
+
+### Bug Fixes
+
+- accept any ArrayBufferLike in arrayBufferToUtf8String
+- return an ArrayBuffer-backed array from utf8StringToUint8Array
+
 ## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Bug Fixes
