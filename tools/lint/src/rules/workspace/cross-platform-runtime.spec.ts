@@ -72,6 +72,20 @@ testRule(rule, {
       'const e = posix.format({ dir: join(root, file) })',
       'const f = join(process.cwd(), file)',
     ]),
+    valid('file modes read beside a platform branch, and modes of other things', [
+      "import { statSync } from 'node:fs'",
+      "expect((statSync(bin).mode & 0o111) !== 0).toBe(process.platform !== 'win32')",
+      'const mode = statSync(file).mode & 0o777',
+      "expect(mode).toBe(process.platform === 'win32' ? 0o666 : 0o755)",
+      "const check = (): void => { if (process.platform !== 'win32') expect(statSync(bin).mode & 0o111).not.toBe(0) }",
+      'const size = statSync(file).size',
+      'const other = entry.mode & 0o111',
+      'const unknown = describe(file).mode',
+      "const computed = fs['statSync'](file).mode & 0o111",
+      'let later',
+      'later = statSync(file)',
+      'const bits = later.mode & 0o111',
+    ]),
     valid('imports of specifiers and file URLs', [
       "import { pathToFileURL } from 'node:url'",
       "await import('./x.js')",
@@ -304,6 +318,17 @@ testRule(rule, {
         at('hardcodedTmp', 5, 16, { path: TMP }),
         at('hardcodedTmp', 6, 7, { path: TMP }),
       ]
+    ),
+    invalid(
+      'file modes read without a platform branch',
+      [
+        "import { fstatSync, lstatSync, statSync } from 'node:fs'",
+        'expect(statSync(bin).mode & 0o111).not.toBe(0)',
+        'const stat = lstatSync(file)',
+        'if (stat.mode & 0o111) run()',
+        'const executable = (): boolean => fs.fstatSync(fd).mode === 0o755',
+      ],
+      [at('fileMode', 2, 8), at('fileMode', 4, 5), at('fileMode', 5, 35)]
     ),
     invalid(
       'shims spawned without a shell',
