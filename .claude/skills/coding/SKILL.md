@@ -328,7 +328,7 @@ Splitting grows spec files. Respect the project's `max-file-lines` limit by movi
 
 ### Scaffolding — reuse the testing helpers first
 
-Before hand-writing test scaffolding, check whether `@hyperfrontend/testing` already provides it: `createMock`, `waitFor`/`flushPromises`/`sleep`, `createDeferred`, `jest.stubGlobal`/`stubEnv` (root); `useTempDir`/`createTempDir`/`writeTree` (`/fs`, required over `mkdtemp` by `workspace/no-mkdtemp-in-tests`); terminal, stdio and child-process stand-ins (`/process`); fake windows and `ResizeObserver` (`/browser`). Hand-roll only when the helper would hide what the test is about.
+Before hand-writing test scaffolding, check whether `@hyperfrontend/testing` already provides it: `createMock`, `waitFor`/`flushPromises`/`sleep` (never a fixed `sleep` before a call assertion: `workspace/no-sleep-before-call-assertion`), `createDeferred`, `jest.stubGlobal`/`stubEnv` (root); `useTempDir`/`createTempDir`/`writeTree` (`/fs`, required over `mkdtemp` by `workspace/no-mkdtemp-in-tests`); terminal, stdio and child-process stand-ins (`/process`); fake windows and `ResizeObserver` (`/browser`). Hand-roll only when the helper would hide what the test is about.
 
 ### Branching — no unnecessary or unreachable code
 
