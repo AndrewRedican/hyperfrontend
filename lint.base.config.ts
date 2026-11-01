@@ -14,7 +14,7 @@ const WORKSPACE_PACKAGE_PREFIXES = ['@hyperfrontend', '@nx']
 export default [
   { families: WORKSPACE_FAMILIES },
   { ignores: ['dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'] },
-  { files: CODE, rules: { ...CODE_RULES, ...on('typescript/no-unused-vars') } },
+  { files: CODE, rules: { ...CODE_RULES, ...on('typescript/no-unused-vars typescript/no-explicit-any typescript/no-non-null-assertion') } },
   { files: JAVASCRIPT, language: { globals: BROWSER_AND_NODE_GLOBALS } },
   { files: SCRIPT, rules: JSDOC_RULES },
   {
@@ -92,7 +92,7 @@ export default [
     files: SCRIPT,
     rules: {
       'escape-package-tags': ['error', { prefixes: WORKSPACE_PACKAGE_PREFIXES }],
-      'jsdoc/escape-inline-tags': ['warn', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
+      'jsdoc/escape-inline-tags': ['error', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
     },
   },
   { files: TYPESCRIPT, ignores: ['**/test.setup.ts', '**/libs/logging/**'], rules: { 'workspace/no-direct-console': 'error' } },
