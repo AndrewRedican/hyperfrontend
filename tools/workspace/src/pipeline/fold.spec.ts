@@ -6,7 +6,7 @@ import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-i
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { libraryOfE2e } from '../graph/depends-on'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
-import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, railwayService, upstreamPackages, windowsTasks, withNeeds } from './fold'
+import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, railwayService, siblingTasks, upstreamPackages, withNeeds } from './fold'
 import { planReason } from './model'
 
 const workspace = createPipelineWorkspace()
@@ -383,14 +383,14 @@ describe('linuxTasks', () => {
   })
 })
 
-describe('windowsTasks', () => {
+describe('siblingTasks', () => {
   it('copies the typecheck, lint, test, build and e2e of libraries and tools', () => {
     const linux = linuxTasks(
       graph,
       selection('lib-alpha:typecheck', 'lib-alpha:lint', 'lib-alpha:test', 'tool-ling:test', 'app-site:typecheck', 'e2e-alpha:e2e'),
       false
     )
-    expect(windowsTasks(graph, linux).map((task) => `${task.id} ${task.environment}`)).toEqual([
+    expect(siblingTasks(graph, linux, 'windows').map((task) => `${task.id} ${task.environment}`)).toEqual([
       'lib-alpha:typecheck windows',
       'lib-alpha:lint windows',
       'lib-alpha:test windows',
@@ -409,7 +409,7 @@ describe('windowsTasks', () => {
     })
     try {
       expect(
-        windowsTasks(other.graph, linuxTasks(other.graph, selection('tool-ling:test'), false)).map(
+        siblingTasks(other.graph, linuxTasks(other.graph, selection('tool-ling:test'), false), 'windows').map(
           (task) => `${task.id} ${task.environment}`
         )
       ).toEqual(['tool-ling:test windows', 'tool-ling:install windows'])
@@ -418,13 +418,17 @@ describe('windowsTasks', () => {
     }
   })
 
+  it('places the same tasks on macOS', () => {
+    const linux = linuxTasks(graph, selection('lib-alpha:test', 'e2e-alpha:e2e', 'app-site:typecheck'), false)
+    expect(siblingTasks(graph, linux, 'macos').map((task) => `${task.id} ${task.environment}`)).toEqual(
+      siblingTasks(graph, linux, 'windows').map((task) => `${task.id} macos`)
+    )
+  })
+
   it('adds the smokes after the build of a library with a consumer smoke alone', () => {
-    expect(windowsTasks(graph, linuxTasks(graph, selection('lib-alpha:build', 'lib-beta:build'), false)).map((task) => task.id)).toEqual([
-      'lib-alpha:build',
-      'lib-beta:build',
-      'lib-alpha:smoke-floor',
-      'lib-alpha:smoke-major',
-    ])
+    expect(
+      siblingTasks(graph, linuxTasks(graph, selection('lib-alpha:build', 'lib-beta:build'), false), 'windows').map((task) => task.id)
+    ).toEqual(['lib-alpha:build', 'lib-beta:build', 'lib-alpha:smoke-floor', 'lib-alpha:smoke-major'])
   })
 })
 
@@ -461,7 +465,7 @@ describe('withNeeds', () => {
   })
 
   it('keeps the needs inside one environment', () => {
-    const both = withNeeds(graph, [...linux, ...windowsTasks(graph, linux)])
+    const both = withNeeds(graph, [...linux, ...siblingTasks(graph, linux, 'windows')])
     expect(both.filter((task) => task.environment === 'windows').map((task) => `${task.id}: ${task.needs.join(',')}`)).toEqual([
       'lib-alpha:typecheck: ',
       'lib-alpha:build: lib-alpha:typecheck',
@@ -514,7 +518,7 @@ describe('withNeeds across projects', () => {
 describe('buildChains', () => {
   it('groups the tasks by environment and project, needs first', () => {
     const linux = linuxTasks(graph, selection('lib-alpha:publish', 'e2e-alpha:e2e', 'lib-alpha:test', 'lib-alpha:typecheck'), true)
-    const chains = buildChains(withNeeds(graph, [...linux, ...windowsTasks(graph, linux)]))
+    const chains = buildChains(withNeeds(graph, [...linux, ...siblingTasks(graph, linux, 'windows')]))
     expect(chains.map((chain) => `${chain.environment} ${chain.project}: ${chain.tasks.map((task) => task.target).join(' ')}`)).toEqual([
       'linux lib-alpha: typecheck test build e2e probe smoke-floor smoke-major publish',
       'windows lib-alpha: typecheck test build e2e smoke-floor smoke-major',

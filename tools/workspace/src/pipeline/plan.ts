@@ -17,7 +17,7 @@ import { selectAffected } from '../graph/affected/select'
 import { compareText } from '../graph/order'
 import { hasTarget } from '../graph/workspace'
 import { RAILWAY_CONFIG } from './commands'
-import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, windowsTasks, withNeeds } from './fold'
+import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, siblingTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
 import { rankChains } from './order'
 
@@ -132,9 +132,10 @@ export function createPlan(options: PlanOptions): Plan {
   selectDrift(options.graph, selection, targets, drift)
   const railwayChanged = (options.changes?.changes ?? []).some((change) => change.path === RAILWAY_CONFIG)
   const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged)
-  const tasks = withNeeds(options.graph, [...linux, ...windowsTasks(options.graph, linux)])
+  const siblings = [Environments.Windows, Environments.MacOS].flatMap((environment) => siblingTasks(options.graph, linux, environment))
+  const tasks = withNeeds(options.graph, [...linux, ...siblings])
   const chains = rankChains(options.graph, buildChains(tasks))
-  const environments = [Environments.Linux, Environments.Windows].filter((environment): environment is Environment =>
+  const environments = [Environments.Linux, Environments.Windows, Environments.MacOS].filter((environment): environment is Environment =>
     chains.some((chain) => chain.environment === environment)
   )
   return {

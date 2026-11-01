@@ -4,9 +4,9 @@
  * the library an e2e task tests, the build a publish publishes), each planned once however many
  * tasks need it, a built publishable library gains its floor probe and, when its e2e project
  * ships a consumer smoke, its smokes, a built demo that declares a Railway service gains its
- * deploy on `main`, the workspace gains the provision those deploys wait on, the Windows
- * environment takes the typecheck, lint, test, build and e2e of the libraries and tools, and every
- * task learns what it needs.
+ * deploy on `main`, the workspace gains the provision those deploys wait on, the Windows and
+ * macOS environments each take the typecheck, lint, test, build and e2e of the libraries and tools,
+ * and every task learns what it needs.
  *
  * @module pipeline/fold
  */
@@ -37,11 +37,11 @@ import {
 } from './commands'
 import { Environment as Environments, PipelineRule, planReason, splitTaskId, Weight } from './model'
 
-/** The targets the Windows environment runs for every library and tool. */
-const WINDOWS_TARGETS = createSet(['typecheck', 'lint', 'test', 'build', 'e2e'])
+/** The targets the sibling environments, Windows and macOS, run for every library and tool. */
+const SIBLING_TARGETS = createSet(['typecheck', 'lint', 'test', 'build', 'e2e'])
 
-/** The projects the Windows environment covers. */
-const WINDOWS_PROJECTS = /^(lib|tool)-/
+/** The projects the sibling environments cover. */
+const SIBLING_PROJECTS = /^(lib|tool)-/
 
 /** The targets that run after a chain's build, when the plan builds it. */
 const AFTER_BUILD = createSet<string>([
@@ -354,26 +354,25 @@ export function linuxTasks(
 }
 
 /**
- * The Windows tasks: the typecheck, lint, test, build and e2e of every library and tool among the
- * Linux tasks, the smokes of a library whose e2e project ships a consumer smoke, and every task
- * they need first.
+ * The tasks of a sibling environment, Windows or macOS: the typecheck, lint, test, build and e2e
+ * of every library and tool among the Linux tasks, the smokes of a library whose e2e project
+ * ships a consumer smoke, and every task they need first.
  *
  * @param graph - The graph the projects belong to
  * @param linux - What the Linux environment runs
+ * @param environment - The sibling environment the tasks run on
  * @returns The tasks, without needs
  */
-export function windowsTasks(graph: WorkspaceGraph, linux: readonly PlanTask[]): PlanTask[] {
+export function siblingTasks(graph: WorkspaceGraph, linux: readonly PlanTask[], environment: Environment): PlanTask[] {
   const tasks = createMap<string, PlanTask>()
   for (const item of linux) {
-    if (WINDOWS_TARGETS.has(item.target) && WINDOWS_PROJECTS.test(item.project))
-      tasks.set(item.id, { ...item, environment: Environments.Windows })
+    if (SIBLING_TARGETS.has(item.target) && SIBLING_PROJECTS.test(item.project)) tasks.set(item.id, { ...item, environment })
   }
   for (const item of [...tasks.values()]) {
     if (item.target !== 'build') continue
-    for (const smoke of afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, Environments.Windows, true))
-      tasks.set(smoke.id, smoke)
+    for (const smoke of afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, environment, true)) tasks.set(smoke.id, smoke)
   }
-  addPrerequisites(graph, tasks, Environments.Windows)
+  addPrerequisites(graph, tasks, environment)
   return [...tasks.values()]
 }
 

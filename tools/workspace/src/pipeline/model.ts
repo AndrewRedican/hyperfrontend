@@ -13,6 +13,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 export const Environment = freeze({
   Linux: 'linux',
   Windows: 'windows',
+  MacOS: 'macos',
 } as const)
 
 /** One of the environments. */
@@ -41,8 +42,8 @@ export const PipelineRule = freeze({
   PipelineTask: 'pipeline-task',
   /** A prerequisite did not succeed. */
   PrerequisiteFailed: 'prerequisite-failed',
-  /** The Windows environment did not succeed before the publishes. */
-  WindowsEnvironment: 'windows-environment',
+  /** A sibling environment, Windows or macOS, did not succeed before the publishes. */
+  SiblingEnvironment: 'sibling-environment',
   /** The run was interrupted before the task started. */
   Cancelled: 'cancelled',
 } as const)

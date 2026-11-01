@@ -3,8 +3,8 @@
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts <command>`, or
  * `npm run hf -- run tool-workspace:pipeline <command>`, where the command is
  * `plan [--base <ref> | --planned-base] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
- * `run [--plan <file>] [--environment linux|windows] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>] [--head-sha <sha>]`,
- * `finalize [--environment linux|windows] [--summary]`,
+ * `run [--plan <file>] [--environment linux|windows|macos] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>[,<job>]] [--head-sha <sha>]`,
+ * `finalize [--environment linux|windows|macos] [--summary]`,
  * `record --out <dir> --run-id <id> --run-number <n> --attempt <n> --sha <sha> --ref <ref> --event <event> --url <url>`,
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects]` or
  * `summary --results <file> [--plan <file>] [--summary]`.
@@ -67,9 +67,9 @@ const USAGE = 'expected plan, run, finalize, record, affected or summary, with t
 const PIPELINE_DIRECTORY = '.hf/pipeline'
 
 /** The runner image of each environment. */
-const RUNNERS: Readonly<Record<Environment, string>> = { linux: 'ubuntu-latest', windows: 'windows-latest' }
+const RUNNERS: Readonly<Record<Environment, string>> = { linux: 'ubuntu-latest', windows: 'windows-latest', macos: 'macos-latest' }
 
-/** How long the Linux environment waits for the Windows one before publishing: the Windows job's own time limit in `ci-main.yml`. */
+/** How long the Linux environment waits for each sibling environment before publishing: the sibling jobs' own time limit in `ci-main.yml`. */
 const SIBLING_TIMEOUT_MS = 120 * 60 * 1000
 
 /** How long between two polls of the sibling job. */
@@ -162,10 +162,11 @@ function resolvePath(path: string): string {
 /**
  * The environment the process runs on.
  *
- * @returns Windows on win32, Linux otherwise
+ * @returns Windows on win32, macOS on darwin, Linux otherwise
  */
 function ownEnvironment(): Environment {
-  return process.platform === 'win32' ? Environments.Windows : Environments.Linux
+  if (process.platform === 'win32') return Environments.Windows
+  return process.platform === 'darwin' ? Environments.MacOS : Environments.Linux
 }
 
 /**
@@ -308,7 +309,7 @@ function headShaOf(): string | undefined {
 /**
  * Where the check runs of an environment are recorded, workspace-relative.
  *
- * @param environment - Linux or Windows
+ * @param environment - Linux, Windows or macOS
  * @returns The path under the pipeline directory
  */
 function checksPath(environment: Environment): string {
@@ -363,13 +364,14 @@ async function runEnvironment(
   const stop = (): void => controller.abort()
   process.once('SIGINT', stop)
   process.once('SIGTERM', stop)
-  const gate = siblingGate({
-    // why: a plan without Windows chains has no Windows job to wait for, so the gate opens at once.
-    name: planned.environments.includes(Environments.Windows) ? values['wait-for'] : undefined,
-    fetchJobs: githubJobs(process.env, fetch),
-    timeoutMs: SIBLING_TIMEOUT_MS,
-    intervalMs: SIBLING_INTERVAL_MS,
-  })
+  // why: a sibling the plan gives no chains has no job to wait for, so only the planned ones gate the publishes.
+  const gates = (values['wait-for'] ?? '')
+    .split(',')
+    .filter((name) => planned.environments.includes(name as Environment))
+    .map((name) =>
+      siblingGate({ name, fetchJobs: githubJobs(process.env, fetch), timeoutMs: SIBLING_TIMEOUT_MS, intervalMs: SIBLING_INTERVAL_MS })
+    )
+  const gate = async (): Promise<string | null> => (await promiseAll(gates.map((open) => open()))).find((closed) => closed !== null) ?? null
   const checks = checksOf(environment)
   const settled = createMap<string, TaskResult>()
   const startedChains = createSet<string>()

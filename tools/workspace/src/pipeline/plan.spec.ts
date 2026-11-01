@@ -27,12 +27,16 @@ describe('createPlan', () => {
   it('plans every task of every project when there is no change set', () => {
     expect(chains(createPlan({ graph, changes: null, main: false }))).toEqual([
       'linux lib-beta: typecheck lint test build e2e probe',
+      'macos lib-beta: typecheck lint test build e2e',
       'windows lib-beta: typecheck lint test build e2e',
       'linux lib-alpha: typecheck lint test build e2e probe smoke-floor smoke-major',
+      'macos lib-alpha: typecheck lint test build e2e smoke-floor smoke-major',
       'windows lib-alpha: typecheck lint test build e2e smoke-floor smoke-major',
       'linux lib-testing: typecheck lint test build',
+      'macos lib-testing: typecheck lint test build',
       'windows lib-testing: typecheck lint test build',
       'linux tool-ling: typecheck lint test',
+      'macos tool-ling: typecheck lint test',
       'windows tool-ling: typecheck lint test',
       'linux app-site: typecheck lint build',
       'linux e2e-beta: lint',
@@ -63,8 +67,10 @@ describe('createPlan', () => {
   it('gives every e2e task the change reaches the build of its library, and no other build', () => {
     expect(chains(createPlan({ graph, changes: modified('libs/testing/src/index.ts'), main: false }))).toEqual([
       'linux lib-alpha: build e2e probe smoke-floor smoke-major',
+      'macos lib-alpha: build e2e smoke-floor smoke-major',
       'windows lib-alpha: build e2e smoke-floor smoke-major',
       'linux lib-testing: typecheck lint test build',
+      'macos lib-testing: typecheck lint test build',
       'windows lib-testing: typecheck lint test build',
     ])
   })
@@ -75,7 +81,7 @@ describe('createPlan', () => {
       base: 'all',
       head: null,
       mode: 'all',
-      environments: ['linux', 'windows'],
+      environments: ['linux', 'windows', 'macos'],
       skipped: [],
     })
   })
@@ -83,6 +89,7 @@ describe('createPlan', () => {
   it('plans the tasks a change reaches', () => {
     expect(chains(createPlan({ graph, changes: modified('libs/beta/src/index.ts'), main: false }))).toEqual([
       'linux lib-beta: typecheck lint test build e2e probe',
+      'macos lib-beta: typecheck lint test build e2e',
       'windows lib-beta: typecheck lint test build e2e',
       'linux app-site: typecheck build',
     ])
@@ -99,7 +106,7 @@ describe('createPlan', () => {
       base: 'base-revision',
       head: null,
       mode: 'affected',
-      environments: ['linux', 'windows'],
+      environments: ['linux', 'windows', 'macos'],
       main: false,
     })
   })
@@ -107,6 +114,7 @@ describe('createPlan', () => {
   it('plans the publishes on main', () => {
     expect(chains(createPlan({ graph, changes: modified('libs/beta/src/index.ts'), main: true }))).toEqual([
       'linux lib-beta: typecheck lint test build e2e probe publish',
+      'macos lib-beta: typecheck lint test build e2e',
       'windows lib-beta: typecheck lint test build e2e',
       'linux app-site: typecheck build',
     ])
@@ -133,6 +141,7 @@ describe('createPlan', () => {
     expect({ chains: chains(plan), drift: plan.drift }).toEqual({
       chains: [
         'linux lib-alpha: typecheck lint test build e2e probe smoke-floor smoke-major publish',
+        'macos lib-alpha: typecheck lint test build e2e smoke-floor smoke-major',
         'windows lib-alpha: typecheck lint test build e2e smoke-floor smoke-major',
         'linux workspace: lint',
       ],
