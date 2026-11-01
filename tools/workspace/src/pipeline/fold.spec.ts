@@ -384,10 +384,10 @@ describe('linuxTasks', () => {
 })
 
 describe('windowsTasks', () => {
-  it('copies the typecheck, lint and test of libraries and tools', () => {
+  it('copies the typecheck, lint, test, build and e2e of libraries and tools', () => {
     const linux = linuxTasks(
       graph,
-      selection('lib-alpha:typecheck', 'lib-alpha:lint', 'lib-alpha:test', 'tool-ling:test', 'app-site:typecheck', 'lib-alpha:e2e'),
+      selection('lib-alpha:typecheck', 'lib-alpha:lint', 'lib-alpha:test', 'tool-ling:test', 'app-site:typecheck', 'e2e-alpha:e2e'),
       false
     )
     expect(windowsTasks(graph, linux).map((task) => `${task.id} ${task.environment}`)).toEqual([
@@ -395,6 +395,10 @@ describe('windowsTasks', () => {
       'lib-alpha:lint windows',
       'lib-alpha:test windows',
       'tool-ling:test windows',
+      'e2e-alpha:e2e windows',
+      'lib-alpha:build windows',
+      'lib-alpha:smoke-floor windows',
+      'lib-alpha:smoke-major windows',
     ])
   })
 
@@ -414,18 +418,12 @@ describe('windowsTasks', () => {
     }
   })
 
-  it('copies the build and the smokes of a library with a consumer smoke', () => {
+  it('adds the smokes after the build of a library with a consumer smoke alone', () => {
     expect(windowsTasks(graph, linuxTasks(graph, selection('lib-alpha:build', 'lib-beta:build'), false)).map((task) => task.id)).toEqual([
       'lib-alpha:build',
+      'lib-beta:build',
       'lib-alpha:smoke-floor',
       'lib-alpha:smoke-major',
-    ])
-  })
-
-  it('gives a copied build the smokes it is there for as its reason, in place of the Linux tasks needing it', () => {
-    const build = windowsTasks(graph, linuxTasks(graph, selection('e2e-alpha:e2e'), false)).find((task) => task.id === 'lib-alpha:build')
-    expect(build?.reasons.map((reason) => `${reason.rule}: ${reason.message}`)).toEqual([
-      'pipeline-task: needed first by lib-alpha:smoke-floor, lib-alpha:smoke-major',
     ])
   })
 })
@@ -467,6 +465,8 @@ describe('withNeeds', () => {
     expect(both.filter((task) => task.environment === 'windows').map((task) => `${task.id}: ${task.needs.join(',')}`)).toEqual([
       'lib-alpha:typecheck: ',
       'lib-alpha:build: lib-alpha:typecheck',
+      'e2e-alpha:e2e: lib-alpha:build',
+      'lib-beta:build: ',
       'lib-alpha:smoke-floor: lib-alpha:build',
       'lib-alpha:smoke-major: lib-alpha:build',
     ])
@@ -517,7 +517,7 @@ describe('buildChains', () => {
     const chains = buildChains(withNeeds(graph, [...linux, ...windowsTasks(graph, linux)]))
     expect(chains.map((chain) => `${chain.environment} ${chain.project}: ${chain.tasks.map((task) => task.target).join(' ')}`)).toEqual([
       'linux lib-alpha: typecheck test build e2e probe smoke-floor smoke-major publish',
-      'windows lib-alpha: typecheck test build smoke-floor smoke-major',
+      'windows lib-alpha: typecheck test build e2e smoke-floor smoke-major',
     ])
   })
 

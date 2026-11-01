@@ -5,8 +5,8 @@
  * tasks need it, a built publishable library gains its floor probe and, when its e2e project
  * ships a consumer smoke, its smokes, a built demo that declares a Railway service gains its
  * deploy on `main`, the workspace gains the provision those deploys wait on, the Windows
- * environment takes the typecheck, lint and test of the libraries and tools, and every task
- * learns what it needs.
+ * environment takes the typecheck, lint, test, build and e2e of the libraries and tools, and every
+ * task learns what it needs.
  *
  * @module pipeline/fold
  */
@@ -38,7 +38,7 @@ import {
 import { Environment as Environments, PipelineRule, planReason, splitTaskId, Weight } from './model'
 
 /** The targets the Windows environment runs for every library and tool. */
-const WINDOWS_TARGETS = createSet(['typecheck', 'lint', 'test'])
+const WINDOWS_TARGETS = createSet(['typecheck', 'lint', 'test', 'build', 'e2e'])
 
 /** The projects the Windows environment covers. */
 const WINDOWS_PROJECTS = /^(lib|tool)-/
@@ -354,9 +354,9 @@ export function linuxTasks(
 }
 
 /**
- * The Windows tasks: the typecheck, lint and test of every library and tool among the Linux
- * tasks, the build and smokes of a library whose e2e project ships a consumer smoke, and every
- * task they need first.
+ * The Windows tasks: the typecheck, lint, test, build and e2e of every library and tool among the
+ * Linux tasks, the smokes of a library whose e2e project ships a consumer smoke, and every task
+ * they need first.
  *
  * @param graph - The graph the projects belong to
  * @param linux - What the Linux environment runs
@@ -368,17 +368,10 @@ export function windowsTasks(graph: WorkspaceGraph, linux: readonly PlanTask[]):
     if (WINDOWS_TARGETS.has(item.target) && WINDOWS_PROJECTS.test(item.project))
       tasks.set(item.id, { ...item, environment: Environments.Windows })
   }
-  for (const item of linux) {
+  for (const item of [...tasks.values()]) {
     if (item.target !== 'build') continue
-    const smokes = afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, Environments.Windows, true)
-    if (smokes.length === 0) continue
-    const names = smokes.map((smoke) => smoke.id).sort(compareText)
-    // why: the Linux build's own prerequisite reason names Linux tasks; on Windows the build is there for the smokes
-    const reasons = [
-      planReason(PipelineRule.PipelineTask, `needed first by ${names.join(', ')}`, names),
-      ...item.reasons.filter((reason) => reason.rule !== PipelineRule.PipelineTask),
-    ]
-    for (const added of [{ ...item, environment: Environments.Windows, reasons }, ...smokes]) tasks.set(added.id, added)
+    for (const smoke of afterBuild(graph, graph.projects.get(item.project) as ProjectRecord, Environments.Windows, true))
+      tasks.set(smoke.id, smoke)
   }
   addPrerequisites(graph, tasks, Environments.Windows)
   return [...tasks.values()]
