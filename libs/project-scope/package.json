@@ -3,7 +3,7 @@
   "version": "0.4.2",
   "description": "Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.2",
+    "@hyperfrontend/immutable-api-utils": "1.0.3",
     "@hyperfrontend/logging": "1.0.1"
   },
   "exports": {

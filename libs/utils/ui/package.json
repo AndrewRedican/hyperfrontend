@@ -45,7 +45,7 @@
     "@hyperfrontend/random-generator-utils": "0.2.1",
     "@hyperfrontend/list-utils": "0.1.1",
     "@hyperfrontend/data-utils": "1.0.1",
-    "@hyperfrontend/immutable-api-utils": "1.0.2",
+    "@hyperfrontend/immutable-api-utils": "1.0.3",
     "@hyperfrontend/logging": "1.0.1"
   },
   "funding": {
