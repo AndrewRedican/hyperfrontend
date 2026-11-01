@@ -7,16 +7,19 @@
  */
 
 import type { ChildProcess } from 'node:child_process'
+import type { TempDir } from '@hyperfrontend/testing/fs'
+import type { ChildExit } from '@hyperfrontend/testing/process'
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { before as beforeAll, after as afterAll } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, it, expect } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
+import { cleanSignalExit, sendSignal } from '@hyperfrontend/testing/process'
 import { shellSafe } from './support/nx-workspace'
 
 const require = createRequire(import.meta.url)
@@ -108,18 +111,6 @@ async function waitForOutput(getOutput: () => string, predicate: (output: string
 }
 
 /**
- * Waits for a spawned child to exit and resolves with its exit code.
- *
- * @param child - The running child process.
- * @returns The exit code, or `null` when killed by a signal.
- */
-function waitForExit(child: ChildProcess): Promise<number | null> {
-  return new Promise((resolve) => {
-    child.once('exit', (code) => resolve(code))
-  })
-}
-
-/**
  * Recursively lists every file under a directory as relative paths.
  *
  * @param dir - The directory to walk.
@@ -143,28 +134,28 @@ describe('@hyperfrontend/features hf CLI', () => {
   })
 
   describe('hf dev', () => {
-    let scratchDir: string
+    let scratch: TempDir
     let child: ChildProcess | undefined
     let appUrl = ''
     let firstResponse: { status: number; body: string } | undefined
     let aliveAfterThreeSeconds: { running: boolean; status: number } | undefined
-    let exitCode: number | null = null
+    let exit: ChildExit | undefined
 
     beforeAll(
       async () => {
-        scratchDir = mkdtempSync(join(tmpdir(), 'hf-dev-e2e-'))
-        mkdirSync(join(scratchDir, 'app'))
-        writeFileSync(join(scratchDir, 'app', 'index.html'), '<!doctype html><html><body>dummy-app-ok</body></html>\n')
+        scratch = createTempDir({ prefix: 'hf-dev-e2e-' })
+        mkdirSync(join(scratch.path, 'app'))
+        writeFileSync(join(scratch.path, 'app', 'index.html'), '<!doctype html><html><body>dummy-app-ok</body></html>\n')
         // note: Randomized high ports keep parallel CI jobs from colliding on a fixed port.
         const appPort = 42000 + Math.floor(Math.random() * 10000)
         const debugPort = appPort + 10000
         writeFileSync(
-          join(scratchDir, 'hf-dev.config.json'),
+          join(scratch.path, 'hf-dev.config.json'),
           `${JSON.stringify({ apps: [{ name: 'dummy-app', outputDir: './app', port: appPort }] }, null, 2)}\n`
         )
 
         child = spawn('node', [hfBin, 'dev', '--port', String(debugPort)], {
-          cwd: scratchDir,
+          cwd: scratch.path,
           detached: true,
           stdio: ['ignore', 'pipe', 'pipe'],
         })
@@ -190,9 +181,7 @@ describe('@hyperfrontend/features hf CLI', () => {
         const probe = await fetchUrl(appUrl)
         aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
 
-        const exitPromise = waitForExit(child)
-        child.kill('SIGINT')
-        exitCode = await exitPromise
+        exit = await sendSignal(child, 'SIGINT')
       },
       { timeout: DEV_SUITE_TIMEOUT }
     )
@@ -201,7 +190,7 @@ describe('@hyperfrontend/features hf CLI', () => {
       if (child !== undefined && child.exitCode === null) {
         child.kill('SIGKILL')
       }
-      rmSync(scratchDir, { recursive: true, force: true })
+      scratch.remove()
     })
 
     it('prints the running app URL', () => {
@@ -217,30 +206,30 @@ describe('@hyperfrontend/features hf CLI', () => {
     })
 
     it('exits cleanly on SIGINT', () => {
-      expect(exitCode).toBe(0)
+      expect(exit).toEqual(cleanSignalExit('SIGINT'))
     })
   })
 
   describe('hf build', () => {
-    let scratchDir: string
+    let scratch: TempDir
     let outDir: string
     let result: { status: number | null; stderr: string; stdout: string } | undefined
     let outFiles: string[] = []
 
     beforeAll(
       () => {
-        scratchDir = mkdtempSync(join(tmpdir(), 'hf-build-e2e-'))
-        outDir = join(scratchDir, 'out')
+        scratch = createTempDir({ prefix: 'hf-build-e2e-' })
+        outDir = join(scratch.path, 'out')
         // why: The builder resolves the SDK and the tsc binary from the consumer's node_modules; linking this e2e project's install makes the scratch dir a real consumer of the packed tarball.
         // why: a junction links a directory on Windows without the symlink privilege, and the type is ignored on POSIX.
-        symlinkSync(join(import.meta.dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'junction')
+        symlinkSync(join(import.meta.dirname, '..', 'node_modules'), join(scratch.path, 'node_modules'), 'junction')
         writeFileSync(
-          join(scratchDir, 'feature.config.json'),
+          join(scratch.path, 'feature.config.json'),
           // why: A strict subset of the display modes is the case that used to emit a shell its own declaration pass could not compile, so the fixture declares one to keep that path exercised by a real build.
           `${JSON.stringify({ name: 'e2e-widget', version: '0.0.1', contract: './widget.contract.ts', url: 'http://localhost:4300/', display: { modes: ['embedded', 'dialog'] } }, null, 2)}\n`
         )
         writeFileSync(
-          join(scratchDir, 'widget.contract.ts'),
+          join(scratch.path, 'widget.contract.ts'),
           `const contract = {
   emitted: [
     {
@@ -257,7 +246,7 @@ export default contract
         )
 
         const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v3', '--out', outDir], {
-          cwd: scratchDir,
+          cwd: scratch.path,
           encoding: 'utf8',
           timeout: BUILD_SUITE_TIMEOUT - 30000,
           env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
@@ -271,7 +260,7 @@ export default contract
     )
 
     afterAll(() => {
-      rmSync(scratchDir, { recursive: true, force: true })
+      scratch.remove()
     })
 
     it('exits 0', () => {
@@ -312,21 +301,24 @@ export default contract
     })
 
     describe('installed into an isolated consumer', () => {
-      let consumerDir: string
+      let consumer: TempDir
 
       beforeAll(
         () => {
           const tarball = outFiles.find((file) => file.endsWith('.tgz'))
-          consumerDir = mkdtempSync(join(tmpdir(), 'hf-shell-consumer-'))
-          writeFileSync(join(consumerDir, 'package.json'), `${JSON.stringify({ name: 'shell-consumer', private: true, type: 'module' })}\n`)
+          consumer = createTempDir({ prefix: 'hf-shell-consumer-' })
+          writeFileSync(
+            join(consumer.path, 'package.json'),
+            `${JSON.stringify({ name: 'shell-consumer', private: true, type: 'module' })}\n`
+          )
           // why: The consumer gets the packed tarball and nothing else, no SDK and no linked node_modules, so every import below resolves through the shell's own published exports map the way it does for an external install.
           execFileSync('npm', shellSafe(['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)]), {
-            cwd: consumerDir,
+            cwd: consumer.path,
             stdio: 'pipe',
             shell: process.platform === 'win32',
           })
           writeFileSync(
-            join(consumerDir, 'consumer.ts'),
+            join(consumer.path, 'consumer.ts'),
             `import { createFeatureShell } from 'e2e-widget-shell'
 import type { FeatureDisplayMode, FeatureShellHandle, FeatureShellOptions } from 'e2e-widget-shell'
 
@@ -341,7 +333,7 @@ export { mode }
       )
 
       afterAll(() => {
-        rmSync(consumerDir, { recursive: true, force: true })
+        consumer.remove()
       })
 
       it('imports createFeatureShell from the package root as ESM', () => {
@@ -349,7 +341,7 @@ export { mode }
           'node',
           ['--input-type=module', '-e', "const m = await import('e2e-widget-shell'); process.stdout.write(typeof m.createFeatureShell)"],
           {
-            cwd: consumerDir,
+            cwd: consumer.path,
             encoding: 'utf8',
           }
         )
@@ -361,7 +353,7 @@ export { mode }
           'node',
           ['--input-type=commonjs', '-e', "process.stdout.write(typeof require('e2e-widget-shell').createFeatureShell)"],
           {
-            cwd: consumerDir,
+            cwd: consumer.path,
             encoding: 'utf8',
           }
         )
@@ -383,7 +375,7 @@ export { mode }
             'es2022,dom',
             'consumer.ts',
           ],
-          { cwd: consumerDir, encoding: 'utf8' }
+          { cwd: consumer.path, encoding: 'utf8' }
         )
         expect({ status: checked.status, output: checked.stdout }).toEqual({ status: 0, output: '' })
       })
@@ -423,7 +415,7 @@ function fetchRawUrl(
 describe('hf serve', () => {
   const hfBin = resolveHfBin()
 
-  let scratchDir: string
+  let scratch: TempDir
   let siteDir = ''
   let servePort = 0
   let child: ChildProcess | undefined
@@ -435,12 +427,12 @@ describe('hf serve', () => {
   let bigJsResponse: { status: number; encoding: string | undefined; body: Buffer } | undefined
   let configResponse: { status: number; body: string } | undefined
   let aliveAfterThreeSeconds: { running: boolean; status: number } | undefined
-  let exitCode: number | null = null
+  let exit: ChildExit | undefined
 
   beforeAll(
     async () => {
-      scratchDir = mkdtempSync(join(tmpdir(), 'hf-serve-e2e-'))
-      siteDir = join(scratchDir, 'site')
+      scratch = createTempDir({ prefix: 'hf-serve-e2e-' })
+      siteDir = join(scratch.path, 'site')
       mkdirSync(join(siteDir, 'widget'), { recursive: true })
       writeFileSync(join(siteDir, 'index.html'), '<!doctype html><html><body>serve-root-ok</body></html>\n')
       writeFileSync(join(siteDir, 'widget', 'index.html'), '<!doctype html><html><body>serve-widget-ok</body></html>\n')
@@ -455,7 +447,7 @@ describe('hf serve', () => {
 
       // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
       child = spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(servePort)], {
-        cwd: scratchDir,
+        cwd: scratch.path,
         detached: true,
         stdio: ['ignore', 'pipe', 'pipe'],
       })
@@ -488,9 +480,7 @@ describe('hf serve', () => {
       const probe = await fetchUrl(serveUrl)
       aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
 
-      const exitPromise = waitForExit(child)
-      child.kill('SIGINT')
-      exitCode = await exitPromise
+      exit = await sendSignal(child, 'SIGINT')
     },
     { timeout: SERVE_SUITE_TIMEOUT }
   )
@@ -499,7 +489,7 @@ describe('hf serve', () => {
     if (child !== undefined && child.exitCode === null) {
       child.kill('SIGKILL')
     }
-    rmSync(scratchDir, { recursive: true, force: true })
+    scratch.remove()
   })
 
   it('prints the serving line with the root and its URL', () => {
@@ -546,6 +536,6 @@ describe('hf serve', () => {
   })
 
   it('exits cleanly on SIGINT', () => {
-    expect(exitCode).toBe(0)
+    expect(exit).toEqual(cleanSignalExit('SIGINT'))
   })
 })

@@ -10,9 +10,9 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 // note: Pinned to the Nx release the generated declarations of libs/integrations/nx are extracted from, so the type probe checks them against the devkit they mirror.
 const NX_VERSION = '23.3.0'
@@ -203,7 +203,7 @@ export function shellSafe(args: readonly string[]): string[] {
  */
 export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
   const tarball = resolveTarball()
-  const workRoot = mkdtempSync(join(tmpdir(), prefix))
+  const workRoot = createTempDir({ prefix }).path
   execFileSync(
     'npx',
     [
