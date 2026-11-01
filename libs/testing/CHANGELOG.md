@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...ac0443856fdd8c390431228767b56287d661569f) - 2026-11-01
+
+### Features
+
+- add sendSignal and cleanSignalExit
+
+### Bug Fixes
+
+- match setup files by their real path
+
 ## [0.3.1](https://github.com/AndrewRedican/hyperfrontend/compare/39ff2bee8839058dfa45401b99b370470aa79521...54c7921f6dc19e82f4f149d95566e42fb4aca5f8) - 2026-10-28
 
 ### Bug Fixes

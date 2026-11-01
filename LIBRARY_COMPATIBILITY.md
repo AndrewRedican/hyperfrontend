@@ -216,7 +216,7 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.7.0` |
+| `@hyperfrontend/builder` | `0.7.1` |
 | `@hyperfrontend/cryptography` | `1.1.2` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
 | `@hyperfrontend/features` | `0.11.5` |
@@ -233,7 +233,7 @@ flowchart TB
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.2` |
-| `@hyperfrontend/testing` | `0.3.1` |
+| `@hyperfrontend/testing` | `0.4.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
 | `@hyperfrontend/versioning` | `0.9.3` |

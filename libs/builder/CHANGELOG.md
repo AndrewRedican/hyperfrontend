@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/f37ceab9d2cfb0e0bf05743be43c593842126850...ac0443856fdd8c390431228767b56287d661569f) - 2026-11-01
+
+### Bug Fixes
+
+- keep platform-restricted packages external
+- keep chunks a bare side-effect import reaches
+
 ## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/69ac32113adab2e85b7e6f30548dde9783e45084...88748aaa668a66fede2a04f4aa4b84a0fe6e4588) - 2026-10-31
 
 ### Features
