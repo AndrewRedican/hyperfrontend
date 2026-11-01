@@ -152,6 +152,13 @@ export default [
     },
   },
   {
+    // context: the pipeline applies this file to production, so each service's serve pin must be the release its demo installs
+    files: ['.railway/railway.ts'],
+    rules: {
+      'workspace/railway-service-pins': 'error',
+    },
+  },
+  {
     files: ['tsconfig.base.json'],
     rules: {
       'workspace/lib-tsconfig-paths': [
