@@ -75,8 +75,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: [plan]
     if: needs.plan.outputs.has-work == 'true'
-    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds and publishes, so it gets the longer limit
-    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    # why: the Linux publishes wait out the Windows job, up to its whole limit, so the Linux one gets room to publish after it
+    timeout-minutes: ${{ matrix.os == 'windows' && 120 || 150 }}
     permissions:
       contents: read
       checks: write # why: one check run per chain, best-effort

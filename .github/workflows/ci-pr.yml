@@ -126,8 +126,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: [plan, version-check]
     if: always() && needs.plan.outputs.has-work == 'true' && needs.version-check.result == 'success'
-    # why: the Windows environment runs typecheck, lint and test alone; the Linux one builds, so it gets the longer limit
-    timeout-minutes: ${{ matrix.os == 'windows' && 90 || 120 }}
+    # why: both environments build and run e2e, so they share one limit
+    timeout-minutes: 120
     permissions:
       contents: read
       checks: write # why: one check run per chain on the pull request, best-effort
