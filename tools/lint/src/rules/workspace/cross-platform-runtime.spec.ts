@@ -190,7 +190,7 @@ testRule(rule, {
       "const g = x.join('/')",
       "const h = x.replace(/[\\\\\\/]/g, '/') + x.replace(/[\\/\\\\]/g, '/') + x.replace(/[ab]/g, '/') + x.replace(/x/g, '/')",
     ]),
-    valid('legacy conversions outside Node projects', ["const a = x.replace(/\\\\/g, '/')"], BROWSER),
+    valid('non-canonical conversions outside Node projects', ["const a = x.replace(/\\\\/g, '/')"], BROWSER),
     valid('relative() results kept local, or not from node:path', [
       "import { relative } from 'node:path'",
       "import { relative as distance } from './math'",
@@ -388,7 +388,7 @@ testRule(rule, {
       ]
     ),
     invalid(
-      'legacy conversions fixed to the canonical spelling',
+      'non-canonical conversions fixed to the canonical spelling',
       [
         "import { join } from 'node:path'",
         "const a = join(x, y).replace(/\\\\/g, '/')",
@@ -404,13 +404,13 @@ testRule(rule, {
       ]
     ),
     invalid(
-      'legacy conversions keeping the separator already canonical',
+      'non-canonical conversions keeping the separator already canonical',
       ["import { posix, sep } from 'node:path'", "const a = x.split(sep).join('/')", "const b = x.split('\\\\').join(posix.sep)"],
       [at('posixConversion', 2, 11), at('posixConversion', 3, 11)],
       ["import { posix, sep } from 'node:path'", 'const a = x.split(sep).join(posix.sep)', 'const b = x.split(sep).join(posix.sep)']
     ),
     invalid(
-      'legacy conversions without a safe fix',
+      'non-canonical conversions, fixed only where the separator name is free',
       [
         "const a = x.replace(/\\\\/g, '/')",
         "import { join } from 'node:path'",
@@ -436,7 +436,11 @@ testRule(rule, {
         at('posixNative', 5, 26, { method: 'basename' }),
       ]
     ),
-    invalid('legacy conversions in a file without node: imports', ["const a = x.replace(/\\\\/g, '/')"], [at('posixConversion', 1, 11)]),
+    invalid(
+      'non-canonical conversions in a file without node: imports',
+      ["const a = x.replace(/\\\\/g, '/')"],
+      [at('posixConversion', 1, 11)]
+    ),
     invalid(
       'relative() results that leave as data',
       [
