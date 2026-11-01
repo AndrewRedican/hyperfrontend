@@ -116,7 +116,16 @@ describe('createPlan', () => {
     expect(chains(createPlan({ graph, changes: modified('apps/demos/one/src/main.ts'), main: true }))).toEqual([
       'linux demo-one: install typecheck build verify deploy',
       'linux demo-two: install build',
+      'linux workspace: provision',
     ])
+  })
+
+  it('plans the provision alone on main when only the Railway configuration changed', () => {
+    expect(chains(createPlan({ graph, changes: modified('.railway/railway.ts'), main: true }))).toEqual(['linux workspace: provision'])
+  })
+
+  it('plans no provision off main when the Railway configuration changed', () => {
+    expect(chains(createPlan({ graph, changes: modified('.railway/railway.ts'), main: false }))).toEqual([])
   })
 
   it('adds the whole chain of a drifted library on main', () => {

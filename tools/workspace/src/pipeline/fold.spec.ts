@@ -2,6 +2,7 @@ import type { ProjectRecord } from '../graph/model'
 import type { PlanReason, PlanTask } from './model'
 import { after as afterAll } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { libraryOfE2e } from '../graph/depends-on'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
@@ -12,6 +13,9 @@ const workspace = createPipelineWorkspace()
 const { graph } = workspace
 
 afterAll(() => workspace.remove())
+
+/** The files a root project is read from. */
+const ROOT_MANIFESTS = ['project.json', 'package.json', 'package-lock.json']
 
 /**
  * A project of the fixture.
@@ -300,7 +304,39 @@ describe('linuxTasks', () => {
       'demo-one:build in demo-one',
       'demo-one:deploy in demo-one',
       'demo-one:install in demo-one',
+      'workspace:provision in workspace',
     ])
+  })
+
+  it('adds the provision on main when the Railway configuration changed and nothing deploys', () => {
+    expect(placed(linuxTasks(graph, selection(), true, true))).toEqual(['workspace:provision in workspace'])
+  })
+
+  it('drops the provision off main', () => {
+    expect(placed(linuxTasks(graph, selection(), false, true))).toEqual([])
+  })
+
+  it('provisions through the provision script in the chain of the root project', () => {
+    const provision = linuxTasks(graph, selection(), true, true)[0] as PlanTask
+    expect({ command: provision.command, env: provision.env, weight: provision.weight, reasons: provision.reasons }).toEqual({
+      command: ['node', 'tools/workspace/scripts/railway-provision.mjs'],
+      env: {},
+      weight: 'light',
+      reasons: [planReason('pipeline-task', 'applies .railway/railway.ts to the production environment before the deploys')],
+    })
+  })
+
+  it('leaves the provision out when no project owns the Railway configuration', () => {
+    const other = createPipelineWorkspace(fromEntries(entries(PIPELINE_WORKSPACE).filter(([file]) => !ROOT_MANIFESTS.includes(file))))
+    try {
+      expect(placed(linuxTasks(other.graph, selection('demo-one:build'), true))).toEqual([
+        'demo-one:build in demo-one',
+        'demo-one:deploy in demo-one',
+        'demo-one:install in demo-one',
+      ])
+    } finally {
+      other.remove()
+    }
   })
 
   it('drops the deploy off main', () => {
@@ -461,7 +497,17 @@ describe('withNeeds across projects', () => {
 
   it('runs a deploy after every other task of its chain', () => {
     const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-one:build', 'demo-one:typecheck'), true))
-    expect(tasks.find((task) => task.id === 'demo-one:deploy')?.needs).toEqual(['demo-one:build', 'demo-one:install', 'demo-one:typecheck'])
+    expect(tasks.find((task) => task.id === 'demo-one:deploy')?.needs).toEqual([
+      'demo-one:build',
+      'demo-one:install',
+      'demo-one:typecheck',
+      'workspace:provision',
+    ])
+  })
+
+  it('runs the provision after every other task of the workspace chain', () => {
+    const tasks = withNeeds(graph, linuxTasks(graph, selection('workspace:lint', 'demo-one:build'), true))
+    expect(tasks.find((task) => task.id === 'workspace:provision')?.needs).toEqual(['workspace:lint'])
   })
 })
 

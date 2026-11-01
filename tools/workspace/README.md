@@ -61,6 +61,17 @@ HF_DEPLOY_SERVICE=clock HF_DEPLOY_COMMIT=<sha> HF_DEPLOY_TIMEOUT=45 node tools/w
 
 `HF_DEPLOY_SERVICE` is the service as the demo's `metadata.deploy.service` names it; `RAILWAY_TOKEN` is a project token of the production environment (the `RAILWAY_TOKEN` repository secret on CI); the commit defaults to `GITHUB_SHA`, then the checked-out head; the wait defaults to 30 minutes. The script reads the deployment's status every 15 seconds and exits non-zero when it ends as anything but `SUCCESS`, so the task's outcome means the demo is serving the commit.
 
+## Railway provision
+
+`scripts/railway-provision.mjs` applies `.railway/railway.ts` to the production environment when the two differ. The pipeline runs it as the `provision` task of the workspace on `main` whenever a deploy is planned or the push changed the file, after the workspace's lint and before every deploy, so each demo deploys with the settings the commit declares. It runs `config plan --detailed-exit-code --out <plan>`; when the plan shows changes it runs `config apply --plan <plan> --json`, which lands exactly the plan the log shows and fails if the environment moved since. It never passes `--confirm-destructive`, so a plan that deletes a service or a volume fails the task and the deploys behind it, and is applied by hand. The CLI is the release the deploy pins. The `railway` package that evaluates the file finds the CLI through `$_`, which the shell sets to whatever it ran last, so the script removes it from the CLI's environment.
+
+```bash
+RAILWAY_TOKEN=<project token> node tools/workspace/scripts/railway-provision.mjs
+RAILWAY_TOKEN=<project token> HF_PROVISION_PLAN=/tmp/railway-plan.json node tools/workspace/scripts/railway-provision.mjs
+```
+
+`RAILWAY_TOKEN` is a project token of the production environment, as for the deploy; the plan is written to `.hf/pipeline/railway-plan.json` unless `HF_PROVISION_PLAN` names another file. The script prints `railway.ts is applied` when nothing differs and `applied railway.ts` after an apply, and exits non-zero on any other outcome.
+
 ## Binary budget
 
 `scripts/check-binary-budget.mjs` stops a change from growing the repository with large files. Every committed byte stays in the history each clone downloads, and GitHub keeps it even after a history rewrite, so the check runs before a file lands rather than after. It walks every object the change adds on top of its base, across every commit rather than the net diff, so a file added and deleted again on the branch still counts. Anything reachable from the base costs nothing, so moving, renaming or restoring a file is free, and so is merging the base in.

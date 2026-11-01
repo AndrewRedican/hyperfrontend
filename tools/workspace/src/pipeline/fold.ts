@@ -4,8 +4,9 @@
  * the library an e2e task tests, the build a publish publishes), each planned once however many
  * tasks need it, a built publishable library gains its floor probe and, when its e2e project
  * ships a consumer smoke, its smokes, a built demo that declares a Railway service gains its
- * deploy on `main`, the Windows environment takes the typecheck, lint and test of the libraries
- * and tools, and every task learns what it needs.
+ * deploy on `main`, the workspace gains the provision those deploys wait on, the Windows
+ * environment takes the typecheck, lint and test of the libraries and tools, and every task
+ * learns what it needs.
  *
  * @module pipeline/fold
  */
@@ -19,6 +20,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { libraryOfE2e, prerequisitesOf } from '../graph/depends-on'
 import { compareText } from '../graph/order'
+import { projectOfFile } from '../graph/resolve'
 import { hasTarget } from '../graph/workspace'
 import {
   declaredFloor,
@@ -27,6 +29,8 @@ import {
   nodeCommand,
   PipelineTarget,
   PROBE_SCRIPT,
+  PROVISION_SCRIPT,
+  RAILWAY_CONFIG,
   SMOKE_SCRIPT,
   targetRank,
   taskCommand,
@@ -52,7 +56,8 @@ const AFTER_BUILD = createSet<string>([
 ])
 
 /** The targets that run after every other task of their chain. */
-const CHAIN_LAST = createSet<string>(['publish', PipelineTarget.Deploy])
+// why: the provision runs after the workspace's lint, which checks the file it applies
+const CHAIN_LAST = createSet<string>(['publish', PipelineTarget.Provision, PipelineTarget.Deploy])
 
 /** What a task is made of before its needs are known. */
 type TaskFields = Omit<PlanTask, 'needs' | 'env'> & Partial<Pick<PlanTask, 'env'>>
@@ -212,6 +217,28 @@ function deployTask(project: ProjectRecord, environment: Environment): PlanTask 
 }
 
 /**
+ * The provision before the deploys: the Railway configuration goes to the production environment
+ * in the chain of the project owning it, the workspace's root project.
+ *
+ * @param graph - The graph the projects belong to
+ * @param environment - Where the task runs
+ * @returns The task, or null when no project owns the configuration
+ */
+function provisionTask(graph: WorkspaceGraph, environment: Environment): PlanTask | null {
+  const owner = projectOfFile(graph.projects, RAILWAY_CONFIG)
+  if (owner === null) return null
+  return task({
+    id: `${owner.name}:${PipelineTarget.Provision}`,
+    project: owner.name,
+    target: PipelineTarget.Provision,
+    environment,
+    weight: Weight.Light,
+    reasons: [planReason(PipelineRule.PipelineTask, `applies ${RAILWAY_CONFIG} to the production environment before the deploys`)],
+    command: ['node', PROVISION_SCRIPT],
+  })
+}
+
+/**
  * A task of a project's target: an e2e task in the chain of the library it tests, any other in
  * its own project's chain; heavy for a library build, light otherwise.
  *
@@ -289,14 +316,21 @@ function addPrerequisites(graph: WorkspaceGraph, tasks: Map<string, PlanTask>, e
 /**
  * The Linux tasks of a selection: one per selected task, e2e tasks folded into their library's
  * chain, then every task they need first, then the probes and smokes after the library builds
- * and, on `main`, the deploys after the builds of the demos that declare a Railway service.
+ * and, on `main`, the deploys after the builds of the demos that declare a Railway service and
+ * the provision, whenever a deploy is planned or the Railway configuration changed.
  *
  * @param graph - The graph the projects belong to
  * @param selected - The selected task ids with their reasons
- * @param main - Whether publish and deploy tasks are kept
+ * @param main - Whether publish, provision and deploy tasks are kept
+ * @param railwayChanged - Whether the change reaches the Railway configuration
  * @returns The tasks, without needs
  */
-export function linuxTasks(graph: WorkspaceGraph, selected: ReadonlyMap<string, readonly PlanReason[]>, main: boolean): PlanTask[] {
+export function linuxTasks(
+  graph: WorkspaceGraph,
+  selected: ReadonlyMap<string, readonly PlanReason[]>,
+  main: boolean,
+  railwayChanged = false
+): PlanTask[] {
   const tasks = createMap<string, PlanTask>()
   for (const [id, reasons] of selected) {
     const { project: name, target } = splitTaskId(id)
@@ -313,6 +347,9 @@ export function linuxTasks(graph: WorkspaceGraph, selected: ReadonlyMap<string, 
     const deploy = main ? deployTask(project, Environments.Linux) : null
     if (deploy !== null) tasks.set(deploy.id, deploy)
   }
+  const deploys = [...tasks.values()].some((item) => item.target === PipelineTarget.Deploy)
+  const provision = main && (deploys || railwayChanged) ? provisionTask(graph, Environments.Linux) : null
+  if (provision !== null) tasks.set(provision.id, provision)
   return [...tasks.values()]
 }
 
@@ -349,10 +386,10 @@ export function windowsTasks(graph: WorkspaceGraph, linux: readonly PlanTask[]):
 
 /**
  * The tasks with their needs: a build after its chain's typecheck, what runs after a build
- * after it, a publish or a deploy after everything else of its chain and a publish after the
- * publishes of the packages it depends on, and a task after every task it needs first (what its
- * `dependsOn` names, another project's task included), whenever the task needed is in the same
- * environment.
+ * after it, a publish, a provision or a deploy after everything else of its chain, a publish after
+ * the publishes of the packages it depends on, a deploy after the provision, and a task after
+ * every task it needs first (what its `dependsOn` names, another project's task included),
+ * whenever the task needed is in the same environment.
  *
  * @param graph - The graph the projects belong to
  * @param tasks - The tasks of every environment
@@ -375,6 +412,11 @@ export function withNeeds(graph: WorkspaceGraph, tasks: readonly PlanTask[]): Pl
       const project = graph.projects.get(item.project) as ProjectRecord
       for (const upstream of upstreamPackages(graph, project)) {
         if (upstream.name !== project.name && has(item.environment, `${upstream.name}:publish`)) needs.add(`${upstream.name}:publish`)
+      }
+    }
+    if (item.target === PipelineTarget.Deploy) {
+      for (const other of tasks) {
+        if (other.environment === item.environment && other.target === PipelineTarget.Provision) needs.add(other.id)
       }
     }
     for (const id of prerequisiteIds(graph, item)) {

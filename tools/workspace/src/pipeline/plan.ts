@@ -1,6 +1,7 @@
 /**
  * The plan of a change: the owned selection of every pipeline target, the tasks the pipeline adds
- * (every task a planned task needs first, and the probes and smokes after the builds), the
+ * (every task a planned task needs first, the probes and smokes after the builds, and on `main`
+ * the deploys and the provision they wait on), the
  * registry drift of `main`, and the chains the two environments run, ranked for the scheduler.
  *
  * @module pipeline/plan
@@ -15,6 +16,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { selectAffected } from '../graph/affected/select'
 import { compareText } from '../graph/order'
 import { hasTarget } from '../graph/workspace'
+import { RAILWAY_CONFIG } from './commands'
 import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, windowsTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
 import { rankChains } from './order'
@@ -128,7 +130,8 @@ export function createPlan(options: PlanOptions): Plan {
   const selection = options.changes === null ? selectAll(options.graph, selectionTargets) : selectChange(options, selectionTargets)
   const drift = options.main ? [...(options.drift ?? [])].sort(compareText) : []
   selectDrift(options.graph, selection, targets, drift)
-  const linux = linuxTasks(options.graph, selection.selected, options.main)
+  const railwayChanged = (options.changes?.changes ?? []).some((change) => change.path === RAILWAY_CONFIG)
+  const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged)
   const tasks = withNeeds(options.graph, [...linux, ...windowsTasks(options.graph, linux)])
   const chains = rankChains(options.graph, buildChains(tasks))
   const environments = [Environments.Linux, Environments.Windows].filter((environment): environment is Environment =>
