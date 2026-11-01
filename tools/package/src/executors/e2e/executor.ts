@@ -159,6 +159,8 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string, ta
     ...(run.dom ? ['--import', pathToFileURL(resolveTestingEntry(workspaceRoot, 'dom')).href] : []),
     '--test',
     `--test-timeout=${run.timeoutMs}`,
+    // why: the nx suites each install a real consumer workspace, and three of those at once on a Windows runner starve one another past the creation cap, so they run one at a time there.
+    ...(format === 'nx' && process.platform === 'win32' ? ['--test-concurrency=1'] : []),
     ...specs,
   ]
 
