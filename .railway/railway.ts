@@ -1,6 +1,7 @@
 import { defineRailway, github, project, service } from 'railway/iac'
 
 export default defineRailway(() => {
+  // why: the pipeline's provision task applies this file to production before any deploy of a main run (tools/workspace/scripts/railway-provision.mjs); a destructive change is left to an apply by hand
   // why: the owned pipeline deploys each demo itself, from the commit it checked, once the demo's own tasks have passed (tools/workspace/scripts/railway-deploy.mjs); Wait for CI stays off so that deploy never waits on the check suite of the run requesting it
   const hyperfrontend = github('AndrewRedican/hyperfrontend', { checkSuites: false, rootDirectory: '/' })
   // why: a push trigger cannot be switched off in the file, so every service watches a path no commit touches and Railway never queues a build of its own
