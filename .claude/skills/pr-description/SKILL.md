@@ -29,6 +29,7 @@ Compare current branch against `main`, fill the PR template, generate a Title Ca
 | **Why from the conversation** | The session (and related ones) that produced the branch holds the decisions; commits hold only the what         |
 | **No commit dump**            | Never one bullet per commit; itemize only where the template has bullets, and then by concern                   |
 | **Decisions, not activity**   | "typedoc cannot take minimatch 11, so the gate moves to high" not "bumped glob, tried an override, reverted it" |
+| **Shipped names only**        | Name only what a reviewer finds in the code; describe internal tracking in plain words                          |
 
 ---
 
@@ -138,6 +139,7 @@ Write the completed template to `PR.md` in the repo root.
 
 - [ ] Conversation read; every decision in the description traces to it
 - [ ] Description opens with value and reads as cause → effect for a context-free reader
+- [ ] Title and description name only what ships
 - [ ] `git log main..HEAD --oneline` executed and full list reviewed
 - [ ] `git diff main --stat` reviewed
 - [ ] Diffs read selectively only where ambiguity warranted it

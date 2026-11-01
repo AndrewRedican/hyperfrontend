@@ -4,11 +4,11 @@
   "description": "Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's hf command line.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/builder": "0.6.0",
+    "@hyperfrontend/builder": "0.7.0",
     "@hyperfrontend/testing": "0.3.1"
   },
   "devDependencies": {
-    "@hyperfrontend/project-scope": "0.4.1",
+    "@hyperfrontend/project-scope": "0.4.2",
     "@types/node": "25.9.9",
     "prettier": "3.8.0",
     "typescript": "5.9.3"

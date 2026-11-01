@@ -237,10 +237,11 @@ async function plan(local: boolean): Promise<Plan> {
 }
 
 /**
- * Publishes the plan as the `pipeline plan` check run, completed at once, when asked for and possible.
+ * Publishes the plan as the `pipeline plan` check run when asked for and possible. The check run
+ * is created complete in one request, so a cancel or a lost answer never leaves it in progress.
  *
  * @param planned - The plan published
- * @returns Resolves when the check run is completed, or at once when it cannot be created
+ * @returns Resolves when the check run exists, or at once when it cannot be created
  */
 async function publishPlan(planned: Plan): Promise<void> {
   if (!values.checks) return
@@ -251,7 +252,7 @@ async function publishPlan(planned: Plan): Promise<void> {
     return
   }
   try {
-    await api.complete(await api.create(PLAN_CHECK_NAME, headSha), 'success', planCheckOutput(planned))
+    await api.publish(PLAN_CHECK_NAME, headSha, 'success', planCheckOutput(planned))
   } catch (error) {
     say(`::notice::the plan check run is off: ${error instanceof Error ? error.message : String(error)}`)
   }

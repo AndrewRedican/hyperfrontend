@@ -6,7 +6,10 @@
  * permission, disables the check runs after one notice; a request that got no answer or a server
  * error is retried when it is an update, and otherwise costs only that request, or that chain's
  * check run when it was the create. Nothing else depends on them. The ids are reported as they
- * are created and completed, so a run that is killed can still settle them.
+ * are created and completed, so a run that is killed can still settle them. A check run whose
+ * outcome is known the moment it exists, such as the plan, is created complete in one request, so
+ * no cancel or lost answer between a create and its completion can leave it in progress; that
+ * request is retried like an update, since a duplicate completed check run costs nothing.
  *
  * @module pipeline/checks
  */
@@ -76,6 +79,8 @@ export interface CheckApi {
   update(id: number, output: CheckOutput): Promise<void>
   /** Completes a check run. */
   complete(id: number, conclusion: string, output: CheckOutput): Promise<void>
+  /** Creates a check run already completed, in one request. */
+  publish(name: string, headSha: string, conclusion: string, output: CheckOutput): Promise<void>
 }
 
 /** One check run the run created. */
@@ -131,31 +136,40 @@ export function githubChecks(env: GitHubEnvironment, request: FetchLike, wait: (
   const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repository } = env
   if (token === undefined || repository === undefined) return null
   const base = `${env.GITHUB_API_URL ?? 'https://api.github.com'}/repos/${repository}/check-runs`
-  // why: a create sent twice can leave a second check run that nothing completes, so only the idempotent PATCH is retried
-  const send = async (url: string, method: string, body: unknown, attempt = 1): Promise<string> => {
+  // why: a create sent twice can leave a second check run in progress that nothing completes, so an open create is sent once; a completed create and the idempotent PATCH are retried
+  const send = async (url: string, method: string, body: unknown, retry: boolean, attempt = 1): Promise<string> => {
     try {
       const response = await request(url, { method, headers: githubHeaders(token), body: stringify(body) })
       if (response.ok) return response.text()
       if (response.status < 500) throw new CheckRefusal(method, url, response.status)
       throw createError(`${method} ${url} answered ${response.status}`)
     } catch (error) {
-      if (error instanceof CheckRefusal || attempt >= (method === 'PATCH' ? CHECK_ATTEMPTS : 1)) throw error
+      if (error instanceof CheckRefusal || attempt >= (retry ? CHECK_ATTEMPTS : 1)) throw error
     }
     await wait(attempt * 1000)
-    return send(url, method, body, attempt + 1)
+    return send(url, method, body, retry, attempt + 1)
   }
   return {
     create: async (name, headSha) =>
       (
         parse(
-          await send(base, 'POST', { name, head_sha: headSha, status: 'in_progress', started_at: createDate().toISOString() })
+          await send(base, 'POST', { name, head_sha: headSha, status: 'in_progress', started_at: createDate().toISOString() }, false)
         ) as Created
       ).id,
     update: async (id, output) => {
-      await send(`${base}/${id}`, 'PATCH', { status: 'in_progress', output })
+      await send(`${base}/${id}`, 'PATCH', { status: 'in_progress', output }, true)
     },
     complete: async (id, conclusion, output) => {
-      await send(`${base}/${id}`, 'PATCH', { status: 'completed', conclusion, completed_at: createDate().toISOString(), output })
+      await send(`${base}/${id}`, 'PATCH', { status: 'completed', conclusion, completed_at: createDate().toISOString(), output }, true)
+    },
+    publish: async (name, headSha, conclusion, output) => {
+      const now = createDate().toISOString()
+      await send(
+        base,
+        'POST',
+        { name, head_sha: headSha, status: 'completed', conclusion, started_at: now, completed_at: now, output },
+        true
+      )
     },
   }
 }
@@ -211,7 +225,7 @@ export function chainOutput(chain: Chain, results: readonly TaskResult[], title:
  * @returns The hooks; after a refusal they do nothing
  */
 export function chainChecks(
-  api: CheckApi,
+  api: Omit<CheckApi, 'publish'>,
   headSha: string,
   notice: (message: string) => void,
   onRecords: (records: CheckRecords) => void = () => undefined

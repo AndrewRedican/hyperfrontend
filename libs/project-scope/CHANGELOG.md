@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...88748aaa668a66fede2a04f4aa4b84a0fe6e4588) - 2026-10-31
+
+### Bug Fixes
+
+- declare DetectionSource in the tech entry that owns it
+
 ## [0.4.1](https://github.com/AndrewRedican/hyperfrontend/compare/f83ba11a155be922f200d00abb89c39d1e3982c7...54c7921f6dc19e82f4f149d95566e42fb4aca5f8) - 2026-10-28
 
 ### Bug Fixes
