@@ -1,5 +1,11 @@
-import { describe, expect, it, sleep } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createCache } from './cache'
+
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/date', () => ({
+  ...jest.requireActual<object>('@hyperfrontend/immutable-api-utils/built-in-copy/date'),
+  dateNow: () => Date.now(),
+}))
 
 describe('createCache', () => {
   it('stores and retrieves values', () => {
@@ -13,15 +19,26 @@ describe('createCache', () => {
     expect(cache.get('missing')).toBeUndefined()
   })
 
-  it('expires values after TTL', async () => {
-    const cache = createCache(10)
-    cache.set('key', 'value')
-    const beforeExpiry = cache.get('key')
+  describe('TTL expiration', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
 
-    await sleep(20)
-    const afterExpiry = cache.get('key')
+    afterEach(() => {
+      jest.useRealTimers()
+    })
 
-    expect({ beforeExpiry, afterExpiry }).toEqual({ beforeExpiry: 'value', afterExpiry: undefined })
+    it('expires values after TTL', () => {
+      const cache = createCache(10)
+      cache.set('key', 'value')
+      jest.advanceTimersByTime(10)
+      const atExpiry = cache.get('key')
+
+      jest.advanceTimersByTime(1)
+      const afterExpiry = cache.get('key')
+
+      expect({ atExpiry, afterExpiry }).toEqual({ atExpiry: 'value', afterExpiry: undefined })
+    })
   })
 
   it('deletes values', () => {
