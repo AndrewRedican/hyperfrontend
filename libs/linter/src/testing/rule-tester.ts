@@ -1,6 +1,7 @@
 /**
  * How a rule is specified: valid texts that must report nothing, invalid texts with the messages
- * and positions they must report and, when the rule fixes, the text they must become. Each case
+ * and positions they must report and, when the rule fixes, the text they must become; an invalid
+ * text that names no output must offer no fix. Each case
  * is one test with one assertion over the whole outcome.
  *
  * @module testing/rule-tester
@@ -51,7 +52,7 @@ export interface ExpectedError {
 export interface InvalidCase extends RuleCase {
   /** The messages, in position order. */
   readonly errors: readonly ExpectedError[]
-  /** The text after the rule's fixes when it fixes, null when it must offer no fix; unchecked when absent. */
+  /** The text after the rule's fixes when it fixes; null or absent when it must offer no fix. */
   readonly output?: string | null
 }
 
@@ -106,7 +107,7 @@ export function testRule(rule: RuleModule, cases: RuleCases): void {
       it(`reports ${invalid.name}`, () => {
         const errors = outcome(rule, invalid, false).errors
         deepStrictEqual(
-          { errors, output: invalid.output === undefined ? null : outcome(rule, invalid, true).output },
+          { errors, output: outcome(rule, invalid, true).output },
           { errors: expectedErrors(invalid.errors, errors), output: invalid.output ?? null }
         )
       })
