@@ -69,8 +69,8 @@ const PIPELINE_DIRECTORY = '.hf/pipeline'
 /** The runner image of each environment. */
 const RUNNERS: Readonly<Record<Environment, string>> = { linux: 'ubuntu-latest', windows: 'windows-latest' }
 
-/** How long the Linux environment waits for the Windows one before publishing. */
-const SIBLING_TIMEOUT_MS = 20 * 60 * 1000
+/** How long the Linux environment waits for the Windows one before publishing: the Windows job's own time limit in `ci-main.yml`. */
+const SIBLING_TIMEOUT_MS = 120 * 60 * 1000
 
 /** How long between two polls of the sibling job. */
 const SIBLING_INTERVAL_MS = 30 * 1000
