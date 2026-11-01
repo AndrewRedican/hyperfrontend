@@ -82,6 +82,10 @@ export default [
     },
   },
   {
+    files: ['.devcontainer/**/devcontainer.json'],
+    rules: { 'workspace/no-vscode-extensions': ['error', { allow: ['anthropic.claude-code', 'github.vscode-github-actions'] }] },
+  },
+  {
     // context: no demo carries a lint target; these three only stop an editor resolving this config from reporting a shipped demo against rules it cannot satisfy from a consumer's seat.
     files: ['apps/demos/**/*.ts', 'apps/demos/**/*.tsx'],
     rules: {
