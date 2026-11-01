@@ -64,3 +64,25 @@ it('resolves with what the worker printed', async () => {
 | `writeStdout(text)`, `writeStderr(text)` | Writes to the child's output streams                                                                  |
 
 [`kill`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-FakeChildProcess-prop-kill) is a mock function, so a test can assert on the signals sent. [`spawnSyncResult`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-spawnSyncResult) builds the complete object a mocked [`spawnSync`](https://nodejs.org/api/child_process.html#child_processspawnsynccommand-args-options) returns, from only the fields that differ from a clean exit with no output.
+
+### Ending a real child
+
+A spec that starts a real command and stops it with a signal reads the exit through [`sendSignal`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-sendSignal), which sends the interrupt or termination signal it is given (a [`StopSignal`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-StopSignal)) and resolves with the exit code and signal the child reports, and compares it with [`cleanSignalExit`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-cleanSignalExit): a zero exit code where signals are delivered, and the signal with no exit code on Windows, which has no signals to deliver and ends the child outright. One assertion then holds on every platform:
+
+```typescript
+import { spawn } from 'node:child_process'
+import { once } from 'node:events'
+import { expect, it } from '@hyperfrontend/testing'
+import { cleanSignalExit, sendSignal } from '@hyperfrontend/testing/process'
+
+it('stops on SIGINT', async () => {
+  const child = spawn(process.execPath, ['server.js'], {
+    stdio: ['ignore', 'pipe', 'inherit'],
+  })
+  await once(child.stdout, 'data')
+
+  expect(await sendSignal(child, 'SIGINT')).toEqual(cleanSignalExit('SIGINT'))
+})
+```
+
+A child that has already ended resolves with how it did, and nothing is sent. Both take a [`createFakeChildProcess`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-createFakeChildProcess) stand-in as readily as a real child.
