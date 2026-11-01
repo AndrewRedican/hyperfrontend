@@ -12,6 +12,7 @@ import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
 import {
   FEATURE_ARGS,
+  NX_INSTALL_COMMAND_TIMEOUT,
   PLUGIN_NAME,
   SCENARIO_TIMEOUT,
   SETUP_TIMEOUT,
@@ -166,10 +167,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
         manifest['dependencies'] = { prettier: prettierRange }
         writeManifest(scenarioDir, manifest)
         seededKeys = Object.keys(readManifest(scenarioDir))
-        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        // why: adding the declaration makes the generator install it, which takes minutes on the Windows runner.
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`], NX_INSTALL_COMMAND_TIMEOUT)
         afterFirstRun = readManifestText(scenarioDir)
         afterManifest = readManifest(scenarioDir)
-        secondRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        secondRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`], NX_INSTALL_COMMAND_TIMEOUT)
         afterSecondRun = readManifestText(scenarioDir)
       },
       { timeout: SCENARIO_TIMEOUT }
@@ -224,7 +226,7 @@ describe('@hyperfrontend/features Nx plugin', () => {
         delete manifest['dependencies']
         delete manifest['devDependencies']
         writeManifest(scenarioDir, manifest)
-        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`], NX_INSTALL_COMMAND_TIMEOUT)
         afterManifest = readManifest(scenarioDir)
       },
       { timeout: SCENARIO_TIMEOUT }
