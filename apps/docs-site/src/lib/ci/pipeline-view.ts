@@ -50,7 +50,7 @@ export interface OutcomeCounts {
  * The timeline of one environment of a record.
  *
  * @param record - The run record
- * @param environment - Linux or Windows
+ * @param environment - Linux, Windows or macOS
  * @returns The timeline; chains without a result still appear, their tasks pending
  */
 export function timelineOf(record: RunRecord, environment: Environment): Timeline {
