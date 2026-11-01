@@ -25,6 +25,7 @@ testRule(NO_TRUE, {
       path: '/w/a.json',
       text: '[1,\n true]',
       errors: [{ message: 'No true', line: 2, column: 2, endLine: 2, endColumn: 6 }],
+      output: '[1,\n false]',
     },
     {
       name: 'a true and its fix',
