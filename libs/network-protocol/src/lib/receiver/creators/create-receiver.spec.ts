@@ -1,4 +1,4 @@
-import { describe, expect, it, jest, sleep } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { packetOpener, unencryptedPacket, wirePacket } from '../../packet/creators/mocks'
 import { createReceiver } from './create-receiver'
 import { createMockLogger, testLabels } from './test-fixtures'
@@ -18,7 +18,7 @@ describe('createReceiver', () => {
     const receivePacket = jest.fn()
     const receiver = createReceiver(testLabels.receiver1, receivePacket, createMockLogger(), packetOpener)
     receiver.receive(wirePacket)
-    await sleep(20)
+    await flushPromises()
     expect(receivePacket).toHaveBeenCalledWith(unencryptedPacket)
   })
 
@@ -35,7 +35,7 @@ describe('createReceiver', () => {
     receiver.stop()
     receiver.receive(wirePacket)
     receiver.resume()
-    await sleep(20)
+    await flushPromises()
     expect(receivePacket).toHaveBeenCalledTimes(1)
   })
 
@@ -46,7 +46,7 @@ describe('createReceiver', () => {
     }
     const receiver = createReceiver(testLabels.receiver1, () => void 0, createMockLogger(), opener, onDrop)
     receiver.receive(wirePacket)
-    await sleep(20)
+    await flushPromises()
     expect(onDrop).toHaveBeenCalledWith({
       direction: 'inbound',
       stage: 'open',
@@ -63,7 +63,7 @@ describe('createReceiver', () => {
     }
     const receiver = createReceiver(testLabels.receiver1, receivePacket, createMockLogger(), opener)
     receiver.receive(wirePacket)
-    await sleep(20)
+    await flushPromises()
     expect(receivePacket).not.toHaveBeenCalled()
   })
 })

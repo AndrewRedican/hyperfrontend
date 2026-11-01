@@ -1,4 +1,4 @@
-import { describe, expect, it, jest, sleep } from '@hyperfrontend/testing'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { packetSealer, unencryptedPacket, wirePacket } from '../../packet/creators/mocks'
 import { createSender } from './create-sender'
 import { createMockLogger, testLabels, testUUIDs } from './test-fixtures'
@@ -13,7 +13,7 @@ describe('createSender', () => {
     const sendPacket = jest.fn()
     const sender = createSender(testLabels.sender1, sendPacket, createMockLogger(), packetSealer)
     sender.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
-    await sleep(20)
+    await flushPromises()
     expect(sendPacket).toHaveBeenCalledWith(wirePacket)
   })
 
@@ -37,7 +37,7 @@ describe('createSender', () => {
     sender.stop()
     sender.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
     sender.resume()
-    await sleep(20)
+    await flushPromises()
     expect(sendPacket).toHaveBeenCalledTimes(1)
   })
 
@@ -48,7 +48,7 @@ describe('createSender', () => {
     }
     const sender = createSender(testLabels.sender1, () => void 0, createMockLogger(), sealer, onDrop)
     sender.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
-    await sleep(20)
+    await flushPromises()
     expect(onDrop).toHaveBeenCalledWith(
       expect.objectContaining({ direction: 'outbound', stage: 'seal', reason: 'Cannot seal packet', cause: expect.any(Error) })
     )
@@ -61,7 +61,7 @@ describe('createSender', () => {
     }
     const sender = createSender(testLabels.sender1, sendPacket, createMockLogger(), sealer)
     sender.send(unencryptedPacket.origin, unencryptedPacket.target, unencryptedPacket.data)
-    await sleep(20)
+    await flushPromises()
     expect(sendPacket).not.toHaveBeenCalled()
   })
 })

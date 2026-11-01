@@ -1,7 +1,6 @@
 import type { WirePacket } from '../../packet/model'
 import { logger } from '@hyperfrontend/logging'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { sleep } from '@hyperfrontend/time-utils'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { packetOpener, unencryptedPacket, wirePacket } from '../../packet/creators/mocks'
 import { createOpenQueue } from './create-open-queue'
 
@@ -16,7 +15,7 @@ describe('createOpenQueue', () => {
     const onSuccess = jest.fn()
     const queue = createOpenQueue(label, packetOpener, logger, onSuccess, jest.fn())
     queue.addMessage(wirePacket)
-    await sleep(50)
+    await flushPromises()
     expect(onSuccess).toHaveBeenCalledWith(unencryptedPacket)
   })
 
@@ -24,7 +23,7 @@ describe('createOpenQueue', () => {
     const onFail = jest.fn()
     const queue = createOpenQueue(label, packetOpener, logger, jest.fn(), onFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(invalid, 'Invalid frame ignored')
   })
 
@@ -33,7 +32,7 @@ describe('createOpenQueue', () => {
     const onFail = jest.fn()
     const queue = createOpenQueue(label, jest.fn().mockRejectedValue(failure), logger, jest.fn(), onFail)
     queue.addMessage(wirePacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(wirePacket, 'replayed', failure)
   })
 
@@ -41,7 +40,7 @@ describe('createOpenQueue', () => {
     const onFail = jest.fn()
     const queue = createOpenQueue(label, jest.fn().mockResolvedValue({ invalid: 'result' }), logger, jest.fn(), onFail)
     queue.addMessage(wirePacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(wirePacket, 'Opened packet is not valid')
   })
 
@@ -57,7 +56,7 @@ describe('createOpenQueue', () => {
       onFail
     )
     queue.addMessage(wirePacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(wirePacket, expect.stringContaining('An unexpected error occurred'), expect.any(Error))
   })
 
@@ -66,7 +65,7 @@ describe('createOpenQueue', () => {
     const queue = createOpenQueue(label, packetOpener, logger, onSuccess, throwingOnFail)
     queue.addMessage(invalid)
     queue.addMessage(wirePacket)
-    await sleep(50)
+    await flushPromises()
     expect(onSuccess).toHaveBeenCalledWith(unencryptedPacket)
   })
 
@@ -74,7 +73,7 @@ describe('createOpenQueue', () => {
     const onFail = jest.fn(throwingOnFail)
     const queue = createOpenQueue(label, packetOpener, logger, jest.fn(), onFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledTimes(1)
   })
 
@@ -82,7 +81,7 @@ describe('createOpenQueue', () => {
     const error = jest.fn()
     const queue = createOpenQueue(label, packetOpener, { ...logger, error }, jest.fn(), throwingOnFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(error).toHaveBeenCalledWith(`${label}: onFail threw. Error: consumer bug`)
   })
 
