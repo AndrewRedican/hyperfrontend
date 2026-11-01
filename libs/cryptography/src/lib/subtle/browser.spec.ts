@@ -6,7 +6,7 @@ import { subtle } from './browser'
 
 describe('subtle (browser)', () => {
   it('delegates method calls to the live globalThis.crypto.subtle', async () => {
-    const digest = await subtle.digest('SHA-256', createUint8Array([1, 2, 3]) as BufferSource)
+    const digest = await subtle.digest('SHA-256', createUint8Array([1, 2, 3]))
     expect(digest.byteLength).toBe(32)
   })
 
