@@ -1,7 +1,8 @@
 /**
  * The runtime checks: a native path where Node expects a module specifier, the pathname of a
  * module URL read as a path, a spawn of a `.cmd` shim, a `node_modules/.bin` launcher or the
- * first word of a split command line without a shell, and a hardcoded temporary path.
+ * first word of a split command line without a shell, a hardcoded temporary path, and the
+ * permission bits of a file mode read without regard to the platform.
  *
  * @module rules/workspace/shared/cross-platform/runtime
  */
@@ -29,6 +30,8 @@ const MESSAGES = {
   splitCommand:
     '`{{ command }}` is the first word of a split command line, and a .cmd shim such as `npm` cannot be spawned without a shell on Windows (ENOENT or EINVAL). Run the whole line through a shell: `execFileSync(line, { shell: true })`.',
   hardcodedTmp: "'{{ path }}' does not exist on Windows. Use `tmpdir()` or `devNull` from node:os.",
+  fileMode:
+    '`.mode` of a stat result carries no permission bits on Windows, where every file reports 0o666. Branch on `process.platform`, asserting the bits only where the platform has them.',
 } as const
 
 /** The suggestion of a shell on Windows, and of an `os` replacement. */
@@ -51,6 +54,12 @@ const JOINERS = createSet(['join', 'resolve'])
 
 /** The names that hold a package manager chosen at runtime. */
 const MANAGER_NAMES = createSet(['packageManager', 'pm'])
+
+/** The `node:fs` functions whose result carries a file mode. */
+const STATTERS = createSet(['statSync', 'lstatSync', 'fstatSync'])
+
+/** The nodes a file-mode read is scoped by when looking for a platform branch. */
+const MODE_SCOPES = createSet(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'Program'])
 
 // how: the POSIX paths are spelled from their segments, so this module does not write them out itself.
 /** The POSIX temporary directory. */
@@ -411,4 +420,41 @@ function isExempt(node: Node): boolean {
       (method.member.object as Node).kind === 'Identifier' &&
       (method.member.object as Node).name === 'require')
   )
+}
+
+/**
+ * Whether an expression calls one of the stat functions, by name or as a member.
+ *
+ * @param node - The expression
+ * @returns Whether it does
+ */
+function isStatCall(node: Node): boolean {
+  if (node.kind !== 'CallExpression') return false
+  const callee = node.callee as Node
+  const name =
+    callee.kind === 'Identifier'
+      ? callee.name
+      : callee.kind === 'MemberExpression' && callee.computed !== true
+        ? (callee.property as Node).name
+        : null
+  return typeof name === 'string' && STATTERS.has(name)
+}
+
+/**
+ * Reports `.mode` read off a stat result inside a function, or at the top level, that never
+ * mentions `process.platform`: the permission bits it carries are absent on Windows.
+ *
+ * @param scan - The file being scanned
+ * @param node - The member expression
+ */
+export function checkFileMode(scan: Scan, node: Node): void {
+  if (!scan.node || node.computed === true || (node.property as Node).name !== 'mode') return
+  const object = unwrap(node.object as Node)
+  const variable = object.kind === 'Identifier' ? scan.tracer.variableOf(object) : null
+  const value = variable === null ? object : scan.tracer.valueOf(variable)
+  if (value === null || !isStatCall(unwrap(value))) return
+  let scope: Node = node
+  while (!MODE_SCOPES.has(scope.kind)) scope = scope.parent as Node
+  if (scan.text.slice(scope.start, scope.end).includes('process.platform')) return
+  scan.report(node, MESSAGES.fileMode)
 }

@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/linter && npm pack && cd - && npm install ../../../dist/libs/linter/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/linter": "file:../../../tmp/e2e-packs/hyperfrontend-linter-0.1.1.tgz"
+    "@hyperfrontend/linter": "file:../../../tmp/e2e-packs/hyperfrontend-linter-0.2.0.tgz"
   },
   "devDependencies": {
     "@types/node": "25.3.3",

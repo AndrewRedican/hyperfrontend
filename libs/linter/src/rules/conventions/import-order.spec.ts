@@ -87,6 +87,7 @@ testRule(rule, {
           column: 1,
         },
       ],
+      output: "import { a } from 'a'\nimport { b } from './b'\n",
     },
   ],
 })

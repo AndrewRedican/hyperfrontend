@@ -109,7 +109,7 @@ export function liveRun(checkRuns: readonly GitHubCheckRun[]): LiveRun {
   const others: GitHubCheckRun[] = []
   for (const run of checkRuns) {
     if (run === planRun) continue
-    const match = /^(.+) \((linux|windows)\)$/.exec(run.name)
+    const match = /^(.+) \((linux|windows|macos)\)$/.exec(run.name)
     if (match === null) {
       others.push(run)
       continue
@@ -153,7 +153,7 @@ export function liveRun(checkRuns: readonly GitHubCheckRun[]): LiveRun {
  * The job of an environment among a run's jobs.
  *
  * @param jobs - The run's jobs
- * @param environment - Linux or Windows
+ * @param environment - Linux, Windows or macOS
  * @returns The job, or null
  */
 export function environmentJob(jobs: readonly GitHubJob[], environment: Environment): GitHubJob | null {

@@ -1,7 +1,6 @@
 import type { UnencryptedPacket } from '../../packet/model'
 import { logger } from '@hyperfrontend/logging'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { sleep } from '@hyperfrontend/time-utils'
+import { describe, expect, flushPromises, it, jest } from '@hyperfrontend/testing'
 import { packetSealer, unencryptedPacket, wirePacket } from '../../packet/creators/mocks'
 import { createSealQueue } from './create-seal-queue'
 
@@ -16,7 +15,7 @@ describe('createSealQueue', () => {
     const onSuccess = jest.fn()
     const queue = createSealQueue(label, packetSealer, logger, onSuccess, jest.fn())
     queue.addMessage(unencryptedPacket)
-    await sleep(50)
+    await flushPromises()
     expect(onSuccess).toHaveBeenCalledWith(wirePacket)
   })
 
@@ -24,7 +23,7 @@ describe('createSealQueue', () => {
     const onFail = jest.fn()
     const queue = createSealQueue(label, packetSealer, logger, jest.fn(), onFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(invalid, 'Invalid packet ignored')
   })
 
@@ -33,7 +32,7 @@ describe('createSealQueue', () => {
     const onFail = jest.fn()
     const queue = createSealQueue(label, jest.fn().mockRejectedValue(failure), logger, jest.fn(), onFail)
     queue.addMessage(unencryptedPacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(unencryptedPacket, 'Cannot seal past the counter limit', failure)
   })
 
@@ -41,7 +40,7 @@ describe('createSealQueue', () => {
     const onFail = jest.fn()
     const queue = createSealQueue(label, jest.fn().mockResolvedValue('bytes'), logger, jest.fn(), onFail)
     queue.addMessage(unencryptedPacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(unencryptedPacket, 'Sealed packet is not valid')
   })
 
@@ -57,7 +56,7 @@ describe('createSealQueue', () => {
       onFail
     )
     queue.addMessage(unencryptedPacket)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledWith(unencryptedPacket, expect.stringContaining('An unexpected error occurred'), expect.any(Error))
   })
 
@@ -66,7 +65,7 @@ describe('createSealQueue', () => {
     const queue = createSealQueue(label, packetSealer, logger, onSuccess, throwingOnFail)
     queue.addMessage(invalid)
     queue.addMessage(unencryptedPacket)
-    await sleep(50)
+    await flushPromises()
     expect(onSuccess).toHaveBeenCalledWith(wirePacket)
   })
 
@@ -74,7 +73,7 @@ describe('createSealQueue', () => {
     const onFail = jest.fn(throwingOnFail)
     const queue = createSealQueue(label, packetSealer, logger, jest.fn(), onFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(onFail).toHaveBeenCalledTimes(1)
   })
 
@@ -82,7 +81,7 @@ describe('createSealQueue', () => {
     const error = jest.fn()
     const queue = createSealQueue(label, packetSealer, { ...logger, error }, jest.fn(), throwingOnFail)
     queue.addMessage(invalid)
-    await sleep(50)
+    await flushPromises()
     expect(error).toHaveBeenCalledWith(`${label}: onFail threw. Error: consumer bug`)
   })
 

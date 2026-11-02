@@ -13,7 +13,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 1. The `plan` job builds the graph state cold, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan and the graph are uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, published as the `pipeline plan` check run on the head commit, and set the `environments` matrix.
 2. `version-check` checks, without changing anything, the version of every library owning a changed file (every library when a global configuration file changes), and gates the environments; the pre-push hook is what bumps versions.
-3. One `linux` job and, when any library or tool is selected, one `windows` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task of a project runs alone through `tools/workspace/bin/hf.ts run <project>:<target>`, in its own process group so a cancel ends everything it started (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows chains carry typecheck, lint and test of the libraries and tools, plus the linter build and smoke, and compare the graph-state digest with Linux.
+3. One `linux` job and, when any library or tool is selected, one `windows` and one `macos` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task of a project runs alone through `tools/workspace/bin/hf.ts run <project>:<target>`, in its own process group so a cancel ends everything it started (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows and macOS chains each carry typecheck, lint, test, build and e2e of the libraries and tools, plus the smokes, and compare the graph-state digest with Linux.
 4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
 5. `status` aggregates `binary-budget`, `plan`, `version-check` and the environments, and passes when the plan finds nothing to run.
 
@@ -21,7 +21,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - Cancels in-progress runs when new commits are pushed
 - Read-only permissions by default; the environments add `checks: write` for the chain check runs
-- The `run` step gets `GITHUB_TOKEN`, which the chain check runs and, on main, the wait for the Windows job read; GitHub sets no token in the environment by itself
+- The `run` step gets `GITHUB_TOKEN`, which the chain check runs and, on main, the wait for the Windows and macOS jobs read; GitHub sets no token in the environment by itself
 - An `always()` step runs `pipeline finalize` after the run: a job killed by its time limit or a cancel still leaves `results-<os>.json` (rewritten after every task) and no check run in progress
 - Uploads build artifacts and coverage for reuse
 
@@ -30,7 +30,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - `plan`: Graph state, format check, the plan and the matrix
 - `binary-budget`: The binary budget of the pull request, whether or not any task runs
 - `version-check`: Validates version bumps were applied locally
-- `linux`, `windows`: Run the plan
+- `linux`, `windows`, `macos`: Run the plan
 - `status`: Aggregates results and provides final status
 
 ### CI - Main Branch ([ci-main.yml](./ci-main.yml))
@@ -40,8 +40,8 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 **How it works**:
 
-1. `plan` selects from `github.event.before` to the pushed head (a force-push, a first push or a dispatch without one plans everything), adds a `publish` task after every selected build of a publishable library, a `deploy` task after every selected build of a demo whose `metadata.deploy` names a Railway service, and adds a whole chain for any publishable library whose current version npm positively reports absent (registry drift), so a publish that failed on an earlier push is retried.
-2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for the `windows` job to conclude through the jobs API; a Windows failure or a 20-minute timeout skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each `hf run <lib>:publish`, whose executor skips a version already on npm and asks npm for provenance. A deploy waits only for the other tasks of its own demo: `tools/workspace/scripts/railway-deploy.mjs` sends the pushed commit to the demo's Railway service with the `RAILWAY_TOKEN` secret (a project token of the production environment) and waits for the deployment to end, so the demo is live minutes after its own build passes, whatever the rest of the run is doing. Railway's own push trigger is quiet (`.railway/railway.ts` watches a path no commit touches), so nothing deploys twice.
+1. `plan` selects from `github.event.before` to the pushed head (a force-push, a first push or a dispatch without one plans everything), adds a `publish` task after every selected build of a publishable library, a `deploy` task after every selected build of a demo whose `metadata.deploy` names a Railway service, a `provision` task on the workspace's chain whenever a deploy is planned or the push changed `.railway/railway.ts`, and adds a whole chain for any publishable library whose current version npm positively reports absent (registry drift), so a publish that failed on an earlier push is retried.
+2. The environments run as on a pull request. Before the first publish, the Linux scheduler waits for the `windows` and `macos` jobs to conclude through the jobs API; a failure of either, or no conclusion within its own 120-minute limit, skips every publish and fails the job. Publishes run in dependency order (the publish of a package a library bundles or pins as a peer first), each `hf run <lib>:publish`, whose executor skips a version already on npm and asks npm for provenance. The provision runs after the workspace's lint, which checks every service's `@hyperfrontend/features` pin against its demo's lock: `tools/workspace/scripts/railway-provision.mjs` plans `.railway/railway.ts` against the production environment and, when the plan shows changes, applies that pinned plan; a destructive plan (a service or volume the file no longer declares) fails it, so applying one stays a decision made by hand. A deploy waits for the provision and for the other tasks of its own demo: `tools/workspace/scripts/railway-deploy.mjs` sends the pushed commit to the demo's Railway service with the `RAILWAY_TOKEN` secret (a project token of the production environment) and waits for the deployment to end, so the demo is live minutes after its own build passes, whatever the rest of the run is doing. Railway's own push trigger is quiet (`.railway/railway.ts` watches a path no commit touches), so nothing deploys twice.
 3. Codecov uploads, the `dist` artifact and the results come from the Linux environment.
 4. `records` writes the run's plan and results, the run index and the graph's explorer document to the `ci-records` branch whenever the plan had work, whatever the environments concluded; the docs-site's dependency and pipeline explorers read that branch. The branch is a data store, never merged: each record replaces it with one parentless commit, it keeps the records of the 50 runs the index lists, and each task keeps its first 5 reasons (the `pipeline-plan` artifact has them all). It is created once by hand with a `vercel.json` that turns Vercel deployments off for it; the job fails if it is missing.
 5. `push-tags`, `github-release` and `dispatch-native-builds` follow a green environment matrix as before.
@@ -55,7 +55,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 **Jobs**:
 
 - `plan`: Graph state, format check, the plan with publishes and registry drift
-- `linux`, `windows`: Run the plan; the Linux one publishes
+- `linux`, `windows`, `macos`: Run the plan; the Linux one publishes
 - `records`: Pushes the run's record and the graph to `ci-records` (`contents: write`)
 - `status`: Aggregates results and provides final status
 - `push-tags`: Creates and pushes version tags

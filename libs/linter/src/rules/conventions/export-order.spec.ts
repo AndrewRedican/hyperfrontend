@@ -85,6 +85,7 @@ testRule(rule, {
           column: 1,
         },
       ],
+      output: "export { a } from 'a'\nexport { b } from './b'\n",
     },
   ],
 })

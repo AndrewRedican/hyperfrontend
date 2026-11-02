@@ -11,8 +11,8 @@ under `customizations.vscode`:
 {
   "customizations": {
     "vscode": {
-      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"],
-      "settings": { "editor.formatOnSave": true },
+      "extensions": ["anthropic.claude-code"],
+      "settings": { "editor.tabSize": 2 },
     },
   },
 }
@@ -41,15 +41,13 @@ The walk never descends into `node_modules`, `.git`, `dist`, `coverage`, `tmp`, 
 `customizations.vscode.settings` applies when the folder is opened in the container. Someone opening
 the repository outside the devcontainer does not receive them. Both keys this workspace moved across
 are explorer conveniences, so nothing builds, tests or lints differently, and `CONTRIBUTING.md` leads
-with the Codespaces path. If that changes, `allowedDirectories` restores a root file without touching
-the rule.
+with the Codespaces path.
 
 ## Options
 
-| Option               | Type       | Default                             | Description                                                                                           |
-| -------------------- | ---------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `allowedDirectories` | `string[]` | `[]`                                | Workspace-relative directories permitted to hold a `.vscode` folder. Use `"."` for the workspace root |
-| `configFile`         | `string`   | `".devcontainer/devcontainer.json"` | The file that owns VS Code configuration instead, named in the message                                |
+| Option       | Type     | Default                             | Description                                                            |
+| ------------ | -------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| `configFile` | `string` | `".devcontainer/devcontainer.json"` | The file that owns VS Code configuration instead, named in the message |
 
 ## Examples
 
@@ -82,6 +80,8 @@ Enabled from the root `lint.config.ts`:
 ```
 
 ## Related Rules
+
+- [no-vscode-extensions](./no-vscode-extensions.md): limits the extensions that file installs
 
 - [project-lifecycle-policy](./project-lifecycle-policy.md): the lifecycle-conditional half of the
   same anti-sprawl policy

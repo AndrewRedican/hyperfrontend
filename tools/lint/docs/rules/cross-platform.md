@@ -248,6 +248,18 @@ const scratch = tmpdir()
 spawnSync(command, args, { stdio: ['ignore', devNull, 'inherit'] })
 ```
 
+### `fileMode`
+
+`.mode` of a `statSync`, `lstatSync` or `fstatSync` result read inside a function, or at the top level, that never mentions `process.platform`. Windows keeps no permission bits: every file reports `0o666`, so a test for an execute bit is false there and an equality with `0o755` never holds.
+
+```typescript
+// ❌
+expect(statSync(bin).mode & 0o111).not.toBe(0)
+
+// ✅
+expect((statSync(bin).mode & 0o111) !== 0).toBe(process.platform !== 'win32')
+```
+
 ## Fixes and imports
 
 Every fix references `node:` exports the way the file already does: a named import is reused (aliases included), a default or namespace import becomes `path.sep` or `path.posix.sep`, and a missing name is appended to an existing named import or added as a new import where import-order expects it. When a needed name is already taken by something else in scope, the rule reports without a fix. Several fixes in one file each add the same import, so ESLint applies them over successive passes.

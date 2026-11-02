@@ -25,7 +25,7 @@ import { keyStretchingConfig } from '../key-stretching-config'
  */
 export function createStretchPassword(
   subtle: SubtleCrypto,
-  utf8StringToUint8Array: (text: string) => Uint8Array
+  utf8StringToUint8Array: (text: string) => Uint8Array<ArrayBuffer>
 ): (password: string, salt: Uint8Array, options?: StretchPasswordOptions) => Promise<Uint8Array> {
   return async function stretchPassword(password, salt, options = {}) {
     if (getType(password) !== 'string' || password.length === 0) {
@@ -41,13 +41,9 @@ export function createStretchPassword(
     if (!isInteger(length) || length < 8 || length % 8 !== 0) {
       throw createError('Password stretching length must be a positive multiple of 8 bits')
     }
-    const material = await subtle.importKey(
-      'raw',
-      utf8StringToUint8Array(password) as BufferSource,
-      { name: keyStretchingConfig.name },
-      false,
-      ['deriveBits']
-    )
+    const material = await subtle.importKey('raw', utf8StringToUint8Array(password), { name: keyStretchingConfig.name }, false, [
+      'deriveBits',
+    ])
     const bits = await subtle.deriveBits(
       { name: keyStretchingConfig.name, salt: salt as BufferSource, iterations, hash: keyStretchingConfig.hash },
       material,

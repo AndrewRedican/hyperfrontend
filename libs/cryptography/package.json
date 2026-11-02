@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/cryptography",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
@@ -37,9 +37,9 @@
   "dependencies": {
     "@hyperfrontend/data-utils": "1.0.1",
     "@hyperfrontend/random-generator-utils": "0.2.1",
-    "@hyperfrontend/string-utils": "1.0.1",
+    "@hyperfrontend/string-utils": "1.0.2",
     "@hyperfrontend/time-utils": "1.0.1",
-    "@hyperfrontend/immutable-api-utils": "1.0.2"
+    "@hyperfrontend/immutable-api-utils": "1.0.3"
   },
   "funding": {
     "type": "github",

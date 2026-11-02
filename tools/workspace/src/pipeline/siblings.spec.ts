@@ -97,13 +97,9 @@ describe('waitForJob', () => {
 describe('siblingGate', () => {
   const limits = { timeoutMs: 100, intervalMs: 1, sleep: async () => undefined }
 
-  it('opens at once when there is no job to wait for', async () => {
-    expect(await siblingGate({ ...limits, name: undefined, fetchJobs: null })()).toBeNull()
-  })
-
   it('closes without a lister, naming the job it could not ask about', async () => {
     expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: null })()).toBe(
-      'windows-environment: no GitHub token to ask about environment (windows)'
+      'sibling-environment: no GitHub token to ask about environment (windows)'
     )
   })
 
@@ -116,7 +112,7 @@ describe('siblingGate', () => {
   it('closes when the job did not succeed', async () => {
     const lister = polling([[{ ...RUNNING, status: 'completed', conclusion: 'failure' }]])
     expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0 })()).toBe(
-      'windows-environment: environment (windows) concluded failure'
+      'sibling-environment: environment (windows) concluded failure'
     )
   })
 
@@ -134,7 +130,7 @@ describe('siblingGate', () => {
     let clock = 0
     const gate = siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => (clock += 60) })
     expect({ closed: await gate(), polls: lister.count() }).toEqual({
-      closed: "windows-environment: asking about environment (windows) failed: listing the run's jobs answered 503",
+      closed: "sibling-environment: asking about environment (windows) failed: listing the run's jobs answered 503",
       polls: 2,
     })
   })
@@ -142,7 +138,7 @@ describe('siblingGate', () => {
   it('names a failure that is not an error object', async () => {
     const lister = polling(['offline'])
     expect(await siblingGate({ ...limits, name: 'environment (windows)', fetchJobs: lister.fetchJobs, now: () => 0, timeoutMs: 0 })()).toBe(
-      'windows-environment: asking about environment (windows) failed: offline'
+      'sibling-environment: asking about environment (windows) failed: offline'
     )
   })
 })

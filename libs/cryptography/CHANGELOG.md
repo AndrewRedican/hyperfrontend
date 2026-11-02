@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01
+
+### Bug Fixes
+
+- return an ArrayBuffer-backed array from getRandomValues
+
 ## [1.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...793105a4c3e18eaa043e6b7307f95ba143b9fdcf) - 2026-10-11
 
 ### Bug Fixes

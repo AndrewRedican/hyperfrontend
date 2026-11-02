@@ -101,7 +101,7 @@ export interface ExplorerDocument {
 }
 
 /** Where a task runs. */
-export type Environment = 'linux' | 'windows'
+export type Environment = 'linux' | 'windows' | 'macos'
 
 /** How much of a runner a task occupies. */
 export type Weight = 'light' | 'heavy'

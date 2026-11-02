@@ -12,6 +12,7 @@ import { rollup } from 'rollup'
 import { createSiblingExternalizePlugin } from '../../declarations/sibling-resolver'
 import { createExternalizeBundledDepsPlugin } from '../externalize-plugin'
 import { isNodeBuiltin } from '../is-node-builtin'
+import { isPlatformRestrictedDep } from '../platform-restricted'
 
 /**
  * Pre-pass kinds. `js` and `dts` cover npm bundled deps with pre-built JS and
@@ -212,7 +213,11 @@ const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   return {
     input: job.inputPath,
     // why: when the externalize plugin is active, it owns rewriting of bundled-dep specifiers to relative paths under depsRoot. The `external` callback must not short-circuit those — rollup consults `external` before plugin resolveId can run, so any matchesAnyDep hit there leaks bare specifiers into the chunk.
-    external: (id: string): boolean => isNodeBuiltin(id) || (!hasExternalize && matchesAnyDep(id, job.otherDeps)) || isExternalJsDep(id),
+    external: (id: string, importer: string | undefined): boolean =>
+      isNodeBuiltin(id) ||
+      (!hasExternalize && matchesAnyDep(id, job.otherDeps)) ||
+      isExternalJsDep(id) ||
+      isPlatformRestrictedDep(id, importer),
     onwarn: onWarn,
     plugins,
   }
@@ -271,11 +276,12 @@ const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   )
   return {
     input: job.inputPath,
-    external: (id: string): boolean =>
+    external: (id: string, importer: string | undefined): boolean =>
       isNodeBuiltin(id) ||
       (!hasExternalize && matchesAnyDep(id, job.otherDeps)) ||
       (!hasExternalize && matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers)) ||
-      isExternalJsDep(id),
+      isExternalJsDep(id) ||
+      isPlatformRestrictedDep(id, importer),
     onwarn: onWarn,
     plugins,
   }

@@ -20,9 +20,11 @@
         "{workspaceRoot}/apps/**/project.json",
         "{workspaceRoot}/apps/**/package.json",
         "{workspaceRoot}/apps/package-e2e/shared/**/*",
-        "{workspaceRoot}/.devcontainer/devcontainer.json"
+        "{workspaceRoot}/.devcontainer/devcontainer.json",
+        "{workspaceRoot}/.railway/**/*",
+        "{workspaceRoot}/apps/demos/**/package-lock.json"
       ],
-      "command": "node tools/lint/bin/lint.ts --max-warnings 0 --no-error-on-unmatched-pattern '.github/workflows' 'package.json' 'README.md' 'ARCHITECTURE.md' 'LIBRARY_COMPATIBILITY.md' 'tsconfig.base.json' 'apps/*/project.json' 'apps/*/*/project.json' 'apps/*/*/*/project.json' 'apps/*/package.json' 'apps/*/*/package.json' 'apps/*/*/*/package.json' 'apps/package-e2e/shared'"
+      "command": "node tools/lint/bin/lint.ts --max-warnings 0 --no-error-on-unmatched-pattern '.github/workflows' 'package.json' 'README.md' 'ARCHITECTURE.md' 'LIBRARY_COMPATIBILITY.md' 'tsconfig.base.json' 'apps/*/project.json' 'apps/*/*/project.json' 'apps/*/*/*/project.json' 'apps/*/package.json' 'apps/*/*/package.json' 'apps/*/*/*/package.json' 'apps/package-e2e/shared' '.railway/railway.ts' '.devcontainer/devcontainer.json'"
     },
     "version:all": {
       "executor": "@hyperfrontend/package:version-batch",

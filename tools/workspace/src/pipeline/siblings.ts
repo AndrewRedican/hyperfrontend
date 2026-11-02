@@ -1,6 +1,6 @@
 /**
  * Waits for a sibling job of the same workflow run to conclude, by polling the run's job list
- * through the GitHub API: the Linux environment waits for the Windows one before it publishes.
+ * through the GitHub API: the Linux environment waits for the Windows and macOS ones before it publishes.
  *
  * @module pipeline/siblings
  */
@@ -175,8 +175,8 @@ export async function waitForJob(options: WaitOptions): Promise<string> {
 
 /** How the publish gate waits for the sibling job. */
 export interface GateOptions extends Omit<WaitOptions, 'fetchJobs' | 'name'> {
-  /** The job the publishes wait for, or undefined when there is none to wait for. */
-  readonly name: string | undefined
+  /** The job the publishes wait for. */
+  readonly name: string
   /** Lists the jobs, or null when the environment cannot ask. */
   readonly fetchJobs: FetchJobs | null
 }
@@ -193,12 +193,11 @@ export function siblingGate(options: GateOptions): () => Promise<string | null> 
   const { name, fetchJobs } = options
   let pending: Promise<string | null> | null = null
   return async () => {
-    if (name === undefined) return null
-    if (fetchJobs === null) return `${PipelineRule.WindowsEnvironment}: no GitHub token to ask about ${name}`
+    if (fetchJobs === null) return `${PipelineRule.SiblingEnvironment}: no GitHub token to ask about ${name}`
     pending ??= waitForJob({ ...options, name, fetchJobs }).then(
-      (conclusion) => (conclusion === 'success' ? null : `${PipelineRule.WindowsEnvironment}: ${name} concluded ${conclusion}`),
+      (conclusion) => (conclusion === 'success' ? null : `${PipelineRule.SiblingEnvironment}: ${name} concluded ${conclusion}`),
       (error: unknown) =>
-        `${PipelineRule.WindowsEnvironment}: asking about ${name} failed: ${error instanceof Error ? error.message : String(error)}`
+        `${PipelineRule.SiblingEnvironment}: asking about ${name} failed: ${error instanceof Error ? error.message : String(error)}`
     )
     return pending
   }

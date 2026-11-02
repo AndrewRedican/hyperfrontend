@@ -4,7 +4,7 @@
  *
  * @module @hyperfrontend/testing/hooks
  */
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -69,7 +69,8 @@ const ALIASES_VAR = 'HF_TEST_ALIASES'
  */
 export function registerResolutionHooks(): void {
   const workspaceRoot = process.env[WORKSPACE_ROOT_VAR] ?? process.cwd()
-  const setupFiles = new Set(JSON.parse(process.env[SETUP_FILES_VAR] ?? '[]') as string[])
+  // why: Node resolves a module's symbolic links before this hook sees its URL, so a setup file named through one, as the macOS temporary directory is, is matched by its real path.
+  const setupFiles = new Set((JSON.parse(process.env[SETUP_FILES_VAR] ?? '[]') as string[]).map((file) => realpathSync(file)))
   const declaredAliases = process.env[ALIASES_VAR]
   const context = {
     workspaceRoot,

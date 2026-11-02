@@ -1,6 +1,6 @@
 import type { TestConfig } from './config'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
@@ -83,7 +83,8 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
     const environment = { ...shared, ...(setupFiles ? { HF_TEST_SETUP_FILES: setupFiles } : {}) }
 
     const stdio = context.silent ? 'pipe' : 'inherit'
-    const result = spawnSync(process.execPath, plan.argv, { cwd: context.projectRoot, stdio, env: environment })
+    // why: Node names each covered file by its real path but relative to the child's working directory, and Windows keeps a junction in that directory where Linux and macOS resolve it, so the child starts from the real path on every platform.
+    const result = spawnSync(process.execPath, plan.argv, { cwd: realpathSync(context.projectRoot), stdio, env: environment })
     if (result.status !== 0) failures.push(`environment "${declared.name}" reported failures`)
 
     const lcovPath = resolve(context.projectRoot, plan.lcovPath)

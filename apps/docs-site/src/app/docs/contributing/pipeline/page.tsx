@@ -7,7 +7,7 @@ import { getPageMetadata } from '@/lib/metadata'
 export const metadata = getPageMetadata({
   title: 'Pipeline',
   description:
-    'Every run of the HyperFrontend pipeline: the tasks a change reached, why each ran or was skipped, the order and timing of their execution on Linux and Windows, and the runs in progress.',
+    'Every run of the HyperFrontend pipeline: the tasks a change reached, why each ran or was skipped, the order and timing of their execution on Linux, Windows and macOS, and the runs in progress.',
   path: PIPELINE_ROUTE,
 })
 

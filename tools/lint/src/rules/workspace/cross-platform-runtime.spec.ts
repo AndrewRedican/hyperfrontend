@@ -72,6 +72,20 @@ testRule(rule, {
       'const e = posix.format({ dir: join(root, file) })',
       'const f = join(process.cwd(), file)',
     ]),
+    valid('file modes read beside a platform branch, and modes of other things', [
+      "import { statSync } from 'node:fs'",
+      "expect((statSync(bin).mode & 0o111) !== 0).toBe(process.platform !== 'win32')",
+      'const mode = statSync(file).mode & 0o777',
+      "expect(mode).toBe(process.platform === 'win32' ? 0o666 : 0o755)",
+      "const check = (): void => { if (process.platform !== 'win32') expect(statSync(bin).mode & 0o111).not.toBe(0) }",
+      'const size = statSync(file).size',
+      'const other = entry.mode & 0o111',
+      'const unknown = describe(file).mode',
+      "const computed = fs['statSync'](file).mode & 0o111",
+      'let later',
+      'later = statSync(file)',
+      'const bits = later.mode & 0o111',
+    ]),
     valid('imports of specifiers and file URLs', [
       "import { pathToFileURL } from 'node:url'",
       "await import('./x.js')",
@@ -190,7 +204,7 @@ testRule(rule, {
       "const g = x.join('/')",
       "const h = x.replace(/[\\\\\\/]/g, '/') + x.replace(/[\\/\\\\]/g, '/') + x.replace(/[ab]/g, '/') + x.replace(/x/g, '/')",
     ]),
-    valid('legacy conversions outside Node projects', ["const a = x.replace(/\\\\/g, '/')"], BROWSER),
+    valid('non-canonical conversions outside Node projects', ["const a = x.replace(/\\\\/g, '/')"], BROWSER),
     valid('relative() results kept local, or not from node:path', [
       "import { relative } from 'node:path'",
       "import { relative as distance } from './math'",
@@ -306,6 +320,17 @@ testRule(rule, {
       ]
     ),
     invalid(
+      'file modes read without a platform branch',
+      [
+        "import { fstatSync, lstatSync, statSync } from 'node:fs'",
+        'expect(statSync(bin).mode & 0o111).not.toBe(0)',
+        'const stat = lstatSync(file)',
+        'if (stat.mode & 0o111) run()',
+        'const executable = (): boolean => fs.fstatSync(fd).mode === 0o755',
+      ],
+      [at('fileMode', 2, 8), at('fileMode', 4, 5), at('fileMode', 5, 35)]
+    ),
+    invalid(
       'shims spawned without a shell',
       [
         SPAWN,
@@ -388,7 +413,7 @@ testRule(rule, {
       ]
     ),
     invalid(
-      'legacy conversions fixed to the canonical spelling',
+      'non-canonical conversions fixed to the canonical spelling',
       [
         "import { join } from 'node:path'",
         "const a = join(x, y).replace(/\\\\/g, '/')",
@@ -404,13 +429,13 @@ testRule(rule, {
       ]
     ),
     invalid(
-      'legacy conversions keeping the separator already canonical',
+      'non-canonical conversions keeping the separator already canonical',
       ["import { posix, sep } from 'node:path'", "const a = x.split(sep).join('/')", "const b = x.split('\\\\').join(posix.sep)"],
       [at('posixConversion', 2, 11), at('posixConversion', 3, 11)],
       ["import { posix, sep } from 'node:path'", 'const a = x.split(sep).join(posix.sep)', 'const b = x.split(sep).join(posix.sep)']
     ),
     invalid(
-      'legacy conversions without a safe fix',
+      'non-canonical conversions, fixed only where the separator name is free',
       [
         "const a = x.replace(/\\\\/g, '/')",
         "import { join } from 'node:path'",
@@ -418,7 +443,14 @@ testRule(rule, {
         "  return [x.replace(/\\\\/g, '/'), x.split('\\\\').join('/')]",
         '}',
       ],
-      [at('posixConversion', 1, 11), at('posixConversion', 4, 11), at('posixConversion', 4, 34)]
+      [at('posixConversion', 1, 11), at('posixConversion', 4, 11), at('posixConversion', 4, 34)],
+      [
+        'const a = x.split(sep).join(posix.sep)',
+        "import { join, sep, posix } from 'node:path'",
+        'function f(sep) {',
+        "  return [x.replace(/\\\\/g, '/'), x.split('\\\\').join('/')]",
+        '}',
+      ]
     ),
     invalid(
       'native paths given to path/posix functions',
@@ -436,7 +468,11 @@ testRule(rule, {
         at('posixNative', 5, 26, { method: 'basename' }),
       ]
     ),
-    invalid('legacy conversions in a file without node: imports', ["const a = x.replace(/\\\\/g, '/')"], [at('posixConversion', 1, 11)]),
+    invalid(
+      'non-canonical conversions in a file without node: imports',
+      ["const a = x.replace(/\\\\/g, '/')"],
+      [at('posixConversion', 1, 11)]
+    ),
     invalid(
       'relative() results that leave as data',
       [
@@ -468,6 +504,23 @@ testRule(rule, {
         at('relativeEscapes', 10, 19),
         at('relativeEscapes', 12, 27),
         at('relativeEscapes', 13, 16),
+      ],
+      [
+        "import { relative, sep, posix } from 'node:path'",
+        'function f() { return relative(a, b).split(sep).join(posix.sep) }',
+        'const o = { root: relative(a, b).split(sep).join(posix.sep) }',
+        'const list = [relative(a, b).split(sep).join(posix.sep) as string]',
+        'const g = () => relative(a, b).split(sep).join(posix.sep)',
+        'o.root = relative(a, b).split(sep).join(posix.sep)',
+        'set.add(relative(a, b).split(sep).join(posix.sep)!)',
+        "const same = relative(a, b).split(sep).join(posix.sep) === 'x/y'",
+        'const other = rel !== relative(a, b).split(sep).join(posix.sep)',
+        'const spec = `./${relative(a, b).split(sep).join(posix.sep)}`',
+        "const kept = relative(a, b) || '.'",
+        'function h() { return c ? relative(a, b).split(sep).join(posix.sep) : d }',
+        'const stored = relative(a, b).split(sep).join(posix.sep)',
+        'export default { stored }',
+        'const forwarded = stored',
       ]
     ),
     invalid(

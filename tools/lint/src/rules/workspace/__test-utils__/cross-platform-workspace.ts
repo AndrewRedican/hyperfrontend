@@ -113,6 +113,8 @@ const TEMPLATES: Readonly<Record<string, string>> = {
   splitCommand:
     '`{{ command }}` is the first word of a split command line, and a .cmd shim such as `npm` cannot be spawned without a shell on Windows (ENOENT or EINVAL). Run the whole line through a shell: `execFileSync(line, { shell: true })`.',
   hardcodedTmp: "'{{ path }}' does not exist on Windows. Use `tmpdir()` or `devNull` from node:os.",
+  fileMode:
+    '`.mode` of a stat result carries no permission bits on Windows, where every file reports 0o666. Branch on `process.platform`, asserting the bits only where the platform has them.',
 }
 
 /**

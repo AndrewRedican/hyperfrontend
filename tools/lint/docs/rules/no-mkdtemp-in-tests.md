@@ -74,15 +74,13 @@ describe('loadConfig', () => {
 
 ## Configuration
 
-Enabled from `lint.base.config.ts` for specs and `__test-utils__` modules, except in the package e2e
-suites, which install only the published package they exercise. `libs/testing`, which implements the
-helpers, and the docs site, whose specs run under Vitest, switch it off in their own
-`lint.config.ts`:
+Enabled from `lint.base.config.ts` for specs, `__test-utils__` modules and the package e2e suites'
+`support` modules. `libs/testing`, which implements the helpers, and the docs site, whose specs run
+under Vitest, switch it off in their own `lint.config.ts`:
 
 ```js
 {
-  files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}'],
-  ignores: ['apps/package-e2e/**'],
+  files: ['**/*.spec.{ts,tsx,mts,cts}', '**/__test-utils__/**/*.{ts,tsx,mts,cts}', 'apps/package-e2e/*/src/support/**/*.ts'],
   rules: {
     'workspace/no-mkdtemp-in-tests': 'error',
   },
@@ -91,5 +89,7 @@ helpers, and the docs site, whose specs run under Vitest, switch it off in their
 
 ## Related Rules
 
+- [no-signal-kill-in-tests](./no-signal-kill-in-tests.md): the other helper of `@hyperfrontend/testing`
+  a spec reaches for instead of the raw Node call
 - [no-test-fixtures](./no-test-fixtures.md): test material is written to a temporary directory
   while a spec runs, never kept as files at rest

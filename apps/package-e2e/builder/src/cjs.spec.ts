@@ -92,9 +92,9 @@ describe('@hyperfrontend/builder CJS', () => {
       expect(readFileSync(binPath, 'utf8').split(/\r?\n/, 1)[0]).toBe('#!/usr/bin/env node')
     })
 
-    it('ships with the executable bit set after extraction', () => {
-      // why: 0o111 is any execute bit; npm preserves the tar mode on install.
-      expect(statSync(binPath).mode & 0o111).not.toBe(0)
+    it('ships with the executable bit set after extraction, where the platform has one', () => {
+      // why: 0o111 is any execute bit; npm preserves the tar mode on install, and Windows reports no execute bit on any file, so there the bits stay clear.
+      expect((statSync(binPath).mode & 0o111) !== 0).toBe(process.platform !== 'win32')
     })
 
     it('prints its usage and exits 0 on --help', () => {

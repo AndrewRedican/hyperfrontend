@@ -107,7 +107,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/linter` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/versioning` |
 | `@hyperfrontend/list-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/logging` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils` |
-| `@hyperfrontend/network-protocol` | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils` |
+| `@hyperfrontend/network-protocol` | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils` |
 | `@hyperfrontend/nexus` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/network-protocol` (peer), `@hyperfrontend/random-generator-utils` |
 | `@hyperfrontend/project-scope` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/logging` |
 | `@hyperfrontend/questions` | `@hyperfrontend/immutable-api-utils` |
@@ -184,7 +184,6 @@ flowchart TB
     network_protocol --> logging
     network_protocol --> random_generator_utils
     network_protocol --> string_utils
-    network_protocol --> time_utils
     nexus --> data_utils
     nexus --> immutable_api_utils
     nexus --> json_utils
@@ -217,14 +216,14 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.7.0` |
-| `@hyperfrontend/cryptography` | `1.1.1` |
+| `@hyperfrontend/builder` | `0.7.1` |
+| `@hyperfrontend/cryptography` | `1.1.2` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
 | `@hyperfrontend/features` | `0.11.5` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
-| `@hyperfrontend/immutable-api-utils` | `1.0.2` |
+| `@hyperfrontend/immutable-api-utils` | `1.0.3` |
 | `@hyperfrontend/json-utils` | `1.1.1` |
-| `@hyperfrontend/linter` | `0.1.1` |
+| `@hyperfrontend/linter` | `0.2.0` |
 | `@hyperfrontend/list-utils` | `0.1.1` |
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
@@ -233,8 +232,8 @@ flowchart TB
 | `@hyperfrontend/questions` | `0.3.1` |
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
-| `@hyperfrontend/string-utils` | `1.0.1` |
-| `@hyperfrontend/testing` | `0.3.1` |
+| `@hyperfrontend/string-utils` | `1.0.2` |
+| `@hyperfrontend/testing` | `0.4.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
 | `@hyperfrontend/versioning` | `0.9.3` |
