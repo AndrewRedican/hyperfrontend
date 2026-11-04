@@ -221,7 +221,7 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.7.1` |
 | `@hyperfrontend/cryptography` | `1.1.2` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
-| `@hyperfrontend/features` | `0.11.5` |
+| `@hyperfrontend/features` | `0.11.6` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.3` |
 | `@hyperfrontend/json-utils` | `1.1.1` |
@@ -230,12 +230,12 @@ flowchart TB
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
 | `@hyperfrontend/nexus` | `3.0.1` |
-| `@hyperfrontend/project-scope` | `0.4.2` |
+| `@hyperfrontend/project-scope` | `0.5.0` |
 | `@hyperfrontend/questions` | `0.3.1` |
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.2` |
-| `@hyperfrontend/testing` | `0.4.0` |
+| `@hyperfrontend/testing` | `0.5.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
-| `@hyperfrontend/versioning` | `0.9.3` |
+| `@hyperfrontend/versioning` | `0.9.4` |

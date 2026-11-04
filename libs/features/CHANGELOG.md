@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.6](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...9a45a040127d6cb7b566d36b63aeb9ad84b85473) - 2026-11-04
+
+### Bug Fixes
+
+- quote npm and package manager spawns for cmd.exe
+
 ## [0.11.5](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...28ab8c85dd6b02b45c755c6ddbd19adc54645fe8) - 2026-10-14
 
 ### Bug Fixes
