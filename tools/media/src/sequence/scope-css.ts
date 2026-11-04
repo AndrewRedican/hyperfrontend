@@ -22,7 +22,7 @@
  */
 export function scopeCss(css: string, scope: string): string {
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '')
-  return stripped.replace(/([^{}]+)\{([^{}]*)\}/g, (_rule, selectors: string, body: string) => {
+  return stripped.replace(/(?<![^{}])([^{}]+)\{([^{}]*)\}/g, (_rule, selectors: string, body: string) => {
     const scoped = selectors
       .split(',')
       .map((selector) => selector.trim())
