@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...9eb70972b05705bccbb762a3d7deaf6d91423fcc) - 2026-11-04
+
+### Features
+
+- report regex repetitions that take quadratic time in no-unsafe-regex
+
+### Bug Fixes
+
+- rewrite its quadratic regexes as linear ones
+- read lookbehinds as groups in the no-unsafe-regex nesting check
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01
 
 ### Breaking Changes

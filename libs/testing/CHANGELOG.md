@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...9a45a040127d6cb7b566d36b63aeb9ad84b85473) - 2026-11-04
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...9eb70972b05705bccbb762a3d7deaf6d91423fcc) - 2026-11-04
 
 ### Features
 
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- double trailing backslashes in quoteForCmd without a backtracking regex
 - quote the packed consumer's npm install for cmd.exe
 
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01

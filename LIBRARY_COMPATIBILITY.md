@@ -224,8 +224,8 @@ flowchart TB
 | `@hyperfrontend/features` | `0.11.6` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.3` |
-| `@hyperfrontend/json-utils` | `1.1.1` |
-| `@hyperfrontend/linter` | `0.2.0` |
+| `@hyperfrontend/json-utils` | `1.1.2` |
+| `@hyperfrontend/linter` | `0.3.0` |
 | `@hyperfrontend/list-utils` | `0.1.1` |
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |

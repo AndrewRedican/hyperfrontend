@@ -7,7 +7,7 @@
   "dependencies": {
     "@hyperfrontend/builder": "0.7.1",
     "@hyperfrontend/immutable-api-utils": "1.0.3",
-    "@hyperfrontend/json-utils": "1.1.1",
+    "@hyperfrontend/json-utils": "1.1.2",
     "@hyperfrontend/network-protocol": "2.0.1",
     "@hyperfrontend/nexus": "3.0.1",
     "@hyperfrontend/project-scope": "0.5.0",
