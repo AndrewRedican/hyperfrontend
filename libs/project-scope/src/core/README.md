@@ -97,9 +97,9 @@ const utf8Content = convertEncoding(buffer, 'utf-8')
 Detect operating system and normalize platform-specific behaviors.
 
 ```typescript
-import { detectPlatform, isWindows, isMacOS, isLinux, normalizeLineEndings } from '@hyperfrontend/project-scope'
+import { detectPlatform, isWindows, isMac, isLinux, normalizeLineEndings } from '@hyperfrontend/project-scope'
 
-const platform = detectPlatform() // 'windows' | 'macos' | 'linux'
+const { os, caseSensitive } = detectPlatform() // os is 'win32', 'darwin', 'linux', ...
 const normalizedContent = normalizeLineEndings(content, 'lf')
 ```
 

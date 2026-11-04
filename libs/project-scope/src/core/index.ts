@@ -99,6 +99,8 @@ export {
   getPathSeparator,
   getPlatformInfo,
   isCaseSensitiveFs,
+  isLinux,
+  isMac,
   isWindows,
   LF,
   normalizeLineEndings,

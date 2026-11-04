@@ -177,6 +177,8 @@ export {
   isCaseSensitiveFs,
   isDirectory,
   isFile,
+  isLinux,
+  isMac,
   isSymlink,
   isTextFile,
   isWindows,
