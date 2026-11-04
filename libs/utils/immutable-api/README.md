@@ -182,6 +182,12 @@ Every export, on every subpath, is in the [API reference](https://www.hyperfront
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File                       | Tree-Shakeable |
