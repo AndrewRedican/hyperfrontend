@@ -245,6 +245,7 @@ const supportingLibraries: NavItem[] = [
           { slug: 'logger', href: '/docs/libraries/project-scope/core/logger' },
           { slug: 'path', href: '/docs/libraries/project-scope/core/path' },
           { slug: 'platform', href: '/docs/libraries/project-scope/core/platform' },
+          { slug: 'process', href: '/docs/libraries/project-scope/core/process' },
         ],
       },
       {
