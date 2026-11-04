@@ -47,7 +47,10 @@ export function quoteForCmd(argument: string): string {
     )
   }
   if (PLAIN.test(argument)) return argument
-  return `"${argument.replace(/(\\+)$/, '$1$1')}"`.replace(CMD_SPECIAL, '^$&')
+  let end = argument.length
+  while (end > 0 && argument[end - 1] === '\\') end--
+  // why: a counted scan, not a regex anchored on a backslash run, so a long run costs linear time
+  return `"${argument}${argument.slice(end)}"`.replace(CMD_SPECIAL, '^$&')
 }
 
 /**
