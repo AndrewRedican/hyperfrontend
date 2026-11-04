@@ -306,6 +306,12 @@ const result = checkPatternSafety('(a+)+')
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File                       | Tree-Shakeable |
