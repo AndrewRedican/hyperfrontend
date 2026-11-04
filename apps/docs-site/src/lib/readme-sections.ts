@@ -122,7 +122,7 @@ export function readSection(markdown: string, slug: string, level = 2): string |
 export function readSectionLink(markdown: string, slug: string, level = 2): string | null {
   const section = readSection(markdown, slug, level)
   if (!section) return null
-  const link = /\[[^\]]*\]\(([^)\s]+)/.exec(section)
+  const link = /\[[^[\]]*\]\(([^)\s]+)/.exec(section)
   return link ? link[1] : null
 }
 

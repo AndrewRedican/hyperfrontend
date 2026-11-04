@@ -80,7 +80,7 @@ function escapePipes(text: string): string {
  * @returns The cell contents
  */
 function cell(text: string): string {
-  return escapePipes(text.replace(/\s*\n\s*/g, ' ')).trim()
+  return escapePipes(text.replace(/\s+/g, (run) => (run.includes('\n') ? ' ' : run))).trim()
 }
 
 /**

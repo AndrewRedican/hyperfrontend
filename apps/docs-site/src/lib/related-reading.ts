@@ -140,7 +140,7 @@ function relatedPackages(readme: string, packageName: string): RelatedEntry[] {
     const bullet = /^\s*[-*]\s+(.*)$/.exec(line)
     if (!bullet) continue
 
-    const named = /\[([^\]]+)\]\(/g
+    const named = /\[([^[\]]+)\]\(/g
     let match: RegExpExecArray | null
     while ((match = named.exec(bullet[1])) !== null) {
       const library = byName.get(match[1].trim())
@@ -167,7 +167,7 @@ function relatedPackages(readme: string, packageName: string): RelatedEntry[] {
  */
 function flattenLinks(markdown: string): string {
   return markdown
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^[\]]+)\]\([^)]*\)/g, '$1')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/\*\*([^*]*)\*\*/g, '$1')
     .trim()
