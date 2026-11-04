@@ -7,6 +7,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { createRegistryUnavailableError } from '../models/registry-error'
 import { createCache } from './cache'
 import { classifyNpmError } from './classify-error'
@@ -87,6 +88,28 @@ export function createNpmRegistry(config: RegistryConfig = {}): Registry {
   }
 }
 
+/** Node's own output limit for a child, kept for the queries whose answer is one value or one list. */
+const DEFAULT_MAX_BUFFER = 1024 * 1024
+
+/**
+ * Runs `npm view` with the registry's timeout and returns what it prints.
+ *
+ * @param state - The registry's configuration and cache
+ * @param args - The arguments after `npm view`, already escaped
+ * @param maxBuffer - The most output accepted, in bytes
+ * @returns The standard output
+ */
+function npmView(state: NpmRegistryState, args: readonly string[], maxBuffer: number): string {
+  const npm = shimCommand('npm', ['view', ...args])
+  return execFileSync(npm.file, npm.args, {
+    encoding: 'utf-8',
+    timeout: state.config.timeout,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    shell: npm.shell,
+    maxBuffer,
+  })
+}
+
 /**
  * Gets the latest published version of a package.
  *
@@ -101,13 +124,7 @@ async function getLatestVersion(state: NpmRegistryState, packageName: string): P
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execFileSync('npm', ['view', safeName, 'version'], {
-      encoding: 'utf-8',
-      timeout: state.config.timeout,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      // why: npm is a .cmd shim on Windows, which Node only spawns through a shell.
-      shell: process.platform === 'win32',
-    }).trim()
+    const result = npmView(state, [safeName, 'version'], DEFAULT_MAX_BUFFER).trim()
 
     const version = result || null
     state.cache.set(cacheKey, version)
@@ -161,12 +178,7 @@ async function isVersionPublished(state: NpmRegistryState, packageName: string, 
   try {
     const safeName = escapePackageName(packageName)
     const safeVersion = escapeVersion(version)
-    const result = execFileSync('npm', ['view', `${safeName}@${safeVersion}`, 'version'], {
-      encoding: 'utf-8',
-      timeout: state.config.timeout,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-    }).trim()
+    const result = npmView(state, [`${safeName}@${safeVersion}`, 'version'], DEFAULT_MAX_BUFFER).trim()
 
     const published = result === version
     state.cache.set(cacheKey, published)
@@ -192,13 +204,7 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execFileSync('npm', ['view', safeName, '--json'], {
-      encoding: 'utf-8',
-      timeout: state.config.timeout,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-      maxBuffer: 10 * 1024 * 1024,
-    })
+    const result = npmView(state, [safeName, '--json'], 10 * 1024 * 1024)
 
     const data = parse(result)
 
@@ -245,13 +251,7 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
   try {
     const safeName = escapePackageName(packageName)
     const safeVersion = escapeVersion(version)
-    const result = execFileSync('npm', ['view', `${safeName}@${safeVersion}`, '--json'], {
-      encoding: 'utf-8',
-      timeout: state.config.timeout,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-      maxBuffer: 5 * 1024 * 1024,
-    })
+    const result = npmView(state, [`${safeName}@${safeVersion}`, '--json'], 5 * 1024 * 1024)
 
     const data = parse(result)
 
@@ -293,12 +293,7 @@ async function listVersions(state: NpmRegistryState, packageName: string): Promi
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execFileSync('npm', ['view', safeName, 'versions', '--json'], {
-      encoding: 'utf-8',
-      timeout: state.config.timeout,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-    })
+    const result = npmView(state, [safeName, 'versions', '--json'], DEFAULT_MAX_BUFFER)
 
     const versions = parse(result)
     const versionList = isArray(versions) ? versions : [versions]
