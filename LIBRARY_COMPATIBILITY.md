@@ -4,31 +4,33 @@
 
 ## Platform Support
 
-| Library | Node.js | Browser | Web Worker | CDN Bundle |
-| --- | --- | --- | --- | --- |
-| `@hyperfrontend/builder` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/cryptography` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/data-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/features` | ✅ | ✅ | ⚠️ | ✅ |
-| `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/linter` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/nexus` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/project-scope` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/questions` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ❌ |
+| Library | Node.js | Browser | Web Worker | Linux | macOS | Windows | CDN Bundle |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `@hyperfrontend/builder` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/cryptography` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/data-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/features` | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/linter` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/nexus` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/project-scope` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/questions` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
 Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing declared. CDN Bundle marks the packages whose build produces an IIFE or UMD bundle.
+
+Every library runs on Linux, macOS and Windows, and is typechecked, linted, tested, built and end-to-end tested on all three on every pull request.
 
 **Notes**
 
