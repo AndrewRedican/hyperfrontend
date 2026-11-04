@@ -158,6 +158,12 @@ Requires Node.js 22.18 or later. There is no browser build.
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File        | Tree-Shakeable |
