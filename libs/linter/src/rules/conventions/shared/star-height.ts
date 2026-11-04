@@ -5,7 +5,8 @@
  *
  * The package's reading is kept where it decides a verdict: `?` counts as a repetition, a
  * repetition of a group holding alternatives is not looked into, a repetition of something other
- * than a group is not looked into, and lookbehinds and modifier groups are unreadable.
+ * than a group is not looked into, and modifier groups are unreadable. Lookbehinds are read as
+ * groups, as lookaheads are, rather than refused the way the package's own parser refused them.
  *
  * @module rules/conventions/shared/star-height
  */
@@ -100,7 +101,8 @@ function scan(pattern: string): Group {
       if (pattern[index] === '?') {
         const marker = pattern[index + 1]
         index += 2
-        if (marker === '<') {
+        if (marker === '<' && (pattern[index] === '=' || pattern[index] === '!')) index += 1
+        else if (marker === '<') {
           const name = /^[A-Za-z_$][\w$]*>/.exec(pattern.slice(index))
           if (name === null) throw UNREADABLE
           index += name[0].length

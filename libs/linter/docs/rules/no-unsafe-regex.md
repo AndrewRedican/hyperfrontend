@@ -9,7 +9,7 @@ A pattern with a repetition nested inside another, such as `/^(a+)+$/`, can take
 - holds a repetition inside another repetition, judged by star height the way the [safe-regex](https://www.npmjs.com/package/safe-regex2) package judges it, `?` counted as a repetition;
 - holds more than 25 repetitions in all;
 - names a quantifier upper bound past 1000, as in `{1,100000}`;
-- cannot be read, such as one with a lookbehind.
+- cannot be read, such as one with a modifier group.
 
 A `RegExp` or [`createRegExp`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/regexp/#api-createRegExp) call whose pattern is computed (a variable, a call, a template with substitutions) is reported too, since the pattern may come from input. The rule does not fix.
 

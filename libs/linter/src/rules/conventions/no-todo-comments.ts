@@ -9,7 +9,6 @@ import type { Node } from '../../code/model'
 import { defineRule } from '../../engine/rule'
 
 /** The marker, spelled as one word, hyphenated or spaced, standing alone between word characters and hyphens. */
-// lint-disable-next-line no-unsafe-regex -- one optional character between fixed letters, no nested quantifier
 const MARKER = /(?<![\w-])to[- ]?do(?![\w-])/gi
 
 /** What the rule reports for a work-left-for-later marker. */
