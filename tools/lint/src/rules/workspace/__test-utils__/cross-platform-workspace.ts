@@ -107,7 +107,9 @@ const TEMPLATES: Readonly<Record<string, string>> = {
     "`{{ target }}` takes a module specifier, and a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Pass `pathToFileURL(path).href` from node:url instead.",
   urlPathname: "`.pathname` of a module URL is '/C:/x' with percent-encoding on Windows. Use `fileURLToPath()` from node:url.",
   shellShim:
-    "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Pass `shell: process.platform === 'win32'` and keep its arguments free of spaces and shell metacharacters.",
+    "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Spawn it through `shimCommand` from @hyperfrontend/project-scope/core/process, or @hyperfrontend/testing/process in specs and e2e suites, which quotes its arguments for cmd.exe; a script that cannot import either passes `shell: process.platform === 'win32'` and keeps its arguments free of spaces and shell metacharacters.",
+  bareShellShim:
+    '`shell` on Windows alone hands the arguments to cmd.exe unescaped, and Node 24 warns about an argument array beside a shell (DEP0190). Spawn through `shimCommand` from @hyperfrontend/project-scope/core/process, or @hyperfrontend/testing/process in specs and e2e suites, which quotes the arguments and passes no array.',
   binShim:
     "'{{ command }}' under node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, which cannot be spawned without a shell (ENOENT or EINVAL), and a shell splits a path that contains a space. Spawn `process.execPath` with the package's entry script, resolved with `require.resolve()`.",
   splitCommand:

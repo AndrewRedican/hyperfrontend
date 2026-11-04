@@ -135,6 +135,8 @@ export interface Scan {
   readonly node: boolean
   /** Whether the file imports a `node:` module. */
   readonly nodeImports: boolean
+  /** Whether the file is TypeScript, which imports `shimCommand` where a script spawns a shim through a shell of its own. */
+  readonly typescript: boolean
   /** The commands that are `.cmd` shims on Windows. */
   readonly shims: ReadonlySet<string>
   /** Reports a problem at a node. */

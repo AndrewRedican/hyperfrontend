@@ -9,6 +9,7 @@ import rule from './cross-platform.ts'
 const workspace = createCrossPlatformWorkspace()
 const NODE = join(workspace.node, 'src', 'file.ts')
 const BROWSER = join(workspace.browser, 'src', 'file.ts')
+const NODE_SCRIPT = join(workspace.node, 'src', 'file.mjs')
 
 /**
  * A case accepted in the Node library.
@@ -145,6 +146,21 @@ testRule(rule, {
       'const d = 42',
       'const e = tag`\\xZ${a}`',
     ]),
+    valid('a shell decided otherwise, or in a script', [
+      SPAWN,
+      "execFileSync('npm', ['pack'], { shell: process.platform !== 'win32' })",
+      "execFileSync('npm', ['pack'], { shell: process.platform === 'darwin' })",
+      "execFileSync('npm', ['pack'], { shell: platform === 'win32' })",
+      "execFileSync('npm', ['pack'], { shell: isWindows })",
+      'const flag = true',
+      "execFileSync('npm', ['pack'], { shell: flag })",
+      "function f(win: boolean) { execFileSync('npm', [], { shell: win }) }",
+    ]),
+    valid(
+      'a shell decided on Windows in a script',
+      [SPAWN, "execFileSync('npm', ['pack'], { shell: process.platform === 'win32' })"],
+      NODE_SCRIPT
+    ),
     valid('spawns of real executables, or with the shell decided', [
       SPAWN,
       "execFileSync('git', ['status'])",
@@ -386,6 +402,24 @@ testRule(rule, {
         "run('yarn', [])",
       ],
       [at('shellShim', 3, 1, { command: 'pnpm' }), at('shellShim', 4, 1, { command: 'yarn' })]
+    ),
+    invalid(
+      'a shell decided on the platform being Windows, in TypeScript',
+      [
+        SPAWN,
+        "execFileSync('npm', ['pack'], { shell: process.platform === 'win32' })",
+        "spawn('npx', [], { cwd, shell: 'win32' == process.platform })",
+        "const WINDOWS = process.platform === 'win32'",
+        "spawnSync('git', ['status'], { shell: WINDOWS })",
+      ],
+      [at('bareShellShim', 2, 33), at('bareShellShim', 3, 25), at('bareShellShim', 5, 32)]
+    ),
+    invalid(
+      'a shim spawned without a shell in a script',
+      [SPAWN, "execFileSync('npm', ['pack'])"],
+      [at('shellShim', 2, 1, { command: 'npm' })],
+      undefined,
+      NODE_SCRIPT
     ),
     invalid(
       'launchers under node_modules/.bin',
