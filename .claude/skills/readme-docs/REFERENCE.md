@@ -77,9 +77,15 @@ The runtime table is wrapped in an `hf:media` region and generated from `metadat
 | ...         |    ...    |
 
 <!-- hf:media end -->
+
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
 ```
 
-`lib-readme-compatibility-table` fixes drift; the build swaps the region for the recorded runtime strip in the dist README only. `### Output Formats` and `### Peer Dependencies` tables follow when they apply.
+`lib-readme-compatibility-table` fixes drift in both tables and adds a missing operating-system table; the build swaps the region for the recorded runtime strip in the dist README only, so the operating-system table sits outside it. `### Output Formats` and `### Peer Dependencies` tables follow when they apply.
 
 ### Inline code
 
