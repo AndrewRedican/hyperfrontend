@@ -1,4 +1,11 @@
-import type { EnvironmentId, EnvironmentSupport, OutputFormatId, PackageCompatibility, PackageOutput } from '@/lib/package-facts'
+import type {
+  EnvironmentId,
+  EnvironmentSupport,
+  OperatingSystemId,
+  OutputFormatId,
+  PackageCompatibility,
+  PackageOutput,
+} from '@/lib/package-facts'
 import type { ReactNode } from 'react'
 import { ENVIRONMENT_PRESENTATION } from './technology-marks'
 
@@ -38,6 +45,13 @@ interface OutputPresentation {
 
 /** The runtimes a compatibility group lists, in the order it lists them. */
 const ENVIRONMENT_ORDER: readonly EnvironmentId[] = ['node', 'browser', 'webWorker']
+
+/** The operating systems a compatibility group lists, in the order it lists them, with the name each chip shows. */
+const OPERATING_SYSTEMS: readonly (readonly [OperatingSystemId, string])[] = [
+  ['linux', 'Linux'],
+  ['macos', 'macOS'],
+  ['windows', 'Windows'],
+]
 
 /**
  * What each support level looks like and, for anyone not reading the colour,
@@ -117,6 +131,11 @@ export function PackageCapabilities({ compatibility, outputs }: PackageCapabilit
               />
             ))}
           </ul>
+          <ul aria-label="Operating systems" className="mt-2 flex flex-wrap gap-2">
+            {OPERATING_SYSTEMS.map(([system, label]) => (
+              <SystemChip key={system} label={label} support={compatibility.operatingSystems[system]} />
+            ))}
+          </ul>
           {compatibility.note && (
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{withCodeSpans(compatibility.note)}</p>
           )}
@@ -179,6 +198,36 @@ function EnvironmentChip({ environment, support, detail }: EnvironmentChipProps)
       <Mark className="h-4 w-4 shrink-0 opacity-80" />
       <span>{label}</span>
       {detail && <span className="font-mono text-[0.6875rem] opacity-70">{detail}</span>}
+      <span aria-hidden="true" className="font-semibold opacity-70">
+        {state.glyph}
+      </span>
+      <span className="sr-only">{state.sr}</span>
+    </li>
+  )
+}
+
+/** Props for {@link SystemChip}. */
+interface SystemChipProps {
+  /** The operating system's name */
+  label: string
+  /** How completely the package supports it */
+  support: EnvironmentSupport
+}
+
+/**
+ * One operating system and how completely the package supports it. A supported operating system
+ * is one whose pipeline leg runs the package's tests and build on every pull request.
+ * @param props - See {@link SystemChipProps}.
+ * @param props.label - The operating system's name
+ * @param props.support - How completely the package supports it
+ * @returns The chip.
+ */
+function SystemChip({ label, support }: SystemChipProps) {
+  const state = SUPPORT_PRESENTATION[support]
+
+  return (
+    <li className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${state.tone}`}>
+      <span>{label}</span>
       <span aria-hidden="true" className="font-semibold opacity-70">
         {state.glyph}
       </span>

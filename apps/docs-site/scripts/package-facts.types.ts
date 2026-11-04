@@ -1,6 +1,9 @@
 /** A runtime a package can claim support for. */
 export type EnvironmentId = 'node' | 'browser' | 'webWorker'
 
+/** An operating system a package can claim support for, named as the pipeline names its legs. */
+export type OperatingSystemId = 'linux' | 'macos' | 'windows'
+
 /**
  * How completely a package supports one runtime.
  *
@@ -17,6 +20,8 @@ export type EnvironmentSupport = 'full' | 'partial' | 'none'
 export interface PackageCompatibility {
   /** Support level per runtime */
   environments: Record<EnvironmentId, EnvironmentSupport>
+  /** Support level per operating system, each one a pipeline leg runs the package on */
+  operatingSystems: Record<OperatingSystemId, EnvironmentSupport>
   /** One line qualifying the row, present only when a bare support level would mislead */
   note?: string
   /** The `engines.node` range the package.json declares, when it declares one */

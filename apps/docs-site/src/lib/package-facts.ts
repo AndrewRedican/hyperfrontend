@@ -5,6 +5,7 @@ import { getManifest } from './docs-loader'
 export type {
   EnvironmentId,
   EnvironmentSupport,
+  OperatingSystemId,
   OutputFormatId,
   PackageCompatibility,
   PackageFacts,
