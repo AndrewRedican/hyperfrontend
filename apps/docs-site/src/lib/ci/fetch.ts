@@ -19,6 +19,18 @@ export interface Fetched<Value> {
   value: Value
   /** The rate limit the response reported */
   rate: RateLimit
+  /** The entity tag the response carried, or null */
+  etag: string | null
+}
+
+/** What a conditional request answered: the body when it changed, or nothing when GitHub said it had not. */
+export interface Conditional<Value> {
+  /** The parsed body, or null when the response was 304 */
+  value: Value | null
+  /** The rate limit the response reported */
+  rate: RateLimit
+  /** The entity tag to send next time, or null */
+  etag: string | null
 }
 
 /** A request that did not succeed. */
@@ -73,6 +85,35 @@ export interface FetchOptions {
   token?: string | null
   /** Aborts the request */
   signal?: AbortSignal
+  /** The entity tag of the copy held, sent so GitHub can answer that it has not changed; only to the API, whose preflight allows it */
+  etag?: string | null
+}
+
+/**
+ * Fetches JSON, conditionally when an entity tag is given.
+ *
+ * @param url - The address asked
+ * @param options - The reader's token, an abort signal and the entity tag held
+ * @returns The parsed body, or null when GitHub answered 304, with the rate limit and the new entity tag
+ * @throws {FetchFailure} When the response is neither 2xx nor 304, or the request fails
+ */
+export async function fetchConditional<Value>(url: string, options: FetchOptions = {}): Promise<Conditional<Value>> {
+  const api = url.startsWith('https://api.github.com/')
+  const base = api ? headers(options.token ?? null) : {}
+  const etag = options.etag ?? null
+  let response: Response
+  try {
+    response = await fetch(url, {
+      headers: api && etag !== null ? { ...base, 'if-none-match': etag } : base,
+      signal: options.signal,
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    throw new FetchFailure(0, url)
+  }
+  if (response.status === 304) return { value: null, rate: rateOf(response), etag }
+  if (!response.ok) throw new FetchFailure(response.status, url, rateOf(response))
+  return { value: (await response.json()) as Value, rate: rateOf(response), etag: response.headers.get('etag') }
 }
 
 /**
@@ -84,18 +125,8 @@ export interface FetchOptions {
  * @throws {FetchFailure} When the response is not 2xx or the request fails
  */
 export async function fetchJson<Value>(url: string, options: FetchOptions = {}): Promise<Fetched<Value>> {
-  let response: Response
-  try {
-    response = await fetch(url, {
-      headers: url.startsWith('https://api.github.com/') ? headers(options.token ?? null) : {},
-      signal: options.signal,
-    })
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw error
-    throw new FetchFailure(0, url)
-  }
-  if (!response.ok) throw new FetchFailure(response.status, url, rateOf(response))
-  return { value: (await response.json()) as Value, rate: rateOf(response) }
+  const fetched = await fetchConditional<Value>(url, { token: options.token, signal: options.signal })
+  return { value: fetched.value as Value, rate: fetched.rate, etag: fetched.etag }
 }
 
 /**

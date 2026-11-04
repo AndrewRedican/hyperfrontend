@@ -382,10 +382,14 @@ export interface GitHubRun {
   html_url: string
   /** When it was created */
   created_at: string
+  /** When its latest attempt started, or null before it did */
+  run_started_at: string | null
   /** When it was last updated */
   updated_at: string
   /** The title GitHub shows */
   display_title: string
+  /** The check suite its jobs and the check runs its jobs create belong to */
+  check_suite_id: number
 }
 
 /** A check run as the GitHub API lists it. */
@@ -406,6 +410,14 @@ export interface GitHubCheckRun {
   html_url: string | null
   /** What it shows */
   output: CheckRunOutput
+  /** The suite it belongs to */
+  check_suite: CheckSuiteRef
+}
+
+/** The suite a check run belongs to, as far as the page reads it. */
+export interface CheckSuiteRef {
+  /** The suite id */
+  id: number
 }
 
 /** What a check run shows. */
@@ -418,9 +430,9 @@ export interface CheckRunOutput {
   text: string | null
 }
 
-/** One page of a commit's check runs. */
+/** One page of a check suite's check runs. */
 export interface CheckRunsPage {
-  /** How many check runs the commit has, across every page */
+  /** How many check runs the suite has, across every page */
   total_count: number
   /** The check runs */
   check_runs: GitHubCheckRun[]

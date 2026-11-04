@@ -1,5 +1,5 @@
 import { Breadcrumb } from '@/components/breadcrumb'
-import { PipelineExplorer } from '@/components/ci/pipeline-explorer'
+import { PipelineExplorer } from '@/components/ci/pipeline/explorer'
 import { H1 } from '@/components/heading-with-anchor'
 import { PIPELINE_ROUTE } from '@/lib/ci/sources'
 import { getPageMetadata } from '@/lib/metadata'
@@ -7,7 +7,7 @@ import { getPageMetadata } from '@/lib/metadata'
 export const metadata = getPageMetadata({
   title: 'Pipeline',
   description:
-    'Every run of the HyperFrontend pipeline: the tasks a change reached, why each ran or was skipped, the order and timing of their execution on Linux, Windows and macOS, and the runs in progress.',
+    'Every run of the HyperFrontend pipeline, recorded or in progress: what ran on Linux, Windows and macOS, when, beside what else, and how the plan spread the work over the runners.',
   path: PIPELINE_ROUTE,
 })
 

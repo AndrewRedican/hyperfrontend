@@ -4560,3 +4560,16 @@
     animation: none;
   }
 }
+
+@layer components {
+  /* A task that is running, on the pipeline page: its ring breathes until its check run reports it ended. */
+  .ci-pulse {
+    animation: ci-placeholder-pulse 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ci-pulse {
+      animation: none;
+    }
+  }
+}
