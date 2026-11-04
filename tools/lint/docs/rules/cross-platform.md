@@ -224,7 +224,7 @@ execFileSync(command, { cwd, shell: true })
 
 ### `lineSplit`
 
-`split('\n')` or `split('\r\n')` on text that may come from a CRLF checkout.
+`split('\n')` or `split('\r\n')` on text that may come from a CRLF checkout. The fix splits on `/\r?\n/`, except in a function that also joins lines back with `.join('\n')` or `.join('\r\n')`, or rebuilds offsets as `.length + 1`: there the new split would turn CRLF text into LF on the way back, or shift every offset after the first break, so the replacement is only offered as a suggestion, to be paired with re-joining on the text's own line break.
 
 ```typescript
 // ❌

@@ -198,6 +198,22 @@ export function unwrap(node: Node): Node {
   return current
 }
 
+/** The nodes a search for a spelling near another is bounded by. */
+const ENCLOSING_SCOPES = createSet(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'Program'])
+
+/**
+ * The source of the function a node sits in, or of the whole program at the top level.
+ *
+ * @param text - The file's text
+ * @param node - Any node
+ * @returns The enclosing function's text
+ */
+export function enclosingText(text: string, node: Node): string {
+  let scope = node
+  while (!ENCLOSING_SCOPES.has(scope.kind)) scope = scope.parent as Node
+  return text.slice(scope.start, scope.end)
+}
+
 /**
  * The name an expression is read through: an identifier, a written-out member, or the callee of a call.
  *

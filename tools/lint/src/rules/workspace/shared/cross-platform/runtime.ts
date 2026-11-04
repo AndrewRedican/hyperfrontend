@@ -13,7 +13,7 @@ import { posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { mergeEdits } from '@hyperfrontend/linter/helpers'
 import { argumentText, reportTiered } from './edits.ts'
-import { MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
+import { enclosingText, MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
 import { methodOf } from './separators.ts'
 
 /** The messages of these checks. */
@@ -57,9 +57,6 @@ const MANAGER_NAMES = createSet(['packageManager', 'pm'])
 
 /** The `node:fs` functions whose result carries a file mode. */
 const STATTERS = createSet(['statSync', 'lstatSync', 'fstatSync'])
-
-/** The nodes a file-mode read is scoped by when looking for a platform branch. */
-const MODE_SCOPES = createSet(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'Program'])
 
 // how: the POSIX paths are spelled from their segments, so this module does not write them out itself.
 /** The POSIX temporary directory. */
@@ -453,8 +450,6 @@ export function checkFileMode(scan: Scan, node: Node): void {
   const variable = object.kind === 'Identifier' ? scan.tracer.variableOf(object) : null
   const value = variable === null ? object : scan.tracer.valueOf(variable)
   if (value === null || !isStatCall(unwrap(value))) return
-  let scope: Node = node
-  while (!MODE_SCOPES.has(scope.kind)) scope = scope.parent as Node
-  if (scan.text.slice(scope.start, scope.end).includes('process.platform')) return
+  if (enclosingText(scan.text, node).includes('process.platform')) return
   scan.report(node, MESSAGES.fileMode)
 }

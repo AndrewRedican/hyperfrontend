@@ -13,7 +13,7 @@ import type { Part } from './origin.ts'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { mergeEdits } from '@hyperfrontend/linter/helpers'
 import { argumentText, quote, reportTiered, templateText } from './edits.ts'
-import { combine, isQualified, isUrlName, MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
+import { combine, enclosingText, isQualified, isUrlName, MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
 
 /** The messages of these checks. */
 const MESSAGES = {
@@ -32,6 +32,12 @@ const MESSAGES = {
     "`posix.{{ method }}()` splits on '/' alone, and this argument is a native path, which uses '\\' on Windows. Call `{{ method }}()` from node:path on native paths, or convert the path first with `workspaceRelativePath` or `normalizePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported.",
   lineSplit: "Splitting on a bare line feed leaves '\\r' on every line of a CRLF file. Split on `/\\r?\\n/`.",
 } as const
+
+/** The suggestion offered where the fix of a bare line-feed split is not applied. */
+const SUGGESTIONS = { lineSplit: "Split on `/\\r?\\n/`, then re-join with the text's own line break" } as const
+
+/** A function that joins lines back on a line feed, or rebuilds offsets one character per line break. */
+const REJOINS = /\.join\((['"`])(?:\\r)?\\n\1\)|\.length \+ 1\b/
 
 /** The string methods that match a separator. */
 const SEPARATOR_METHODS = createSet(['split', 'indexOf', 'lastIndexOf', 'startsWith', 'endsWith', 'includes', 'replace', 'replaceAll'])
@@ -200,7 +206,11 @@ export function checkMethodCall(scan: Scan, call: Node): void {
   if (method === null || argument === undefined) return
   const value = stringOf(argument)
   if (method.name === 'split' && (value === '\n' || value === '\r\n')) {
-    scan.report(argument, MESSAGES.lineSplit, { start: argument.start, end: argument.end, text: '/\\r?\\n/' })
+    const edit = { start: argument.start, end: argument.end, text: '/\\r?\\n/' }
+    // why: lines joined back on a line feed, or offsets rebuilt one character per break, would turn CRLF text into LF or shift every offset after the first break, so there the fix is only offered
+    if (REJOINS.test(enclosingText(scan.text, call)))
+      scan.report(argument, MESSAGES.lineSplit, null, [{ message: SUGGESTIONS.lineSplit, fix: edit }])
+    else scan.report(argument, MESSAGES.lineSplit, edit)
     return
   }
   if (scan.node && checkConversion(scan, call)) return

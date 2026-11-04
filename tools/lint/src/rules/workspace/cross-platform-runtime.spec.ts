@@ -301,6 +301,17 @@ testRule(rule, {
       BROWSER
     ),
     invalid(
+      'splits on a bare line feed where lines are joined back or offsets rebuilt, offered without a fix',
+      [
+        "function a(text: string) { return text.split('\\n').map(trim).join('\\n') }",
+        "function b(text: string) { let at = 0; for (const line of text.split('\\r\\n')) at += line.length + 1; return at }",
+        "const c = (text: string) => text.split('\\n').join(`\\r\\n`)",
+      ],
+      [at('lineSplit', 1, 46), at('lineSplit', 2, 70), at('lineSplit', 3, 40)],
+      undefined,
+      BROWSER
+    ),
+    invalid(
       'temporary paths written out',
       [
         "const a = '/tmp'",
