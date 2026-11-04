@@ -227,6 +227,12 @@ Every signature, option and return type is in the [API reference](https://www.hy
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File                       | Tree-Shakeable |
