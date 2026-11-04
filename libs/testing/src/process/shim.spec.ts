@@ -29,6 +29,11 @@ describe('process/shim', () => {
       assert.equal(quoteForCmd('C:\\My Dir\\'), '^"C:\\My^ Dir\\\\^"')
     })
 
+    it('doubles a long run of trailing backslashes', () => {
+      const run = '\\'.repeat(50_000)
+      assert.equal(quoteForCmd(`a b${run}`), `^"a^ b${run}${run}^"`)
+    })
+
     it('quotes an empty argument so it survives as one', () => {
       assert.equal(quoteForCmd(''), '^"^"')
     })
