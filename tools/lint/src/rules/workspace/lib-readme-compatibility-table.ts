@@ -1,8 +1,11 @@
 /**
  * A publishable library's README carries, under `## Compatibility`, the runtime table its
  * `project.json` declares: one row per runtime in the order the site draws them, the Node.js row
- * naming the floor of `engines.node`. Padding and the delimiter row are not compared; a drifted
- * table is rewritten from the declaration, and a section with no table is reported on its heading.
+ * naming the floor of `engines.node`. After it, and after the media region around it when there is
+ * one, comes the operating-system table, which a published README keeps when the region becomes
+ * an image. Padding and the delimiter row are not compared; a drifted table is rewritten from the
+ * declaration, a missing operating-system table is added, and a section with no table at all is
+ * reported on its heading.
  *
  * @module rules/workspace/lib-readme-compatibility-table
  */
@@ -15,6 +18,16 @@ import { isPublishableProject, readPackageFile, readProjectFile } from './shared
 
 /** The heading that opens the section, matched at the start of a line. */
 const HEADING = '## Compatibility'
+
+/** The line that closes a media region. */
+const MEDIA_END = '<!-- hf:media end -->'
+
+/** The operating systems the second table lists, with the label each row shows. */
+const OPERATING_SYSTEMS: readonly (readonly [string, string])[] = [
+  ['Linux', 'linux'],
+  ['macOS', 'macos'],
+  ['Windows', 'windows'],
+]
 
 /** The glyph each declared level renders as; anything else renders as unsupported. */
 const GLYPHS: Readonly<Record<string, string>> = { full: '✅', partial: '⚠️' }
@@ -69,6 +82,39 @@ function declaredTable(environments: unknown, engine: unknown): string[] {
 }
 
 /**
+ * Writes the operating-system table a declaration calls for, padded as the formatter pads it.
+ *
+ * @param systems - The `metadata.compatibility.operatingSystems` value
+ * @returns The table's lines
+ */
+function declaredSystemsTable(systems: unknown): string[] {
+  const levels: Record<string, unknown> = { ...(systems as object) }
+  const header = 'Operating System'
+  return [
+    `| ${header} | Supported |`,
+    `| ${'-'.repeat(header.length)} | :-------: |`,
+    ...OPERATING_SYSTEMS.map(([label, key]) => `| ${label.padEnd(header.length)} |    ${GLYPHS[levels[key] as string] ?? '❌'}     |`),
+  ]
+}
+
+/**
+ * The lines of the table that starts at the first table line of a run of lines.
+ *
+ * @param lines - The lines to search
+ * @returns The table's lines, empty when the run holds no table
+ */
+function tableIn(lines: readonly Line[]): Line[] {
+  const first = lines.findIndex((line) => line.text.startsWith('|'))
+  const table: Line[] = []
+  if (first === -1) return table
+  for (const line of lines.slice(first)) {
+    if (!line.text.startsWith('|')) break
+    table.push(line)
+  }
+  return table
+}
+
+/**
  * Reduces a table to what it says: each row but the delimiter as its trimmed cells, the text
  * before the first pipe and after the last dropped.
  *
@@ -104,8 +150,8 @@ export default defineRule<undefined, MarkdownNode>({
         const after = lines.slice(heading.row + 1)
         const end = after.findIndex((line) => line.text.startsWith('## ') || line.text.startsWith('### '))
         const section = end === -1 ? after : after.slice(0, end)
-        const first = section.findIndex((line) => line.text.startsWith('|'))
-        if (first === -1) {
+        const table = tableIn(section)
+        if (table.length === 0) {
           context.report({
             start: heading.offset,
             at: { line: heading.row + 1, column: 0, endLine: heading.row + 1, endColumn: HEADING.length },
@@ -114,24 +160,47 @@ export default defineRule<undefined, MarkdownNode>({
           })
           return
         }
-        const table: Line[] = []
-        for (const line of section.slice(first)) {
-          if (!line.text.startsWith('|')) break
-          table.push(line)
-        }
         const metadata = project?.metadata?.['compatibility'] as Record<string, unknown> | undefined
         const engines: Record<string, unknown> = { ...readPackageFile(directory)?.engines }
-        const declared = declaredTable(metadata?.['environments'], engines['node'])
-        if (saying(table.map((line) => line.text)).join('\n') === saying(declared).join('\n')) return
-        const last = table[table.length - 1] as Line
-        const start = (table[0] as Line).offset
-        const finish = last.offset + last.text.length
+        const eol = text.includes('\r\n') ? '\r\n' : '\n'
+        const compare = (found: readonly Line[], declared: readonly string[], message: string): void => {
+          if (saying(found.map((line) => line.text)).join('\n') === saying(declared).join('\n')) return
+          const first = found[0] as Line
+          const last = found[found.length - 1] as Line
+          context.report({
+            start: first.offset,
+            at: { line: first.row + 1, column: 0, endLine: last.row + 1, endColumn: last.text.length },
+            message,
+            fix: { start: first.offset, end: last.offset + last.text.length, text: declared.join(eol) },
+          })
+        }
+        compare(
+          table,
+          declaredTable(metadata?.['environments'], engines['node']),
+          'The compatibility table does not match metadata.compatibility in project.json and engines.node in package.json. Run lint with --fix to regenerate it.'
+        )
+        const rest = section.slice(section.indexOf(table[table.length - 1] as Line) + 1)
+        const closing = rest.findIndex((line) => line.text.trim() !== '')
+        const region = rest[closing]?.text.trim() === MEDIA_END
+        // how: the operating-system table is looked for after the media region that wraps the runtime table, which a published README replaces with an image
+        const anchor = region ? (rest[closing] as Line) : (table[table.length - 1] as Line)
+        const systems = tableIn(region ? rest.slice(closing + 1) : rest)
+        const declaredSystems = declaredSystemsTable(metadata?.['operatingSystems'])
+        if (systems.length > 0) {
+          compare(
+            systems,
+            declaredSystems,
+            'The operating-system table does not match metadata.compatibility.operatingSystems in project.json. Run lint with --fix to regenerate it.'
+          )
+          return
+        }
+        const insertAt = anchor.offset + anchor.text.length
         context.report({
-          start,
-          at: { line: (table[0] as Line).row + 1, column: 0, endLine: last.row + 1, endColumn: last.text.length },
+          start: anchor.offset,
+          at: { line: anchor.row + 1, column: 0, endLine: anchor.row + 1, endColumn: anchor.text.length },
           message:
-            'The compatibility table does not match metadata.compatibility in project.json and engines.node in package.json. Run lint with --fix to regenerate it.',
-          fix: { start, end: finish, text: declared.join(text.includes('\r\n') ? '\r\n' : '\n') },
+            'The Compatibility section carries no operating-system table after the runtime table and its media region. Run lint with --fix to add the one metadata.compatibility.operatingSystems declares.',
+          fix: { start: insertAt, end: insertAt, text: `${eol}${eol}${declaredSystems.join(eol)}` },
         })
       },
     }
