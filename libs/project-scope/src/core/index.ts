@@ -19,6 +19,7 @@ export type {
 export type { LogLevel, ScopedLogger, ScopedLoggerOptions } from './logger'
 export type { ParsedPath } from './path'
 export type { DetectedLineEnding, LineEndingStyle, PlatformInfo } from './platform'
+export type { ShimCommand } from './process'
 export { clearAllCaches, createCache, getCacheCount, memoize, unregisterCache } from './cache'
 export {
   addBom,
@@ -106,3 +107,4 @@ export {
   normalizeLineEndings,
   pathsEqual,
 } from './platform'
+export { quoteForCmd, shimCommand } from './process'
