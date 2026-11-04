@@ -281,11 +281,10 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
     delete json.targets
 
     const metadata = json.metadata ?? {}
-    // why: a re-run refreshes the environments and keeps what was added by hand beside them, such as the note
-    json.metadata = {
-      ...metadata,
-      compatibility: { ...(metadata['compatibility'] as Record<string, unknown> | undefined), environments: options.compatibility },
-    }
+    const compatibility = { ...(metadata['compatibility'] as Record<string, unknown> | undefined) }
+    // why: a re-run refreshes the environments and keeps what was added by hand beside them, such as the note; a library runs on all three pipeline legs, so a new one declares all three operating systems
+    const operatingSystems = compatibility['operatingSystems'] ?? { linux: 'full', macos: 'full', windows: 'full' }
+    json.metadata = { ...metadata, compatibility: { ...compatibility, environments: options.compatibility, operatingSystems } }
 
     const buildOptions: Record<string, unknown> = {
       esm: { bundleWorkspaceDeps: true },
