@@ -35,7 +35,7 @@ const anchorsByFile = createMap<string, ReadonlySet<string>>()
 export function headingSlug(heading: string): string {
   let text = heading
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^[\]]*)\]\([^)]*\)/g, '$1')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/\*\*([^*]*)\*\*/g, '$1')
     .replace(/\*([^*]*)\*/g, '$1')
@@ -196,7 +196,7 @@ export function linkProblem(index: DocsIndex, origins: LinkOrigins, href: string
     if (bare(url.host) === bare(createURL(origins.siteUrl).host)) return siteProblem(index, url)
     if (origins.repoUrl === '') return null
     const repository = createURL(origins.repoUrl)
-    const base = repository.pathname.replace(/\/+$/, '')
+    const base = repository.pathname.replace(/(?<!\/)\/+$/, '')
     if (url.host !== repository.host || (url.pathname !== base && !url.pathname.startsWith(`${base}/`))) return null
     return repositoryProblem(index, url.pathname.slice(base.length))
   }
