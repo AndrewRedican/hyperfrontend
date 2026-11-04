@@ -1,7 +1,9 @@
 /**
  * A publishable library declares where it runs in `metadata.compatibility`: the three runtimes
- * `node`, `browser` and `webWorker`, each at `full`, `partial` or `none`, with an optional note,
- * and the declaration must not contradict itself or the build.
+ * `node`, `browser` and `webWorker` and the three operating systems `linux`, `macos` and
+ * `windows`, each at `full`, `partial` or `none`, with an optional note. The declaration must not
+ * contradict itself or the build, and claims support only on an operating system whose pipeline
+ * leg runs the project.
  *
  * @module rules/workspace/lib-project-compatibility
  */
@@ -9,19 +11,28 @@
 import type { JsonObjectNode, JsonPropertyNode, JsonSpan } from '@hyperfrontend/json-utils'
 import type { JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { isString, propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
+import { exercisedEnvironments } from '@hyperfrontend/workspace'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 /** The runtimes a library declares. */
 const RUNTIMES = ['node', 'browser', 'webWorker']
 
-/** The support levels a runtime can be declared at. */
+/** The support levels a runtime or an operating system can be declared at. */
 const LEVELS = ['full', 'partial', 'none']
+
+/** The operating systems a library declares, named as the pipeline names its environments. */
+const OPERATING_SYSTEMS = ['linux', 'macos', 'windows']
+
+/** How each operating system reads in a message. */
+const SYSTEM_NAMES: Readonly<Record<string, string>> = { linux: 'Linux', macos: 'macOS', windows: 'Windows' }
 
 /** The build formats only a browser or a CDN consumer loads. */
 const BROWSER_FORMATS = ['iife', 'umd']
 
 const MISSING_COMPATIBILITY =
-  'Publishable library project.json is missing metadata.compatibility. Add: "metadata": { "compatibility": { "environments": { "node": "full", "browser": "full", "webWorker": "full" } } }'
+  'Publishable library project.json is missing metadata.compatibility. Add: "metadata": { "compatibility": { "environments": { "node": "full", "browser": "full", "webWorker": "full" }, "operatingSystems": { "linux": "full", "macos": "full", "windows": "full" } } }'
+const MISSING_OPERATING_SYSTEMS =
+  'metadata.compatibility declares no operatingSystems object. Add: "operatingSystems": { "linux": "full", "macos": "full", "windows": "full" }, using full, partial or none for each.'
 const MISSING_ENVIRONMENTS =
   'metadata.compatibility declares no environments object. Add: "environments": { "node": "full", "browser": "full", "webWorker": "full" }, using full, partial or none for each runtime.'
 const INVALID_NOTE = 'metadata.compatibility.note must be a non-empty string. Write the caveat as prose, or remove the field.'
@@ -112,6 +123,55 @@ function checkEnvironments(environments: JsonPropertyNode, root: JsonObjectNode,
   }
 }
 
+/**
+ * Checks the operating systems object and reports every problem in it, a claim on an operating
+ * system the pipeline never runs the project on among them.
+ *
+ * @param systems - The `operatingSystems` property
+ * @param root - The project file's root object
+ * @param context - Where to report
+ */
+function checkOperatingSystems(systems: JsonPropertyNode, root: JsonObjectNode, context: RuleContext<undefined, JsonTreeNode>): void {
+  if (systems.value.kind !== 'object') {
+    context.report({ ...spanOf(systems), message: MISSING_OPERATING_SYSTEMS })
+    return
+  }
+  const name = propertyOf(root, 'name')?.value
+  const exercised: readonly string[] = exercisedEnvironments(name !== undefined && isString(name) ? name.value : '')
+  const declared: string[] = []
+  for (const property of systems.value.properties) {
+    const system = property.key.value as string
+    if (!OPERATING_SYSTEMS.includes(system)) {
+      context.report({
+        ...spanOf(property),
+        message: `${system} is not an operating system this repository declares. Remove it, or rename it to one of linux, macos, windows.`,
+      })
+      continue
+    }
+    declared.push(system)
+    if (!isString(property.value) || !LEVELS.includes(property.value.value)) {
+      context.report({
+        ...spanOf(property),
+        message: `metadata.compatibility.operatingSystems.${system} must be full, partial or none. Replace the current value with one of those three levels.`,
+      })
+      continue
+    }
+    if (property.value.value === 'none' || exercised.includes(system)) continue
+    context.report({
+      ...spanOf(property),
+      message: `${system} is declared ${property.value.value}, but the pipeline runs this project on ${exercised.map((environment) => SYSTEM_NAMES[environment]).join(', ')} only, so nothing checks the claim. Declare none, or have the pipeline run the project there.`,
+    })
+  }
+  for (const system of OPERATING_SYSTEMS) {
+    if (declared.includes(system)) continue
+    context.report({
+      start: systems.value.start,
+      end: systems.value.end,
+      message: `metadata.compatibility.operatingSystems is missing ${system}. Declare it as full, partial or none.`,
+    })
+  }
+}
+
 export default manifestRule('workspace/lib-project-compatibility', 'project.json', (root, context) => {
   const metadata = propertyOf(root, 'metadata')
   const compatibility = metadata !== null && metadata.value.kind === 'object' ? propertyOf(metadata.value, 'compatibility') : null
@@ -126,16 +186,19 @@ export default manifestRule('workspace/lib-project-compatibility', 'project.json
   const environments = propertyOf(compatibility.value, 'environments')
   if (environments === null) context.report({ ...spanOf(compatibility), message: MISSING_ENVIRONMENTS })
   else checkEnvironments(environments, root, context)
+  const systems = propertyOf(compatibility.value, 'operatingSystems')
+  if (systems === null) context.report({ ...spanOf(compatibility), message: MISSING_OPERATING_SYSTEMS })
+  else checkOperatingSystems(systems, root, context)
   for (const property of compatibility.value.properties) {
     const key = property.key.value as string
-    if (key === 'environments') continue
+    if (key === 'environments' || key === 'operatingSystems') continue
     if (key === 'note') {
       if (!isString(property.value) || property.value.value.trim() === '') context.report({ ...spanOf(property), message: INVALID_NOTE })
       continue
     }
     context.report({
       ...spanOf(property),
-      message: `${key} is not a field of metadata.compatibility. Remove it; only environments and note are read.`,
+      message: `${key} is not a field of metadata.compatibility. Remove it; only environments, operatingSystems and note are read.`,
     })
   }
 })
