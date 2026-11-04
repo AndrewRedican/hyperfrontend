@@ -206,6 +206,12 @@ Every export, option and return type is in the [API reference](https://www.hyper
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 [`/cli`](https://www.hyperfrontend.dev/docs/libraries/project-scope/cli/) parses its arguments with Node's `util.parseArgs`, so it needs Node.js 18.3 or later; every other entry runs on 18.0.
 
 ### Output Formats
