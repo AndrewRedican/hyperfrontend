@@ -62,7 +62,7 @@ function canonical(text: string, dropTrailingZeros: boolean): string {
   const dot = mantissa.indexOf('.')
   if (dot === -1) {
     const whole = withoutLeadingZeros(mantissa)
-    return `${dropTrailingZeros ? whole.replace(/0+$/, '') : whole}e${shift + whole.length - 1}`
+    return `${dropTrailingZeros ? whole.replace(/(?<!0)0+$/, '') : whole}e${shift + whole.length - 1}`
   }
   const integer = withoutLeadingZeros(mantissa.slice(0, dot))
   const fraction = mantissa.slice(dot + 1)
