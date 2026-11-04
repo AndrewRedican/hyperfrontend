@@ -68,7 +68,7 @@ export function shortNameOf(packageName: string): string {
 /**
  * Narrows an unknown project.json value to a declared support level.
  *
- * @param value - The raw value read from `metadata.compatibility.environments`.
+ * @param value - The raw value read from `metadata.compatibility.environments` or `operatingSystems`.
  * @returns The support level, or null when the value declares nothing usable.
  */
 function toSupportLevel(value: unknown): SupportLevel | null {
@@ -181,6 +181,11 @@ function readMatrixLibrary(projectDir: string): MatrixLibrary | null {
       node: toSupportLevel(environments?.node),
       browser: toSupportLevel(environments?.browser),
       webWorker: toSupportLevel(environments?.webWorker),
+    },
+    operatingSystems: {
+      linux: toSupportLevel(compatibility?.operatingSystems?.linux),
+      macos: toSupportLevel(compatibility?.operatingSystems?.macos),
+      windows: toSupportLevel(compatibility?.operatingSystems?.windows),
     },
     note: toOptionalString(compatibility?.note),
     formats: {

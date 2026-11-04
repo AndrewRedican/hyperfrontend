@@ -9,6 +9,7 @@ export type {
   MatrixEnvironments,
   MatrixFormats,
   MatrixLibrary,
+  MatrixOperatingSystems,
   MatrixPackageJson,
   MatrixProjectJson,
   SupportLevel,

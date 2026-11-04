@@ -14,7 +14,10 @@ describe('renderCompatibilityDocument', () => {
         path: 'libs/logging',
         projectJson: publishableProject({
           name: 'lib-logging',
-          compatibility: { environments: { node: 'full', browser: 'full', webWorker: 'full' } },
+          compatibility: {
+            environments: { node: 'full', browser: 'full', webWorker: 'full' },
+            operatingSystems: { linux: 'full', macos: 'full', windows: 'full' },
+          },
           buildOptions: {
             esm: {},
             cjs: {},
@@ -33,7 +36,11 @@ describe('renderCompatibilityDocument', () => {
         path: 'libs/utils/data',
         projectJson: publishableProject({
           name: 'lib-data-utils',
-          compatibility: { environments: { node: 'full', browser: 'partial', webWorker: 'none' }, note: 'Reads DOM ranges.' },
+          compatibility: {
+            environments: { node: 'full', browser: 'partial', webWorker: 'none' },
+            operatingSystems: { linux: 'full', macos: 'full', windows: 'partial' },
+            note: 'Reads DOM ranges.',
+          },
         }),
         packageJson: { name: '@hyperfrontend/data-utils', version: '1.0.0', engines: { node: '>=18.0.0' } },
       },
@@ -68,17 +75,45 @@ describe('renderCompatibilityDocument', () => {
     ])
   })
 
-  it('renders one platform row per library with a glyph per environment', () => {
+  it('renders one platform row per library with a glyph per environment and operating system', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
     const platform = sectionOf(document, '## Platform Support')
 
     expect(platform).toContain(
       [
-        '| Library | Node.js | Browser | Web Worker | CDN Bundle |',
-        '| --- | --- | --- | --- | --- |',
-        '| `@hyperfrontend/data-utils` | ✅ | ⚠️ | ❌ | ❌ |',
-        '| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |',
+        '| Library | Node.js | Browser | Web Worker | Linux | macOS | Windows | CDN Bundle |',
+        '| --- | --- | --- | --- | --- | --- | --- | --- |',
+        '| `@hyperfrontend/data-utils` | ✅ | ⚠️ | ❌ | ✅ | ✅ | ⚠️ | ❌ |',
+        '| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |',
       ].join('\n')
+    )
+  })
+
+  it('says what a marked operating system promises when some library is not full on every one', () => {
+    const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
+
+    expect(document).toContain(
+      'A library marked ✅ or ⚠️ for an operating system is typechecked, linted, tested, built and end-to-end tested on it on every pull request.'
+    )
+  })
+
+  it('says every library runs and is tested everywhere when each is full on every operating system', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/everywhere',
+        projectJson: publishableProject({
+          name: 'lib-everywhere',
+          compatibility: {
+            environments: { node: 'full', browser: 'none', webWorker: 'none' },
+            operatingSystems: { linux: 'full', macos: 'full', windows: 'full' },
+          },
+        }),
+        packageJson: { name: '@hyperfrontend/everywhere', version: '1.0.0' },
+      },
+    ])
+
+    expect(buildCompatibilityDocument(root)).toContain(
+      'Every library runs on Linux, macOS and Windows, and is typechecked, linted, tested, built and end-to-end tested on all three on every pull request.'
     )
   })
 
@@ -97,7 +132,7 @@ describe('renderCompatibilityDocument', () => {
       },
     ])
 
-    expect(buildCompatibilityDocument(root)).toContain('| `@hyperfrontend/undeclared` | ❓ | ❓ | ❓ | ❌ |')
+    expect(buildCompatibilityDocument(root)).toContain('| `@hyperfrontend/undeclared` | ❓ | ❓ | ❓ | ❓ | ❓ | ❓ | ❌ |')
   })
 
   it('marks a CDN bundle when only a UMD build is configured', () => {
@@ -109,7 +144,7 @@ describe('renderCompatibilityDocument', () => {
       },
     ])
 
-    expect(buildCompatibilityDocument(root)).toContain('| `@hyperfrontend/umd-only` | ❓ | ❓ | ❓ | ✅ |')
+    expect(buildCompatibilityDocument(root)).toContain('| `@hyperfrontend/umd-only` | ❓ | ❓ | ❓ | ❓ | ❓ | ❓ | ✅ |')
   })
 
   it('lists a note for every library that declares one', () => {
@@ -337,7 +372,7 @@ describe('renderCompatibilityDocument', () => {
   it('renders the platform table header when the workspace holds no publishable library', () => {
     const document = renderCompatibilityDocument([])
 
-    expect(document).toContain('| Library | Node.js | Browser | Web Worker | CDN Bundle |')
+    expect(document).toContain('| Library | Node.js | Browser | Web Worker | Linux | macOS | Windows | CDN Bundle |')
   })
 
   it('renders no library row when the workspace holds no publishable library', () => {
@@ -361,6 +396,7 @@ describe('renderCompatibilityDocument', () => {
         nodeEngine: null,
         npmEngine: null,
         environments: { node: 'full', browser: 'none', webWorker: 'none' },
+        operatingSystems: { linux: 'full', macos: 'full', windows: 'full' },
         note: null,
         formats: { esm: true, cjs: true, iife: false, umd: false },
         globalNames: [],
@@ -380,6 +416,7 @@ describe('renderCompatibilityDocument', () => {
         nodeEngine: null,
         npmEngine: null,
         environments: { node: 'full', browser: 'none', webWorker: 'none' },
+        operatingSystems: { linux: 'full', macos: 'full', windows: 'full' },
         note: null,
         formats: { esm: true, cjs: true, iife: false, umd: false },
         globalNames: [],

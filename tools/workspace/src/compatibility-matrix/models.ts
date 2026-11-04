@@ -18,9 +18,26 @@ interface CompatibilityEnvironments {
 /**
  * The `metadata.compatibility` block of project.json.
  */
+/**
+ * Raw `metadata.compatibility.operatingSystems` values, unchecked.
+ */
+interface CompatibilityOperatingSystems {
+  /** Declared support on Linux. */
+  linux?: unknown
+  /** Declared support on macOS. */
+  macos?: unknown
+  /** Declared support on Windows. */
+  windows?: unknown
+}
+
+/**
+ *
+ */
 interface CompatibilityMetadata {
   /** Declared support per runtime environment. */
   environments?: CompatibilityEnvironments
+  /** Declared support per operating system. */
+  operatingSystems?: CompatibilityOperatingSystems
   /** Caveat rendered under the platform table. */
   note?: string
 }
@@ -141,6 +158,18 @@ export interface MatrixEnvironments {
 }
 
 /**
+ * Support levels a package declares per operating system, null where it declares nothing usable.
+ */
+export interface MatrixOperatingSystems {
+  /** Linux support. */
+  linux: SupportLevel | null
+  /** macOS support. */
+  macos: SupportLevel | null
+  /** Windows support. */
+  windows: SupportLevel | null
+}
+
+/**
  * Output formats a package's build target produces.
  */
 export interface MatrixFormats {
@@ -170,6 +199,8 @@ export interface MatrixLibrary {
   npmEngine: string | null
   /** Declared runtime support. */
   environments: MatrixEnvironments
+  /** Declared operating-system support. */
+  operatingSystems: MatrixOperatingSystems
   /** Caveat to render under the platform table, null when there is none. */
   note: string | null
   /** Output formats produced by the build target. */
