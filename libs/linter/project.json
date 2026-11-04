@@ -11,6 +11,11 @@
         "browser": "none",
         "webWorker": "none"
       },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      },
       "note": "Needs Node.js 24 or later: configurations are TypeScript modules loaded through Node's own type stripping."
     }
   },

@@ -129,7 +129,7 @@ The packaged rules reimplement rules from [ESLint](https://eslint.org/), [typesc
 
 ## Compatibility
 
-Requires Node.js 24 or later, on Linux or Windows. There is no browser build.
+Requires Node.js 24 or later. There is no browser build.
 
 <!-- hf:media start id="runtimes" scene="runtimes-linter" asset="runtimes" docs="#compatibility" alt="The runtimes @hyperfrontend/linter supports" -->
 
@@ -140,6 +140,12 @@ Requires Node.js 24 or later, on Linux or Windows. There is no browser build.
 | Web Workers     |    ❌     |
 
 <!-- hf:media end -->
+
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
 
 ### Output Formats
 
