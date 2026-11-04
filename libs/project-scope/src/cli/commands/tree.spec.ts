@@ -20,7 +20,7 @@ describe('treeCommand', () => {
 
   it('includes file/directory count summary', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT })
-    expect(result.output).toMatch(/\d+ director(y|ies), \d+ file/)
+    expect(result.output).toMatch(/\b\d+ director(y|ies), \d+ file/)
   })
 
   it('returns JSON output when format is json', () => {
@@ -268,7 +268,7 @@ describe('treeCommandDef argument parsing', () => {
 describe('treeCommand formatSize coverage', () => {
   it('formats small file sizes in bytes', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, filesOnly: true })
-    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\d+B/) })
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\b\d+B/) })
   })
 
   it('formats file sizes in KB range', () => {
