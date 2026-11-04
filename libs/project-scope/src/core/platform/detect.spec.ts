@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { detectPlatform, getPlatformInfo, detectCaseSensitivity, isCaseSensitiveFs, isWindows, isMac, isLinux } from './detect'
 
 describe('core/platform/detect', () => {
@@ -88,33 +91,41 @@ describe('core/platform/detect with mocked platforms', () => {
   })
 
   describe('detectCaseSensitivity on win32', () => {
-    it('returns false for Windows platform', async () => {
+    const scratch = useTempDir({ tree: { A: '' } })
+
+    it('answers from the file system rather than the platform name', async () => {
+      const caseSensitive = !existsSync(join(scratch.path, 'a'))
       jest.replaceProperty(process, 'platform', 'win32')
       const { detectCaseSensitivity: detect } = await import('./detect')
-      expect(detect()).toBe(false)
+      expect(detect()).toBe(caseSensitive)
     })
   })
 
-  describe('detectCaseSensitivity on darwin', () => {
-    it('returns false for macOS platform (default HFS+/APFS)', async () => {
-      jest.replaceProperty(process, 'platform', 'darwin')
-      const { detectCaseSensitivity: detect } = await import('./detect')
-      expect(detect()).toBe(false)
-    })
-  })
-
-  describe('detectCaseSensitivity on linux with fs error', () => {
-    it('returns true when file write fails', async () => {
-      jest.replaceProperty(process, 'platform', 'linux')
+  describe('detectCaseSensitivity when no file can be written', () => {
+    const unwritable = (): void => {
       jest.doMock('node:fs', () => ({
-        writeFileSync: jest.fn(() => {
+        mkdtempSync: jest.fn(() => {
           throw new Error('EACCES: permission denied')
         }),
+        writeFileSync: jest.fn(),
         existsSync: jest.fn(),
         unlinkSync: jest.fn(),
+        rmdirSync: jest.fn(),
       }))
+    }
+
+    it('falls back to case-sensitive on Linux', async () => {
+      jest.replaceProperty(process, 'platform', 'linux')
+      unwritable()
       const { detectCaseSensitivity: detect } = await import('./detect')
       expect(detect()).toBe(true)
+    })
+
+    it('falls back to case-insensitive on macOS', async () => {
+      jest.replaceProperty(process, 'platform', 'darwin')
+      unwritable()
+      const { detectCaseSensitivity: detect } = await import('./detect')
+      expect(detect()).toBe(false)
     })
   })
 
