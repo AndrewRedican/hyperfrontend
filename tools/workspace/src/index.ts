@@ -16,3 +16,4 @@ export type {
 export { collectMatrixLibraries, shortNameOf } from './compatibility-matrix/collect'
 export { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME, refreshCompatibilityDocument } from './compatibility-matrix/refresh'
 export { renderCompatibilityDocument } from './compatibility-matrix/render'
+export { exercisedEnvironments } from './pipeline/fold'

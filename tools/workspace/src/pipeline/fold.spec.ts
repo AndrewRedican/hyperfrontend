@@ -6,7 +6,17 @@ import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-i
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { libraryOfE2e } from '../graph/depends-on'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
-import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, railwayService, siblingTasks, upstreamPackages, withNeeds } from './fold'
+import {
+  buildChains,
+  e2eProjectsOf,
+  exercisedEnvironments,
+  isPublishable,
+  linuxTasks,
+  railwayService,
+  siblingTasks,
+  upstreamPackages,
+  withNeeds,
+} from './fold'
 import { planReason } from './model'
 
 const workspace = createPipelineWorkspace()
@@ -380,6 +390,17 @@ describe('linuxTasks', () => {
 
   it('ignores a task of a project the graph does not know', () => {
     expect(linuxTasks(graph, selection('lib-nobody:build'), false)).toEqual([])
+  })
+})
+
+describe('exercisedEnvironments', () => {
+  it('runs libraries and tools on all three environments and everything else on Linux', () => {
+    expect(['lib-alpha', 'tool-ling', 'docs-site', 'e2e-lib-alpha'].map(exercisedEnvironments)).toEqual([
+      ['linux', 'windows', 'macos'],
+      ['linux', 'windows', 'macos'],
+      ['linux'],
+      ['linux'],
+    ])
   })
 })
 
