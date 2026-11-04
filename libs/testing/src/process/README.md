@@ -86,3 +86,15 @@ it('stops on SIGINT', async () => {
 ```
 
 A child that has already ended resolves with how it did, and nothing is sent. Both take a [`createFakeChildProcess`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-createFakeChildProcess) stand-in as readily as a real child.
+
+### Starting npm on every platform
+
+`npm`, `npx`, `pnpm` and `yarn` are `.cmd` shims on Windows, which Node starts only through a shell. [`shimCommand`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-shimCommand) returns the program, arguments and [`shell`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-ShimCommand-prop-shell) option for the running platform: on Windows one command line with every argument quoted by [`quoteForCmd`](https://www.hyperfrontend.dev/docs/libraries/testing/process/#api-quoteForCmd) and no argument array, so a path with a space or an ampersand reaches npm intact and Node prints no deprecation; elsewhere the command and its arguments as given.
+
+```typescript
+import { execFileSync } from 'node:child_process'
+import { shimCommand } from '@hyperfrontend/testing/process'
+
+const npm = shimCommand('npm', ['install', '--no-save', tarballPath])
+execFileSync(npm.file, npm.args, { cwd: scratch.path, shell: npm.shell })
+```
