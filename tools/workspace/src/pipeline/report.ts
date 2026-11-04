@@ -44,7 +44,7 @@ export const EXCERPT_LINES = 60
  * @returns The lines, or null when the task printed nothing
  */
 export function failureExcerpt(log: string, limit: number = EXCERPT_LINES): string | null {
-  const lines = log.replace(/\s+$/, '').split(/\r?\n/)
+  const lines = log.trimEnd().split(/\r?\n/)
   if (lines.length === 1 && lines[0] === '') return null
   const failing = lines.findIndex((line) => /failing tests:\s*$/.test(line))
   if (failing === -1) return lines.slice(max(0, lines.length - limit)).join('\n')
