@@ -1,6 +1,7 @@
 import type { Tree } from '../model'
 import { execFileSync } from 'node:child_process'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { sdkInfo } from '../../shared/sdk-info'
 
 /** Package managers detectable from a consumer workspace's lockfile. */
@@ -56,8 +57,8 @@ export function detectPackageManager(exists: PathExists): PackageManager {
 export function installPackages(tree: Tree): void {
   const packageManager = detectPackageManager((relativePath) => tree.exists(relativePath))
   try {
-    // why: npm, yarn, and pnpm are .cmd shims on Windows, which Node only spawns through a shell.
-    execFileSync(packageManager, ['install'], { cwd: tree.root, stdio: 'inherit', shell: process.platform === 'win32' })
+    const command = shimCommand(packageManager, ['install'])
+    execFileSync(command.file, command.args, { cwd: tree.root, stdio: 'inherit', shell: command.shell })
   } catch {
     throw createError(
       `The ${sdkInfo.packageName} declaration was already written to package.json, but the automatic install failed. Run \`${packageManager} install\` in ${tree.root} to finish installing it.`
