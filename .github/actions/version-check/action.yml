@@ -70,7 +70,7 @@ runs:
       run: |
         echo "Validating versions for affected libraries..."
 
-        # The libraries owning a changed file, or every library when a global configuration file changes (nx.json, package.json, package-lock.json, tsconfig.base.json)
+        # The libraries owning a changed file, the ones that ship code the change touches, every library when the toolchain changes, and every library when a global configuration file changes (nx.json, package.json, package-lock.json, tsconfig.base.json)
         # This job only checks versions; the pre-push hook bumps them
         AFFECTED=$(node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts affected --target version-check --base "${{ inputs.base-ref }}" --head "${{ inputs.head-ref }}" --projects)
 

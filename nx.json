@@ -28,7 +28,14 @@
       }
     },
     "version-check": {
-      "inputs": ["{projectRoot}/**/*"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "^production",
+        {
+          "projects": ["tool-package", "lib-builder"],
+          "input": "production"
+        }
+      ],
       "executor": "@hyperfrontend/package:version-check",
       "options": {
         "scopeFiltering": {
