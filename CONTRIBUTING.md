@@ -289,6 +289,7 @@ Version bumps happen automatically via **lefthook pre-push hooks**. When you `gi
 - Just write conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
 - Push normally; versioning happens automatically
 - Your PR will include the version bump already applied
+- A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the builder or the package executors releases every library
 
 **If you need to bypass versioning (not recommended):**
 

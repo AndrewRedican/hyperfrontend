@@ -21,7 +21,7 @@ Format: `type(scope): subject` — one line, lowercase subject, no period, imper
 
 `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
 
-Version impact (computed at pre-push by the root `version:all` target, never by hand): `feat` → minor · `fix`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump.
+Version impact (computed at pre-push by the root `version:all` target, never by hand): `feat` → minor · `fix`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump. A releasable commit also patch-bumps every library that ships a copy of the code it changes, and one in `lib-builder` or `tool-package` patch-bumps every library.
 
 ## Scopes
 
