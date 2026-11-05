@@ -50,7 +50,7 @@ jobs:
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
       - name: Format
-        run: npm run -s hf -- format --check --all
+        run: npx hf format --check --all
 
       - name: Plan
         id: plan
@@ -122,6 +122,12 @@ jobs:
         run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Command line
+        run: |
+          # why: the hf executable is an npm link to TypeScript source plus the shim npm writes for this operating system; this is the one place each leg starts it the way a person does
+          npx hf show projects --json > /dev/null
+          (cd libs && npx hf show projects --json > /dev/null)
 
       - name: Run
         env:

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/26d9e6c609557d561dac4ad9179417adc7d3755f...e1fedeaec2e4a890fb7767750298f48de3434cbe) - 2026-11-05
+
+### Dependency Updates
+
+- **tool-package:** let the version batch inherit the commit window
+- **tool-package:** release a library the graph rebuilds
+
 ## [1.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
 
 ### Bug Fixes

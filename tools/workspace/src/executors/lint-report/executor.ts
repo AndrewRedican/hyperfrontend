@@ -112,10 +112,10 @@ function describeFailure(error: ExecError): string {
  * The command line a person types for a workspace command, as the report shows it.
  *
  * @param args - Arguments of the workspace command line
- * @returns The command through the root `hf` script
+ * @returns The command through the `hf` executable
  */
 function displayed(args: readonly string[]): string {
-  return ['npm', 'run', 'hf', '--', ...args].join(' ')
+  return ['npx', 'hf', ...args].join(' ')
 }
 
 /**

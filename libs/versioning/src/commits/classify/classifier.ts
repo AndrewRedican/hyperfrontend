@@ -52,7 +52,7 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
     return createClassifiedCommit(commit, raw, 'unscoped-file')
   }
 
-  if (hasScope && dependencyCommitMap) {
+  if (dependencyCommitMap) {
     const dependencyPath = findDependencyPath(scopes, raw.hash, dependencyCommitMap)
     if (dependencyPath) {
       return createClassifiedCommit(commit, raw, 'indirect-dependency', { dependencyPath })
@@ -119,18 +119,16 @@ export function classifyCommits(commits: readonly CommitWithRaw[], context: Clas
 }
 
 /**
- * Finds a dependency path for a given scope list and commit hash.
+ * Finds the dependency a commit reaches the project through.
  *
- * Verifies both:
- * 1. Any scope element matches a dependency name (or variation)
- * 2. The commit hash is in that dependency's commit set
- *
- * This prevents false positives from mislabeled commits.
+ * The commit hash decides: a commit is indirect when a dependency's commit set holds it,
+ * whatever its scope says, because the files it changes are what reach the project. The
+ * scope only chooses which dependency is named when several sets hold the hash.
  *
  * @param scopes - The commit scope array
- * @param hash - The commit hash to verify
+ * @param hash - The commit hash to look up
  * @param dependencyCommitMap - Map of dependencies to their commit hashes
- * @returns Dependency path if found and hash verified, undefined otherwise
+ * @returns The dependency path when a set holds the hash, undefined otherwise
  */
 function findDependencyPath(
   scopes: readonly string[],
@@ -138,20 +136,18 @@ function findDependencyPath(
   dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>>
 ): readonly string[] | undefined {
   const normalizedScopes = scopes.map((s) => s.toLowerCase()).filter((s) => s.length > 0)
-  if (normalizedScopes.length === 0) {
-    return undefined
-  }
+  let holder: string | undefined
 
   for (const [depName, depHashes] of dependencyCommitMap) {
+    if (!depHashes.has(hash)) continue
     const depVariations = getDependencyVariations(depName).map((v) => v.toLowerCase())
     if (normalizedScopes.some((ns) => depVariations.includes(ns))) {
-      if (depHashes.has(hash)) {
-        return [depName]
-      }
+      return [depName]
     }
+    holder ??= depName
   }
 
-  return undefined
+  return holder === undefined ? undefined : [holder]
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
- * The workspace's own command line, which the root `package.json` names `hf`. Usage, from anywhere
- * inside the workspace: `npm run hf -- run <project>:<target> [--name=value ...]` runs that one task, nothing it depends on first and nothing cached, from the workspace root,
+ * The workspace's own command line, the `hf` executable. Usage, from anywhere inside the
+ * workspace: `npx hf run <project>:<target> [--name=value ...]` runs that one task, nothing it depends on first and nothing cached, from the workspace root,
  * and exits 0 when it succeeds and 1 otherwise. The arguments after the task merge over the
  * target's options, or reach the commands of an `nx:run-commands` target.
  * `run-many -t <targets> [-p <names and globs> | --all]` runs those tasks and their prerequisites,
@@ -70,6 +70,8 @@ if (root === null) {
   write('run from inside the workspace: no nx.json above the working directory')
   process.exit(1)
 }
+// why: every command reads its paths from the workspace root, wherever in the workspace it was typed
+process.chdir(root)
 const key = pathKey(process.env, process.platform)
 // why: the tasks and the processes their executors start find the workspace's own binaries first, as they did when npx started them
 process.env[key] = searchPath(root, process.env[key], process.execPath, process.platform)

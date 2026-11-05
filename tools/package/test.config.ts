@@ -16,7 +16,9 @@ const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
   coverageInclude: [
     'src/readme/**/*.ts',
+    'src/executors/version-batch/lib/rebuilt-projects.ts',
     'src/executors/version-batch/lib/select-libraries.ts',
+    'src/executors/version/lib/shipped-change-commits.ts',
     'src/executors/version/lib/refresh-compatibility-matrix.ts',
     'src/generators/make-publishable/lib/**/*.ts',
     'src/lib/tree/**/*.ts',

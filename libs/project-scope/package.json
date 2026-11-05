@@ -1,10 +1,10 @@
 {
   "name": "@hyperfrontend/project-scope",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.3",
-    "@hyperfrontend/logging": "1.0.1"
+    "@hyperfrontend/immutable-api-utils": "1.0.4",
+    "@hyperfrontend/logging": "1.0.2"
   },
   "exports": {
     ".": "./src/index.js",

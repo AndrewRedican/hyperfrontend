@@ -117,7 +117,7 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
  *
  * @example Rename a library
  * ```bash
- * npm run hf -- generate rename lib-my-utils new-utils
+ * npx hf generate rename lib-my-utils new-utils
  * ```
  */
 export async function renameGenerator(tree: Tree, options: RenameGeneratorSchema): Promise<void> {

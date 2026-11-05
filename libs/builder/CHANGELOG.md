@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...e1fedeaec2e4a890fb7767750298f48de3434cbe) - 2026-11-05
+
+### Dependency Updates
+
+- **tool-package:** let the version batch inherit the commit window
+- **tool-package:** release a library the graph rebuilds
+- **lib-project-scope:** double trailing backslashes in quoteForCmd without a backtracking regex
+- **tool-package:** declare operating systems in make-publishable output
+- **tool-package:** quote the e2e and publish executors' npm spawns for cmd.exe
+- **lib-project-scope:** add shimCommand for starting windows cmd shims
+- **lib-project-scope:** probe file system case sensitivity on every platform
+- **lib-project-scope:** export isMac and isLinux beside isWindows
+
 ## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/f37ceab9d2cfb0e0bf05743be43c593842126850...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01
 
 ### Bug Fixes

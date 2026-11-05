@@ -6,9 +6,9 @@
  * it is shown in. Regenerate with:
  *
  * ```bash
- * npm run hf -- run tool-media:media --scene=clock-preview
- * npm run hf -- run tool-media:media --scene=heartbeat-preview
- * npm run hf -- run tool-media:media --scene=koi-pond-preview
+ * npx hf run tool-media:media --scene=clock-preview
+ * npx hf run tool-media:media --scene=heartbeat-preview
+ * npx hf run tool-media:media --scene=koi-pond-preview
  * ```
  *
  * The scenes live in `tools/media/scenes/`, the assets are committed under

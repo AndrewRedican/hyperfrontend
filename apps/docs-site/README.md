@@ -271,7 +271,7 @@ counted since, so the published page is current without a commit for every day.
 The committed dataset is refreshed on purpose, not as part of a build:
 
 ```bash
-npm run refresh-downloads            # or, from the root: npm run hf -- run docs-site:refresh-downloads
+npm run refresh-downloads            # or, from the root: npx hf run docs-site:refresh-downloads
 npm run refresh-downloads -- --force # run even when already refreshed today
 ```
 

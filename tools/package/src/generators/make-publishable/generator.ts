@@ -525,7 +525,7 @@ function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
  */
 function recordReadmeMedia(options: NormalizedOptions): void {
   logger.info(
-    `Note: Record the package banner and runtime strip: npm run hf -- run tool-media:media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
+    `Note: Record the package banner and runtime strip: npx hf run tool-media:media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
   )
 }
 
@@ -552,17 +552,17 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  *
  * @example Make a library publishable
  * ```bash
- * npm run hf -- generate make-publishable lib-my-utils --compatibility=isomorphic
+ * npx hf generate make-publishable lib-my-utils --compatibility=isomorphic
  * ```
  *
  * @example With custom global name and bundle entry
  * ```bash
- * npm run hf -- generate make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
+ * npx hf generate make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
  * ```
  *
  * @example Placed on a chosen level of the docs-site hierarchy and section of its index
  * ```bash
- * npm run hf -- generate make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
+ * npx hf generate make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {

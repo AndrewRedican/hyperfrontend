@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/list-utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Purpose-built collection utilities for queue management, filtering, and iteration patterns.",
   "license": "MIT",
   "sideEffects": false,
@@ -30,6 +30,6 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.3"
+    "@hyperfrontend/immutable-api-utils": "1.0.4"
   }
 }

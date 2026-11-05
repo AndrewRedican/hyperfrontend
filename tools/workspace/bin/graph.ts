@@ -1,7 +1,7 @@
 /**
  * Prints and persists the owned workspace graph. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts <command>`, or
- * `npm run hf -- graph <command>`, where the command is `projects [--json]`,
+ * `npx hf graph <command>`, where the command is `projects [--json]`,
  * `graph [--json]`, `explain <project>`, `explain <project:target> [--base <ref>] [--head <ref>]`,
  * `build [--force]`, `verify`, `status [--json]` or
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain]`.

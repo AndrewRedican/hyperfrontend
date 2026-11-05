@@ -9,16 +9,17 @@ This executor is used by CI to verify that lefthook versioning ran successfully 
 - **Read-only**: Does NOT modify any files or create commits
 - **Dry-run comparison**: Calculates expected state by running version flow in dry-run mode
 - **Changelog validation**: Uses `@hyperfrontend/versioning` changelog parsing to verify entry content
+- **Same rule as the bump**: Counts the changes that reach a library through code it ships or through the toolchain, exactly as the `version` executor does
 - **Clear remediation**: Provides actionable fix instructions on failure
 
 ## Usage
 
 ```bash
 # Check a single library
-npm run hf -- run lib-cryptography:version-check
+npx hf run lib-cryptography:version-check
 
 # Verbose output for debugging
-npm run hf -- run lib-cryptography:version-check --verbose
+npx hf run lib-cryptography:version-check --verbose
 ```
 
 On a pull request, the `version-check` action runs it for every library that owns a changed file.
@@ -61,12 +62,12 @@ Discrepancies:
     Actual:   2.0.0
 
 Remedy:
-  Run: npm run hf -- run lib-cryptography:version
+  Run: npx hf run lib-cryptography:version
   Or push again to trigger lefthook versioning
 
 To fix this issue:
   1. Pull latest changes: git pull origin <branch>
-  2. Run versioning: npm run hf -- run lib-cryptography:version
+  2. Run versioning: npx hf run lib-cryptography:version
   3. Commit the changes: git add . && git commit --amend --no-edit
   4. Push: git push --force-with-lease
 
@@ -95,7 +96,7 @@ The version-check executor is called by the `version-check` job in `ci-pr.yml`:
 - name: Validate versions
   run: |
     for lib in $AFFECTED; do
-      npm run hf -- run "$lib:version-check" --verbose=true
+      npx hf run "$lib:version-check" --verbose=true
     done
 ```
 

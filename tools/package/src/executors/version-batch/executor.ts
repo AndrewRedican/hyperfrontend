@@ -2,6 +2,7 @@ import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
 import type { VersionBatchExecutorSchema } from './schema'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
 import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+import { withShippedChanges } from '../version/lib/graph-change-sources'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { getLogger } from '../version/lib/logger'
 import { runVersionForProject } from '../version/lib/run-version-for-project'
@@ -93,6 +94,8 @@ export default async function versionBatchExecutor(
 
     const graph = workspaceGraph(workspaceRoot)
     logger.debug(`Loaded workspace graph with ${graph.projects.size} projects`)
+    // why: one resolver for the batch, so libraries released from the same commit share one reading of the graph and of the history
+    const tracked = withShippedChanges(scopeFiltering, graph, workspaceRoot)
 
     // why: a forced bump names its libraries, so affected detection is not consulted for it
     const affected = releaseAs === undefined ? await getAffectedLibraries(workspaceRoot, graph, base, head) : []
@@ -150,7 +153,7 @@ export default async function versionBatchExecutor(
           dryRun: false,
           verbose,
           quiet: !verbose,
-          scopeFiltering,
+          scopeFiltering: tracked,
           maxCommitFallback,
           releaseAs,
         })

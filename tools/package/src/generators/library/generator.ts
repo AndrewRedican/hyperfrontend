@@ -127,17 +127,17 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  *
  * @example Create an internal utility library
  * ```bash
- * npm run hf -- generate library --name=my-lib --type=util
+ * npx hf generate library --name=my-lib --type=util
  * ```
  *
  * @example Create a publishable library
  * ```bash
- * npm run hf -- generate library --name=my-lib --type=util --publishable --compatibility=isomorphic
+ * npx hf generate library --name=my-lib --type=util --publishable --compatibility=isomorphic
  * ```
  *
  * @example Create a nested library under utils
  * ```bash
- * npm run hf -- generate library --name=my-utils --directory=libs/utils
+ * npx hf generate library --name=my-utils --directory=libs/utils
  * ```
  */
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSchema): Promise<void> {

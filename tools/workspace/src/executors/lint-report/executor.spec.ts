@@ -142,7 +142,7 @@ describe('lintReportExecutor', () => {
     it('reports the exit code of the command', async () => {
       failWith({ status: 2, stdout: 'Oops! Something went wrong! :(\n', stderr: '\u001B[31mError: rule threw\u001B[39m\n' })
       await lintReportExecutor({}, context)
-      expect(report()).toEqual(expect.stringContaining('`npm run hf -- run-many -t lint --all --fix` exited with code 2'))
+      expect(report()).toEqual(expect.stringContaining('`npx hf run-many -t lint --all --fix` exited with code 2'))
     })
 
     it('reports the tail of the raw output without colour codes', async () => {
@@ -194,7 +194,7 @@ describe('lintReportExecutor', () => {
       failWith({ message: 'spawnSync node ENOENT' })
       await lintReportExecutor({}, context)
       expect(report()).toEqual(
-        expect.stringContaining('`npm run hf -- run-many -t lint --all --fix` could not be launched (spawnSync node ENOENT)')
+        expect.stringContaining('`npx hf run-many -t lint --all --fix` could not be launched (spawnSync node ENOENT)')
       )
     })
   })
@@ -234,7 +234,7 @@ describe('lintReportExecutor', () => {
       expect(report()).toEqual(
         expect.stringContaining(
           [
-            '**lib-b** `npm run hf -- run lib-b:lint --fix` exited with code 2',
+            '**lib-b** `npx hf run lib-b:lint --fix` exited with code 2',
             '',
             '```',
             'Oops! Something went wrong! :(',

@@ -4,7 +4,7 @@ Own the whole of the root `LIBRARY_COMPATIBILITY.md`, generating it from each pa
 
 ## Rule Details
 
-The compatibility matrix is a generated document, not a hand-maintained one. This rule derives the document the workspace should hold (through `buildCompatibilityDocument` from `@hyperfrontend/workspace`, the one generator every consumer shares), compares it with the file on disk, and reports one error when the two differ. The report carries a fix that replaces the entire file, so `npm run hf -- run @hyperfrontend/workspace:lint:all` (or `npm run hf -- run @hyperfrontend/workspace:lint --fix`) regenerates it after a hand edit to a manifest.
+The compatibility matrix is a generated document, not a hand-maintained one. This rule derives the document the workspace should hold (through `buildCompatibilityDocument` from `@hyperfrontend/workspace`, the one generator every consumer shares), compares it with the file on disk, and reports one error when the two differ. The report carries a fix that replaces the entire file, so `npx hf run @hyperfrontend/workspace:lint:all` (or `npx hf run @hyperfrontend/workspace:lint --fix`) regenerates it after a hand edit to a manifest.
 
 A version bump edits manifests after lint has run, so the version flow regenerates the document itself through the same generator and commits it with the bump. The rule is the check; the version flow is the other writer. Neither leaves the document a bump behind.
 
@@ -75,7 +75,7 @@ The generated document, byte for byte:
 ```markdown
 # Library Compatibility Matrix
 
-> Generated from each package's `project.json` and `package.json`. Regenerate it with `npm run hf -- run @hyperfrontend/workspace:lint:all` rather than editing it by hand.
+> Generated from each package's `project.json` and `package.json`. Regenerate it with `npx hf run @hyperfrontend/workspace:lint:all` rather than editing it by hand.
 
 ## Platform Support
 

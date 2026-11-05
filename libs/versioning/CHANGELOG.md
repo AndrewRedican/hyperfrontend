@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0](https://github.com/AndrewRedican/hyperfrontend/compare/26d9e6c609557d561dac4ad9179417adc7d3755f...e1fedeaec2e4a890fb7767750298f48de3434cbe) - 2026-11-05
+
+### Features
+
+- take dependency commits from a caller's resolver
+- cap a bump from indirect commits alone at a patch
+
+### Bug Fixes
+
+- classify a dependency commit by hash, not by scope
+
+### Dependency Updates
+
+- **tool-package:** let the version batch inherit the commit window
+- **tool-package:** release a library the graph rebuilds
+
 ## [0.9.4](https://github.com/AndrewRedican/hyperfrontend/compare/a531c8d91a1ae6e9cd706d44888afb5eb732c36b...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
 
 ### Bug Fixes

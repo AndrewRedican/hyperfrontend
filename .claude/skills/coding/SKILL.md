@@ -28,10 +28,10 @@ Know all enforced rules **before** generating code. Violations will be caught by
 Run in order, targeting only affected projects:
 
 ```bash
-npm run hf -- run <project-name>:test
-npm run hf -- run <project-name>:lint --fix
-npm run hf -- run <project-name>:typecheck
-npm run hf -- format --write
+npx hf run <project-name>:test
+npx hf run <project-name>:lint --fix
+npx hf run <project-name>:typecheck
+npx hf format --write
 ```
 
 ---

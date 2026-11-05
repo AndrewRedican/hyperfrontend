@@ -4,7 +4,7 @@ The workspace's lint integration: the workspace's own rule families, and [`@hype
 
 ## Running it
 
-Every project but the workspace root gets a `lint` target, inferred by the workspace graph, that runs `node <rel>/tools/lint/bin/lint.ts .` from the project root; projects under the `lint.exclude` globs of `nx.json` get none. `npm run hf -- run @hyperfrontend/workspace:lint:all` runs them all and writes the report. From any directory:
+Every project but the workspace root gets a `lint` target, inferred by the workspace graph, that runs `node <rel>/tools/lint/bin/lint.ts .` from the project root; projects under the `lint.exclude` globs of `nx.json` get none. `npx hf run @hyperfrontend/workspace:lint:all` runs them all and writes the report. From any directory:
 
 ```bash
 node tools/lint/bin/lint.ts [--fix | --fix-dry-run] [--format stylish|json] \
@@ -38,8 +38,8 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 ## Commands
 
 ```bash
-npm run hf -- run tool-lint:test
-npm run hf -- run tool-lint:typecheck
+npx hf run tool-lint:test
+npx hf run tool-lint:typecheck
 node tools/lint/scripts/parser-oracle.ts
 node tools/lint/scripts/bench.ts
 ```

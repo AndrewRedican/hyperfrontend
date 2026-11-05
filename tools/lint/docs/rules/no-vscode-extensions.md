@@ -13,7 +13,7 @@ string is left alone.
 ### Why?
 
 - **No tooling the workspace does not use.** Every extension the container installs runs in
-  everyone's editor. Formatting and linting run through `npm run hf --` and the git hooks, so an
+  everyone's editor. Formatting and linting run through `npx hf` and the git hooks, so an
   editor extension doing the same work is a second, drifting copy of it.
 - **A deliberate exception list.** Adding an extension means adding it to `allow` in the root
   `lint.config.ts`, so each one is a reviewed decision rather than a line slipped into the

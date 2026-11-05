@@ -1,5 +1,7 @@
 import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionCheckExecutorSchema } from './schema'
+import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+import { withShippedChanges } from '../version/lib/graph-change-sources'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { isVersionCommit } from '../version/lib/is-version-commit'
 import { getLogger } from '../version/lib/logger'
@@ -71,7 +73,7 @@ export default async function versionCheckExecutor(
     projectName,
     projectRoot,
     verbose: options.verbose,
-    scopeFiltering: options.scopeFiltering,
+    scopeFiltering: withShippedChanges(options.scopeFiltering, workspaceGraph(workspaceRoot), workspaceRoot),
     maxCommitFallback: options.maxCommitFallback,
     repository: options.repository,
   })
@@ -96,7 +98,7 @@ export default async function versionCheckExecutor(
       logger.log('')
       logger.log('To fix this issue:')
       logger.log('  1. Pull latest changes: git pull origin <branch>')
-      logger.log(`  2. Run versioning: npm run hf -- run ${projectName}:version`)
+      logger.log(`  2. Run versioning: npx hf run ${projectName}:version`)
       logger.log('  3. Commit the changes: git add . && git commit --amend --no-edit')
       logger.log('  4. Push: git push --force-with-lease')
       logger.log('')

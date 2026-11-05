@@ -88,14 +88,14 @@ Batch versioning executor for all affected libraries. This is the recommended ap
 
 ```bash
 # Preview batch version changes
-npm run hf -- run @hyperfrontend/workspace:version:all --dryRun
+npx hf run @hyperfrontend/workspace:version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
-npm run hf -- run @hyperfrontend/workspace:version:all
+npx hf run @hyperfrontend/workspace:version:all
 
 # Release a change to the package artifact that no commit type would release,
 # such as a readme: a forced patch, calculated from each published version
-npm run hf -- run @hyperfrontend/workspace:version:all \
+npx hf run @hyperfrontend/workspace:version:all \
   --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
 
@@ -162,12 +162,14 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
+A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it. See [the version executor](src/executors/version/README.md#changes-that-reach-a-library-indirectly).
+
 ## Development
 
 ```bash
 # Check and test the plugin
-npm run hf -- run-many -t typecheck,test -p tool-package
+npx hf run-many -t typecheck,test -p tool-package
 
 # Try it on a library
-npm run hf -- run lib-logging:build
+npx hf run lib-logging:build
 ```

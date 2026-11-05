@@ -43,7 +43,7 @@ jobs:
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
       - name: Format
-        run: npm run -s hf -- format --check --all
+        run: npx hf format --check --all
 
       - name: Plan
         id: plan
@@ -165,6 +165,12 @@ jobs:
           DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
           echo "${{ matrix.os }} graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
           [ "$DIGEST" = "${{ needs.plan.outputs.graph-digest }}" ]
+
+      - name: Command line
+        run: |
+          # why: the hf executable is an npm link to TypeScript source plus the shim npm writes for this operating system; this is the one place each leg starts it the way a person does
+          npx hf show projects --json > /dev/null
+          (cd libs && npx hf show projects --json > /dev/null)
 
       - name: Run
         env:

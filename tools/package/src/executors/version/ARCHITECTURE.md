@@ -43,6 +43,16 @@ docs(lib): update readme      → MINOR bump (project-specific)
 BREAKING CHANGE: remove API   → MAJOR bump
 ```
 
+### 4. The Graph Decides What a Change Reaches
+
+The version flow of `@hyperfrontend/versioning` attributes commits to a library by scope and by the files under its root. It knows nothing about imports. The executors supply that knowledge through the flow's `dependencyCommits` option:
+
+1. `selectReleaseBuilds` (`lib/graph-change-sources.ts`) asks the owned workspace graph which `build` tasks the changes since the library's published commit select, and why. The graph is read without its tool edges, so a reason says whether the library reaches a file through its own imports or through a declared input, and a file the build executor merely imports selects nothing.
+2. `createShippedChangeResolver` (`lib/shipped-change-commits.ts`) keeps the reasons that start from a file another project owns, leaves out global configuration and files of the workspace root, and maps each file to the commits that changed it.
+3. The flow classifies those commits as indirect and caps their effect at a patch.
+
+`version`, `version-check` and `version-batch` all build the option with `withShippedChanges`, so the check expects exactly what the bump produces. `version-batch` uses the same selection to find libraries that own no changed file and are still due a release.
+
 ## Component Details
 
 ### Safety Checks

@@ -62,7 +62,7 @@ Inspect each low-count entry (`git grep -n -F "$pkg"`):
 
 ```bash
 mv node_modules/ts-node /tmp/ts-node-bak
-npm run hf -- run lib-json-utils:test   # narrowest consuming target
+npx hf run lib-json-utils:test   # narrowest consuming target
 mv /tmp/ts-node-bak node_modules/ts-node
 ```
 
@@ -83,11 +83,11 @@ Inert-override removal = zero lock churn. Non-empty diff → not inert; stop, re
 
 ## Verify
 
-| Audited   | Commands                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Root      | `npm run hf -- run lib-json-utils:test`                                                                                   |
-| docs-site | `npx tsc --noEmit` + `node ../../tools/lint/bin/lint.ts package.json`; **never `npm run hf -- run docs-site:lint`** (OOM) |
-| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`                                            |
+| Audited   | Commands                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| Root      | `npx hf run lib-json-utils:test`                                                                                   |
+| docs-site | `npx tsc --noEmit` + `node ../../tools/lint/bin/lint.ts package.json`; **never `npx hf run docs-site:lint`** (OOM) |
+| Vue demo  | `npm run type-check` + `npm run test:unit -- --run` + `npx eslint src/App.vue`                                     |
 
 Removed a `@types/*` → type-check mandatory. Leave everything uncommitted.
 

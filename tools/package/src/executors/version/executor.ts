@@ -1,5 +1,7 @@
 import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionExecutorSchema } from './schema'
+import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+import { withShippedChanges } from './lib/graph-change-sources'
 import { getLogger } from './lib/logger'
 import { runVersionForProject } from './lib/run-version-for-project'
 
@@ -64,7 +66,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     diffFormat: options.diffFormat,
     rollbackOnFailure: options.rollbackOnFailure,
     repository: options.repository,
-    scopeFiltering: options.scopeFiltering,
+    scopeFiltering: withShippedChanges(options.scopeFiltering, workspaceGraph(workspaceRoot), workspaceRoot),
     maxCommitFallback: options.maxCommitFallback,
     backupChangelog: options.backupChangelog,
   })

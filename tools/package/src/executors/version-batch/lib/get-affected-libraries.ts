@@ -3,13 +3,16 @@ import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { getChangedFilesBetween } from '@hyperfrontend/versioning/git/operations'
 import { hasTarget } from '@hyperfrontend/workspace/graph'
+import { selectReleaseBuilds } from '../../version/lib/graph-change-sources'
+import { rebuiltProjects } from './rebuilt-projects'
 
 /**
- * Gets the list of affected libraries based on git changes.
+ * Gets the libraries a change may make due a release.
  *
- * Uses git diff to find changed files and maps them to projects
- * through the workspace graph. Only returns libraries that have
- * a `version` target defined.
+ * A library is a candidate when it owns a changed file, or when the workspace graph
+ * selects its build for the change because of a file another project owns. Only
+ * libraries that have a `version` target are returned; the version flow then decides
+ * whether each one is bumped.
  *
  * @param workspaceRoot - Absolute path to workspace root
  * @param graph - The workspace graph
@@ -37,6 +40,9 @@ export async function getAffectedLibraries(
       affectedProjects.add(project.name)
     }
   }
+
+  // why: a library that owns no changed file is still due a release when the graph rebuilds it for a change to code it ships or to the toolchain that builds it
+  for (const name of rebuiltProjects(graph, selectReleaseBuilds(graph, workspaceRoot, base, head))) affectedProjects.add(name)
 
   return from(affectedProjects)
     .filter((projectName) => hasVersionTarget(graph, projectName))
