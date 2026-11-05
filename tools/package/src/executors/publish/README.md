@@ -25,13 +25,13 @@ The `@hyperfrontend/package:publish` executor publishes built library packages t
 
 ```bash
 # Publish a single library
-npm run hf -- run-many -t publish -p lib-cryptography
+npx hf run-many -t publish -p lib-cryptography
 
 # Preview what would be published
-npm run hf -- run-many -t publish -p lib-cryptography --dryRun
+npx hf run-many -t publish -p lib-cryptography --dryRun
 
 # Publish all affected libraries
-npm run hf -- affected -t publish --base=main
+npx hf affected -t publish --base=main
 ```
 
 ---
@@ -42,20 +42,20 @@ npm run hf -- affected -t publish --base=main
 
 ```bash
 # Publish to npm
-npm run hf -- run-many -t publish -p lib-cryptography
+npx hf run-many -t publish -p lib-cryptography
 
 # Publish with a specific tag
-npm run hf -- run-many -t publish -p lib-cryptography --tag=beta
+npx hf run-many -t publish -p lib-cryptography --tag=beta
 
 # Publish with restricted access (private package)
-npm run hf -- run-many -t publish -p lib-cryptography --access=restricted
+npx hf run-many -t publish -p lib-cryptography --access=restricted
 ```
 
 ### Dry Run
 
 ```bash
 # See what would be published without actually publishing
-npm run hf -- run-many -t publish -p lib-cryptography --dryRun
+npx hf run-many -t publish -p lib-cryptography --dryRun
 ```
 
 Output shows:
@@ -69,14 +69,14 @@ Output shows:
 
 ```bash
 # Publish to a private registry
-npm run hf -- run-many -t publish -p lib-cryptography --registry=https://registry.mycompany.com
+npx hf run-many -t publish -p lib-cryptography --registry=https://registry.mycompany.com
 ```
 
 ### With 2FA
 
 ```bash
 # Publish with one-time password
-npm run hf -- run-many -t publish -p lib-cryptography --otp=123456
+npx hf run-many -t publish -p lib-cryptography --otp=123456
 ```
 
 ---
@@ -163,7 +163,7 @@ In CI, set this as a secret:
 - name: Publish
   env:
     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  run: npm run hf -- run-many -t publish -p lib-cryptography
+  run: npx hf run-many -t publish -p lib-cryptography
 ```
 
 ---
@@ -194,8 +194,8 @@ publish:
         registry-url: 'https://registry.npmjs.org'
 
     - run: npm ci
-    - run: npm run hf -- run lib-cryptography:build
-    - run: npm run hf -- run lib-cryptography:publish
+    - run: npx hf run lib-cryptography:build
+    - run: npx hf run lib-cryptography:publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
@@ -208,7 +208,7 @@ publish:
 
 **Cause:** Package hasn't been built yet.
 
-**Solution:** Run `npm run hf -- run <project>:build` first, or run the publish through `npm run hf -- run-many -t publish -p <project>`, which builds first because the publish target depends on `build`.
+**Solution:** Run `npx hf run <project>:build` first, or run the publish through `npx hf run-many -t publish -p <project>`, which builds first because the publish target depends on `build`.
 
 ### "package.json not found in dist"
 

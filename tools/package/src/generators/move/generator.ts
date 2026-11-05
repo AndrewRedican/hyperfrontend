@@ -38,17 +38,17 @@ import {
  *
  * @example Move a library to a different directory
  * ```bash
- * npm run hf -- generate move lib-my-utils libs/utils
+ * npx hf generate move lib-my-utils libs/utils
  * ```
  *
  * @example Move and rename a library
  * ```bash
- * npm run hf -- generate move lib-my-utils libs/utils --newName=data
+ * npx hf generate move lib-my-utils libs/utils --newName=data
  * ```
  *
  * @example Move without changing the project name
  * ```bash
- * npm run hf -- generate move lib-my-utils libs/utils --updateName=false
+ * npx hf generate move lib-my-utils libs/utils --updateName=false
  * ```
  */
 export async function moveGenerator(tree: Tree, options: MoveGeneratorSchema): Promise<void> {
