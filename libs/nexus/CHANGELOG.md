@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...a0f7b54607f0a998df303d4f46418c5b47e8dce8) - 2026-11-05
+
+### Dependency Updates
+
+- **tool-package:** release a library the graph rebuilds
+- **lib-json-utils:** keep the nested-quantifier probes linear on repeated parentheses
+- **lib-testing:** double trailing backslashes in quoteForCmd without a backtracking regex
+- **tool-package:** declare operating systems in make-publishable output
+- **tool-package:** quote the e2e and publish executors' npm spawns for cmd.exe
+- **lib-testing:** quote the packed consumer's npm install for cmd.exe
+- **lib-testing:** add shimCommand to the process entry
+- **tool-package:** run the nx e2e suites one at a time on windows
+- **lib-testing:** run a project's tests from the real path of its root
+- **lib-testing:** add sendSignal and cleanSignalExit
+- **lib-testing:** match setup files by their real path
+- **lib-builder:** keep platform-restricted packages external
+- **lib-builder:** keep chunks a bare side-effect import reaches
+- **lib-cryptography:** return an ArrayBuffer-backed array from getRandomValues
+- **lib-string-utils:** accept any ArrayBufferLike in arrayBufferToUtf8String
+- **lib-string-utils:** return an ArrayBuffer-backed array from utf8StringToUint8Array
+- **lib-immutable-api-utils:** return ArrayBuffer-backed views from the typed array factories
+- **lib-builder:** fail the build on a declaration alias cycle between entries
+- **lib-builder:** list every third-party package the output inlines in THIRD_PARTY_LICENSES.md
+- **lib-builder:** reproduce dependency license texts in THIRD_PARTY_LICENSES.md
+- **tool-package:** drop npm's silent flag from the version remedies
+- **tool-package:** locate generator templates from the tree root
+- **tool-package:** add a provenance option to the publish executor
+- **tool-package:** locate the test runner from the workspace root
+- **lib-json-utils:** rethrow what is not the parser's own failure
+- **lib-testing:** pass consumer run arguments and result path through the environment
+- **tool-package:** scaffold e2e specs on the packed consumer
+- **tool-package:** hand e2e suites the packed tarball path
+- **lib-testing:** drive a packed package from a consumer entry
+- **lib-builder:** skip type checking in workers that drop diagnostics
+- **lib-builder:** build browser bundles from one entry, refuse several
+
 ## [3.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Bug Fixes

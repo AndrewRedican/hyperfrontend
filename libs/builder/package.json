@@ -1,13 +1,13 @@
 {
   "name": "@hyperfrontend/builder",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
   "license": "MIT",
   "dependencies": {
-    "@hyperfrontend/logging": "1.0.1",
-    "@hyperfrontend/immutable-api-utils": "1.0.3",
-    "@hyperfrontend/project-scope": "0.5.0",
-    "@hyperfrontend/versioning": "0.9.4",
+    "@hyperfrontend/logging": "1.0.2",
+    "@hyperfrontend/immutable-api-utils": "1.0.4",
+    "@hyperfrontend/project-scope": "0.5.1",
+    "@hyperfrontend/versioning": "0.10.0",
     "@rollup/plugin-commonjs": "29.0.3",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",
