@@ -212,6 +212,9 @@ export function createAnalyzeCommitsStep(): FlowStep {
       const commits: ConventionalCommit[] = includedCommits.map((c) => toChangelogCommit(c))
 
       const { summary } = classificationResult
+      const directCommits: ConventionalCommit[] = includedCommits
+        .filter((c) => c.source !== 'indirect-dependency' && c.source !== 'indirect-infra')
+        .map((c) => toChangelogCommit(c))
       const message = buildSummaryMessage(commits.length, rawCommits.length, summary, strategy)
 
       logger.debug(
@@ -228,6 +231,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
           classificationResult,
         },
         message,
+        directCommits,
       }
     },
     {

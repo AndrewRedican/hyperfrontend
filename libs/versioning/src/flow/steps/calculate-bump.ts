@@ -95,7 +95,7 @@ export function createCalculateBumpStep(): FlowStep {
     'Calculate Version Bump',
     async (ctx) => {
       const { config, state, logger } = ctx
-      const { commits, currentVersion, isFirstRelease } = state
+      const { commits, directCommits, currentVersion, isFirstRelease } = state
 
       if (isFirstRelease) {
         const configuredFirst = config.firstReleaseVersion ?? '0.1.0'
@@ -189,7 +189,10 @@ export function createCalculateBumpStep(): FlowStep {
       const minorTypes = config.minorTypes ?? ['feat']
       const patchTypes = config.patchTypes ?? ['fix', 'perf', 'revert']
 
-      const bumpType = calculateBumpFromCommits(commits, minorTypes, patchTypes, currentVersion ?? '0.0.0')
+      const ownBump = calculateBumpFromCommits(directCommits ?? commits, minorTypes, patchTypes, currentVersion ?? '0.0.0')
+      // why: a change that reaches the project only through a dependency or infrastructure says its contents changed, not that its own interface did
+      const bumpType: BumpType =
+        ownBump === 'none' && directCommits !== undefined && commits.length > directCommits.length ? 'patch' : ownBump
 
       if (bumpType === 'none') {
         return {

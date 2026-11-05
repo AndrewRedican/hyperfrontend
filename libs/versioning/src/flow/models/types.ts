@@ -39,6 +39,9 @@ export interface FlowState {
   /** Analyzed commits since last release */
   readonly commits?: readonly ConventionalCommit[]
 
+  /** The analyzed commits attributed to the project itself, leaving out the ones that reach it through a dependency or infrastructure */
+  readonly directCommits?: readonly ConventionalCommit[]
+
   /** Classification result with source attribution (when scope filtering enabled) */
   readonly classificationResult?: ClassificationResult
 
