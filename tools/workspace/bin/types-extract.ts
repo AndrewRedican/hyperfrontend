@@ -1,7 +1,7 @@
 /**
  * Regenerates or checks the upstream-compatible declarations the workspace carries. Usage, from
  * the workspace root: `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts [--check | --update]`;
- * the targets run through `npm run hf -- run tool-workspace:types-extract` and `npm run hf -- run tool-workspace:types-extract-check` pass the hook.
+ * the targets run through `npx hf run tool-workspace:types-extract` and `npx hf run tool-workspace:types-extract-check` pass the hook.
  *
  * @module bin/types-extract
  */

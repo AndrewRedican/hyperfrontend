@@ -1,7 +1,7 @@
 /**
  * Plans and runs the pipeline. Usage, from the workspace root:
  * `node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts <command>`, or
- * `npm run hf -- run tool-workspace:pipeline <command>`, where the command is
+ * `npx hf run tool-workspace:pipeline <command>`, where the command is
  * `plan [--base <ref> | --planned-base] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
  * `run [--plan <file>] [--environment linux|windows|macos] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>[,<job>]] [--head-sha <sha>]`,
  * `finalize [--environment linux|windows|macos] [--summary]`,
