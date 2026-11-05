@@ -239,6 +239,12 @@ const result: number = addOnce(2, 3) // Type safe ✓
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File                       | Tree-Shakeable |

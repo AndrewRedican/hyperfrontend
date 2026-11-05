@@ -82,14 +82,14 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  if (/\([^)]*[+*]\)[+*]/.test(pattern)) {
+  if (/\([^()]*[+*]\)[+*]/.test(pattern)) {
     return {
       safe: false,
       reason: 'Nested quantifiers detected - may cause catastrophic backtracking',
     }
   }
 
-  if (/\([^)]*[+*]\)\{\d+,\d*\}/.test(pattern)) {
+  if (/\([^()]*[+*]\)\{\d+,\d*\}/.test(pattern)) {
     return {
       safe: false,
       reason: 'Nested quantifiers with bounds detected - may cause catastrophic backtracking',

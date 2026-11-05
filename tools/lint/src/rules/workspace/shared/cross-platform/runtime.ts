@@ -13,7 +13,7 @@ import { posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { mergeEdits } from '@hyperfrontend/linter/helpers'
 import { argumentText, reportTiered } from './edits.ts'
-import { MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
+import { enclosingText, isQualified, MAX_HOPS, nameOf, partsOf, stringOf, unwrap } from './origin.ts'
 import { methodOf } from './separators.ts'
 
 /** The messages of these checks. */
@@ -24,7 +24,9 @@ const MESSAGES = {
     "`{{ target }}` takes a module specifier, and a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Pass `pathToFileURL(path).href` from node:url instead.",
   urlPathname: "`.pathname` of a module URL is '/C:/x' with percent-encoding on Windows. Use `fileURLToPath()` from node:url.",
   shellShim:
-    "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Pass `shell: process.platform === 'win32'` and keep its arguments free of spaces and shell metacharacters.",
+    "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Spawn it through `shimCommand` from @hyperfrontend/project-scope/core/process, or @hyperfrontend/testing/process in specs and e2e suites, which quotes its arguments for cmd.exe; a script that cannot import either passes `shell: process.platform === 'win32'` and keeps its arguments free of spaces and shell metacharacters.",
+  bareShellShim:
+    '`shell` on Windows alone hands the arguments to cmd.exe unescaped, and Node 24 warns about an argument array beside a shell (DEP0190). Spawn through `shimCommand` from @hyperfrontend/project-scope/core/process, or @hyperfrontend/testing/process in specs and e2e suites, which quotes the arguments and passes no array.',
   binShim:
     "'{{ command }}' under node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, which cannot be spawned without a shell (ENOENT or EINVAL), and a shell splits a path that contains a space. Spawn `process.execPath` with the package's entry script, resolved with `require.resolve()`.",
   splitCommand:
@@ -57,9 +59,6 @@ const MANAGER_NAMES = createSet(['packageManager', 'pm'])
 
 /** The `node:fs` functions whose result carries a file mode. */
 const STATTERS = createSet(['statSync', 'lstatSync', 'fstatSync'])
-
-/** The nodes a file-mode read is scoped by when looking for a platform branch. */
-const MODE_SCOPES = createSet(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'Program'])
 
 // how: the POSIX paths are spelled from their segments, so this module does not write them out itself.
 /** The POSIX temporary directory. */
@@ -246,13 +245,14 @@ export function checkRuntimeCall(scan: Scan, call: Node): void {
 function checkSpawn(scan: Scan, call: Node, command: Node, rest: readonly Node[]): void {
   const options = rest.find((node) => node.kind === 'ObjectExpression')
   const properties = (options?.properties ?? []) as readonly Node[]
-  if (
-    properties.some(
-      (property) =>
-        property.computed !== true && ((property.key as Node | undefined)?.name ?? (property.key as Node | undefined)?.value) === 'shell'
-    )
+  const shell = properties.find(
+    (property) =>
+      property.computed !== true && ((property.key as Node | undefined)?.name ?? (property.key as Node | undefined)?.value) === 'shell'
   )
+  if (shell !== undefined) {
+    if (scan.typescript && isWindowsTest(scan, shell.value as Node)) scan.report(shell, MESSAGES.bareShellShim)
     return
+  }
   if (isFirstWord(scan, command)) {
     scan.report(call, fill(MESSAGES.splitCommand, 'command', scan.text.slice(command.start, command.end)))
     return
@@ -278,7 +278,31 @@ function checkSpawn(scan: Scan, call: Node, command: Node, rest: readonly Node[]
       : last === undefined
         ? { start: options.start, end: options.end, text: `{ ${SHELL} }` }
         : { start: last.end, end: last.end, text: `, ${SHELL}` }
-  scan.report(call, fill(MESSAGES.shellShim, 'command', shim), null, [{ message: SUGGESTIONS.shell, fix: edit }])
+  // why: a TypeScript source imports `shimCommand` instead, and a shell decided on the platform there is reported in turn
+  scan.report(call, fill(MESSAGES.shellShim, 'command', shim), null, scan.typescript ? [] : [{ message: SUGGESTIONS.shell, fix: edit }])
+}
+
+/**
+ * Whether a `shell` option is decided by the platform being Windows: `process.platform` compared
+ * with `'win32'` either way round, written out or held by a variable.
+ *
+ * @param scan - The file's checks
+ * @param node - The option's value
+ * @returns Whether it is
+ */
+function isWindowsTest(scan: Scan, node: Node): boolean {
+  let test = unwrap(node)
+  if (test.kind === 'Identifier') {
+    const variable = scan.tracer.variableOf(test)
+    const value = variable === null ? null : scan.tracer.valueOf(variable)
+    if (value === null) return false
+    test = unwrap(value)
+  }
+  if (test.kind !== 'BinaryExpression' || (test.operator !== '===' && test.operator !== '==')) return false
+  const sides = [test.left as Node, test.right as Node]
+  return (
+    sides.some((side) => stringOf(side) === 'win32') && sides.some((side) => isQualified(scan.tracer.qualify(side), 'process:platform'))
+  )
 }
 
 /**
@@ -453,8 +477,6 @@ export function checkFileMode(scan: Scan, node: Node): void {
   const variable = object.kind === 'Identifier' ? scan.tracer.variableOf(object) : null
   const value = variable === null ? object : scan.tracer.valueOf(variable)
   if (value === null || !isStatCall(unwrap(value))) return
-  let scope: Node = node
-  while (!MODE_SCOPES.has(scope.kind)) scope = scope.parent as Node
-  if (scan.text.slice(scope.start, scope.end).includes('process.platform')) return
+  if (enclosingText(scan.text, node).includes('process.platform')) return
   scan.report(node, MESSAGES.fileMode)
 }

@@ -70,8 +70,10 @@ export const HELPER_EXPORTS = {
     'createCapturedOutput',
     'createFakeChildProcess',
     'createTtyInput',
+    'quoteForCmd',
     'readAll',
     'sendSignal',
+    'shimCommand',
     'spawnSyncResult',
   ],
 }

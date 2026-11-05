@@ -186,6 +186,12 @@ intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later. 
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File        | Tree-Shakeable |

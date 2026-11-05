@@ -44,7 +44,7 @@ export function object(p: TypeParser): TypeNode {
  */
 function fieldStartsAhead(p: TypeParser): boolean {
   const before = p.text.slice(0, p.pos)
-  return /\n\s*$/.test(before)
+  return before.slice(before.trimEnd().length).includes('\n')
 }
 
 /**

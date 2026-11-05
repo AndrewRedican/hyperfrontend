@@ -9,7 +9,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { executeTask, logPathOf, needsShell, replayLines, runCommand, shellSafe } from './execute'
+import { executeTask, logPathOf, needsShell, replayLines, runCommand } from './execute'
 
 const directory = useTempDir({ prefix: 'execute-' })
 
@@ -63,16 +63,6 @@ function nodeTask(script: string, fields: Partial<PlanTask> = {}): PlanTask {
     ...fields,
   }
 }
-
-describe('shellSafe', () => {
-  it('quotes an argument with a space on Windows', () => {
-    expect(shellSafe(['npx', 'a b', 'c'], 'win32')).toEqual(['npx', '"a b"', 'c'])
-  })
-
-  it('leaves the arguments alone elsewhere', () => {
-    expect(shellSafe(['npx', 'a b'], 'linux')).toEqual(['npx', 'a b'])
-  })
-})
 
 describe('runCommand', () => {
   it('captures what the command printed, in order', async () => {
@@ -251,7 +241,7 @@ describe('runCommand', () => {
     expect(options).toEqual([['node', ['-e', 'process.stdout.write("a b")'], false, false]])
   })
 
-  it('launches a shim through a shell on Windows, quoting what holds a space', async () => {
+  it('launches a shim through a shell on Windows as one quoted line with no argument array', async () => {
     const options: unknown[] = []
     await runCommand(['npx', '-p', 'a b'], {
       cwd: directory.path,
@@ -261,7 +251,7 @@ describe('runCommand', () => {
         return spawn('node', ['-e', '1'], { ...spawnOptions, shell: false })
       },
     })
-    expect(options).toEqual([['npx', ['-p', '"a b"'], true]])
+    expect(options).toEqual([['npx -p ^"a^ b^"', [], true]])
   })
 })
 

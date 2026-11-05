@@ -5,7 +5,8 @@ import { existsSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import { createTempDir } from '../fs/temp-dir'
-import { createPackedConsumer, npmArguments, usePackedConsumer } from './packed-consumer'
+import { shimCommand } from '../process/shim'
+import { createPackedConsumer, usePackedConsumer } from './packed-consumer'
 
 /** The packages the suites pack, as the trees `npm pack` is run over. */
 const PACKAGES = {
@@ -43,11 +44,8 @@ after(() => source.remove())
  * @returns The absolute path of the `.tgz` npm wrote beside it.
  */
 function pack(name: keyof typeof PACKAGES): string {
-  const output = execFileSync('npm', ['pack', '--json', '--loglevel=error'], {
-    cwd: source.resolve(name),
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  })
+  const npm = shimCommand('npm', ['pack', '--json', '--loglevel=error'])
+  const output = execFileSync(npm.file, npm.args, { cwd: source.resolve(name), encoding: 'utf8', shell: npm.shell })
   const [result] = JSON.parse(output) as Array<{ filename: string }>
   return source.resolve(name, result.filename)
 }
@@ -235,16 +233,6 @@ describe('createPackedConsumer refusals', () => {
   it('rethrows the install failure of a file npm cannot install', () => {
     const notATarball = source.write('not-a-tarball.tgz', 'plain text')
     assert.throws(() => createPackedConsumer({ tarball: notATarball }))
-  })
-})
-
-describe('npmArguments', () => {
-  it('quotes arguments with spaces for the Windows shell', () => {
-    assert.deepEqual(npmArguments(['install', 'C:\\My Packages\\lib.tgz'], 'win32'), ['install', '"C:\\My Packages\\lib.tgz"'])
-  })
-
-  it('passes arguments through unchanged elsewhere', () => {
-    assert.deepEqual(npmArguments(['install', 'my packages.tgz'], 'linux'), ['install', 'my packages.tgz'])
   })
 })
 

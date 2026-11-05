@@ -13,6 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { Outcome } from './model'
 
 /** What a child process ended as. */
@@ -101,18 +102,6 @@ export function needsShell(command: readonly string[], platform: string): boolea
 }
 
 /**
- * The arguments as a Windows shell receives them: each one holding a space is quoted, because
- * the shell splits an unquoted argument at every space.
- *
- * @param args - The arguments
- * @param platform - `win32` or another platform name
- * @returns The arguments, quoted on Windows where needed
- */
-export function shellSafe(args: readonly string[], platform: string): string[] {
-  return platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
-}
-
-/**
  * Ends a child process together with every process it started: its process group on POSIX, its
  * process tree through `taskkill` on Windows, where the child may be the shell that started a shim.
  *
@@ -144,8 +133,10 @@ function endTree(child: ChildProcess, platform: string, start: Spawn, kill: Kill
  */
 export function runCommand(command: readonly string[], options: CommandOptions): Promise<CommandResult> {
   const platform = options.platform ?? process.platform
-  const shell = needsShell(command, platform)
-  const [file, ...args] = shell ? shellSafe(command, platform) : command
+  const [program, ...rest] = command as [string, ...string[]]
+  const { file, args, shell } = needsShell(command, platform)
+    ? shimCommand(program, rest, 'win32')
+    : { file: program, args: rest, shell: false }
   const start = options.spawn ?? (spawn as Spawn)
   const kill: Kill = options.kill ?? process.kill
   // why: stopping a command just started races it on Windows, where taskkill is a process of its own, so an aborted signal never starts one
@@ -159,7 +150,7 @@ export function runCommand(command: readonly string[], options: CommandOptions):
     const stderr: string[] = []
     let timedOut = false
     let settled = false
-    const child = start(file as string, args, {
+    const child = start(file, args, {
       cwd: options.cwd,
       env: { ...process.env, ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],

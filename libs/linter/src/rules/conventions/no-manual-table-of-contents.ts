@@ -53,7 +53,7 @@ export default defineRule<undefined, MarkdownNode>({
         const heading = headingText(node)
         const normalised = heading
           .toLowerCase()
-          .replace(/[\s:.\-–—]+$/, '')
+          .replace(/(?<![\s:.\-–—])[\s:.\-–—]+$/, '')
           .replace(/\s+/g, ' ')
           .trim()
         if (!INDEX_HEADINGS.has(normalised)) return

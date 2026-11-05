@@ -14,20 +14,20 @@ The rule only runs on a file named `LIBRARY_COMPATIBILITY.md` that sits in the w
 
 Every publishable library under `libs/` and `plugins/` contributes one row. A directory counts when its `project.json` declares `projectType: "library"` with both a `build` and a `publish` target, and its `package.json` declares a name.
 
-| Section             | Source                                                                                 |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| Platform Support    | `project.json` `metadata.compatibility.environments` and `metadata.compatibility.note` |
-| Output Formats      | `project.json` `targets.build.options` keys `esm`, `cjs`, `iife`, `umd`                |
-| Global name         | `globalName` on the `iife` and `umd` bundle options                                    |
-| Engine Requirements | `package.json` `engines.node` and `engines.npm`                                        |
-| Dependency Graph    | `package.json` `dependencies` and `peerDependencies`, first-party entries only         |
-| Published Versions  | `package.json` `version`                                                               |
+| Section             | Source                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Platform Support    | `project.json` `metadata.compatibility.environments`, `operatingSystems` and `note` |
+| Output Formats      | `project.json` `targets.build.options` keys `esm`, `cjs`, `iife`, `umd`             |
+| Global name         | `globalName` on the `iife` and `umd` bundle options                                 |
+| Engine Requirements | `package.json` `engines.node` and `engines.npm`                                     |
+| Dependency Graph    | `package.json` `dependencies` and `peerDependencies`, first-party entries only      |
+| Published Versions  | `package.json` `version`                                                            |
 
 Rows are sorted by package name so the generated text is stable across machines.
 
 ### Environment Glyphs
 
-`metadata.compatibility.environments` declares `full`, `partial` or `none` per environment. A package that declares nothing gets an explicit unknown glyph rather than an invented support level.
+`metadata.compatibility.environments` and `operatingSystems` declare `full`, `partial` or `none` per runtime and per operating system. A package that declares nothing gets an explicit unknown glyph rather than an invented support level. Below the legend, one sentence says what an operating-system cell promises, worded from the declarations: when every library is `full` on all three it says so, and otherwise that a marked operating system is one the pipeline tests the library on, which [`lib-project-compatibility`](./lib-project-compatibility.md) guarantees.
 
 | Glyph | Meaning                                                |
 | ----- | ------------------------------------------------------ |
@@ -79,9 +79,9 @@ The generated document, byte for byte:
 
 ## Platform Support
 
-| Library                  | Node.js | Browser | Web Worker | CDN Bundle |
-| ------------------------ | ------- | ------- | ---------- | ---------- |
-| `@hyperfrontend/logging` | ✅      | ✅      | ✅         | ✅         |
+| Library                  | Node.js | Browser | Web Worker | Linux | macOS | Windows | CDN Bundle |
+| ------------------------ | ------- | ------- | ---------- | ----- | ----- | ------- | ---------- |
+| `@hyperfrontend/logging` | ✅      | ✅      | ✅         | ✅    | ✅    | ✅      | ✅         |
 ```
 
 ## Why

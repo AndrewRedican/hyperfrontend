@@ -89,6 +89,12 @@ import { /* exports */ } from '<%= packageName %>'
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ## License
 
 [MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

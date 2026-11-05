@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { logger } from '../../lib/logger'
 import { resolveTestingEntry, testingAliases } from '../../lib/testing-runtime'
 
@@ -44,11 +45,12 @@ function getPackageInfo(distPath: string): PackageInfo {
 function packPackage(distPath: string, workspaceRoot: string): string {
   logger.info(`Running npm pack in ${distPath}`)
 
-  const result = execFileSync('npm', ['pack', '--json'], {
+  const npm = shimCommand('npm', ['pack', '--json'])
+  const result = execFileSync(npm.file, npm.args, {
     cwd: distPath,
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
+    shell: npm.shell,
   })
 
   const packResult = parse(result)
@@ -70,17 +72,6 @@ function packPackage(distPath: string, workspaceRoot: string): string {
 }
 
 /**
- * Quotes arguments a Windows shell would otherwise split at their spaces.
- *
- * @param args - The arguments as the child should receive them.
- * @returns The arguments to hand `execFileSync`, quoted only where a shell is in the way.
- */
-function shellSafe(args: readonly string[]): string[] {
-  // why: `npm` and `npx` are .cmd shims on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
-  return process.platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
-}
-
-/**
  * Installs the tarball in the test project directory.
  *
  * @param tarballPath - The full path to the tarball file
@@ -89,12 +80,9 @@ function shellSafe(args: readonly string[]): string[] {
 function installTarball(tarballPath: string, testDir: string): void {
   logger.info(`Installing ${tarballPath} in ${testDir}`)
 
-  execFileSync('npm', shellSafe(['install', tarballPath, '--save-exact']), {
-    cwd: testDir,
-    encoding: 'utf-8',
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  })
+  // why: the tarball sits under the workspace, whose path may hold a space, as in `C:\Users\Jane Doe`
+  const npm = shimCommand('npm', ['install', tarballPath, '--save-exact'])
+  execFileSync(npm.file, npm.args, { cwd: testDir, encoding: 'utf-8', stdio: 'inherit', shell: npm.shell })
 
   logger.info(`Installation complete`)
 }

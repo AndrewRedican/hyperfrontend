@@ -10,6 +10,11 @@
         "node": "full",
         "browser": "full",
         "webWorker": "full"
+      },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
       }
     }
   },

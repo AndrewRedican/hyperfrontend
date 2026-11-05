@@ -18,6 +18,7 @@ import {
   writeJsonFile,
 } from '@hyperfrontend/project-scope/core/fs'
 import { isWithinRoot } from '@hyperfrontend/project-scope/core/path'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
@@ -96,8 +97,8 @@ async function defaultRunBuilder(input: BuildRunnerInput): Promise<void> {
  * @returns The created tarball's filename.
  */
 function defaultPackTarball(packageDir: string): string {
-  // why: npm is a .cmd shim on Windows, which Node only spawns through a shell.
-  const output = execFileSync('npm', ['pack'], { cwd: packageDir, encoding: 'utf-8', shell: process.platform === 'win32' })
+  const npm = shimCommand('npm', ['pack'])
+  const output = execFileSync(npm.file, npm.args, { cwd: packageDir, encoding: 'utf-8', shell: npm.shell })
   // why: split always yields at least one element, so pop() is never undefined
   return output.trim().split(/\r?\n/).pop() ?? ''
 }

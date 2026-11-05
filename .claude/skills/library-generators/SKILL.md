@@ -46,7 +46,7 @@ npm run hf -- generate library --name=my-utils --type=util --description="..." \
 
 ## Runtime Compatibility
 
-The publishable path asks "Where does this package run?" and writes the answer to `metadata.compatibility` in project.json: `isomorphic`, `node-only`, or `browser-only`. Internal libraries are never asked and get no metadata block; `partial` support and a `note` are added by hand afterwards.
+The publishable path asks "Where does this package run?" and writes the answer to `metadata.compatibility` in project.json: `isomorphic`, `node-only`, or `browser-only`. It also declares `operatingSystems` as `full` on `linux`, `macos` and `windows`, the three legs every library runs on. Internal libraries are never asked and get no metadata block; `partial` support and a `note` are added by hand afterwards.
 
 ---
 

@@ -1,6 +1,6 @@
 # lib-readme-compatibility-table
 
-Keep a publishable library README's compatibility table equal to what its `project.json` declares.
+Keep a publishable library README's compatibility tables, runtimes and operating systems, equal to what its `project.json` declares.
 
 ## Rule Details
 
@@ -16,7 +16,17 @@ This rule holds the table to the declaration. The table has one row per runtime,
 | Web Workers     |    ⚠️     |
 ```
 
-`full` renders as ✅, `partial` as ⚠️ and `none` as ❌; a runtime the declaration does not name renders as ❌. Padding is not compared, so a table the formatter has re-aligned still passes. Prose around the table, such as a note on which entry points a partial level applies to, is not the rule's business and stays as written.
+After it, and after the `hf:media` region around it when there is one, comes a second table for the operating systems `metadata.compatibility.operatingSystems` declares. It sits outside the region because the build replaces the region with the runtime strip in the distribution readme, and the operating systems must reach npm too:
+
+```markdown
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+```
+
+`full` renders as ✅, `partial` as ⚠️ and `none` as ❌; a runtime or operating system the declaration does not name renders as ❌. A missing operating-system table is added after the region, or after the runtime table when there is no region. Padding is not compared, so a table the formatter has re-aligned still passes. Prose around the table, such as a note on which entry points a partial level applies to, is not the rule's business and stays as written.
 
 ### What the rule reports
 
@@ -57,6 +67,12 @@ The declaration has no runtime called Deno, and the table has no row for web wor
 | Node.js >= 18   |    ✅     |
 | Modern Browsers |    ✅     |
 | Web Workers     |    ✅     |
+
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
 ```
 
 ## When Not To Use It

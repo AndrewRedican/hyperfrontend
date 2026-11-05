@@ -97,10 +97,22 @@ const utf8Content = convertEncoding(buffer, 'utf-8')
 Detect operating system and normalize platform-specific behaviors.
 
 ```typescript
-import { detectPlatform, isWindows, isMacOS, isLinux, normalizeLineEndings } from '@hyperfrontend/project-scope'
+import { detectPlatform, isWindows, isMac, isLinux, normalizeLineEndings } from '@hyperfrontend/project-scope'
 
-const platform = detectPlatform() // 'windows' | 'macos' | 'linux'
+const { os, caseSensitive } = detectPlatform() // os is 'win32', 'darwin', 'linux', ...
 const normalizedContent = normalizeLineEndings(content, 'lf')
+```
+
+### Shim Commands (`process/`)
+
+Start `npm`, `npx` and the other commands that are `.cmd` shims on Windows the same way on every platform, with arguments quoted for cmd.exe.
+
+```typescript
+import { execFileSync } from 'node:child_process'
+import { shimCommand } from '@hyperfrontend/project-scope'
+
+const npm = shimCommand('npm', ['install', tarballPath])
+execFileSync(npm.file, npm.args, { cwd, shell: npm.shell })
 ```
 
 ### Logger (`logger.ts`)

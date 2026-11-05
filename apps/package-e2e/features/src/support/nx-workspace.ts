@@ -13,6 +13,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { createTempDir } from '@hyperfrontend/testing/fs'
+import { shimCommand } from '@hyperfrontend/testing/process'
 
 // note: Pinned to the Nx release the generated declarations of libs/integrations/nx are extracted from, so the type probe checks them against the devkit they mirror.
 const NX_VERSION = '23.3.0'
@@ -161,12 +162,8 @@ function resolveTarball(): PackedTarball {
     throw new Error(`No staged tarball in ${packsDir} and no built dist at ${distDir}; build lib-features first.`)
   }
   // how: Mirrors the @hyperfrontend/package:e2e executor — npm pack inside dist, then stage the tarball under tmp/e2e-packs.
-  const packed = execFileSync('npm', ['pack', '--json'], {
-    cwd: distDir,
-    encoding: 'utf8',
-    timeout: 120000,
-    shell: process.platform === 'win32',
-  })
+  const npm = shimCommand('npm', ['pack', '--json'])
+  const packed = execFileSync(npm.file, npm.args, { cwd: distDir, encoding: 'utf8', timeout: 120000, shell: npm.shell })
   const filename = (JSON.parse(packed) as NpmPackReport[])[0].filename as string
   const match = filename.match(TARBALL_PATTERN)
   if (match === null) {
@@ -185,17 +182,6 @@ function resolveTarball(): PackedTarball {
 }
 
 /**
- * Quotes arguments a Windows shell would otherwise split at their spaces.
- *
- * @param args - The arguments as the child should receive them.
- * @returns The arguments to hand `execFileSync`, quoted only where a shell is in the way.
- */
-export function shellSafe(args: readonly string[]): string[] {
-  // why: `npm` and `npx` are .cmd shims on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
-  return process.platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
-}
-
-/**
  * Creates a pristine consumer workspace and installs the packed tarball into it.
  *
  * @param prefix - Unique mkdtemp prefix so parallel suites never share a scratch root.
@@ -204,29 +190,33 @@ export function shellSafe(args: readonly string[]): string[] {
 export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
   const tarball = resolveTarball()
   const workRoot = createTempDir({ prefix }).path
-  execFileSync(
-    'npx',
-    [
-      '--yes',
-      `create-nx-workspace@${NX_VERSION}`,
-      'consumer',
-      '--preset=ts',
-      '--no-interactive',
-      '--pm',
-      'npm',
-      '--nxCloud=skip',
-      '--skipGit',
-    ],
-    { cwd: workRoot, env: scratchEnv(), encoding: 'utf8', timeout: WORKSPACE_CREATE_TIMEOUT, shell: process.platform === 'win32' }
-  )
+  const create = shimCommand('npx', [
+    '--yes',
+    `create-nx-workspace@${NX_VERSION}`,
+    'consumer',
+    '--preset=ts',
+    '--no-interactive',
+    '--pm',
+    'npm',
+    '--nxCloud=skip',
+    '--skipGit',
+  ])
+  execFileSync(create.file, create.args, {
+    cwd: workRoot,
+    env: scratchEnv(),
+    encoding: 'utf8',
+    timeout: WORKSPACE_CREATE_TIMEOUT,
+    shell: create.shell,
+  })
   const pristineDir = join(workRoot, 'consumer')
   // how: `nx add <pkg>` installs the plugin as a devDependency before invoking its init generator; installing the tarball the same way reproduces that starting state.
-  execFileSync('npm', shellSafe(['install', '--save-dev', tarball.tarballPath]), {
+  const install = shimCommand('npm', ['install', '--save-dev', tarball.tarballPath])
+  execFileSync(install.file, install.args, {
     cwd: pristineDir,
     env: scratchEnv(),
     encoding: 'utf8',
     timeout: TARBALL_INSTALL_TIMEOUT,
-    shell: process.platform === 'win32',
+    shell: install.shell,
   })
   return { workRoot, pristineDir, packedVersion: tarball.version }
 }
@@ -238,12 +228,13 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
  * @param packages - The package specifiers, such as `@types/node@24`.
  */
 export function installUnsaved(workspaceDir: string, packages: readonly string[]): void {
-  execFileSync('npm', shellSafe(['install', '--no-save', '--no-audit', '--no-fund', ...packages]), {
+  const npm = shimCommand('npm', ['install', '--no-save', '--no-audit', '--no-fund', ...packages])
+  execFileSync(npm.file, npm.args, {
     cwd: workspaceDir,
     env: scratchEnv(),
     encoding: 'utf8',
     timeout: TARBALL_INSTALL_TIMEOUT,
-    shell: process.platform === 'win32',
+    shell: npm.shell,
   })
 }
 
@@ -256,13 +247,8 @@ export function installUnsaved(workspaceDir: string, packages: readonly string[]
  * @returns The exit status and combined stdout/stderr, stripped of ANSI sequences.
  */
 export function runNx(workspaceDir: string, args: readonly string[], timeout: number = NX_COMMAND_TIMEOUT): NxRunResult {
-  const spawned = spawnSync('npx', shellSafe(['nx', ...args]), {
-    cwd: workspaceDir,
-    env: scratchEnv(),
-    encoding: 'utf8',
-    timeout,
-    shell: process.platform === 'win32',
-  })
+  const npx = shimCommand('npx', ['nx', ...args])
+  const spawned = spawnSync(npx.file, npx.args, { cwd: workspaceDir, env: scratchEnv(), encoding: 'utf8', timeout, shell: npx.shell })
   const failure = spawned.error === undefined ? '' : `\nspawn error: ${String(spawned.error)}`
   // why: Colors are disabled via the environment, and stripping guards against any child that styles its output regardless.
   return { status: spawned.status, output: stripAnsiSequences(`${spawned.stdout ?? ''}${spawned.stderr ?? ''}${failure}`) }

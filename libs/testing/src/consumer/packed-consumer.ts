@@ -5,6 +5,7 @@ import { join, posix, relative, resolve, sep } from 'node:path'
 import { after, before } from 'node:test'
 import { createTempDir } from '../fs/temp-dir'
 import { writeFile, writeTree } from '../fs/write-tree'
+import { shimCommand } from '../process/shim'
 
 /**
  * Which module system a child process loads the package through.
@@ -116,23 +117,6 @@ const ARGS_ENV = 'HF_CONSUMER_ARGS'
 const RESULT_ENV = 'HF_CONSUMER_RESULT'
 
 /**
- * Builds the arguments npm receives, quoted where a Windows shell is in the way.
- *
- * @param args - The arguments as npm should receive them.
- * @param platform - The platform the command runs on.
- * @returns The arguments to hand `execFileSync`.
- * @example Quoting a path with a space for the Windows shell
- * ```ts
- * npmArguments(['install', 'C:\\My Packages\\lib.tgz'], 'win32')
- * // => ['install', '"C:\\My Packages\\lib.tgz"']
- * ```
- */
-export function npmArguments(args: readonly string[], platform: NodeJS.Platform): string[] {
-  // why: npm is a .cmd shim on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space.
-  return platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
-}
-
-/**
  * Builds the environment a child inherits: this process's, minus the test runner's markers, plus the extras.
  *
  * @param extra - Variables the caller adds, overriding inherited ones of the same name.
@@ -166,13 +150,13 @@ function install(options: PackedConsumerOptions): string {
   const dir = createTempDir({ prefix: 'hf-consumer-', tree: { 'package.json': { name: 'consumer', version: '0.0.0', private: true } } })
   const specifiers = [tarball, ...(options.peers ?? [])]
   // why: --prefer-offline reuses whatever the npm cache already holds, which is everything a prior install of the same tarball fetched, so the consumer installs fast and offline.
-  const args = ['install', '--prefer-offline', '--no-audit', '--no-fund', '--loglevel=error', ...specifiers]
+  const npm = shimCommand('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund', '--loglevel=error', ...specifiers])
   try {
-    execFileSync('npm', npmArguments(args, process.platform), {
+    execFileSync(npm.file, npm.args, {
       cwd: dir.path,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
+      shell: npm.shell,
       timeout: options.installTimeout ?? DEFAULT_INSTALL_TIMEOUT,
     })
   } catch (error) {

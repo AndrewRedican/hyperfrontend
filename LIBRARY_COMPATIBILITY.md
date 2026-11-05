@@ -4,31 +4,33 @@
 
 ## Platform Support
 
-| Library | Node.js | Browser | Web Worker | CDN Bundle |
-| --- | --- | --- | --- | --- |
-| `@hyperfrontend/builder` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/cryptography` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/data-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/features` | ✅ | ✅ | ⚠️ | ✅ |
-| `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/linter` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/nexus` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/project-scope` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/questions` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ❌ |
-| `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ |
-| `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ❌ |
+| Library | Node.js | Browser | Web Worker | Linux | macOS | Windows | CDN Bundle |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `@hyperfrontend/builder` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/cryptography` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/data-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/features` | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/function-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/immutable-api-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/json-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/linter` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/list-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/logging` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/network-protocol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/nexus` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/project-scope` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/questions` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
 Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing declared. CDN Bundle marks the packages whose build produces an IIFE or UMD bundle.
+
+Every library runs on Linux, macOS and Windows, and is typechecked, linted, tested, built and end-to-end tested on all three on every pull request.
 
 **Notes**
 
@@ -219,21 +221,21 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.7.1` |
 | `@hyperfrontend/cryptography` | `1.1.2` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
-| `@hyperfrontend/features` | `0.11.5` |
+| `@hyperfrontend/features` | `0.11.6` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.3` |
-| `@hyperfrontend/json-utils` | `1.1.1` |
-| `@hyperfrontend/linter` | `0.2.0` |
+| `@hyperfrontend/json-utils` | `1.1.2` |
+| `@hyperfrontend/linter` | `0.3.0` |
 | `@hyperfrontend/list-utils` | `0.1.1` |
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
 | `@hyperfrontend/nexus` | `3.0.1` |
-| `@hyperfrontend/project-scope` | `0.4.2` |
+| `@hyperfrontend/project-scope` | `0.5.0` |
 | `@hyperfrontend/questions` | `0.3.1` |
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.2` |
-| `@hyperfrontend/testing` | `0.4.0` |
+| `@hyperfrontend/testing` | `0.5.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
-| `@hyperfrontend/versioning` | `0.9.3` |
+| `@hyperfrontend/versioning` | `0.9.4` |

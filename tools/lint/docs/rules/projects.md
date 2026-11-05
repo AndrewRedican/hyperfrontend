@@ -7,6 +7,7 @@ Lint rules that read the workspace's project graph, the one Nx would build, buil
 | [`projects/module-boundaries`](#module-boundaries) | Imports between projects                                            | `.ts`, `.tsx`, `.js`, `.jsx` |
 | [`projects/dependency-checks`](#dependency-checks) | A buildable project's `package.json` against what its files import  | `package.json`               |
 | [`projects/plugin-manifests`](#plugin-manifests)   | The generator, executor and migration manifests of a plugin project | the configured manifests     |
+| [`projects/command-lines`](#command-lines)         | The `nx:run-commands` lines of a project's targets                  | `project.json`               |
 
 ## The project graph
 
@@ -42,3 +43,20 @@ Options: `ignoredDependencies` and `ignoredFiles`. Each project's `lint.config.t
 In a `package.json`, every version of a migrations `packageGroup` must be valid semver or one of `allowedVersionStrings`, and every member of a listed group must name its version. The workspace enables the rule on the `package.json` of `tools/package` and `tools/app`, which is the only file it reads there.
 
 Options: `allowedVersionStrings`.
+
+## command-lines
+
+The workspace runner starts every `nx:run-commands` line through the platform shell (`tools/workspace/src/runner/commands.ts`): `sh` on Linux and macOS, cmd.exe on Windows. In a `project.json`, each target's `command`, the `command` of its `options`, and every entry of their `commands` (a string, or an object's `command`) is checked for what the two shells read differently:
+
+| Message       | Reported when                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `singleQuote` | A `'` outside double quotes: cmd.exe passes it through as part of the argument                 |
+| `envPrefix`   | The line starts with `NAME=value`, which cmd.exe does not read as an assignment                |
+| `variable`    | A `$NAME`, `${NAME}`, `$(…)` or `%NAME%`, which only one shell expands, quoted or not          |
+| `separator`   | A `;` or a lone `&` outside double quotes; `&&`, `\|\|`, `\|` and `2>&1` mean the same in both |
+| `glob`        | A `*` or `?` outside double quotes, which only `sh` expands                                    |
+| `backslash`   | A `\` outside double quotes, which `sh` reads as an escape                                     |
+
+A line with several problems is reported once for each. Nothing is fixed: the replacement is a judgement about the command, such as moving a variable into the target's `env` or quoting a pattern so the program matches it.
+
+Options: `include`, the selectors of the `workspace/cross-platform` rule, defaulting to every publishable library. The workspace selects publishable libraries, the root `project.json`, `tools/**` and `apps/package-e2e/**`: the projects whose targets the Windows and macOS legs run, or a contributor runs on their own machine. The docs site and the demos build on Linux alone, and their `cp` lines are left as they are.

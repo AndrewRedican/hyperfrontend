@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { logger } from '../../lib/logger'
 
 /**
@@ -162,11 +163,12 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
 
   if (!options.dryRun) {
     try {
-      const npmViewResult = execFileSync('npm', ['view', `${packageName}@${packageVersion}`, 'version'], {
+      const view = shimCommand('npm', ['view', `${packageName}@${packageVersion}`, 'version'])
+      const npmViewResult = execFileSync(view.file, view.args, {
         encoding: 'utf-8',
         cwd: distPath,
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',
+        shell: view.shell,
       }).trim()
 
       if (npmViewResult === packageVersion) {
@@ -193,12 +195,8 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
   logger.info(`  Command: npm ${args.join(' ')}`)
 
   try {
-    const output = execFileSync('npm', args, {
-      cwd: distPath,
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      shell: process.platform === 'win32',
-    })
+    const publish = shimCommand('npm', args)
+    const output = execFileSync(publish.file, publish.args, { cwd: distPath, encoding: 'utf-8', stdio: 'pipe', shell: publish.shell })
 
     if (output) {
       logger.info(output)

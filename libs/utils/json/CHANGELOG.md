@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
+
+### Bug Fixes
+
+- keep the nested-quantifier probes linear on repeated parentheses
+
 ## [1.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/48c68a5121e56df2ff34e82df2c97002142a8538...54c7921f6dc19e82f4f149d95566e42fb4aca5f8) - 2026-10-28
 
 ### Bug Fixes

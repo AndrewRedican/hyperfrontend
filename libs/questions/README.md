@@ -162,6 +162,12 @@ Every config, option and outcome type is in the [API reference](https://www.hype
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 Prompts run on a TTY, where the session redraws when the terminal is resized, and on non-TTY streams such as tests and pipes. On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so a bracketed paste can never submit a value. Where bracketed paste is unavailable, a chunk that ends in a line ending submits the text before it, which is how a line-buffered reader behaves and is what makes piped input work; line endings in the middle of such a chunk stay data.
 
 ### Output Formats

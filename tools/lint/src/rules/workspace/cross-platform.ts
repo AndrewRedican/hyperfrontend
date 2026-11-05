@@ -109,6 +109,7 @@ export default defineRule<CrossPlatformOptions | undefined, Node>({
         (statement) => statement.kind === 'ImportDeclaration' && ((statement.source as Node).value as string).startsWith('node:')
       ),
       shims: createSet(options.shimCommands ?? SHIMS),
+      typescript: /\.[cm]?tsx?$/.test(context.file.path),
       report: (node, message, fix, suggestions) =>
         context.report({
           start: node.start,

@@ -341,7 +341,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] `project.json` → `name` starts with `lib-`, has `description` and `tags`
 - [ ] `project.json` → targets: `build`, `publish`, `version`, `version-check`
 - [ ] `project.json` → IIFE/UMD outputs include both `entry` and `globalName`
-- [ ] `project.json` → `metadata.compatibility.environments` declares `node`, `browser`, `webWorker` as `full` / `partial` / `none` (the `library` and `make-publishable` generators ask for this; `lib-project-compatibility` enforces it)
+- [ ] `project.json` → `metadata.compatibility.environments` declares `node`, `browser`, `webWorker` and `metadata.compatibility.operatingSystems` declares `linux`, `macos`, `windows`, each `full` / `partial` / `none` (the `library` and `make-publishable` generators write these; `lib-project-compatibility` enforces them and accepts an operating system only where the pipeline runs the project)
 - [ ] `package.json` → required fields present (see `lib-pkg-fields` rule doc)
 - [ ] `package.json` → exports use `.js` only (no `.ts` paths)
 - [ ] `package.json` → includes `"./package.json": "./package.json"` export

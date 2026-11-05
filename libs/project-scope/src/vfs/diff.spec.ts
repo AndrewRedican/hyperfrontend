@@ -170,7 +170,7 @@ describe('vfs/diff', () => {
         deletions: 1,
       }
       const formatted = formatUnifiedDiff(fileDiff)
-      expect(formatted).toMatch(/@@.*@@/)
+      expect(formatted).toMatch(/@@[^@]*@@/)
     })
 
     it('handles empty diff', () => {

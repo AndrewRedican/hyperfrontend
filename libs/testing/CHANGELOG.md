@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
+
+### Features
+
+- add shimCommand to the process entry
+
+### Bug Fixes
+
+- double trailing backslashes in quoteForCmd without a backtracking regex
+- quote the packed consumer's npm install for cmd.exe
+
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...1f922d33dad2e3cf7f8c525c5d99a69ac2508094) - 2026-11-01
 
 ### Features

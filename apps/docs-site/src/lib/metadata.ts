@@ -76,7 +76,7 @@ function extractDescription(markdown: string): string | null {
     if ('#!|><-*'.includes(paragraph.charAt(0)) || paragraph.startsWith('[')) continue
     const text = paragraph
       .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\[([^[\]]*)\]\([^)]*\)/g, '$1')
       .replace(/[`*]/g, '')
       .replace(/\s+/g, ' ')
       .trim()

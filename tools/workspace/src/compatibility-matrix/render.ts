@@ -78,9 +78,26 @@ function presenceGlyph(present: boolean): string {
   return present ? GLYPH.full : GLYPH.none
 }
 
+/** The operating systems a package declares, in the order the table draws them. */
+const OPERATING_SYSTEMS = ['linux', 'macos', 'windows'] as const
+
 /**
- * Renders the platform support section: the environment table, the glyph
- * legend, and the per-package caveats.
+ * States what an operating-system cell promises, from the declarations themselves: the lint rule
+ * behind them accepts support only on an operating system whose pipeline leg runs the package.
+ *
+ * @param libraries - The rows rendered.
+ * @returns One sentence.
+ */
+function testedSentence(libraries: MatrixLibrary[]): string {
+  const everywhere = libraries.every((library) => OPERATING_SYSTEMS.every((system) => library.operatingSystems[system] === 'full'))
+  return everywhere
+    ? 'Every library runs on Linux, macOS and Windows, and is typechecked, linted, tested, built and end-to-end tested on all three on every pull request.'
+    : `A library marked ${GLYPH.full} or ${GLYPH.partial} for an operating system is typechecked, linted, tested, built and end-to-end tested on it on every pull request.`
+}
+
+/**
+ * Renders the platform support section: the environment and operating-system table, the glyph
+ * legend, what an operating-system cell promises, and the per-package caveats.
  *
  * @param libraries - The rows to render.
  * @returns The section as markdown.
@@ -91,6 +108,9 @@ function renderPlatformSection(libraries: MatrixLibrary[]): string {
     supportGlyph(library.environments.node),
     supportGlyph(library.environments.browser),
     supportGlyph(library.environments.webWorker),
+    supportGlyph(library.operatingSystems.linux),
+    supportGlyph(library.operatingSystems.macos),
+    supportGlyph(library.operatingSystems.windows),
     presenceGlyph(library.formats.iife || library.formats.umd),
   ])
 
@@ -99,7 +119,12 @@ function renderPlatformSection(libraries: MatrixLibrary[]): string {
     `${GLYPH.unknown} nothing declared. CDN Bundle marks the packages whose build produces an IIFE or UMD bundle.`,
   ].join(' ')
 
-  const parts = ['## Platform Support', renderTable(['Library', 'Node.js', 'Browser', 'Web Worker', 'CDN Bundle'], rows), legend]
+  const parts = [
+    '## Platform Support',
+    renderTable(['Library', 'Node.js', 'Browser', 'Web Worker', 'Linux', 'macOS', 'Windows', 'CDN Bundle'], rows),
+    legend,
+    testedSentence(libraries),
+  ]
   const notes: string[] = []
 
   for (const library of libraries) {

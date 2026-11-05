@@ -19,8 +19,7 @@ import { before as beforeAll, after as afterAll } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, it, expect } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
-import { cleanSignalExit, sendSignal } from '@hyperfrontend/testing/process'
-import { shellSafe } from './support/nx-workspace'
+import { cleanSignalExit, sendSignal, shimCommand } from '@hyperfrontend/testing/process'
 
 const require = createRequire(import.meta.url)
 
@@ -312,11 +311,8 @@ export default contract
             `${JSON.stringify({ name: 'shell-consumer', private: true, type: 'module' })}\n`
           )
           // why: The consumer gets the packed tarball and nothing else, no SDK and no linked node_modules, so every import below resolves through the shell's own published exports map the way it does for an external install.
-          execFileSync('npm', shellSafe(['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)]), {
-            cwd: consumer.path,
-            stdio: 'pipe',
-            shell: process.platform === 'win32',
-          })
+          const npm = shimCommand('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)])
+          execFileSync(npm.file, npm.args, { cwd: consumer.path, stdio: 'pipe', shell: npm.shell })
           writeFileSync(
             join(consumer.path, 'consumer.ts'),
             `import { createFeatureShell } from 'e2e-widget-shell'

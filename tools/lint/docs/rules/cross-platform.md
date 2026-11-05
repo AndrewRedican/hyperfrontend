@@ -181,19 +181,33 @@ const here = fileURLToPath(new URL('.', import.meta.url))
 
 ### `shellShim`
 
-`execFileSync`, `execFile`, `spawn`, or `spawnSync` from `node:child_process` launching a `.cmd` shim without a `shell` option. The command is recognised as a literal, a `const` holding one, either branch of a conditional, or a value named `packageManager` or `pm`. Calls whose options are not an inline object literal, or that spread their options, are left alone. The suggestion adds `shell: process.platform === 'win32'`, so POSIX keeps spawning the binary directly.
+`execFileSync`, `execFile`, `spawn`, or `spawnSync` from `node:child_process` launching a `.cmd` shim without a `shell` option. The command is recognised as a literal, a `const` holding one, either branch of a conditional, or a value named `packageManager` or `pm`. The commands are the `shimCommands` option. Calls whose options are not an inline object literal, or that spread their options, are left alone.
 
-With a shell, Node concatenates the arguments without escaping them and, from Node 24, prints `DEP0190` for every call that passes an argument array. Keep shelled arguments free of spaces and shell metacharacters, or pass the whole command line as one string with no argument array.
+In TypeScript, spawn the shim through `shimCommand` from `@hyperfrontend/project-scope/core/process`, or from `@hyperfrontend/testing/process` in specs and e2e suites, which returns the program, arguments and `shell` option for the running platform: on Windows one command line with every argument quoted for cmd.exe and no argument array, elsewhere the command and its arguments with no shell. A `.mjs` or `.js` script, which cannot import either, gets a suggestion to pass `shell: process.platform === 'win32'`, and must keep its arguments free of spaces and shell metacharacters.
 
 ```typescript
 // ❌
 execFileSync('npm', ['pack'], { cwd: packageDir })
 
 // ✅
-execFileSync('npm', ['pack'], {
-  cwd: packageDir,
+const npm = shimCommand('npm', ['pack'])
+execFileSync(npm.file, npm.args, { cwd: packageDir, shell: npm.shell })
+```
+
+### `bareShellShim`
+
+In a TypeScript file, a spawn whose `shell` option is `process.platform` compared with `'win32'`, written out or through a variable holding the comparison. With a shell, Node joins the argument array without escaping it, so cmd.exe interprets a space, `&`, `|` or `^` inside an argument, and from Node 24 it prints `DEP0190` once per process for an argument array beside a shell. `shimCommand` quotes each argument and passes the joined line with no array, which prints nothing. There is no fix: the call needs an import and its arguments rearranged. Scripts are left alone.
+
+```typescript
+// ❌
+execFileSync('npm', ['install', tarballPath], {
+  cwd,
   shell: process.platform === 'win32',
 })
+
+// ✅
+const npm = shimCommand('npm', ['install', tarballPath])
+execFileSync(npm.file, npm.args, { cwd, shell: npm.shell })
 ```
 
 ### `binShim`
@@ -224,7 +238,7 @@ execFileSync(command, { cwd, shell: true })
 
 ### `lineSplit`
 
-`split('\n')` or `split('\r\n')` on text that may come from a CRLF checkout.
+`split('\n')` or `split('\r\n')` on text that may come from a CRLF checkout. The fix splits on `/\r?\n/`, except in a function that also joins lines back with `.join('\n')` or `.join('\r\n')`, or rebuilds offsets as `.length + 1`: there the new split would turn CRLF text into LF on the way back, or shift every offset after the first break, so the replacement is only offered as a suggestion, to be paired with re-joining on the text's own line break.
 
 ```typescript
 // ❌

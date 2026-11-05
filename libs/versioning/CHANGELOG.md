@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.4](https://github.com/AndrewRedican/hyperfrontend/compare/a531c8d91a1ae6e9cd706d44888afb5eb732c36b...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
+
+### Bug Fixes
+
+- quote npm view spawns for cmd.exe
+
 ## [0.9.3](https://github.com/AndrewRedican/hyperfrontend/compare/07570357d738e1194aee2d1387253432b0add3c8...9c973ebdccf4eb6fe9a4ed3e1dfaca4dda4d7dd3) - 2026-10-31
 
 ### Bug Fixes

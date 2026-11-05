@@ -52,7 +52,7 @@ export function formatStylish(results: readonly FileResult[]): string {
     for (const row of rows) {
       out +=
         `  ${row.position.padStart(positionWidth)}  ${row.severity.padEnd(severityWidth)}  ${row.message.padEnd(messageWidth)}  ${row.rule}\n`.replace(
-          / +\n$/,
+          /(?<! ) +\n$/,
           '\n'
         )
     }

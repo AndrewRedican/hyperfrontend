@@ -11,6 +11,11 @@
         "browser": "full",
         "webWorker": "full"
       },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      },
       "note": "Some utilities require browser APIs; check individual exports."
     }
   },

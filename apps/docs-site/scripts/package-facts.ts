@@ -1,6 +1,7 @@
 import type {
   EnvironmentId,
   EnvironmentSupport,
+  OperatingSystemId,
   OutputFormatId,
   PackageCompatibility,
   PackageFacts,
@@ -14,6 +15,9 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /** The runtimes a compatibility row reports, in the order the row shows them. */
 const ENVIRONMENT_ORDER: readonly EnvironmentId[] = ['node', 'browser', 'webWorker']
+
+/** The operating systems a compatibility row reports, in the order the row shows them. */
+const OPERATING_SYSTEM_ORDER: readonly OperatingSystemId[] = ['linux', 'macos', 'windows']
 
 /** The formats an output row reports, in the order the row shows them. */
 const OUTPUT_ORDER: readonly OutputFormatId[] = ['esm', 'cjs', 'iife', 'umd', 'bin']
@@ -141,9 +145,24 @@ function readCompatibility(declared: unknown, packageName: string, nodeRange: st
     environments[environment] = support
   }
 
+  const rawSystems = record['operatingSystems'] as Record<string, unknown> | undefined
+  if (!rawSystems) {
+    throw createError(`${packageName}: metadata.compatibility declares no operatingSystems`)
+  }
+
+  const operatingSystems = {} as Record<OperatingSystemId, EnvironmentSupport>
+  for (const system of OPERATING_SYSTEM_ORDER) {
+    const support = toSupport(rawSystems[system])
+    if (!support) {
+      throw createError(`${packageName}: metadata.compatibility.operatingSystems.${system} must be one of ${SUPPORT_LEVELS.join(', ')}`)
+    }
+    operatingSystems[system] = support
+  }
+
   const note = record['note']
   return {
     environments,
+    operatingSystems,
     ...(typeof note === 'string' && note !== '' ? { note } : {}),
     ...(nodeRange !== undefined && nodeRange !== '' ? { nodeRange } : {}),
   }

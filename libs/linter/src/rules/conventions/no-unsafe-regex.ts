@@ -1,7 +1,7 @@
 /**
  * No regular expression risks catastrophic backtracking: a literal or constant pattern holds no
- * nested repetition and no bound past a thousand, and no expression is built from a value the
- * code does not spell out.
+ * nested repetition, no bound past a thousand and no repetition that takes quadratic time, and no
+ * expression is built from a value the code does not spell out.
  *
  * @module rules/conventions/no-unsafe-regex
  */
@@ -9,12 +9,15 @@
 import type { Node } from '../../code/model'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { defineRule } from '../../engine/rule'
+import { polynomialRepetition } from './shared/polynomial'
 import { isSafePattern } from './shared/star-height'
 
 /** A regular expression literal's parts. */
 interface RegexValue {
   /** The pattern's source. */
   readonly pattern: string
+  /** The flags after the closing slash. */
+  readonly flags: string
 }
 
 /** A template element's text. */
@@ -60,7 +63,7 @@ export default defineRule<undefined, Node>({
   language: 'code',
   fixable: false,
   create(context) {
-    const check = (pattern: string, node: Node): void => {
+    const check = (pattern: string, flags: string, node: Node): void => {
       for (const match of pattern.matchAll(BOUND)) {
         if (match[2] === undefined || parseInt(match[2], 10) <= MAX_BOUND) continue
         context.report({
@@ -70,20 +73,28 @@ export default defineRule<undefined, Node>({
         })
         return
       }
-      if (!isSafePattern(pattern)) context.report({ start: node.start, end: node.end, message: MESSAGES.backtracking })
+      if (!isSafePattern(pattern)) return context.report({ start: node.start, end: node.end, message: MESSAGES.backtracking })
+      const slow = polynomialRepetition(pattern, flags)
+      if (slow === null) return
+      context.report({
+        start: node.start,
+        end: node.end,
+        message: `Regex repetition \`${pattern.slice(slow.start, slow.end)}\` can take quadratic time (ReDoS): nothing anchors the pattern at its start, so after a failed match it is retried from every position of a long run. Anchor the pattern with \`^\`, have what precedes the repetition exclude the characters it repeats, or scan the string without a regex.`,
+      })
     }
     const construction = (node: Node, factory: boolean): void => {
       const argument = (node.arguments as readonly Node[])[0]
       if (argument === undefined) return
       const pattern = constantPattern(argument)
-      if (pattern !== null) return check(pattern, node)
+      const flags = (node.arguments as readonly Node[])[1]
+      if (pattern !== null) return check(pattern, (flags === undefined ? null : constantPattern(flags)) ?? '', node)
       const message = argument.kind === 'TemplateLiteral' ? MESSAGES.template : factory ? MESSAGES.factory : MESSAGES.dynamic
       context.report({ start: node.start, end: node.end, message })
     }
     return {
       Literal(node) {
         const regex = node.regex as RegexValue | undefined
-        if (regex !== undefined) check(regex.pattern, node)
+        if (regex !== undefined) check(regex.pattern, regex.flags, node)
       },
       CallExpression(node) {
         const callee = node.callee as Node

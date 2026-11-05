@@ -608,7 +608,7 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.message).toMatch(/\d+ section\(s\), \d+ commit\(s\)/)
+      expect(result.message).toMatch(/\b\d+ section\(s\), \d+ commit\(s\)/)
     })
   })
 })

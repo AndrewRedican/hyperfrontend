@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/f37ceab9d2cfb0e0bf05743be43c593842126850...9efd63cbe268b1103496863894a05adc572641e0) - 2026-11-05
+
+### Features
+
+- add shimCommand for starting windows cmd shims
+- export isMac and isLinux beside isWindows
+
+### Bug Fixes
+
+- double trailing backslashes in quoteForCmd without a backtracking regex
+- probe file system case sensitivity on every platform
+
 ## [0.4.2](https://github.com/AndrewRedican/hyperfrontend/compare/1bc7b10e43d8018c0d69858963d444b61d779288...88748aaa668a66fede2a04f4aa4b84a0fe6e4588) - 2026-10-31
 
 ### Bug Fixes

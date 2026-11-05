@@ -168,6 +168,12 @@ Every model, option, step and outcome type is in the [API reference](https://www
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 ### Output Formats
 
 | Format | File        | Tree-Shakeable |

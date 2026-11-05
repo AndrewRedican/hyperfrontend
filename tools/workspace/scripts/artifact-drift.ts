@@ -14,6 +14,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { compareArtifacts, renderDrift } from '../src/artifact-drift/compare'
 import { contentHash, hashContent, parsePackJson } from '../src/artifact-drift/pack'
@@ -45,12 +46,13 @@ const projects = [...graph.projects.values()]
  * @returns The output
  */
 function npm(args: readonly string[], cwd: string): string {
-  return execFileSync('npm', [...args], {
+  const command = shimCommand('npm', args)
+  return execFileSync(command.file, command.args, {
     cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     maxBuffer: 64 * 1024 * 1024,
-    shell: process.platform === 'win32',
+    shell: command.shell,
   })
 }
 

@@ -43,16 +43,24 @@ describe('isSafePattern', () => {
   })
 
   it('rejects what the scanner cannot read', () => {
-    expect(verdicts(['[', '(', ')', '\\', '*a', '(?<=a)b', '(?i:a)', '(?<1a>)', '(?<a'])).toEqual([
+    expect(verdicts(['[', '(', ')', '\\', '*a', '(?i:a)', '(?<1a>)', '(?<a'])).toEqual([
       '[ unsafe',
       '( unsafe',
       ') unsafe',
       '\\ unsafe',
       '*a unsafe',
-      '(?<=a)b unsafe',
       '(?i:a) unsafe',
       '(?<1a>) unsafe',
       '(?<a unsafe',
+    ])
+  })
+
+  it('reads a lookbehind as a group, as it reads a lookahead', () => {
+    expect(verdicts(['(?<=a)b', '(?<!0)0+$', '(?<=a+)b', '(?<!(a+)+)b'])).toEqual([
+      '(?<=a)b safe',
+      '(?<!0)0+$ safe',
+      '(?<=a+)b safe',
+      '(?<!(a+)+)b unsafe',
     ])
   })
 })

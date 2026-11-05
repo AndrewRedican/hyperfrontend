@@ -37,32 +37,25 @@ let cachedPlatformInfo: PlatformInfo | null = null
 let cachedCaseSensitive: boolean | null = null
 
 /**
- * Detect if file system is case sensitive.
+ * Detect if the file system holding the temporary directory is case sensitive, by writing a file
+ * named `A` and looking for `a`. The answer is probed on every platform, since APFS and NTFS can be
+ * configured either way; only when no file can be written does it fall back to the platform's
+ * default, case-sensitive on Linux and insensitive elsewhere.
  *
  * @returns True if file system is case-sensitive
  *
  * @example Detecting case sensitivity
  * ```typescript
  * if (detectCaseSensitivity()) {
- *   // Linux: 'File.ts' and 'file.ts' are different files
+ *   // 'File.ts' and 'file.ts' are different files, as on most Linux file systems
  * } else {
- *   // Windows/macOS: treat as same file
+ *   // treat them as the same file, as the Windows and macOS defaults do
  * }
  * ```
  */
 export function detectCaseSensitivity(): boolean {
   if (cachedCaseSensitive !== null) {
     return cachedCaseSensitive
-  }
-
-  if (process.platform === 'win32') {
-    cachedCaseSensitive = false
-    return false
-  }
-
-  if (process.platform === 'darwin') {
-    cachedCaseSensitive = false
-    return false
   }
 
   let secureTestDir: string | null = null
@@ -75,7 +68,8 @@ export function detectCaseSensitivity(): boolean {
     cachedCaseSensitive = !existsSync(testFileLower)
     unlinkSync(testFile)
   } catch {
-    cachedCaseSensitive = true
+    // why: APFS and NTFS can be either, so the platform is only the fallback when no file can be written: Linux file systems are usually case-sensitive, the macOS and Windows defaults are not
+    cachedCaseSensitive = process.platform === 'linux'
   } finally {
     if (secureTestDir) {
       try {
@@ -97,7 +91,7 @@ export function detectCaseSensitivity(): boolean {
  * @example Checking case sensitivity
  * ```typescript
  * const caseSensitive = isCaseSensitiveFs()
- * // => true on Linux, false on Windows/macOS
+ * // => usually true on Linux, false on a default Windows or macOS volume
  * ```
  */
 export function isCaseSensitiveFs(): boolean {

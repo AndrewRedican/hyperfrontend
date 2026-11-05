@@ -11,6 +11,11 @@
         "browser": "none",
         "webWorker": "none"
       },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      },
       "note": "Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide."
     }
   },

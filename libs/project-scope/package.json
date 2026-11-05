@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/project-scope",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "1.0.3",
@@ -15,6 +15,7 @@
     "./core/logger": "./src/core/logger/index.js",
     "./core/path": "./src/core/path/index.js",
     "./core/platform": "./src/core/platform/index.js",
+    "./core/process": "./src/core/process/index.js",
     "./heuristics": "./src/heuristics/index.js",
     "./heuristics/dependencies": "./src/heuristics/dependencies/index.js",
     "./heuristics/entry-points": "./src/heuristics/entry-points/index.js",

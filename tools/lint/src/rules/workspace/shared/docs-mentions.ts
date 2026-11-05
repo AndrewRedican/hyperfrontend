@@ -205,7 +205,7 @@ function subpathMention(pkg: DocsPackage, subpath: string, siteUrl: string, inde
  */
 export function resolveMention(index: DocsIndex, origins: LinkOrigins, text: string, file: string): CodeMention {
   if (exemptionOf(text)) return { kind: 'exempt' }
-  const site = origins.siteUrl.replace(/\/+$/, '')
+  const site = origins.siteUrl.replace(/(?<!\/)\/+$/, '')
   const home = packageOfFile(index, file)
   if (text.startsWith('@')) {
     const [scope, name, ...rest] = text.split('/')

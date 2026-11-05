@@ -3,6 +3,7 @@ import type { InstallExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { logger } from '../../lib/logger'
 
 /**
@@ -55,7 +56,8 @@ export default async function installExecutor(options: InstallExecutorOptions, c
   delete env['npm_config_engine_strict']
 
   try {
-    execFileSync('npm', args, { cwd, stdio: 'inherit', env, shell: process.platform === 'win32' })
+    const npm = shimCommand('npm', args)
+    execFileSync(npm.file, npm.args, { cwd, stdio: 'inherit', env, shell: npm.shell })
     logger.info(`Dependencies installed for ${projectName}`)
     return { success: true }
   } catch {

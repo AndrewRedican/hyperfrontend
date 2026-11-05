@@ -361,20 +361,20 @@ export function transformLinks(content: string, context?: TransformLinksContext)
     '](/docs/libraries/$1/architecture)'
   )
 
-  transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/\.\.\/libs\/([^/]+)\/README\.md\)/g, '[$1](/docs/libraries/$2)')
+  transformed = transformed.replace(/\[([^[\]]+)\]\(\.\.\/\.\.\/libs\/([^/]+)\/README\.md\)/g, '[$1](/docs/libraries/$2)')
 
   if (context?.librarySlug) {
-    transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/([^/]+)\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug}/$2)`)
+    transformed = transformed.replace(/\[([^[\]]+)\]\(\.\.\/([^/]+)\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug}/$2)`)
 
-    transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/\.\.\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug})`)
+    transformed = transformed.replace(/\[([^[\]]+)\]\(\.\.\/\.\.\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug})`)
 
     // why: Inside a library, `ARCHITECTURE.md` names that library's own guide, not the workspace-root overview the filename would otherwise resolve to.
     transformed = transformed.replace(
-      /\[([^\]]+)\]\((?:\.\/|\.\.\/\.\.\/)?ARCHITECTURE\.md\)/g,
+      /\[([^[\]]+)\]\((?:\.\/|\.\.\/\.\.\/)?ARCHITECTURE\.md\)/g,
       `[$1](/docs/libraries/${context.librarySlug}/architecture)`
     )
   } else {
-    transformed = transformed.replace(/\[([^\]]+)\]\(\.\/ARCHITECTURE\.md\)/g, '[$1](/architecture)')
+    transformed = transformed.replace(/\[([^[\]]+)\]\(\.\/ARCHITECTURE\.md\)/g, '[$1](/architecture)')
   }
 
   return transformed

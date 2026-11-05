@@ -143,10 +143,17 @@ export default [
   },
   {
     files: ['**/project.json'],
-    rules: on(`
-      workspace/lib-project-metadata workspace/lib-project-version-targets workspace/lib-project-compatibility workspace/lib-project-bundle-config
-      workspace/lib-e2e-project-required workspace/deploy-static-headers
-    `),
+    rules: {
+      ...on(`
+        workspace/lib-project-metadata workspace/lib-project-version-targets workspace/lib-project-compatibility workspace/lib-project-bundle-config
+        workspace/lib-e2e-project-required workspace/deploy-static-headers
+      `),
+      // why: the targets of these projects run on the Windows and macOS legs or on a contributor's machine, where a run-commands line goes through cmd.exe instead of sh; the docs site and the demos build on Linux alone
+      'projects/command-lines': [
+        'error',
+        { include: [{ publishableLibraries: true }, { files: ['project.json', 'tools/**', 'apps/package-e2e/**'] }] },
+      ],
+    },
   },
   {
     files: ['**/README.md'],

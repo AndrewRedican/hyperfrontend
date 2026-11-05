@@ -387,5 +387,5 @@ export function repositoryUrl(root: string): string | null {
   return url
     .replace(/^git\+/, '')
     .replace(/\.git$/, '')
-    .replace(/\/+$/, '')
+    .replace(/(?<!\/)\/+$/, '')
 }

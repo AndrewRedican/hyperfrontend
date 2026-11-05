@@ -6,6 +6,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { build } from '@hyperfrontend/builder'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { createCapturedOutput } from '@hyperfrontend/testing/process'
@@ -337,10 +338,21 @@ describe('runBuild', () => {
 
   it('packs with npm when no pack runner is injected', async () => {
     await runWithoutRunners()
+    const npm = shimCommand('npm', ['pack'])
     expect(mockExecFileSync).toHaveBeenCalledWith(
-      'npm',
-      ['pack'],
-      expect.objectContaining({ cwd: expect.stringContaining('.hf-shell-clock-') })
+      npm.file,
+      npm.args,
+      expect.objectContaining({ cwd: expect.stringContaining('.hf-shell-clock-'), shell: npm.shell })
     )
+  })
+
+  it('packs with npm as one shell command line on Windows', async () => {
+    const platform = jest.replaceProperty(process, 'platform', 'win32')
+    try {
+      await runWithoutRunners()
+    } finally {
+      platform.restore()
+    }
+    expect(mockExecFileSync).toHaveBeenCalledWith('npm pack', [], expect.objectContaining({ shell: true }))
   })
 })

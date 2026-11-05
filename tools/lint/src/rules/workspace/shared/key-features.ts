@@ -56,7 +56,7 @@ function bulletMessages(body: string): string[] {
   }
   const messages: string[] = []
   // why: the site renders a linked label as its link text and a coded one without the backticks, so that is the length a reader sees.
-  const rendered = label.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`/g, '')
+  const rendered = label.replace(/\[([^[\]]*)\]\([^)]*\)/g, '$1').replace(/`/g, '')
   if (rendered.length > LABEL_LIMIT) {
     messages.push(
       `Key feature label '${rendered}' is ${rendered.length} characters, past the ${LABEL_LIMIT} a label may use. Cut it back to a name and move the rest into the explanation after it.`

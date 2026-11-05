@@ -43,6 +43,24 @@ const SIBLING_TARGETS = createSet(['typecheck', 'lint', 'test', 'build', 'e2e'])
 /** The projects the sibling environments cover. */
 const SIBLING_PROJECTS = /^(lib|tool)-/
 
+/**
+ * The environments whose pipeline runs a project's typecheck, lint, test, build and e2e: Linux for
+ * every project, and Windows and macOS too for a library or a tool. A package's declared
+ * operating-system support is checked against this, so it never claims an environment no run covers.
+ *
+ * @param project - The project's name
+ * @returns The environments, Linux first
+ *
+ * @example The environments a library and an application run in
+ * ```typescript
+ * exercisedEnvironments('lib-logging') // => ['linux', 'windows', 'macos']
+ * exercisedEnvironments('docs-site') // => ['linux']
+ * ```
+ */
+export function exercisedEnvironments(project: string): Environment[] {
+  return SIBLING_PROJECTS.test(project) ? [Environments.Linux, Environments.Windows, Environments.MacOS] : [Environments.Linux]
+}
+
 /** The targets that run after a chain's build, when the plan builds it. */
 const AFTER_BUILD = createSet<string>([
   'e2e',
@@ -366,7 +384,8 @@ export function linuxTasks(
 export function siblingTasks(graph: WorkspaceGraph, linux: readonly PlanTask[], environment: Environment): PlanTask[] {
   const tasks = createMap<string, PlanTask>()
   for (const item of linux) {
-    if (SIBLING_TARGETS.has(item.target) && SIBLING_PROJECTS.test(item.project)) tasks.set(item.id, { ...item, environment })
+    if (SIBLING_TARGETS.has(item.target) && exercisedEnvironments(item.project).includes(environment))
+      tasks.set(item.id, { ...item, environment })
   }
   for (const item of [...tasks.values()]) {
     if (item.target !== 'build') continue

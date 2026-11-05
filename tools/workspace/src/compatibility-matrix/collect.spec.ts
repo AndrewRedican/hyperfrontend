@@ -123,6 +123,24 @@ describe('collectMatrixLibraries', () => {
     expect(library?.environments).toEqual({ node: 'partial', browser: 'full', webWorker: 'none' })
   })
 
+  it('reads the declared support level for each operating system', () => {
+    const root = createWorkspace([
+      {
+        path: 'libs/ui',
+        projectJson: publishableProject({
+          name: 'lib-ui-utils',
+          compatibility: {
+            environments: { node: 'full', browser: 'full', webWorker: 'full' },
+            operatingSystems: { linux: 'full', macos: 'partial', windows: 'sometimes' },
+          },
+        }),
+        packageJson: { name: '@hyperfrontend/ui-utils', version: '0.0.8' },
+      },
+    ])
+
+    expect(collectMatrixLibraries(root)[0]?.operatingSystems).toEqual({ linux: 'full', macos: 'partial', windows: null })
+  })
+
   it('reads the compatibility note from project.json', () => {
     const root = createWorkspace([
       {
@@ -151,7 +169,10 @@ describe('collectMatrixLibraries', () => {
 
     const library = collectMatrixLibraries(root)[0]
 
-    expect(library?.environments).toEqual({ node: null, browser: null, webWorker: null })
+    expect({ environments: library?.environments, operatingSystems: library?.operatingSystems }).toEqual({
+      environments: { node: null, browser: null, webWorker: null },
+      operatingSystems: { linux: null, macos: null, windows: null },
+    })
   })
 
   it('leaves the note unset when project.json carries no compatibility metadata', () => {

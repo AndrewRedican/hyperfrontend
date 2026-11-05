@@ -185,6 +185,12 @@ Every export, option and type is in the [API reference](https://www.hyperfronten
 
 <!-- hf:media end -->
 
+| Operating System | Supported |
+| ---------------- | :-------: |
+| Linux            |    ✅     |
+| macOS            |    ✅     |
+| Windows          |    ✅     |
+
 **Note:** Some DOM utilities require browser APIs; check individual exports.
 
 ### Output Formats
