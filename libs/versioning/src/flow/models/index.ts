@@ -5,7 +5,18 @@
  */
 export type { VersionFlow, CreateFlowOptions } from './flow'
 export type { FlowStep, StepCondition, StepExecutor, CreateStepOptions } from './step'
-export type { FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResult, FlowStepResultWithId, Logger } from './types'
+export type {
+  DependencyCommitRequest,
+  DependencyCommitResolver,
+  FlowConfig,
+  FlowContext,
+  FlowResult,
+  FlowState,
+  FlowStatus,
+  FlowStepResult,
+  FlowStepResultWithId,
+  Logger,
+} from './types'
 export {
   createFlow,
   addStep,

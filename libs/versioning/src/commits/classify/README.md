@@ -178,6 +178,23 @@ const flow = createVersionFlow('conventional', {
 })
 ```
 
+### Supplying the Dependency Commits
+
+The dependency tracking switch shown above uses a built-in lookup that sees only the implicit dependencies a project declares in its configuration. A caller that knows the real dependency graph passes a resolver instead, which takes precedence:
+
+```typescript
+import { createVersionFlow } from '@hyperfrontend/versioning'
+
+const flow = createVersionFlow('conventional', {
+  scopeFiltering: {
+    // The project being versioned and the commit its range starts after, or null when there is none
+    dependencyCommits: ({ projectName, baseCommit }) => commitsReaching(projectName, baseCommit),
+  },
+})
+```
+
+The resolver returns, for each dependency by name, the hashes of the commits that reach the project through it. A project whose only releasable commits are indirect is raised by a patch, whatever those commits are; its own commits keep their level.
+
 ## Design Principles
 
 1. **Accuracy over speed**: Multi-source validation ensures correct attribution

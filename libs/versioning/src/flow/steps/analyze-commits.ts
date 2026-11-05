@@ -194,7 +194,9 @@ export function createAnalyzeCommitsStep(): FlowStep {
       )
 
       let dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>> | undefined
-      if (scopeFilteringConfig.trackDependencyChanges) {
+      if (scopeFilteringConfig.dependencyCommits) {
+        dependencyCommitMap = scopeFilteringConfig.dependencyCommits({ projectName, workspaceRoot, baseCommit: effectiveBaseCommit })
+      } else if (scopeFilteringConfig.trackDependencyChanges) {
         dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, effectiveBaseCommit, logger, maxFallback)
       }
 
@@ -210,16 +212,17 @@ export function createAnalyzeCommitsStep(): FlowStep {
       const includedCommits = applyStrategyFilter(classificationResult.included, strategy)
 
       const commits: ConventionalCommit[] = includedCommits.map((c) => toChangelogCommit(c))
-
-      const { summary } = classificationResult
       const directCommits: ConventionalCommit[] = includedCommits
         .filter((c) => c.source !== 'indirect-dependency' && c.source !== 'indirect-infra')
         .map((c) => toChangelogCommit(c))
+
+      const { summary } = classificationResult
       const message = buildSummaryMessage(commits.length, rawCommits.length, summary, strategy)
 
       logger.debug(
         `Classification breakdown: direct-scope=${summary.bySource['direct-scope']}, ` +
           `direct-file=${summary.bySource['direct-file']}, unscoped-file=${summary.bySource['unscoped-file']}, ` +
+          `indirect-dependency=${summary.bySource['indirect-dependency']}, indirect-infra=${summary.bySource['indirect-infra']}, ` +
           `excluded=${summary.bySource['excluded']}`
       )
 
@@ -228,10 +231,10 @@ export function createAnalyzeCommitsStep(): FlowStep {
         stateUpdates: {
           effectiveBaseCommit,
           commits,
+          directCommits,
           classificationResult,
         },
         message,
-        directCommits,
       }
     },
     {

@@ -88,6 +88,34 @@ export interface FlowState {
 }
 
 /**
+ * What a dependency commit resolver is asked: the project being versioned and where its commit range starts.
+ */
+export interface DependencyCommitRequest {
+  /** Name of the project being versioned */
+  readonly projectName: string
+
+  /** Absolute path of the workspace root */
+  readonly workspaceRoot: string
+
+  /** The commit the analysed range starts after, or null when there is no such commit (a first release, or a published commit missing from history) */
+  readonly baseCommit: string | null
+}
+
+/**
+ * Names the commits that reach a project through something other than its own files.
+ *
+ * Returns, for each dependency or tool by name, the hashes of the commits that change it in a
+ * way the project is built from. An empty map means nothing reaches the project indirectly.
+ *
+ * @example Reporting every commit that touched one dependency
+ * ```typescript
+ * const dependencyCommits: DependencyCommitResolver = ({ baseCommit }) =>
+ *   new Map([['lib-utils', new Set(baseCommit === null ? [] : commitsTouching('libs/utils', baseCommit))]])
+ * ```
+ */
+export type DependencyCommitResolver = (request: DependencyCommitRequest) => ReadonlyMap<string, ReadonlySet<string>>
+
+/**
  * Strategy for filtering commits to a project's changelog.
  *
  * - `'hybrid'`: Use scope + file validation (default, recommended)
@@ -134,6 +162,18 @@ export interface ScopeFilteringConfig {
    * @default false
    */
   readonly trackDependencyChanges?: boolean
+
+  /**
+   * Supplies the commits that reach the project through its dependencies.
+   *
+   * Use it when the caller knows the real dependency graph. It takes precedence over
+   * `trackDependencyChanges`, whose built-in lookup sees only the `implicitDependencies`
+   * a project declares.
+   *
+   * @example
+   * dependencyCommits: ({ projectName, baseCommit }) => commitsReaching(projectName, baseCommit)
+   */
+  readonly dependencyCommits?: DependencyCommitResolver
 
   /**
    * Project name prefixes stripped for scope matching.
@@ -205,13 +245,17 @@ type DefaultInfrastructureFields = {
   infrastructure: undefined
   /** Infrastructure matcher function (unused in default) */
   infrastructureMatcher: undefined
+  /** Dependency commit resolver (unused in default) */
+  dependencyCommits: undefined
 }
 
 /**
  * Shape of the default scope filtering configuration: every required field plus
- * explicit `undefined` placeholders for the infrastructure-related extensions.
+ * explicit `undefined` placeholders for the infrastructure-related extensions and the dependency commit resolver.
  */
-export type DefaultScopeFilteringConfig = Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> &
+export type DefaultScopeFilteringConfig = Required<
+  Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher' | 'dependencyCommits'>
+> &
   DefaultInfrastructureFields
 
 /**
@@ -228,6 +272,7 @@ export const DEFAULT_SCOPE_FILTERING_CONFIG: DefaultScopeFilteringConfig = {
   projectPrefixes: DEFAULT_PROJECT_PREFIXES,
   infrastructure: undefined,
   infrastructureMatcher: undefined,
+  dependencyCommits: undefined,
 }
 
 /**
