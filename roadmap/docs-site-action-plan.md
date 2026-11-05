@@ -62,9 +62,9 @@ native share sheet, LinkedIn, X, WhatsApp, copy link; analytics through the
 ### Verification
 
 ```bash
-npm run hf -- run-many -t build -p docs-site
-npm run hf -- run docs-site:lint --fix
-npm run hf -- run-many -t typecheck -p docs-site
+npx hf run-many -t build -p docs-site
+npx hf run docs-site:lint --fix
+npx hf run-many -t typecheck -p docs-site
 ```
 
 ---
@@ -180,7 +180,7 @@ audit has not run.
 ### Verification
 
 ```bash
-npm run hf -- run-many -t build -p docs-site
+npx hf run-many -t build -p docs-site
 npx lighthouse https://hyperfrontend.dev --only-categories=accessibility
 ```
 

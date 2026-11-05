@@ -28,7 +28,7 @@ Version impact (computed at pre-push by the root `version:all` target, never by 
 **A scope MUST be a project name exactly as written in that project's `project.json` `name` field.**
 
 ```bash
-npm run -s hf -- show projects | grep <hint>   # verify before committing
+npx hf show projects | grep <hint>   # verify before committing
 ```
 
 ✓ `lib-features` `lib-nexus` `e2e-lib-features` `demo-clock` `docs-site` `tool-app`

@@ -32,13 +32,13 @@ Before adding `@nx/devkit` to a file: import the type from `@hyperfrontend/integ
 Regenerate (resolves the ref once, writes the lock, writes only changed files):
 
 ```bash
-npm run hf -- run tool-workspace:types-extract
+npx hf run tool-workspace:types-extract
 ```
 
 Verify, byte-exact, twice for determinism:
 
 ```bash
-npm run hf -- run tool-workspace:types-extract-check
+npx hf run tool-workspace:types-extract-check
 ```
 
 Bump Nx:
@@ -46,12 +46,12 @@ Bump Nx:
 ```bash
 # 1. tools/workspace/types-extract.config.ts: ref: '23.4.0'
 # 2. the e2e lane's NX_VERSION is the same tag
-npm run hf -- run tool-workspace:types-extract
+npx hf run tool-workspace:types-extract
 git diff --stat libs/integrations/nx/src/compat   # read REPORT.md rows that appeared or vanished
-npm run hf -- run-many -t typecheck,test \
+npx hf run-many -t typecheck,test \
   -p lib-integration-nx,tool-app,tool-package,tool-workspace,lib-features
 # the nx lane probes against the real devkit
-CI=1 npm run hf -- run-many -t e2e -p e2e-lib-features
+CI=1 npx hf run-many -t e2e -p e2e-lib-features
 ```
 
 Add a type an executor needs:

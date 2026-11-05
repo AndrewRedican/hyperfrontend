@@ -99,11 +99,11 @@ Never authored in the README. The build replaces the H1 with `assets/media/banne
 
 ```bash
 # fast check that the tagline fits two lines
-npm run hf -- run tool-media:preview --scene=banner-<name> --at=0 \
+npx hf run tool-media:preview --scene=banner-<name> --at=0 \
   --out=<scratch>/banner.png
 
 # record all three variants (writes the GIFs and banner.json together)
-npm run hf -- run tool-media:media --scene=banner-<name>
+npx hf run tool-media:media --scene=banner-<name>
 ```
 
 Never interrupt a recording: a killed run can leave new GIFs beside a stale `banner.json`. Restore with `git checkout -- assets/media/banner-<name>/` and record again.
@@ -137,5 +137,5 @@ Never: an `## API` export table, interface code blocks duplicating extractable t
 ## Validation
 
 ```bash
-npm run hf -- run @hyperfrontend/workspace:lint:all
+npx hf run @hyperfrontend/workspace:lint:all
 ```

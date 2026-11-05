@@ -132,7 +132,7 @@ testRule(rule, {
 - Rules that read the workspace use a disposable workspace written into the temporary directory from a `__test-utils__` module (for instance `createLibraryWorkspace()`), created at module level and removed by a final `it('removes the disposable workspace', …)`; `afterAll` is not available. Never keep test material as files at rest: `workspace/no-test-fixtures` reports fixture directories and any non-code file under `__test-utils__`.
 - Test names are assertive: `reports X`, `allows Y`, never `should …`.
 - A workspace rule's spec imports `testRule` from `@hyperfrontend/linter/testing`.
-- 100 % lines, branches and functions, measured by `npm run hf -- run lib-linter:test` for packaged rules and `npm run hf -- run tool-lint:test` for workspace rules. One spec alone: see the single-spec recipe in memory (`node --import libs/testing/src/hooks/index.ts --test --experimental-test-coverage …` from the project root). Uncoverable branches: the `lint-coverage` skill.
+- 100 % lines, branches and functions, measured by `npx hf run lib-linter:test` for packaged rules and `npx hf run tool-lint:test` for workspace rules. One spec alone: see the single-spec recipe in memory (`node --import libs/testing/src/hooks/index.ts --test --experimental-test-coverage …` from the project root). Uncoverable branches: the `lint-coverage` skill.
 
 ---
 

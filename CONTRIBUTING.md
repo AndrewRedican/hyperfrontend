@@ -106,17 +106,17 @@ The devcontainer configuration is located in `.devcontainer/devcontainer.json` a
 
 ### Verify Your Setup
 
-After setup, verify everything works. Every workspace task runs through the workspace's own command line, `npm run hf -- <command>`, from the repository root:
+After setup, verify everything works. Every workspace task runs through the workspace's own command line, `npx hf <command>`, from the repository root:
 
 ```bash
 # Build all packages
-npm run hf -- run-many -t build --all
+npx hf run-many -t build --all
 
 # Run tests
-npm run hf -- run-many -t test --all
+npx hf run-many -t test --all
 
 # Lint code
-npm run hf -- run-many -t lint --all
+npx hf run-many -t lint --all
 ```
 
 `run <project>:<target>` runs one task alone; `run-many` runs the named tasks and their `dependsOn` prerequisites, one at a time, and skips the dependents of a failure. Nothing is cached, so every task runs every time.
@@ -129,10 +129,10 @@ The documentation site is a Next.js application located in `apps/docs-site/`.
 
 ```bash
 # Install dependencies (required once)
-npm run hf -- run docs-site:install
+npx hf run docs-site:install
 
 # Build the site and serve it
-npm run hf -- run-many -t serve -p docs-site
+npx hf run-many -t serve -p docs-site
 ```
 
 The site will be available at `http://localhost:3000`.
@@ -140,7 +140,7 @@ The site will be available at `http://localhost:3000`.
 #### Building Documentation
 
 ```bash
-npm run hf -- run-many -t build -p docs-site
+npx hf run-many -t build -p docs-site
 ```
 
 The output will be in `apps/docs-site/out/` (this directory is gitignored).
@@ -246,16 +246,16 @@ node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.t
 One task of one project runs alone, without the tasks it depends on, through the workspace's own entry:
 
 ```bash
-npm run hf -- run lib-nexus:test
+npx hf run lib-nexus:test
 ```
 
 A target across every project a change reaches, from the merge base with `origin/main` unless `--base` names another revision:
 
 ```bash
-npm run hf -- affected -t test
-npm run hf -- affected -t lint
-npm run hf -- affected -t build --base=main
-CI=1 npm run hf -- affected -t e2e
+npx hf affected -t test
+npx hf affected -t lint
+npx hf affected -t build --base=main
+CI=1 npx hf affected -t e2e
 ```
 
 E2E tests validate that built packages work correctly when consumed via `npm install`. Test projects in `apps/package-e2e/` manage their own dependencies separately from the root workspace.
@@ -266,10 +266,10 @@ Build a single library or all libraries:
 
 ```bash
 # Build one library
-npm run hf -- run lib-nexus:build
+npx hf run lib-nexus:build
 
 # Build all libraries
-npm run hf -- run-many -t build -p 'lib-*'
+npx hf run-many -t build -p 'lib-*'
 ```
 
 Output goes to `dist/libs/<library>/` with ESM + CJS formats.
@@ -301,16 +301,16 @@ git push --no-verify
 
 ```bash
 # Preview batch version changes (dry run)
-npm run hf -- run @hyperfrontend/workspace:version:all --dryRun
+npx hf run @hyperfrontend/workspace:version:all --dryRun
 
 # Preview single library version changes
-npm run hf -- run lib-nexus:version --dryRun
+npx hf run lib-nexus:version --dryRun
 
 # Manually run versioning for a single library
-npm run hf -- run lib-nexus:version
+npx hf run lib-nexus:version
 
 # Validate version state (what CI runs)
-npm run hf -- run lib-nexus:version-check
+npx hf run lib-nexus:version-check
 ```
 
 **CI Validation:**
@@ -323,10 +323,10 @@ Publishing happens via CI after PR merge. To test locally:
 
 ```bash
 # Dry run (preview); the build runs first
-npm run hf -- run-many -t publish -p lib-nexus --dryRun
+npx hf run-many -t publish -p lib-nexus --dryRun
 
 # Publish to local Verdaccio for testing
-npm run hf -- run-many -t publish -p lib-nexus \
+npx hf run-many -t publish -p lib-nexus \
   --registry=http://localhost:4873
 ```
 
@@ -456,16 +456,16 @@ Common CI failures and fixes:
 
 ```bash
 # Format check failed
-npm run hf -- format --write
+npx hf format --write
 
 # Lint check failed
-npm run hf -- affected -t lint
+npx hf affected -t lint
 
 # Test check failed
-npm run hf -- affected -t test
+npx hf affected -t test
 
 # Build check failed
-npm run hf -- affected -t build
+npx hf affected -t build
 ```
 
 ### Workflow Documentation
@@ -491,15 +491,15 @@ The project lints with the workspace linter, `@hyperfrontend/linter`:
 
 ```bash
 # Lint every project
-npm run hf -- run-many -t lint --all
+npx hf run-many -t lint --all
 
 # Fix auto-fixable issues in one project
-npm run hf -- run lib-nexus:lint --fix
+npx hf run lib-nexus:lint --fix
 ```
 
 ### Formatting
 
-Prettier owns formatting. `npm run hf -- format --check` checks the files your change touches, `--write` rewrites them, and `--all` covers the whole workspace.
+Prettier owns formatting. `npx hf format --check` checks the files your change touches, `--write` rewrites them, and `--all` covers the whole workspace.
 
 ## Commit Message Guidelines
 

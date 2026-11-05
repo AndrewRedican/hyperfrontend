@@ -49,10 +49,10 @@ Each phase **MUST** be independently verifiable.
 Insert after each phase. Replace `PROJECT` with actual project name:
 
 ```bash
-npm run hf -- run PROJECT:test
-npm run hf -- run PROJECT:lint --fix
-npm run hf -- run PROJECT:typecheck
-npm run hf -- format --write
+npx hf run PROJECT:test
+npx hf run PROJECT:lint --fix
+npx hf run PROJECT:typecheck
+npx hf format --write
 ```
 
 Fix all IDE-reported errors before proceeding.
@@ -76,5 +76,5 @@ A plan under `roadmap/` describes what is still to do. When a milestone lands, d
 - [ ] Each phase independently verifiable
 - [ ] File paths complete and accurate
 - [ ] Unit tests included only if project has existing `*.spec.ts`
-- [ ] Verification commands use the `npm run hf --` syntax
+- [ ] Verification commands use the `npx hf` syntax
 - [ ] Plan saved to `roadmap/*.md`
