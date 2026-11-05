@@ -21,9 +21,9 @@ export const metadata = getPageMetadata({
  * demo's `project.json`.
  */
 const DEMO_DEV_COMMANDS = [
-  'npm run hf -- run-many -t dev -p demo-clock',
-  'npm run hf -- run-many -t dev -p demo-heartbeat',
-  'npm run hf -- run-many -t dev -p demo-koi-pond',
+  'npx hf run-many -t dev -p demo-clock',
+  'npx hf run-many -t dev -p demo-heartbeat',
+  'npx hf run-many -t dev -p demo-koi-pond',
 ]
 
 export default function ContributingPage() {
@@ -124,15 +124,15 @@ export default function ContributingPage() {
         <div className="command-grid mt-4">
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run tests</h3>
-            <CodeBlock code="npm run hf -- run-many -t test --all" layout="full" />
+            <CodeBlock code="npx hf run-many -t test --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run linting</h3>
-            <CodeBlock code="npm run hf -- run-many -t lint --all" layout="full" />
+            <CodeBlock code="npx hf run-many -t lint --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Build all packages</h3>
-            <CodeBlock code="npm run hf -- run-many -t build --all" layout="full" />
+            <CodeBlock code="npx hf run-many -t build --all" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run a specific demo</h3>
