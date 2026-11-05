@@ -162,6 +162,8 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
+A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it. See [the version executor](src/executors/version/README.md#changes-that-reach-a-library-indirectly).
+
 ## Development
 
 ```bash

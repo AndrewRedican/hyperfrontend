@@ -1,5 +1,7 @@
 import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
 import type { VersionCheckExecutorSchema } from './schema'
+import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+import { withShippedChanges } from '../version/lib/graph-change-sources'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { isVersionCommit } from '../version/lib/is-version-commit'
 import { getLogger } from '../version/lib/logger'
@@ -71,7 +73,7 @@ export default async function versionCheckExecutor(
     projectName,
     projectRoot,
     verbose: options.verbose,
-    scopeFiltering: options.scopeFiltering,
+    scopeFiltering: withShippedChanges(options.scopeFiltering, workspaceGraph(workspaceRoot), workspaceRoot),
     maxCommitFallback: options.maxCommitFallback,
     repository: options.repository,
   })

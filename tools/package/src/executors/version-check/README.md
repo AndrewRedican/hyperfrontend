@@ -9,6 +9,7 @@ This executor is used by CI to verify that lefthook versioning ran successfully 
 - **Read-only**: Does NOT modify any files or create commits
 - **Dry-run comparison**: Calculates expected state by running version flow in dry-run mode
 - **Changelog validation**: Uses `@hyperfrontend/versioning` changelog parsing to verify entry content
+- **Same rule as the bump**: Counts the changes that reach a library through code it ships or through the toolchain, exactly as the `version` executor does
 - **Clear remediation**: Provides actionable fix instructions on failure
 
 ## Usage

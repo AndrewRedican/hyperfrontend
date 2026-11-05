@@ -74,6 +74,17 @@ npx hf run @hyperfrontend/workspace:version:all \
 
 Commits with types `chore`, `ci`, `build`, `test`, `style`, `refactor` do not trigger version bumps but may appear in the changelog under "Other Changes" if they have notable content.
 
+### Changes That Reach a Library Indirectly
+
+A library is also released when the workspace graph rebuilds it for a change it did not make itself:
+
+- **Code it ships.** A releasable commit (`feat`, `fix`, `perf`, `revert`) in a package the library's build reaches through imports, directly or through other packages. The built library carries a copy of that code, so the copy is out of date until the library is released.
+- **The toolchain.** A releasable commit in a project the `build` target declares as an input in `nx.json` (the builder and the package executors). Every library is built by them.
+
+Such a change raises the library by a **patch**, whatever the commit's own type, and is listed in its changelog as an indirect change. The library's own commits keep the level from the table above.
+
+A change that only touches a global configuration file (`nx.json`, the root `package.json`, `package-lock.json`, `tsconfig.base.json`) or another file the workspace root owns rebuilds libraries and releases none. So does a change in something only the build executor imports: the toolchain is what the target declares, not everything it loads.
+
 ## How It Works
 
 ### Version Flow
@@ -145,6 +156,7 @@ Tags are created **after** publish, not during versioning. This is why `skipTag`
 - Ensure commits follow conventional format: `type(scope): message`
 - Check that commit types trigger bumps (see table above)
 - Run with `--verbose` to see commit analysis
+- The classification breakdown in the verbose output counts `indirect-dependency` commits: the ones that reach the library through code it ships or through the toolchain
 
 ### Already versioned?
 
