@@ -189,7 +189,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
-      - run: npm run hf -- format --check --all
+      - run: npx hf format --check --all
       - id: plan
         run: >-
           node --import ./tools/lint/src/runtime/aliases.ts

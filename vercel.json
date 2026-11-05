@@ -1,6 +1,6 @@
 {
-  "installCommand": "npm ci --engine-strict=false && npm run hf -- run docs-site:install --ci=true",
-  "buildCommand": "npm run hf -- run docs-site:build",
+  "installCommand": "npm ci --engine-strict=false && npx hf run docs-site:install --ci=true",
+  "buildCommand": "npx hf run docs-site:build",
   "headers": [
     {
       "source": "/(.*)",

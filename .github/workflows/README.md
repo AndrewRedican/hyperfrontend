@@ -254,7 +254,7 @@ act pull_request -j plan -W .github/workflows/ci-pr.yml
 
 - Ensure `fetch-depth: 0` is set in checkout step
 - Read the `plan` job summary: every task lists the reason it runs, every skipped task the rule that made the skip safe
-- `npm run hf -- graph affected --target <t> --explain` and `npm run hf -- graph explain <project:target>` answer locally why a task is in or out
+- `npx hf graph affected --target <t> --explain` and `npx hf graph explain <project:target>` answer locally why a task is in or out
 
 ### Failed Jobs
 

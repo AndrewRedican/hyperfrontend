@@ -100,7 +100,7 @@ jobs:
       - name: Build native binary
         if: steps.support.outputs.supported == 'true'
         shell: bash
-        run: CI=1 npm run hf -- run-many -t build -p ${{ inputs.project-name }}
+        run: CI=1 npx hf run-many -t build -p ${{ inputs.project-name }}
 
       - name: Upload binary artifact
         if: steps.support.outputs.supported == 'true'
