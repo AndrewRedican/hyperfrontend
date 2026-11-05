@@ -96,6 +96,8 @@ const result = classifyCommits(commits, context)
 result.included.filter((c) => c.source === 'indirect-dependency')
 ```
 
+The commit hash decides. A commit is an indirect dependency change when a dependency's set holds its hash, whatever its scope names, because the files it changes are what reach the project. The scope only chooses which dependency is named when several sets hold the same hash, and an excluded scope still excludes the commit.
+
 ### With Infrastructure Detection
 
 ```typescript
