@@ -137,5 +137,5 @@ Never: an `## API` export table, interface code blocks duplicating extractable t
 ## Validation
 
 ```bash
-npx hf run @hyperfrontend/workspace:lint:all
+npx hf run hyperfrontend:lint:all
 ```

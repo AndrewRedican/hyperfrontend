@@ -13,7 +13,7 @@ Lint rule: `workspace/lib-ci-workflows`, run on `.github/workflows/ci-main.yml`
 
 ## How a Library Gets Built
 
-Nothing per library decides when CI runs it. Every pull request and every push to `main` plans its work from the owned pipeline (`tools/workspace`): the plan reads the project graph, selects the tasks of the projects a change reaches, and the environment jobs execute them. There is no path filter or matrix entry to register; a new library is in the plan as soon as its project exists.
+Nothing per library decides when CI runs it. Every pull request and every push to `main` plans its work from the owned pipeline (`tools/pipeline`): the plan reads the project graph, selects the tasks of the projects a change reaches, and the environment jobs execute them. There is no path filter or matrix entry to register; a new library is in the plan as soon as its project exists.
 
 ## Entries the Rule Expects
 
