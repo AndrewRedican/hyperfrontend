@@ -1,0 +1,48 @@
+{
+  "name": "lib-workspace",
+  "description": "Workspace graph, task runner and generators behind the hf command line.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "external": ["@hyperfrontend/testing/runner"],
+        "esm": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": {
+            "exclude": ["tslib"]
+          }
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": {
+            "exclude": ["tslib"]
+          }
+        },
+        "assets": [
+          {
+            "from": "libs/workspace",
+            "files": ["executors.json"]
+          },
+          {
+            "from": "libs/workspace/src/executors",
+            "glob": "**/schema.json",
+            "to": "executors"
+          }
+        ],
+        "bin": [
+          {
+            "name": "hf",
+            "runner": "runHf",
+            "format": "esm",
+            "bootstrap": "runHf({ argv: process.argv.slice(2), cwd: process.cwd() }).then(\n  (code) => { process.stdout.write('', () => process.stderr.write('', () => process.exit(code))) },\n  (error) => {\n    process.stderr.write((error instanceof Error ? error.message : String(error)) + '\\n')\n    process.exitCode = 1\n  }\n)"
+          }
+        ]
+      }
+    },
+    "typecheck": {},
+    "test": {}
+  }
+}

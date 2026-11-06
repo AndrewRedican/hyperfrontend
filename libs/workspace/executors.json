@@ -1,0 +1,29 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "./executors/build/index",
+      "schema": "./executors/build/schema.json",
+      "description": "Build a library into a publishable package."
+    },
+    "e2e": {
+      "implementation": "./executors/e2e/index",
+      "schema": "./executors/e2e/schema.json",
+      "description": "Pack a library's build, install the tarball into the e2e project that tests it, and run its suites."
+    },
+    "publish": {
+      "implementation": "./executors/publish/index",
+      "schema": "./executors/publish/schema.json",
+      "description": "Publish a library's build output to the npm registry, skipping a version already there."
+    },
+    "test": {
+      "implementation": "./executors/test/index",
+      "schema": "./executors/test/schema.json",
+      "description": "Run a project's suites on Node's built-in test runner."
+    },
+    "typecheck": {
+      "implementation": "./executors/typecheck/index",
+      "schema": "./executors/typecheck/schema.json",
+      "description": "Run the TypeScript compiler over a project without emitting files."
+    }
+  }
+}

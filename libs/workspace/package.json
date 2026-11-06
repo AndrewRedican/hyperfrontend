@@ -1,0 +1,73 @@
+{
+  "name": "@hyperfrontend/workspace",
+  "version": "0.0.0",
+  "description": "Workspace graph, task runner and generators behind the hf command line.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hyperfrontend/builder": "0.7.2",
+    "@hyperfrontend/immutable-api-utils": "1.0.4",
+    "@hyperfrontend/linter": "0.3.1",
+    "@hyperfrontend/logging": "1.0.2",
+    "@hyperfrontend/project-scope": "0.5.1",
+    "tslib": "2.8.1",
+    "typescript": "5.9.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-android-arm-eabi": "4.64.10",
+    "@rollup/rollup-android-arm64": "4.64.10",
+    "@rollup/rollup-darwin-arm64": "4.64.10",
+    "@rollup/rollup-darwin-x64": "4.64.10",
+    "@rollup/rollup-freebsd-arm64": "4.64.10",
+    "@rollup/rollup-freebsd-x64": "4.64.10",
+    "@rollup/rollup-linux-arm-gnueabihf": "4.64.10",
+    "@rollup/rollup-linux-arm-musleabihf": "4.64.10",
+    "@rollup/rollup-linux-arm64-gnu": "4.64.10",
+    "@rollup/rollup-linux-arm64-musl": "4.64.10",
+    "@rollup/rollup-linux-loong64-gnu": "4.64.10",
+    "@rollup/rollup-linux-loong64-musl": "4.64.10",
+    "@rollup/rollup-linux-ppc64-gnu": "4.64.10",
+    "@rollup/rollup-linux-ppc64-musl": "4.64.10",
+    "@rollup/rollup-linux-riscv64-gnu": "4.64.10",
+    "@rollup/rollup-linux-riscv64-musl": "4.64.10",
+    "@rollup/rollup-linux-s390x-gnu": "4.64.10",
+    "@rollup/rollup-linux-x64-gnu": "4.64.10",
+    "@rollup/rollup-linux-x64-musl": "4.64.10",
+    "@rollup/rollup-openbsd-x64": "4.64.10",
+    "@rollup/rollup-openharmony-arm64": "4.64.10",
+    "@rollup/rollup-win32-arm64-msvc": "4.64.10",
+    "@rollup/rollup-win32-ia32-msvc": "4.64.10",
+    "@rollup/rollup-win32-x64-gnu": "4.64.10",
+    "@rollup/rollup-win32-x64-msvc": "4.64.10"
+  },
+  "peerDependencies": {
+    "@hyperfrontend/testing": ">=0.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@hyperfrontend/testing": {
+      "optional": true
+    }
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./cli": "./src/cli/index.js",
+    "./executors/build": "./src/executors/build/index.js",
+    "./executors/e2e": "./src/executors/e2e/index.js",
+    "./executors/publish": "./src/executors/publish/index.js",
+    "./executors/test": "./src/executors/test/index.js",
+    "./executors/typecheck": "./src/executors/typecheck/index.js",
+    "./graph": "./src/graph/index.js",
+    "./hooks": "./src/hooks/index.js",
+    "./runner": "./src/runner/index.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "hf": "./bin/hf.mjs"
+  },
+  "executors": "./executors.json",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,240 @@
+# Build Executor
+
+Format-centric build executor for the libraries of a workspace. A thin wrapper over [`@hyperfrontend/builder`](../../../../builder/README.md) that decides what holds for every workspace: the packages the workspace's own projects carry are first-party (bundled where a format asks, left out of the published dependencies), the repository fields come from the root `package.json`, third-party licences are collected, and the project's `README.md` and `CHANGELOG.md` travel with the package. Everything else is a build decision made in the target's options.
+
+## Usage
+
+```json
+{
+  "build": {
+    "executor": "@hyperfrontend/workspace:build",
+    "options": {
+      "esm": { "bundleWorkspaceDeps": false },
+      "cjs": { "bundleWorkspaceDeps": false },
+      "iife": {
+        "entry": ".",
+        "globalName": "HyperfrontendLogging"
+      },
+      "umd": {
+        "entry": ".",
+        "globalName": "HyperfrontendLogging"
+      }
+    }
+  }
+}
+```
+
+## Output Formats
+
+| Format   | Use Case                          | Node.js | Browser |
+| -------- | --------------------------------- | ------- | ------- |
+| **ESM**  | Modern bundlers, native modules   | ✅      | ✅      |
+| **CJS**  | Node.js, legacy bundlers          | ✅      | ⚠️      |
+| **IIFE** | Browser `<script>` tags, CDN      | ❌      | ✅      |
+| **UMD**  | Universal (Browser + AMD + CJS)   | ⚠️      | ✅      |
+
+## Configuration Options
+
+### Global Options
+
+| Option       | Type             | Default                              | Description                                                                                                       |
+| ------------ | ---------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `outputPath` | `string`         | `dist/<project root>`                | Output directory, relative to the workspace root. |
+| `tsConfig`   | `string`         | `<project root>/tsconfig.lib.json`   | Path to tsconfig, relative to the workspace root. |
+| `rootAssets` | `string[]`       | none                                 | Files at the workspace root copied into the package when they exist, such as a licence. `FUNDING.md` is copied only into a package that declares `funding`. |
+| `assets`     | `AssetSpec[]`    | none                                 | Asset specs to copy in addition to the project's `README.md` and `CHANGELOG.md` and the root assets. |
+| `external`   | `string[]`       | Auto-detected from package.json      | Global externals for all formats.                                                                                 |
+| `bin`        | `BinConfig[]`    | —                                    | Bin declarations to synthesize. Source convention: `src/bin/<name>.ts`.                                            |
+| `dedupeSharedInternals` | `boolean` | `true`                          | Hoist first-party modules inlined into multiple entry bundles into shared `_shared/<srcPath>/` chunks and rewrite entries to import them. Safe additive post-emit pass over `esm`/`cjs` outputs; set `false` to keep entries fully self-contained. |
+
+### `AssetSpec`
+
+| Field      | Type                          | Description                                                                                  |
+| ---------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `from`     | `string`                      | Absolute source directory.                                                                   |
+| `to`       | `string`                      | Output subdirectory relative to `outputPath`. Defaults to the dist root.                     |
+| `files`    | `string[]`                    | Explicit relative file names to copy.                                                        |
+| `glob`     | `string`                      | POSIX-style glob pattern, evaluated relative to `from`.                                      |
+
+### `BinConfig`
+
+| Field       | Type                                                                          | Description                                                                                            |
+| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `name`      | `string`                                                                      | Bin name (also the `package.json#bin` key and the source file basename at `src/bin/<name>.ts`).        |
+| `format`    | `'cjs' \| 'esm' \| ('cjs' \| 'esm')[]`                                        | Required output format(s).                                                                             |
+| `runner`    | `string`                                                                      | Named runner export to bootstrap. Defaults to the file's `default` export.                             |
+| `bootstrap` | `string`                                                                      | Override the bootstrap footer template.                                                                |
+| `sea`       | `{ platforms: ('linux-x64' \| 'linux-arm64' \| 'darwin-x64' \| 'darwin-arm64' \| 'win32-x64')[] }` | Opt into Node SEA native binary emission. Builder skips silently when the host doesn't match a declared platform. |
+
+### ESM/CJS Config
+
+| Option                | Type                 | Default      | Description                                                                            |
+| --------------------- | -------------------- | ------------ | -------------------------------------------------------------------------------------- |
+| `entry`               | `string \| string[]` | All detected | Entry point pattern(s).                                                                |
+| `exclude`             | `string \| string[]` | —            | Entry points to exclude.                                                               |
+| `sourcemap`           | `boolean`            | `false`      | Generate sourcemaps.                                                                   |
+| `external`            | `string[]`           | —            | Additional externals for this format.                                                  |
+| `bundleWorkspaceDeps` | `boolean`            | —            | Inline workspace (`@hyperfrontend/*`) packages instead of keeping them external.       |
+
+### IIFE/UMD Config
+
+| Option       | Type                     | Default      | Description                                                  |
+| ------------ | ------------------------ | ------------ | ------------------------------------------------------------ |
+| `entry`      | `string \| string[]`     | (required)   | Entry point pattern(s).                                      |
+| `globalName` | `string`                 | (required)   | Global variable name for browser.                            |
+| `minify`     | `boolean`                | `true`       | Generate minified version.                                   |
+| `output`     | `string`                 | `bundle`     | Output subdirectory.                                         |
+| `sourcemap`  | `boolean`                | `false`      | Generate sourcemaps.                                         |
+| `external`   | `string[]`               | —            | Dependencies to keep external (inline by default).           |
+| `globals`    | `Record<string, string>` | —            | Global names for each external (required if external is set). |
+| `amdId`      | `string` (UMD only)      | package name | AMD module ID.                                               |
+
+## Entry Point Patterns
+
+Entry points support exact paths, globs, and arrays:
+
+```json
+// Exact path
+"entry": "."
+
+// Platform-specific
+"entry": "./browser"
+
+// Glob pattern
+"entry": "./browser/*"
+
+// Multiple entries
+"entry": ["./browser/v3", "./browser/v4"]
+```
+
+## IIFE/UMD Dependency Handling
+
+**Default behavior:** All dependencies are inlined into the bundle. This creates self-contained bundles ideal for CDN usage.
+
+**To keep dependencies external:** Specify both `external` and `globals`:
+
+```json
+"iife": {
+  "entry": ".",
+  "globalName": "MyLib",
+  "external": ["lodash"],
+  "globals": { "lodash": "_" }
+}
+```
+
+Build **fails** if `external` has entries without corresponding `globals`.
+
+## Examples
+
+### Simple Library (Root Entry)
+
+```json
+{
+  "esm": { "bundleWorkspaceDeps": false },
+  "cjs": { "bundleWorkspaceDeps": false },
+  "iife": { "entry": ".", "globalName": "HyperfrontendLogging" },
+  "umd": { "entry": ".", "globalName": "HyperfrontendLogging" }
+}
+```
+
+### Library with Bins (JS + Native)
+
+```json
+{
+  "esm": { "bundleWorkspaceDeps": true },
+  "cjs": { "bundleWorkspaceDeps": true },
+  "bin": [
+    {
+      "name": "hf-build",
+      "format": ["cjs"],
+      "sea": {
+        "platforms": [
+          "linux-x64",
+          "linux-arm64",
+          "darwin-x64",
+          "darwin-arm64",
+          "win32-x64"
+        ]
+      }
+    }
+  ]
+}
+```
+
+### Multiple Bundles
+
+```json
+{
+  "esm": { "bundleWorkspaceDeps": false },
+  "cjs": { "bundleWorkspaceDeps": false },
+  "iife": [
+    { "entry": "./browser/v3", "globalName": "HyperfrontendNetworkProtocolV3", "output": "bundle/v3" },
+    { "entry": "./browser/v4", "globalName": "HyperfrontendNetworkProtocolV4", "output": "bundle/v4" }
+  ],
+  "umd": [
+    { "entry": "./browser/v3", "globalName": "HyperfrontendNetworkProtocolV3", "output": "bundle/v3" },
+    { "entry": "./browser/v4", "globalName": "HyperfrontendNetworkProtocolV4", "output": "bundle/v4" }
+  ]
+}
+```
+
+## Build Output
+
+Output is written to the output directory with structure:
+
+```
+dist/libs/my-lib/
+├── esm/                 # ESM modules
+├── cjs/                 # CommonJS modules
+├── bundle/              # IIFE/UMD bundles (configurable)
+│   ├── my-lib.iife.js
+│   ├── my-lib.iife.min.js
+│   ├── my-lib.umd.js
+│   └── my-lib.umd.min.js
+├── bin/                 # JS bins (when configured)
+├── types/               # TypeScript declarations
+├── package.json         # Generated with exports field + bin field auto-wired
+├── README.md
+└── LICENSE.md
+```
+
+## The distribution readme
+
+The readme a package ships is not a byte copy of the one it maintains. After the build, the executor reads the source `README.md` and writes a second one into the output with its title replaced by the package banner and every marked region replaced by a committed visual; that copy is what `npm pack` picks up, while the source, GitHub and the documentation site keep the original text.
+
+The banner is placed by convention rather than by a marker. The level-1 heading of the source becomes a figure showing `assets/media/banner-<name>/banner.gif`, where `<name>` is the package name without its scope, linked to the package's documentation page and carrying the package name as its alternative text. A registry page already shows the name above the readme, so the heading it would repeat is where the package's visual identity goes instead; the source keeps the heading for GitHub and for the documentation site, which renders it as the page title.
+
+Everything else a visual replaces is marked. A region is a pair of HTML comments, which every renderer hides:
+
+```markdown
+<!-- hf:media start id="runtimes" scene="runtimes-logging" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+
+<!-- hf:media end -->
+```
+
+A region may also be empty, for a visual that is inserted rather than substituted.
+
+| Attribute | Required | Meaning                                                                                                                                            |
+| --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`      | yes      | The region's name, unique within the file: lower-case words joined by single hyphens.                                                              |
+| `scene`   | yes      | The directory under `assets/media` holding the visual.                                                                                             |
+| `alt`     | yes      | The visual's alternative text.                                                                                                                     |
+| `asset`   | no       | The filename stem within the scene, `hero` when omitted. The animation is preferred and a still (`webp`, then `png`) is used when there is none.  |
+| `docs`    | no       | Where the visual links to: an `#anchor` or a path under the package's documentation page, or an absolute URL. The landing page when omitted.       |
+
+Each marker is one line, and a start marker carries only `name="value"` attributes. A stem never names an extension or a theme suffix: the readme is read on pages whose theme nobody here controls, so only the portable file is ever embedded, and the display size comes from the audit record beside it. The build refuses a readme that has no level-1 heading, whose banner has not been recorded, or whose markers do not pair, nest, repeat an id, or name media that has not been recorded, and it removes the copied readme from the output rather than leaving a half-transformed one behind. Text stays text wherever text is better: an installation command, an API example, a table of file paths a reader might copy.
+
+## Notes
+
+- ESM/CJS auto-detect entry points from package.json `exports` field.
+- External dependencies auto-detected from `dependencies` + `peerDependencies`.
+- TypeScript declarations generated via `tsc` directly (not Rollup plugin).
+- Package.json `exports` field regenerated based on built formats.
+- Workspace packages (matching `@hyperfrontend/*`) are filtered out of the published `dependencies` map by default.
+- `repository`, `bugs`, `homepage`, and `author` are inherited from the workspace root `package.json` if absent on the project.
+- A `THIRD_PARTY_LICENSES.md` file is emitted automatically when the published `dependencies` map is non-empty or the output inlines third-party code. It lists both, with each inlined package's license and notice texts.
+- Memory monitoring is enabled with conservative defaults (warn at 512MB heap, critical at 768MB, growth warning at 50MB).
