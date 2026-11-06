@@ -108,7 +108,7 @@ export function discoverPackages(options: DiscoveryOptions = {}): DiscoveryResul
 
   const workspaceRoot = options.workspaceRoot ?? (tree ? tree.root : findWorkspaceRoot(process.cwd()))
   if (!workspaceRoot) {
-    throw createError('Could not find workspace root. Ensure you are in a monorepo with nx.json, turbo.json, or workspaces field.')
+    throw createError('Could not find workspace root. Ensure you are in a monorepo with hf.json, nx.json, turbo.json, or workspaces field.')
   }
 
   const config: WorkspaceConfig = {
