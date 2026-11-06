@@ -128,6 +128,7 @@
       "@hyperfrontend/package": ["tools/package/src/index.ts"],
       "@hyperfrontend/package/readme/markers": ["tools/package/src/readme/markers.ts"],
       "@hyperfrontend/package/readme/transform": ["tools/package/src/readme/transform.ts"],
+      "@hyperfrontend/pipeline": ["tools/pipeline/src/index.ts"],
       "@hyperfrontend/project-scope": ["libs/project-scope/src/index.ts"],
       "@hyperfrontend/project-scope/cli": ["libs/project-scope/src/cli/index.ts"],
       "@hyperfrontend/project-scope/core": ["libs/project-scope/src/core/index.ts"],
@@ -237,8 +238,16 @@
       "@hyperfrontend/versioning/workspace/models": ["libs/versioning/src/workspace/models/index.ts"],
       "@hyperfrontend/versioning/workspace/operations": ["libs/versioning/src/workspace/operations/index.ts"],
       "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
-      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"],
-      "@hyperfrontend/workspace/graph": ["tools/workspace/src/graph/index.ts"]
+      "@hyperfrontend/workspace": ["libs/workspace/src/index.ts"],
+      "@hyperfrontend/workspace/cli": ["libs/workspace/src/cli/index.ts"],
+      "@hyperfrontend/workspace/executors/build": ["libs/workspace/src/executors/build/index.ts"],
+      "@hyperfrontend/workspace/executors/e2e": ["libs/workspace/src/executors/e2e/index.ts"],
+      "@hyperfrontend/workspace/executors/publish": ["libs/workspace/src/executors/publish/index.ts"],
+      "@hyperfrontend/workspace/executors/test": ["libs/workspace/src/executors/test/index.ts"],
+      "@hyperfrontend/workspace/executors/typecheck": ["libs/workspace/src/executors/typecheck/index.ts"],
+      "@hyperfrontend/workspace/graph": ["libs/workspace/src/graph/index.ts"],
+      "@hyperfrontend/workspace/hooks": ["libs/workspace/src/hooks/index.ts"],
+      "@hyperfrontend/workspace/runner": ["libs/workspace/src/runner/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
