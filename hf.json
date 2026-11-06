@@ -11,10 +11,10 @@
         "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
         "{workspaceRoot}/tools/lint/config/**/*",
-        "{workspaceRoot}/tools/workspace/src/graph/**/*"
+        "{workspaceRoot}/libs/workspace/src/graph/**/*"
       ]
     },
-    "@hyperfrontend/package:test": {
+    "@hyperfrontend/workspace:test": {
       "inputs": ["default", "^production"]
     },
     "version": {
@@ -22,7 +22,7 @@
       "options": {
         "tagPrefix": "{projectName}@",
         "scopeFiltering": {
-          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+          "excludeScopes": ["release", "deps", "workspace", "hyperfrontend", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
         },
         "maxCommitFallback": 10000
       }
@@ -32,14 +32,14 @@
         "{projectRoot}/**/*",
         "^production",
         {
-          "projects": ["tool-package", "lib-builder"],
+          "projects": ["tool-package", "lib-workspace", "lib-builder"],
           "input": "production"
         }
       ],
       "executor": "@hyperfrontend/package:version-check",
       "options": {
         "scopeFiltering": {
-          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+          "excludeScopes": ["release", "deps", "workspace", "hyperfrontend", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
         },
         "maxCommitFallback": 10000
       }
@@ -50,18 +50,19 @@
         "^production",
         "{workspaceRoot}/assets/media/*/*.json",
         {
-          "projects": ["tool-package", "lib-builder"],
+          "projects": ["tool-package", "lib-workspace", "lib-builder"],
           "input": "production"
         }
       ],
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "outputPath": "dist/{projectRoot}"
+        "outputPath": "dist/{projectRoot}",
+        "rootAssets": ["LICENSE.md", "SECURITY.md", "FUNDING.md"]
       }
     },
     "publish": {
       "dependsOn": ["build"],
-      "executor": "@hyperfrontend/package:publish",
+      "executor": "@hyperfrontend/workspace:publish",
       "options": {
         "access": "public",
         "tag": "latest",
@@ -70,18 +71,18 @@
     },
     "typecheck": {
       "inputs": ["default", "^production"],
-      "executor": "@hyperfrontend/package:typecheck"
+      "executor": "@hyperfrontend/workspace:typecheck"
     },
     "audit": {
       "inputs": ["dependencyState"],
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "options": {
         "command": "npm audit --audit-level=moderate",
         "cwd": "{projectRoot}"
       }
     },
     "test": {
-      "executor": "@hyperfrontend/package:test",
+      "executor": "@hyperfrontend/workspace:test",
       "options": {}
     }
   },
@@ -93,7 +94,7 @@
       "{projectRoot}/.npmrc",
       "{projectRoot}/project.json",
       "{workspaceRoot}/.npmrc",
-      "{workspaceRoot}/nx.json"
+      "{workspaceRoot}/hf.json"
     ],
     "production": [
       "default",
@@ -107,6 +108,7 @@
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
   "lint": {
+    "command": "node {workspaceRoot}/tools/lint/bin/lint.ts .",
     "exclude": ["apps/demos/**/*"]
   }
 }
