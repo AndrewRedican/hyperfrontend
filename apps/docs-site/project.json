@@ -7,7 +7,7 @@
   "implicitDependencies": ["demo-clock", "demo-heartbeat", "demo-koi-pond"],
   "targets": {
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npx tsc --noEmit",
@@ -15,7 +15,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npm run test",
@@ -27,7 +27,7 @@
       "options": {}
     },
     "refresh-shell": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["demo-clock:pack-shell", "demo-heartbeat:pack-shell", "demo-koi-pond:pack-shell"],
       "options": {
         "commands": [
@@ -41,7 +41,7 @@
       }
     },
     "refresh-downloads": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npm run refresh-downloads --",
@@ -79,7 +79,7 @@
       }
     },
     "audit": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "inputs": ["dependencyState"],
       "options": {
         "command": "npm audit --audit-level=high",
