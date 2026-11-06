@@ -22,7 +22,7 @@ const FILES: Readonly<Record<string, string>> = {
   }),
   'project.json': stringify({ name: 'root' }),
   'root-file.ts': 'export const root = 1\n',
-  'nx.json': stringify({
+  'hf.json': stringify({
     namedInputs: { default: ['{projectRoot}/**/*', 'sharedGlobals'], sharedGlobals: ['{workspaceRoot}/patches/**'] },
     targetDefaults: { build: { inputs: ['default', '^default', { projects: ['other'], input: 'default' }] } },
   }),

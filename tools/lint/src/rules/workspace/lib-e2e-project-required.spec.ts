@@ -1,12 +1,12 @@
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { WORKSPACE_ROOT } from '../../runtime/aliases.ts'
 import { createProjectTrees } from './__test-utils__/project-trees.ts'
 import rule from './lib-e2e-project-required.ts'
 
 const projects = createProjectTrees()
+const WORKSPACE_ROOT = resolve(import.meta.dirname, '..', '..', '..', '..', '..')
 const LOGGING = join(WORKSPACE_ROOT, 'libs', 'logging', 'project.json')
 
 testRule(rule, {

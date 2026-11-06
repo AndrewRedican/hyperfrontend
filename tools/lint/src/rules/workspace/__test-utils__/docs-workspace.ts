@@ -33,7 +33,7 @@ const APP = 'apps/docs-site/src/app'
 
 /** The files of the workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
-  'nx.json': '{}',
+  'hf.json': '{}',
   'package.json': stringify({ name: 'ws', repository: { url: 'git+https://github.com/org/repo.git' } }),
   'ARCHITECTURE.md': '# Architecture\n\n## Layers\n',
   'libs/alpha/project.json': PUBLISHABLE,

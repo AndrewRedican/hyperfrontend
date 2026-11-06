@@ -8,7 +8,7 @@ import rule from './no-vscode-config.ts'
 // why: the rule walks the whole directory tree below the manifest, so the fixture is a disposable workspace root in the temporary directory rather than a tree inside this one.
 const DIR = createTempDir({ prefix: 'lint-vscode-' })
 const ROOT = DIR.path
-DIR.write('nx.json', '{}')
+DIR.write('hf.json', '{}')
 for (const directory of ['.vscode', 'sub/.vscode', 'node_modules/.vscode']) DIR.mkdir(directory)
 
 const message = (path: string, configFile = '.devcontainer/devcontainer.json'): string =>
@@ -17,7 +17,7 @@ const message = (path: string, configFile = '.devcontainer/devcontainer.json'): 
 testRule(rule, {
   valid: [
     { name: 'a manifest outside the workspace root', path: join(ROOT, 'sub', 'package.json'), text: '{}' },
-    { name: 'a file that is no manifest at the workspace root', path: join(ROOT, 'nx.json'), text: '{}' },
+    { name: 'a file that is no manifest at the workspace root', path: join(ROOT, 'hf.json'), text: '{}' },
   ],
   invalid: [
     {

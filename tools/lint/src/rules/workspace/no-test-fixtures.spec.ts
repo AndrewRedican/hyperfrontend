@@ -19,7 +19,7 @@ function workspace(prefix: string, files: readonly string[]): TempDir {
 
 // why: the rule walks the whole directory tree below the manifest, so each case is a disposable workspace root in the temporary directory rather than a tree inside this one.
 const CLEAN = workspace('lint-material-clean-', [
-  'nx.json',
+  'hf.json',
   'LICENSE',
   'src/__test-utils__/sample-projects/minimal.ts',
   'src/__test-utils__/write-samples.mts',
@@ -29,7 +29,7 @@ const CLEAN = workspace('lint-material-clean-', [
   '_/fixtures/notes.md',
 ])
 const DIRTY = workspace('lint-material-dirty-', [
-  'nx.json',
+  'hf.json',
   'a.snap',
   'parse.golden',
   'user.Fixture.json',
@@ -60,7 +60,7 @@ const named = (path: string): { message: string; line: number; column: number } 
 testRule(rule, {
   valid: [
     { name: 'a manifest outside the workspace root', path: OUTSIDE.resolve('package.json'), text: '{}' },
-    { name: 'a file that is no manifest at the workspace root', path: DIRTY.resolve('nx.json'), text: '{}' },
+    { name: 'a file that is no manifest at the workspace root', path: DIRTY.resolve('hf.json'), text: '{}' },
     {
       name: 'a root whose test data is code under __test-utils__, with fixture-like names only on code modules and skipped trees',
       path: CLEAN.resolve('package.json'),

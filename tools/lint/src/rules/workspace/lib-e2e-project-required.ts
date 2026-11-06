@@ -8,16 +8,17 @@
 import { existsSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { isString, propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
-import { WORKSPACE_ROOT } from '../../runtime/aliases.ts'
+import { workspaceRootOf } from './shared/locate.ts'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 export default manifestRule('workspace/lib-e2e-project-required', 'project.json', (root, context) => {
-  if (!relative(WORKSPACE_ROOT, dirname(context.file.path)).startsWith(`libs${sep}`)) return
+  const workspace = workspaceRootOf(dirname(context.file.path))
+  if (workspace === null || !relative(workspace, dirname(context.file.path)).startsWith(`libs${sep}`)) return
   const name = propertyOf(root, 'name')
   if (name === null || !isString(name.value)) return
   const libraryName = name.value.value
   const folder = libraryName.startsWith('lib-') ? libraryName.slice(4) : libraryName
-  if (existsSync(join(WORKSPACE_ROOT, 'apps', 'package-e2e', folder, 'project.json'))) return
+  if (existsSync(join(workspace, 'apps', 'package-e2e', folder, 'project.json'))) return
   context.report({
     ...wholeDocument(context.file),
     message: `Publishable library '${libraryName}' is missing a corresponding e2e project. Expected: apps/package-e2e/${folder}/project.json`,

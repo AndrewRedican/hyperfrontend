@@ -1,5 +1,5 @@
 /**
- * An `nx:run-commands` line means the same to `sh` and to cmd.exe: the runner starts every line
+ * An `@hyperfrontend/workspace:run-commands` line means the same to `sh` and to cmd.exe: the runner starts every line
  * through the platform shell, `sh` on Linux and macOS and cmd.exe on Windows, so a quote, a
  * variable, a separator, a glob or an escape that only one of them reads changes what runs.
  *

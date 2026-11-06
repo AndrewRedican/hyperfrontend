@@ -13,7 +13,7 @@ const root = createDocsWorkspace()
 const BARE_DIR = createTempDir({
   prefix: 'lint-docs-bare-',
   tree: {
-    'nx.json': '{}',
+    'hf.json': '{}',
     'libs/x/project.json': '{"projectType":"library","targets":{"build":{},"publish":{}}}',
     'libs/x/package.json': '{"name":"@ws/x"}',
   },

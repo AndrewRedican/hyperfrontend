@@ -15,7 +15,7 @@ const PUBLISHABLE = stringify({ name: 'test-lib', projectType: 'library', target
 
 /** The files of the workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
-  'nx.json': '{}',
+  'hf.json': '{}',
   'package.json': stringify({ name: 'workspace', private: true }),
   'pub/project.json': PUBLISHABLE,
   'pub/package.json': stringify({

@@ -4,7 +4,7 @@ The workspace's lint integration: the workspace's own rule families, and [`@hype
 
 ## Running it
 
-Every project but the workspace root gets a `lint` target, inferred by the workspace graph, that runs `node <rel>/tools/lint/bin/lint.ts .` from the project root; projects under the `lint.exclude` globs of `nx.json` get none. `npx hf run @hyperfrontend/workspace:lint:all` runs them all and writes the report. From any directory:
+Every project but the workspace root gets a `lint` target, inferred by the workspace graph, that runs the `lint.command` of `hf.json` from the project root, here `node <rel>/tools/lint/bin/lint.ts .`; projects under the `lint.exclude` globs of `hf.json` get none. `npx hf run hyperfrontend:lint:all` runs them all and writes the report. From any directory:
 
 ```bash
 node tools/lint/bin/lint.ts [--fix | --fix-dry-run] [--format stylish|json] \
@@ -12,7 +12,7 @@ node tools/lint/bin/lint.ts [--fix | --fix-dry-run] [--format stylish|json] \
 node tools/lint/bin/lint.ts --stdin --stdin-filename src/file.ts < file.ts
 ```
 
-`bin/lint.ts` installs the resolution hook in `src/runtime/aliases.ts` and then calls the package's `run`, so the package and the libraries it bundles load from source: a fresh checkout lints without a build or a published linter. The flags, the exit codes and the configuration are the package's; its [README](../../libs/linter/README.md) and the [rule catalogue](https://www.hyperfrontend.dev/docs/libraries/linter/rules/) describe them.
+`bin/lint.ts` installs the resolution hook of `@hyperfrontend/workspace` (`libs/workspace/src/hooks/index.ts`) and then calls the package's `run`, so the package and the libraries it bundles load from source: a fresh checkout lints without a build or a published linter. The flags, the exit codes and the configuration are the package's; its [README](../../libs/linter/README.md) and the [rule catalogue](https://www.hyperfrontend.dev/docs/libraries/linter/rules/) describe them.
 
 ## Configuration
 
@@ -31,7 +31,6 @@ A rule is `src/rules/<family>/<rule>.ts`, its default export a `defineRule` from
 
 - `bin/lint.ts`: the command.
 - `config/`: the families and the workspace's own settings.
-- `src/runtime/aliases.ts`: the resolution hook that loads workspace libraries from source.
 - `src/rules/workspace/`, `src/rules/projects/`: the workspace's rules, with specs and fixtures.
 - `scripts/`: development tooling: `parser-oracle.ts` compares the package's scanner with the installed TypeScript compiler, `bench.ts` times the linter.
 

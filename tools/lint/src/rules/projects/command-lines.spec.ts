@@ -12,7 +12,7 @@ testRule(rule, {
     {
       name: 'lines both shells read alike',
       path: LIBRARY,
-      text: '{\n  "targets": {\n    "build": {"command": "npm run build"},\n    "lint": {"executor": "nx:run-commands", "options": {"command": "node tools/lint/bin/lint.ts \\"apps/*/project.json\\" 2>&1 && echo done | cat", "commands": ["npx tsc --noEmit", {"command": "node x.js"}, {"description": "none"}, 3]}},\n    "odd": {"options": "not an object", "commands": "not a list"},\n    "text": "not an object"\n  }\n}',
+      text: '{\n  "targets": {\n    "build": {"command": "npm run build"},\n    "lint": {"executor": "@hyperfrontend/workspace:run-commands", "options": {"command": "node tools/lint/bin/lint.ts \\"apps/*/project.json\\" 2>&1 && echo done | cat", "commands": ["npx tsc --noEmit", {"command": "node x.js"}, {"description": "none"}, 3]}},\n    "odd": {"options": "not an object", "commands": "not a list"},\n    "text": "not an object"\n  }\n}',
     },
     { name: 'targets that are not an object', path: LIBRARY, text: '{"targets":[]}' },
     { name: 'a project file that is not an object', path: LIBRARY, text: '[]' },

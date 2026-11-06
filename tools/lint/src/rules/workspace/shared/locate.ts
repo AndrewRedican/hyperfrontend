@@ -29,7 +29,7 @@ function once(cache: Map<string, string | null>, directory: string, find: (direc
 
 /**
  * The workspace root above a directory, as project-scope finds it: a workspace marker such as
- * `nx.json`, else a manifest declaring workspaces, else the nearest manifest.
+ * `hf.json`, else a manifest declaring workspaces, else the nearest manifest.
  *
  * @param directory - Where to start
  * @returns The root, or null
