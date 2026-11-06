@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
 import type { InstallExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -17,14 +17,14 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the install
  */
-export default async function installExecutor(options: InstallExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
+export default async function installExecutor(options: InstallExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
     return { success: false }
   }
 
-  const projectConfig = context.projectsConfigurations?.projects[projectName]
+  const projectConfig = context.projects[projectName]
   if (!projectConfig) {
     logger.error(`Could not find project configuration for ${projectName}`)
     return { success: false }
