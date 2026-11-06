@@ -1,4 +1,3 @@
-import type { ProjectGraph } from '@hyperfrontend/integration-nx/compat'
 import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning/flow/models'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -23,8 +22,6 @@ export interface RunVersionOptions {
   workspaceRoot: string
   /** Project root relative to workspace root */
   projectRoot: string
-  /** Nx project graph for dependency resolution */
-  projectGraph: ProjectGraph
   /** Skip creating a git commit */
   skipCommit?: boolean
   /** Skip creating a git tag */
@@ -106,7 +103,6 @@ export interface RunVersionResult {
  *   projectName: 'my-lib',
  *   workspaceRoot: '/path/to/workspace',
  *   projectRoot: 'libs/my-lib',
- *   projectGraph,
  *   skipCommit: true,
  *   skipTag: true,
  * })

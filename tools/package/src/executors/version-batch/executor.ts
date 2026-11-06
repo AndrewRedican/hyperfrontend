@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext } from '@hyperfrontend/workspace/runner'
 import type { VersionBatchExecutorSchema } from './schema'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
 import { workspaceGraph } from '@hyperfrontend/workspace/graph'
@@ -49,7 +49,7 @@ export interface VersionBatchResult {
  * 3. Creates a single batch commit
  *
  * @param options - Executor options from schema
- * @param context - Nx executor context
+ * @param context - The workspace, the project and the target the task runs on
  * @returns Executor result with success status
  */
 export default async function versionBatchExecutor(
@@ -59,7 +59,7 @@ export default async function versionBatchExecutor(
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false, releaseAs, libraries } = options
 
-  const versionTargetDefaults = context.nxJsonConfiguration?.targetDefaults?.['version'] as VersionTargetDefaults | undefined
+  const versionTargetDefaults = context.configuration.targetDefaults?.['version'] as VersionTargetDefaults | undefined
   const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
   const maxCommitFallback = options.maxCommitFallback ?? versionTargetDefaults?.options?.maxCommitFallback
 
@@ -147,7 +147,6 @@ export default async function versionBatchExecutor(
           projectName: lib,
           workspaceRoot,
           projectRoot: project.root,
-          projectGraph: context.projectGraph,
           skipCommit: true,
           skipTag: true,
           dryRun: false,

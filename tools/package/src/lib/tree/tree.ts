@@ -1,45 +1,13 @@
 /**
- * The virtual file tree a generator works on, and the JSON helpers over it: the structural
- * subset every tree the generators are handed satisfies, whether Nx's, the compat declaration's
- * or the owned virtual filesystem's.
+ * The virtual file tree a generator works on, as the workspace's contract declares it, and the
+ * JSON helpers over it.
  *
  * @module lib/tree/tree
  */
 
+import type { Tree } from '@hyperfrontend/workspace/runner'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-
-/** One change a tree has recorded since it was opened. */
-export interface TreeChange {
-  /** The path, relative to the tree's root, POSIX. */
-  readonly path: string
-  /** What happened to the file. */
-  readonly type: 'CREATE' | 'UPDATE' | 'DELETE'
-  /** The content written, or nothing for a deletion. */
-  readonly content?: Buffer | null
-}
-
-/** A virtual file tree: reads fall through to the files, writes are recorded until committed. */
-export interface Tree {
-  /** The directory every path is relative to, absolute. */
-  readonly root: string
-  /** The content of a file, or null when there is none. */
-  read(path: string): Buffer | null
-  /** The text of a file, or null when there is none. */
-  read(path: string, encoding: 'utf-8'): string | null
-  /** Records a file's content. */
-  write(path: string, content: Buffer | string): void
-  /** Whether a file or directory is there. */
-  exists(path: string): boolean
-  /** Records a file's deletion. */
-  delete(path: string): void
-  /** Whether the path names a file. */
-  isFile(path: string): boolean
-  /** The names directly under a directory. */
-  children(path: string): string[]
-  /** Every change recorded so far. */
-  listChanges(): TreeChange[]
-}
 
 /**
  * The value of a JSON file of the tree.
@@ -80,3 +48,5 @@ export function writeJson(tree: Tree, path: string, value: unknown): void {
 export function updateJson<Value>(tree: Tree, path: string, updater: (value: Value) => Value): void {
   writeJson(tree, path, updater(readJson<Value>(tree, path)))
 }
+
+export type { Tree, TreeChange } from '@hyperfrontend/workspace'

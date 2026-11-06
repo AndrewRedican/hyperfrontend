@@ -43,7 +43,7 @@ export function deriveProjectNameFromPath(projectRoot: string): string {
 /**
  * Derive npm package name from project name.
  *
- * @param projectName - The project name (e.g., 'lib-data-utils', 'tool-workspace', 'plugin-features')
+ * @param projectName - The project name (e.g., 'lib-data-utils', 'tool-pipeline', 'plugin-features')
  * @returns The npm package name (e.g., '@hyperfrontend/data-utils')
  */
 export function derivePackageName(projectName: string): string {

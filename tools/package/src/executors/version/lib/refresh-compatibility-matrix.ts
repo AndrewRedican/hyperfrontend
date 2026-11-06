@@ -1,4 +1,4 @@
-import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME, refreshCompatibilityDocument } from '@hyperfrontend/workspace'
+import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME, refreshCompatibilityDocument } from '@hyperfrontend/pipeline'
 import { getLogger } from './logger'
 
 /**

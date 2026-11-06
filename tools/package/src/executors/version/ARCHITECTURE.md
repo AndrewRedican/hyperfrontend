@@ -135,7 +135,7 @@ Version bumps happen **locally** via lefthook pre-push hooks, not in CI:
 flowchart TD
     A[Developer commits] --> B[git push]
     B --> C[lefthook pre-push]
-    C --> D[hf run @hyperfrontend/workspace:version:all]
+    C --> D[hf run hyperfrontend:version:all]
     D --> E[Version each affected library]
     E --> F["Commit: chore: update versions for lib-a, lib-b"]
     F --> G[Push proceeds with version commit]

@@ -1,123 +1,32 @@
-import type { AssetSpec, BinConfig, BuildConfig, CjsConfig, EsmConfig, IifeConfig, PackageJson, UmdConfig } from '@hyperfrontend/builder/models'
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
-import { build } from '@hyperfrontend/builder'
-import { byPrefix } from '@hyperfrontend/builder/presets'
+import type { BuildExecutorOptions } from '@hyperfrontend/workspace/executors/build'
+import type { Executor } from '@hyperfrontend/workspace/runner'
+import { join } from 'node:path'
 import { logger } from '@hyperfrontend/logging'
-import { join } from '@hyperfrontend/project-scope/core'
+import { buildExecutor } from '@hyperfrontend/workspace/executors/build'
 import { prepareDistReadme } from '../../readme/prepare-dist-readme'
-import {
-  DEFAULT_PROJECT_ASSETS,
-  DEFAULT_WORKSPACE_ASSETS,
-  DOCS_BASE_URL,
-  FUNDING_ASSET,
-  INHERITABLE_FIELDS,
-  MEDIA_PUBLIC_BASE_URL,
-  MEDIA_ROOT,
-  MEMORY_THRESHOLDS,
-  WORKSPACE_SCOPE,
-} from './wrapper-config'
+import { DOCS_BASE_URL, MEDIA_PUBLIC_BASE_URL, MEDIA_ROOT, WORKSPACE_SCOPE } from './wrapper-config'
 
 /**
- * Schema-validated executor options. Mirrors `BuildConfig` from
- * `@hyperfrontend/builder/models` minus the monorepo-specific knobs that this
- * wrapper hardcodes (`isWorkspacePackage`, `filterWorkspaceDepsFromOutput`,
- * `inheritFieldsFrom`, `thirdPartyLicenses`, `memoryMonitor`).
+ * This repository's build: the workspace package's `build` executor, then the README the
+ * registry shows. The readme npm packs is the source readme with its title replaced by the
+ * package banner and its marked regions replaced by committed visuals; it is written into the
+ * output after the build, so the source stays the one humans maintain and the output holds the
+ * one readers of the registry see.
+ *
+ * @param options - The options of the workspace package's `build` executor
+ * @param context - The workspace, the project and the target the task runs on
+ * @returns Whether the build and the README preparation succeeded
  */
-export interface BuildExecutorOptions {
-  /** Output directory. Supports `{projectRoot}` placeholder. Defaults to `dist/{projectRoot}`. */
-  outputPath?: string
-  /** Path to tsconfig. Supports `{projectRoot}` placeholder. Defaults to `{projectRoot}/tsconfig.lib.json`. */
-  tsConfig?: string
-  /** Additional asset specs to copy in addition to the wrapper's defaults. */
-  assets?: AssetSpec[]
-  /** Global externals applied to every format. */
-  external?: string[]
-  /** ESM output configuration. Omit to skip. */
-  esm?: EsmConfig | EsmConfig[]
-  /** CommonJS output configuration. Omit to skip. */
-  cjs?: CjsConfig | CjsConfig[]
-  /** IIFE bundle configuration. Omit to skip. */
-  iife?: IifeConfig | IifeConfig[]
-  /** UMD bundle configuration. Omit to skip. */
-  umd?: UmdConfig | UmdConfig[]
-  /** Override path for the unpkg field. Defaults to the first UMD bundle path. */
-  unpkg?: string
-  /** Override path for the jsdelivr field. Defaults to the first UMD bundle path. */
-  jsdelivr?: string
-  /** Bin declarations to synthesize alongside the library. */
-  bin?: BinConfig[]
-  /** Hoist first-party modules shared across entry bundles into `_shared/` chunks. Defaults to enabled. */
-  dedupeSharedInternals?: boolean
-  /** Enable verbose / debug logging. */
-  verbose?: boolean
-  /** Empty the output directory before emitting. Defaults to enabled; only an empty directory or a previous build of this package is removed. */
-  clean?: boolean
-}
-
-const substituteProjectRoot = (template: string, projectRelativePath: string): string =>
-  template.replace('{projectRoot}', projectRelativePath)
-
-const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, context: ExecutorContext) => {
-  const { projectName, root: workspaceRoot } = context
-
-  logger.setLogLevel(options.verbose ? 'debug' : 'log')
-
-  if (!projectName) {
-    logger.error('Project name is required')
-    return { success: false }
-  }
-
-  const projectConfig = context.projectsConfigurations?.projects[projectName]
-  if (!projectConfig) {
-    logger.error(`Could not find project configuration for ${projectName}`)
-    return { success: false }
-  }
-
-  const projectRelativePath = projectConfig.root
-  const projectRoot = join(workspaceRoot, projectRelativePath)
-  const outputPath = options.outputPath
-    ? join(workspaceRoot, substituteProjectRoot(options.outputPath, projectRelativePath))
-    : undefined
-  const tsConfig = options.tsConfig
-    ? join(workspaceRoot, substituteProjectRoot(options.tsConfig, projectRelativePath))
-    : undefined
-
-  const config: BuildConfig = {
-    projectRoot,
-    workspaceRoot,
-    outputPath,
-    tsConfig,
-    isWorkspacePackage: byPrefix(WORKSPACE_SCOPE),
-    filterWorkspaceDepsFromOutput: true,
-    inheritFieldsFrom: { from: join(workspaceRoot, 'package.json'), fields: [...INHERITABLE_FIELDS] },
-    assets: [
-      { from: projectRoot, files: [...DEFAULT_PROJECT_ASSETS] },
-      { from: workspaceRoot, files: [...DEFAULT_WORKSPACE_ASSETS] },
-      { from: workspaceRoot, files: [FUNDING_ASSET], condition: (pkg: PackageJson) => Boolean(pkg.funding) },
-      ...(options.assets ?? []),
-    ],
-    external: options.external,
-    esm: options.esm,
-    cjs: options.cjs,
-    iife: options.iife,
-    umd: options.umd,
-    unpkg: options.unpkg,
-    jsdelivr: options.jsdelivr,
-    bin: options.bin,
-    dedupeSharedInternals: options.dedupeSharedInternals,
-    thirdPartyLicenses: true,
-    memoryMonitor: MEMORY_THRESHOLDS,
-    verbose: options.verbose,
-    clean: options.clean,
-  }
-
+const runExecutor: Executor<BuildExecutorOptions> = async (options, context) => {
+  const built = await buildExecutor(options, context)
+  const projectConfig = context.projects[context.projectName]
+  // why: a project with no publish target never reaches the registry, so its output keeps the source readme and needs no recorded banner
+  if (!built.success || projectConfig?.targets?.['publish'] === undefined) return built
   try {
-    await build(config)
-    // why: the readme npm packs is the source readme with its title replaced by the package banner and its marked regions replaced by committed visuals; it is written into the output after the build so the source stays the one humans maintain and the output holds the one readers of the registry see
     const prepared = prepareDistReadme({
-      workspaceRoot,
-      projectRoot,
-      outputPath: outputPath ?? join(workspaceRoot, 'dist', projectRelativePath),
+      workspaceRoot: context.root,
+      projectRoot: join(context.root, projectConfig.root),
+      outputPath: options.outputPath ? join(context.root, options.outputPath) : join(context.root, 'dist', projectConfig.root),
       mediaRoot: MEDIA_ROOT,
       publicBaseUrl: MEDIA_PUBLIC_BASE_URL,
       docsBaseUrl: DOCS_BASE_URL,
@@ -128,13 +37,8 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
     }
     return { success: true }
   } catch (error) {
-    logger.error(`Failed to build ${projectName}`)
-    if (error instanceof Error) {
-      logger.error(`Error: ${error.message}`)
-      if (error.stack) logger.debug(`Stack trace:\n${error.stack}`)
-    } else {
-      logger.error(String(error))
-    }
+    logger.error(`Failed to build ${context.projectName}`)
+    logger.error(`Error: ${error instanceof Error ? error.message : String(error)}`)
     return { success: false }
   }
 }

@@ -1,8 +1,8 @@
+import { refreshCompatibilityDocument } from '@hyperfrontend/pipeline'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { refreshCompatibilityDocument } from '@hyperfrontend/workspace'
 import { refreshCompatibilityMatrix } from './refresh-compatibility-matrix'
 
-jest.mock('@hyperfrontend/workspace', () => ({
+jest.mock('@hyperfrontend/pipeline', () => ({
   COMPATIBILITY_DOCUMENT_NAME: 'LIBRARY_COMPATIBILITY.md',
   buildCompatibilityDocument: jest.fn(() => '# Library Compatibility Matrix\n'),
   refreshCompatibilityDocument: jest.fn(),

@@ -9,7 +9,7 @@ const OWNERS: Readonly<Record<string, { name: string; root: string }>> = {
   'libs/builder/src/clean.ts': { name: 'lib-builder', root: 'libs/builder' },
   'libs/logging/src/index.ts': { name: 'lib-logging', root: 'libs/logging' },
   'tools/package/src/executors/build/executor.ts': { name: 'tool-package', root: 'tools/package' },
-  'assets/media/features/banner.json': { name: '@hyperfrontend/workspace', root: '.' },
+  'assets/media/features/banner.json': { name: 'hyperfrontend', root: '.' },
 }
 
 const graph = { projectOf: (file: string): ProjectRecord | null => (OWNERS[file] as ProjectRecord | undefined) ?? null }

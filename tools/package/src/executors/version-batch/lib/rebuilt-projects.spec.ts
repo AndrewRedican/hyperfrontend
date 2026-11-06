@@ -5,7 +5,7 @@ import { rebuiltProjects } from './rebuilt-projects'
 const OWNERS: Readonly<Record<string, { name: string; root: string }>> = {
   'libs/features/src/index.ts': { name: 'lib-features', root: 'libs/features' },
   'libs/builder/src/build.ts': { name: 'lib-builder', root: 'libs/builder' },
-  'assets/media/features/banner.json': { name: '@hyperfrontend/workspace', root: '.' },
+  'assets/media/features/banner.json': { name: 'hyperfrontend', root: '.' },
 }
 
 const graph = { projectOf: (file: string): ProjectRecord | null => (OWNERS[file] as ProjectRecord | undefined) ?? null }

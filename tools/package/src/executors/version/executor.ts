@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
 import type { VersionExecutorSchema } from './schema'
 import { workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { withShippedChanges } from './lib/graph-change-sources'
@@ -18,11 +18,11 @@ import { runVersionForProject } from './lib/run-version-for-project'
  * allowing the same logic to be reused by the `version-batch` executor.
  *
  * @param options - Configuration options for the version executor
- * @param context - Nx executor context
+ * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
  */
-export default async function versionExecutor(options: VersionExecutorSchema, context: ExecutorContext): ReturnType<PromiseExecutor> {
-  const { projectName, root: workspaceRoot, projectGraph } = context
+export default async function versionExecutor(options: VersionExecutorSchema, context: ExecutorContext): Promise<ExecutorResult> {
+  const { projectName, root: workspaceRoot } = context
   const logger = getLogger()
   logger.setLogLevel(options)
   logger.setContextValue('projectName', projectName ?? 'unknown')
@@ -33,14 +33,9 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     return { success: false }
   }
 
-  if (!projectGraph) {
-    logger.error('Project graph is required')
-    return { success: false }
-  }
-
-  const projectConfig = projectGraph.nodes[projectName]?.data
+  const projectConfig = context.projects[projectName]
   if (!projectConfig) {
-    logger.error(`Project not found in project graph`)
+    logger.error(`Project not found in the workspace`)
     return { success: false }
   }
 
@@ -50,7 +45,6 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     projectName,
     workspaceRoot,
     projectRoot: projectConfig.root,
-    projectGraph,
     skipCommit: options.skipCommit,
     skipTag: options.skipTag ?? true,
     dryRun: options.dryRun,

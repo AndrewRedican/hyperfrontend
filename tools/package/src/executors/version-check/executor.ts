@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
 import type { VersionCheckExecutorSchema } from './schema'
 import { workspaceGraph } from '@hyperfrontend/workspace/graph'
 import { withShippedChanges } from '../version/lib/graph-change-sources'
@@ -24,14 +24,11 @@ import { validateVersionState, formatValidationResult } from '../version/lib/val
  * - Debugging version discrepancies
  *
  * @param options - Configuration options for the version-check executor
- * @param context - Nx executor context
+ * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
  */
-export default async function versionCheckExecutor(
-  options: VersionCheckExecutorSchema,
-  context: ExecutorContext
-): ReturnType<PromiseExecutor> {
-  const { projectName, root: workspaceRoot, projectGraph } = context
+export default async function versionCheckExecutor(options: VersionCheckExecutorSchema, context: ExecutorContext): Promise<ExecutorResult> {
+  const { projectName, root: workspaceRoot } = context
   const logger = getLogger()
   logger.setLogLevel(options)
   logger.setContextValue('projectName', projectName ?? 'unknown')
@@ -44,9 +41,9 @@ export default async function versionCheckExecutor(
 
   logger.debug(`Version check executor started for {projectName}`)
 
-  const projectConfig = projectGraph?.nodes[projectName]?.data
+  const projectConfig = context.projects[projectName]
   if (!projectConfig) {
-    logger.error(`Project not found in project graph`)
+    logger.error(`Project not found in the workspace`)
     return { success: false }
   }
 
