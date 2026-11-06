@@ -161,7 +161,7 @@ function resolveTarball(): PackedTarball {
   if (!existsSync(join(distDir, 'package.json'))) {
     throw new Error(`No staged tarball in ${packsDir} and no built dist at ${distDir}; build lib-features first.`)
   }
-  // how: Mirrors the @hyperfrontend/package:e2e executor — npm pack inside dist, then stage the tarball under tmp/e2e-packs.
+  // how: Mirrors the @hyperfrontend/workspace:e2e executor — npm pack inside dist, then stage the tarball under tmp/e2e-packs.
   const npm = shimCommand('npm', ['pack', '--json'])
   const packed = execFileSync(npm.file, npm.args, { cwd: distDir, encoding: 'utf8', timeout: 120000, shell: npm.shell })
   const filename = (JSON.parse(packed) as NpmPackReport[])[0].filename as string
