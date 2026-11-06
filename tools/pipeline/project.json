@@ -1,0 +1,29 @@
+{
+  "name": "tool-pipeline",
+  "description": "This repository's pipeline and the tools around it: the compatibility document, the generated Nx-compatible declarations, artifact drift and the lint report.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "test": {},
+    "typecheck": {},
+    "pipeline": {
+      "executor": "@hyperfrontend/workspace:run-commands",
+      "options": {
+        "command": "node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts"
+      }
+    },
+    "types-extract": {
+      "executor": "@hyperfrontend/workspace:run-commands",
+      "options": {
+        "command": "node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/types-extract.ts"
+      }
+    },
+    "types-extract-check": {
+      "executor": "@hyperfrontend/workspace:run-commands",
+      "options": {
+        "command": "node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/types-extract.ts --check"
+      }
+    }
+  }
+}
