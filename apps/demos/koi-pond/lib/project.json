@@ -24,7 +24,7 @@
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npm run type-check",
@@ -32,7 +32,7 @@
       }
     },
     "refresh": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "node ../tools/refresh-lib.mjs",
@@ -40,7 +40,7 @@
       }
     },
     "verify": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "node ../tools/refresh-lib.mjs --check",
