@@ -38,7 +38,7 @@ jobs:
         shell: bash
         # why: a cold build takes four seconds and nothing is restored, so the state is the commit's and nothing else's
         run: |
-          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          GRAPH="npx hf graph"
           $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
@@ -50,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
+          node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload plan
@@ -91,7 +91,7 @@ jobs:
         env:
           BASE_REF: origin/${{ github.base_ref }}
           APPROVAL_FLAG: ${{ steps.approval.outputs.flag }}
-        run: node tools/workspace/scripts/check-binary-budget.mjs --base "$BASE_REF" $APPROVAL_FLAG
+        run: node tools/pipeline/scripts/check-binary-budget.mjs --base "$BASE_REF" $APPROVAL_FLAG
 
   version-check:
     name: version-check
@@ -160,7 +160,7 @@ jobs:
         if: matrix.os != 'linux'
         run: |
           # The persisted graph is portable: the same commit yields byte-identical state on every leg.
-          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          GRAPH="npx hf graph"
           $GRAPH build --force
           DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
           echo "${{ matrix.os }} graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
@@ -176,14 +176,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the chain check runs are created through the API; GitHub sets no token in the environment by itself
         # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
-        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
+        run: exec node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --head-sha ${{ github.event.pull_request.head.sha }}
 
       - name: Settle
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
         # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
+        run: node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
       - name: Upload results
         if: always()

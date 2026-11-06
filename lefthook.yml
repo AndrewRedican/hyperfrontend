@@ -14,7 +14,7 @@ pre-commit:
   parallel: false
   commands:
     binary-budget:
-      run: node tools/workspace/scripts/check-binary-budget.mjs --staged --allow-over-budget
+      run: node tools/pipeline/scripts/check-binary-budget.mjs --staged --allow-over-budget
       fail_text: 'A staged file is over the 2,000,000-byte limit. Unstage it and keep it out of Git, or shrink it.'
     format:
       run: npx hf format --write
@@ -35,16 +35,16 @@ pre-push:
       fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
     binary-budget:
       priority: 2
-      run: node tools/workspace/scripts/check-binary-budget.mjs --allow-over-budget
+      run: node tools/pipeline/scripts/check-binary-budget.mjs --allow-over-budget
       fail_text: 'A commit on this branch adds a file over the 2,000,000-byte limit, which CI rejects. Drop it from the branch history before pushing.'
     pipeline:
       priority: 3
       # why: the same plan and prerequisite rules as CI, one task at a time; dependents of a failure are skipped and everything independent still runs
-      run: CI=1 NODE_OPTIONS="--max-old-space-size=4096" node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
+      run: CI=1 NODE_OPTIONS="--max-old-space-size=4096" node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --local
       fail_text: 'The pipeline failed. Read the summary above; each task wrote its log under .hf/pipeline/logs.'
     version:
       priority: 4
-      run: npx hf run @hyperfrontend/workspace:version:all --verbose
+      run: npx hf run hyperfrontend:version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
 
