@@ -8,8 +8,8 @@ import { getLogger } from '../version/lib/logger'
 import { runVersionForProject } from '../version/lib/run-version-for-project'
 import { createBatchCommit } from './lib/create-batch-commit'
 import { getAffectedLibraries, hasVersionTarget } from './lib/get-affected-libraries'
-import { rollbackChanges } from './lib/rollback-changes'
 import { selectLibraries } from './lib/select-libraries'
+import { withRollback } from './lib/working-tree'
 
 /** Options declared on the `version` target. */
 interface VersionTargetOptions {
@@ -66,17 +66,6 @@ export default async function versionBatchExecutor(
   const logger = getLogger()
   logger.setLogLevel({ verbose, quiet: false })
 
-  let interrupted = false
-  const cleanupAndExit = async () => {
-    interrupted = true
-    logger.log('\nInterrupted, cleaning up...')
-    await rollbackChanges(workspaceRoot)
-    process.exit(1)
-  }
-
-  process.on('SIGINT', cleanupAndExit)
-  process.on('SIGTERM', cleanupAndExit)
-
   try {
     const currentBranch = getCurrentBranch({ cwd: workspaceRoot })
     if (currentBranch === 'main') {
@@ -125,89 +114,81 @@ export default async function versionBatchExecutor(
       return { success: true }
     }
 
-    const bumpedLibs: string[] = []
-    const allModifiedFiles: string[] = []
-    const failedLibs: string[] = []
+    // why: only from here on does the batch write to the working tree; everything before, a dry run included, reads, and so needs nothing put back
+    return await withRollback(
+      workspaceRoot,
+      async (keep) => {
+        const bumpedLibs: string[] = []
+        const allModifiedFiles: string[] = []
+        const failedLibs: string[] = []
 
-    for (const lib of affectedLibraries) {
-      if (interrupted) {
-        break
-      }
+        for (const lib of affectedLibraries) {
+          const project = graph.projects.get(lib)
+          if (project === undefined) {
+            logger.warn(`Project ${lib} not found in graph, skipping`)
+            continue
+          }
 
-      const project = graph.projects.get(lib)
-      if (project === undefined) {
-        logger.warn(`Project ${lib} not found in graph, skipping`)
-        continue
-      }
+          logger.debug(`Processing ${lib}...`)
 
-      logger.debug(`Processing ${lib}...`)
+          try {
+            const result = await runVersionForProject({
+              projectName: lib,
+              workspaceRoot,
+              projectRoot: project.root,
+              skipCommit: true,
+              skipTag: true,
+              dryRun: false,
+              verbose,
+              quiet: !verbose,
+              scopeFiltering: tracked,
+              maxCommitFallback,
+              releaseAs,
+            })
 
-      try {
-        const result = await runVersionForProject({
-          projectName: lib,
-          workspaceRoot,
-          projectRoot: project.root,
-          skipCommit: true,
-          skipTag: true,
-          dryRun: false,
-          verbose,
-          quiet: !verbose,
-          scopeFiltering: tracked,
-          maxCommitFallback,
-          releaseAs,
-        })
-
-        if (result.success && result.bumped) {
-          bumpedLibs.push(lib)
-          allModifiedFiles.push(...result.modifiedFiles)
-          logger.log(`  ✓ ${lib}: ${result.previousVersion} → ${result.newVersion}`)
-        } else if (result.success) {
-          logger.debug(`  - ${lib}: no version bump needed`)
-        } else {
-          failedLibs.push(lib)
-          logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
+            if (result.success && result.bumped) {
+              bumpedLibs.push(lib)
+              allModifiedFiles.push(...result.modifiedFiles)
+              logger.log(`  ✓ ${lib}: ${result.previousVersion} → ${result.newVersion}`)
+            } else if (result.success) {
+              logger.debug(`  - ${lib}: no version bump needed`)
+            } else {
+              failedLibs.push(lib)
+              logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
+            }
+          } catch (error) {
+            failedLibs.push(lib)
+            logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
+          }
         }
-      } catch (error) {
-        failedLibs.push(lib)
-        logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
-      }
-    }
 
-    if (interrupted) {
-      return { success: false }
-    }
+        if (bumpedLibs.length > 0) {
+          logger.log(`\nCreating batch commit for ${bumpedLibs.length} libraries...`)
 
-    if (bumpedLibs.length > 0) {
-      logger.log(`\nCreating batch commit for ${bumpedLibs.length} libraries...`)
+          const commitHash = await createBatchCommit(workspaceRoot, allModifiedFiles, bumpedLibs)
+          // why: the bumps are committed, so an interrupt from here on has nothing to put back
+          keep()
 
-      const commitHash = await createBatchCommit(workspaceRoot, allModifiedFiles, bumpedLibs)
+          logger.log(`Created commit: ${commitHash.slice(0, 8)}`)
+          logger.log(`Bumped: ${bumpedLibs.join(', ')}`)
+        } else {
+          logger.log('\nNo version bumps needed')
+        }
 
-      logger.log(`Created commit: ${commitHash.slice(0, 8)}`)
-      logger.log(`Bumped: ${bumpedLibs.join(', ')}`)
-    } else {
-      logger.log('\nNo version bumps needed')
-    }
+        if (failedLibs.length > 0) {
+          logger.error(
+            `\n${failedLibs.length} of ${affectedLibraries.length} librar${failedLibs.length === 1 ? 'y' : 'ies'} failed to version: ${failedLibs.join(', ')}. ` +
+              `Anything that did version is left in place; resolve the failures and run again.`
+          )
+          return { success: false }
+        }
 
-    if (failedLibs.length > 0) {
-      logger.error(
-        `\n${failedLibs.length} of ${affectedLibraries.length} librar${failedLibs.length === 1 ? 'y' : 'ies'} failed to version: ${failedLibs.join(', ')}. ` +
-          `Anything that did version is left in place; resolve the failures and run again.`
-      )
-      return { success: false }
-    }
-
-    return { success: true }
+        return { success: true }
+      },
+      (line) => logger.log(line)
+    )
   } catch (error) {
     logger.error(`version-batch failed: ${error instanceof Error ? error.message : error}`)
-
-    if (!dryRun) {
-      logger.log('Rolling back changes...')
-      await rollbackChanges(workspaceRoot)
-    }
-
     return { success: false }
-  } finally {
-    process.removeListener('SIGINT', cleanupAndExit)
-    process.removeListener('SIGTERM', cleanupAndExit)
   }
 }

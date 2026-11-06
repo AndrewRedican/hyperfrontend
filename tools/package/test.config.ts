@@ -18,6 +18,7 @@ const config: TestConfig = {
     'src/readme/**/*.ts',
     'src/executors/version-batch/lib/rebuilt-projects.ts',
     'src/executors/version-batch/lib/select-libraries.ts',
+    'src/executors/version-batch/lib/working-tree.ts',
     'src/executors/version/lib/shipped-change-commits.ts',
     'src/executors/version/lib/refresh-compatibility-matrix.ts',
     'src/generators/make-publishable/lib/**/*.ts',
