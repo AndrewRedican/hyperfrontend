@@ -45,6 +45,22 @@ const NOTE = [
   '',
 ].join('\n')
 
+/** The lint configuration of the workspace: the projects family of the package, with tag constraints between its libraries. */
+const LINT_CONFIG = [
+  "import { PROJECTS_FAMILY } from '@hyperfrontend/workspace/lint'",
+  '',
+  'export default [',
+  '  { families: { projects: PROJECTS_FAMILY } },',
+  "  { ignores: ['node_modules/', 'out/', '.hf/'] },",
+  '  {',
+  "    files: ['**/*.ts'],",
+  "    rules: { 'projects/module-boundaries': ['error', { depConstraints: [{ sourceTag: 'type:util', onlyDependOnLibsWithTags: ['type:util'] }] }] },",
+  '  },',
+  "  { files: ['**/package.json'], rules: { 'projects/dependency-checks': ['error', { ignoredDependencies: ['@hyperfrontend/testing'] }] } },",
+  ']',
+  '',
+].join('\n')
+
 /** The workspace written into the consumer. */
 const WORKSPACE = {
   '.gitignore': 'node_modules\n.hf\n',
@@ -55,9 +71,14 @@ const WORKSPACE = {
     },
   },
   'LICENSE.md': 'A licence.\n',
+  'lint.config.ts': LINT_CONFIG,
+  'tsconfig.base.json': {
+    compilerOptions: { paths: { '@consumer/core': ['packages/core/src/index.ts'], '@consumer/alpha': ['libs/alpha/src/index.ts'] } },
+  },
   'packages/core/project.json': {
     name: 'core',
     projectType: 'library',
+    tags: ['type:util'],
     targets: {
       typecheck: { executor: '@hyperfrontend/workspace:typecheck' },
       test: { executor: '@hyperfrontend/workspace:test' },
@@ -99,8 +120,10 @@ const WORKSPACE = {
     '})',
     '',
   ].join('\n'),
+  'libs/alpha/src/index.ts': 'export const alpha = 1\n',
   'libs/alpha/project.json': {
     name: 'alpha',
+    tags: ['type:app'],
     targets: {
       build: { command: 'node -e "console.log(\'built alpha\')"' },
       echo: { command: 'node -e "console.log(process.argv.slice(1).join(\' \'))" --' },
@@ -133,7 +156,7 @@ const WORKSPACE = {
 
 const consumer = usePackedConsumer({
   tarball: process.env['HF_E2E_TARBALL'],
-  peers: ['typescript@5.7.3', '@types/node@25.3.3', '@hyperfrontend/testing@0.5.1'],
+  peers: ['typescript@5.7.3', '@types/node@25.3.3', '@hyperfrontend/testing@0.5.1', '@hyperfrontend/linter@0.3.1'],
 })
 
 before(() => {
@@ -243,6 +266,24 @@ describe('the executors of the package', () => {
     const run = hf(['run', 'core:typecheck'])
     rmSync(join(consumer.path, 'packages', 'core', 'src', 'broken.ts'))
     expect({ status: run.status, reported: run.stdout.includes('TS2322') }).toEqual({ status: 1, reported: true })
+  })
+
+  it('lints a library through the inferred lint target and the linter the workspace installs', () => {
+    expect(hf(['run', 'core:lint'])).toEqual(expect.objectContaining({ status: 0 }))
+  })
+
+  it('fails the lint of a library that imports a project its tags do not allow, naming the constraint', () => {
+    consumer.write('packages/core/src/crossing.ts', "import { alpha } from '@consumer/alpha'\n\nexport const crossing = alpha\n")
+    const run = hf(['run', 'core:lint'])
+    rmSync(join(consumer.path, 'packages', 'core', 'src', 'crossing.ts'))
+    expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({ status: 1, output: expect.stringContaining('type:util') })
+  })
+
+  it('fails the lint of a library whose manifest does not declare a package it imports, naming the package', () => {
+    consumer.write('packages/core/src/typed.ts', "import ts from 'typescript'\n\nexport const version = ts.version\n")
+    const run = hf(['run', 'core:lint'])
+    rmSync(join(consumer.path, 'packages', 'core', 'src', 'typed.ts'))
+    expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({ status: 1, output: expect.stringContaining('typescript') })
   })
 
   it('runs the suites of a library on the test runtime the workspace installs', () => {
