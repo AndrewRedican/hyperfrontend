@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -61,23 +61,22 @@ export interface Library {
  * @returns The libraries, sorted by directory.
  */
 export function publishableLibraries(): readonly Library[] {
-  const libs = join(WORKSPACE_ROOT, 'libs')
   const dirs: string[] = []
-  for (const entry of readdirSync(libs, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
-    if (!entry.isDirectory()) {
-      continue
-    }
-    const dir = join(libs, entry.name)
-    if (entry.name === 'utils') {
-      for (const inner of readdirSync(dir, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
-        if (inner.isDirectory()) {
-          dirs.push(join(dir, inner.name))
-        }
+  // why: a directory under libs/ that carries a manifest is a library; one that does not (libs/utils, libs/integrations) holds libraries one level down
+  const collect = (parent: string): void => {
+    for (const entry of readdirSync(parent, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+      if (!entry.isDirectory()) {
+        continue
       }
-      continue
+      const dir = join(parent, entry.name)
+      if (existsSync(join(dir, 'package.json'))) {
+        dirs.push(dir)
+      } else {
+        collect(dir)
+      }
     }
-    dirs.push(dir)
   }
+  collect(join(WORKSPACE_ROOT, 'libs'))
   return dirs
     .map((dir) => {
       const manifest = parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest
