@@ -6,6 +6,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
+import { installedEngineVersion } from './engine-version'
 import { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 
 const root = createGraphWorkspace()
@@ -120,12 +121,12 @@ describe('importsOfText forms', () => {
 })
 
 describe('readerVersion', () => {
-  it('names the installed parser version where the workspace does not alias the parser to source', () => {
+  it('names the installed engine version where the workspace does not alias the parser to source', () => {
     const installed = createTempDir({
       prefix: 'reader-installed-',
       tree: { 'node_modules/@hyperfrontend/linter/package.json': '{ "version": "1.2.3" }' },
     })
-    expect(readerVersion(installed.path)).toBe('3:1.2.3')
+    expect(readerVersion(installed.path)).toBe(`3:${installedEngineVersion()}`)
   })
 
   it('hashes the aliased parser sources, specs left out', () => {
@@ -143,19 +144,16 @@ describe('readerVersion', () => {
     expect(readerVersion(aliased.path)).toBe(`3:${hash}`)
   })
 
-  it('answers unknown for an alias naming no sources beside an installed parser without a version', () => {
+  it('names the installed engine version for an alias naming no sources', () => {
     const empty = createTempDir({
       prefix: 'reader-empty-',
-      tree: {
-        'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/linter": ["libs/linter/src/index.ts"] } } }',
-        'node_modules/@hyperfrontend/linter/package.json': '{ "name": "@hyperfrontend/linter" }',
-      },
+      tree: { 'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/linter": ["libs/linter/src/index.ts"] } } }' },
     })
-    expect(readerVersion(empty.path)).toBe('3:unknown')
+    expect(readerVersion(empty.path)).toBe(`3:${installedEngineVersion()}`)
   })
 
-  it('answers unknown without an alias or an installed parser, once per root', () => {
-    expect([readerVersion(root), readerVersion(root) === readerVersion(root)]).toEqual(['3:unknown', true])
+  it('computes the version once per root', () => {
+    expect(readerVersion(root) === readerVersion(root)).toBe(true)
   })
 })
 

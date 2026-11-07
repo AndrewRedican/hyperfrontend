@@ -1,7 +1,7 @@
 /**
  * What a persisted state was written by and from: the schema, the algorithm (a hash of the graph
- * sources where the workspace aliases them), the import reader, the Node major, and the hashes of
- * the files whose change invalidates the whole graph.
+ * sources where the workspace aliases them, else the installed engine's version), the import
+ * reader, the Node major, and the hashes of the files whose change invalidates the whole graph.
  *
  * @module graph/store/meta
  */
@@ -10,6 +10,7 @@ import type { FileRecord } from './files'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { freeze, fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { installedEngineVersion } from '../engine-version'
 import { readerVersion } from '../imports'
 import { readAliases } from '../workspace'
 import { hashesByPath } from './files'
@@ -28,7 +29,7 @@ const GRAPH_ALIAS = '@hyperfrontend/workspace/graph'
 export interface GraphMeta {
   /** The schema of the state files. */
   readonly schema: string
-  /** The algorithm that wrote the state: a hash of the graph sources, or `installed`. */
+  /** The algorithm that wrote the state: a hash of the graph sources, or `installed:<version>` of the installed engine. */
   readonly algorithm: string
   /** The import reader, as `readerVersion` names it. */
   readonly reader: string
@@ -40,7 +41,8 @@ export interface GraphMeta {
 
 /**
  * The algorithm that builds the graph for a workspace: a hash of the graph sources where the
- * workspace aliases the graph package to its source, else `installed`.
+ * workspace aliases the graph package to its source, else `installed:` and the version of the
+ * installed engine, so a state one version wrote is rebuilt by the next.
  *
  * @param root - The workspace root, absolute
  * @returns The algorithm's name
@@ -48,7 +50,7 @@ export interface GraphMeta {
 export function algorithmVersion(root: string): string {
   const target = readAliases(root).get(GRAPH_ALIAS)?.[0]
   const sources = target === undefined ? null : join(root, dirname(target))
-  return sources !== null && existsSync(sources) ? sourcesHash(sources) : 'installed'
+  return sources !== null && existsSync(sources) ? sourcesHash(sources) : `installed:${installedEngineVersion()}`
 }
 
 /**

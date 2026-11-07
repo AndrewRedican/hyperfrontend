@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from '../__test-utils__/workspace'
+import { installedEngineVersion } from '../engine-version'
 import { readerVersion } from '../imports'
 import { listFileRecords } from './files'
 import { sourcesHash } from './hashes'
@@ -16,7 +17,7 @@ describe('currentMeta', () => {
     const hash = (path: string): string | null => files.find((record) => record.path === path)?.hash ?? null
     expect(currentMeta(root, files)).toEqual({
       schema: SCHEMA,
-      algorithm: 'installed',
+      algorithm: `installed:${installedEngineVersion()}`,
       reader: readerVersion(root),
       node: process.versions.node.split('.')[0],
       config: {
@@ -56,13 +57,13 @@ describe('algorithmVersion', () => {
     }
   })
 
-  it('answers installed where the alias names no sources', () => {
+  it('answers installed with the engine version where the alias names no sources', () => {
     const dangling = createTempDir({
       prefix: 'algorithm-',
       tree: { 'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/workspace/graph": ["gone/index.ts"] } } }' },
     })
     try {
-      expect(algorithmVersion(dangling.path)).toBe('installed')
+      expect(algorithmVersion(dangling.path)).toBe(`installed:${installedEngineVersion()}`)
     } finally {
       dangling.remove()
     }

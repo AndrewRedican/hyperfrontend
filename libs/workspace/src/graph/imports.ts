@@ -19,7 +19,8 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { childrenOf, parseCode } from '@hyperfrontend/linter/helpers'
-import { readAliases, readJson } from './workspace'
+import { installedEngineVersion } from './engine-version'
+import { readAliases } from './workspace'
 
 /** Where the remembered imports live under the workspace. */
 export const CACHE_FILE = join('node_modules', '.cache', 'hyperfrontend-lint', 'imports.json')
@@ -54,12 +55,6 @@ interface CachedImports {
   readonly imports: readonly FileImport[]
 }
 
-/** An installed package's manifest, as far as its version is read. */
-interface InstalledManifest {
-  /** The installed version. */
-  readonly version?: string
-}
-
 /** Where a statement stands in its file. */
 interface Position {
   /** The one-based line. */
@@ -86,8 +81,9 @@ export function isCodeFile(path: string): boolean {
 
 /**
  * The version of the reader for a workspace: the cache format, then a hash of the parser's
- * sources where the workspace aliases the parser package to its source, else the installed
- * parser's version. A cache another version wrote is discarded.
+ * sources where the workspace aliases the parser package to its source, else the version of the
+ * installed engine, which carries its own copy of the parser. A cache another version wrote is
+ * discarded.
  *
  * @param root - The workspace root, absolute
  * @returns The version string
@@ -105,7 +101,7 @@ export function readerVersion(root: string): string {
  * What identifies the parser a workspace reads imports with.
  *
  * @param root - The workspace root, absolute
- * @returns A hash of the aliased parser sources, the installed package's version, or `unknown`
+ * @returns A hash of the aliased parser sources, else the installed engine's version
  */
 function parserIdentity(root: string): string {
   const target = readAliases(root).get(PARSER_ALIAS)?.[0]
@@ -117,7 +113,7 @@ function parserIdentity(root: string): string {
     }
     return hash.digest('hex')
   }
-  return readJson<InstalledManifest>(join(root, 'node_modules', '@hyperfrontend', 'linter', 'package.json'))?.version ?? 'unknown'
+  return installedEngineVersion()
 }
 
 /**
