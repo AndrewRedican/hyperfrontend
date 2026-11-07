@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to make publishable",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The bundle formats the package builds, among esm, cjs, iife and umd (e.g., 'esm,cjs,iife,umd')",
+      "default": ["esm", "cjs"]
+    },
+    "globalName": {
+      "type": "string",
+      "description": "Global variable name for iife and umd bundles (e.g., 'AcmeMyUtils'). Defaults to the scope and the name as one class name."
+    },
+    "bundleEntry": {
+      "type": "string",
+      "description": "Entry point for iife and umd bundles (e.g., '.' or './browser')",
+      "default": "."
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "npm keywords for the package. Defaults to the package's own, else its name, its scope and 'typescript'."
+    },
+    "nodeEngine": {
+      "type": "string",
+      "description": "The Node.js range the package declares (e.g., '>=20.0.0'). Defaults to the package's own, else '>=18.0.0'."
+    },
+    "buildExecutor": {
+      "type": "string",
+      "description": "The executor of the build target",
+      "default": "@hyperfrontend/workspace:build"
+    },
+    "e2eDirectory": {
+      "type": "string",
+      "description": "The directory the e2e project is created under",
+      "default": "e2e"
+    },
+    "skipE2E": {
+      "type": "boolean",
+      "description": "Skip creating the e2e project",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["project"]
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The current project name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "newName": {
+      "type": "string",
+      "description": "The new project name",
+      "$default": {
+        "$source": "argv",
+        "index": 1
+      }
+    },
+    "packageName": {
+      "type": "string",
+      "description": "The new package name. Defaults to the new name under the package's current scope."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["project", "newName"]
+}
