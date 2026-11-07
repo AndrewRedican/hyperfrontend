@@ -7,6 +7,8 @@ description: Use @hyperfrontend/package generators to create, promote, rename, o
 
 All support `--dry-run`.
 
+The generators are the packaged ones of `@hyperfrontend/workspace` (`libs/workspace/src/generators`: `workspace`, `library`, `make-publishable`, `rename`, `move`), wrapped by `tools/package/src/generators` with this repository's conventions: the `@hyperfrontend` scope, the `lib-<name>` project name, the `type:`/`scope:` tags, the lint template that turns on the workspace rules, the compatibility block, the README badges, the CI workflow and the registrations. A bare name resolves to the wrapper here; `@hyperfrontend/workspace:<name>` reaches the packaged one. The packaged `library` takes `scope`, `projectName`, `packageName`, `tags`, `keywords` and `formats` and writes a `build` target in both module formats, which the wrapper removes for an internal library here; the packaged `make-publishable` takes `formats` (`esm,cjs,iife,umd`), `buildExecutor`, `e2eDirectory` and `nodeEngine`; `workspace` writes `hf.json`, `tsconfig.base.json`, `lint.base.config.ts` and `.hfignore` into an outside repository and is not used here.
+
 ---
 
 ## Commands
@@ -64,7 +66,7 @@ Besides the project's own files, the E2E project and the status workflow, the ge
 | `apps/docs-site/src/lib/ecosystem.ts`                      | Package appended to the `--ecosystemTier` level of `ECOSYSTEM_TIERS`                                             |
 | `apps/docs-site/src/app/docs/libraries/{slug}/**/page.tsx` | `page.tsx`, `releases/page.tsx`, `architecture/page.tsx` when the document exists, one page per secondary export |
 
-`package.json` keeps the `engines`, `peerDependencies` and `peerDependenciesMeta` the project already declares; the README's Node badge and compatibility row read the declared floor.
+`package.json` keeps the `engines`, `peerDependencies` and `peerDependenciesMeta` the project already declares; the README's Node badge and compatibility row read the declared floor. The licence, the repository (with the project's `directory`) and the funding come from the root `package.json`.
 
 **Left to do by hand**: record the package banner and runtime strip (`npx hf run tool-media:media --scene=banner-{slug} --scene=runtimes-{slug}`), replace the README template's placeholder sections, and add `fallbackFeatures` to the docs page if the README cannot supply key features. Leave `package.json` at version `0.0.0` and never seed a `CHANGELOG.md`: the versioning flow computes the first version from the commits and writes the changelog with it, and until then the `releases` page answers not found and the sitemap check skips it.
 

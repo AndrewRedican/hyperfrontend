@@ -1,6 +1,6 @@
 import type { DocsCategory, LibraryFacts } from './library-facts'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from './lines'
+import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from '@hyperfrontend/workspace/generators'
 
 /** The navigation array each section of the index is written in. */
 const ARRAYS: Record<DocsCategory, string> = {

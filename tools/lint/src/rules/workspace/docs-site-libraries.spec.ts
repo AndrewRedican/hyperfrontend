@@ -17,7 +17,7 @@ const PUBLISHABLE = JSON.stringify({ projectType: 'library', targets: { build: {
  * @returns The root
  */
 function workspace(files: Readonly<Record<string, string>>): TempDir {
-  return createTempDir({ prefix: 'lint-docs-libraries-', tree: { 'nx.json': '{}', ...files } })
+  return createTempDir({ prefix: 'lint-docs-libraries-', tree: { 'hf.json': '{}', ...files } })
 }
 
 const PLACED = workspace({

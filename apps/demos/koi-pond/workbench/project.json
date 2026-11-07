@@ -24,7 +24,7 @@
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npm run type-check",

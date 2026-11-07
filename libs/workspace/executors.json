@@ -1,0 +1,44 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "./executors/build/index",
+      "schema": "./executors/build/schema.json",
+      "description": "Build a library into a publishable package."
+    },
+    "e2e": {
+      "implementation": "./executors/e2e/index",
+      "schema": "./executors/e2e/schema.json",
+      "description": "Pack a library's build, install the tarball into the e2e project that tests it, and run its suites."
+    },
+    "publish": {
+      "implementation": "./executors/publish/index",
+      "schema": "./executors/publish/schema.json",
+      "description": "Publish a library's build output to the npm registry, skipping a version already there."
+    },
+    "test": {
+      "implementation": "./executors/test/index",
+      "schema": "./executors/test/schema.json",
+      "description": "Run a project's suites on Node's built-in test runner."
+    },
+    "typecheck": {
+      "implementation": "./executors/typecheck/index",
+      "schema": "./executors/typecheck/schema.json",
+      "description": "Run the TypeScript compiler over a project without emitting files."
+    },
+    "version": {
+      "implementation": "./executors/version/index",
+      "schema": "./executors/version/schema.json",
+      "description": "Version a project from its conventional commits, pin its dependents to the new version, and commit the bump."
+    },
+    "version-batch": {
+      "implementation": "./executors/version-batch/index",
+      "schema": "./executors/version-batch/schema.json",
+      "description": "Version every library a change makes due a release, and record the bumps in one commit."
+    },
+    "version-check": {
+      "implementation": "./executors/version-check/index",
+      "schema": "./executors/version-check/schema.json",
+      "description": "Compare a project's manifest and changelog with what its commits call for, without writing anything."
+    }
+  }
+}

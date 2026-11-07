@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { testRule } from '@hyperfrontend/linter/testing'
+import { buildCompatibilityDocument } from '@hyperfrontend/pipeline'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { buildCompatibilityDocument } from '@hyperfrontend/workspace'
 import { createMarkdownWorkspace } from './__test-utils__/markdown-workspace.ts'
 import rule from './lib-compatibility-matrix.ts'
 
@@ -15,7 +15,7 @@ workspace.write('libs/pub/package.json', '{ "name": "@s/pub", "description": "Co
 const DOCUMENT = workspace.rootFile('LIBRARY_COMPATIBILITY.md')
 const EXPECTED = buildCompatibilityDocument(workspace.root)
 const MESSAGE =
-  'LIBRARY_COMPATIBILITY.md is generated from each package project.json and package.json, and no longer matches them. Run `npx hf run @hyperfrontend/workspace:lint:all` (or `npx hf run @hyperfrontend/workspace:lint --fix`) to regenerate it.'
+  'LIBRARY_COMPATIBILITY.md is generated from each package project.json and package.json, and no longer matches them. Run `npx hf run hyperfrontend:lint:all` (or `npx hf run @hyperfrontend/workspace:lint --fix`) to regenerate it.'
 
 testRule(rule, {
   valid: [

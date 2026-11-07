@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project name to move",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "destination": {
+      "type": "string",
+      "description": "Destination directory relative to workspace root (e.g., 'libs/utils')",
+      "$default": {
+        "$source": "argv",
+        "index": 1
+      }
+    },
+    "newName": {
+      "type": "string",
+      "description": "New name for the project's directory. Defaults to the current directory name."
+    },
+    "projectName": {
+      "type": "string",
+      "description": "The project's new name, when the names are updated. Defaults to the directory's name."
+    },
+    "packageName": {
+      "type": "string",
+      "description": "The package's new name, when the names are updated. Defaults to the directory's name under the package's current scope."
+    },
+    "updateName": {
+      "type": "boolean",
+      "description": "Update the project name and the package name to follow the new location",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["project", "destination"]
+}

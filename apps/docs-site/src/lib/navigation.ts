@@ -395,6 +395,33 @@ const supportingLibraries: NavItem[] = [
     ],
   },
   { slug: 'web-worker', packageName: '@hyperfrontend/web-worker', href: '/docs/libraries/web-worker' },
+  {
+    slug: 'workspace',
+    packageName: '@hyperfrontend/workspace',
+    href: '/docs/libraries/workspace',
+    children: [
+      { slug: 'architecture', href: '/docs/libraries/workspace/architecture' },
+      { slug: 'cli', href: '/docs/libraries/workspace/cli' },
+      { slug: 'executors/build', href: '/docs/libraries/workspace/executors/build' },
+      { slug: 'executors/e2e', href: '/docs/libraries/workspace/executors/e2e' },
+      { slug: 'executors/publish', href: '/docs/libraries/workspace/executors/publish' },
+      { slug: 'executors/test', href: '/docs/libraries/workspace/executors/test' },
+      { slug: 'executors/typecheck', href: '/docs/libraries/workspace/executors/typecheck' },
+      { slug: 'executors/version', href: '/docs/libraries/workspace/executors/version' },
+      { slug: 'executors/version-batch', href: '/docs/libraries/workspace/executors/version-batch' },
+      { slug: 'executors/version-check', href: '/docs/libraries/workspace/executors/version-check' },
+      { slug: 'generators', href: '/docs/libraries/workspace/generators' },
+      { slug: 'generators/library', href: '/docs/libraries/workspace/generators/library' },
+      { slug: 'generators/make-publishable', href: '/docs/libraries/workspace/generators/make-publishable' },
+      { slug: 'generators/move', href: '/docs/libraries/workspace/generators/move' },
+      { slug: 'generators/rename', href: '/docs/libraries/workspace/generators/rename' },
+      { slug: 'generators/workspace', href: '/docs/libraries/workspace/generators/workspace' },
+      { slug: 'graph', href: '/docs/libraries/workspace/graph' },
+      { slug: 'hooks', href: '/docs/libraries/workspace/hooks' },
+      { slug: 'lint', href: '/docs/libraries/workspace/lint' },
+      { slug: 'runner', href: '/docs/libraries/workspace/runner' },
+    ],
+  },
 ]
 
 /**

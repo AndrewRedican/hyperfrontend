@@ -105,6 +105,7 @@ const workspaceRoot = findWorkspaceRoot('./libs/my-lib')
 
 **Workspace root markers:**
 
+- `hf.json`
 - `nx.json`
 - `turbo.json`
 - `lerna.json`

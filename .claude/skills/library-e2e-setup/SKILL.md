@@ -15,7 +15,7 @@ description: Create E2E test projects for publishable hyperfrontend libraries. U
 | ------------ | -------------------------- |
 | E2E projects | `apps/package-e2e/<name>/` |
 | Packed tgz   | `tmp/e2e-packs/`           |
-| ESLint rule  | `lib-e2e-project-required` |
+| Lint rule    | `lib-e2e-project-required` |
 
 ---
 
@@ -31,7 +31,7 @@ Generator creates: `project.json`, `package.json`, `tsconfig.json`, `src/{esm,cj
 
 ## Spec shape
 
-`esm.spec.ts` and `cjs.spec.ts` run on `usePackedConsumer` from `@hyperfrontend/testing/consumer`: the executor passes the packed tarball as `HF_E2E_TARBALL`, the helper installs it into a temp dir outside the workspace, and every test runs under plain Node with no loader hooks. `consumer.entries('import' | 'require')` loads every exports subpath; `consumer.run(fn, { kind, args })` serialises `fn` into the consumer and returns its JSON result, so the body imports the package itself and closes over nothing. Browser bundles stay on `iife.spec.ts` / `umd.spec.ts` with the shared helpers.
+Every spec runs on `usePackedConsumer` from `@hyperfrontend/testing/consumer`: the executor passes the packed tarball as `HF_E2E_TARBALL`, the helper installs it into a temp dir outside the workspace, and every test runs under plain Node with no loader hooks. `consumer.entries('import' | 'require')` loads every exports subpath; `consumer.run(fn, { kind, args })` serialises `fn` into the consumer and returns its JSON result, so the body imports the package itself and closes over nothing. The generated `iife.spec.ts` / `umd.spec.ts` read `bundle/index.<format>.js` from the package installed in the consumer and run it as a classic script (and, for UMD, as a CommonJS module) with helpers of their own; they import nothing outside the e2e project. Older e2e projects still use `apps/package-e2e/shared/helpers.ts`, which reads `dist/`.
 
 **Critical fields:**
 
@@ -42,6 +42,8 @@ Generator creates: `project.json`, `package.json`, `tsconfig.json`, `src/{esm,cj
 // package.json dependencies
 { "@hyperfrontend/<name>": "file:../../../tmp/e2e-packs/hyperfrontend-<name>-x.x.x.tgz" }
 ```
+
+The e2e executor rewrites that dependency on install (`npm install <tarball> --save-exact`) and the version flow repins it on every bump; a new e2e project gets no `scripts` and no `devDependencies`.
 
 ---
 

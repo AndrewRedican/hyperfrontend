@@ -1,107 +1,41 @@
-import type { NamedJson } from './json-updaters'
-import type { Tree } from './tree/tree'
-import { posix } from 'node:path'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
-import { replaceDescriptionPackageName } from './json-updaters'
-import { logger } from './logger'
-import { joinPathFragments } from './tree/paths'
-import { updateJson } from './tree/tree'
-
-/** An e2e project.json as far as the rename rewrites it. */
-interface E2eProjectManifest extends NamedJson {
-  /** The library the suite tests, among others */
-  implicitDependencies?: unknown
-}
-
-/** An e2e package.json as far as the rename rewrites it. */
-interface E2ePackageManifest extends NamedJson {
-  /** The packed library it installs */
-  dependencies?: Record<string, string>
-  /** Its scripts */
-  scripts?: Record<string, string>
-}
-
 /**
- * Options for E2E project checking.
- */
-export interface E2ECheckOptions {
-  /** Current npm package name */
-  currentPackageName: string
-  /** New npm package name */
-  newPackageName: string
-  /** Whether the name is being updated */
-  updateName?: boolean
-}
-
-/**
- * Update E2E project files in-place and warn about the folder move.
- * Automatically updates:
- * - project.json: name and implicitDependencies
- * - package.json: name and dependency key
- * Warns about the folder rename which requires a separate move generator invocation.
+ * Where this repository keeps the project that tests a package, and the note a rename leaves
+ * when that directory no longer matches the package's name.
  *
- * @param tree - The virtual file system tree
- * @param options - Options containing package names and update flag
+ * @module lib/e2e-helpers
  */
-export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
-  const currentLibName = options.currentPackageName.replace('@hyperfrontend/', '')
-  const currentE2ERoot = `apps/package-e2e/${currentLibName}`
 
-  if (!tree.exists(joinPathFragments(currentE2ERoot, 'project.json'))) {
-    return
-  }
+import type { Tree } from '@hyperfrontend/workspace/runner'
+import { joinPathFragments, unscopedName } from '@hyperfrontend/workspace/generators'
+import { logger } from './logger'
 
-  // why: Skip update if name isn't being updated (move without rename)
-  if (options.updateName === false) {
-    return
-  }
+/** The directory every package's e2e project lives under, named after the package. */
+export const E2E_DIRECTORY = 'apps/package-e2e'
 
-  const newLibName = options.newPackageName.replace('@hyperfrontend/', '')
+/** How a package was renamed. */
+export interface E2EFolderOptions {
+  /** The package's current name */
+  currentPackageName: string
+  /** The package's new name */
+  newPackageName: string
+}
 
-  if (currentLibName === newLibName) {
-    return
-  }
-
-  const newE2EProjectName = `e2e-lib-${newLibName}`
-  const currentE2EProjectName = `e2e-lib-${currentLibName}`
-  const newE2ERoot = `apps/package-e2e/${newLibName}`
-
-  const projectJsonPath = joinPathFragments(currentE2ERoot, 'project.json')
-  updateJson<E2eProjectManifest>(tree, projectJsonPath, (json) => {
-    if (json.name === currentE2EProjectName) {
-      json.name = newE2EProjectName
-    }
-    replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
-    if (isArray(json.implicitDependencies)) {
-      json.implicitDependencies = (json.implicitDependencies as string[]).map((dep) =>
-        dep === `lib-${currentLibName}` ? `lib-${newLibName}` : dep
-      )
-    }
-    return json
-  })
-
-  const packageJsonPath = joinPathFragments(currentE2ERoot, 'package.json')
-  if (tree.exists(packageJsonPath)) {
-    updateJson<E2ePackageManifest>(tree, packageJsonPath, (json) => {
-      json.name = `@hyperfrontend/e2e-${newLibName}`
-      replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
-      if (json.dependencies?.[options.currentPackageName]) {
-        const oldTgzPath = json.dependencies[options.currentPackageName] ?? ''
-        json.dependencies[options.newPackageName] = oldTgzPath.replace(`hyperfrontend-${currentLibName}-`, `hyperfrontend-${newLibName}-`)
-        delete json.dependencies[options.currentPackageName]
-      }
-      if (json.scripts?.['pack-install'] !== undefined) {
-        json.scripts['pack-install'] = json.scripts['pack-install'].replaceAll(`/${currentLibName}`, `/${newLibName}`)
-      }
-      return json
-    })
-  }
-
+/**
+ * Warns that the e2e project's directory still carries the package's old name, and names the
+ * move that fixes it. The e2e project's files were already renamed with the package.
+ *
+ * @param tree - The tree the projects live in
+ * @param options - The package's old and new names
+ */
+export function noteE2EFolderMove(tree: Tree, options: E2EFolderOptions): void {
+  const currentLibName = unscopedName(options.currentPackageName)
+  const newLibName = unscopedName(options.newPackageName)
+  if (currentLibName === newLibName || !tree.exists(joinPathFragments(E2E_DIRECTORY, currentLibName, 'project.json'))) return
   logger.warn('')
   logger.warn('=== E2E Project Folder Move Required ===')
-  logger.warn(`E2E project files updated in: ${currentE2ERoot}`)
-  logger.warn(`Please move the folder to match the new name:`)
-  logger.warn(`  npx hf generate move e2e-${currentLibName} ${newE2ERoot.replace(`${posix.sep}${newLibName}`, '')}`)
-  logger.warn(`  (or manually: mv ${currentE2ERoot} ${newE2ERoot})`)
+  logger.warn(`E2E project files updated in: ${E2E_DIRECTORY}/${currentLibName}`)
+  logger.warn('Please move the folder to match the new name:')
+  logger.warn(`  npx hf generate move e2e-lib-${newLibName} ${E2E_DIRECTORY} --newName=${newLibName} --updateName=false`)
+  logger.warn(`  (or manually: mv ${E2E_DIRECTORY}/${currentLibName} ${E2E_DIRECTORY}/${newLibName})`)
   logger.warn('')
 }

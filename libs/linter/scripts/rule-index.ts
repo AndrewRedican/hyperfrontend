@@ -4,7 +4,7 @@
  * Run it after adding, removing or changing a rule; `src/rules/docs.spec.ts` fails while the
  * committed index differs from what it computes.
  *
- * Usage, from the package root: `node --import ../../tools/lint/src/runtime/aliases.ts scripts/rule-index.ts`
+ * Usage, from the package root: `node --import ../../libs/workspace/src/hooks/index.ts scripts/rule-index.ts`
  *
  * @module scripts/rule-index
  */

@@ -1,4 +1,4 @@
-import type { Tree } from './tree/tree'
+import type { Tree } from '@hyperfrontend/workspace/runner'
 import { logger } from './logger'
 
 /**

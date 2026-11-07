@@ -149,8 +149,8 @@ function install(options: PackedConsumerOptions): string {
   }
   const dir = createTempDir({ prefix: 'hf-consumer-', tree: { 'package.json': { name: 'consumer', version: '0.0.0', private: true } } })
   const specifiers = [tarball, ...(options.peers ?? [])]
-  // why: --prefer-offline reuses whatever the npm cache already holds, which is everything a prior install of the same tarball fetched, so the consumer installs fast and offline.
-  const npm = shimCommand('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund', '--loglevel=error', ...specifiers])
+  // why: --prefer-offline trusts a cached packument and npm never revalidates one on ETARGET, so a restored CI cache cannot install a version published after it was saved
+  const npm = shimCommand('npm', ['install', '--no-audit', '--no-fund', '--loglevel=error', ...specifiers])
   try {
     execFileSync(npm.file, npm.args, {
       cwd: dir.path,

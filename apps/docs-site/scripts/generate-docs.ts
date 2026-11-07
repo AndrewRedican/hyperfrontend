@@ -230,6 +230,7 @@ const LIBRARIES: LibraryConfig[] = [
   { name: 'Questions', packageName: '@hyperfrontend/questions', slug: 'questions', srcPath: 'libs/questions', category: 'supporting' },
   { name: 'Testing', packageName: '@hyperfrontend/testing', slug: 'testing', srcPath: 'libs/testing', category: 'core' },
   { name: 'Linter', packageName: '@hyperfrontend/linter', slug: 'linter', srcPath: 'libs/linter', category: 'supporting' },
+  { name: 'Workspace', packageName: '@hyperfrontend/workspace', slug: 'workspace', srcPath: 'libs/workspace', category: 'supporting' },
 ]
 
 /**
@@ -263,6 +264,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   versioning: 'versioning',
   testing: 'testing',
   linter: 'linter',
+  workspace: 'workspace',
 }
 
 /**

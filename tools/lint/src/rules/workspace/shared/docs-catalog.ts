@@ -15,9 +15,8 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { isPublishableProject, readPackageFile, readProjectFile, resolveModule } from '@hyperfrontend/workspace/lint'
 import { listSources, readDeclarations, readSymbols } from './docs-api.ts'
-import { resolveModule } from './exports-index.ts'
-import { isPublishableProject, readPackageFile, readProjectFile } from './project-file.ts'
 
 /** The package a route sits under, and the entry whose page it is. */
 export interface RouteOwner {

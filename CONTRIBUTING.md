@@ -237,10 +237,10 @@ Run the pipeline the pre-push hook and CI run, from the merge base with `origin/
 
 ```bash
 # Typecheck, lint, test, build and e2e of what your change reaches, one task at a time, with a reason per task
-node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --local
+node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --local
 
 # Only plan: which chains and tasks a change reaches, and why every other task is skipped
-node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --base origin/main
+node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --base origin/main
 ```
 
 One task of one project runs alone, without the tasks it depends on, through the workspace's own entry:
@@ -302,7 +302,7 @@ git push --no-verify
 
 ```bash
 # Preview batch version changes (dry run)
-npx hf run @hyperfrontend/workspace:version:all --dryRun
+npx hf run hyperfrontend:version:all --dryRun
 
 # Preview single library version changes
 npx hf run lib-nexus:version --dryRun

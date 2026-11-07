@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
 import type { BuildExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -19,14 +19,14 @@ import { logger } from '../../lib/logger'
 export default async function buildExecutor(
   options: BuildExecutorOptions,
   context: ExecutorContext
-): ReturnType<PromiseExecutor> {
+): Promise<ExecutorResult> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
     return { success: false }
   }
 
-  const projectConfig = context.projectsConfigurations?.projects[projectName]
+  const projectConfig = context.projects[projectName]
   if (!projectConfig) {
     logger.error(`Could not find project configuration for ${projectName}`)
     return { success: false }

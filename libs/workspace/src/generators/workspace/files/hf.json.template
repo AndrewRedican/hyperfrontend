@@ -1,0 +1,52 @@
+{
+  "targetDefaults": {
+    "typecheck": {
+      "inputs": ["default", "^production"],
+      "executor": "@hyperfrontend/workspace:typecheck"
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "executor": "@hyperfrontend/workspace:test"
+    },
+    "build": {
+      "inputs": ["production", "^production"],
+      "dependsOn": ["^build"],
+      "executor": "@hyperfrontend/workspace:build",
+      "options": {
+        "outputPath": "dist/{projectRoot}"
+      }
+    },
+    "publish": {
+      "dependsOn": ["build"],
+      "executor": "@hyperfrontend/workspace:publish",
+      "options": {
+        "access": "public",
+        "tag": "latest"
+      }
+    },
+    "e2e": {
+      "dependsOn": ["^build"],
+      "executor": "@hyperfrontend/workspace:e2e"
+    },
+    "version": {
+      "executor": "@hyperfrontend/workspace:version",
+      "options": {
+        "tagPrefix": "{projectName}@"
+      }
+    },
+    "version-check": {
+      "inputs": ["{projectRoot}/**/*", "^production"],
+      "executor": "@hyperfrontend/workspace:version-check"
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": [
+      "default",
+      "!{projectRoot}/lint.config.ts",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/test.config.ts"
+    ]
+  }
+}

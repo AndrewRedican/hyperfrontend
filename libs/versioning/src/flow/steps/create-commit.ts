@@ -1,5 +1,6 @@
 import type { FlowStep } from '../models/step'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { createStep, createSkippedResult } from '../models/step'
 import { interpolate } from '../utils/interpolate'
 
@@ -34,7 +35,7 @@ export function createGitCommitStep(): FlowStep {
     CREATE_COMMIT_STEP_ID,
     'Create Version Commit',
     async (ctx) => {
-      const { git, config, state, projectName, packageName, logger } = ctx
+      const { git, config, state, projectName, packageName, logger, workspaceRoot } = ctx
       const { nextVersion, bumpType, modifiedFiles } = state
 
       if (config.skipGit) {
@@ -59,7 +60,8 @@ export function createGitCommitStep(): FlowStep {
 
       if (modifiedFiles && modifiedFiles.length > 0) {
         try {
-          git.stage(modifiedFiles)
+          // why: the steps record absolute paths, and the git path check refuses what a prefix can hold, such as a drive letter's colon or the tilde of a Windows short name
+          git.stage(modifiedFiles.map((file) => workspaceRelativePath(workspaceRoot, file)))
           logger.debug(`Staged ${modifiedFiles.length} file(s)`)
         } catch (error) {
           return {

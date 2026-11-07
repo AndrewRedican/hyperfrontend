@@ -1,0 +1,75 @@
+{
+  "name": "lib-workspace",
+  "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "none",
+        "webWorker": "none"
+      },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      }
+    }
+  },
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "external": ["@hyperfrontend/testing/runner"],
+        "esm": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": {
+            "exclude": ["tslib"]
+          }
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": {
+            "exclude": ["tslib"]
+          }
+        },
+        "assets": [
+          {
+            "from": "libs/workspace",
+            "files": ["executors.json", "generators.json"]
+          },
+          {
+            "from": "libs/workspace/src/executors",
+            "glob": "**/schema.json",
+            "to": "executors"
+          },
+          {
+            "from": "libs/workspace/src/generators",
+            "glob": "**/schema.json",
+            "to": "generators"
+          },
+          {
+            "from": "libs/workspace/src/generators",
+            "glob": "**/files*/**",
+            "to": "generators"
+          }
+        ],
+        "bin": [
+          {
+            "name": "hf",
+            "runner": "runHf",
+            "format": "esm",
+            "bootstrap": "runHf({ argv: process.argv.slice(2), cwd: process.cwd() }).then(\n  (code) => { process.stdout.write('', () => process.stderr.write('', () => process.exit(code))) },\n  (error) => {\n    process.stderr.write((error instanceof Error ? error.message : String(error)) + '\\n')\n    process.exitCode = 1\n  }\n)"
+          }
+        ]
+      }
+    },
+    "publish": {},
+    "typecheck": {},
+    "test": {}
+  }
+}

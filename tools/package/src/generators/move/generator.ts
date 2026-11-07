@@ -1,36 +1,23 @@
-import type { Tree } from '../../lib/tree/tree'
+/**
+ * This repository's `move` generator: the packaged one with the project named by its new path
+ * and the package named under `@hyperfrontend`, then the notes about the e2e directory and the
+ * CI workflow the move leaves behind.
+ *
+ * @module generators/move/generator
+ */
+
+import type { Tree } from '@hyperfrontend/workspace/runner'
 import type { MoveGeneratorSchema } from './schema'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { formatFiles } from '@hyperfrontend/workspace/generators'
+import { moveGenerator as move, planMove } from '@hyperfrontend/workspace/generators/move'
 import { checkCIWorkflow } from '../../lib/ci-helpers'
-import { checkE2EProject } from '../../lib/e2e-helpers'
-import { logger } from '../../lib/logger'
-import { formatFiles } from '../../lib/tree/format'
-import {
-  copyDirectory,
-  deleteDirectory,
-  normalizeOptions,
-  updateContentReferences,
-  updateEslintConfig,
-  updatePackageJson,
-  updateProjectJson,
-  updateProjectReferences,
-  updateTsConfigJson,
-  updateTsConfigLibJson,
-  updateTsConfigPaths,
-  updateTsConfigSpecJson,
-} from './lib/move-helpers'
+import { noteE2EFolderMove } from '../../lib/e2e-helpers'
+import { derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
 
 /**
- * Generator that moves a project to a new location.
- *
- * This generator:
- * 1. Copies all project files to the new location
- * 2. Updates project.json with new paths and optionally new name
- * 3. Updates package.json with new package name (if updateName is true)
- * 4. Updates tsconfig.base.json path mappings
- * 5. Updates references in other projects
- * 6. Updates README and source file references
- * 7. Deletes the old project directory
+ * Moves a project of this repository: its new name follows its new path by this repository's
+ * conventions, the package is named after it under `@hyperfrontend`, and the packaged generator
+ * carries both everywhere.
  *
  * @param tree - The virtual file system tree
  * @param options - Configuration options
@@ -52,53 +39,15 @@ import {
  * ```
  */
 export async function moveGenerator(tree: Tree, options: MoveGeneratorSchema): Promise<void> {
-  const normalizedOptions = normalizeOptions(tree, options)
-
-  if (normalizedOptions.currentProjectRoot === normalizedOptions.newProjectRoot) {
-    throw createError('Source and destination cannot be the same')
+  const plan = planMove(tree, options)
+  const projectName = plan.updateName ? deriveProjectNameFromPath(plan.newProjectRoot) : options.project
+  const packageName = derivePackageName(projectName)
+  await move(tree, { ...options, projectName, packageName, skipFormat: true })
+  if (plan.updateName && plan.currentPackageName !== undefined) {
+    noteE2EFolderMove(tree, { currentPackageName: plan.currentPackageName, newPackageName: packageName })
   }
-
-  if (tree.exists(normalizedOptions.newProjectRoot)) {
-    throw createError(`Destination already exists: ${normalizedOptions.newProjectRoot}`)
-  }
-
-  copyDirectory(tree, normalizedOptions.currentProjectRoot, normalizedOptions.newProjectRoot)
-
-  updateProjectJson(tree, normalizedOptions)
-  updatePackageJson(tree, normalizedOptions)
-  updateEslintConfig(tree, normalizedOptions)
-  updateTsConfigJson(tree, normalizedOptions)
-  updateTsConfigLibJson(tree, normalizedOptions)
-  updateTsConfigSpecJson(tree, normalizedOptions)
-
-  updateTsConfigPaths(tree, normalizedOptions)
-
-  updateProjectReferences(tree, normalizedOptions)
-
-  updateContentReferences(tree, normalizedOptions)
-
-  deleteDirectory(tree, normalizedOptions.currentProjectRoot)
-
-  logger.info(`\nMoved project from ${normalizedOptions.currentProjectRoot} to ${normalizedOptions.newProjectRoot}`)
-  if (normalizedOptions.updateName && normalizedOptions.projectName !== normalizedOptions.newProjectName) {
-    logger.info(`Project renamed from ${normalizedOptions.projectName} to ${normalizedOptions.newProjectName}`)
-    logger.info(`Package name changed from ${normalizedOptions.currentPackageName} to ${normalizedOptions.newPackageName}`)
-  }
-
-  checkE2EProject(tree, {
-    currentPackageName: normalizedOptions.currentPackageName,
-    newPackageName: normalizedOptions.newPackageName,
-    updateName: normalizedOptions.updateName,
-  })
-
-  checkCIWorkflow(tree, {
-    currentProjectName: normalizedOptions.projectName,
-    newProjectName: normalizedOptions.newProjectName,
-  })
-
-  if (!normalizedOptions.skipFormat) {
-    await formatFiles(tree)
-  }
+  checkCIWorkflow(tree, { currentProjectName: options.project, newProjectName: projectName })
+  if (!options.skipFormat) await formatFiles(tree)
 }
 
 export default moveGenerator

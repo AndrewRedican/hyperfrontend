@@ -1,16 +1,11 @@
 {
   "name": "@hyperfrontend/package",
   "version": "0.0.0",
-  "description": "Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's hf command line.",
+  "description": "This repository's executors and generators on top of @hyperfrontend/workspace: the build with the registry README, the version flow with the compatibility document, and the generators that register a library across the repository.",
   "private": true,
-  "dependencies": {
-    "@hyperfrontend/builder": "0.7.2",
-    "@hyperfrontend/testing": "0.5.1"
-  },
   "devDependencies": {
-    "@hyperfrontend/project-scope": "0.5.1",
+    "@hyperfrontend/project-scope": "0.6.0",
     "@types/node": "25.9.9",
-    "prettier": "3.8.0",
     "typescript": "5.9.3"
   },
   "generators": "./generators.json",

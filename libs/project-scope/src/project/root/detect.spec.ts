@@ -98,6 +98,12 @@ describe('findWorkspaceRoot', () => {
     expect(result).toBe(MONOREPO)
   })
 
+  it('finds workspace root with hf.json', () => {
+    const workspace = createTempDir({ prefix: 'ps-hf-root-', tree: { 'hf.json': '{}', 'libs/core/package.json': '{ "name": "core" }' } })
+
+    expect(findWorkspaceRoot(join(workspace.path, 'libs/core'))).toBe(workspace.path)
+  })
+
   it('finds workspace root with workspaces field', () => {
     const result = findWorkspaceRoot(resolve(MONOREPO, 'packages/core'))
 
@@ -238,6 +244,10 @@ describe('ROOT_MARKERS', () => {
 })
 
 describe('WORKSPACE_MARKERS', () => {
+  it('contains hf.json', () => {
+    expect(WORKSPACE_MARKERS).toContain('hf.json')
+  })
+
   it('contains nx.json', () => {
     expect(WORKSPACE_MARKERS).toContain('nx.json')
   })

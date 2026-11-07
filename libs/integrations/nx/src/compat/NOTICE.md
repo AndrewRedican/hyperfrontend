@@ -1,6 +1,6 @@
 # Third-party notice
 
-The TypeScript declarations in this directory were copied, and transformed as REPORT.md describes, from nrwl/nx at commit `2b305ee85b8db033e4ab998f31282cbff66ac2a8` (23.3.0) by the types-extract tool of tools/workspace. The upstream files read:
+The TypeScript declarations in this directory were copied, and transformed as REPORT.md describes, from nrwl/nx at commit `2b305ee85b8db033e4ab998f31282cbff66ac2a8` (23.3.0) by the types-extract tool of tools/pipeline. The upstream files read:
 
 - `packages/nx/src/config/misc-interfaces.ts`
 - `packages/nx/src/config/nx-json.ts`

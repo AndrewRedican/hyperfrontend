@@ -1,0 +1,23 @@
+{
+  "name": "e2e-lib-workspace",
+  "description": "E2E tests for @hyperfrontend/workspace package outputs",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "tags": ["type:e2e", "scope:internal"],
+  "targets": {
+    "e2e": {
+      "executor": "@hyperfrontend/workspace:e2e",
+      "dependsOn": ["^build"],
+      "options": {
+        "formats": [
+          "cjs",
+          "esm",
+          { "name": "consumer", "specs": ["src/consumer.spec.ts"], "timeoutMs": 300000 },
+          { "name": "generators", "specs": ["src/generators.spec.ts"], "timeoutMs": 900000 }
+        ]
+      }
+    },
+    "audit": {}
+  },
+  "implicitDependencies": ["lib-workspace"]
+}

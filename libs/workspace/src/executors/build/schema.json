@@ -1,0 +1,419 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Build executor schema",
+  "description": "Format-centric build executor for hyperfrontend library packages. Thin wrapper over @hyperfrontend/builder. All output formats are opt-in.",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "Output directory, relative to the workspace root. Defaults to dist/<project root>."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to tsconfig, relative to the workspace root. Defaults to <project root>/tsconfig.lib.json."
+    },
+    "rootAssets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Files at the workspace root copied into the package when they exist, such as a licence. FUNDING.md is copied only into a package that declares funding."
+    },
+    "assets": {
+      "type": "array",
+      "description": "Additional asset specs to copy into the build output, in addition to the project's README and changelog and the root assets.",
+      "items": {
+        "$ref": "#/definitions/assetSpec"
+      }
+    },
+    "external": {
+      "type": "array",
+      "description": "Global external dependencies for all formats.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "esm": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/esmConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/esmConfig"
+          }
+        }
+      ],
+      "description": "ESM output configuration. Omit to skip."
+    },
+    "cjs": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/cjsConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cjsConfig"
+          }
+        }
+      ],
+      "description": "CJS output configuration. Omit to skip."
+    },
+    "iife": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/iifeConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/iifeConfig"
+          }
+        }
+      ],
+      "description": "IIFE bundle configuration. Browser-only. Omit to skip."
+    },
+    "umd": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/umdConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/umdConfig"
+          }
+        }
+      ],
+      "description": "UMD bundle configuration. Universal format. Omit to skip."
+    },
+    "unpkg": {
+      "type": "string",
+      "description": "Custom path for the unpkg field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
+    },
+    "jsdelivr": {
+      "type": "string",
+      "description": "Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
+    },
+    "bin": {
+      "type": "array",
+      "description": "Bin declarations to synthesize alongside the library. Each declaration produces a JS bin (CJS and/or ESM) and optionally a Node SEA native binary per platform.",
+      "items": {
+        "$ref": "#/definitions/binConfig"
+      }
+    },
+    "dedupeSharedInternals": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hoist first-party modules inlined into multiple entry bundles into shared _shared/<srcPath>/ chunks and rewrite entries to import them. Safe additive post-emit pass over esm/cjs outputs. Set false to keep entries fully self-contained."
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable verbose/debug logging for build diagnostics."
+    },
+    "clean": {
+      "type": "boolean",
+      "default": true,
+      "description": "Empty the output directory before emitting. Only an empty directory or a previous build of this package is removed; set false when several builds share one output directory."
+    }
+  },
+  "definitions": {
+    "assetSpec": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Absolute source directory."
+        },
+        "to": {
+          "type": "string",
+          "description": "Output subdirectory relative to outputPath. Defaults to '.'."
+        },
+        "files": {
+          "type": "array",
+          "description": "Explicit relative file names to copy.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "glob": {
+          "type": "string",
+          "description": "POSIX-style glob pattern, evaluated relative to 'from'."
+        }
+      },
+      "required": [
+        "from"
+      ]
+    },
+    "entryConfig": {
+      "type": "object",
+      "properties": {
+        "entry": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Entry point(s). Exact paths or globs. Omit to use all detected entries."
+        },
+        "exclude": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Entry points to exclude."
+        }
+      }
+    },
+    "bundleAllDeps": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Bundle every third-party dep into _dependencies/<dep>/ so the published artifact is fully self-contained. Pass an object with include/exclude to override the auto-derived dep set."
+    },
+    "esmConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bundleWorkspaceDeps": {
+              "type": "boolean",
+              "description": "Inline workspace dependencies (true) or keep them external (false)."
+            },
+            "bundleAllDeps": {
+              "$ref": "#/definitions/bundleAllDeps"
+            }
+          }
+        }
+      ]
+    },
+    "cjsConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bundleWorkspaceDeps": {
+              "type": "boolean",
+              "description": "Inline workspace dependencies (true) or keep them external (false)."
+            },
+            "bundleAllDeps": {
+              "$ref": "#/definitions/bundleAllDeps"
+            }
+          }
+        }
+      ]
+    },
+    "iifeConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "globalName": {
+              "type": "string"
+            },
+            "minify": {
+              "type": "boolean",
+              "default": true
+            },
+            "output": {
+              "type": "string"
+            },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "globals": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "globalName"
+          ]
+        }
+      ]
+    },
+    "umdConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "globalName": {
+              "type": "string"
+            },
+            "minify": {
+              "type": "boolean",
+              "default": true
+            },
+            "amdId": {
+              "type": "string"
+            },
+            "output": {
+              "type": "string"
+            },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "globals": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "globalName"
+          ]
+        }
+      ]
+    },
+    "binConfig": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Bin name (also the package.json#bin key and the source file basename at src/bin/<name>.ts)."
+        },
+        "format": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "cjs",
+                "esm"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cjs",
+                  "esm"
+                ]
+              }
+            }
+          ],
+          "description": "Required output format(s) for the bin."
+        },
+        "runner": {
+          "type": "string",
+          "description": "Named runner export to bootstrap. Defaults to the file's default export."
+        },
+        "bootstrap": {
+          "type": "string",
+          "description": "Override the bootstrap footer template."
+        },
+        "sea": {
+          "type": "object",
+          "properties": {
+            "platforms": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "linux-x64",
+                  "linux-arm64",
+                  "darwin-x64",
+                  "darwin-arm64",
+                  "win32-x64"
+                ]
+              },
+              "description": "Platforms for which a native binary should be produced."
+            }
+          },
+          "required": [
+            "platforms"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "format"
+      ]
+    }
+  }
+}

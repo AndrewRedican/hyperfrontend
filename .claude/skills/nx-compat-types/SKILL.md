@@ -1,6 +1,6 @@
 ---
 name: nx-compat-types
-description: Regenerate, check and extend the @nx/devkit-compatible declarations in libs/integrations/nx/src/compat, generated from Nx's sources by the types-extract tool in tools/workspace. Use when bumping nx or @nx/devkit, when types-extract-check fails, when an executor needs an Nx type the compat entry lacks, when REPORT.md shows a new substitution, when a typecheck error names compat/, or when the features e2e nx lane's nx-types spec fails.
+description: Regenerate, check and extend the @nx/devkit-compatible declarations in libs/integrations/nx/src/compat, generated from Nx's sources by the types-extract tool in tools/pipeline. Use when bumping nx or @nx/devkit, when types-extract-check fails, when an executor needs an Nx type the compat entry lacks, when REPORT.md shows a new substitution, when a typecheck error names compat/, or when the features e2e nx lane's nx-types spec fails.
 ---
 
 # Nx compat types
@@ -11,10 +11,10 @@ Generated files. **Never edit by hand**; change the config and regenerate. Nothi
 
 | Role                             | Where                                                                                                   |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Requests, depth, overrides, ref  | `tools/workspace/types-extract.config.ts`                                                               |
-| Locked commit per source         | `tools/workspace/types-extract.lock.json`                                                               |
-| Engine                           | `tools/workspace/src/types-extract/*.ts` (specs beside each file)                                       |
-| CLI                              | `tools/workspace/bin/types-extract.ts` (`--check`, `--update`)                                          |
+| Requests, depth, overrides, ref  | `tools/pipeline/types-extract.config.ts`                                                                |
+| Locked commit per source         | `tools/pipeline/types-extract.lock.json`                                                                |
+| Engine                           | `tools/pipeline/src/types-extract/*.ts` (specs beside each file)                                        |
+| CLI                              | `tools/pipeline/bin/types-extract.ts` (`--check`, `--update`)                                           |
 | Generated declarations           | `libs/integrations/nx/src/compat/{executor,graph,tree,plugin}.ts`                                       |
 | Generated barrel, report, notice | `libs/integrations/nx/src/compat/{index.ts,REPORT.md,NOTICE.md}`                                        |
 | Drift probe against real devkit  | `apps/package-e2e/features/src/nx-types.spec.ts` + `src/support/nx-types-probe.ts` (e2e `nx` lane)      |
@@ -32,24 +32,24 @@ Before adding `@nx/devkit` to a file: import the type from `@hyperfrontend/integ
 Regenerate (resolves the ref once, writes the lock, writes only changed files):
 
 ```bash
-npx hf run tool-workspace:types-extract
+npx hf run tool-pipeline:types-extract
 ```
 
 Verify, byte-exact, twice for determinism:
 
 ```bash
-npx hf run tool-workspace:types-extract-check
+npx hf run tool-pipeline:types-extract-check
 ```
 
 Bump Nx:
 
 ```bash
-# 1. tools/workspace/types-extract.config.ts: ref: '23.4.0'
+# 1. tools/pipeline/types-extract.config.ts: ref: '23.4.0'
 # 2. the e2e lane's NX_VERSION is the same tag
-npx hf run tool-workspace:types-extract
+npx hf run tool-pipeline:types-extract
 git diff --stat libs/integrations/nx/src/compat   # read REPORT.md rows that appeared or vanished
 npx hf run-many -t typecheck,test \
-  -p lib-integration-nx,tool-app,tool-package,tool-workspace,lib-features
+  -p lib-integration-nx,tool-app,tool-package,tool-pipeline,lib-features
 # the nx lane probes against the real devkit
 CI=1 npx hf run-many -t e2e -p e2e-lib-features
 ```
@@ -57,7 +57,7 @@ CI=1 npx hf run-many -t e2e -p e2e-lib-features
 Add a type an executor needs:
 
 ```ts
-// tools/workspace/types-extract.config.ts → requests[]
+// tools/pipeline/types-extract.config.ts → requests[]
 { source: 'nx', root: 'packages/nx/src/config/misc-interfaces.ts', symbols: ['ExecutorContext', 'TaskGraphExecutor'], depth: 2, output: 'libs/integrations/nx/src/compat/executor.ts' }
 ```
 
@@ -72,7 +72,7 @@ overrides: {
 Move a branch ref (tags never move):
 
 ```bash
-node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extract.ts --update
+node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/types-extract.ts --update
 ```
 
 ## Rules the engine applies
@@ -97,4 +97,4 @@ node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/types-extr
 - [ ] `types-extract` run, `types-extract-check` green twice
 - [ ] `REPORT.md` diff read; every new substitution intended
 - [ ] `ref` and the e2e lane's `NX_VERSION` name the same tag; the `nx` lane of `e2e-lib-features` green
-- [ ] Typecheck green: `lib-integration-nx`, `tool-app`, `tool-package`, `tool-workspace`, `lib-features`
+- [ ] Typecheck green: `lib-integration-nx`, `tool-app`, `tool-package`, `tool-pipeline`, `lib-features`

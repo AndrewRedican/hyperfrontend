@@ -20,6 +20,6 @@ See [00-strategy.md](00-strategy.md) and the [index](README.md).
 
 ## Open questions
 
-- Generator home: a new `tools/` project vs inside `tools/workspace`.
+- Generator home: a new `tools/` project vs inside `tools/pipeline`.
 - Template framework set for v1 of the generator.
 - What the generator validates vs leaves to the author.

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": []
+}

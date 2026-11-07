@@ -1,0 +1,46 @@
+/**
+ * IIFE bundle E2E tests for `<%= packageName %>`.
+ *
+ * The packed tarball is installed into a consumer outside the workspace, and the bundle is read from the
+ * installed package and run the way a classic script runs, so the global it attaches is the one a page sees.
+ */
+
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+
+const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
+
+/**
+ * The source of a bundle the installed package ships.
+ *
+ * @param file - The bundle's file name
+ * @returns Its code
+ */
+function bundle(file: string): string {
+  return readFileSync(join(consumer.path, 'node_modules', ...consumer.packageName.split('/'), 'bundle', file), 'utf-8')
+}
+
+/**
+ * Runs a bundle as a classic script and answers what it attached to the window.
+ *
+ * @param code - The bundle's code
+ * @returns The global, or undefined when the bundle attached none
+ */
+function attached(code: string): unknown {
+  const target = window as unknown as Record<string, unknown>
+  target['<%= globalName %>'] = undefined
+  ;(0, eval)(code)
+  return target['<%= globalName %>']
+}
+
+describe('<%= packageName %> IIFE bundle', () => {
+  it('attaches <%= globalName %> to the window', () => {
+    expect(attached(bundle('index.iife.js'))).toEqual(expect.any(Object))
+  })
+
+  it('ships a minified twin that attaches the same global', () => {
+    expect(attached(bundle('index.iife.min.js'))).toEqual(expect.any(Object))
+  })
+})

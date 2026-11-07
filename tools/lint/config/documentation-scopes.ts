@@ -11,7 +11,7 @@
 
 import type { ConfigBlock } from '@hyperfrontend/linter'
 import { relative, resolve, sep } from 'node:path'
-import { isPublishableLibrary } from '../src/rules/workspace/shared/project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 
 /** The workspace root, three directories above this file. */
 const WORKSPACE_ROOT = resolve(import.meta.dirname, '..', '..', '..')

@@ -1,0 +1,9 @@
+{
+  "name": "<%= e2ePackageName %>",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for <%= packageName %> package outputs",
+  "dependencies": {
+    "<%= packageName %>": "file:<%= e2eOffsetFromRoot %>tmp/e2e-packs/<%= tarballStem %>-<%= version %>.tgz"
+  }
+}

@@ -7,6 +7,7 @@
 /* lint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 /* istanbul ignore file -- @preserve self-execution Node script; logic lives in job-runner.ts */
 import type { RollupBuildDescriptor } from './types'
+import { isMainThread } from 'node:worker_threads'
 import { runRollupWorkerJob } from './job-runner'
 
 export type { RollupBuildDescriptor, RollupWorkerBin, RollupWorkerBundleOutput, RollupWorkerFormat, RollupWorkerReport } from './types'
@@ -21,6 +22,8 @@ interface RequireWithMain {
 }
 
 const isMainModule = (): boolean => {
+  // why: the terser plugin runs its minifier on a worker-thread pool started on its own file, and once the plugin is bundled into this module that file is this one; a worker thread sees `require.main === module` and the same argv as the process, so only the main thread may be the worker the dispatcher started
+  if (!isMainThread) return false
   if (typeof require !== 'undefined' && typeof module !== 'undefined' && (require as unknown as RequireWithMain).main === module) {
     return true
   }

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...998de01185d0dd0a73bb3c4fff5ca8d33b06703e) - 2026-11-07
+
+### Dependency Updates
+
+- **lib-workspace:** add the build, test, typecheck, e2e and publish executors
+- **lib-builder:** run the rollup worker on the main thread only
+
 ## [1.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...e1fedeaec2e4a890fb7767750298f48de3434cbe) - 2026-11-05
 
 ### Dependency Updates

@@ -13,7 +13,7 @@ export const ROOT_MARKERS = ['package.json', '.git'] as const
 /**
  * Files indicating workspace/monorepo root.
  */
-export const WORKSPACE_MARKERS = ['nx.json', 'turbo.json', 'lerna.json', 'pnpm-workspace.yaml', 'rush.json'] as const
+export const WORKSPACE_MARKERS = ['hf.json', 'nx.json', 'turbo.json', 'lerna.json', 'pnpm-workspace.yaml', 'rush.json'] as const
 
 /**
  * Check if directory looks like a project directory.
@@ -86,7 +86,7 @@ export function findProjectRoot(startPath: string): string | null {
 
 /**
  * Find workspace root (monorepo root).
- * Searches up for workspace markers like nx.json, turbo.json, etc.
+ * Searches up for workspace markers like hf.json, nx.json, turbo.json, etc.
  *
  * @param startPath - Starting path
  * @returns Workspace root path or null

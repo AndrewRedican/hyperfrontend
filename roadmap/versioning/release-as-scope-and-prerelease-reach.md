@@ -22,7 +22,7 @@ rather than an accident of the enum, and investigate the prerelease gap below.
   reachable through the library API.
 - They are NOT reachable through `releaseAs`. Both the flow config type
   (`libs/versioning/src/flow/models/types.ts:280`) and the executor schema enum
-  (`tools/package/src/executors/version/schema.json:12`) narrow it to the three stable keywords.
+  (`libs/workspace/src/executors/version/schema.json:12`) narrow it to the three stable keywords.
   So a consumer can cut a prerelease with the library but not with the executor option.
 - NEEDS INVESTIGATION: whether that narrowing is deliberate or incidental. If prerelease bumps
   are meant to be reachable from the executor, the four prerelease keywords plus a

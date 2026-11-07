@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to release libraries from their commits",
+  "problem": "Versions and changelogs written by hand drift from what the commits changed, and nothing stops a push whose versions are wrong.",
+  "outcome": "Libraries versioned, changelogged and committed from their conventional commits, a version check CI runs on every push, and a publish that skips versions already on the registry.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/workspace", "@hyperfrontend/versioning"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/workspace@0.0.0",
+    "verifiedOn": "2026-11-07"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [{ "package": "@hyperfrontend/workspace", "symbol": "runVersion" }],
+  "prerequisites": {
+    "knowledge": [
+      "A workspace set up with npx hf generate workspace",
+      "A library to release",
+      "git, with the repository's history available"
+    ]
+  },
+  "related": {
+    "guides": [
+      "set-up-a-monorepo-and-test-only-what-changed",
+      "replace-commitizen-and-commitlint",
+      "publish-release-notes-from-your-changelog"
+    ],
+    "reference": [
+      "/docs/libraries/workspace/executors/version",
+      "/docs/libraries/workspace/executors/version-check",
+      "/docs/libraries/workspace/executors/version-batch",
+      "/docs/libraries/workspace/executors/publish"
+    ],
+    "explanation": ["/docs/libraries/workspace/architecture"]
+  },
+  "keywords": [
+    "release",
+    "version",
+    "changelog",
+    "conventional commits",
+    "semver",
+    "version-check",
+    "version-batch",
+    "publish",
+    "npm",
+    "CI",
+    "monorepo"
+  ]
+}

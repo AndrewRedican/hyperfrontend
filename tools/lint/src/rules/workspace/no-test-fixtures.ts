@@ -106,7 +106,7 @@ export default defineRule<undefined, JsonTreeNode>({
   fixable: false,
   create(context) {
     const directory = dirname(context.file.path)
-    if (basename(context.file.path) !== 'package.json' || !existsSync(join(directory, 'nx.json'))) return {}
+    if (basename(context.file.path) !== 'package.json' || !existsSync(join(directory, 'hf.json'))) return {}
     return {
       document() {
         for (const { path, reason } of materialAtRest(directory)) {
