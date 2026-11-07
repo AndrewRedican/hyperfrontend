@@ -219,6 +219,7 @@ jobs:
             "state-machine:libs/state-machine"
             "testing:libs/testing"
             "versioning:libs/versioning"
+            "workspace:libs/workspace"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
             "immutable-api-utils:libs/utils/immutable-api"

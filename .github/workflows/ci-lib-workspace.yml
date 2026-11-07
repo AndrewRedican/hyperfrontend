@@ -1,0 +1,17 @@
+name: lib-workspace
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+
+jobs:
+  status:
+    uses: ./.github/workflows/_lib-status.yml
+    with:
+      project-name: lib-workspace
+      library-path: libs/workspace
