@@ -28,7 +28,7 @@ import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
 const consumer = usePackedConsumer({ tarball: process.env.MY_LIB_TARBALL })
 ```
 
-The install runs `npm install` with `--prefer-offline` in a fresh directory under the system temporary directory, so it reuses the npm cache and finishes in a few seconds. The handle forwards to that directory for as long as the suite runs; reading it outside a test or hook throws, which is how a misplaced call announces itself. For a consumer a single test owns, [`createPackedConsumer`](/docs/libraries/testing/consumer#api-createPackedConsumer) installs straight away and leaves removal to you.
+The install runs `npm install` in a fresh directory under the system temporary directory, so it reuses the npm cache and finishes in a few seconds. The handle forwards to that directory for as long as the suite runs; reading it outside a test or hook throws, which is how a misplaced call announces itself. For a consumer a single test owns, [`createPackedConsumer`](/docs/libraries/testing/consumer#api-createPackedConsumer) installs straight away and leaves removal to you.
 
 ## 3. Load every entry under plain Node
 
