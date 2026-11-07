@@ -56,7 +56,7 @@
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npm run type-check",
@@ -64,7 +64,7 @@
       }
     },
     "pack-shell": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": ["install"],
       "options": {
         "command": "npx hf build --ci --out ../../../../dist/apps/demos/koi-pond/shell",
@@ -72,7 +72,7 @@
       }
     },
     "refresh-fish-shells": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "dependsOn": [
         "demo-koi-fish-vanilla:pack-shell",
         "demo-koi-fish-react:pack-shell",
