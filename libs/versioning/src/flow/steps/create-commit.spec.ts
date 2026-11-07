@@ -196,7 +196,25 @@ describe('Create Commit Step', () => {
 
       await step.execute(ctx)
 
-      expect(git.stage).toHaveBeenCalledWith(['/workspace/libs/test/package.json', '/workspace/libs/test/CHANGELOG.md'])
+      expect(git.stage).toHaveBeenCalledWith(['libs/test/package.json', 'libs/test/CHANGELOG.md'])
+    })
+
+    it('stages paths relative to the workspace, so a prefix git would refuse never reaches it', async () => {
+      const step = createGitCommitStep()
+      const git = createMockGitClient()
+      const ctx: FlowContext = {
+        ...createMockContext({
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          modifiedFiles: ['/workspace/RUNNER~1/repo/libs/test/package.json'],
+        }),
+        workspaceRoot: '/workspace/RUNNER~1/repo',
+        git,
+      }
+
+      await step.execute(ctx)
+
+      expect(git.stage).toHaveBeenCalledWith(['libs/test/package.json'])
     })
 
     it('does not stage all files when modified files are provided', async () => {
