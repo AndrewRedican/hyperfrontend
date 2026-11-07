@@ -34,6 +34,12 @@ describe('workspaceGenerator', () => {
     })
   })
 
+  it('ignores what the engine, the builds and the test runs write in a repository without a .gitignore', async () => {
+    const tree = createMemoryTree({})
+    await workspaceGenerator(tree, { skipFormat: true })
+    expect(tree.read('.gitignore', 'utf-8')).toBe('node_modules\ndist\ntmp\ncoverage\n.hf\n')
+  })
+
   it('keeps a .gitignore the repository already has', async () => {
     const tree = createMemoryTree({ '.gitignore': 'mine\n' })
     await workspaceGenerator(tree, { skipFormat: true })

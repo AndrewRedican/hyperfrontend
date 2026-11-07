@@ -18,8 +18,8 @@ const WORKSPACE_FILE = 'hf.json'
 /** What `.hfignore` lists: the files no project's inputs read. */
 const HF_IGNORE = 'CHANGELOG.md\n**/CHANGELOG.md\n'
 
-/** What `.gitignore` lists when the repository has none: the directories the engine and the builds write. */
-const GIT_IGNORE = 'node_modules\ndist\ntmp\n.hf\n'
+/** What `.gitignore` lists when the repository has none: the directories the engine, the builds and the test runs write. */
+const GIT_IGNORE = 'node_modules\ndist\ntmp\ncoverage\n.hf\n'
 
 // why: the CommonJS build of this module has no import.meta.dirname, and the ES module, which the specs load, has no __dirname
 /* node:coverage ignore next 1 */
