@@ -8,11 +8,12 @@
 
 import type { ConsumerRun } from '@hyperfrontend/testing/consumer'
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, readlinkSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The executor the workspace provides for itself: it imports a sibling without its extension and is typed against the package. */
 const HELLO = [
@@ -426,5 +427,105 @@ describe('the contract types', () => {
   it('type an executor and a generator of the workspace under the TypeScript compiler', () => {
     const run = consumer.node([join(consumer.path, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'tools/local'])
     expect({ status: run.status, output: run.stdout }).toEqual({ status: 0, output: '' })
+  })
+})
+
+/** The features command line as the stub provides it: it reports what it was asked and whether the call was handed over. */
+const FEATURES_CLI = [
+  'exports.runFeaturesCli = (invocation) => {',
+  "  invocation.stdout.write(`features ran ${invocation.argv.join(' ')} handedOver=${invocation.handedOver}\\n`)",
+  '  return Promise.resolve(0)',
+  '}',
+  '',
+].join('\n')
+
+/**
+ * The features executable as the stub provides it: the decision the published one makes, written out. A first word
+ * that is no flag and none of its own commands goes to the workspace command line resolved from the directory the
+ * command ran in; everything else runs here.
+ */
+const FEATURES_BIN = [
+  '#!/usr/bin/env node',
+  "'use strict'",
+  "const { createRequire } = require('node:module')",
+  "const { join } = require('node:path')",
+  "const { pathToFileURL } = require('node:url')",
+  "const { runFeaturesCli } = require('../cli.cjs')",
+  '',
+  'const argv = process.argv.slice(2)',
+  "const own = ['init', 'build', 'dev', 'serve']",
+  'const invocation = { argv, cwd: process.cwd(), stdout: process.stdout, stderr: process.stderr }',
+  '',
+  'async function main() {',
+  '  const first = argv[0]',
+  "  if (first !== undefined && !first.startsWith('-') && !own.includes(first)) {",
+  '    let file = null',
+  '    try {',
+  "      file = createRequire(join(process.cwd(), 'package.json')).resolve('@hyperfrontend/workspace/cli')",
+  '    } catch {}',
+  '    if (file !== null) {',
+  '      const { runWorkspaceCli } = await import(pathToFileURL(file).href)',
+  '      return runWorkspaceCli({ ...invocation, handedOver: true })',
+  '    }',
+  '  }',
+  '  return runFeaturesCli(invocation)',
+  '}',
+  '',
+  'main().then((code) => {',
+  '  process.exitCode = code',
+  '})',
+  '',
+].join('\n')
+
+describe('hf linked beside a features package', () => {
+  // why: no published @hyperfrontend/features carries the handover yet, so a package standing in for it is installed beside the tarball; it declares the same bin and makes the same decision, so npm links one of the two and the test asks both commands of whichever that was
+  const features = createTempDir({
+    prefix: 'hf-features-stub-',
+    tree: {
+      'package.json': {
+        name: '@hyperfrontend/features',
+        version: '0.0.0',
+        bin: { hf: './bin/hf.cjs' },
+        exports: { './cli': './cli.cjs' },
+      },
+      'cli.cjs': FEATURES_CLI,
+      'bin/hf.cjs': FEATURES_BIN,
+    },
+  })
+  const linked = usePackedConsumer({ tarball: process.env['HF_E2E_TARBALL'], peers: [features.path] })
+
+  before(() => {
+    linked.writeTree({
+      'hf.json': {},
+      'libs/alpha/project.json': { name: 'alpha', targets: { echo: { command: 'node -e 0' } } },
+    })
+  })
+
+  /**
+   * The file npm linked as `hf`, read from the link or from the shim it wrote.
+   *
+   * @returns The bin file of whichever package npm linked
+   */
+  function linkedBin(): string {
+    const shim = join(linked.path, 'node_modules', '.bin', 'hf')
+    if (lstatSync(shim).isSymbolicLink()) return join(linked.path, 'node_modules', '.bin', readlinkSync(shim))
+    const target = /node_modules[\\/]@hyperfrontend[\\/](features|workspace)[\\/]\S*hf\.[cm]js/.exec(readFileSync(shim, 'utf8'))
+    if (target === null) throw new Error(`the hf shim at ${shim} names no bin file`)
+    return join(linked.path, target[0])
+  }
+
+  it('links one hf for the two packages', () => {
+    expect(linkedBin()).toMatch(/@hyperfrontend[\\/](features|workspace)[\\/]/)
+  })
+
+  it('reaches the features command line for a features command', () => {
+    expect(linked.node([linkedBin(), 'build', '--help'])).toEqual(
+      expect.objectContaining({ status: 0, stdout: 'features ran build --help handedOver=true\n' })
+    )
+  })
+
+  it('reaches the workspace command line for a workspace command', () => {
+    const run = linked.node([linkedBin(), 'show', 'projects'])
+    expect({ status: run.status, projects: lines(run.stdout) }).toEqual({ status: 0, projects: expect.arrayContaining(['alpha']) })
   })
 })
