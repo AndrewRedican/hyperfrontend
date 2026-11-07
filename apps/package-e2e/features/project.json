@@ -6,10 +6,24 @@
   "tags": ["type:e2e", "scope:internal"],
   "targets": {
     "e2e": {
-      "executor": "@hyperfrontend/package:e2e",
+      "executor": "@hyperfrontend/workspace:e2e",
       "dependsOn": ["^build"],
       "options": {
-        "formats": ["cjs", "esm", "browser", "nx"]
+        "formats": [
+          "cjs",
+          "esm",
+          "browser",
+          {
+            "name": "cli",
+            "specs": ["src/cli.spec.ts"]
+          },
+          {
+            "name": "nx",
+            "specs": ["src/nx-plugin.spec.ts", "src/nx-plugin-callbacks.spec.ts", "src/nx-types.spec.ts"],
+            "timeoutMs": 900000,
+            "serialOn": ["win32"]
+          }
+        ]
       }
     },
     "audit": {}
