@@ -67,7 +67,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **What it does**:
 
 1. **Removes stale comments**: Deletes any existing version-check comments from previous runs (idempotency)
-2. **Validates versions**: Lists the libraries owning a changed file, or every library when a global configuration file (`nx.json`, `package.json`, `package-lock.json`, `tsconfig.base.json`) changes (`pipeline affected --target version-check --projects`), and runs `hf.ts run <library>:version-check --verbose=true` for each. The job only checks versions; the pre-push hook bumps them
+2. **Validates versions**: Lists the libraries owning a changed file, or every library when a global configuration file (`hf.json`, `package.json`, `package-lock.json`, `tsconfig.base.json`) changes (`pipeline affected --target version-check --projects`), and runs `hf.ts run <library>:version-check --verbose=true` for each. The job only checks versions; the pre-push hook bumps them
 3. **Posts failure comment**: If validation fails, posts a comment with:
    - List of libraries with issues
    - Step-by-step fix instructions
@@ -106,7 +106,7 @@ Actions are designed to be used together in workflows:
     pr-number: ${{ github.event.pull_request.number }}
 ```
 
-The selection of work is not an action: the `plan` job runs `tools/workspace/bin/pipeline.ts plan`, and the `environment` jobs run `pipeline.ts run`. The workflow files hold only what GitHub itself must read (triggers, permissions, runners, caches, artifacts, secrets, timeouts); selection, ordering, parallelism, failure propagation and publish gating live in `tools/workspace/src/pipeline`.
+The selection of work is not an action: the `plan` job runs `tools/pipeline/bin/pipeline.ts plan`, and the `environment` jobs run `pipeline.ts run`. The workflow files hold only what GitHub itself must read (triggers, permissions, runners, caches, artifacts, secrets, timeouts); selection, ordering, parallelism, failure propagation and publish gating live in `tools/pipeline/src/pipeline`.
 
 ### Reusability
 
@@ -192,8 +192,8 @@ jobs:
       - run: npx hf format --check --all
       - id: plan
         run: >-
-          node --import ./tools/lint/src/runtime/aliases.ts
-          tools/workspace/bin/pipeline.ts plan
+          node --import ./libs/workspace/src/hooks/index.ts
+          tools/pipeline/bin/pipeline.ts plan
           --base "origin/${{ github.base_ref }}" --github-output
 
   version-check:
@@ -222,8 +222,8 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
       - run: >-
-          node --import ./tools/lint/src/runtime/aliases.ts
-          tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }}
+          node --import ./libs/workspace/src/hooks/index.ts
+          tools/pipeline/bin/pipeline.ts run --environment ${{ matrix.os }}
 ```
 
 The real `environment` job downloads the plan the `plan` job uploaded rather than planning again; see [`ci-pr.yml`](../workflows/ci-pr.yml) and [`ci-main.yml`](../workflows/ci-main.yml).

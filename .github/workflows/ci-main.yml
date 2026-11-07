@@ -45,7 +45,7 @@ jobs:
         shell: bash
         # why: a cold build takes four seconds and nothing is restored, so the state is the commit's and nothing else's
         run: |
-          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          GRAPH="npx hf graph"
           $GRAPH build --force | tee -a "$GITHUB_STEP_SUMMARY"
           echo "digest=$($GRAPH status --json | jq -r '.digests["graph.json"]')" >> "$GITHUB_OUTPUT"
 
@@ -58,7 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         # why: the newest first parent a run planned is the base, so a push whose run was cancelled while pending is planned by the next; with none in reach everything is planned, as with the full input
         run: |
-          node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts plan --planned-base --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
+          node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --planned-base --fallback-all --main --catch-up ${{ inputs.full == true && '--all' || '' }} --summary --github-output --checks
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload plan
@@ -111,7 +111,7 @@ jobs:
         if: matrix.os != 'linux'
         run: |
           # The persisted graph is portable: the same commit yields byte-identical state on every leg.
-          GRAPH="node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/graph.ts"
+          GRAPH="npx hf graph"
           $GRAPH build --force
           DIGEST=$($GRAPH status --json | jq -r '.digests["graph.json"]')
           echo "${{ matrix.os }} graph.json digest $DIGEST, linux ${{ needs.plan.outputs.graph-digest }}"
@@ -129,20 +129,43 @@ jobs:
           npx hf show projects --json > /dev/null
           (cd libs && npx hf show projects --json > /dev/null)
 
+      - name: Command line through cmd
+        if: matrix.os == 'windows'
+        shell: cmd
+        # why: a person on Windows types into cmd or PowerShell, whose shims npm writes beside the sh one; each must hand a flag with a value, a project:target, and a quoted comma list with a glob to hf unchanged
+        run: |
+          npx hf show projects --with-target=typecheck --json > nul || exit /b 1
+          npx hf run lib-logging:typecheck || exit /b 1
+          npx hf run-many -t typecheck -p "lib-logging,lib-time-*" > shim.txt || exit /b 1
+          type shim.txt
+          findstr /C:"succeeded lib-logging:typecheck" shim.txt > nul || exit /b 1
+          findstr /C:"succeeded lib-time-utils:typecheck" shim.txt > nul || exit /b 1
+
+      - name: Command line through PowerShell
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          npx hf show projects --with-target=typecheck --json > $null; if ($LASTEXITCODE -ne 0) { exit 1 }
+          npx hf run lib-logging:typecheck; if ($LASTEXITCODE -ne 0) { exit 1 }
+          $out = npx hf run-many -t typecheck -p "lib-logging,lib-time-*" | Out-String; if ($LASTEXITCODE -ne 0) { exit 1 }
+          Write-Output $out
+          if ($out -notmatch 'succeeded lib-logging:typecheck' -or $out -notmatch 'succeeded lib-time-utils:typecheck') { exit 1 }
+
       - name: Run
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows and macOS jobs and the chain check runs go through the API; GitHub sets no token in the environment by itself
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }} # why: the deploy tasks inside the Linux run send the commit to the demo's Railway service with a project token of the production environment
         # why: the publishes inside the Linux run wait for the Windows and macOS environments to conclude; the publish executor still skips versions already on npm
         # why: exec makes node the step's own process, so a cancel or the time limit signals the run itself, which stops its tasks and settles its check runs before the settle step reads them
-        run: exec node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "windows,macos"
+        run: exec node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --environment ${{ matrix.os }} --summary --checks --wait-for "windows,macos"
 
       - name: Settle
         if: always()
         env:
           GITHUB_TOKEN: ${{ github.token }}
         # why: a job killed by its time limit or a cancel writes no final results and leaves its check runs in progress; this completes them from the partial record
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
+        run: node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts finalize --environment ${{ matrix.os }} --summary
 
       - name: Upload results
         if: always()
@@ -196,6 +219,7 @@ jobs:
             "state-machine:libs/state-machine"
             "testing:libs/testing"
             "versioning:libs/versioning"
+            "workspace:libs/workspace"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
             "immutable-api-utils:libs/utils/immutable-api"
@@ -264,7 +288,7 @@ jobs:
       - name: Write record
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/pipeline.ts record --out .hf/records --run-id ${{ github.run_id }} --run-number ${{ github.run_number }} --attempt ${{ github.run_attempt }} --sha ${{ github.sha }} --ref ${{ github.ref }} --event ${{ github.event_name }} --url "$RUN_URL"
+        run: node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts record --out .hf/records --run-id ${{ github.run_id }} --run-number ${{ github.run_number }} --attempt ${{ github.run_attempt }} --sha ${{ github.sha }} --ref ${{ github.ref }} --event ${{ github.event_name }} --url "$RUN_URL"
 
       - name: Push record
         shell: bash
