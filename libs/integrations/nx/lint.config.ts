@@ -3,7 +3,7 @@ import baseConfig from '../../../lint.base.config.ts'
 export default [
   ...baseConfig,
   {
-    // why: these files are generated from upstream Nx sources by `tool-workspace:types-extract` and checked byte for byte, so the workspace's authoring rules do not apply to them.
+    // why: these files are generated from upstream Nx sources by `tool-pipeline:types-extract` and checked byte for byte, so the workspace's authoring rules do not apply to them.
     ignores: [
       'src/compat/executor.ts',
       'src/compat/graph.ts',
