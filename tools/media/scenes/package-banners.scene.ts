@@ -47,6 +47,7 @@ const TAGLINES: Record<string, string> = {
   [`${SCOPE}state-machine`]: 'The lifecycle of an async operation as a store, with the states a lone isLoading cannot tell apart.',
   [`${SCOPE}testing`]: 'A lightweight Jest-like testing library built on native Node capabilities.',
   [`${SCOPE}versioning`]: 'From conventional commits to the bump, the version and the changelog entry, with nobody choosing.',
+  [`${SCOPE}workspace`]: 'Runs, selects and versions the projects of a monorepo from a graph of what reaches what.',
   [`${SCOPE}data-utils`]: 'Walk, compare and repair data structures, circular references included.',
   [`${SCOPE}function-utils`]: 'Wrappers that change what a call does without changing what it looks like.',
   [`${SCOPE}immutable-api-utils`]: 'Built-ins captured before untrusted code runs, and objects nothing can tamper with after.',
