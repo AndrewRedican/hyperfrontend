@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { buildGraph } from './build'
 import { CACHE_FILE } from './imports'
-import { readNxConfiguration } from './inputs'
+import { readWorkspaceFile } from './inputs'
 
 /** The directory under `node_modules` the checkout keeps to itself. */
 const CACHE_DIRECTORY = '.cache'
@@ -58,6 +58,13 @@ function lendPackages(root: string, checkout: string): void {
  * @param revision - The commit checked out
  * @param work - What runs, given the checkout's absolute root
  * @returns What the work returned
+ *
+ * @example Reading a file as it stood at `main`
+ * ```typescript
+ * const manifest = withRevision(root, 'main', (checkout) => readJson<{ version?: string }>(join(checkout, 'libs/features/package.json')))
+ * manifest?.version // => '0.11.1'
+ * // the checkout is gone by now; the workspace's node_modules were linked into it, never copied
+ * ```
  */
 export function withRevision<Result>(root: string, revision: string, work: (checkout: string) => Result): Result {
   const directory = mkdtempSync(join(tmpdir(), 'hf-revision-'))
@@ -81,11 +88,18 @@ export function withRevision<Result>(root: string, revision: string, work: (chec
  * @param root - The workspace root, absolute
  * @param revision - The commit whose graph is built
  * @returns The graph, rooted at a checkout that no longer exists once it is returned
+ *
+ * @example The graph answers from memory, its root does not exist
+ * ```typescript
+ * const before = graphAtRevision(root, 'main')
+ * before.projects.has('lib-removed') // => true, when main still had the project
+ * existsSync(before.root) // => false
+ * ```
  */
 export function graphAtRevision(root: string, revision: string): WorkspaceGraph {
   return withRevision(root, revision, (checkout) => {
     // why: the selection reads the target defaults by the graph's root after the checkout is gone, so they are read while it stands.
-    readNxConfiguration(checkout)
+    readWorkspaceFile(checkout)
     return buildGraph(checkout)
   })
 }
@@ -97,6 +111,13 @@ export function graphAtRevision(root: string, revision: string): WorkspaceGraph 
  * @param root - The workspace root, absolute
  * @param changes - The change set, or null for a selection of everything
  * @returns The graph at the change set's base, or undefined when no change removed a path
+ *
+ * @example Built only when a path was deleted or renamed
+ * ```typescript
+ * const changes = changeSet(root, 'main', null)
+ * const previous = previousGraph(root, changes) // => undefined for edits and additions alone
+ * selectAffected({ graph: workspaceGraph(root), changes, targets: ['test'], previous })
+ * ```
  */
 export function previousGraph(root: string, changes: ChangeSet | null): WorkspaceGraph | undefined {
   if (changes === null || !changes.changes.some((change) => change.status === 'deleted' || change.status === 'renamed')) return undefined

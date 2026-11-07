@@ -17,9 +17,9 @@ export type {
   DependsOnObject,
   InputDefinition,
   InputObject,
-  NxConfiguration,
   SettingSource,
   TargetDefaults,
+  WorkspaceFile,
 } from './inputs'
 export type {
   BuiltinResolution,
@@ -81,7 +81,7 @@ export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports }
 export {
   expandInputs,
   isCompatibleTarget,
-  readNxConfiguration,
+  readWorkspaceFile,
   selfInputs,
   targetDefaultsFor,
   targetDependsOn,
@@ -89,7 +89,7 @@ export {
   targetInputs,
 } from './inputs'
 export { installedPackages } from './lockfile'
-export { EdgeKind, ImportKind, NodeKind, nodeId, taskId } from './model'
+export { EdgeKind, ImportKind, NodeKind, nodeId, RUN_COMMANDS, taskId } from './model'
 export { compareEdges, compareText, sortEdges } from './order'
 export { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve'
 export { previousGraph } from './revision'

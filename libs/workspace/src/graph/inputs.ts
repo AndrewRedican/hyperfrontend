@@ -58,8 +58,8 @@ export type DependsOn = string | DependsOnObject
 /** The inputs Nx gives a target configured without any. */
 const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
 
-/** The workspace configuration, as far as the targets are read. */
-export interface NxConfiguration {
+/** The root `hf.json`, as far as the targets are read. */
+export interface WorkspaceFile {
   /** The named inputs. */
   readonly namedInputs?: Readonly<Record<string, readonly InputDefinition[]>>
   /** The defaults of each target. */
@@ -77,22 +77,22 @@ export interface Configured<Value> {
   readonly from: SettingSource
 }
 
-/** The workspace configurations read so far, by root. */
-const configurations = createMap<string, NxConfiguration>()
+/** The `hf.json` of each root read so far. */
+const configurations = createMap<string, WorkspaceFile>()
 
 /**
- * The workspace configuration of a root, read once.
+ * The `hf.json` of a root, read once.
  *
  * @param root - The workspace root, absolute
- * @returns The configuration, empty without an `hf.json`
+ * @returns The file's content, empty where there is none
  */
-export function readNxConfiguration(root: string): NxConfiguration {
-  let nx = configurations.get(root)
-  if (nx === undefined) {
-    nx = readJson<NxConfiguration>(join(root, 'hf.json')) ?? {}
-    configurations.set(root, nx)
+export function readWorkspaceFile(root: string): WorkspaceFile {
+  let file = configurations.get(root)
+  if (file === undefined) {
+    file = readJson<WorkspaceFile>(join(root, 'hf.json')) ?? {}
+    configurations.set(root, file)
   }
-  return nx
+  return file
 }
 
 /**
@@ -150,7 +150,7 @@ export function isCompatibleTarget(own: TargetRecord | undefined, defaults: Targ
  * @returns The defaults, or null when there are none or they do not apply
  */
 export function targetDefaultsFor(root: string, project: ProjectRecord, target: string): TargetDefaults | null {
-  const defaults = readNxConfiguration(root).targetDefaults?.[target]
+  const defaults = readWorkspaceFile(root).targetDefaults?.[target]
   if (defaults === undefined) return null
   return isCompatibleTarget(project.configuration?.targets?.[target], defaults) ? defaults : null
 }
@@ -212,7 +212,7 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
 export function expandInputs(root: string, project: ProjectRecord, inputs: readonly InputDefinition[]): string[] {
   const named: Readonly<Record<string, readonly InputDefinition[]>> = {
     default: ['{projectRoot}/**/*'],
-    ...readNxConfiguration(root).namedInputs,
+    ...readWorkspaceFile(root).namedInputs,
     ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
   }
   const patterns: string[] = []

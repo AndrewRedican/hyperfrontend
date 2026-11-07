@@ -5,7 +5,7 @@ import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
 import {
   isCompatibleTarget,
-  readNxConfiguration,
+  readWorkspaceFile,
   selfInputs,
   targetDefaultsFor,
   targetDependsOn,
@@ -36,9 +36,9 @@ function withInputs(inputs: readonly unknown[] | undefined, namedInputs?: Readon
   }
 }
 
-describe('readNxConfiguration', () => {
+describe('readWorkspaceFile', () => {
   it('reads hf.json once per root', () => {
-    expect(readNxConfiguration(root)).toBe(readNxConfiguration(root))
+    expect(readWorkspaceFile(root)).toBe(readWorkspaceFile(root))
   })
 })
 
