@@ -6,7 +6,8 @@ export default [
     files: ['**/*.ts'],
     ignores: ['**/*.spec.ts', '**/test.config.ts', '**/test.setup.ts', '**/*.types.ts'],
     rules: {
-      'workspace/lib-pkg-main-reexports': ['error', { topology: 'barrel' }],
+      // why: the entries are loaded by name and apart (the manifests name the executors and generators, the hook installs itself on import, the command line is a process), so the contract entry re-exports none of them.
+      'workspace/lib-pkg-main-reexports': ['error', { topology: 'fragmented' }],
     },
   },
   {
@@ -18,6 +19,9 @@ export default [
           ignoredDependencies: [
             // why: the test runtime is imported by the specs and test.config.ts, and by the test executor's runner, which resolves it from the workspace the task runs in; it is an optional peer, never a dependency.
             '@hyperfrontend/testing',
+            // why: the format command and the generators resolve prettier from the workspace that runs them, and the e2e executor's browser suites preload jsdom from there; both are optional peers nothing here imports.
+            'prettier',
+            'jsdom',
             // why: the embedded builder loads the compiler from the consumer's node_modules; nothing here imports it, so the graph cannot see it.
             'typescript',
             // why: the embedded builder's TypeScript plugin resolves tslib from the consumer's node_modules at build time; it is never imported here, so the graph cannot see it.

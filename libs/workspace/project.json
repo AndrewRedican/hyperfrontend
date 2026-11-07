@@ -1,10 +1,26 @@
 {
   "name": "lib-workspace",
-  "description": "Workspace graph, task runner and generators behind the hf command line.",
+  "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": ["type:util", "scope:internal"],
+  "tags": ["type:util", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "none",
+        "webWorker": "none"
+      },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      }
+    }
+  },
   "targets": {
+    "version": {},
+    "version-check": {},
     "build": {
       "executor": "@hyperfrontend/package:build",
       "options": {
@@ -52,6 +68,7 @@
         ]
       }
     },
+    "publish": {},
     "typecheck": {},
     "test": {}
   }

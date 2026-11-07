@@ -1,9 +1,8 @@
 {
   "name": "@hyperfrontend/workspace",
   "version": "0.0.0",
-  "description": "Workspace graph, task runner and generators behind the hf command line.",
+  "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
-  "private": true,
   "type": "module",
   "dependencies": {
     "@hyperfrontend/builder": "0.7.2",
@@ -44,10 +43,18 @@
     "@rollup/rollup-win32-x64-msvc": "4.64.10"
   },
   "peerDependencies": {
-    "@hyperfrontend/testing": ">=0.5.0"
+    "@hyperfrontend/testing": ">=0.5.0",
+    "jsdom": ">=20.0.0",
+    "prettier": ">=3.0.0"
   },
   "peerDependenciesMeta": {
     "@hyperfrontend/testing": {
+      "optional": true
+    },
+    "jsdom": {
+      "optional": true
+    },
+    "prettier": {
       "optional": true
     }
   },
@@ -82,5 +89,21 @@
   "engines": {
     "node": ">=24.0.0",
     "npm": ">=8.0.0"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "hyperfrontend",
+    "workspace",
+    "monorepo",
+    "task-runner",
+    "affected",
+    "generators",
+    "executors",
+    "typescript",
+    "nodejs"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
   }
 }
