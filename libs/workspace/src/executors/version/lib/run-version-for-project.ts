@@ -1,0 +1,372 @@
+import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning/flow/models'
+import type { ProjectConfiguration } from '../../../runner/contract'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { joinPosix, workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
+import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
+import { createVersionFlow } from '@hyperfrontend/versioning/flow'
+import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
+import { stage, amendCommitNoEdit } from '@hyperfrontend/versioning/git/operations'
+import { isInUnstableGitState } from './is-in-unstable-git-state'
+import { isVersionCommit } from './is-version-commit'
+import { getLogger } from './logger'
+import { updateDependentVersions } from './update-dependent-versions'
+import { updateE2eDependencies } from './update-e2e-dependencies'
+
+/** What a version run did to a project, as a follow-up reads it. */
+export interface VersionBump {
+  /** The project's name */
+  readonly projectName: string
+  /** The project's root, workspace-relative */
+  readonly projectRoot: string
+  /** The name of the package the project carries */
+  readonly packageName: string
+  /** The version before the bump, or null for a first release */
+  readonly previousVersion: string | null
+  /** The version the bump wrote */
+  readonly newVersion: string
+}
+
+/** The run a follow-up is called from. */
+export interface FollowUpRun {
+  /** Absolute path to the workspace root */
+  readonly workspaceRoot: string
+  /** Whether the run writes nothing; a follow-up then writes nothing either */
+  readonly dryRun: boolean
+}
+
+/**
+ * Called after a project is bumped and before the commit that records the bump. It answers the
+ * workspace-relative files it changed, and the commit carries them with the bump.
+ */
+export type FollowUp = (bump: VersionBump, run: FollowUpRun) => readonly string[]
+
+/**
+ * Options for running version logic on a single project.
+ */
+export interface RunVersionOptions {
+  /** Name of the project to version */
+  projectName: string
+  /** Absolute path to workspace root */
+  workspaceRoot: string
+  /** Project root relative to workspace root */
+  projectRoot: string
+  /** Every project of the workspace by name: the ones that pin the package are brought to the new version */
+  projects: Readonly<Record<string, ProjectConfiguration>>
+  /** Skip creating a git commit */
+  skipCommit?: boolean
+  /** Skip creating a git tag */
+  skipTag?: boolean
+  /** Preview changes without applying */
+  dryRun?: boolean
+  /** Enable verbose logging */
+  verbose?: boolean
+  /** Suppress non-error output */
+  quiet?: boolean
+  /** Force a specific bump type */
+  releaseAs?: 'major' | 'minor' | 'patch'
+  /** Version tag prefix */
+  tagPrefix?: string
+  /** Scope filtering configuration */
+  scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes for bumps and changelogs */
+  maxCommitFallback?: FlowConfig['maxCommitFallback']
+  /** Called after the bump and before the commit, each answering the files the commit must also carry */
+  followUps?: readonly FollowUp[]
+}
+
+/**
+ * Result of running version logic on a single project.
+ */
+export interface RunVersionResult {
+  /** Whether the operation completed successfully */
+  success: boolean
+  /** Whether a version bump actually occurred */
+  bumped: boolean
+  /** Previous version (null if first release or skipped) */
+  previousVersion: string | null
+  /** New version (null if skipped) */
+  newVersion: string | null
+  /** All files modified during the operation */
+  modifiedFiles: string[]
+  /** Error message if operation failed */
+  error?: string
+  /** The underlying flow result for advanced use cases */
+  flowResult?: FlowResult
+}
+
+/**
+ * The projects that depend on one without importing it: the e2e projects that install its tarball.
+ *
+ * @param projects - Every project of the workspace by name
+ * @param projectName - The project depended on
+ * @returns The configurations of the projects whose `implicitDependencies` name it
+ */
+function implicitDependents(projects: Readonly<Record<string, ProjectConfiguration>>, projectName: string): ProjectConfiguration[] {
+  return values(projects).filter((project) => project.implicitDependencies?.includes(projectName) === true)
+}
+
+/**
+ * Runs versioning logic for a single project.
+ *
+ * This function contains the core versioning logic extracted from the executor, allowing it
+ * to be called directly by the version-batch executor without going through the executor
+ * interface.
+ *
+ * Key behaviors:
+ * - Uses npm registry as source of truth (not git tags)
+ * - Performs safety checks (version commit detection, unstable git state)
+ * - Executes the versioning flow via `@hyperfrontend/versioning`
+ * - Updates dependent package versions
+ * - Tracks all modified files
+ *
+ * @param options - Configuration options for versioning
+ * @returns Result containing success status, version info, and modified files
+ *
+ * @example Versioning a project without committing
+ * ```typescript
+ * const result = await runVersion({
+ *   projectName: 'my-lib',
+ *   workspaceRoot: '/path/to/workspace',
+ *   projectRoot: 'libs/my-lib',
+ *   projects: context.projects,
+ *   skipCommit: true,
+ *   skipTag: true,
+ * })
+ *
+ * if (result.bumped) {
+ *   console.log(`Bumped from ${result.previousVersion} to ${result.newVersion}`)
+ *   console.log(`Modified files: ${result.modifiedFiles.join(', ')}`)
+ * }
+ * ```
+ *
+ * @example Carrying a follow-up's files into the version commit
+ * ```typescript
+ * import { writeFileSync } from 'node:fs'
+ * import { join } from 'node:path'
+ *
+ * const result = await runVersion({
+ *   projectName: 'my-lib',
+ *   workspaceRoot: '/path/to/workspace',
+ *   projectRoot: 'libs/my-lib',
+ *   projects: context.projects,
+ *   followUps: [
+ *     (bump, run) => {
+ *       if (!run.dryRun) writeFileSync(join(run.workspaceRoot, 'docs/versions.md'), `${bump.packageName} ${bump.newVersion}\n`)
+ *       return ['docs/versions.md']
+ *     },
+ *   ],
+ * })
+ * // => result.modifiedFiles ends with 'docs/versions.md', amended into the commit that records the bump
+ * ```
+ */
+export async function runVersion(options: RunVersionOptions): Promise<RunVersionResult> {
+  const {
+    projectName,
+    workspaceRoot,
+    projectRoot,
+    projects,
+    skipCommit = false,
+    skipTag = true,
+    dryRun = false,
+    verbose = false,
+    quiet = false,
+    releaseAs,
+    tagPrefix = `${projectName}@`,
+    scopeFiltering,
+    maxCommitFallback,
+    followUps = [],
+  } = options
+
+  const logger = getLogger()
+  logger.setLogLevel({ verbose, quiet })
+  logger.setContextValue('projectName', projectName)
+  logger.setContextValue('workspaceRoot', workspaceRoot)
+  logger.setContextValue('projectRoot', projectRoot)
+
+  const modifiedFiles: string[] = []
+
+  logger.debug('Checking if current commit is a version/release commit')
+  if (isVersionCommit(workspaceRoot, projectName)) {
+    logger.info('Skipping - current commit is a version/release commit for this project')
+    return {
+      success: true,
+      bumped: false,
+      previousVersion: null,
+      newVersion: null,
+      modifiedFiles: [],
+    }
+  }
+
+  logger.debug('Checking if git is in an unstable state (rebase/merge)')
+  if (isInUnstableGitState(workspaceRoot)) {
+    logger.info('Skipping - git is in rebase/merge state')
+    return {
+      success: true,
+      bumped: false,
+      previousVersion: null,
+      newVersion: null,
+      modifiedFiles: [],
+    }
+  }
+
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json')
+  logger.setContextValue('packageJsonPath', packageJsonPath)
+  logger.setContextValue('tagPrefix', tagPrefix)
+
+  logger.debug(`Project root: {projectRoot}`)
+  logger.debug(`Package.json path: {packageJsonPath}`)
+  logger.debug(`Tag prefix: {tagPrefix}`)
+
+  const flowConfig: Partial<FlowConfig> = {
+    dryRun,
+    skipGit: skipCommit,
+    skipTag,
+    skipChangelog: false,
+    tagFormat: `${tagPrefix}\${version}`,
+    releaseAs,
+    repository: 'inferred',
+    scopeFiltering,
+    maxCommitFallback,
+  }
+
+  logger.debug(
+    `Flow config: dryRun=${flowConfig.dryRun}, skipGit=${flowConfig.skipGit}, skipTag=${flowConfig.skipTag}${flowConfig.releaseAs ? `, releaseAs=${flowConfig.releaseAs}` : ''}`
+  )
+  logger.info('Starting version flow using @hyperfrontend/versioning')
+
+  const flow = createVersionFlow('conventional', flowConfig)
+  const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
+    dryRun,
+    verbose,
+    projectRoot,
+  })
+  // why: the flow sets the shared logger to its own level while it runs; what follows is reported at the level the run asked for
+  logger.setLogLevel({ verbose, quiet })
+
+  const success = flowResult.status === 'success' || flowResult.status === 'skipped'
+  const bumped = flowResult.status === 'success' && flowResult.state.nextVersion != null
+
+  if (flowResult.status === 'success') {
+    logger.info(flowResult.summary)
+
+    if (!flowResult.state.nextVersion) {
+      logger.debug('No version bump needed (no releasable commits)')
+      return {
+        success: true,
+        bumped: false,
+        previousVersion: flowResult.state.currentVersion ?? null,
+        newVersion: null,
+        modifiedFiles: [],
+        flowResult,
+      }
+    }
+  } else if (flowResult.status === 'skipped') {
+    logger.info('No release needed or already published')
+    return {
+      success: true,
+      bumped: false,
+      previousVersion: flowResult.state.currentVersion ?? null,
+      newVersion: null,
+      modifiedFiles: [],
+      flowResult,
+    }
+  } else {
+    logger.error(flowResult.summary)
+    return {
+      success: false,
+      bumped: false,
+      previousVersion: null,
+      newVersion: null,
+      modifiedFiles: [],
+      error: flowResult.summary,
+      flowResult,
+    }
+  }
+
+  logger.debug('Collecting modified files')
+  if (flowResult.state.modifiedFiles) {
+    for (const file of flowResult.state.modifiedFiles) {
+      const relPath = workspaceRelativePath(workspaceRoot, file)
+      modifiedFiles.push(relPath)
+      logger.debug(`Modified file: ${relPath}`)
+    }
+  } else {
+    logger.debug('No modified files in flow result, using fallback')
+    modifiedFiles.push(joinPosix(projectRoot, 'package.json'))
+    const changelogPath = join(workspaceRoot, projectRoot, 'CHANGELOG.md')
+    if (existsSync(changelogPath)) {
+      modifiedFiles.push(joinPosix(projectRoot, 'CHANGELOG.md'))
+    }
+  }
+
+  // why: Everything the bump obliges beyond the package's own files is gathered here and committed with it: the pins of its dependents, and whatever the follow-ups of the workspace that runs this derive from the new version.
+  const followUpFiles: string[] = []
+
+  const packageName = readPackageJsonIfExists(packageJsonPath)?.name ?? null
+  const newVersion = flowResult.state.nextVersion
+
+  logger.debug(`Package: ${packageName}, Version: ${newVersion}`)
+  if (packageName) {
+    const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, projects, projectName, dryRun)
+    const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, implicitDependents(projects, projectName), dryRun)
+
+    if (updatedFiles.length > 0) {
+      logger.info(`Updated dependency version in ${updatedFiles.length} library package(s):`)
+      for (const file of updatedFiles) {
+        logger.debug(`  - ${file}`)
+      }
+    }
+
+    if (e2eUpdatedFiles.length > 0) {
+      logger.info(`Updated e2e app dependency in ${e2eUpdatedFiles.length} package(s):`)
+      for (const file of e2eUpdatedFiles) {
+        logger.debug(`  - ${file}`)
+      }
+    }
+
+    followUpFiles.push(...updatedFiles, ...e2eUpdatedFiles)
+
+    const bump: VersionBump = {
+      projectName,
+      projectRoot,
+      packageName,
+      previousVersion: flowResult.state.currentVersion ?? null,
+      newVersion,
+    }
+    for (const followUp of followUps) {
+      const files = followUp(bump, { workspaceRoot, dryRun })
+      if (files.length > 0) {
+        logger.info(`Follow-up changed ${files.join(', ')}`)
+        followUpFiles.push(...files)
+      }
+    }
+  }
+
+  if (followUpFiles.length > 0) {
+    modifiedFiles.push(...followUpFiles)
+
+    if (!dryRun && !skipCommit) {
+      logger.debug('Staging and amending commit with the follow-up files')
+      try {
+        stage(followUpFiles, { cwd: workspaceRoot })
+        amendCommitNoEdit({ cwd: workspaceRoot })
+        logger.info('Amended commit to include the follow-up files')
+      } catch (error) {
+        logger.warn(`Could not amend commit with the follow-up files: ${error}`)
+      }
+    }
+  }
+
+  logger.debug('Version operation completed successfully')
+
+  return {
+    success,
+    bumped,
+    previousVersion: flowResult.state.currentVersion ?? null,
+    newVersion,
+    modifiedFiles,
+    flowResult,
+  }
+}

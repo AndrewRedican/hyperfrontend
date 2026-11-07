@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Version executor schema",
+  "description": "Versions a project from its conventional commits with @hyperfrontend/versioning, taking the published version on the npm registry as the source of truth.",
+  "properties": {
+    "dryRun": {
+      "type": "boolean",
+      "description": "See what commands would be run, without committing to git or updating files.",
+      "default": false
+    },
+    "releaseAs": {
+      "type": "string",
+      "description": "Manually increment the version by that keyword.",
+      "enum": ["major", "minor", "patch"]
+    },
+    "tagPrefix": {
+      "type": "string",
+      "description": "Version tag prefix. Default is '{projectName}@' in independent mode."
+    },
+    "skipCommit": {
+      "type": "boolean",
+      "description": "Allows to skip making a commit when bumping a version.",
+      "default": false
+    },
+    "skipTag": {
+      "type": "boolean",
+      "description": "Allows to skip tagging the release. Default: true (tags created after publish).",
+      "default": true
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output for debugging. Shows additional details about each step.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress all non-error output.",
+      "default": false
+    },
+    "maxCommitFallback": {
+      "type": "number",
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs.",
+      "default": 500
+    },
+    "scopeFiltering": {
+      "type": "object",
+      "description": "Scope filtering configuration for commit classification and changelog generation.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["hybrid", "scope-only", "file-only", "inferred"],
+          "description": "Filtering strategy. Default: 'hybrid'"
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional scopes to include as direct commits"
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scopes to exclude even if files match"
+        },
+        "trackDependencyChanges": {
+          "type": "boolean",
+          "description": "Include commits that touch dependency packages as indirect commits"
+        },
+        "infrastructure": {
+          "type": "object",
+          "description": "Infrastructure tracking configuration",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Git paths to track as infrastructure (e.g., 'tools/', '.github/')"
+            },
+            "scopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Scopes indicating infrastructure changes (e.g., 'ci', 'build')"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": []
+}
