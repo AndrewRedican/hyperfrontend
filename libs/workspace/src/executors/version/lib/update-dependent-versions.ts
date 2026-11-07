@@ -1,6 +1,6 @@
 import type { ProjectConfiguration } from '../../../runner/contract'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { getLogger } from './logger'
@@ -43,7 +43,7 @@ export function updateDependentVersions(
     logger.step(`checking the manifests of ${candidates.length} project(s)`)
 
     for (const project of candidates) {
-      const relativePath = project.root === '.' ? 'package.json' : `${project.root}/package.json`
+      const relativePath = project.root === '.' ? 'package.json' : posix.join(project.root, 'package.json')
       const packageJsonPath = join(workspaceRoot, relativePath)
 
       // why: a project with its own lockfile installs from the registry, so pointing it at a

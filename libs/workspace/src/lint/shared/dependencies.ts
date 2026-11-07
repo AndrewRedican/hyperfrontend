@@ -34,7 +34,7 @@ export function inputFiles(project: ProjectRecord, inputs: readonly string[], ig
   const positive = expanded.filter((pattern) => !pattern.startsWith('!')).map(compileGlob)
   const negative = expanded.filter((pattern) => pattern.startsWith('!')).map((pattern) => compileGlob(pattern.slice(1)))
 
-  const everything = positive.length === 0 || (positive.length === 1 && positive[0]?.pattern === `${project.root}/**/*`)
+  const everything = positive.length === 0 || (positive.length === 1 && positive[0]?.pattern === posix.join(project.root, '**/*'))
   return project.files.filter(
     (file) => (everything || positive.some((glob) => glob.test(file))) && !negative.some((glob) => glob.test(file))
   )

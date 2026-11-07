@@ -1,5 +1,5 @@
 import type { ProjectConfiguration } from '../../../runner/contract'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { getProductionDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { getLogger } from './logger'
 import { replaceTgzReference } from './replace-dependency-version'
@@ -84,7 +84,7 @@ export function updateE2eDependencies(
     logger.step('checking files')
 
     for (const dependent of dependents) {
-      const relativePath = `${dependent.root}/package.json`
+      const relativePath = posix.join(dependent.root, 'package.json')
       const packageJsonPath = join(workspaceRoot, relativePath)
       const pkg = readPackageJsonIfExists(packageJsonPath)
       if (!pkg) {

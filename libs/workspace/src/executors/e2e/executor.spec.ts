@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { formatRun, libraryUnderTest, testingAliases } from './executor'
@@ -78,13 +79,13 @@ describe('testingAliases', () => {
   })
 
   it('keeps the aliases of the test runtime and drops every other', () => {
-    expect(testingAliases(`${workspace.path}/source`)).toEqual({
+    expect(testingAliases(join(workspace.path, 'source'))).toEqual({
       '@hyperfrontend/testing': ['libs/testing/src/index.ts'],
       '@hyperfrontend/testing/hooks': ['libs/testing/src/hooks/index.ts'],
     })
   })
 
   it('answers none in a workspace that declares no aliases', () => {
-    expect(testingAliases(`${workspace.path}/installed`)).toEqual({})
+    expect(testingAliases(join(workspace.path, 'installed'))).toEqual({})
   })
 })

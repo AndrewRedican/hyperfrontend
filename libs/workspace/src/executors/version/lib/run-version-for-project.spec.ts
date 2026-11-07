@@ -1,6 +1,7 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { FlowResult } from '@hyperfrontend/versioning/flow/models'
 import type { FollowUp } from './run-version-for-project'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
@@ -134,7 +135,7 @@ describe('runVersion', () => {
       flowResult('success', {
         currentVersion: '1.0.0',
         nextVersion: '1.1.0',
-        modifiedFiles: [`${workspace.path}/libs/core/package.json`, 'elsewhere/CHANGELOG.md'],
+        modifiedFiles: [join(workspace.path, 'libs', 'core', 'package.json'), 'elsewhere/CHANGELOG.md'],
       })
     )
     mockDependents.mockReturnValue(['libs/consumer/package.json'])
