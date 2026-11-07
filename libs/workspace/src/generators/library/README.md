@@ -1,6 +1,6 @@
 # library
 
-Creates a TypeScript library of the workspace: its `package.json` and `project.json` (with the typecheck, test and build targets), its TypeScript, lint and test configurations, an alias in `tsconfig.base.json`, a README and a first module with its spec. With `--publishable`, the generator named make-publishable runs on it next.
+Creates a TypeScript library of the workspace: its `package.json` and `project.json` (with the typecheck, test and build targets), its TypeScript, lint and test configurations, an alias in `tsconfig.base.json`, a README and an entry module. With `--publishable`, the generator named make-publishable runs on it next.
 
 ```bash
 npx hf generate library my-utils \
