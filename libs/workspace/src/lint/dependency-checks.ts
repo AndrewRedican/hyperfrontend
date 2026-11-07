@@ -123,9 +123,13 @@ export default defineRule<DependencyChecksOptions | undefined, JsonTreeNode>({
           ...manifest.optionalDependencies,
         }
         checkSections(manifestObject, declared)
-        for (const section of manifestObject.properties) {
-          if (!SECTION_KEY.test(keyOf(section))) continue
-          checkMissing(section, declared)
+        const sections = manifestObject.properties.filter((property) => SECTION_KEY.test(keyOf(property)))
+        // why: every section reports what is missing, and one of them carries the fix, the runtime section where it can take an entry, else the first that can: the fixes of one pass apply together, and a package belongs in one section.
+        const fixed =
+          sections.find((section) => keyOf(section) === 'dependencies' && section.value.kind === 'object') ??
+          sections.find((section) => section.value.kind === 'object')
+        for (const section of sections) {
+          checkMissing(section, declared, section === fixed)
           if (section.value.kind !== 'object') continue
           for (const dependency of section.value.properties) checkDependency(section.value, dependency)
         }
@@ -167,14 +171,15 @@ export default defineRule<DependencyChecksOptions | undefined, JsonTreeNode>({
      *
      * @param section - The section's property
      * @param declared - The production dependencies declared
+     * @param fixable - Whether this section's report carries the fix adding the packages to it
      */
-    function checkMissing(section: JsonPropertyNode, declared: Readonly<Record<string, string>>): void {
+    function checkMissing(section: JsonPropertyNode, declared: Readonly<Record<string, string>>, fixable: boolean): void {
       const missing = expected.filter((name) => !declared[name] && !ignoredDependencies.includes(name))
       if (missing.length === 0) return
       const listed = missing.map((name) => `\n    "${name}": "${versionFor(name)}"`).join(',')
       const value = section.value as JsonNode
       let fix: Fix | undefined
-      if (value.kind === 'object') {
+      if (fixable && value.kind === 'object') {
         const last = value.properties[value.properties.length - 1]
         fix =
           last === undefined

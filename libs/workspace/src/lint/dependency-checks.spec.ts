@@ -81,6 +81,8 @@ const OBSOLETE = `{"dependencies":{"react":"1","@ws/dep":"2.0.0","lodash":"1",${
 const MISMATCHED = '{"dependencies":{"@ws/dep":"2.0.0","left-pad":"^2.0.0","inner":"^1.0.0","hoisted":"latest"}}'
 const PINNED = '{"dependencies":{"prerelease":"1.0.0-alpha.6","oddball":"1.0.0"}}'
 const GAPS = '{"dependencies":{},"peerDependencies":"x"}'
+const THREE = '{"optionalDependencies":{},"dependencies":{},"peerDependencies":{}}'
+const NO_RUNTIME = '{"dependencies":"x","peerDependencies":{},"optionalDependencies":{}}'
 const SHORT = '{"dependencies":{"left-pad":"1.3.0","inner":"0.0.1","hoisted":"2.0.0"}}'
 
 testRule(rule, {
@@ -111,6 +113,26 @@ testRule(rule, {
       SHORT,
       [at(SHORT, SHORT.slice(1, -1), MISSING('dependencies', ['@ws/dep']))],
       `${SHORT.slice(0, -2)},\n    "@ws/dep": "2.0.0"}}`
+    ),
+    invalid(
+      'used packages left out of three sections, added to the runtime section alone',
+      THREE,
+      [
+        at(THREE, '"optionalDependencies":{}', MISSING('optionalDependencies', EXPECTED)),
+        at(THREE, '"dependencies":{}', MISSING('dependencies', EXPECTED)),
+        at(THREE, '"peerDependencies":{}', MISSING('peerDependencies', EXPECTED)),
+      ],
+      `{"optionalDependencies":{},"dependencies":{\n    "@ws/dep": "2.0.0",\n    "left-pad": "1.3.0",\n    "inner": "0.0.1",\n    "hoisted": "2.0.0"\n  },"peerDependencies":{}}`
+    ),
+    invalid(
+      'used packages added to the first section that can take them when the runtime section cannot',
+      NO_RUNTIME,
+      [
+        at(NO_RUNTIME, '"dependencies":"x"', MISSING('dependencies', EXPECTED)),
+        at(NO_RUNTIME, '"peerDependencies":{}', MISSING('peerDependencies', EXPECTED)),
+        at(NO_RUNTIME, '"optionalDependencies":{}', MISSING('optionalDependencies', EXPECTED)),
+      ],
+      `{"dependencies":"x","peerDependencies":{\n    "@ws/dep": "2.0.0",\n    "left-pad": "1.3.0",\n    "inner": "0.0.1",\n    "hoisted": "2.0.0"\n  },"optionalDependencies":{}}`
     ),
     invalid(
       'used packages left out of an empty section and a malformed one',
