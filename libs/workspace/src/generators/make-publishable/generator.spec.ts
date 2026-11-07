@@ -42,6 +42,7 @@ describe('planPublishable', () => {
       e2eProjectRoot: 'e2e/a',
       createE2e: true,
       republishing: false,
+      e2eExists: false,
     })
   })
 
@@ -201,6 +202,27 @@ describe('makePublishableGenerator', () => {
       'libs/a/project.json',
       'libs/a/README.md',
     ])
+  })
+
+  it('keeps the suites of an e2e project that exists before the library publishes', async () => {
+    const tree = treeWith({
+      'e2e/a/project.json':
+        '{ "name": "e2e-lib-a", "targets": { "e2e": { "options": { "formats": ["cjs", "esm", { "name": "consumer", "specs": ["src/consumer.spec.ts"] }] } } } }',
+      'e2e/a/src/esm.spec.ts': 'mine\n',
+      'e2e/a/src/consumer.spec.ts': 'mine too\n',
+    })
+    await makePublishableGenerator(tree, { project: 'lib-a', formats: ['esm'], skipFormat: true })
+    expect({
+      esm: tree.read('e2e/a/src/esm.spec.ts', 'utf-8'),
+      consumer: tree.read('e2e/a/src/consumer.spec.ts', 'utf-8'),
+      project: readJson<{ targets: unknown }>(tree, 'e2e/a/project.json').targets,
+      cjs: tree.exists('e2e/a/src/cjs.spec.ts'),
+    }).toEqual({
+      esm: 'mine\n',
+      consumer: 'mine too\n',
+      project: { e2e: { options: { formats: ['cjs', 'esm', { name: 'consumer', specs: ['src/consumer.spec.ts'] }] } } },
+      cjs: false,
+    })
   })
 
   it('writes the e2e project file naming the library and the formats', async () => {

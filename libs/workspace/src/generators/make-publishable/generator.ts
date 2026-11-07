@@ -104,6 +104,8 @@ export interface PublishablePlan {
   createE2e: boolean
   /** Whether the project already publishes, so what it has is kept */
   republishing: boolean
+  /** Whether the e2e project already exists, so every file it has is kept */
+  e2eExists: boolean
 }
 
 /**
@@ -136,6 +138,7 @@ export function planPublishable(tree: Tree, options: MakePublishableGeneratorOpt
   const name = unscopedName(packageName)
   const scope = scopeOf(packageName)
   const formats = bundleFormats(options.formats)
+  const e2eProjectRoot = joinPathFragments(options.e2eDirectory ?? DEFAULT_E2E_DIRECTORY, name)
   return {
     projectName: options.project,
     projectRoot: project.root,
@@ -152,9 +155,11 @@ export function planPublishable(tree: Tree, options: MakePublishableGeneratorOpt
     buildExecutor: options.buildExecutor ?? DEFAULT_BUILD_EXECUTOR,
     e2eProjectName: `${E2E_PREFIX}${options.project}`,
     e2ePackageName: scopedName(scope, `${E2E_PREFIX}${name}`),
-    e2eProjectRoot: joinPathFragments(options.e2eDirectory ?? DEFAULT_E2E_DIRECTORY, name),
+    e2eProjectRoot,
     createE2e: options.skipE2E !== true,
     republishing: project.targets?.['publish'] !== undefined,
+    // why: a project can be tested before it publishes; the suites it wrote by hand are never replaced by the templates
+    e2eExists: tree.exists(joinPathFragments(e2eProjectRoot, 'project.json')),
   }
 }
 
@@ -242,8 +247,8 @@ function updatePackageJson(tree: Tree, plan: PublishablePlan): void {
 
 /**
  * Writes the e2e project: its manifests, the TypeScript configuration, and one suite per format
- * chosen; the suites of the formats not chosen are dropped. A project that already publishes
- * keeps every e2e file it has.
+ * chosen; the suites of the formats not chosen are dropped. A project that already publishes,
+ * or already has an e2e project, keeps every e2e file it has.
  *
  * @param tree - The tree written to
  * @param plan - The settled options
@@ -258,7 +263,8 @@ function createE2eProject(tree: Tree, plan: PublishablePlan): void {
   const dropped = FORMATS.filter((format) => !plan.formats.includes(format)).map((format) =>
     joinPathFragments(plan.e2eProjectRoot, 'src', `${format}.spec.ts`)
   )
-  const kept = dropped.filter((path) => plan.republishing && tree.exists(path))
+  const keep = plan.republishing || plan.e2eExists
+  const kept = dropped.filter((path) => keep && tree.exists(path))
   generateFiles(
     tree,
     join(TEMPLATES, 'files-e2e'),
@@ -270,7 +276,7 @@ function createE2eProject(tree: Tree, plan: PublishablePlan): void {
       e2eFormats: stringify(e2eFormats),
       e2eOffsetFromRoot: offsetFromRoot(plan.e2eProjectRoot),
     },
-    { keepExisting: plan.republishing }
+    { keepExisting: keep }
   )
   for (const path of dropped) if (!kept.includes(path)) tree.delete(path)
 }
