@@ -20,10 +20,10 @@ Every project's `lint.config.ts` spreads the root `lint.base.config.ts` before i
 
 ## The workspace's rules
 
-| Family        | What it checks                                                                                                                                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `workspace/*` | This repository's conventions: library manifests and READMEs, the docs site's registrations, CI workflows, the portable-path helpers, logging and editor policy                                  |
-| `projects/*`  | Module boundaries, declared dependencies and portable command lines, on the workspace graph; published by `@hyperfrontend/workspace/lint`, documented in `libs/workspace/docs/rules/projects.md` |
+| Family        | What it checks                                                                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspace/*` | This repository's conventions: library manifests and READMEs, the docs site's registrations, CI workflows, the portable-path helpers, logging and editor policy                              |
+| `projects/*`  | Module boundaries, declared dependencies and portable command lines, on the workspace graph; published by `@hyperfrontend/workspace/lint`, documented in `libs/workspace/src/lint/README.md` |
 
 A workspace rule is `src/rules/workspace/<rule>.ts`, its default export a `defineRule` from `@hyperfrontend/linter`; the id names the file, and `config/families.ts` registers every file it finds. The readers the rules share with the published family (the workspace root and project of a file, project files, aliases, module exports) come from `@hyperfrontend/workspace/lint`. Its spec beside it lists valid and invalid cases with `testRule` from `@hyperfrontend/linter/testing`. The rules import only the package's public entries. Their documentation is in `docs/rules/`, and the `lint-rules` skill has the details.
 
