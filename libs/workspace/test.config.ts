@@ -9,9 +9,13 @@ import type { TestConfig } from '@hyperfrontend/testing/runner'
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
   coverageInclude: ['src/**/*.ts'],
-  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract and the generators' options declare types alone; the e2e and publish executors are shells around npm processes, which the package's e2e project runs for real.
+  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract and the options of the executors and generators declare types alone; the e2e and publish executors are shells around npm processes, which the package's e2e project runs for real.
   coverageExclude: [
     'src/**/__test-utils__/**',
+    'src/index.ts',
+    'src/cli/index.ts',
+    'src/executors/*/index.ts',
+    'src/executors/*/options.ts',
     'src/executors/e2e/executor.ts',
     'src/executors/publish/executor.ts',
     'src/generators/index.ts',
