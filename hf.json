@@ -11,7 +11,8 @@
         "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
         "{workspaceRoot}/tools/lint/config/**/*",
-        "{workspaceRoot}/libs/workspace/src/graph/**/*"
+        "{workspaceRoot}/libs/workspace/src/graph/**/*",
+        "{workspaceRoot}/libs/workspace/src/lint/**/*"
       ]
     },
     "@hyperfrontend/workspace:test": {
