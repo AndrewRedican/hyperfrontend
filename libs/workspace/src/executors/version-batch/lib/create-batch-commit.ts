@@ -31,24 +31,13 @@ export async function createBatchCommit(workspaceRoot: string, files: string[], 
 }
 
 /**
- * Formats the commit message for a batch version update.
- *
- * Format: `chore: update versions for lib-a, lib-b, lib-c`
- *
- * For many libraries, truncates the list to keep message readable.
+ * Formats the commit message for a batch version update: `chore: update versions for lib-a, lib-b`,
+ * naming every library bumped, because the version check recognises the commit by the names in
+ * its subject and a truncated list would hide the ones past it.
  *
  * @param libraries - List of library names that were bumped
  * @returns Formatted commit message
  */
 function formatBatchCommitMessage(libraries: string[]): string {
-  const MAX_LIBS_IN_MESSAGE = 10
-
-  if (libraries.length <= MAX_LIBS_IN_MESSAGE) {
-    return `chore: update versions for ${libraries.join(', ')}`
-  }
-
-  const shown = libraries.slice(0, MAX_LIBS_IN_MESSAGE)
-  const remaining = libraries.length - MAX_LIBS_IN_MESSAGE
-
-  return `chore: update versions for ${shown.join(', ')} and ${remaining} more`
+  return `chore: update versions for ${libraries.join(', ')}`
 }
