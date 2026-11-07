@@ -1,37 +1,19 @@
 import type { TestConfig } from '@hyperfrontend/testing/runner'
 
 /**
- * How the `@hyperfrontend/workspace` library is tested: the graph, the runner and the resolution
- * hook are held to full coverage by their own specs, as are the executors' helpers, the test
- * executor's decisions and the version run around the flow of `@hyperfrontend/versioning`. The command line and the executors compose them around processes they
- * start, and are exercised as an installed package by the package's e2e project.
+ * How the `@hyperfrontend/workspace` library is tested: every module has specs of its own, and
+ * the package's e2e project runs the installed command line, executors and generators as a
+ * consumer would. What the unit suite leaves short of full coverage is the git plumbing of the
+ * version executors, which the e2e project's release flow drives for real.
  */
 const config: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
-  coverageInclude: [
-    'src/cli/handover.ts',
-    'src/executors/build/root-assets.ts',
-    'src/executors/shared/workspace.ts',
-    'src/executors/test/executor.ts',
-    'src/executors/version/lib/graph-change-sources.ts',
-    'src/executors/version/lib/replace-dependency-version.ts',
-    'src/executors/version/lib/run-version-for-project.ts',
-    'src/executors/version/lib/shipped-change-commits.ts',
-    'src/executors/version/lib/update-dependent-versions.ts',
-    'src/executors/version/lib/update-e2e-dependencies.ts',
-    'src/executors/version-batch/lib/base-branch.ts',
-    'src/executors/version-batch/lib/rebuilt-projects.ts',
-    'src/executors/version-batch/lib/select-libraries.ts',
-    'src/executors/version-batch/lib/working-tree.ts',
-    'src/generators/**/*.ts',
-    'src/graph/**/*.ts',
-    'src/hooks/**/*.ts',
-    'src/lint/**/*.ts',
-    'src/runner/**/*.ts',
-  ],
-  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract and the generators' options declare types alone.
+  coverageInclude: ['src/**/*.ts'],
+  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract and the generators' options declare types alone; the e2e and publish executors are shells around npm processes, which the package's e2e project runs for real.
   coverageExclude: [
     'src/**/__test-utils__/**',
+    'src/executors/e2e/executor.ts',
+    'src/executors/publish/executor.ts',
     'src/generators/index.ts',
     'src/generators/*/index.ts',
     'src/generators/*/options.ts',
@@ -40,7 +22,7 @@ const config: TestConfig = {
     'src/runner/index.ts',
     'src/runner/contract.ts',
   ],
-  coverageThresholds: { lines: 100, branches: 100, functions: 100 },
+  coverageThresholds: { lines: 99, branches: 100, functions: 98 },
 }
 
 export default config
