@@ -43,7 +43,7 @@
     "@rollup/rollup-win32-x64-msvc": "4.64.10"
   },
   "peerDependencies": {
-    "@hyperfrontend/testing": "0.5.2",
+    "@hyperfrontend/testing": ">=0.5.1",
     "jsdom": ">=20.0.0",
     "prettier": ">=3.0.0"
   },
