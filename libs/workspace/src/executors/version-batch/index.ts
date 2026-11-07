@@ -1,7 +1,7 @@
 /**
  * The `version-batch` executor: versions every library a change makes due a release, and records the bumps in one commit.
  *
- * @module executors/version-batch
+ * @module @hyperfrontend/workspace/executors/version-batch
  */
 
 export type { VersionBatchResult } from './executor'

@@ -33,6 +33,13 @@ function once(cache: Map<string, string | null>, directory: string, find: (direc
  *
  * @param directory - Where to start
  * @returns The root, or null
+ *
+ * @example Making a checked file's path workspace-relative
+ * ```typescript
+ * const root = workspaceRootOf(dirname(context.file.path)) // => '/repo'
+ * relative(root!, context.file.path) // => 'libs/features/src/index.ts'
+ * workspaceRootOf('/tmp') // => null
+ * ```
  */
 export function workspaceRootOf(directory: string): string | null {
   return once(workspaceRoots, directory, findWorkspaceRoot)
@@ -44,6 +51,13 @@ export function workspaceRootOf(directory: string): string | null {
  *
  * @param directory - Where to start
  * @returns The root, or null
+ *
+ * @example The project, not the workspace, that holds a file
+ * ```typescript
+ * projectRootOf('/repo/libs/features/src/host') // => '/repo/libs/features'
+ * projectRootOf('/repo/libs/features/e2e/src') // => '/repo/libs/features/e2e', the nearest project.json
+ * projectRootOf('/repo/tools') // => '/repo', the workspace is its own project
+ * ```
  */
 export function projectRootOf(directory: string): string | null {
   return once(projectRoots, directory, findProjectRoot)

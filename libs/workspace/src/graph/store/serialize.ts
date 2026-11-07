@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The bodies the state files hold, derived from a graph in a portable form: the projects without
  * their raw manifests, the nodes by id, the qualified records in canonical order, the project

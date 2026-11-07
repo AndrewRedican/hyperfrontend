@@ -59,6 +59,12 @@ function untrackedFiles(root: string): string[] {
  *
  * @param root - The workspace root, absolute
  * @returns The uncommitted changes to tracked files, as a commit only this snapshot names, and the untracked files
+ *
+ * @example Recording a tree with edits in flight
+ * ```typescript
+ * snapshotWorkingTree(root)
+ * // => { changes: '3f9c2e1...', untracked: Set { 'notes.md' } }; changes is null for a clean tree
+ * ```
  */
 export function snapshotWorkingTree(root: string): TreeSnapshot {
   // why: `stash create` builds the commit a stash would hold and leaves the tree, the index and the stash list alone; it prints nothing for a clean tree. The identity only labels that commit, and is given here so the snapshot works whatever identity git has, or lacks.
@@ -73,6 +79,15 @@ export function snapshotWorkingTree(root: string): TreeSnapshot {
  *
  * @param root - The workspace root, absolute
  * @param snapshot - The tree as it stood
+ *
+ * @example Undoing a run's edits, not the developer's
+ * ```typescript
+ * const snapshot = snapshotWorkingTree(root)
+ * writeFileSync(join(root, 'libs/core/package.json'), bumped)
+ * writeFileSync(join(root, 'libs/core/CHANGELOG.md'), entry)
+ * restoreWorkingTree(root, snapshot)
+ * // libs/core/package.json holds the uncommitted edit it had before, and the new CHANGELOG.md is gone
+ * ```
  */
 export function restoreWorkingTree(root: string, snapshot: TreeSnapshot): void {
   // why: the second parent of the commit `stash create` makes is the index as it stood
@@ -94,6 +109,21 @@ export function restoreWorkingTree(root: string, snapshot: TreeSnapshot): void {
  * @param note - Says a line about the rollback
  * @returns What the run returned
  * @throws {unknown} What the run threw, once the tree is back
+ *
+ * @example Calling `keep` once the edits are committed
+ * ```typescript
+ * const hash = await withRollback(
+ *   root,
+ *   async (keep) => {
+ *     const files = await bumpManifests()
+ *     const hash = commitBump(files)
+ *     keep() // the bump is in history: an interrupt from here on puts nothing back
+ *     return hash
+ *   },
+ *   (line) => process.stderr.write(`${line}\n`)
+ * )
+ * // a throw before keep() restores every file first, then rethrows
+ * ```
  */
 export async function withRollback<Result>(
   root: string,

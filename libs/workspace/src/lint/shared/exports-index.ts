@@ -86,6 +86,14 @@ function isFile(path: string): boolean {
  *
  * @param file - The absolute path
  * @returns The program, or null when the file is missing or does not parse
+ *
+ * @example The same program on every call
+ * ```typescript
+ * const program = parsedModule('/repo/libs/features/src/index.ts')
+ * program?.kind // => 'Program'
+ * parsedModule('/repo/libs/features/src/index.ts') === program // => true
+ * parsedModule('/repo/libs/features/src/missing.ts') // => null
+ * ```
  */
 export function parsedModule(file: string): Node | null {
   const known = programs.get(file)
@@ -103,6 +111,14 @@ export function parsedModule(file: string): Node | null {
  * @param from - The absolute path of the importing module
  * @param specifier - The specifier as written
  * @returns The absolute path of the file, or null for a bare specifier or a missing file
+ *
+ * @example An emitted extension finds its source first
+ * ```typescript
+ * const from = '/repo/libs/features/src/index.ts'
+ * resolveModule(from, './host/open.js') // => '/repo/libs/features/src/host/open.ts'
+ * resolveModule(from, './host') // => '/repo/libs/features/src/host/index.ts'
+ * resolveModule(from, '@hyperfrontend/nexus') // => null, bare specifiers are not resolved here
+ * ```
  */
 export function resolveModule(from: string, specifier: string): string | null {
   if (!specifier.startsWith('./') && !specifier.startsWith('../') && !isAbsolute(specifier)) return null
@@ -170,6 +186,15 @@ function declare(statement: Node, file: string, exported: boolean, found: Declar
  *
  * @param file - The absolute path
  * @returns The declarations, none when the file is missing or does not parse
+ *
+ * @example A name exported through a list is marked exported
+ * ```typescript
+ * // const helper = () => 1
+ * // export const { a, b } = pair
+ * // export { helper }
+ * moduleDeclarations('/repo/libs/features/src/util.ts').map(({ name, kind, exported }) => ({ name, kind, exported }))
+ * // => [{ name: 'helper', kind: 'variable', exported: true }, { name: 'a', kind: 'variable', exported: true }, { name: 'b', kind: 'variable', exported: true }]
+ * ```
  */
 export function moduleDeclarations(file: string): readonly Declaration[] {
   const known = declarationsByFile.get(file)
@@ -321,6 +346,17 @@ function collect(file: string, visiting: Set<string>): Collected {
  *
  * @param file - The absolute path
  * @returns The exports, in the order the module lists them
+ *
+ * @example Following a re-export to the file that declares the name
+ * ```typescript
+ * // libs/features/src/index.ts: export { open as openHost } from './host/open'
+ * //                             export * from './types'
+ * const exports = moduleExports('/repo/libs/features/src/index.ts')
+ * exports.find((item) => item.name === 'openHost')
+ * // => { name: 'openHost', kind: 'function', node: <FunctionDeclaration>, file: '/repo/libs/features/src/host/open.ts' }
+ * exports.some((item) => item.name === 'open') // => false, the local name is not exported
+ * exports.find((item) => item.name === 'HostOptions')?.kind // => 'interface', brought in by the star re-export
+ * ```
  */
 export function moduleExports(file: string): readonly ModuleExport[] {
   return collect(file, createSet<string>()).exports

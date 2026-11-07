@@ -27,6 +27,12 @@ export interface PackageJsonInfo {
  * @param tree - The virtual file system tree
  * @param projectRoot - The project root path
  * @returns Package name and description
+ *
+ * @example A project with and without a manifest
+ * ```typescript
+ * readPackageJsonInfo(tree, 'libs/core') // => { name: '@acme/core', description: 'Core library.', keywords: ['core', 'acme'] }
+ * readPackageJsonInfo(tree, 'apps/docs') // => { name: null, description: '', keywords: [] } when apps/docs has no package.json
+ * ```
  */
 export function readPackageJsonInfo(tree: Tree, projectRoot: string): PackageJsonInfo {
   const packageJsonPath = joinPathFragments(projectRoot, 'package.json')
@@ -54,6 +60,12 @@ export function readPackageJsonInfo(tree: Tree, projectRoot: string): PackageJso
  * @param tree - The virtual file system tree
  * @param projectRoot - The project root path
  * @returns The package name or null if not found
+ *
+ * @example Telling a package from a bare project
+ * ```typescript
+ * getPackageNameFromProject(tree, 'libs/core') // => '@acme/core'
+ * getPackageNameFromProject(tree, 'apps/docs') // => null
+ * ```
  */
 export function getPackageNameFromProject(tree: Tree, projectRoot: string): string | null {
   return readPackageJsonInfo(tree, projectRoot).name
@@ -96,6 +108,15 @@ export interface RootManifest {
  *
  * @param tree - The tree whose root is looked at
  * @returns The manifest's fields the generators inherit from
+ *
+ * @example What a new package inherits
+ * ```typescript
+ * import { readRootManifest, scopeOf } from '@hyperfrontend/workspace/generators'
+ *
+ * const root = readRootManifest(tree)
+ * // => { name: '@acme/workspace', license: 'MIT', repository: { type: 'git', url: 'https://github.com/acme/workspace.git' } }
+ * scopeOf(root.name ?? '') // => '@acme'
+ * ```
  */
 export function readRootManifest(tree: Tree): RootManifest {
   const content = tree.read('package.json', 'utf-8')

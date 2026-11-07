@@ -32,6 +32,19 @@ import { validateVersionState, formatValidationResult } from '../version/lib/val
  * @param options - Configuration options for the version-check executor
  * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
+ *
+ * @example A `version-check` target sharing the `version` target's attribution
+ * ```json
+ * {
+ *   "targets": {
+ *     "version-check": {
+ *       "executor": "@hyperfrontend/workspace:version-check",
+ *       "options": { "scopeFiltering": { "strategy": "hybrid", "excludeScopes": ["ci"] } }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run lib-core:version-check` fails when `libs/core/package.json` or its changelog lag behind what the commits call for, naming the `npx hf run lib-core:version` run that puts them right; it passes without a look on a version commit for the project.
  */
 export async function versionCheckExecutor(options: VersionCheckExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const { projectName, root: workspaceRoot } = context

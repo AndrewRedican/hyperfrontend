@@ -245,6 +245,12 @@ Commands:
  *
  * @param word - The first argument
  * @returns True for `run` and every command of the table
+ *
+ * @example Deciding which command line answers
+ * ```typescript
+ * isOwnCommand('run-many') // true
+ * isOwnCommand('pack') // false: the features command line is asked, when it is installed
+ * ```
  */
 export function isOwnCommand(word: string): boolean {
   return word === 'run' || hasOwn(COMMANDS, word)
@@ -258,6 +264,25 @@ export function isOwnCommand(word: string): boolean {
  * @param options - The arguments, the starting directory and where to write
  * @param host - How the features command line is found and loaded
  * @returns The exit code: 0 when the command succeeded, 1 otherwise
+ *
+ * @example The command line as a function
+ * ```typescript
+ * import { runWorkspaceCli } from '@hyperfrontend/workspace/cli'
+ *
+ * const code = await runWorkspaceCli({
+ *   argv: ['run-many', '-t', 'build', '-p', 'lib-*'],
+ *   cwd: process.cwd(),
+ *   stdout: process.stdout,
+ *   stderr: process.stderr,
+ * })
+ * // => 0 when every task succeeded, 1 otherwise
+ * ```
+ *
+ * @example Another `hf` command line passing a command on
+ * ```typescript
+ * const code = await runWorkspaceCli({ argv, cwd, stdout, stderr, handedOver: true })
+ * // => the exit code; an unknown command is reported here rather than passed back
+ * ```
  */
 export async function runWorkspaceCli(options: WorkspaceCliOptions, host: HandoverHost = processHost()): Promise<number> {
   const { argv, cwd } = options

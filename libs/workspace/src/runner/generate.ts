@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * Reads the command line of `generate <generator> [positionals] [--name=value ...] [--dry-run]`
  * against the generator's schema: positionals fill the options the schema takes from the argument

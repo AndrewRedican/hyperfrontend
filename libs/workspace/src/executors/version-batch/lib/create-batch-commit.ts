@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { commit, stage } from '@hyperfrontend/versioning/git/operations'
 

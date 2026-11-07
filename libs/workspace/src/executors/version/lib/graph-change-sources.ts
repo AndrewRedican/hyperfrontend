@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 import type { TaskDecision, WorkspaceGraph } from '../../../graph'
 import type { ChangeSources } from './shipped-change-commits'

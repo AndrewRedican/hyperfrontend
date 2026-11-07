@@ -67,6 +67,12 @@ export interface MovePathOptions {
  *
  * @param paths - The paths object to sort
  * @returns Sorted paths object
+ *
+ * @example A stable order for the alias map
+ * ```typescript
+ * sortPaths({ '@acme/utils': ['libs/utils/src/index.ts'], '@acme/core': ['libs/core/src/index.ts'] })
+ * // => { '@acme/core': ['libs/core/src/index.ts'], '@acme/utils': ['libs/utils/src/index.ts'] }
+ * ```
  */
 export function sortPaths(paths: Record<string, string[]>): Record<string, string[]> {
   const sortedPaths: Record<string, string[]> = {}
@@ -85,6 +91,14 @@ export function sortPaths(paths: Record<string, string[]>): Record<string, strin
  *
  * @param tree - The virtual file system tree
  * @param options - Options containing package name and project root
+ *
+ * @example Registering a new library's alias
+ * ```typescript
+ * import { addTsConfigPath } from '@hyperfrontend/workspace/generators'
+ *
+ * addTsConfigPath(tree, { packageName: '@acme/data-utils', projectRoot: 'libs/utils/data' })
+ * // tsconfig.base.json compilerOptions.paths gains '@acme/data-utils': ['libs/utils/data/src/index.ts'], keys sorted
+ * ```
  */
 export function addTsConfigPath(tree: Tree, options: AddPathOptions): void {
   updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {
@@ -108,6 +122,12 @@ export function addTsConfigPath(tree: Tree, options: AddPathOptions): void {
  *
  * @param tree - The virtual file system tree
  * @param options - Options with current and new package names
+ *
+ * @example The entry points of a package are renamed with it
+ * ```typescript
+ * renameTsConfigPaths(tree, { currentPackageName: '@acme/core', newPackageName: '@acme/kernel' })
+ * // '@acme/core' and '@acme/core/testing' became '@acme/kernel' and '@acme/kernel/testing'; '@acme/core-ui' is untouched
+ * ```
  */
 export function renameTsConfigPaths(tree: Tree, options: RenamePathOptions): void {
   updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {
@@ -141,6 +161,18 @@ export function renameTsConfigPaths(tree: Tree, options: RenamePathOptions): voi
  *
  * @param tree - The virtual file system tree
  * @param options - Options with current/new roots and package names
+ *
+ * @example Moving the aliases with the directory, keeping the name
+ * ```typescript
+ * moveTsConfigPaths(tree, {
+ *   currentProjectRoot: 'libs/core',
+ *   newProjectRoot: 'packages/core',
+ *   currentPackageName: '@acme/core',
+ *   newPackageName: '@acme/core',
+ *   updateName: false,
+ * })
+ * // '@acme/core': ['libs/core/src/index.ts'] became '@acme/core': ['packages/core/src/index.ts']
+ * ```
  */
 export function moveTsConfigPaths(tree: Tree, options: MovePathOptions): void {
   updateJson<PathsTsConfig>(tree, 'tsconfig.base.json', (json) => {

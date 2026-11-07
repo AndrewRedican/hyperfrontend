@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The steps of a move: settling where the project goes and what it is called there, copying
  * and deleting its files, and rewriting its manifests, its aliases and what refers to it.

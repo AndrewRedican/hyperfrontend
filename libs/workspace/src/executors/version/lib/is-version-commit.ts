@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { COMMIT_TYPES } from '@hyperfrontend/versioning/commits/models'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { extractScope, extractType } from '@hyperfrontend/versioning/git/models'

@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The fixture workspace the graph specs analyse, and the scenarios that change it: each scenario
  * is a base tree and a head tree, planted as two commits of a temporary repository so a spec can

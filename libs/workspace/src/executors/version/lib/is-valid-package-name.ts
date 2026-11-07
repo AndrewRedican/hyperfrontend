@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import { escapePackageName } from '@hyperfrontend/versioning/registry/npm'
 import { getLogger } from './logger'
 

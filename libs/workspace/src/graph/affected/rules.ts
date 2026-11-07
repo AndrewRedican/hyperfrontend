@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The reasons an affected decision is written with: one constructor per rule of the closed set,
  * each producing the sentence a reader sees, and the classification of the files whose change is
@@ -32,6 +33,12 @@ const CONFIGURATION_FILES = freeze(['project.json', 'test.config.ts', 'lint.conf
  *
  * @param path - The path, workspace-relative
  * @returns True for `hf.json`, the root manifest, the lock file and the base tsconfig
+ *
+ * @example Only the root's own files count
+ * ```typescript
+ * isGlobalConfig('package-lock.json') // => true
+ * isGlobalConfig('libs/features/package.json') // => false
+ * ```
  */
 export function isGlobalConfig(path: string): boolean {
   return (GLOBAL_CONFIG as readonly string[]).includes(path)
@@ -43,6 +50,16 @@ export function isGlobalConfig(path: string): boolean {
  * @param path - The path, workspace-relative
  * @param project - The project owning it
  * @returns The kind, or null for a source, asset or documentation file
+ *
+ * @example Configuration sits at the project root; a nested tsconfig is a source like any other
+ * ```typescript
+ * const project = graph.projects.get('lib-features')! // root 'libs/features'
+ * configurationKind('libs/features/package.json', project) // => 'manifest'
+ * configurationKind('libs/features/tsconfig.lib.json', project) // => 'configuration'
+ * configurationKind('libs/features/lint.config.ts', project) // => 'configuration'
+ * configurationKind('libs/features/e2e/tsconfig.json', project) // => null
+ * configurationKind('libs/features/src/index.ts', project) // => null
+ * ```
  */
 export function configurationKind(path: string, project: ProjectRecord): ConfigurationKind | null {
   const relative = project.root === '.' ? path : path.slice(project.root.length + 1)

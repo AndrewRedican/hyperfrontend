@@ -18,6 +18,15 @@ export const FUNDING_ASSET = 'FUNDING.md'
  * @param root - The workspace root, absolute
  * @param names - The files, relative to the root
  * @returns One asset spec per file that exists, the funding file conditional on the package declaring `funding`
+ *
+ * @example A missing file is skipped, the funding file is conditional
+ * ```typescript
+ * rootAssetSpecs('/repo', ['LICENSE', 'FUNDING.md', 'NOTICE'])
+ * // => [
+ * //   { from: '/repo', files: ['LICENSE'] },
+ * //   { from: '/repo', files: ['FUNDING.md'], condition: (manifest) => Boolean(manifest.funding) },
+ * // ] when /repo has no NOTICE
+ * ```
  */
 export function rootAssetSpecs(root: string, names: readonly string[]): AssetSpec[] {
   return names

@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * A disposable git workspace for the graph specs: a root project, two libraries, an
  * application, an aliased package, an installed package, a tooling package with executors, a

@@ -1,7 +1,7 @@
 /**
  * The `build` executor: builds a library into a publishable package with the builder, treating the workspace's own packages as first-party.
  *
- * @module executors/build
+ * @module @hyperfrontend/workspace/executors/build
  */
 
 export type { BuildExecutorOptions } from './executor'

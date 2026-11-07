@@ -100,6 +100,14 @@ function listOf(value: string): string[] {
  * @param argv - The arguments after `run-many`
  * @returns The request
  * @throws {Error} When no target is named, or neither projects nor `--all`
+ *
+ * @example Everything after the selection reaches the tasks
+ * ```typescript
+ * parseManyArgs(['-t', 'build,test', '-p', 'lib-*', '--verbose'])
+ * // => { targets: ['build', 'test'], projects: ['lib-*'], args: ['--verbose'] }
+ * parseManyArgs(['-t', 'build', '--all'])
+ * // => { targets: ['build'], projects: null, args: [] }
+ * ```
  */
 export function parseManyArgs(argv: readonly string[]): ManyRequest {
   const targets: string[] = []
@@ -125,6 +133,14 @@ export function parseManyArgs(argv: readonly string[]): ManyRequest {
  * @param argv - The arguments after `affected`
  * @returns The request
  * @throws {Error} When no target is named
+ *
+ * @example The working tree against `origin/main` unless told otherwise
+ * ```typescript
+ * parseAffectedArgs(['-t', 'test'])
+ * // => { targets: ['test'], base: 'origin/main', head: null, args: [] }
+ * parseAffectedArgs(['-t', 'test', '--base=v1.2.0', '--head', 'HEAD'])
+ * // => { targets: ['test'], base: 'v1.2.0', head: 'HEAD', args: [] }
+ * ```
  */
 export function parseAffectedArgs(argv: readonly string[]): AffectedRequest {
   const targets: string[] = []
@@ -149,6 +165,13 @@ export function parseAffectedArgs(argv: readonly string[]): AffectedRequest {
  * @param name - The name of the project tested
  * @param pattern - The name or glob
  * @returns True when it matches
+ *
+ * @example Globs against project names
+ * ```typescript
+ * matchesProject('lib-core', 'lib-*') // true
+ * matchesProject('e2e-lib-core', 'lib-*') // false
+ * matchesProject('e2e-lib-core', '*-lib-*') // true
+ * ```
  */
 export function matchesProject(name: string, pattern: string): boolean {
   const [first, ...rest] = pattern.split('*') as [string, ...string[]]
@@ -171,6 +194,18 @@ export function matchesProject(name: string, pattern: string): boolean {
  * @param request - The targets and projects asked for
  * @returns The tasks in the order they run
  * @throws {Error} When a named project is unknown, or the tasks' prerequisites form a cycle
+ *
+ * @example The prerequisites come first, unrequested
+ * ```typescript
+ * import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+ * import { planMany } from '@hyperfrontend/workspace/runner'
+ *
+ * planMany(workspaceGraph(root), { targets: ['build'], projects: ['app-shell'], args: [] })
+ * // => [
+ * //   { id: 'lib-core:build', requested: false, after: [] },
+ * //   { id: 'app-shell:build', requested: true, after: ['lib-core:build'] },
+ * // ]
+ * ```
  */
 export function planMany(graph: WorkspaceGraph, request: ManyRequest): PlannedTask[] {
   const projects = [...graph.projects.values()].sort((a, b) => (a.name < b.name ? -1 : 1))
@@ -195,6 +230,16 @@ export function planMany(graph: WorkspaceGraph, request: ManyRequest): PlannedTa
  * @param tasks - The tasks asked for, each of a project of the graph
  * @returns The tasks in the order they run
  * @throws {Error} When the tasks' prerequisites form a cycle
+ *
+ * @example Planning tasks chosen some other way than by name
+ * ```typescript
+ * planTasks(graph, [{ project: 'app-shell', target: 'e2e' }])
+ * // => [
+ * //   { id: 'lib-core:build', requested: false, after: [] },
+ * //   { id: 'app-shell:build', requested: false, after: ['lib-core:build'] },
+ * //   { id: 'app-shell:e2e', requested: true, after: ['app-shell:build'] },
+ * // ]
+ * ```
  */
 export function planTasks(graph: WorkspaceGraph, tasks: readonly TaskRef[]): PlannedTask[] {
   const order: PlannedTask[] = []
@@ -229,6 +274,23 @@ export function planTasks(graph: WorkspaceGraph, tasks: readonly TaskRef[]): Pla
  * @param args - The arguments every requested task receives
  * @param host - How a task runs, the clock and the output
  * @returns How each task ended, in order
+ *
+ * @example Running the plan in children of this command line
+ * ```typescript
+ * import { spawn } from 'node:child_process'
+ * import { runPlanned, selfCommand } from '@hyperfrontend/workspace/runner'
+ *
+ * const outcomes = await runPlanned(tasks, ['--verbose'], {
+ *   runChild: (id, args) =>
+ *     new Promise((resolve) => {
+ *       const command = selfCommand(process, ['run', id, ...args])
+ *       spawn(command[0] as string, command.slice(1), { stdio: 'inherit' }).on('close', (code) => resolve(code ?? 1))
+ *     }),
+ *   now: Date.now,
+ *   write: (line) => process.stderr.write(`${line}\n`),
+ * })
+ * // => [{ id: 'lib-core:build', status: 'failed', durationMs: 1840 }, { id: 'app-shell:build', status: 'skipped', durationMs: 0 }]
+ * ```
  */
 export async function runPlanned(tasks: readonly PlannedTask[], args: readonly string[], host: ManyHost): Promise<TaskOutcome[]> {
   const outcomes: TaskOutcome[] = []
@@ -256,6 +318,15 @@ export async function runPlanned(tasks: readonly PlannedTask[], args: readonly s
  *
  * @param outcomes - How each task ended
  * @returns The lines
+ *
+ * @example The lines a run ends with
+ * ```typescript
+ * manySummary([
+ *   { id: 'lib-core:build', status: 'succeeded', durationMs: 1840 },
+ *   { id: 'app-shell:build', status: 'skipped', durationMs: 0 },
+ * ])
+ * // => ['  succeeded lib-core:build (1.8 s)', '  skipped   app-shell:build (0.0 s)', '1 succeeded, 0 failed, 1 skipped']
+ * ```
  */
 export function manySummary(outcomes: readonly TaskOutcome[]): string[] {
   const lines = outcomes.map((outcome) => `  ${outcome.status.padEnd(9)} ${outcome.id} (${(outcome.durationMs / 1000).toFixed(1)} s)`)

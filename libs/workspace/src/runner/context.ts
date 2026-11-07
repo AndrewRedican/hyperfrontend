@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * What an executor is handed: the workspace root and the working directory, the project and the
  * target it runs, every project's configuration with its targets resolved, and `hf.json` as

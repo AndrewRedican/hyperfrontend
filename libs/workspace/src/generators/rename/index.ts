@@ -1,7 +1,7 @@
 /**
  * The `rename` generator: renames a project and carries the new name into everything that refers to it.
  *
- * @module generators/rename
+ * @module @hyperfrontend/workspace/generators/rename
  */
 
 export type { RenamePlan } from './generator'

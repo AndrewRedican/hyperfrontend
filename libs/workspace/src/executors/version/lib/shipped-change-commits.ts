@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { DependencyCommitResolver } from '@hyperfrontend/versioning/flow/models'
 import type { Reason, TaskDecision, WorkspaceGraph } from '../../../graph'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'

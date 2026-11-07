@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * What a persisted state was written by and from: the schema, the algorithm (a hash of the graph
  * sources where the workspace aliases them, else the installed engine's version), the import
@@ -77,6 +78,14 @@ export function currentMeta(root: string, files: readonly FileRecord[]): GraphMe
  * @param previous - The persisted meta
  * @param current - The meta a build would write now
  * @returns The differing keys, configuration files as `config:<file>`; empty when they agree
+ *
+ * @example Why a build goes cold
+ * ```typescript
+ * const persisted = readState(root)!.meta
+ * metaDifferences(persisted, currentMeta(root, listFileRecords(root)))
+ * // => ['node', 'config:package-lock.json'] after a Node upgrade and an install
+ * // => [] when the next build may be warm or incremental
+ * ```
  */
 export function metaDifferences(previous: GraphMeta, current: GraphMeta): string[] {
   const differences: string[] = []

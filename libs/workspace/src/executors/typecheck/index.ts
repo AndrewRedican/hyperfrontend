@@ -1,7 +1,7 @@
 /**
  * The `typecheck` executor: runs the TypeScript compiler over a project's library and spec configurations without emitting files.
  *
- * @module executors/typecheck
+ * @module @hyperfrontend/workspace/executors/typecheck
  */
 
 export type { TypecheckExecutorOptions } from './options'

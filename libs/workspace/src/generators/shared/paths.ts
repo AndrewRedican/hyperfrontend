@@ -13,6 +13,11 @@ import { normalizePath } from '@hyperfrontend/project-scope/core/path'
  *
  * @param fragments - The parts of the path
  * @returns The joined path with forward slashes
+ *
+ * @example A path fit for a configuration file, whatever the platform
+ * ```typescript
+ * joinPathFragments('libs', 'utils\\data', './package.json') // => 'libs/utils/data/package.json'
+ * ```
  */
 export function joinPathFragments(...fragments: readonly string[]): string {
   return posix.join(...fragments.map((fragment) => normalizePath(fragment)))
@@ -23,6 +28,12 @@ export function joinPathFragments(...fragments: readonly string[]): string {
  *
  * @param directory - A directory relative to the root, such as `libs/utils/data`
  * @returns `./` for the root itself, else `../` repeated once per segment
+ *
+ * @example Pointing a project's tsconfig at the base one
+ * ```typescript
+ * `${offsetFromRoot('libs/utils/data')}tsconfig.base.json` // => '../../../tsconfig.base.json'
+ * offsetFromRoot('.') // => './'
+ * ```
  */
 export function offsetFromRoot(directory: string): string {
   if (directory === '.') return './'

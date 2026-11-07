@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The errors the runner raises itself when a task cannot run as asked, whose message says all
  * there is to say, as against anything a task throws, whose stack is worth reading.

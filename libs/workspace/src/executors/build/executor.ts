@@ -70,6 +70,24 @@ const MEMORY_THRESHOLDS: MemoryMonitorOptions = { warningMB: 512, criticalMB: 76
  * @param options - The formats, entries, assets and bins to build
  * @param context - The workspace, the project and the target the task runs on
  * @returns Whether the build succeeded
+ *
+ * @example A `build` target writing ESM, CommonJS and a browser bundle
+ * ```json
+ * {
+ *   "targets": {
+ *     "build": {
+ *       "executor": "@hyperfrontend/workspace:build",
+ *       "options": {
+ *         "esm": { "bundleWorkspaceDeps": true },
+ *         "cjs": { "bundleWorkspaceDeps": true },
+ *         "umd": { "entry": ".", "globalName": "AcmeCore" },
+ *         "rootAssets": ["LICENSE", "FUNDING.md"]
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ * Run with `npx hf run lib-core:build`; the package lands in `dist/libs/core` unless `outputPath` says otherwise.
  */
 export const buildExecutor: Executor<BuildExecutorOptions> = async (options, context) => {
   const { projectName, root: workspaceRoot } = context

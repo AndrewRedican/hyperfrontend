@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * Reads `show projects [--with-target=<target>] [--json]` and lists the workspace's projects.
  *

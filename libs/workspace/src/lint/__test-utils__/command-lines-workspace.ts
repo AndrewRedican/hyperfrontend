@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * Disposable projects for the command-lines rule, one per kind of project the default
  * selection treats differently: a publishable library in a workspace, a library that is not

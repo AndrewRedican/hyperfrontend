@@ -40,6 +40,12 @@ export interface BlockBounds {
  *
  * @param content - The text to split
  * @returns The lines and their ending
+ *
+ * @example The ending is remembered, not normalised
+ * ```typescript
+ * splitLines('a\r\nb\r\n') // => { lines: ['a', 'b', ''], eol: '\r\n' }
+ * splitLines('a\nb') // => { lines: ['a', 'b'], eol: '\n' }
+ * ```
  */
 export function splitLines(content: string): TextLines {
   const eol = content.includes('\r\n') ? '\r\n' : '\n'
@@ -51,6 +57,13 @@ export function splitLines(content: string): TextLines {
  *
  * @param text - The lines and their ending
  * @returns The text
+ *
+ * @example Editing a line and writing the file back byte for byte
+ * ```typescript
+ * const text = splitLines(tree.read('lint.base.config.ts', 'utf-8') ?? '')
+ * text.lines.splice(3, 0, "  '@acme/lint-rules',")
+ * tree.write('lint.base.config.ts', joinLines(text)) // the file keeps its CRLF or LF endings
+ * ```
  */
 export function joinLines(text: TextLines): string {
   return text.lines.join(text.eol)
@@ -61,6 +74,13 @@ export function joinLines(text: TextLines): string {
  *
  * @param line - One line of the file
  * @returns Its indentation, empty for a line that starts at the margin
+ *
+ * @example Matching the indentation of a neighbouring line
+ * ```typescript
+ * indentOf('    rules: {') // => '    '
+ * indentOf('\tcommand: "hf-lint .",') // => '\t'
+ * indentOf('export default [') // => ''
+ * ```
  */
 export function indentOf(line: string): string {
   return line.slice(0, line.length - line.trimStart().length)
@@ -73,6 +93,14 @@ export function indentOf(line: string): string {
  * @param matches - The predicate
  * @param from - The index to start searching at
  * @returns The index of the first matching line, or -1 when none matches
+ *
+ * @example The search starts where told
+ * ```typescript
+ * const lines = ['import a from "a"', '', 'export default [', '  a,', ']']
+ * findLine(lines, (line) => line.startsWith('export default'), 0) // => 2
+ * findLine(lines, (line) => line === ']', 3) // => 4
+ * findLine(lines, (line) => line.startsWith('import'), 1) // => -1
+ * ```
  */
 export function findLine(lines: readonly string[], matches: (line: string) => boolean, from: number): number {
   for (let index = from; index < lines.length; index++) {
@@ -90,6 +118,15 @@ export function findLine(lines: readonly string[], matches: (line: string) => bo
  * @param what - Names the block in the error raised when it is not there
  * @returns The indices of the opening and closing lines
  * @throws {Error} When the block does not open, or opens and never closes
+ *
+ * @example Locating the rules block of a lint configuration
+ * ```typescript
+ * const lines = ['export default [', '  {', '    rules: {', "      'a': 'error',", '    },', '  },', ']']
+ * blockBounds(lines, (line) => line.trim() === 'rules: {', (line) => line.trim() === '},', 'the rules block')
+ * // => { open: 2, close: 4 }
+ * blockBounds(lines, (line) => line.trim() === 'ignores: [', (line) => line.trim() === '],', 'the ignores block')
+ * // throws: the ignores block: the block that opens it was not found
+ * ```
  */
 export function blockBounds(
   lines: readonly string[],
@@ -109,6 +146,13 @@ export function blockBounds(
  *
  * @param value - The text
  * @returns The literal, with backslashes and quotes escaped
+ *
+ * @example Writing a path into TypeScript source
+ * ```typescript
+ * quote('@acme/core') // => "'@acme/core'"
+ * quote("it's") // => "'it\\'s'"
+ * quote('C:\\repo') // => "'C:\\\\repo'"
+ * ```
  */
 export function quote(value: string): string {
   return `'${value.replaceAll('\\', '\\\\').replaceAll("'", "\\'")}'`

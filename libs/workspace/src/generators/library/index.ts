@@ -1,7 +1,7 @@
 /**
  * The `library` generator: creates a TypeScript library of the workspace, and hands a publishable one to `make-publishable`.
  *
- * @module generators/library
+ * @module @hyperfrontend/workspace/generators/library
  */
 
 export type { LibraryPlan } from './generator'

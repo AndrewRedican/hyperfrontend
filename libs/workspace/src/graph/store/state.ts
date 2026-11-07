@@ -109,6 +109,11 @@ export type StateKey = keyof typeof STATE_FILES
  *
  * @param root - The workspace root, absolute
  * @returns `<root>/.hf/graph`
+ *
+ * @example Locating one state file
+ * ```typescript
+ * join(stateDirectory(root), STATE_FILES.meta) // => '/repo/.hf/graph/meta.json'
+ * ```
  */
 export function stateDirectory(root: string): string {
   return join(root, '.hf', 'graph')
@@ -119,6 +124,14 @@ export function stateDirectory(root: string): string {
  *
  * @param root - The workspace root, absolute
  * @returns The state, or null
+ *
+ * @example All five files or nothing
+ * ```typescript
+ * const state = readState(root)
+ * state?.meta.schema // => 'hf-graph/1'
+ * state?.graph.projects.map((project) => project.name) // => ['docs-site', 'lib-features', ...]
+ * // delete or hand-edit any one of the files and the whole state reads as null
+ * ```
  */
 export function readState(root: string): PersistedState | null {
   const directory = stateDirectory(root)
@@ -164,6 +177,21 @@ function computeState(root: string, files: readonly FileRecord[], meta: GraphMet
  * @param root - The workspace root, absolute
  * @param options - Whether to build cold
  * @returns The graph, the state and what the build did
+ *
+ * @example An incremental build after one file changed
+ * ```typescript
+ * const { graph, outcome } = buildState(root)
+ * outcome.plan.mode // => 'incremental'
+ * outcome.plan.reasons // => ['0 added', '1 changed', '0 deleted']
+ * outcome.plan.reparse // => ['libs/features/src/index.ts']
+ * outcome.written // => ['files.json', 'imports.json', 'entries.json'], graph.json held the same bytes
+ * graph.projects.size // => 42
+ * ```
+ *
+ * @example Forcing a cold build
+ * ```typescript
+ * buildState(root, { force: true }).outcome.plan.mode // => 'cold'
+ * ```
  */
 export function buildState(root: string, options: BuildStateOptions = {}): BuiltState {
   const started = performance.now()
@@ -185,6 +213,14 @@ export function buildState(root: string, options: BuildStateOptions = {}): Built
  *
  * @param root - The workspace root, absolute
  * @returns Whether every state file agrees, and which do not
+ *
+ * @example A CI check that the committed state matches a cold build
+ * ```typescript
+ * const { ok, differences } = verifyState(root)
+ * // => { ok: false, differences: ['imports.json'] } when an import changed since the state was written
+ * // => { ok: false, differences: ['no persisted state'] } when there is nothing to compare
+ * if (!ok) process.exitCode = 1
+ * ```
  */
 export function verifyState(root: string): Verification {
   const persisted = readState(root)
@@ -221,6 +257,14 @@ export interface StateStatus {
  *
  * @param root - The workspace root, absolute
  * @returns Whether a state is persisted, its meta and digests, and the plan
+ *
+ * @example What a build would do, without doing it
+ * ```typescript
+ * const status = stateStatus(root)
+ * status.present // => true
+ * status.plan // => { mode: 'incremental', reasons: ['2 added', '0 changed', '0 deleted'], added: [...], changed: [], deleted: [], reparse: 2 }
+ * status.digests // => { 'files.json': '9f86d0...', 'imports.json': '...', ... }
+ * ```
  */
 export function stateStatus(root: string): StateStatus {
   const persisted = readState(root)

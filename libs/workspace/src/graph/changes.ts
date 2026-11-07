@@ -43,6 +43,16 @@ function git(root: string, args: readonly string[]): string {
  *
  * @param output - The NUL-separated output
  * @returns The changes, in git's order
+ *
+ * @example A rename carries two paths, a copy counts as an addition
+ * ```typescript
+ * parseNameStatus('M\0libs/a.ts\0R100\0libs/old.ts\0libs/new.ts\0C75\0libs/x.ts\0libs/y.ts\0')
+ * // => [
+ * //   { status: 'modified', path: 'libs/a.ts', previousPath: null },
+ * //   { status: 'renamed', path: 'libs/new.ts', previousPath: 'libs/old.ts' },
+ * //   { status: 'added', path: 'libs/y.ts', previousPath: null },
+ * // ]
+ * ```
  */
 export function parseNameStatus(output: string): FileChange[] {
   const fields = output.split('\0').filter((field) => field !== '')
@@ -70,6 +80,19 @@ export function parseNameStatus(output: string): FileChange[] {
  * @param base - The base revision
  * @param head - The head revision, or null for the working tree
  * @returns The change set, sorted by path
+ *
+ * @example The working tree against `main`, untracked files included
+ * ```typescript
+ * const changes = changeSet(root, 'main', null)
+ * changes.base // => 'a1b2c3...', the merge base rather than main's tip
+ * changes.head // => null
+ * changes.changes // => [{ status: 'added', path: 'libs/features/src/new.ts', previousPath: null }, ...]
+ * ```
+ *
+ * @example Two commits, as CI frames a pull request
+ * ```typescript
+ * changeSet(root, 'origin/main', 'HEAD').head // => 'HEAD'
+ * ```
  */
 export function changeSet(root: string, base: string, head: string | null): ChangeSet {
   const mergeBase = git(root, ['merge-base', base, head ?? 'HEAD']).trim()

@@ -29,7 +29,7 @@ function isDigit(character: string): boolean {
  * @returns The version, `22.18.0`
  * @throws {Error} When the range names no version at all
  *
- * @example
+ * @example Reading the floor of an engines range
  * ```typescript
  * nodeFloorOf('>=18.0.0') // '18.0.0'
  * nodeFloorOf('^20.10 || >=22') // '20.10'
@@ -52,7 +52,7 @@ export function nodeFloorOf(range: string): string {
  * @param version - A version such as `22.18.0`
  * @returns The version with trailing `.0` segments dropped, `22.18`
  *
- * @example
+ * @example Dropping the trailing zero segments
  * ```typescript
  * compactVersion('18.0.0') // '18'
  * compactVersion('20.10.5') // '20.10.5'

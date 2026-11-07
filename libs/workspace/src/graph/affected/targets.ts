@@ -72,6 +72,13 @@ const EXTGLOB = /[?*+@!]\(/
  *
  * @param target - The target's name
  * @returns The kinds that carry a change to it
+ *
+ * @example A type-only import never selects a test or lint task
+ * ```typescript
+ * relevantKinds('build').has('type') // => true
+ * relevantKinds('test').has('type') // => false
+ * relevantKinds('lint').has('value') // => true
+ * ```
  */
 export function relevantKinds(target: string): ReadonlySet<EdgeKind> {
   if (!(TYPE_BLIND_TARGETS as readonly string[]).includes(target)) return ALL_KINDS
@@ -97,6 +104,15 @@ function placePattern(pattern: string, projectRoot: string): string {
  *
  * @param patterns - The expanded patterns
  * @returns Whether files of a role count
+ *
+ * @example The `production` exclusions are read by role, not by pattern
+ * ```typescript
+ * const production = roleFilterOf(expandInputs(root, project, ['production']))
+ * production('production') // => true
+ * production('spec') // => false
+ * production('docs') // => true
+ * roleFilterOf(['{projectRoot}/**\/*'])('spec') // => true
+ * ```
  */
 export function roleFilterOf(patterns: readonly string[]): RoleFilter {
   const production = patterns.some((pattern) => (PRODUCTION_EXCLUSIONS as readonly string[]).includes(pattern))
@@ -111,6 +127,19 @@ export function roleFilterOf(patterns: readonly string[]): RoleFilter {
  * @param patterns - The expanded patterns, `{projectRoot}` unreplaced
  * @param projectRoot - The root `{projectRoot}` stands for
  * @returns Whether a file of a role is an input
+ *
+ * @example Positive and negative patterns, placed on the project
+ * ```typescript
+ * const inputs = fileFilterOf(['{projectRoot}/src/**\/*', '!{projectRoot}/src/**\/*.md'], 'libs/features')
+ * inputs('libs/features/src/index.ts', 'production') // => true
+ * inputs('libs/features/src/README.md', 'docs') // => false
+ * inputs('libs/features/package.json', 'build-config') // => false, not under src
+ * ```
+ *
+ * @example An extended glob the compiler cannot read excludes nothing
+ * ```typescript
+ * fileFilterOf(['{projectRoot}/**\/*', '!{projectRoot}/**\/+(a|b).ts'], 'libs/features')('libs/features/a.ts', 'production') // => true
+ * ```
  */
 export function fileFilterOf(patterns: readonly string[], projectRoot: string): FileFilter {
   const positives: Glob[] = []
@@ -167,6 +196,22 @@ function dependencyInputs(inputs: readonly InputDefinition[]): string[] {
  * @param project - The project whose task is read
  * @param target - The target's name
  * @returns The own-file filter, the dependency filter, the named projects and the relevant kinds
+ *
+ * @example What a build reads of itself and of its dependencies
+ * ```typescript
+ * // inputs: ['production', '^production']
+ * const inputs = taskInputs(root, graph.projects.get('lib-features')!, 'build')
+ * inputs.self('libs/features/src/index.spec.ts', 'spec') // => false
+ * inputs.reach('libs/features/src/index.ts', 'production') // => true
+ * inputs.dependencies?.('libs/nexus')('libs/nexus/src/index.ts', 'production') // => true
+ * inputs.kinds.has('type') // => true
+ * ```
+ *
+ * @example A task that reads no dependency input
+ * ```typescript
+ * // inputs: ['default']
+ * taskInputs(root, project, 'lint').dependencies // => null
+ * ```
  */
 export function taskInputs(root: string, project: ProjectRecord, target: string): TaskInputs {
   const own = selfInputs(root, project, target)

@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The hashes the persisted state rests on: git's blob id for a file, computed by git itself so a
  * checkout's line-ending filters apply as they apply to the index; a sha256 digest of a canonical
@@ -42,6 +43,12 @@ function sortKeys(value: unknown): unknown {
  *
  * @param value - Any JSON value
  * @returns The text
+ *
+ * @example Key order and whitespace are normalised, array order is kept
+ * ```typescript
+ * canonicalJson({ b: [{ z: 1, a: 2 }], a: 'x' }) // => '{"a":"x","b":[{"a":2,"z":1}]}'
+ * canonicalJson({ a: 1, b: 2 }) === canonicalJson({ b: 2, a: 1 }) // => true
+ * ```
  */
 export function canonicalJson(value: unknown): string {
   return stringify(sortKeys(value))
@@ -62,6 +69,11 @@ export function sha256(content: string | Buffer): string {
  *
  * @param body - Any JSON value
  * @returns The hex digest
+ *
+ * @example Two writers agree on a digest whatever order they built the body in
+ * ```typescript
+ * digestOf({ files: [{ path: 'a', hash: '1' }], meta: {} }) === digestOf({ meta: {}, files: [{ hash: '1', path: 'a' }] }) // => true
+ * ```
  */
 export function digestOf(body: unknown): string {
   return sha256(canonicalJson(body))

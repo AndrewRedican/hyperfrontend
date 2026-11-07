@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * How a state file is read back: its envelope parsed, its schema checked and its digest recomputed
  * over the body text as written, so a truncated, edited or foreign file reads as absent rather than

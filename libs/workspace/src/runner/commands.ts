@@ -127,6 +127,13 @@ function isQuoted(value: string): boolean {
  *
  * @param arg - The argument as written
  * @returns The argument, quoted where needed
+ *
+ * @example A value the shell would read specially is double-quoted
+ * ```typescript
+ * quoteArgument('--pattern=src/*.spec.ts') // => '--pattern="src/*.spec.ts"'
+ * quoteArgument('--reporter=dot') // => '--reporter=dot'
+ * quoteArgument("--title='a b'") // => "--title='a b'", already quoted
+ * ```
  */
 export function quoteArgument(arg: string): string {
   const equals = arg.indexOf('=')
@@ -145,6 +152,16 @@ export function quoteArgument(arg: string): string {
  * @param forwardAll - Whether a command without a placeholder takes them
  * @returns The command line
  * @throws {Error} When the command holds both kinds of placeholder
+ *
+ * @example Where the arguments after the task land
+ * ```typescript
+ * const forwarded = ['--fix', '--reporter=dot']
+ * const values = { fix: 'true', reporter: 'dot' }
+ * withArguments('hf-lint .', forwarded, values, true) // => 'hf-lint . --fix --reporter=dot'
+ * withArguments('hf-lint . {args}', forwarded, values, true) // => 'hf-lint . --fix --reporter=dot'
+ * withArguments('hf-lint --format {args.reporter} .', forwarded, values, true) // => 'hf-lint --format dot .'
+ * withArguments('hf-lint .', forwarded, values, false) // => 'hf-lint .'
+ * ```
  */
 export function withArguments(
   command: string,
@@ -314,6 +331,25 @@ async function runSideBySide(
  * @param host - Where and how the commands run
  * @returns True when the commands succeeded
  * @throws {Error} When the target or the arguments use an option not supported
+ *
+ * @example Two commands side by side from a project's directory
+ * ```typescript
+ * import { spawn } from 'node:child_process'
+ *
+ * await runCommands(
+ *   { commands: ['tsc -p tsconfig.lib.json --noEmit', 'hf-lint .'], cwd: 'libs/core', env: { CI: 'true' } },
+ *   ['--fix'],
+ *   {
+ *     root,
+ *     env: process.env,
+ *     platform: process.platform,
+ *     execPath: process.execPath,
+ *     spawn: (line, options) => spawn(line, options),
+ *     write: (line) => process.stderr.write(`${line}\n`),
+ *   }
+ * )
+ * // => true when both exited 0; `--fix` was appended to each, and the first failure ended the other
+ * ```
  */
 export async function runCommands(
   options: Readonly<Record<string, unknown>>,

@@ -60,6 +60,20 @@ function withAt(scope: string | undefined): string | undefined {
  * @param tree - The tree, whose root manifest gives the default scope
  * @param options - The options as given
  * @returns The names, the root and the description the generator writes from
+ *
+ * @example The names a spelling and the root manifest's scope settle to
+ * ```typescript
+ * planLibrary(tree, { name: 'DataUtils', directory: 'libs/utils' })
+ * // => {
+ * //   name: 'data-utils',
+ * //   projectName: 'data-utils',
+ * //   packageName: '@acme/data-utils',
+ * //   projectRoot: 'libs/utils/data-utils',
+ * //   description: 'DataUtils library.',
+ * //   tags: [],
+ * //   offsetFromRoot: '../../../',
+ * // } when the root package.json is named @acme/workspace
+ * ```
  */
 export function planLibrary(tree: Tree, options: LibraryGeneratorOptions): LibraryPlan {
   const name = names(options.name).fileName
@@ -135,6 +149,16 @@ function writeProjectJson(tree: Tree, plan: LibraryPlan): void {
  * @example A publishable library under a chosen directory
  * ```bash
  * npx hf generate library my-utils --directory=libs/utils --publishable --formats=esm,cjs,iife,umd
+ * ```
+ *
+ * @example From a workspace's own generator, formatting once at the end
+ * ```typescript
+ * import libraryGenerator from '@hyperfrontend/workspace/generators/library'
+ * import { formatFiles } from '@hyperfrontend/workspace/generators'
+ *
+ * await libraryGenerator(tree, { name: 'data-utils', tags: ['type:util'], skipFormat: true })
+ * tree.write('libs/data-utils/src/index.ts', 'export * from "./data"\n')
+ * await formatFiles(tree)
  * ```
  */
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorOptions): Promise<void> {

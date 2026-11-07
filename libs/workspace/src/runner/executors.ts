@@ -60,6 +60,22 @@ export interface ExecutorSource {
  * @param executor - The executor, `<package>:<name>`
  * @returns The module and the options schema
  * @throws {Error} When no workspace project and no installed package provides the executor, or its manifest entry, module or schema is missing
+ *
+ * @example Finding a packaged executor
+ * ```typescript
+ * import { discoverProjects, listFiles } from '@hyperfrontend/workspace/graph'
+ * import { locateExecutor } from '@hyperfrontend/workspace/runner'
+ *
+ * const projects = discoverProjects(root, listFiles(root))
+ * locateExecutor(root, projects, '@hyperfrontend/workspace:typecheck')
+ * // => { file: '/repo/node_modules/@hyperfrontend/workspace/executors/typecheck/index.js', schema: { properties: { tsConfig: { type: 'string' }, ... } } }
+ * ```
+ *
+ * @example A workspace project stands in front of the installed package of the same name
+ * ```typescript
+ * locateExecutor(root, projects, '@acme/tooling:lint')
+ * // => { file: '/repo/tools/tooling/src/executors/lint/index.ts', schema: { ... } } while tools/tooling carries @acme/tooling
+ * ```
  */
 export function locateExecutor(root: string, projects: ReadonlyMap<string, ProjectRecord>, executor: string): ExecutorSource {
   const colon = executor.indexOf(':')
@@ -85,6 +101,12 @@ export function locateExecutor(root: string, projects: ReadonlyMap<string, Proje
  * @param options - The options of the target and the command line
  * @param schema - The executor's options schema
  * @returns A copy of the options with the defaults applied
+ *
+ * @example Filling the options a target left unset
+ * ```typescript
+ * withDefaults({ tsConfig: 'libs/core/tsconfig.lib.json' }, { properties: { tsConfig: { type: 'string' }, strict: { type: 'boolean', default: true } } })
+ * // => { tsConfig: 'libs/core/tsconfig.lib.json', strict: true }
+ * ```
  */
 export function withDefaults(options: Readonly<Record<string, unknown>>, schema: ExecutorSchema): Record<string, unknown> {
   const filled = { ...options }
@@ -102,6 +124,17 @@ export function withDefaults(options: Readonly<Record<string, unknown>>, schema:
  * @param executor - The executor, for the error
  * @returns The executor function
  * @throws {Error} When the module's default export is not a function
+ *
+ * @example Calling an executor outside a task
+ * ```typescript
+ * import { pathToFileURL } from 'node:url'
+ * import { loadExecutor, locateExecutor, withDefaults } from '@hyperfrontend/workspace/runner'
+ *
+ * const source = locateExecutor(root, projects, '@acme/tooling:lint')
+ * const lint = await loadExecutor(source, (file) => import(pathToFileURL(file).href), '@acme/tooling:lint')
+ * const result = await lint(withDefaults({ fix: true }, source.schema), context)
+ * // => whatever the executor answers, { success: true } when it passed
+ * ```
  */
 export async function loadExecutor(source: ExecutorSource, importModule: ImportModule, executor: string): Promise<ExecutorFunction> {
   const implementation = (await importModule(source.file))['default']
@@ -114,6 +147,12 @@ export async function loadExecutor(source: ExecutorSource, importModule: ImportM
  *
  * @param answer - What the executor answered: its result, or a promise of it
  * @returns True when the result is an object whose `success` is truthy
+ *
+ * @example An executor that answers nothing has failed
+ * ```typescript
+ * await settle(Promise.resolve({ success: true })) // true
+ * await settle(undefined) // false
+ * ```
  */
 export async function settle(answer: unknown): Promise<boolean> {
   const result = await answer

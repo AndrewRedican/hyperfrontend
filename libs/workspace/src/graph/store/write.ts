@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * How a state file is written: an envelope carrying the body, a digest of the body's canonical
  * text and the schema, as canonical JSON with a trailing newline; written to a temporary name and

@@ -105,6 +105,12 @@ const TESTING_PACKAGE = '@hyperfrontend/testing'
  * @param projects - Every project's configuration by name
  * @param project - The e2e project
  * @returns The library's configuration, or undefined when the project depends on none that builds
+ *
+ * @example The implicit dependency that builds names the library
+ * ```typescript
+ * libraryUnderTest(context.projects, context.projects['e2e-core'])
+ * // => context.projects['lib-core'] when e2e-core lists implicitDependencies: ['lib-core'] and lib-core has a build target
+ * ```
  */
 export function libraryUnderTest(
   projects: Readonly<Record<string, ProjectConfiguration>>,
@@ -122,6 +128,13 @@ export function libraryUnderTest(
  *
  * @param workspaceRoot - The workspace root, absolute
  * @returns The runtime's aliases and nothing else; none in a workspace that installs the runtime
+ *
+ * @example Only the runtime's aliases survive
+ * ```typescript
+ * testingAliases(root)
+ * // => { '@hyperfrontend/testing': ['libs/testing/src/index.ts'], '@hyperfrontend/testing/*': ['libs/testing/src/*'] } in the workspace that develops the runtime
+ * // => {} in a workspace that installs it
+ * ```
  */
 export function testingAliases(workspaceRoot: string): Record<string, readonly string[]> {
   return fromEntries(
@@ -163,6 +176,14 @@ const BUILT_IN_SPECS: Readonly<Record<string, readonly string[]>> = {
  * @param format - A built-in format's name, or a suite the project declares itself
  * @param platform - The platform the run happens on
  * @returns The run, or undefined for a name that is no built-in format
+ *
+ * @example A built-in format and a declared suite
+ * ```typescript
+ * formatRun('browser', 'linux')
+ * // => { name: 'browser', candidates: ['src/iife.spec.ts', 'src/umd.spec.ts'], dom: true, timeoutMs: 30000, serial: false }
+ * formatRun({ name: 'consumer', specs: ['src/consumer.spec.ts'], timeoutMs: 120000, serialOn: ['win32'] }, 'win32')
+ * // => { name: 'consumer', candidates: ['src/consumer.spec.ts'], dom: false, timeoutMs: 120000, serial: true }
+ * ```
  */
 export function formatRun(format: E2eFormat, platform: string): FormatRun | undefined {
   if (typeof format !== 'string')
@@ -258,6 +279,24 @@ function runNodeTests(testDir: string, format: E2eFormat, workspaceRoot: string,
  * @param options - Configuration for test directory, formats, and cleanup behavior
  * @param context - The workspace, the project and the target the task runs on
  * @returns A promise resolving to an object indicating success or failure
+ *
+ * @example An e2e project's target, the library found through `implicitDependencies`
+ * ```json
+ * {
+ *   "name": "e2e-core",
+ *   "implicitDependencies": ["lib-core"],
+ *   "targets": {
+ *     "e2e": {
+ *       "executor": "@hyperfrontend/workspace:e2e",
+ *       "dependsOn": ["^build"],
+ *       "options": {
+ *         "formats": ["cjs", "esm", { "name": "consumer", "specs": ["src/consumer.spec.ts"], "timeoutMs": 120000 }]
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run e2e-core:e2e` packs `dist/libs/core`, installs the tarball into `e2e/core`, and runs the three suites.
  */
 export async function e2eExecutor(options: E2eExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const { projectName, root: workspaceRoot } = context

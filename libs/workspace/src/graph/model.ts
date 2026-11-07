@@ -368,6 +368,16 @@ export interface Edge {
  *
  * @param node - The node to identify
  * @returns `<kind>:<identity>`
+ *
+ * @example One id per kind
+ * ```typescript
+ * nodeId({ kind: 'project', name: 'lib-features', root: 'libs/features' }) // => 'project:lib-features'
+ * nodeId({ kind: 'file', path: 'libs/features/src/index.ts', project: 'lib-features', role: 'production' }) // => 'file:libs/features/src/index.ts'
+ * nodeId({ kind: 'entry', id: '@hyperfrontend/features/host', project: 'lib-features', file: 'libs/features/src/host.ts' }) // => 'entry:@hyperfrontend/features/host'
+ * nodeId({ kind: 'external', name: 'typescript', version: '5.9.2' }) // => 'external:typescript@5.9.2'
+ * nodeId({ kind: 'external', name: 'typescript', version: null }) // => 'external:typescript@*'
+ * nodeId({ kind: 'task', project: 'lib-features', target: 'build' }) // => 'task:lib-features:build'
+ * ```
  */
 export function nodeId(node: GraphNode): string {
   switch (node.kind) {
@@ -393,6 +403,12 @@ export function nodeId(node: GraphNode): string {
  *
  * @param task - The task to identify
  * @returns `<project>:<target>`
+ *
+ * @example Matching a decision's task against a ref
+ * ```typescript
+ * const ref = { kind: 'task', project: 'lib-features', target: 'build' } as const
+ * sets.get('build')?.selected.some((decision) => decision.task === taskId(ref)) // => true when lib-features:build is selected
+ * ```
  */
 export function taskId(task: TaskRef): string {
   return `${task.project}:${task.target}`

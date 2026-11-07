@@ -51,6 +51,12 @@ const PATTERN_CHARACTERS = ['*', '|', '{', '}', '(', ')', '[']
  * @param where - Where the target is written, for the error
  * @returns The target, its command moved into its options
  * @throws {Error} When the target names both an executor and a command
+ *
+ * @example A bare command is a `run-commands` target
+ * ```typescript
+ * desugar({ command: 'tsc -p tsconfig.lib.json' }, 'lib-core:typecheck')
+ * // => { executor: '@hyperfrontend/workspace:run-commands', options: { command: 'tsc -p tsconfig.lib.json' } }
+ * ```
  */
 export function desugar(target: Target, where: string): Target {
   const { command, ...rest } = target
@@ -81,6 +87,19 @@ function defaultsKey(defaults: Readonly<Record<string, unknown>>, name: string, 
  * @param executor - The executor the project's target names, if any
  * @returns The defaults, read like a target, or undefined when none apply
  * @throws {Error} When the defaults use a form the runner does not read: a key written as a pattern, or a list of filtered entries
+ *
+ * @example The executor's entry wins over the name's
+ * ```typescript
+ * const configuration = {
+ *   targetDefaults: {
+ *     build: { options: { outputPath: 'dist/{projectRoot}' } },
+ *     '@hyperfrontend/workspace:build': { dependsOn: ['^build'] },
+ *   },
+ * }
+ * defaultsFor(configuration, 'build', '@hyperfrontend/workspace:build') // => { dependsOn: ['^build'] }
+ * defaultsFor(configuration, 'build', undefined) // => { options: { outputPath: 'dist/{projectRoot}' } }
+ * defaultsFor(configuration, 'lint', undefined) // => undefined
+ * ```
  */
 export function defaultsFor(configuration: WorkspaceConfiguration, name: string, executor: string | undefined): Target | undefined {
   const defaults = configuration.targetDefaults ?? {}
@@ -120,6 +139,21 @@ function identity(target: Target): TargetDefaults {
  * @param own - The project's target
  * @param defaults - The defaults, if any apply
  * @returns The merged target
+ *
+ * @example The project's options win, the defaults fill the rest
+ * ```typescript
+ * mergeTarget(
+ *   { options: { esm: {}, outputPath: 'dist/packages/core' } },
+ *   { executor: '@hyperfrontend/workspace:build', options: { outputPath: 'dist/{projectRoot}' } }
+ * )
+ * // => { executor: '@hyperfrontend/workspace:build', options: { outputPath: 'dist/packages/core', esm: {} } }
+ * ```
+ *
+ * @example Defaults for another executor are dropped
+ * ```typescript
+ * mergeTarget({ executor: '@acme/tooling:build' }, { executor: '@hyperfrontend/workspace:build', options: { esm: {} } })
+ * // => { executor: '@acme/tooling:build' }
+ * ```
  */
 export function mergeTarget(own: Target, defaults: Target | undefined): Target {
   if (defaults === undefined || !isCompatibleTarget(identity(own), identity(defaults))) return own
@@ -149,6 +183,12 @@ function replaceTokens(text: string, project: ProjectRecord, where: string): str
  * @param project - The project the target belongs to
  * @param where - Where the value sits, for the error
  * @returns The value, tokens replaced
+ *
+ * @example The tokens of a build target's options, for the project at `libs/core`
+ * ```typescript
+ * interpolate({ outputPath: '{workspaceRoot}/dist/{projectRoot}', assets: ['{projectRoot}/README.md'] }, project, 'lib-core:build options')
+ * // => { outputPath: 'dist/libs/core', assets: ['libs/core/README.md'] }
+ * ```
  */
 export function interpolate(value: unknown, project: ProjectRecord, where: string): unknown {
   if (typeof value === 'string') return replaceTokens(value, project, where)
@@ -165,6 +205,15 @@ export function interpolate(value: unknown, project: ProjectRecord, where: strin
  * @param name - The name the project gives the target
  * @param written - The target as the project writes it
  * @returns The target merged with its defaults, its options' tokens replaced
+ *
+ * @example What `npx hf run lib-core:build` runs with
+ * ```typescript
+ * import { discoverProjects, listFiles } from '@hyperfrontend/workspace/graph'
+ *
+ * const project = discoverProjects(root, listFiles(root)).get('lib-core')!
+ * resolveTarget(configuration, project, 'build', { options: { esm: {} } })
+ * // => { executor: '@hyperfrontend/workspace:build', inputs: ['production', '^production'], dependsOn: ['^build'], options: { outputPath: 'dist/libs/core', esm: {} } }
+ * ```
  */
 export function resolveTarget(
   configuration: WorkspaceConfiguration,
@@ -184,6 +233,15 @@ export function resolveTarget(
  * @param configuration - The workspace configuration
  * @param project - The project whose targets are read
  * @returns The resolved targets by name
+ *
+ * @example The targets an executor sees in `context.projects['lib-core'].targets`
+ * ```typescript
+ * projectTargets(configuration, project)
+ * // => {
+ * //   typecheck: { executor: '@hyperfrontend/workspace:typecheck', options: {} },
+ * //   build: { executor: '@hyperfrontend/workspace:build', dependsOn: ['^build'], options: { outputPath: 'dist/libs/core', esm: {} } },
+ * // }
+ * ```
  */
 export function projectTargets(configuration: WorkspaceConfiguration, project: ProjectRecord): Record<string, ResolvedTarget> {
   return fromEntries(
@@ -203,6 +261,14 @@ export function projectTargets(configuration: WorkspaceConfiguration, project: P
  * @param projects - The workspace's projects by name
  * @returns The project and the target's name
  * @throws {Error} When the id names no project, no target of it, or a configuration
+ *
+ * @example A target name may itself hold a colon
+ * ```typescript
+ * parseTaskId('lib-core:build', projects).target // => 'build'
+ * parseTaskId('lib-core:build:watch', projects).target // => 'build:watch' when the project has that target
+ * parseTaskId('lib-core:build:production', projects)
+ * // throws: lib-core:build:production names the configuration production; targets run without configurations
+ * ```
  */
 export function parseTaskId(id: string, projects: ReadonlyMap<string, ProjectRecord>): TaskTarget {
   const [name, ...segments] = id.split(':') as [string, ...string[]]
@@ -225,6 +291,12 @@ export function parseTaskId(id: string, projects: ReadonlyMap<string, ProjectRec
  * @param id - The task id, for the error
  * @returns The executor, `<package>:<name>`
  * @throws {Error} When the target runs a configuration by default or names no executor
+ *
+ * @example A target with neither an executor nor a command cannot run
+ * ```typescript
+ * executorOf({ executor: '@hyperfrontend/workspace:build', options: {} }, 'lib-core:build') // => '@hyperfrontend/workspace:build'
+ * executorOf({ options: {} }, 'lib-core:docs') // throws: lib-core:docs names no executor and no command
+ * ```
  */
 export function executorOf(target: ResolvedTarget, id: string): string {
   if (target.defaultConfiguration !== undefined)

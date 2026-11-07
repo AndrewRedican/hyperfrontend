@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * A disposable workspace for the runner specs: target defaults keyed by name and by executor,
  * a library whose targets inherit them, a manifest-only package, a tooling project providing

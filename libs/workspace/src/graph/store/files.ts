@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The files of a workspace with a content hash each: git's blob id from the index for a clean
  * tracked file, and the blob id git computes from the working tree for a file that is dirty or
@@ -50,6 +51,14 @@ function gitFields(root: string, args: readonly string[]): string[] {
  *
  * @param root - The workspace root, absolute
  * @returns The records, sorted by path
+ *
+ * @example The hash follows the working tree, not the index
+ * ```typescript
+ * const records = listFileRecords(root)
+ * records[0] // => { path: '.hfignore', hash: '3b18e512dba79e4c8300dd08aeb37f8e728b8dad' }
+ * records.some((record) => record.path.startsWith('.hf/')) // => false, the state never describes itself
+ * // edit a tracked file without staging it: its hash changes on the next call
+ * ```
  */
 export function listFileRecords(root: string): FileRecord[] {
   const ignores = ignoredPatterns(root)

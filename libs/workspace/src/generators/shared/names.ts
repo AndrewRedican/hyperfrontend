@@ -52,6 +52,13 @@ function toFileName(name: string): string {
  *
  * @param name - Any spelling, such as `my-lib`, `myLib` or `MY_LIB`
  * @returns The class, property, constant and file forms
+ *
+ * @example The forms a template reads
+ * ```typescript
+ * names('data-utils')
+ * // => { name: 'data-utils', className: 'DataUtils', propertyName: 'dataUtils', constantName: 'DATA_UTILS', fileName: 'data-utils' }
+ * names('DataUtils').fileName // => 'data-utils'
+ * ```
  */
 export function names(name: string): Names {
   const propertyName = toPropertyName(name)

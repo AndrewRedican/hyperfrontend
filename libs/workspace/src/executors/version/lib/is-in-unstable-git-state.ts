@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import { getOperationState } from '@hyperfrontend/versioning/git/operations'
 import { getLogger } from './logger'
 

@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The rewrites the boundary rule offers: an import of another project by path becomes imports of
  * the aliases whose entries export each name, and an import of a project's own alias becomes

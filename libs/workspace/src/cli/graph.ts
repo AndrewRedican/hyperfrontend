@@ -149,6 +149,20 @@ function sortedProjects(graph: WorkspaceGraph): ProjectRecord[] {
  * @param output - Where the command writes
  * @returns The exit code: 1 when `verify` finds a difference, 0 otherwise
  * @throws {Error} When the command or one of its arguments is not one it knows
+ *
+ * @example The tasks a change selects, explained
+ * ```typescript
+ * import { runGraph } from '@hyperfrontend/workspace/cli'
+ *
+ * const output = { say: (line: string) => process.stdout.write(`${line}\n`), note: (line: string) => process.stderr.write(`${line}\n`) }
+ * runGraph(['affected', '--target', 'build', '--base', 'origin/main', '--explain'], root, output)
+ * // => 0; each selected build and the file that selected it went to `say`, the state build report to `note`
+ * ```
+ *
+ * @example Checking the persisted graph state in CI
+ * ```typescript
+ * runGraph(['verify'], root, output) // => 1 when a cold build disagrees with the state on disk
+ * ```
  */
 export function runGraph(argv: readonly string[], root: string, output: GraphOutput): number {
   const { say, note } = output

@@ -74,6 +74,15 @@ function workspaceListings(root: string, projects: ReadonlyMap<string, ProjectRe
  * @param root - The workspace root, absolute
  * @param projects - The workspace's projects by name
  * @returns The generators of the workspace's projects, then the engine's own
+ *
+ * @example Listing what `npx hf generate` can run
+ * ```typescript
+ * import { discoverProjects, listFiles } from '@hyperfrontend/workspace/graph'
+ * import { generatorNames } from '@hyperfrontend/workspace/runner'
+ *
+ * generatorNames(root, discoverProjects(root, listFiles(root)))
+ * // => ['@acme/tooling:component', '@hyperfrontend/workspace:workspace', '@hyperfrontend/workspace:library', ...]
+ * ```
  */
 export function generatorNames(root: string, projects: ReadonlyMap<string, ProjectRecord>): string[] {
   const own = workspaceListings(root, projects)
@@ -111,6 +120,18 @@ function listingOfBare(root: string, projects: ReadonlyMap<string, ProjectRecord
  * @param written - The generator as the command line names it, `<name>` or `<package>:<name>`
  * @returns The module and the options schema
  * @throws {Error} When nothing provides the generator, two workspace projects answer to a bare name, or its module or schema is missing
+ *
+ * @example A bare name prefers the workspace's own generator
+ * ```typescript
+ * locateGenerator(root, projects, 'library')
+ * // => the library generator of a workspace project that lists one, else { file: '/repo/node_modules/@hyperfrontend/workspace/generators/library/index.js', schema: { ... } }
+ * ```
+ *
+ * @example Naming the package settles it
+ * ```typescript
+ * locateGenerator(root, projects, '@hyperfrontend/workspace:library')
+ * // => the engine's own, whatever the workspace lists under that name
+ * ```
  */
 export function locateGenerator(root: string, projects: ReadonlyMap<string, ProjectRecord>, written: string): GeneratorSource {
   const colon = written.lastIndexOf(':')
@@ -135,6 +156,15 @@ export function locateGenerator(root: string, projects: ReadonlyMap<string, Proj
  * @param written - The generator as the command line names it, for the refusal
  * @returns The module's default export
  * @throws {Error} When the module's default export is not a function
+ *
+ * @example Loading a generator the runner located
+ * ```typescript
+ * import { pathToFileURL } from 'node:url'
+ * import { loadGenerator, locateGenerator } from '@hyperfrontend/workspace/runner'
+ *
+ * const generate = await loadGenerator(locateGenerator(root, projects, 'library'), (file) => import(pathToFileURL(file).href), 'library')
+ * await generate(tree, { name: 'data-utils' })
+ * ```
  */
 export async function loadGenerator(source: GeneratorSource, importModule: ImportModule, written: string): Promise<Generator> {
   const implementation = (await importModule(source.file))['default']
@@ -151,6 +181,18 @@ export async function loadGenerator(source: GeneratorSource, importModule: Impor
  * @param options - The options the generator is called with
  * @param importModule - Imports a module from its absolute path; the process's own import when omitted
  * @returns Resolves when the generator has run
+ *
+ * @example A workspace generator composing the packaged `library` generator
+ * ```typescript
+ * import type { Generator } from '@hyperfrontend/workspace/generators'
+ * import { runGenerator } from '@hyperfrontend/workspace/generators'
+ *
+ * const featureLibrary: Generator<{ name: string }> = async (tree, options) => {
+ *   await runGenerator(tree, 'library', { name: options.name, tags: ['type:feature'], skipFormat: true })
+ *   tree.write(`libs/${options.name}/src/feature.ts`, 'export const feature = true\n')
+ * }
+ * export default featureLibrary
+ * ```
  */
 export async function runGenerator(
   tree: Tree,

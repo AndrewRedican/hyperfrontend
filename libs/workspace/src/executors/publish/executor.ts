@@ -75,6 +75,12 @@ function getPackageVersion(distPath: string): string {
  *
  * @param options - Options for the publish executor
  * @returns Array of npm publish command arguments
+ *
+ * @example A dry run keeps the provenance flag
+ * ```typescript
+ * buildPublishArgs({ dryRun: true, tag: 'next', provenance: true })
+ * // => ['publish', '--dry-run', '--tag', 'next', '--provenance']
+ * ```
  */
 export function buildPublishArgs(options: PublishExecutorOptions): string[] {
   const args: string[] = ['publish']
@@ -119,6 +125,20 @@ export function buildPublishArgs(options: PublishExecutorOptions): string[] {
  * @param options - Options for the publish executor
  * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
+ *
+ * @example A `publish` target run after the build
+ * ```json
+ * {
+ *   "targets": {
+ *     "publish": {
+ *       "executor": "@hyperfrontend/workspace:publish",
+ *       "dependsOn": ["build"],
+ *       "options": { "access": "public", "tag": "latest", "provenance": true }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run lib-core:publish --dryRun` previews the npm command; a version the registry already has is skipped with success.
  */
 export async function publishExecutor(options: PublishExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const { projectName, root: workspaceRoot } = context

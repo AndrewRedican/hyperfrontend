@@ -21,6 +21,15 @@ const CONDITIONS = ['import', 'require', 'default', 'types']
  *
  * @param value - The value of one `exports` key
  * @returns The path as the manifest writes it, or null when the value names no file
+ *
+ * @example Conditions are searched in order, nested ones included
+ * ```typescript
+ * exportTarget('./src/index.ts') // => './src/index.ts'
+ * exportTarget({ types: './dist/index.d.ts', import: './dist/index.js' }) // => './dist/index.js', import before types
+ * exportTarget({ node: { import: './dist/node.js' }, default: './dist/index.js' }) // => './dist/index.js'
+ * exportTarget({ import: { default: './dist/index.js' } }) // => './dist/index.js'
+ * exportTarget(null) // => null
+ * ```
  */
 export function exportTarget(value: unknown): string | null {
   if (typeof value === 'string') return value
@@ -55,6 +64,16 @@ function subpathsOf(exportsField: unknown): Readonly<Record<string, unknown>> {
  * @param aliases - The workspace's path aliases, each to its targets
  * @param files - The workspace's files
  * @returns The entries, in the order found
+ *
+ * @example The alias wins where it and `exports` name the same entry
+ * ```typescript
+ * // package.json: { name: '@hyperfrontend/features', exports: { '.': './dist/index.js', './host': './dist/host.js' } }
+ * // tsconfig.base.json paths: { '@hyperfrontend/features': ['libs/features/src/index.ts'] }
+ * const files = new Set(listFiles(root))
+ * entriesOfProject(project, readAliases(root), files)
+ * // => [{ kind: 'entry', id: '@hyperfrontend/features', project: 'lib-features', file: 'libs/features/src/index.ts' }]
+ * // './host' is left out: dist/host.js is not among the files, and no alias names it
+ * ```
  */
 export function entriesOfProject(
   project: ProjectRecord,

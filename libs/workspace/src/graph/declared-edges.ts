@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The edges a project's configuration draws without an import: the projects it declares as
  * implicit dependencies, the packages its manifest depends on, the tools its targets run, and the

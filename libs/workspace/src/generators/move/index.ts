@@ -1,7 +1,7 @@
 /**
  * The `move` generator: relocates a project under another directory and brings its names, aliases and references along.
  *
- * @module generators/move
+ * @module @hyperfrontend/workspace/generators/move
  */
 
 export type { MovePlan } from './lib/move-helpers'

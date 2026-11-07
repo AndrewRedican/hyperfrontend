@@ -1,7 +1,7 @@
 /**
  * The `version` executor: versions a project from its conventional commits, pins its dependents to the new version, and commits the bump.
  *
- * @module executors/version
+ * @module @hyperfrontend/workspace/executors/version
  */
 
 export type { FollowUp, FollowUpRun, RunVersionOptions, RunVersionResult, VersionBump } from './lib/run-version-for-project'

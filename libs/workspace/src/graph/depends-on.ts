@@ -41,6 +41,13 @@ interface Named {
  * @param graph - The graph the projects belong to
  * @param project - A project with an e2e target
  * @returns The first implicit dependency with a build target, or null
+ *
+ * @example The library an e2e project packs
+ * ```typescript
+ * const graph = workspaceGraph(root)
+ * libraryOfE2e(graph, graph.projects.get('e2e-lib-features')!)?.name // => 'lib-features'
+ * libraryOfE2e(graph, graph.projects.get('lib-features')!) // => null, no implicit dependency builds
+ * ```
  */
 export function libraryOfE2e(graph: WorkspaceGraph, project: ProjectRecord): ProjectRecord | null {
   for (const name of project.implicitDependencies) {
@@ -90,6 +97,25 @@ function named(graph: WorkspaceGraph, project: ProjectRecord, target: string, en
  * @param target - The depending target
  * @returns The tasks that must succeed before the target runs
  * @throws {Error} When an entry is not one of the forms read
+ *
+ * @example The three forms, read against the graph
+ * ```typescript
+ * // project.json of lib-features: { targets: { build: { dependsOn: ['lint', '^build', 'lib-builder:build'] } } }
+ * const graph = workspaceGraph(root)
+ * prerequisitesOf(graph, graph.projects.get('lib-features')!, 'build')
+ * // => [
+ * //   { id: 'lib-features:lint', project: 'lib-features', target: 'lint' },
+ * //   { id: 'lib-nexus:build', project: 'lib-nexus', target: 'build' }, // each project lib-features has an edge to
+ * //   { id: 'lib-builder:build', project: 'lib-builder', target: 'build' },
+ * // ]
+ * ```
+ *
+ * @example An object entry is refused rather than skipped
+ * ```typescript
+ * // dependsOn: [{ target: 'build', projects: 'dependencies' }]
+ * prerequisitesOf(graph, project, 'build')
+ * // throws: lib-features:build depends on {"target":"build","projects":"dependencies"}, which is not one of the forms read: target, ^target or project:target
+ * ```
  */
 export function prerequisitesOf(graph: WorkspaceGraph, project: ProjectRecord, target: string): Prerequisite[] {
   const tasks = createMap<string, Prerequisite>()

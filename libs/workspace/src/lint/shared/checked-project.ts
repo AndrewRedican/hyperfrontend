@@ -56,6 +56,13 @@ function importsNode(directory: string): boolean {
  * @param path - The file's absolute path
  * @param include - The selectors of the files checked
  * @returns The root of the project owning the file, or null when the file is not checked
+ *
+ * @example The default selector against a rule's `include` option
+ * ```typescript
+ * checkedProject('/repo/libs/features/project.json', [{ publishableLibraries: true }]) // => '/repo/libs/features'
+ * checkedProject('/repo/apps/docs-site/project.json', [{ publishableLibraries: true }]) // => null
+ * checkedProject('/repo/apps/docs-site/project.json', [{ files: ['apps/**\/project.json'] }]) // => '/repo/apps/docs-site'
+ * ```
  */
 export function checkedProject(path: string, include: readonly Selector[]): string | null {
   const root = projectRootOf(dirname(path))
@@ -75,6 +82,12 @@ export function checkedProject(path: string, include: readonly Selector[]): stri
  *
  * @param root - The absolute directory of the project
  * @returns Whether a runtime source of it imports a `node:` module
+ *
+ * @example A spec's `node:` import does not make a browser library a Node project
+ * ```typescript
+ * isNodeProject('/repo/libs/workspace') // => true
+ * isNodeProject('/repo/libs/features') // => false, even with `import { tmpdir } from 'node:os'` in a *.spec.ts
+ * ```
  */
 export function isNodeProject(root: string): boolean {
   let known = nodeProjects.get(root)

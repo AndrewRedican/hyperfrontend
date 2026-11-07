@@ -66,6 +66,14 @@ const WORKSPACE_ROOT_TOKEN = '{workspaceRoot}'
  *
  * @param root - The workspace root, absolute
  * @returns The paths, in git's order
+ *
+ * @example Untracked files count, ignored and `.hfignore`d ones do not
+ * ```typescript
+ * const files = listFiles(root)
+ * files.includes('libs/workspace/src/new-file.ts') // => true, before it is ever added
+ * files.includes('node_modules/typescript/package.json') // => false, with or without a .gitignore
+ * files.includes('apps/docs-site/.next/cache') // => false when .hfignore lists `apps/docs-site/.next/**`
+ * ```
  */
 export function listFiles(root: string): string[] {
   const listed = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], {
@@ -84,6 +92,15 @@ export function listFiles(root: string): string[] {
  *
  * @param root - The workspace root
  * @returns The globs, none when the file is absent
+ *
+ * @example Applying the workspace's ignores to a path of your own
+ * ```typescript
+ * import { matchesAny } from '@hyperfrontend/linter/helpers'
+ *
+ * const ignores = ignoredPatterns(root) // from a .hfignore holding `# build output` and `dist/**`
+ * matchesAny(ignores, 'dist/libs/features/index.js') // => true
+ * matchesAny(ignores, 'libs/features/src/index.ts') // => false
+ * ```
  */
 export function ignoredPatterns(root: string): ReturnType<typeof compileGlob>[] {
   const file = join(root, '.hfignore')
@@ -100,6 +117,13 @@ export function ignoredPatterns(root: string): ReturnType<typeof compileGlob>[] 
  *
  * @param path - The file's absolute path
  * @returns The value, or null
+ *
+ * @example A missing or malformed file reads as null rather than throwing
+ * ```typescript
+ * readJson<{ name?: string }>(join(root, 'package.json'))?.name // => 'hyperfrontend'
+ * readJson(join(root, 'absent.json')) // => null
+ * readJson(join(root, 'broken.json')) // => null, for a file holding `{ "name": `
+ * ```
  */
 export function readJson<Value>(path: string): Value | null {
   if (!existsSync(path)) return null
@@ -115,6 +139,14 @@ export function readJson<Value>(path: string): Value | null {
  *
  * @param root - The workspace root, absolute
  * @returns Each alias to its targets, none when the file or its paths are absent
+ *
+ * @example Every target of an alias is kept, not only the first
+ * ```typescript
+ * const aliases = readAliases(root)
+ * aliases.get('@hyperfrontend/workspace/graph') // => ['libs/workspace/src/graph/index.ts']
+ * aliases.get('@hyperfrontend/features/*') // => ['libs/features/src/*', 'libs/features/src/*.ts']
+ * aliases.get('left-pad') // => undefined
+ * ```
  */
 export function readAliases(root: string): Map<string, readonly string[]> {
   return createMap(entries(readJson<BaseTsconfig>(join(root, 'tsconfig.base.json'))?.compilerOptions?.paths ?? {}))
@@ -146,6 +178,20 @@ function tagsOf(manifest: PackageManifest | null, configuration: ProjectConfigur
  * @param root - The workspace root, absolute
  * @param files - The workspace's files
  * @returns The projects by name, with their files assigned to the deepest owning root
+ *
+ * @example A file belongs to the deepest project above it
+ * ```typescript
+ * const projects = discoverProjects(root, listFiles(root))
+ * const workspace = [...projects.values()].find((project) => project.root === '.')!
+ * workspace.files.includes('libs/features/src/index.ts') // => false, lib-features owns it
+ * projects.get('lib-features')?.type // => 'lib', inferred from the location when project.json names none
+ * ```
+ *
+ * @example A directory with a `package.json` alone is a project named by the manifest
+ * ```typescript
+ * // libs/vendored/package.json: { "name": "@scope/vendored" }, no project.json
+ * discoverProjects(root, listFiles(root)).get('@scope/vendored')?.configuration // => null
+ * ```
  */
 export function discoverProjects(root: string, files: readonly string[]): Map<string, ProjectRecord> {
   const roots = createMap<string, ProjectFiles>()
@@ -198,6 +244,13 @@ export function discoverProjects(root: string, files: readonly string[]): Map<st
  * @param root - The project root, workspace-relative and POSIX
  * @param command - The command as `hf.json` writes it
  * @returns The command as it runs from the project's root
+ *
+ * @example The workspace root token becomes the way back up from the project
+ * ```typescript
+ * lintCommand('libs/features', 'node {workspaceRoot}/tools/lint/bin/lint.ts .')
+ * // => 'node ../../tools/lint/bin/lint.ts .'
+ * lintCommand('libs/features', 'hf-lint .') // => 'hf-lint .'
+ * ```
  */
 export function lintCommand(root: string, command: string): string {
   return command.replaceAll(WORKSPACE_ROOT_TOKEN, posix.relative(root, '.'))
@@ -222,6 +275,17 @@ function lintSettings(root: string): LintSettings {
  * @param root - The workspace root, absolute
  * @param projects - The projects, by name
  * @returns The same projects, the inferred target added to their configuration
+ *
+ * @example The target a project gets when it declares none
+ * ```typescript
+ * // hf.json: { lint: { command: 'node {workspaceRoot}/tools/lint/bin/lint.ts .', exclude: ['libs/vendored/**'] } }
+ * const inferred = inferLintTargets(root, projects)
+ * inferred.get('lib-features')?.configuration?.targets?.['lint']
+ * // => { executor: '@hyperfrontend/workspace:run-commands',
+ * //      options: { command: 'node ../../tools/lint/bin/lint.ts .', cwd: 'libs/features' } }
+ * hasTarget(inferred.get('@scope/vendored')!, 'lint') // => false, excluded
+ * hasTarget(inferred.get('hyperfrontend')!, 'lint') // => false, the workspace root never gets one
+ * ```
  */
 export function inferLintTargets(root: string, projects: ReadonlyMap<string, ProjectRecord>): Map<string, ProjectRecord> {
   const settings = lintSettings(root)
@@ -257,6 +321,12 @@ export function inferLintTargets(root: string, projects: ReadonlyMap<string, Pro
  * @param project - The project whose targets are read
  * @param target - The target's name
  * @returns True when the project's configuration declares it
+ *
+ * @example Selecting the projects a target can run on
+ * ```typescript
+ * const graph = workspaceGraph(root)
+ * const buildable = [...graph.projects.values()].filter((project) => hasTarget(project, 'build'))
+ * ```
  */
 export function hasTarget(project: ProjectRecord, target: string): boolean {
   return project.configuration?.targets?.[target] !== undefined

@@ -45,6 +45,13 @@ export interface E2eRename {
  * @param tree - The tree the projects are read from
  * @param projectName - The library's project name
  * @returns The e2e project, or undefined when none depends on the library
+ *
+ * @example Found by its dependency, not by its name
+ * ```typescript
+ * e2eProjectOf(tree, 'lib-core')
+ * // => { name: 'e2e-lib-core', root: 'e2e/core', implicitDependencies: ['lib-core'], targets: { e2e: {} } }
+ * e2eProjectOf(tree, 'docs-site') // => undefined
+ * ```
  */
 export function e2eProjectOf(tree: Tree, projectName: string): ProjectConfiguration | undefined {
   return [...getProjects(tree).values()].find(
@@ -73,6 +80,18 @@ function renamedAfter(current: string, oldName: string, newName: string): string
  * @param tree - The tree the projects live in
  * @param rename - The library's old and new names
  * @returns The e2e project's root, or undefined when no project tests the library
+ *
+ * @example The e2e project follows the library's rename, in place
+ * ```typescript
+ * renameE2eProject(tree, {
+ *   currentProjectName: 'lib-core',
+ *   newProjectName: 'lib-kernel',
+ *   currentPackageName: '@acme/core',
+ *   newPackageName: '@acme/kernel',
+ * })
+ * // => 'e2e/core': its project.json name e2e-lib-core became e2e-lib-kernel, its package.json name @acme/e2e-core became @acme/e2e-kernel,
+ * //    and the dependency pin "file:../../packs/acme-core-1.0.0.tgz" became "file:../../packs/acme-kernel-1.0.0.tgz"
+ * ```
  */
 export function renameE2eProject(tree: Tree, rename: E2eRename): string | undefined {
   const project = e2eProjectOf(tree, rename.currentProjectName) ?? e2eProjectOf(tree, rename.newProjectName)

@@ -24,6 +24,22 @@ import { runVersion } from './lib/run-version-for-project'
  * @param options - Configuration options for the version executor
  * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
+ *
+ * @example A `version` target attributing commits by scope and by file
+ * ```json
+ * {
+ *   "targets": {
+ *     "version": {
+ *       "executor": "@hyperfrontend/workspace:version",
+ *       "options": {
+ *         "tagPrefix": "lib-core@",
+ *         "scopeFiltering": { "strategy": "hybrid", "excludeScopes": ["ci", "docs-site"] }
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run lib-core:version --dryRun` says what would be bumped; without the flag the bump, the changelog entry and the pins of the dependents are committed, and no tag is made until `--skipTag=false`.
  */
 export async function versionExecutor(options: VersionExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const { projectName, root: workspaceRoot } = context

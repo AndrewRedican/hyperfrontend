@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The qualified edge one import draws: from the importing file to the file, entry or installed
  * package it resolves to, carrying the import's form, the importing file's role, the specifier

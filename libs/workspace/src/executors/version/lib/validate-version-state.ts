@@ -111,6 +111,22 @@ export interface ValidateVersionStateOptions {
  *
  * @param options - Validation options including paths and configuration
  * @returns Validation result with status and any discrepancies found
+ *
+ * @example A manifest that lags behind its commits
+ * ```typescript
+ * const result = await validateVersionState({ workspaceRoot: root, projectName: 'lib-core', projectRoot: 'libs/core' })
+ * // => {
+ * //   status: 'invalid',
+ * //   library: 'lib-core',
+ * //   expected: { version: '1.1.0', bumpType: 'minor', commitCount: 3, changelogEntry: { ... } },
+ * //   actual: { version: '1.0.0', hasVersionEntry: false },
+ * //   discrepancies: [
+ * //     { file: 'package.json', type: 'version-mismatch', expected: '1.1.0', actual: '1.0.0', remedy: 'Run: npx hf run lib-core:version' },
+ * //     { file: 'CHANGELOG.md', type: 'changelog-missing', expected: 'Entry for version 1.1.0', actual: 'No entry found', remedy: '...' },
+ * //   ],
+ * // }
+ * // status is 'skipped' when the commits call for no bump, 'valid' when the files already match
+ * ```
  */
 export async function validateVersionState(options: ValidateVersionStateOptions): Promise<VersionValidationResult> {
   const { workspaceRoot, projectName, projectRoot, verbose, scopeFiltering, maxCommitFallback, repository } = options
@@ -266,6 +282,14 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
  *
  * @param result - The validation result to format
  * @returns Formatted string for console output
+ *
+ * @example The verdict as the `version-check` task prints it
+ * ```typescript
+ * formatValidationResult({ status: 'skipped', library: 'lib-core', skipReason: 'No version bump required based on commit analysis', discrepancies: [] })
+ * // => '⏭️  lib-core: No version bump required based on commit analysis'
+ * formatValidationResult(invalid)
+ * // => several lines: the expected and actual versions, each discrepancy, then the remedy of the first one
+ * ```
  */
 export function formatValidationResult(result: VersionValidationResult): string {
   const lines: string[] = []

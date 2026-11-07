@@ -74,6 +74,14 @@ const readerVersions = createMap<string, string>()
  *
  * @param path - The workspace-relative path
  * @returns Whether to read it
+ *
+ * @example Declaration files count, vendored packages do not
+ * ```typescript
+ * isCodeFile('libs/features/src/index.ts') // => true
+ * isCodeFile('libs/features/src/types.d.ts') // => true
+ * isCodeFile('libs/features/node_modules/left-pad/index.js') // => false
+ * isCodeFile('libs/features/README.md') // => false
+ * ```
  */
 export function isCodeFile(path: string): boolean {
   return CODE_EXTENSIONS.test(path) && !path.includes(`node_modules${posix.sep}`)
@@ -87,6 +95,12 @@ export function isCodeFile(path: string): boolean {
  *
  * @param root - The workspace root, absolute
  * @returns The version string
+ *
+ * @example The two forms a version takes
+ * ```typescript
+ * readerVersion(root) // => '3:4f2a...' where the workspace aliases @hyperfrontend/linter to its sources
+ * readerVersion(root) // => '3:0.11.2' where the installed engine's parser reads the imports
+ * ```
  */
 export function readerVersion(root: string): string {
   let version = readerVersions.get(root)
@@ -255,6 +269,15 @@ function positionOf(starts: readonly number[], offset: number): Position {
  * @param tree - The program
  * @param text - The text the program was parsed from, for positions
  * @returns The imports, in source order
+ *
+ * @example Reading imports from a tree already parsed
+ * ```typescript
+ * import { parseCode } from '@hyperfrontend/linter/helpers'
+ *
+ * const text = readFileSync(join(root, file), 'utf8')
+ * const { tree } = parseCode(text, '.ts', 'module', false)
+ * if (tree !== null) importsOfTree(tree, text) // => the same list importsOfText(text, file) gives
+ * ```
  */
 export function importsOfTree(tree: Node, text: string): FileImport[] {
   const starts = lineStarts(text)
@@ -310,6 +333,30 @@ export function importsOfTree(tree: Node, text: string): FileImport[] {
  * @param text - The file's text
  * @param file - Its path, whose extension decides the dialect
  * @returns The imports, in source order, or null when the text does not parse
+ *
+ * @example Each form an import can take
+ * ```typescript
+ * importsOfText(
+ *   [
+ *     "import type { Node } from '@hyperfrontend/linter'",
+ *     "import './polyfill'",
+ *     "export * from './host'",
+ *     "const mod = await import(`./locale/${lang}`)",
+ *   ].join('\n'),
+ *   'src/index.ts'
+ * )
+ * // => [
+ * //   { specifier: '@hyperfrontend/linter', dynamic: false, kind: 'type', typeOnly: true, names: ['Node'], line: 1, column: 1 },
+ * //   { specifier: './polyfill', dynamic: false, kind: 'side-effect', typeOnly: false, names: [], line: 2, column: 1 },
+ * //   { specifier: './host', dynamic: false, kind: 're-export-all', typeOnly: false, names: ['*'], line: 3, column: 1 },
+ * //   { specifier: '`./locale/${lang}`', dynamic: true, kind: 'unresolved', typeOnly: false, names: [], line: 4, column: 19 },
+ * // ]
+ * ```
+ *
+ * @example A file that does not parse
+ * ```typescript
+ * importsOfText('import {', 'src/broken.ts') // => null
+ * ```
  */
 export function importsOfText(text: string, file: string): FileImport[] | null {
   const parsed = parseCode(text, extname(file), 'module', /\.d\.[cm]?ts$/.test(file))
@@ -322,6 +369,12 @@ export function importsOfText(text: string, file: string): FileImport[] | null {
  * @param root - The workspace root, absolute
  * @param file - The workspace-relative path
  * @returns The imports, or null when the file does not parse
+ *
+ * @example Bypassing the cache for one file
+ * ```typescript
+ * readImports(root, 'libs/features/src/index.ts')?.map((item) => item.specifier)
+ * // => ['@hyperfrontend/nexus', './host/open', ...]
+ * ```
  */
 export function readImports(root: string, file: string): FileImport[] | null {
   return importsOfText(readFileSync(join(root, file), 'utf8'), file)
@@ -336,6 +389,14 @@ export function readImports(root: string, file: string): FileImport[] | null {
  * @param root - The workspace root, absolute
  * @param files - The workspace-relative paths
  * @returns The imports by path, for the code files only
+ *
+ * @example Only code files appear, and a parse failure is recorded as null
+ * ```typescript
+ * const imports = importsOfFiles(root, listFiles(root))
+ * imports.has('README.md') // => false
+ * imports.get('libs/features/src/index.ts')?.length // => 7
+ * imports.get('libs/broken/src/index.ts') // => null, when the file does not parse
+ * ```
  */
 export function importsOfFiles(root: string, files: readonly string[]): Map<string, readonly FileImport[] | null> {
   const cacheFile = join(root, CACHE_FILE)

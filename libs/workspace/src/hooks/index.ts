@@ -1,14 +1,16 @@
 /**
  * The resolution hook that loads a workspace's TypeScript from source: the path aliases of
  * `tsconfig.base.json`, and extensionless relative imports completed the way the compiler does.
- * Importing this module installs it for the workspace this file lives in and for the workspace
- * above the working directory.
  *
- * It runs before the aliases exist, so it imports nothing but Node's own modules and reads
- * `tsconfig.base.json` through Node's JSON loading.
+ * @remarks
+ * Importing this module installs the hook for the workspace this file lives in and for the
+ * workspace above the working directory. It runs before the aliases exist, so it imports nothing
+ * but Node's own modules and reads `tsconfig.base.json` through Node's JSON loading.
  *
- * @module hooks
+ * @module @hyperfrontend/workspace/hooks
  */
+
+/* lint-disable workspace/lib-require-jsdoc-example */
 
 import { existsSync, statSync } from 'node:fs'
 import { createRequire, registerHooks } from 'node:module'
@@ -108,6 +110,15 @@ function isFile(path: string): boolean {
  * @param specifier - The import specifier
  * @param parentFile - The absolute path of the importing file
  * @returns The completed absolute path, or null when the specifier is not relative, names a file as written, or completes to nothing
+ *
+ * @example The three completions, and the cases the hook leaves to Node
+ * ```typescript
+ * const parent = '/repo/libs/features/src/index.ts'
+ * completeRelative('./host/open', parent) // => '/repo/libs/features/src/host/open.ts'
+ * completeRelative('./host', parent) // => '/repo/libs/features/src/host/index.ts', when host/ is a directory
+ * completeRelative('./host/open.ts', parent) // => null, the file exists as written
+ * completeRelative('@hyperfrontend/nexus', parent) // => null, not relative
+ * ```
  */
 export function completeRelative(specifier: string, parentFile: string): string | null {
   if (!specifier.startsWith('./') && !specifier.startsWith('../')) return null
@@ -123,6 +134,15 @@ export function completeRelative(specifier: string, parentFile: string): string 
  * @param specifier - The import specifier
  * @param parentURL - The importing module's URL, when there is one
  * @returns The file URL to load, or null when the hook has nothing to say
+ *
+ * @example An alias resolves from anywhere, a relative import only from workspace TypeScript
+ * ```typescript
+ * const sources = readSources('/repo')
+ * resolveWorkspace(sources, '@hyperfrontend/nexus', undefined) // => 'file:///repo/libs/nexus/src/index.ts'
+ * resolveWorkspace(sources, './host', 'file:///repo/libs/features/src/index.ts') // => 'file:///repo/libs/features/src/host/index.ts'
+ * resolveWorkspace(sources, './host', 'file:///repo/node_modules/pkg/index.js') // => null
+ * resolveWorkspace(sources, 'typescript', 'file:///repo/libs/features/src/index.ts') // => null, Node resolves it
+ * ```
  */
 export function resolveWorkspace(sources: WorkspaceSources, specifier: string, parentURL: string | undefined): string | null {
   const target = aliasTarget(sources, specifier)
@@ -154,6 +174,22 @@ const installed: WorkspaceSources[] = []
  * installed after another is asked after it.
  *
  * @param root - The workspace root, absolute
+ *
+ * @example Running a workspace's TypeScript from source
+ * ```bash
+ * node --import @hyperfrontend/workspace/hooks tools/scripts/report.ts
+ * ```
+ * Importing the module installs the hooks for the workspace above the working directory; call
+ * `installAliases` only for a second workspace, which is asked after the first.
+ *
+ * @example Lending a script the aliases of another workspace
+ * ```typescript
+ * import { installAliases } from '@hyperfrontend/workspace/hooks'
+ *
+ * installAliases('/repos/other-workspace')
+ * installAliases('/repos/other-workspace') // a second call for the same root changes nothing
+ * const { buildGraph } = await import('@other/graph') // an alias of the other workspace's tsconfig.base.json
+ * ```
  */
 export function installAliases(root: string): void {
   if (installed.some((sources) => sources.root === root)) return
@@ -178,6 +214,12 @@ export function installAliases(root: string): void {
  * Installs the hooks for the workspace above a directory, when there is one.
  *
  * @param directory - Where to look from, absolute
+ *
+ * @example Installing for the workspace a file belongs to
+ * ```typescript
+ * installFrom(dirname(fileURLToPath(import.meta.url))) // finds the nearest hf.json above this file
+ * installFrom('/tmp') // does nothing: no workspace above
+ * ```
  */
 export function installFrom(directory: string): void {
   const root = workspaceRootFrom(directory)

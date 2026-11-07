@@ -15,6 +15,14 @@ export type ExplainMode = 'tasks' | 'explain'
  *
  * @param item - The reason described
  * @returns One or two lines
+ *
+ * @example A reason with and without a path
+ * ```typescript
+ * describeReason({ rule: 'changed-input', file: 'libs/a/src/x.ts', path: [], message: 'libs/a/src/x.ts is an input of lib-a:build (production file of lib-a)' })
+ * // => ['changed-input libs/a/src/x.ts: libs/a/src/x.ts is an input of lib-a:build (production file of lib-a)']
+ * describeReason({ rule: 'dependent-task', file: null, path: ['task:lib-a:build'], message: 'lib-a:test runs after lib-a:build, which is selected' })
+ * // => ['dependent-task: lib-a:test runs after lib-a:build, which is selected', '  via task:lib-a:build']
+ * ```
  */
 export function describeReason(item: Reason): string[] {
   const head = `${item.rule}${item.file === null ? '' : ` ${item.file}`}: ${item.message}`
@@ -49,6 +57,26 @@ function heading(set: AffectedSet): string {
  * @param set - The decisions of one target
  * @param mode - The selected ids alone, or the explanation
  * @returns The lines
+ *
+ * @example The task ids alone, ready for a runner
+ * ```typescript
+ * const graph = workspaceGraph(root)
+ * const changes = changeSet(root, 'main', null)
+ * const sets = selectAffected({ graph, changes, targets: ['test'], previous: previousGraph(root, changes) })
+ * formatAffected(sets.get('test')!, 'tasks') // => ['lib-features:test', 'lib-nexus:test']
+ * ```
+ *
+ * @example The full explanation
+ * ```typescript
+ * formatAffected(sets.get('test')!, 'explain').join('\n')
+ * // test: 2 of 14 tasks selected, 3 changed files, a1b2c3d4e5f6 → working tree
+ * //   lib-nexus:test
+ * //       changed-input libs/nexus/src/core/registry.ts: libs/nexus/src/core/registry.ts is an input of lib-nexus:test (production file of lib-nexus)
+ * //   ...
+ * // skipped 12 tasks
+ * //   lib-builder:test
+ * //       unreachable libs/nexus/src/core/registry.ts: ... lib-builder does not depend on lib-nexus
+ * ```
  */
 export function formatAffected(set: AffectedSet, mode: ExplainMode): string[] {
   if (mode === 'tasks') return set.selected.map((decision) => decision.task)
@@ -69,6 +97,13 @@ export function formatAffected(set: AffectedSet, mode: ExplainMode): string[] {
  * @param set - The affected set
  * @param task - The task id, `<project>:<target>`
  * @returns The decision with its reasons, or one line saying the target has no such task
+ *
+ * @example Why one task was skipped
+ * ```typescript
+ * formatTask(sets.get('test')!, 'lib-builder:test')
+ * // => ['lib-builder:test is skipped', '    unreachable libs/nexus/src/core/registry.ts: ...']
+ * formatTask(sets.get('test')!, 'docs-site:test') // => ['docs-site:test is not a task of test']
+ * ```
  */
 export function formatTask(set: AffectedSet, task: string): string[] {
   const selected = set.selected.find((decision) => decision.task === task)

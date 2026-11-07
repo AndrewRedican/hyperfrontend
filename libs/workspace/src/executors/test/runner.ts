@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The command line of the process the `test` executor starts: it loads a project's test
  * configuration and hands it to the test runtime's runner. It runs with the runtime's resolution

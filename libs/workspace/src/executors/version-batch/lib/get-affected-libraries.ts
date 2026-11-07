@@ -19,6 +19,14 @@ import { rebuiltProjects } from './rebuilt-projects'
  * @param base - Base git ref (default: origin/main)
  * @param head - Head git ref (default: HEAD)
  * @returns List of affected library names that have a version target
+ *
+ * @example A library is due a release without a changed file of its own
+ * ```typescript
+ * import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+ *
+ * await getAffectedLibraries(root, workspaceGraph(root), 'origin/main', 'HEAD')
+ * // => ['lib-core', 'lib-features']: the change touched libs/core alone, and lib-features bundles what it imports from it
+ * ```
  */
 export async function getAffectedLibraries(
   workspaceRoot: string,
@@ -56,6 +64,13 @@ export async function getAffectedLibraries(
  * @param graph - The workspace graph
  * @param projectName - Name of the project, as the graph keys it
  * @returns True when the project declares a version target
+ *
+ * @example An unknown project is simply not versionable
+ * ```typescript
+ * hasVersionTarget(graph, 'lib-core') // true when libs/core/project.json has a version target
+ * hasVersionTarget(graph, 'docs-site') // false: an application declares none
+ * hasVersionTarget(graph, 'no-such-project') // false
+ * ```
  */
 export function hasVersionTarget(graph: WorkspaceGraph, projectName: string): boolean {
   const project = graph.projects.get(projectName)

@@ -35,9 +35,19 @@ const TEMPLATES = join(typeof __dirname === 'string' ? __dirname : import.meta.d
  * @returns Resolves when the files are written
  * @throws {Error} When the tree already holds an `hf.json`
  *
- * @example
+ * @example Starting a workspace in a repository that has none
  * ```bash
  * npx hf generate workspace
+ * ```
+ *
+ * @example From a setup script, over a tree of the repository
+ * ```typescript
+ * import { commitChanges, createFsTree } from '@hyperfrontend/project-scope/vfs'
+ * import workspaceGenerator from '@hyperfrontend/workspace/generators/workspace'
+ *
+ * const tree = createFsTree(process.cwd())
+ * await workspaceGenerator(tree, { skipFormat: true })
+ * commitChanges(tree) // writes hf.json, tsconfig.base.json, lint.base.config.ts, .hfignore and, when missing, .gitignore
  * ```
  */
 export async function workspaceGenerator(tree: Tree, options: WorkspaceGeneratorOptions = {}): Promise<void> {

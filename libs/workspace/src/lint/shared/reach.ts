@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * Walks over the project graph the boundary rule needs: the path a cycle takes, whether a project
  * reaches another through dynamic imports alone, and the files that draw each step.

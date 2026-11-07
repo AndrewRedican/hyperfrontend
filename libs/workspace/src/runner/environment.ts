@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The search path a task runs with: the `node_modules/.bin` directory of the directory it runs
  * in and of every directory above it, then the directory of the running Node.js, then the path

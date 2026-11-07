@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The options a command line passes after the task: `--name=value` sets an option and a bare
  * `--name` sets it to true. A kebab-case name becomes camelCase, and a value is read as the type

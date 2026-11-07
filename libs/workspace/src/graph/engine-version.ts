@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The version of this package where it runs installed, which stamps the caches the graph writes:
  * the parser the import reader uses and the graph algorithm are both inlined into the package, so

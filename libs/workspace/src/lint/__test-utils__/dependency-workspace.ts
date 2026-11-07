@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * A disposable git workspace for the dependency specs: a buildable library importing an npm
  * package, a buildable and an unbuildable workspace library, a missing package, a nested install,

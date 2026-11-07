@@ -3,7 +3,7 @@
  * workspace's aliases, project files and module exports that the rules and a workspace's own
  * rules share.
  *
- * @module lint
+ * @module @hyperfrontend/workspace/lint
  */
 
 import type { RuleFamily } from '@hyperfrontend/linter'

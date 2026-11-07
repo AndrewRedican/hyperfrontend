@@ -46,6 +46,18 @@ export interface RenamePlan {
  * @param options - The options as given
  * @returns The root and the names the rename writes from
  * @throws {Error} When the new name is the current one
+ *
+ * @example The package keeps its scope
+ * ```typescript
+ * planRename(tree, { project: 'my-utils', newName: 'better-utils' })
+ * // => {
+ * //   currentProjectName: 'my-utils',
+ * //   projectRoot: 'libs/my-utils',
+ * //   newProjectName: 'better-utils',
+ * //   currentPackageName: '@acme/my-utils',
+ * //   newPackageName: '@acme/better-utils',
+ * // }
+ * ```
  */
 export function planRename(tree: Tree, options: RenameGeneratorOptions): RenamePlan {
   if (options.project === options.newName) throw createError(`New name must be different from current name: ${options.project}`)
@@ -72,9 +84,16 @@ export function planRename(tree: Tree, options: RenameGeneratorOptions): RenameP
  * @returns Resolves when the rename is written
  * @throws {Error} When the project is unknown or the new name is the current one
  *
- * @example
+ * @example Renaming a project from the command line
  * ```bash
  * npx hf generate rename my-utils better-utils
+ * ```
+ *
+ * @example Choosing the package name rather than deriving it
+ * ```typescript
+ * import renameGenerator from '@hyperfrontend/workspace/generators/rename'
+ *
+ * await renameGenerator(tree, { project: 'my-utils', newName: 'better-utils', packageName: '@acme/utils' })
  * ```
  */
 export async function renameGenerator(tree: Tree, options: RenameGeneratorOptions): Promise<void> {

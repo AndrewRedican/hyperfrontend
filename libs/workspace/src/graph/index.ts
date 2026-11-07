@@ -1,7 +1,8 @@
 /**
- * `@hyperfrontend/workspace/graph` - the owned workspace graph: the projects, files, entries and
- * installed packages a workspace holds, the qualified edges between them, and the project edges
- * Nx would draw.
+ * The owned workspace graph: the projects, files, entries and installed packages a workspace
+ * holds, the qualified edges between them, and the project edges Nx would draw.
+ *
+ * @module @hyperfrontend/workspace/graph
  */
 export type { Closure, Fallback, Hop } from './affected/closure'
 export type { ExplainMode } from './affected/explain'

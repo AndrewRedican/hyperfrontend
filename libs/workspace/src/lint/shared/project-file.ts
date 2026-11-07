@@ -57,6 +57,14 @@ function readObject(path: string): Record<string, unknown> | null {
  *
  * @param directory - The absolute directory
  * @returns The parsed file, or null when there is none or it is not an object
+ *
+ * @example Reading a target's existence from a rule
+ * ```typescript
+ * const project = readProjectFile('/repo/libs/features')
+ * project?.name // => 'lib-features'
+ * project?.targets?.['publish'] !== undefined // => true
+ * readProjectFile('/repo/libs/vendored') // => null, a package.json alone has no project.json
+ * ```
  */
 export function readProjectFile(directory: string): ProjectFile | null {
   const known = files.get(directory)
@@ -71,6 +79,12 @@ export function readProjectFile(directory: string): ProjectFile | null {
  *
  * @param directory - The absolute directory
  * @returns The parsed manifest, or null when there is none or it is not an object
+ *
+ * @example The fields are untyped until checked
+ * ```typescript
+ * const manifest = readPackageFile('/repo/libs/features')
+ * const name = typeof manifest?.name === 'string' ? manifest.name : null // => '@hyperfrontend/features'
+ * ```
  */
 export function readPackageFile(directory: string): PackageFile | null {
   const known = manifests.get(directory)
@@ -86,6 +100,14 @@ export function readPackageFile(directory: string): PackageFile | null {
  *
  * @param project - The parsed file
  * @returns True for a publishable library
+ *
+ * @example A library needs both targets
+ * ```typescript
+ * isPublishableProject({ projectType: 'library', targets: { build: {}, publish: {} } }) // => true
+ * isPublishableProject({ projectType: 'library', targets: { build: {} } }) // => false
+ * isPublishableProject({ projectType: 'application', targets: { build: {}, publish: {} } }) // => false
+ * isPublishableProject(null) // => false
+ * ```
  */
 export function isPublishableProject(project: ProjectFile | null): boolean {
   return (
@@ -101,6 +123,12 @@ export function isPublishableProject(project: ProjectFile | null): boolean {
  *
  * @param directory - The absolute directory that would hold `project.json`
  * @returns True when the project is a library with `build` and `publish` targets
+ *
+ * @example Gating a rule to publishable libraries
+ * ```typescript
+ * const root = projectRootOf(dirname(context.file.path))
+ * if (root === null || !isPublishableLibrary(root)) return {}
+ * ```
  */
 export function isPublishableLibrary(directory: string): boolean {
   return isPublishableProject(readProjectFile(directory))

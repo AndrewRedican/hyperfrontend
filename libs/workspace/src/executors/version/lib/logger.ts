@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { Logger } from '@hyperfrontend/logging'
 import type { VersionExecutorOptions } from '../options'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'

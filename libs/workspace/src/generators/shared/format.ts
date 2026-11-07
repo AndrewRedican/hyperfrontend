@@ -48,6 +48,13 @@ export interface Prettier {
  * @param root - The workspace root, absolute
  * @returns Its API
  * @throws {Error} When the workspace has no prettier
+ *
+ * @example Formatting a text with the workspace's prettier and configuration
+ * ```typescript
+ * const prettier = prettierOf(tree.root)
+ * const options = { ...(await prettier.resolveConfig(`${tree.root}/libs/core/src/index.ts`, { editorconfig: true })), filepath: 'index.ts' }
+ * await prettier.format('export const a={b:1}', options) // => "export const a = { b: 1 }\n"
+ * ```
  */
 export function prettierOf(root: string): Prettier {
   try {
@@ -64,6 +71,17 @@ export function prettierOf(root: string): Prettier {
  * @param prettier - The prettier to format with; the workspace's own when omitted
  * @returns Resolves when every file is written back
  * @throws {Error} When prettier cannot parse a file, which a generator wrote wrong
+ *
+ * @example The last step of a generator
+ * ```typescript
+ * import type { Generator } from '@hyperfrontend/workspace/generators'
+ * import { formatFiles, writeJson } from '@hyperfrontend/workspace/generators'
+ *
+ * const addConfig: Generator<{ project: string; skipFormat?: boolean }> = async (tree, options) => {
+ *   writeJson(tree, `libs/${options.project}/custom.json`, { enabled: true })
+ *   if (!options.skipFormat) await formatFiles(tree)
+ * }
+ * ```
  */
 export async function formatFiles(tree: Tree, prettier: Prettier = prettierOf(tree.root)): Promise<void> {
   const ignorePath = join(tree.root, '.prettierignore')

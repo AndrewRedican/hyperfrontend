@@ -64,6 +64,15 @@ function replaceArguments(text: string): readonly [string, string] {
  * @param expression - The text between `<%=` and `%>`
  * @param substitutions - The values
  * @returns The text
+ *
+ * @example Dotted paths and the one call a template may make
+ * ```typescript
+ * const substitutions = { names: names('data-utils'), packageName: '@acme/data-utils' }
+ * renderExpression('names.className', substitutions) // => 'DataUtils'
+ * renderExpression('packageName.replace("@", "")', substitutions) // => 'acme/data-utils'
+ * renderExpression('names.missing', substitutions) // => ''
+ * renderExpression('other', substitutions) // throws: other is not defined for the template
+ * ```
  */
 export function renderExpression(expression: string, substitutions: Substitutions): string {
   const trimmed = expression.trim()
@@ -85,6 +94,12 @@ export function renderExpression(expression: string, substitutions: Substitution
  * @param substitutions - The values
  * @returns The rendered text
  * @throws {Error} When a tag is not closed
+ *
+ * @example Rendering one template text
+ * ```typescript
+ * renderTemplate('export class <%= names.className %> {}\n', { names: names('data-utils') })
+ * // => 'export class DataUtils {}\n'
+ * ```
  */
 export function renderTemplate(template: string, substitutions: Substitutions): string {
   const parts: string[] = []
@@ -131,6 +146,16 @@ function targetPath(source: string, file: string, target: string): string {
  * @param substitutions - The values the templates name
  * @param options - Whether files already there are kept
  * @throws {Error} When the directory holds no file
+ *
+ * @example A generator's `files` directory written under the project
+ * ```typescript
+ * import { join } from 'node:path'
+ * import { generateFiles, names } from '@hyperfrontend/workspace/generators'
+ *
+ * // files/src/index.ts.template holds: export const <%= names.propertyName %> = '<%= names.name %>'
+ * generateFiles(tree, join(import.meta.dirname, 'files'), 'libs/data-utils', { names: names('data-utils') }, { keepExisting: true })
+ * // writes libs/data-utils/src/index.ts holding "export const dataUtils = 'data-utils'", unless the file is already there
+ * ```
  */
 export function generateFiles(
   tree: Tree,

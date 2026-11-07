@@ -1,7 +1,7 @@
 /**
  * The `workspace` generator: writes the root configuration the engine reads into a repository that has none.
  *
- * @module generators/workspace
+ * @module @hyperfrontend/workspace/generators/workspace
  */
 
 export type { WorkspaceGeneratorOptions } from './options'

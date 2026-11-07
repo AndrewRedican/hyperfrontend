@@ -1,10 +1,8 @@
 /**
- * What the generators are built from, for a workspace's own generators to compose the packaged
- * ones on the same tree: the tree's JSON, project and template helpers, the names and paths a
- * generator writes, the manifest and alias updates a rename needs, and the running of a generator
- * by name.
+ * What the generators are built from, so a workspace's own generators compose the packaged ones
+ * on the same tree: JSON, project and template helpers, names and paths, and running by name.
  *
- * @module generators
+ * @module @hyperfrontend/workspace/generators
  */
 
 export type { Generator, Tree, TreeChange } from '../runner/contract'

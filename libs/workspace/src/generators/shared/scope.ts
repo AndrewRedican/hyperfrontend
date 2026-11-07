@@ -12,6 +12,12 @@ import { names } from './names'
  *
  * @param packageName - A package name, scoped or not
  * @returns The scope with its `@`, or undefined for an unscoped name
+ *
+ * @example Scoped and unscoped names
+ * ```typescript
+ * scopeOf('@acme/core') // => '@acme'
+ * scopeOf('lodash') // => undefined
+ * ```
  */
 export function scopeOf(packageName: string): string | undefined {
   const slash = packageName.indexOf('/')
@@ -23,6 +29,12 @@ export function scopeOf(packageName: string): string | undefined {
  *
  * @param packageName - A package name, scoped or not
  * @returns The part after the scope's slash, or the name as given
+ *
+ * @example The name a directory takes
+ * ```typescript
+ * unscopedName('@acme/core') // => 'core'
+ * unscopedName('lodash') // => 'lodash'
+ * ```
  */
 export function unscopedName(packageName: string): string {
   const scope = scopeOf(packageName)
@@ -35,6 +47,12 @@ export function unscopedName(packageName: string): string {
  * @param scope - The scope with its `@`, or undefined for no scope
  * @param name - The name under the scope
  * @returns `@scope/name`, or the name alone
+ *
+ * @example Renaming a package under its current scope
+ * ```typescript
+ * scopedName(scopeOf('@acme/core'), 'kernel') // => '@acme/kernel'
+ * scopedName(undefined, 'kernel') // => 'kernel'
+ * ```
  */
 export function scopedName(scope: string | undefined, name: string): string {
   return scope === undefined ? name : `${scope}/${name}`
@@ -46,6 +64,12 @@ export function scopedName(scope: string | undefined, name: string): string {
  *
  * @param packageName - A package name, scoped or not
  * @returns The identifier a browser attaches the bundle under
+ *
+ * @example The scope becomes part of the global
+ * ```typescript
+ * globalNameOf('@acme/data-utils') // => 'AcmeDataUtils'
+ * globalNameOf('data-utils') // => 'DataUtils'
+ * ```
  */
 export function globalNameOf(packageName: string): string {
   const scope = scopeOf(packageName)

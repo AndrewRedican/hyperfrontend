@@ -42,6 +42,14 @@ type ProjectFile = Omit<ProjectConfiguration, 'name' | 'root'> & Partial<Pick<Pr
  *
  * @param tree - The tree read
  * @returns The projects, in path order
+ *
+ * @example A project the same run created is already there
+ * ```typescript
+ * import { getProjects, writeJson } from '@hyperfrontend/workspace/generators'
+ *
+ * writeJson(tree, 'libs/data/project.json', { projectType: 'library' })
+ * getProjects(tree).get('data') // => { name: 'data', root: 'libs/data', projectType: 'library' }, named after its directory
+ * ```
  */
 export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
   const projects = createMap<string, ProjectConfiguration>()
@@ -62,6 +70,13 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
  * @param name - Which project
  * @returns Its configuration
  * @throws {Error} When no project of that name is there
+ *
+ * @example The root a generator writes under
+ * ```typescript
+ * const project = readProjectConfiguration(tree, 'lib-core')
+ * // => { name: 'lib-core', root: 'libs/core', projectType: 'library', targets: { build: { ... } } }
+ * tree.write(`${project.root}/src/generated.ts`, 'export const generated = true\n')
+ * ```
  */
 export function readProjectConfiguration(tree: Tree, name: string): ProjectConfiguration {
   const project = getProjects(tree).get(name)

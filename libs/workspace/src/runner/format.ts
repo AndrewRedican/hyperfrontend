@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * Formats the workspace with prettier, `format --check|--write [--all | --files=<list>]`: every
  * file git tracks or would track under `--all`, the named files under `--files`, and otherwise the

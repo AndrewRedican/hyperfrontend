@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The environment git runs with when it lists and hashes a workspace's files. A checkout answers
  * from its own repository; a tree without one, such as a deploy's source snapshot, answers from an

@@ -20,6 +20,11 @@ export interface HfOptions {
  *
  * @param options - The arguments and the starting directory
  * @returns The exit code
+ *
+ * @example What the `hf` executable does
+ * ```typescript
+ * process.exitCode = await runHf({ argv: process.argv.slice(2), cwd: process.cwd() })
+ * ```
  */
 export function runHf(options: HfOptions): Promise<number> {
   return runWorkspaceCli({ ...options, stdout: process.stdout, stderr: process.stderr })

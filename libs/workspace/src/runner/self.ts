@@ -22,6 +22,16 @@ export interface StartedAs {
  * @param started - The running process
  * @param args - The arguments of the new run
  * @returns The executable, its flags, the entry module and the arguments
+ *
+ * @example Starting a task in a child the way this process was started
+ * ```typescript
+ * import { spawn } from 'node:child_process'
+ * import { selfCommand } from '@hyperfrontend/workspace/runner'
+ *
+ * const [program, ...args] = selfCommand(process, ['run', 'lib-core:build'])
+ * // => ['/usr/bin/node', '--import=tsx', '/repo/node_modules/@hyperfrontend/workspace/bin/hf.mjs', 'run', 'lib-core:build']
+ * spawn(program as string, args, { stdio: 'inherit' })
+ * ```
  */
 export function selfCommand(started: StartedAs, args: readonly string[]): string[] {
   return [started.execPath, ...started.execArgv, started.argv[1] as string, ...args]

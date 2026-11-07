@@ -123,7 +123,7 @@ function implicitDependents(projects: Readonly<Record<string, ProjectConfigurati
  * @param options - Configuration options for versioning
  * @returns Result containing success status, version info, and modified files
  *
- * @example
+ * @example Versioning a project without committing
  * ```typescript
  * const result = await runVersion({
  *   projectName: 'my-lib',
@@ -138,6 +138,26 @@ function implicitDependents(projects: Readonly<Record<string, ProjectConfigurati
  *   console.log(`Bumped from ${result.previousVersion} to ${result.newVersion}`)
  *   console.log(`Modified files: ${result.modifiedFiles.join(', ')}`)
  * }
+ * ```
+ *
+ * @example Carrying a follow-up's files into the version commit
+ * ```typescript
+ * import { writeFileSync } from 'node:fs'
+ * import { join } from 'node:path'
+ *
+ * const result = await runVersion({
+ *   projectName: 'my-lib',
+ *   workspaceRoot: '/path/to/workspace',
+ *   projectRoot: 'libs/my-lib',
+ *   projects: context.projects,
+ *   followUps: [
+ *     (bump, run) => {
+ *       if (!run.dryRun) writeFileSync(join(run.workspaceRoot, 'docs/versions.md'), `${bump.packageName} ${bump.newVersion}\n`)
+ *       return ['docs/versions.md']
+ *     },
+ *   ],
+ * })
+ * // => result.modifiedFiles ends with 'docs/versions.md', amended into the commit that records the bump
  * ```
  */
 export async function runVersion(options: RunVersionOptions): Promise<RunVersionResult> {

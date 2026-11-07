@@ -1,7 +1,7 @@
 /**
  * The workspace's command line as a function: what the `hf` executable runs, and what another command line hands its arguments to.
  *
- * @module cli
+ * @module @hyperfrontend/workspace/cli
  */
 
 export type { GraphOutput } from './graph'

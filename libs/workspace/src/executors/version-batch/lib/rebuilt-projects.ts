@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 import type { TaskDecision, WorkspaceGraph } from '../../../graph'
 import { reachedThrough } from '../../version/lib/shipped-change-commits'
 

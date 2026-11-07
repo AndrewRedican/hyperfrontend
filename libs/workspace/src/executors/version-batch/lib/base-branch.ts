@@ -41,6 +41,12 @@ export function baseBranches(base: string, remotes: readonly string[]): string[]
  *
  * @param cwd - A directory inside the repository
  * @returns The remote names, or none when git cannot answer
+ *
+ * @example Feeding the remotes to the base branch reading
+ * ```typescript
+ * baseBranches('origin/main', listRemotes(root)) // => ['origin/main', 'main'] in a clone with an origin remote
+ * listRemotes('/tmp/not-a-repository') // => []
+ * ```
  */
 export function listRemotes(cwd: string): string[] {
   try {

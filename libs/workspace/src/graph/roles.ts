@@ -70,6 +70,19 @@ function isSpecFile(basename: string): boolean {
  * @param file - The path to classify, workspace-relative and POSIX
  * @param projectRoot - The owning project's root, workspace-relative and POSIX; `.` for the workspace itself
  * @returns Which role the file plays
+ *
+ * @example The roles, as the `production` named input draws the line
+ * ```typescript
+ * roleOf('libs/features/src/index.ts', 'libs/features') // => 'production'
+ * roleOf('libs/features/src/index.spec.ts', 'libs/features') // => 'spec'
+ * roleOf('libs/features/src/__test-utils__/host.ts', 'libs/features') // => 'spec'
+ * roleOf('libs/features/lint.config.ts', 'libs/features') // => 'lint-config'
+ * roleOf('libs/features/tsconfig.lib.json', 'libs/features') // => 'build-config'
+ * roleOf('libs/features/scripts/release.ts', 'libs/features') // => 'script'
+ * roleOf('libs/features/README.md', 'libs/features') // => 'docs'
+ * roleOf('libs/features/assets/logo.svg', 'libs/features') // => 'asset'
+ * roleOf('tools/lint/bin/lint.ts', '.') // => 'production', the workspace root owns it
+ * ```
  */
 export function roleOf(file: string, projectRoot: string): Role {
   const relative = projectRoot === '.' || !file.startsWith(`${projectRoot}${posix.sep}`) ? file : file.slice(projectRoot.length + 1)

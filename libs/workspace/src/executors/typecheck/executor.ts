@@ -23,6 +23,16 @@ import { resolveFromWorkspace } from '../shared/workspace'
  * @param options - Executor options including the tsconfig paths
  * @param context - The workspace, the project and the target the task runs on
  * @returns An object indicating success or failure of the type check
+ *
+ * @example A `typecheck` target with the default configurations
+ * ```json
+ * {
+ *   "targets": {
+ *     "typecheck": { "executor": "@hyperfrontend/workspace:typecheck" }
+ *   }
+ * }
+ * ```
+ * `npx hf run lib-core:typecheck` checks `libs/core/tsconfig.lib.json`, then `libs/core/tsconfig.spec.json` when that file exists; `--tsConfig=libs/core/tsconfig.json` names another.
  */
 export async function typecheckExecutor(options: TypecheckExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const projectName = context.projectName

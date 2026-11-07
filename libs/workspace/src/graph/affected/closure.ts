@@ -179,6 +179,22 @@ function collapsedProject(graph: WorkspaceGraph, edge: Edge, own: string): strin
  * @param seeds - The files to start from, workspace-relative
  * @param kinds - The edge kinds to follow; unresolved and side-effect edges are always honoured
  * @returns The reachable files and projects, with how each was reached
+ *
+ * @example What a change can reach from a library's entry
+ * ```typescript
+ * const graph = workspaceGraph(root)
+ * const closure = closureOf(graph, ['libs/features/src/index.ts'], ALL_KINDS)
+ * closure.files.has('libs/nexus/src/core/registry.ts') // => true when the entry imports it, however indirectly
+ * closure.files.get('libs/features/src/index.ts') // => { from: null, edge: null, rule: null }, a seed
+ * closure.touched // => Set { 'lib-features', 'lib-nexus', ... }
+ * closure.projects // => Map {}, unless a fallback collapsed a project to whole
+ * ```
+ *
+ * @example Type-only edges left out, as a `test` target sees the graph
+ * ```typescript
+ * const kinds = relevantKinds('test')
+ * closureOf(graph, seeds, kinds).files.size <= closureOf(graph, seeds, ALL_KINDS).files.size // => true
+ * ```
  */
 export function closureOf(graph: WorkspaceGraph, seeds: Iterable<string>, kinds: ReadonlySet<EdgeKind>): Closure {
   const index = indexOf(graph)
@@ -250,6 +266,14 @@ export function closureOf(graph: WorkspaceGraph, seeds: Iterable<string>, kinds:
  * @param closure - The closure the file was reached in
  * @param path - The reached file
  * @returns The ids, the seed first and the file last
+ *
+ * @example The path an explanation prints
+ * ```typescript
+ * const closure = closureOf(graph, ['libs/features/src/index.ts'], ALL_KINDS)
+ * traceOf(closure, 'libs/nexus/src/core/registry.ts')
+ * // => ['file:libs/features/src/index.ts', 'entry:@hyperfrontend/nexus', 'file:libs/nexus/src/index.ts', 'file:libs/nexus/src/core/registry.ts']
+ * traceOf(closure, 'libs/unrelated/src/index.ts') // => ['file:libs/unrelated/src/index.ts'], a file the closure never reached
+ * ```
  */
 export function traceOf(closure: Closure, path: string): string[] {
   const ids: string[] = []
@@ -270,6 +294,12 @@ export function traceOf(closure: Closure, path: string): string[] {
  * @param closure - The closure the file was reached in
  * @param path - The reached file
  * @returns The hop carrying the rule, or null when ordinary edges reached the file
+ *
+ * @example Telling a precise reach from a conservative one
+ * ```typescript
+ * const hop = ruleHop(closure, 'libs/nexus/src/core/registry.ts')
+ * hop?.rule // => 'unresolved-import' when a file on the chain loads an expression, null when every edge was followed precisely
+ * ```
  */
 export function ruleHop(closure: Closure, path: string): Hop | null {
   for (let current: string | null = path; current !== null; ) {
@@ -289,6 +319,12 @@ export function ruleHop(closure: Closure, path: string): Hop | null {
  * @param path - The file asked about
  * @param project - The project owning it, or null
  * @returns The hop, or null when the closure does not reach the file
+ *
+ * @example A file of a collapsed project is reached through the project's hop
+ * ```typescript
+ * hopTo(closure, 'libs/nexus/src/core/registry.ts', 'lib-nexus') // => the hop that reached the file, or the one that collapsed lib-nexus
+ * hopTo(closure, 'README.md', null) // => null
+ * ```
  */
 export function hopTo(closure: Closure, path: string, project: string | null): Hop | null {
   return closure.files.get(path) ?? (project === null ? null : (closure.projects.get(project) ?? null))
@@ -299,6 +335,13 @@ export function hopTo(closure: Closure, path: string, project: string | null): H
  *
  * @param graph - The graph whose entries are closed over
  * @returns Each entry id to what its file reaches
+ *
+ * @example Which entries a file's change can reach
+ * ```typescript
+ * const changed = 'libs/nexus/src/core/registry.ts'
+ * const reaching = [...entryClosures(graph)].filter(([, closure]) => closure.files.has(changed)).map(([id]) => id)
+ * // => ['@hyperfrontend/nexus', '@hyperfrontend/features', '@hyperfrontend/features/host']
+ * ```
  */
 export function entryClosures(graph: WorkspaceGraph): Map<string, Closure> {
   const closures = createMap<string, Closure>()

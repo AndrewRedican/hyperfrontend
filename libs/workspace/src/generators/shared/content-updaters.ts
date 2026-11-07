@@ -25,6 +25,12 @@ export interface UpdateContentOptions {
  *
  * @param tree - The virtual file system tree
  * @param options - Options containing project root and package names
+ *
+ * @example Every mention in the README follows the package
+ * ```typescript
+ * updateReadmeReferences(tree, { projectRoot: 'libs/core', currentPackageName: '@acme/core', newPackageName: '@acme/kernel' })
+ * // "npm install @acme/core" in libs/core/README.md now reads "npm install @acme/kernel"; a project without a README is left alone
+ * ```
  */
 export function updateReadmeReferences(tree: Tree, options: UpdateContentOptions): void {
   if (options.currentPackageName === options.newPackageName) {
@@ -49,6 +55,12 @@ export function updateReadmeReferences(tree: Tree, options: UpdateContentOptions
  *
  * @param tree - The virtual file system tree
  * @param options - Options containing project root and package names
+ *
+ * @example Only the entry's `@module` tag is rewritten
+ * ```typescript
+ * updateModuleJSDoc(tree, { projectRoot: 'libs/core', currentPackageName: '@acme/core', newPackageName: '@acme/kernel' })
+ * // "@module @acme/core" in libs/core/src/index.ts now reads "@module @acme/kernel"; other mentions of the name stay
+ * ```
  */
 export function updateModuleJSDoc(tree: Tree, options: UpdateContentOptions): void {
   if (options.currentPackageName === options.newPackageName) {
@@ -74,6 +86,14 @@ export function updateModuleJSDoc(tree: Tree, options: UpdateContentOptions): vo
  *
  * @param tree - The virtual file system tree
  * @param options - Options containing project root and package names
+ *
+ * @example Carrying a package's new name into its prose
+ * ```typescript
+ * import { updateContentReferences } from '@hyperfrontend/workspace/generators'
+ *
+ * updateContentReferences(tree, { projectRoot: 'libs/core', currentPackageName: '@acme/core', newPackageName: '@acme/kernel' })
+ * // libs/core/README.md and the @module header of libs/core/src/index.ts now say @acme/kernel
+ * ```
  */
 export function updateContentReferences(tree: Tree, options: UpdateContentOptions): void {
   updateReadmeReferences(tree, options)

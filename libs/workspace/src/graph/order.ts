@@ -13,6 +13,12 @@ import type { Edge, EdgeEvidence } from './model'
  * @param left - One edge
  * @param right - Another
  * @returns Negative, zero or positive as a comparator does
+ *
+ * @example Checking that a list of edges is already canonical
+ * ```typescript
+ * const canonical = graph.records.every((edge, index) => index === 0 || compareEdges(graph.records[index - 1]!, edge) <= 0)
+ * // => true
+ * ```
  */
 export function compareEdges(left: Edge, right: Edge): number {
   return (
@@ -46,6 +52,12 @@ function compareEvidencePosition(left: EdgeEvidence, right: EdgeEvidence): numbe
  * @param left - One string
  * @param right - Another
  * @returns Negative, zero or positive as a comparator does
+ *
+ * @example Code-unit order, not locale order
+ * ```typescript
+ * ['b', 'B', 'a', 'A'].sort(compareText) // => ['A', 'B', 'a', 'b']
+ * ['b', 'B', 'a', 'A'].sort((left, right) => left.localeCompare(right)) // => ['a', 'A', 'b', 'B']
+ * ```
  */
 export function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0
@@ -57,6 +69,14 @@ export function compareText(left: string, right: string): number {
  *
  * @param edges - The edges in any order
  * @returns A sorted copy
+ *
+ * @example One order whatever order the edges arrived in
+ * ```typescript
+ * const forward = sortEdges(edges)
+ * const backward = sortEdges([...edges].reverse())
+ * JSON.stringify(forward) === JSON.stringify(backward) // => true
+ * forward === edges // => false, the input is never sorted in place
+ * ```
  */
 export function sortEdges(edges: readonly Edge[]): Edge[] {
   return [...edges].sort(compareEdges)

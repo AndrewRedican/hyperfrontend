@@ -37,6 +37,19 @@ const RUNNER_BOOTSTRAP =
  * @param options - Executor options naming the test configuration and coverage directory
  * @param context - The workspace, the project and the target the task runs on
  * @returns An object indicating success or failure of the test run
+ *
+ * @example A `test` target reading the project's `test.config.ts`
+ * ```json
+ * {
+ *   "targets": {
+ *     "test": {
+ *       "executor": "@hyperfrontend/workspace:test",
+ *       "options": { "coverageDirectory": "coverage/libs/core" }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run lib-core:test` starts a Node.js process with `@hyperfrontend/testing/hooks` preloaded; coverage lands in `coverage/libs/core`, the default for a project at `libs/core`.
  */
 export async function testExecutor(options: TestExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const projectName = context.projectName

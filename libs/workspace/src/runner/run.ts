@@ -41,6 +41,25 @@ export interface RunHost extends CommandsHost {
  * @param host - Where the task runs and what it runs with
  * @returns True when the task succeeded
  * @throws {Error} When the task cannot run as asked, or its executor throws
+ *
+ * @example Running one task in this process
+ * ```typescript
+ * import { spawn } from 'node:child_process'
+ * import { pathToFileURL } from 'node:url'
+ * import { runTask } from '@hyperfrontend/workspace/runner'
+ *
+ * const succeeded = await runTask('lib-core:build', ['--clean=false'], {
+ *   root,
+ *   cwd: process.cwd(),
+ *   env: process.env,
+ *   platform: process.platform,
+ *   execPath: process.execPath,
+ *   spawn: (line, options) => spawn(line, options),
+ *   write: (line) => process.stderr.write(`${line}\n`),
+ *   importModule: (file) => import(pathToFileURL(file).href),
+ * })
+ * // => true when the build executor answered { success: true }; lib-core's dependsOn did not run first
+ * ```
  */
 export async function runTask(id: string, args: readonly string[], host: RunHost): Promise<boolean> {
   const overrides = parseOverrides(args)
@@ -72,6 +91,12 @@ export async function runTask(id: string, args: readonly string[], host: RunHost
  * @param argv - The arguments after the entry, `run <project>:<target> [--name=value ...]`
  * @param host - Where the task runs and what it runs with
  * @returns The exit code: 0 when the task succeeded, 1 otherwise
+ *
+ * @example Reporting a refusal instead of throwing
+ * ```typescript
+ * await main(['run', 'lib-core:build:production'], host)
+ * // => 1, after writing "hf run lib-core:build:production: lib-core:build:production names the configuration production; targets run without configurations"
+ * ```
  */
 export async function main(argv: readonly string[], host: RunHost): Promise<number> {
   const [command, id, ...args] = argv

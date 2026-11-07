@@ -22,6 +22,15 @@ export const BUILD_TARGET = 'build'
  * @param root - The workspace root, absolute
  * @param specifier - The module, such as `@scope/package/entry`
  * @returns The file, or null when the workspace cannot resolve the module
+ *
+ * @example A tool the workspace installs, run on the current Node.js
+ * ```typescript
+ * import { execFileSync } from 'node:child_process'
+ *
+ * const tsc = resolveFromWorkspace(context.root, 'typescript/bin/tsc')
+ * // => '/repo/node_modules/typescript/bin/tsc', or null when the workspace has no TypeScript
+ * if (tsc !== null) execFileSync(process.execPath, [tsc, '--noEmit', '-p', 'libs/core/tsconfig.lib.json'], { cwd: context.root, stdio: 'inherit' })
+ * ```
  */
 export function resolveFromWorkspace(root: string, specifier: string): string | null {
   try {
@@ -38,6 +47,13 @@ export function resolveFromWorkspace(root: string, specifier: string): string | 
  * @param root - The workspace root, absolute
  * @param project - The project's configuration, its targets resolved
  * @returns The output directory, absolute
+ *
+ * @example The directory the build of a project wrote
+ * ```typescript
+ * buildOutputOf(context.root, context.projects['lib-core'])
+ * // => '/repo/dist/libs/core' by default
+ * // => '/repo/dist/packages/core' when the build target's options set outputPath: 'dist/packages/core'
+ * ```
  */
 export function buildOutputOf(root: string, project: ProjectConfiguration): string {
   const configured = project.targets?.[BUILD_TARGET]?.options?.['outputPath']
@@ -56,6 +72,12 @@ interface NamedManifest {
  * @param root - The workspace root, absolute
  * @param projects - Every project's configuration by name
  * @returns The name of each project's `package.json`, where it has one that names itself
+ *
+ * @example The first-party packages a build bundles rather than lists as dependencies
+ * ```typescript
+ * workspacePackages(context.root, context.projects)
+ * // => ['@acme/core', '@acme/utils', '@acme/e2e-core']; a project without a package.json contributes nothing
+ * ```
  */
 export function workspacePackages(root: string, projects: Readonly<Record<string, ProjectConfiguration>>): string[] {
   return values(projects).flatMap((project) => {

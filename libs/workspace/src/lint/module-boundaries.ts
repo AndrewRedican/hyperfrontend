@@ -58,6 +58,15 @@ const SOURCE_KINDS = ['ImportDeclaration', 'ImportExpression', 'ExportAllDeclara
  * @param entry - The allow entry
  * @param specifier - The specifier as written
  * @returns Whether the import is left alone
+ *
+ * @example The four forms an `allow` entry takes
+ * ```typescript
+ * allows('@scope/legacy/**', '@scope/legacy/deep/path') // => true
+ * allows('@scope/legacy/*', '@scope/legacy/one') // => true
+ * allows('@scope/legacy/*', '@scope/legacy/one/two') // => false
+ * allows('@scope/**\/testing', '@scope/features/testing') // => true
+ * allows('^@scope/(a|b)$', '@scope/b') // => true, anything else is a regular expression
+ * ```
  */
 export function allows(entry: string, specifier: string): boolean {
   if (entry.endsWith('/**')) return specifier.startsWith(entry.slice(0, -2))

@@ -37,6 +37,12 @@ const rootsByDirectory = createMap<string, string | null>()
  *
  * @param directory - Where to start
  * @returns That directory, or null when none holds the file
+ *
+ * @example Finding the workspace from the file a rule is checking
+ * ```typescript
+ * baseConfigRootOf('/repo/libs/features/src/host') // => '/repo'
+ * baseConfigRootOf('/tmp') // => null
+ * ```
  */
 export function baseConfigRootOf(directory: string): string | null {
   const known = rootsByDirectory.get(directory)
@@ -61,6 +67,16 @@ export function baseConfigRootOf(directory: string): string | null {
  *
  * @param workspaceRoot - The directory holding `tsconfig.base.json`
  * @returns The aliases, none when the file is missing, unreadable or declares no paths
+ *
+ * @example The first target of each alias, made absolute
+ * ```typescript
+ * pathAliases('/repo')
+ * // => [
+ * //   { alias: '@hyperfrontend/features', source: '/repo/libs/features/src/index.ts' },
+ * //   { alias: '@hyperfrontend/features/*', source: '/repo/libs/features/src/*' },
+ * //   { alias: '@scope/empty', source: null }, // paths: { '@scope/empty': [] }
+ * // ]
+ * ```
  */
 export function pathAliases(workspaceRoot: string): readonly PathAlias[] {
   const known = aliasesByRoot.get(workspaceRoot)

@@ -53,6 +53,12 @@ export interface HandoverHost {
  *
  * @param entry - The package entry that holds the command line
  * @returns How this process resolves and loads that entry
+ *
+ * @example Resolving the features command line from where the command was run
+ * ```typescript
+ * const host = processHost()
+ * host.resolve('/repo/apps/shell') // => '/repo/node_modules/@hyperfrontend/features/cli/index.js', or null when the package is not installed
+ * ```
  */
 export function processHost(entry: string = FEATURES_CLI): HandoverHost {
   return {
@@ -74,6 +80,14 @@ export function processHost(entry: string = FEATURES_CLI): HandoverHost {
  * @param invocation - The run, passed on as it was received
  * @param host - How the features command line is found and loaded
  * @returns The exit code of the features command line, or null when the package is not installed
+ *
+ * @example Letting the other command line answer a command this one does not own
+ * ```typescript
+ * import { handOver, processHost } from '@hyperfrontend/workspace/cli'
+ *
+ * const code = await handOver({ argv: ['pack', '.'], cwd: process.cwd(), stdout: process.stdout, stderr: process.stderr }, processHost())
+ * // => the features exit code, or null when @hyperfrontend/features is not installed where the command was run
+ * ```
  */
 export async function handOver(invocation: Invocation, host: HandoverHost): Promise<number | null> {
   const file = host.resolve(invocation.cwd)

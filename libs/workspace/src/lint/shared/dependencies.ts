@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The packages a project's build uses, as the previous rule counted them: the npm packages and
  * buildable workspace packages its build inputs import, each at the version installed for the

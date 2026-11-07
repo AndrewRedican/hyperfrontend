@@ -80,6 +80,18 @@ const graphs = createMap<string, WorkspaceGraph>()
  *
  * @param root - The workspace root, absolute
  * @returns The graph, the same object on every later request
+ *
+ * @example Asking the graph what a file imports and who owns it
+ * ```typescript
+ * import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+ *
+ * const graph = workspaceGraph(root)
+ * graph.projectOf('libs/features/src/index.ts')?.name // => 'lib-features'
+ * graph.resolve('libs/features/src/index.ts', '@hyperfrontend/nexus')
+ * // => { kind: 'project', project: <lib-nexus>, file: 'libs/nexus/src/index.ts', path: null }
+ * graph.edges.get('lib-features') // => [{ source: 'lib-features', target: 'lib-nexus', type: 'static', files: [...] }]
+ * workspaceGraph(root) === graph // => true, built once per root
+ * ```
  */
 export function workspaceGraph(root: string): WorkspaceGraph {
   let graph = graphs.get(root)
@@ -145,6 +157,19 @@ function groupEdges(
  * @param root - The workspace root, absolute
  * @param options - The files and imports to build from, where the caller has them
  * @returns The graph of projects, edges, npm uses, aliases and versions
+ *
+ * @example Building from a file list and imports the caller already holds
+ * ```typescript
+ * const files = listFiles(root)
+ * const imports = importsOfFiles(root, files)
+ * const graph = buildGraph(root, { files, imports })
+ * graph.npmUses.get('lib-workspace') // => [{ name: '@hyperfrontend/linter', files: ['libs/workspace/src/...'] }, ...]
+ * ```
+ *
+ * @example A fresh graph each call, unlike `workspaceGraph`
+ * ```typescript
+ * buildGraph(root) === buildGraph(root) // => false
+ * ```
  */
 export function buildGraph(root: string, options: BuildOptions = {}): WorkspaceGraph {
   const fileList = options.files ?? listFiles(root)

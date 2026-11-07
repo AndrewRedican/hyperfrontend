@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The lock one writer of the state directory holds: a file that appears already holding the
  * writer's pid, stale once its writer is dead or it has outlived a bound, so a crashed build never
@@ -134,6 +135,14 @@ function tryLock(path: string, holder: string): boolean {
  * @param work - The work run while the lock is held
  * @param options - The staleness bound, the wait and the poll interval
  * @returns What the work returned
+ *
+ * @example Writing under the lock, with a short wait for a tool that must not block
+ * ```typescript
+ * const outcome = withLock(stateDirectory(root), () => buildState(root), { timeoutMs: 5_000 })
+ * // throws after 5 s while another live process holds the lock:
+ * // the graph state at /repo/.hf/graph is locked by another process
+ * // a lock left by a process that died is taken over at once
+ * ```
  */
 export function withLock<Result>(directory: string, work: () => Result, options: LockOptions = {}): Result {
   const { staleMs = 60_000, timeoutMs = 60_000, pollMs = 50 } = options

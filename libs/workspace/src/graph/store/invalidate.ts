@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * What a build must redo given the persisted state and the workspace now: nothing when the meta
  * and the file list agree, the changed and added code files when only files differ, and everything

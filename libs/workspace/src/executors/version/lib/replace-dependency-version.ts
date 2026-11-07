@@ -14,6 +14,14 @@ const DEPENDENCY_SECTIONS: readonly string[] = ['dependencies', 'devDependencies
  * @param packageName - The npm package name to update
  * @param newVersion - The new version string to set
  * @returns true if a replacement was made, false otherwise
+ *
+ * @example Every section that pins the package follows
+ * ```typescript
+ * replaceDependencyVersion('/repo/libs/consumer/package.json', '@acme/core', '2.0.0')
+ * // => true; dependencies, devDependencies and peerDependencies entries for @acme/core now read 2.0.0, key order kept
+ * replaceDependencyVersion('/repo/libs/consumer/package.json', '@acme/core', '2.0.0')
+ * // => false the second time: nothing left to change, the file is not rewritten
+ * ```
  */
 export function replaceDependencyVersion(filePath: string, packageName: string, newVersion: string): boolean {
   const content = readFileSync(filePath, 'utf-8')
@@ -74,6 +82,13 @@ function replaceTgzInValue(value: string, tgzPrefix: string, newTgzName: string)
  * @param tgzPrefix - The tgz filename prefix to match (e.g., "hyperfrontend-my-package-")
  * @param newTgzName - The new tgz filename to use
  * @returns true if a replacement was made, false otherwise
+ *
+ * @example Repinning the tarball an e2e project installs
+ * ```typescript
+ * replaceTgzReference('/repo/e2e/core/package.json', '@acme/core', 'acme-core-', 'acme-core-1.1.0.tgz')
+ * // => true; "file:../../packs/acme-core-1.0.0.tgz" became "file:../../packs/acme-core-1.1.0.tgz"
+ * // => false for a pin that is a plain version, which is left alone
+ * ```
  */
 export function replaceTgzReference(filePath: string, packageName: string, tgzPrefix: string, newTgzName: string): boolean {
   const content = readFileSync(filePath, 'utf-8')

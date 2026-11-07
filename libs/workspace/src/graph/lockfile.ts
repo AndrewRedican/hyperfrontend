@@ -36,6 +36,14 @@ export interface InstalledPackages {
  *
  * @param root - The workspace root, absolute
  * @returns The top-level versions and the nested ones; empty without a lock file
+ *
+ * @example A package installed twice at different versions
+ * ```typescript
+ * const { hoisted, nested } = installedPackages(root)
+ * hoisted.get('minimatch') // => '10.0.1', from node_modules/minimatch
+ * nested.has('minimatch@3.1.2') // => true, from node_modules/typedoc/node_modules/minimatch
+ * hoisted.get('@hyperfrontend/features') // => undefined, workspace links carry no version
+ * ```
  */
 export function installedPackages(root: string): InstalledPackages {
   const hoisted = createMap<string, string>()

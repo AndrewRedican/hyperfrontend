@@ -1,7 +1,7 @@
 /**
  * The task runner as a library: run one task, plan and run many with their prerequisites, and find the executor or generator a name means.
  *
- * @module runner
+ * @module @hyperfrontend/workspace/runner
  */
 
 export type {

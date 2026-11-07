@@ -41,6 +41,13 @@ export interface UpdateReferencesOptions {
  *
  * @param tree - The tree the configurations live in
  * @param options - The current and new names, and the roots to skip
+ *
+ * @example The projects that depend on a renamed one follow it
+ * ```typescript
+ * updateProjectReferences(tree, { currentProjectName: 'lib-core', newProjectName: 'lib-kernel' })
+ * // e2e/core/project.json: implicitDependencies ['lib-core'] became ['lib-kernel']
+ * // apps/shell/project.json: a target's dependsOn ['lib-core'] became ['lib-kernel']; '^build' entries are untouched
+ * ```
  */
 export function updateProjectReferences(tree: Tree, options: UpdateReferencesOptions): void {
   if (options.currentProjectName === options.newProjectName) return

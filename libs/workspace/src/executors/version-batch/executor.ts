@@ -61,6 +61,26 @@ export interface VersionBatchResult {
  * @param options - Executor options from schema
  * @param context - The workspace, the project and the target the task runs on
  * @returns Executor result with success status
+ *
+ * @example A root project's `version-batch` target
+ * ```json
+ * {
+ *   "name": "workspace",
+ *   "root": ".",
+ *   "targets": {
+ *     "version-batch": {
+ *       "executor": "@hyperfrontend/workspace:version-batch",
+ *       "options": { "base": "origin/main" }
+ *     }
+ *   }
+ * }
+ * ```
+ * `npx hf run workspace:version-batch` versions every library the change since `origin/main` makes due a release and commits the bumps as `chore: update versions for lib-core, lib-utils`; on `main` itself it stands down.
+ *
+ * @example Forcing a bump the commits would not have made
+ * ```bash
+ * npx hf run workspace:version-batch --releaseAs=patch --libraries=lib-core,lib-utils
+ * ```
  */
 export async function versionBatchExecutor(options: VersionBatchExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const workspaceRoot = context.root

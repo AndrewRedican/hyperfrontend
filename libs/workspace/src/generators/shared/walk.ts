@@ -45,6 +45,15 @@ function trimEnd(line: string): string {
  * @param text - The file's text
  * @param base - The directory the file sits in, relative to the root, or an empty string
  * @returns The rules in order; comments and blank lines dropped
+ *
+ * @example How the lines of a `.gitignore` are read
+ * ```typescript
+ * compileIgnoreRules('# build output\ndist/\n!dist/keep.txt\n', '')
+ * // => [
+ * //   { negated: false, directoryOnly: true, anchored: false, glob: 'dist', base: '' },
+ * //   { negated: true, directoryOnly: false, anchored: true, glob: 'dist/keep.txt', base: '' },
+ * // ]
+ * ```
  */
 export function compileIgnoreRules(text: string, base: string): IgnoreRule[] {
   const rules: IgnoreRule[] = []
@@ -88,6 +97,14 @@ function matches(rule: IgnoreRule, path: string, isDirectory: boolean): boolean 
  * @param isDirectory - Whether the path names a directory
  * @param rules - The rules in order, the deepest `.gitignore` last
  * @returns True when the last matching rule ignores it
+ *
+ * @example The last matching rule decides
+ * ```typescript
+ * const rules = compileIgnoreRules('dist/\n!dist/keep.txt\n', '')
+ * isIgnored('libs/core/dist', true, rules) // => true
+ * isIgnored('dist/keep.txt', false, rules) // => false
+ * isIgnored('dist', false, rules) // => false: the rule names directories alone
+ * ```
  */
 export function isIgnored(path: string, isDirectory: boolean, rules: readonly IgnoreRule[]): boolean {
   let ignored = false
@@ -113,6 +130,18 @@ function rulesOf(tree: Tree, directory: string): IgnoreRule[] {
  * @param tree - The tree walked
  * @param directory - Where to start, relative to the root; an empty string or `.` for the root
  * @param visitor - Called with each file's path relative to the root
+ *
+ * @example Rewriting every source file of a project
+ * ```typescript
+ * import { visitNotIgnoredFiles } from '@hyperfrontend/workspace/generators'
+ *
+ * visitNotIgnoredFiles(tree, 'libs/core', (path) => {
+ *   if (!path.endsWith('.ts')) return
+ *   const content = tree.read(path, 'utf-8') ?? ''
+ *   tree.write(path, content.replaceAll('@acme/core', '@acme/kernel'))
+ * })
+ * // libs/core/node_modules and anything libs/core/.gitignore lists are never visited
+ * ```
  */
 export function visitNotIgnoredFiles(tree: Tree, directory: string, visitor: (path: string) => void): void {
   const normalised = posix.normalize(directory === '' ? '.' : directory)

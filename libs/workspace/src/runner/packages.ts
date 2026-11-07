@@ -30,6 +30,14 @@ const SOURCE_DIRECTORY = 'src'
  * @param packageName - The name its `package.json` gives the package
  * @param contribution - Which manifest is asked for
  * @returns The manifest's path, or undefined when neither a workspace project nor an installed package of that name declares one
+ *
+ * @example Where a package lists its generators
+ * ```typescript
+ * contributionManifest(root, projects, '@acme/tooling', 'generators')
+ * // => '/repo/tools/tooling/generators.json' while a workspace project carries @acme/tooling
+ * // => '/repo/node_modules/@acme/tooling/generators.json' once only the installed package does
+ * // => undefined when its package.json names no "generators"
+ * ```
  */
 export function contributionManifest(
   root: string,
@@ -54,6 +62,14 @@ export function contributionManifest(
  * @param directory - The directory of the manifest, absolute
  * @param written - The file as the manifest writes it, relative to the manifest
  * @returns The file where it exists, or undefined
+ *
+ * @example One manifest path, found beside it or under `src`
+ * ```typescript
+ * packagedFile('/repo/node_modules/@acme/tooling', './executors/lint/schema.json')
+ * // => '/repo/node_modules/@acme/tooling/executors/lint/schema.json'
+ * packagedFile('/repo/tools/tooling', './executors/lint/schema.json')
+ * // => '/repo/tools/tooling/src/executors/lint/schema.json', the built layout flattened into src
+ * ```
  */
 export function packagedFile(directory: string, written: string): string | undefined {
   return [join(directory, written), join(directory, SOURCE_DIRECTORY, written)].find(isFile)
@@ -65,6 +81,14 @@ export function packagedFile(directory: string, written: string): string | undef
  * @param directory - The directory of the manifest, absolute
  * @param written - The module as the manifest writes it, relative to the manifest
  * @returns The file as written when it is one, else the first that exists with a TypeScript or JavaScript extension added, beside the manifest or under `src`; undefined when none does
+ *
+ * @example An extensionless module serves the source and the build alike
+ * ```typescript
+ * moduleFile('/repo/tools/tooling', './executors/lint/index')
+ * // => '/repo/tools/tooling/src/executors/lint/index.ts'
+ * moduleFile('/repo/node_modules/@acme/tooling', './executors/lint/index')
+ * // => '/repo/node_modules/@acme/tooling/executors/lint/index.js'
+ * ```
  */
 export function moduleFile(directory: string, written: string): string | undefined {
   for (const base of [directory, join(directory, SOURCE_DIRECTORY)]) {

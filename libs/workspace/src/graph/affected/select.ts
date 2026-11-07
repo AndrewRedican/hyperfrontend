@@ -133,6 +133,25 @@ function changedPaths(changes: ChangeSet): ChangedPath[] {
  *
  * @param options - The graph, the changes, the targets and the previous graph
  * @returns The affected set of each requested target, and of each target one of them depends on
+ *
+ * @example Deciding the tests to run for the working tree against `main`
+ * ```typescript
+ * import { changeSet, previousGraph, selectAffected, workspaceGraph } from '@hyperfrontend/workspace/graph'
+ *
+ * const graph = workspaceGraph(root)
+ * const changes = changeSet(root, 'main', null)
+ * const sets = selectAffected({ graph, changes, targets: ['test'], previous: previousGraph(root, changes) })
+ * const tests = sets.get('test')!
+ * tests.selected.map((decision) => decision.task) // => ['lib-features:test', 'lib-nexus:test']
+ * tests.selected[0]!.reasons[0]!.rule // => 'changed-input'
+ * tests.skipped[0]!.reasons[0]!.rule // => 'unreachable', every skip names the rule that makes it safe
+ * ```
+ *
+ * @example A depended-on target is decided as well
+ * ```typescript
+ * // hf.json: { targetDefaults: { test: { dependsOn: ['^build'] } } }
+ * [...selectAffected({ graph, changes, targets: ['test'] }).keys()] // => ['test', 'build']
+ * ```
  */
 export function selectAffected(options: SelectOptions): Map<string, AffectedSet> {
   const { graph, changes, previous = null } = options

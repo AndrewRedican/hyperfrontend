@@ -129,6 +129,28 @@ function bundleFormats(formats: readonly string[] | undefined): BundleFormat[] {
  * @param options - The options as given
  * @returns The names, the formats and the e2e project the generator writes from
  * @throws {Error} When the project has no `package.json` with a name, or a format is unknown
+ *
+ * @example The formats fall into the build's order and the e2e names follow the package's
+ * ```typescript
+ * planPublishable(tree, { project: 'data-utils', formats: ['umd', 'esm'] })
+ * // => {
+ * //   projectName: 'data-utils',
+ * //   projectRoot: 'libs/data-utils',
+ * //   packageName: '@acme/data-utils',
+ * //   formats: ['esm', 'umd'],
+ * //   globalName: 'AcmeDataUtils',
+ * //   bundleEntry: '.',
+ * //   keywords: ['data-utils', 'acme', 'typescript'],
+ * //   buildExecutor: '@hyperfrontend/workspace:build',
+ * //   e2eProjectName: 'e2e-data-utils',
+ * //   e2ePackageName: '@acme/e2e-data-utils',
+ * //   e2eProjectRoot: 'e2e/data-utils',
+ * //   createE2e: true,
+ * //   republishing: false,
+ * //   e2eExists: false,
+ * //   ...
+ * // }
+ * ```
  */
 export function planPublishable(tree: Tree, options: MakePublishableGeneratorOptions): PublishablePlan {
   const project = readProjectConfiguration(tree, options.project)
@@ -298,6 +320,14 @@ function createE2eProject(tree: Tree, plan: PublishablePlan): void {
  * @example A package with browser bundles under a chosen global
  * ```bash
  * npx hf generate make-publishable my-lib --formats=esm,cjs,iife,umd --globalName=MyLib
+ * ```
+ *
+ * @example Re-running on a published library changes nothing it already has
+ * ```typescript
+ * import makePublishableGenerator from '@hyperfrontend/workspace/generators/make-publishable'
+ *
+ * await makePublishableGenerator(tree, { project: 'my-lib', formats: ['esm', 'cjs', 'umd'] })
+ * // the build target gains its umd options; the existing targets, keywords, README and e2e suites are kept
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorOptions): Promise<void> {

@@ -43,6 +43,15 @@ export interface Resolver {
  * @param files - The workspace's files
  * @param path - The workspace-relative path, POSIX
  * @returns The file, or null when none matches
+ *
+ * @example An emitted `.js` name finds the TypeScript source behind it
+ * ```typescript
+ * const files = new Set(['libs/features/src/index.ts', 'libs/features/src/host/open.tsx'])
+ * fileOf(files, 'libs/features/src/index.js') // => 'libs/features/src/index.ts'
+ * fileOf(files, 'libs/features/src') // => 'libs/features/src/index.ts'
+ * fileOf(files, 'libs/features/src/host/open') // => 'libs/features/src/host/open.tsx'
+ * fileOf(files, 'libs/features/src/missing') // => null
+ * ```
  */
 export function fileOf(files: ReadonlySet<string>, path: string): string | null {
   if (files.has(path)) return path
@@ -63,6 +72,12 @@ export function fileOf(files: ReadonlySet<string>, path: string): string | null 
  * @param pattern - The pattern, as a tsconfig path alias or target writes it
  * @param value - What the wildcard stands for
  * @returns The pattern with the value in place of its wildcard, or as is when it has none
+ *
+ * @example Filling the alias target for a wildcard alias
+ * ```typescript
+ * substituteWildcard('libs/features/src/*.ts', 'host/open') // => 'libs/features/src/host/open.ts'
+ * substituteWildcard('libs/features/src/index.ts', 'host/open') // => 'libs/features/src/index.ts'
+ * ```
  */
 export function substituteWildcard(pattern: string, value: string): string {
   const star = pattern.indexOf('*')
@@ -78,6 +93,14 @@ const rootIndexes = createWeakMap<ReadonlyMap<string, ProjectRecord>, Map<string
  * @param projects - The projects by name
  * @param file - The workspace-relative path
  * @returns The project, or null when the workspace has no root project
+ *
+ * @example The deepest root wins, the workspace itself catches the rest
+ * ```typescript
+ * const { projects } = workspaceGraph(root)
+ * projectOfFile(projects, 'libs/features/e2e/src/open.spec.ts')?.name // => 'e2e-lib-features'
+ * projectOfFile(projects, 'libs/features/src/index.ts')?.name // => 'lib-features'
+ * projectOfFile(projects, 'tsconfig.base.json')?.root // => '.'
+ * ```
  */
 export function projectOfFile(projects: ReadonlyMap<string, ProjectRecord>, file: string): ProjectRecord | null {
   let index = rootIndexes.get(projects)
@@ -100,6 +123,15 @@ export function projectOfFile(projects: ReadonlyMap<string, ProjectRecord>, file
  * @param workspaces - The globs of the root manifest's `workspaces`, compiled
  * @param projects - The projects by name
  * @returns The map, empty when the root declares no workspaces
+ *
+ * @example Only projects under a declared workspace glob are importable by package name
+ * ```typescript
+ * import { compileGlob } from '@hyperfrontend/linter/helpers'
+ *
+ * const { projects } = workspaceGraph(root)
+ * packagesOf([compileGlob('libs/*')], projects).has('@hyperfrontend/features') // => true
+ * packagesOf([], projects).size // => 0
+ * ```
  */
 export function packagesOf(workspaces: readonly Glob[], projects: ReadonlyMap<string, ProjectRecord>): Map<string, ProjectRecord> {
   const packages = createMap<string, ProjectRecord>()
@@ -120,6 +152,23 @@ export function packagesOf(workspaces: readonly Glob[], projects: ReadonlyMap<st
  * @param from - The importing file, workspace-relative
  * @param specifier - The specifier as written
  * @returns What it names
+ *
+ * @example The four kinds a specifier resolves to
+ * ```typescript
+ * const graph = workspaceGraph(root)
+ * const from = 'libs/features/src/index.ts'
+ * resolveSpecifier(graph, from, './host/open') // => { kind: 'project', project: <lib-features>, file: 'libs/features/src/host/open.ts', path: 'libs/features/src/host/open' }
+ * resolveSpecifier(graph, from, '@hyperfrontend/nexus') // => { kind: 'project', project: <lib-nexus>, file: 'libs/nexus/src/index.ts', path: null }
+ * resolveSpecifier(graph, from, 'node:path') // => { kind: 'builtin' }
+ * resolveSpecifier(graph, from, 'typescript/lib/tsserverlibrary') // => { kind: 'npm', name: 'typescript' }
+ * // 'unknown' is answered only where no project, the workspace root included, holds the path
+ * ```
+ *
+ * @example A relative path to a file that does not exist still names its project
+ * ```typescript
+ * const resolution = resolveSpecifier(graph, from, './missing')
+ * if (resolution.kind === 'project') resolution.file // => null, the project is lib-features all the same
+ * ```
  */
 export function resolveSpecifier(resolver: Resolver, from: string, specifier: string): Resolution {
   if (specifier.startsWith('./') || specifier.startsWith('../'))
@@ -215,6 +264,12 @@ function aliasTargets(aliases: ReadonlyMap<string, readonly string[]>, specifier
  *
  * @param specifier - The bare specifier
  * @returns The package name, scope included
+ *
+ * @example Scoped and unscoped subpaths
+ * ```typescript
+ * packageNameOf('@hyperfrontend/features/host') // => '@hyperfrontend/features'
+ * packageNameOf('typescript/lib/tsserverlibrary') // => 'typescript'
+ * ```
  */
 export function packageNameOf(specifier: string): string {
   const segments = specifier.split('/')

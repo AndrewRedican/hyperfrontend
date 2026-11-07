@@ -1,7 +1,7 @@
 /**
  * The `make-publishable` generator: gives a library the targets, manifest fields, README and e2e project a published package needs.
  *
- * @module generators/make-publishable
+ * @module @hyperfrontend/workspace/generators/make-publishable
  */
 
 export type { PublishablePlan } from './generator'

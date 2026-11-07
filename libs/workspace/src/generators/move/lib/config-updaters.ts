@@ -1,3 +1,4 @@
+/* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The paths a moved project's configuration files write back to the root: the base lint
  * configuration, the base tsconfig, and the output directories.
