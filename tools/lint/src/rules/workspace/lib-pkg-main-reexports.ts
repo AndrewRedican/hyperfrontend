@@ -10,8 +10,7 @@ import { dirname, posix, resolve } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
-import { projectRootOf } from './shared/locate.ts'
-import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
+import { isPublishableLibrary, projectRootOf, readPackageFile } from '@hyperfrontend/workspace/lint'
 
 /** The rule's options. */
 export interface MainReexportsOptions {

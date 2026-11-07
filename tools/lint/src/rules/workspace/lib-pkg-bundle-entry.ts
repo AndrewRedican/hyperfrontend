@@ -7,8 +7,8 @@
 
 import { dirname } from 'node:path'
 import { propertyOf } from '@hyperfrontend/linter/helpers'
+import { readProjectFile } from '@hyperfrontend/workspace/lint'
 import { manifestRule } from './shared/manifest-rule.ts'
-import { readProjectFile } from './shared/project-file.ts'
 
 /** One bundled output as declared. */
 interface BundleFormat {

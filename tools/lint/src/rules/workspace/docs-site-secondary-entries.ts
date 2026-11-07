@@ -10,8 +10,8 @@ import { existsSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { defineRule } from '@hyperfrontend/linter'
+import { readPackageFile } from '@hyperfrontend/workspace/lint'
 import { navigationLink, pagesDirectory, readSiteFile, siteListingListeners } from './shared/docs-site.ts'
-import { readPackageFile } from './shared/project-file.ts'
 
 export default defineRule<undefined, Node>({
   id: 'workspace/docs-site-secondary-entries',

@@ -5,12 +5,10 @@
  *
  * @module rules/workspace/deepest-import-path
  */
-
 import type { Node } from '@hyperfrontend/linter'
 import { dirname } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
-import { baseConfigRootOf, pathAliases } from './shared/aliases.ts'
-import { moduleExports } from './shared/exports-index.ts'
+import { baseConfigRootOf, moduleExports, pathAliases } from '@hyperfrontend/workspace/lint'
 
 /** The rule's options. */
 interface Options {

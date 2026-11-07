@@ -11,9 +11,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix, sep } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
+import { readPackageFile, workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { publishableLibraries } from './shared/libraries.ts'
-import { workspaceRootOf } from './shared/locate.ts'
-import { readPackageFile } from './shared/project-file.ts'
 
 /** A publishable library and its package name. */
 interface NamedLibrary {

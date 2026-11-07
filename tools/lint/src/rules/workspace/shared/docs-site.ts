@@ -8,7 +8,7 @@
 import type { Node, RuleContext } from '@hyperfrontend/linter'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix, sep } from 'node:path'
-import { workspaceRootOf } from './locate.ts'
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
 
 /** One entry of the `LIBRARIES` array. */
 export interface LibraryEntry {

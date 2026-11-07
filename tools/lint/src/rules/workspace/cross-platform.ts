@@ -8,16 +8,16 @@
  */
 
 import type { Node } from '@hyperfrontend/linter'
+import type { Selector } from '@hyperfrontend/workspace/lint'
 import type { Scan } from './shared/cross-platform/edits.ts'
 import type { Helper } from './shared/cross-platform/origin.ts'
-import type { Selector } from './shared/cross-platform/project.ts'
 import { dirname } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
 import { scopeAnalysisOf } from '@hyperfrontend/linter/helpers'
+import { checkedProject, isNodeProject, workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { createNamer } from './shared/cross-platform/edits.ts'
 import { createTracer } from './shared/cross-platform/origin.ts'
-import { checkedProject, isNodeProject } from './shared/cross-platform/project.ts'
 import {
   checkArray,
   checkFileMode,
@@ -28,7 +28,6 @@ import {
   checkTemporaryPath,
 } from './shared/cross-platform/runtime.ts'
 import { checkBuiltString, checkMethodCall, checkPosixInput, checkRelative } from './shared/cross-platform/separators.ts'
-import { workspaceRootOf } from './shared/locate.ts'
 
 /** The rule's options. */
 export interface CrossPlatformOptions {

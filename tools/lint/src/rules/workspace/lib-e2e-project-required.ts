@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { isString, propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
-import { workspaceRootOf } from './shared/locate.ts'
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 export default manifestRule('workspace/lib-e2e-project-required', 'project.json', (root, context) => {

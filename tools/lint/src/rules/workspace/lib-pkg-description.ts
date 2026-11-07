@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { defineRule } from '@hyperfrontend/linter'
-import { isPublishableLibrary } from './shared/project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 import { badgeBlock, shortDescription } from './shared/readme.ts'
 
 const MESSAGE =

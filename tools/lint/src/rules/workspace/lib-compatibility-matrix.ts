@@ -9,7 +9,7 @@ import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME } from '@hyperfrontend/pipeline'
-import { workspaceRootOf } from './shared/locate.ts'
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
 
 const MESSAGE =
   'LIBRARY_COMPATIBILITY.md is generated from each package project.json and package.json, and no longer matches them. Run `npx hf run hyperfrontend:lint:all` (or `npx hf run @hyperfrontend/workspace:lint --fix`) to regenerate it.'

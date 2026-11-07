@@ -7,12 +7,12 @@
  */
 
 import type { Node } from '@hyperfrontend/linter'
-import type { DeclarationKind } from './exports-index.ts'
+import type { DeclarationKind } from '@hyperfrontend/workspace/lint'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { moduleDeclarations, parsedModule, resolveModule } from './exports-index.ts'
+import { moduleDeclarations, parsedModule, resolveModule } from '@hyperfrontend/workspace/lint'
 
 /** What kind of thing a documented symbol is. */
 export type DocsSymbolKind = 'function' | 'class' | 'interface' | 'type' | 'enum' | 'variable' | 'unknown'

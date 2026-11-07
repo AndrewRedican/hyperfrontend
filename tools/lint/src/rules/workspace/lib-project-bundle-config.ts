@@ -11,7 +11,7 @@ import type { JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { isString, propertyOf } from '@hyperfrontend/linter/helpers'
-import { isPublishableLibrary } from './shared/project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 
 /** The bundled formats. */
 const FORMATS = ['iife', 'umd']

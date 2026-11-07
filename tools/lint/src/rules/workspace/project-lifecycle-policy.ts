@@ -12,7 +12,7 @@ import { readdirSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { compileGlob, propertyOf, rootObject, wholeDocument } from '@hyperfrontend/linter/helpers'
-import { readProjectFile } from './shared/project-file.ts'
+import { readProjectFile } from '@hyperfrontend/workspace/lint'
 
 /** The policy attached to one lifecycle state. */
 interface Policy {
