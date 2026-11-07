@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.7.3](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...8f5e7079944067c582c6ea6b9c9ffdf0bae978ce) - 2026-11-07
+## [0.7.3](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...f7402da4043201d00015d4d70ab5fed39908a46c) - 2026-11-07
 
 ### Bug Fixes
 
@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 
 ### Dependency Updates
 
+- **lib-workspace:** print a channel header only above a line that shows
+- **lib-workspace:** refuse a batch whose revisions git cannot compare
+- **lib-workspace:** report usage mistakes without a stack trace
+- **lib-workspace:** count a partial batch failure in the plural
+- **lib-workspace:** restore the batch log level after a library run throws
+- **lib-workspace:** accept a range of @hyperfrontend/testing as a peer
+- **lib-workspace:** leave peer ranges alone when bumping dependents
 - **lib-workspace:** ignore coverage output in the .gitignore the workspace generator writes
 - **lib-workspace:** make the package publishable
 - **lib-workspace:** join project paths portably in the version executors and the dependency reader
