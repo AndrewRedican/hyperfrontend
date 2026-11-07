@@ -1,0 +1,11 @@
+{
+  "name": "@hyperfrontend/pipeline",
+  "version": "0.0.0",
+  "description": "This repository's pipeline and the tools around it: the compatibility document, the generated Nx-compatible declarations, artifact drift and the lint report.",
+  "private": true,
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "executors": "./executors.json"
+}
