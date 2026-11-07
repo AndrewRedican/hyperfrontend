@@ -20,7 +20,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "hf": "node --import ./tools/lint/src/runtime/aliases.ts tools/workspace/bin/hf.ts"
+    "hf": "node --import ./libs/workspace/src/hooks/index.ts libs/workspace/bin/hf.mjs"
   },
   "funding": {
     "type": "github",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@hyperfrontend/versioning": "0.9.2",
-    "@hyperfrontend/workspace": "file:tools/workspace",
+    "@hyperfrontend/workspace": "file:libs/workspace/bin",
     "@rollup/plugin-commonjs": "29.0.3",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",

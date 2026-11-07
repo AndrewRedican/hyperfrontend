@@ -11,10 +11,11 @@
         "{workspaceRoot}/libs/linter/src/**/*",
         "{workspaceRoot}/tools/lint/src/**/*",
         "{workspaceRoot}/tools/lint/config/**/*",
-        "{workspaceRoot}/tools/workspace/src/graph/**/*"
+        "{workspaceRoot}/libs/workspace/src/graph/**/*",
+        "{workspaceRoot}/libs/workspace/src/lint/**/*"
       ]
     },
-    "@hyperfrontend/package:test": {
+    "@hyperfrontend/workspace:test": {
       "inputs": ["default", "^production"]
     },
     "version": {
@@ -22,7 +23,7 @@
       "options": {
         "tagPrefix": "{projectName}@",
         "scopeFiltering": {
-          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+          "excludeScopes": ["release", "deps", "workspace", "hyperfrontend", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
         },
         "maxCommitFallback": 10000
       }
@@ -34,12 +35,16 @@
         {
           "projects": ["tool-package", "lib-builder"],
           "input": "production"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "buildExecutor"
         }
       ],
-      "executor": "@hyperfrontend/package:version-check",
+      "executor": "@hyperfrontend/workspace:version-check",
       "options": {
         "scopeFiltering": {
-          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+          "excludeScopes": ["release", "deps", "workspace", "hyperfrontend", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
         },
         "maxCommitFallback": 10000
       }
@@ -52,16 +57,21 @@
         {
           "projects": ["tool-package", "lib-builder"],
           "input": "production"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "buildExecutor"
         }
       ],
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "outputPath": "dist/{projectRoot}"
+        "outputPath": "dist/{projectRoot}",
+        "rootAssets": ["LICENSE.md", "SECURITY.md", "FUNDING.md"]
       }
     },
     "publish": {
       "dependsOn": ["build"],
-      "executor": "@hyperfrontend/package:publish",
+      "executor": "@hyperfrontend/workspace:publish",
       "options": {
         "access": "public",
         "tag": "latest",
@@ -70,22 +80,23 @@
     },
     "typecheck": {
       "inputs": ["default", "^production"],
-      "executor": "@hyperfrontend/package:typecheck"
+      "executor": "@hyperfrontend/workspace:typecheck"
     },
     "audit": {
       "inputs": ["dependencyState"],
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/workspace:run-commands",
       "options": {
         "command": "npm audit --audit-level=moderate",
         "cwd": "{projectRoot}"
       }
     },
     "test": {
-      "executor": "@hyperfrontend/package:test",
+      "executor": "@hyperfrontend/workspace:test",
       "options": {}
     }
   },
   "namedInputs": {
+    "buildExecutor": ["{projectRoot}/src/executors/build/**/*", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"],
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "dependencyState": [
       "{projectRoot}/package.json",
@@ -93,7 +104,7 @@
       "{projectRoot}/.npmrc",
       "{projectRoot}/project.json",
       "{workspaceRoot}/.npmrc",
-      "{workspaceRoot}/nx.json"
+      "{workspaceRoot}/hf.json"
     ],
     "production": [
       "default",
@@ -107,6 +118,7 @@
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
   "lint": {
+    "command": "node {workspaceRoot}/tools/lint/bin/lint.ts .",
     "exclude": ["apps/demos/**/*"]
   }
 }
