@@ -20,6 +20,8 @@ const DATASET_DIR = resolve(__dirname, '../data/npm-downloads')
 interface PackageManifest {
   /** Whether the package is withheld from the registry */
   private?: boolean
+  /** The version on disk; `0.0.0` until the first release */
+  version?: string
 }
 
 /** How the script was asked to run. */
@@ -34,16 +36,17 @@ interface RunMode {
  * Every documented package that is published, in the order the site lists them.
  *
  * Read from the same library list the site renders, with each package's own
- * manifest consulted for the `private` flag, so a package withheld from the
- * registry is never asked about and a newly published one is tracked from
- * the next refresh without a second list to update.
+ * manifest consulted for the `private` flag and the version, so a package
+ * withheld from the registry, or still at `0.0.0` before its first release, is
+ * never asked about, and a newly published one is tracked from the next
+ * refresh without a second list to update.
  *
  * @returns Full npm package names
  */
 function publishedPackages(): string[] {
   return LIBRARIES.filter((library) => {
     const manifest = parse(readFileSync(join(WORKSPACE_ROOT, dirname(library.readmePath), 'package.json'), 'utf8')) as PackageManifest
-    return manifest.private !== true
+    return manifest.private !== true && manifest.version !== '0.0.0'
   }).map((library) => library.packageName)
 }
 
