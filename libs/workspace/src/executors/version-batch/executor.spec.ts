@@ -12,6 +12,7 @@ import { createTempDir } from '@hyperfrontend/testing/fs'
 import { captureStdio } from '@hyperfrontend/testing/process'
 import { workspaceGraph } from '../../graph'
 import { withShippedChanges } from '../version/lib/graph-change-sources'
+import { getLogger } from '../version/lib/logger'
 import { runVersion } from '../version/lib/run-version-for-project'
 import { versionBatchExecutor } from './executor'
 import { getAffectedLibraries } from './lib/get-affected-libraries'
@@ -479,6 +480,15 @@ describe('versionBatchExecutor failures', () => {
       stderr: expect.stringContaining(line),
       runs: 2,
     })
+  })
+
+  it('reports its commit after the last library threw while the log was quiet', async () => {
+    const directory = repository()
+    mockRun.mockImplementationOnce(bumps(directory)).mockImplementationOnce(async () => {
+      getLogger().setLogLevel({ verbose: false, quiet: true })
+      throw new Error('run broke')
+    })
+    expect((await batch(directory)).stdout).toContain('Bumped: lib-a')
   })
 
   it('counts several failed libraries in the plural', async () => {

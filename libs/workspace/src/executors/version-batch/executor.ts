@@ -188,6 +188,7 @@ export async function versionBatchExecutor(options: VersionBatchExecutorOptions,
               logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
             }
           } catch (error) {
+            logger.setLogLevel({ verbose, quiet: false })
             failedLibs.push(lib)
             logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
           }
