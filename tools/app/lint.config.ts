@@ -13,10 +13,4 @@ export default [
       ],
     },
   },
-  {
-    files: ['**/package.json'],
-    rules: {
-      'projects/plugin-manifests': 'error',
-    },
-  },
 ]

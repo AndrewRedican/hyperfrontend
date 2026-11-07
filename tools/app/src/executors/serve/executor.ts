@@ -1,4 +1,4 @@
-import type { ExecutorContext, PromiseExecutor } from '@hyperfrontend/integration-nx/compat'
+import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
 import type { ServeExecutorOptions } from './schema'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -17,14 +17,14 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the serve command
  */
-export default async function serveExecutor(options: ServeExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
+export default async function serveExecutor(options: ServeExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
     return { success: false }
   }
 
-  const projectConfig = context.projectsConfigurations?.projects[projectName]
+  const projectConfig = context.projects[projectName]
   if (!projectConfig) {
     logger.error(`Could not find project configuration for ${projectName}`)
     return { success: false }
@@ -48,7 +48,7 @@ export default async function serveExecutor(options: ServeExecutorOptions, conte
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
-  return createPromise<Awaited<ReturnType<PromiseExecutor>>>((resolve) => {
+  return createPromise<ExecutorResult>((resolve) => {
     const child = spawn(command, {
       cwd,
       stdio: 'inherit',
