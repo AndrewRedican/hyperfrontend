@@ -84,8 +84,9 @@ export const getLogger = () => {
     let stepNumber = 0
     const header = `[ ${toTitleCase(prefix)} ]`
 
-    const ensureHeader = () => {
-      if (!hasEmittedHeader) {
+    // why: the header belongs to the lines under it, so a line the level filters out must not print it alone
+    const ensureHeader = (visible = true) => {
+      if (visible && !hasEmittedHeader) {
         baseLogger.log('')
         baseLogger.log(header)
         hasEmittedHeader = true
@@ -94,12 +95,12 @@ export const getLogger = () => {
 
     return freeze({
       step: (message: string) => {
-        ensureHeader()
+        ensureHeader(baseLogger.getLogLevel() === 'debug')
         stepNumber++
         debugFn(`  ${stepNumber}. ${message}`)
       },
       item: (message: string) => {
-        ensureHeader()
+        ensureHeader(baseLogger.getLogLevel() === 'debug')
         debugFn(`     - ${message}`)
       },
       error: (message: string) => {
@@ -111,11 +112,11 @@ export const getLogger = () => {
         warnFn(`  ${message}`)
       },
       info: (message: string) => {
-        ensureHeader()
+        ensureHeader(baseLogger.getLogLevel() === 'debug' || baseLogger.getLogLevel() === 'info')
         infoFn(`  ${stepNumber + 1}. ${message}`)
       },
       debug: (message: string) => {
-        ensureHeader()
+        ensureHeader(baseLogger.getLogLevel() === 'debug')
         stepNumber++
         debugFn(`  ${stepNumber}. ${message}`)
       },
