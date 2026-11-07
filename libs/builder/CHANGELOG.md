@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...8f5e7079944067c582c6ea6b9c9ffdf0bae978ce) - 2026-11-07
+
+### Bug Fixes
+
+- run the rollup worker on the main thread only
+
+### Dependency Updates
+
+- **lib-workspace:** ignore coverage output in the .gitignore the workspace generator writes
+- **lib-workspace:** make the package publishable
+- **lib-workspace:** join project paths portably in the version executors and the dependency reader
+- **lib-workspace:** leave installed packages out of the file list whatever the repository ignores
+- **lib-workspace:** keep the suites of an e2e project that exists before the library publishes
+- **lib-workspace:** stamp the graph caches with the installed engine version
+- **lib-workspace:** name every bumped library in the batch commit subject
+- **lib-workspace:** add the generators and the helpers they are built from
+- **lib-workspace:** add a missing package to one manifest section when every fix applies
+- **lib-workspace:** publish the projects rule family as the lint entry
+- **lib-workspace:** add the version, version-check and version-batch executors
+- **tool-package:** restore the tree as it stood when the batch fails
+- **lib-workspace:** add the workspace graph, runner, hf and executors
+
 ## [0.7.2](https://github.com/AndrewRedican/hyperfrontend/compare/53020db1cc2866f0363c72c738ac1dcb671bfaf2...e1fedeaec2e4a890fb7767750298f48de3434cbe) - 2026-11-05
 
 ### Dependency Updates
