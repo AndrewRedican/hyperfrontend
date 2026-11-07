@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "type": "tutorial",
+  "title": "Set up a monorepo and test only what changed",
+  "problem": "A repository of several TypeScript libraries runs every test on every change, because nothing knows which libraries a change actually reaches.",
+  "outcome": "A workspace of three libraries whose tasks run by name and in dependency order, and an affected run that tests the two a change reaches, skips the one that imports only a type, and says why for each.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/workspace", "@hyperfrontend/testing"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/workspace@0.0.0",
+    "verifiedOn": "2026-11-07"
+  },
+  "complexity": "beginner",
+  "estMinutes": 20,
+  "apis": [{ "package": "@hyperfrontend/workspace", "symbol": "selectAffected" }],
+  "prerequisites": {
+    "knowledge": ["Node.js 24 or later", "git", "An empty directory"]
+  },
+  "related": {
+    "guides": ["add-your-own-executor-and-generator", "release-libraries-from-their-commits", "run-typescript-tests-on-node-test"],
+    "reference": ["/docs/libraries/workspace", "/docs/libraries/workspace/cli", "/docs/libraries/workspace/graph"],
+    "explanation": ["/docs/libraries/workspace/architecture"]
+  },
+  "keywords": [
+    "monorepo",
+    "affected",
+    "hf",
+    "task runner",
+    "run-many",
+    "dependency graph",
+    "type-only import",
+    "CI",
+    "hf.json",
+    "generate library"
+  ]
+}
