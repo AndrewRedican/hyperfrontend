@@ -36,7 +36,7 @@
           "input": "production"
         }
       ],
-      "executor": "@hyperfrontend/package:version-check",
+      "executor": "@hyperfrontend/workspace:version-check",
       "options": {
         "scopeFiltering": {
           "excludeScopes": ["release", "deps", "workspace", "hyperfrontend", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
