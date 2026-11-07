@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Test executor schema",
+  "description": "Runs a project's suites on Node's built-in test runner.",
+  "properties": {
+    "testConfig": {
+      "type": "string",
+      "description": "Path to the project's test configuration. Defaults to {projectRoot}/test.config.ts."
+    },
+    "coverageDirectory": {
+      "type": "string",
+      "description": "Where coverage reports are written. Defaults to {workspaceRoot}/coverage/{projectRoot}."
+    }
+  },
+  "additionalProperties": false
+}

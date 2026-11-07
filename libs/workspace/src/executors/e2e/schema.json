@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "E2E executor schema",
+  "description": "Test package build outputs via npm pack + tarball install.",
+  "properties": {
+    "packageDir": {
+      "type": "string",
+      "description": "Path to the built package directory, relative to the workspace root. Defaults to the build output of the first project this one implicitly depends on that has a build target."
+    },
+    "testDir": {
+      "type": "string",
+      "description": "Path to E2E test project directory relative to workspace root. Defaults to the current project root."
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": ["cjs", "esm", "browser"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name the run is reported under."
+              },
+              "specs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The spec files it runs, relative to the test project."
+              },
+              "timeoutMs": {
+                "type": "number",
+                "description": "Per-test timeout in milliseconds. Defaults to 30000."
+              },
+              "dom": {
+                "type": "boolean",
+                "description": "Whether the run needs the DOM preload."
+              },
+              "serialOn": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The platforms (process.platform values) on which the suites run one at a time."
+              }
+            },
+            "required": ["name", "specs"]
+          }
+        ]
+      },
+      "description": "What to test: 'cjs', 'esm' and 'browser' run the conventional spec files (browser runs the IIFE and UMD specs against the DOM preload); an object names a suite of the project's own. Defaults to cjs, esm, and browser.",
+      "default": ["cjs", "esm", "browser"]
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip npm pack and install step (useful if already installed).",
+      "default": false
+    },
+    "cleanupTarball": {
+      "type": "boolean",
+      "description": "Remove tarball after installation.",
+      "default": true
+    }
+  },
+  "required": []
+}
