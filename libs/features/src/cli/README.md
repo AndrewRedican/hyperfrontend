@@ -22,6 +22,8 @@ const code = await runFeaturesCli({
 | [`dev`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runDev)     | Resolves `hf-dev.config.*` and starts the dev server: one static server per app plus the debug UI.                                       |
 | [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) | Resolves `hf-serve.config.*` and serves a built site for production: compression, ETags, and header rules.                               |
 
+The `hf` name is shared. [`@hyperfrontend/workspace`](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/workspace) publishes an `hf` executable too, and npm links only one of the two. Each command line passes a command it does not own to the other when the other is installed, so `npx hf build` and `npx hf run lib-a:test` both work whichever was linked. The workspace commands need Node.js 24 or later: on an older release they are refused with a message, and the four commands above keep working.
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/features/cli/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/hf-serve/hero.gif" alt="A terminal in a checkout project: npx hf build --protocol v4 prints the path of the built shell and the name of the packed tarball; npx hf serve --root dist announces the served root at http://localhost:4284/ and then logs three GET requests, each with a 200 status">
