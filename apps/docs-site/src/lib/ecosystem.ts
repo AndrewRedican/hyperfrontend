@@ -96,6 +96,7 @@ export const ECOSYSTEM_TIERS: readonly EcosystemTier[] = [
       '@hyperfrontend/questions',
       '@hyperfrontend/testing',
       '@hyperfrontend/linter',
+      '@hyperfrontend/workspace',
     ],
   },
   {
