@@ -1,14 +1,14 @@
 # @hyperfrontend/package
 
-This repository's executors and generators on top of [`@hyperfrontend/workspace`](../../libs/workspace/README.md): the build with the README the registry shows, the version flow with the compatibility document, and the generators that register a library across the repository. The `typecheck`, `test`, `publish` and `e2e` executors are the workspace package's own.
+This repository's executors and generators on top of [`@hyperfrontend/workspace`](../../libs/workspace/README.md): the build with the README the registry shows, the version flow with the compatibility document, and the generators that register a library across the repository. The `typecheck`, `test`, `publish`, `e2e` and `version-check` executors are the workspace package's own.
 
 ## Executors
 
-| Executor      | Description                                                       | Docs                                                         |
-| ------------- | ----------------------------------------------------------------- | ------------------------------------------------------------ |
-| `build`       | The workspace package's build, then the README the registry shows | [README](../../libs/workspace/src/executors/build/README.md) |
-| `version`     | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md)                  |
-| `version:all` | Batch versioning for all affected libraries                       | -                                                            |
+| Executor        | Description                                                                                                 | Docs                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `build`         | The workspace package's build, then the README the registry shows                                           | [README](../../libs/workspace/src/executors/build/README.md)   |
+| `version`       | The workspace package's version run, then the compatibility document                                        | [README](../../libs/workspace/src/executors/version/README.md) |
+| `version-batch` | The workspace package's batch with the compatibility document as a follow-up; the root `version:all` target | -                                                              |
 
 ## Quick Start
 
@@ -48,7 +48,7 @@ After the build of a project with a `publish` target, the output README is rewri
 
 ### version
 
-Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependency conventional commits versioning library:
+The workspace package's `version` executor with one follow-up: after the bump, `LIBRARY_COMPATIBILITY.md` is brought in line with the manifests and committed with it. The executor itself is idempotent, using `@hyperfrontend/versioning`:
 
 - **npm as source of truth** — uses npm registry to determine current version, not git tags
 - **Idempotency** — skips if version is already published to npm
@@ -56,11 +56,11 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 - **Documentation stays out of the bump**: `docs`, `chore` and `build` commits never release on their own; a forced bump lists them
 - **Dependent updates** — automatically updates version references in dependent packages
 
-**Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [Architecture](./src/executors/version/ARCHITECTURE.md)
+**Full documentation:** [libs/workspace/src/executors/version/README.md](../../libs/workspace/src/executors/version/README.md) | [Architecture](../../libs/workspace/src/executors/version/ARCHITECTURE.md)
 
 ### version-batch
 
-Batch versioning executor for all affected libraries. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
+The workspace package's `version-batch` executor with the same follow-up. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
 
 - **Affected detection** — programmatically detects libraries changed between base and head refs
 - **Batch commit** — creates a single commit for all version updates
@@ -115,7 +115,7 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
-A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it. See [the version executor](src/executors/version/README.md#changes-that-reach-a-library-indirectly).
+A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it. See [the version executor](../../libs/workspace/src/executors/version/README.md#changes-that-reach-a-library-indirectly).
 
 ## Development
 

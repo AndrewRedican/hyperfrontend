@@ -1,5 +1,6 @@
+import type { FollowUp } from '@hyperfrontend/workspace/executors/version'
+import { logger } from '@hyperfrontend/logging'
 import { buildCompatibilityDocument, COMPATIBILITY_DOCUMENT_NAME, refreshCompatibilityDocument } from '@hyperfrontend/pipeline'
-import { getLogger } from './logger'
 
 /**
  * Brings the root compatibility document in line with the manifests a version
@@ -16,18 +17,32 @@ import { getLogger } from './logger'
  * ```
  */
 export function refreshCompatibilityMatrix(workspaceRoot: string, dryRun: boolean): string[] {
-  const logger = getLogger().channel('refreshCompatibilityMatrix')
   if (dryRun) {
     // why: A dry run must leave the tree untouched, so the document is derived and compared without ever being written.
     const current = buildCompatibilityDocument(workspaceRoot)
-    logger.step(`would refresh ${COMPATIBILITY_DOCUMENT_NAME} (${current.length} characters)`)
+    logger.debug(`would refresh ${COMPATIBILITY_DOCUMENT_NAME} (${current.length} characters)`)
     return []
   }
   const refreshed = refreshCompatibilityDocument(workspaceRoot)
   if (refreshed === null) {
-    logger.step(`${COMPATIBILITY_DOCUMENT_NAME} already matches the manifests`)
+    logger.debug(`${COMPATIBILITY_DOCUMENT_NAME} already matches the manifests`)
     return []
   }
-  logger.step(`refreshed ${COMPATIBILITY_DOCUMENT_NAME}`)
+  logger.debug(`refreshed ${COMPATIBILITY_DOCUMENT_NAME}`)
   return [refreshed]
 }
+
+/**
+ * The compatibility document as a follow-up of a version run: refreshed after each bump, and
+ * committed with it when it changed.
+ *
+ * @param _bump - The bump that was written; the document is derived from every manifest, so it is not read
+ * @param run - The run the follow-up is called from
+ * @returns The document, workspace-relative, when it changed
+ *
+ * @example Passing the follow-up to the published executor
+ * ```typescript
+ * versionExecutor({ ...options, followUps: [compatibilityFollowUp] }, context)
+ * ```
+ */
+export const compatibilityFollowUp: FollowUp = (_bump, run) => refreshCompatibilityMatrix(run.workspaceRoot, run.dryRun)

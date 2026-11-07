@@ -8,17 +8,12 @@
     "version": {
       "implementation": "./src/executors/version/executor",
       "schema": "./src/executors/version/schema.json",
-      "description": "Versioning executor using @hyperfrontend/versioning. Uses npm registry as source of truth."
+      "description": "This repository's version run: the workspace package's version executor, then the compatibility document brought in line with the bump."
     },
     "version-batch": {
       "implementation": "./src/executors/version-batch/executor",
       "schema": "./src/executors/version-batch/schema.json",
-      "description": "Run versioning for all affected libraries and create a single batch commit."
-    },
-    "version-check": {
-      "implementation": "./src/executors/version-check/executor",
-      "schema": "./src/executors/version-check/schema.json",
-      "description": "Validates version state without changes. Used by CI to verify lefthook versioning."
+      "description": "This repository's batch: the workspace package's version-batch executor with the compatibility document as a follow-up."
     }
   }
 }

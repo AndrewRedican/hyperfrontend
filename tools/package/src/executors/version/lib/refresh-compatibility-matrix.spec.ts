@@ -1,6 +1,6 @@
 import { refreshCompatibilityDocument } from '@hyperfrontend/pipeline'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { refreshCompatibilityMatrix } from './refresh-compatibility-matrix'
+import { compatibilityFollowUp, refreshCompatibilityMatrix } from './refresh-compatibility-matrix'
 
 jest.mock('@hyperfrontend/pipeline', () => ({
   COMPATIBILITY_DOCUMENT_NAME: 'LIBRARY_COMPATIBILITY.md',
@@ -35,5 +35,17 @@ describe('refreshCompatibilityMatrix', () => {
 
   it('reports no files on a dry run', () => {
     expect(refreshCompatibilityMatrix('/abs/repo', true)).toEqual([])
+  })
+})
+
+describe('compatibilityFollowUp', () => {
+  it('refreshes the document of the workspace the run is in, whatever the bump', () => {
+    mockRefresh.mockReturnValueOnce('LIBRARY_COMPATIBILITY.md')
+    expect(
+      compatibilityFollowUp(
+        { projectName: 'lib-a', projectRoot: 'libs/a', packageName: '@scope/a', previousVersion: '1.0.0', newVersion: '1.1.0' },
+        { workspaceRoot: '/abs/repo', dryRun: false }
+      )
+    ).toEqual(['LIBRARY_COMPATIBILITY.md'])
   })
 })

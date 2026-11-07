@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Batch version executor",
+  "description": "Run versioning for all affected libraries and create a single batch commit",
+  "type": "object",
+  "properties": {
+    "base": {
+      "type": "string",
+      "description": "Base git ref for affected detection",
+      "default": "origin/main"
+    },
+    "head": {
+      "type": "string",
+      "description": "Head git ref for affected detection",
+      "default": "HEAD"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Preview changes without making them",
+      "default": false
+    },
+    "scopeFiltering": {
+      "type": "object",
+      "description": "Commit scope filtering used when attributing commits to a project. Defaults to the version target's declaration.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["scope-only", "file-only", "hybrid"]
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projectPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose logging",
+      "default": false
+    },
+    "maxCommitFallback": {
+      "type": "number",
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs. Left unset, the batch takes the bound the `version` target declares in hf.json, so it analyzes the same commits `version-check` does."
+    },
+    "releaseAs": {
+      "type": "string",
+      "description": "Force this bump on the libraries named by --libraries, calculated from each one's published version. For a release whose change is in the package artifact rather than its code, such as a readme; the changelog lists every commit since the last release.",
+      "enum": ["major", "minor", "patch"]
+    },
+    "libraries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Project names to version instead of the affected set. Required with --releaseAs, and only meaningful with it."
+    }
+  },
+  "required": []
+}
