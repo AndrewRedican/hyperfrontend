@@ -61,12 +61,10 @@ export function isVersionCommit(cwd: string, projectName: string): boolean {
  * @returns True if the commit is a version commit for this project
  */
 function isCommitVersionCommit(
-  commit: ReturnType<typeof getCommit>,
+  commit: NonNullable<ReturnType<typeof getCommit>>,
   projectName: string,
   logger: ReturnType<ReturnType<typeof getLogger>['channel']>
 ): boolean {
-  if (!commit) return false
-
   logger.debug(`extracting type from commit subject "${commit.subject}"`)
   const type = extractType(commit.subject)
   if (type !== ('chore' satisfies keyof typeof COMMIT_TYPES)) {
