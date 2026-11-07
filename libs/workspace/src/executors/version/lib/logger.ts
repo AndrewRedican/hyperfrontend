@@ -1,5 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { VersionExecutorSchema } from '../schema'
+import type { VersionExecutorOptions } from '../options'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -32,7 +32,7 @@ export interface ChannelLogger {
  */
 interface ExecutorLogger extends Omit<Logger, 'setLogLevel' | 'channel'> {
   /** Sets log level based on verbose/quiet flags */
-  setLogLevel: (level: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void
+  setLogLevel: (level: Pick<VersionExecutorOptions, 'verbose' | 'quiet'>) => void
   /** Creates a prefixed sub-logger channel */
   channel(prefix: string): ChannelLogger
   /** Sets a context value for message interpolation */
@@ -72,7 +72,7 @@ export const getLogger = () => {
   const logFn = (message: string) => baseLogger.log(msg(message))
   const infoFn = (message: string) => baseLogger.info(msg(message))
   const debugFn = (message: string) => baseLogger.debug(msg(message))
-  const setLogLevel: ({ verbose, quiet }: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void = ({ verbose, quiet }) => {
+  const setLogLevel: ({ verbose, quiet }: Pick<VersionExecutorOptions, 'verbose' | 'quiet'>) => void = ({ verbose, quiet }) => {
     baseLogger.setLogLevel(quiet ? 'error' : verbose ? 'debug' : 'log')
     context.set('logLevel', baseLogger.getLogLevel())
   }

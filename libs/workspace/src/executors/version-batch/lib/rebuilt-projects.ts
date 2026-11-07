@@ -1,4 +1,4 @@
-import type { TaskDecision, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { TaskDecision, WorkspaceGraph } from '../../../graph'
 import { reachedThrough } from '../../version/lib/shipped-change-commits'
 
 /**

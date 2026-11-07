@@ -1,10 +1,10 @@
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
-import type { TaskDecision, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { TaskDecision, WorkspaceGraph } from '../../../graph'
 import type { ChangeSources } from './shipped-change-commits'
 import { execFileSync } from 'node:child_process'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { changeSet, EdgeKind, selectAffected } from '@hyperfrontend/workspace/graph'
+import { changeSet, EdgeKind, selectAffected } from '../../../graph'
 import { BUILD_TARGET, createShippedChangeResolver } from './shipped-change-commits'
 
 /** The byte that opens each commit in the log format below, which no path or hash contains. */

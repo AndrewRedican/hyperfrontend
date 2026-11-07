@@ -112,29 +112,34 @@ The flow executes these steps:
 After the flow completes, the executor handles dependent updates:
 
 ```typescript
-// Update packages that depend on this one
-const updatedFiles = updateDependentVersions(packageName, newVersion, ...)
+// Pin every workspace project that depends on this one
+const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, projects, projectName, dryRun)
 
-// Update E2E test packages
-const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, ...)
+// Repin the projects that depend on it implicitly: the e2e projects that install its tarball
+const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, implicitDependents, dryRun)
+
+// Ask the follow-ups the wrapping executor passed for the files they changed
+for (const followUp of followUps) followUpFiles.push(...followUp(bump, { workspaceRoot, dryRun }))
 
 // Amend the version commit to include these changes
-if (updatedFiles.length > 0 && !options.skipCommit) {
-  execSync('git add ...')
-  execSync('git commit --amend --no-edit')
+if (followUpFiles.length > 0 && !dryRun && !skipCommit) {
+  stage(followUpFiles, { cwd: workspaceRoot })
+  amendCommitNoEdit({ cwd: workspaceRoot })
 }
 ```
 
+The dependents are the workspace's projects, as the executor context carries them; a project that installs from the registry through a lock file of its own is left alone. A follow-up is how a workspace adds files of its own to the commit: this repository's wrapper in `tools/package` refreshes the root compatibility document that embeds every package's version.
+
 ## CI Integration
 
-### Local Versioning (lefthook)
+### Local Versioning (pre-push hook)
 
-Version bumps happen **locally** via lefthook pre-push hooks, not in CI:
+Version bumps happen **locally**, from a pre-push hook, not in CI:
 
 ```mermaid
 flowchart TD
     A[Developer commits] --> B[git push]
-    B --> C[lefthook pre-push]
+    B --> C[pre-push hook]
     C --> D[hf run hyperfrontend:version:all]
     D --> E[Version each affected library]
     E --> F["Commit: chore: update versions for lib-a, lib-b"]
@@ -169,7 +174,7 @@ The version-check executor:
 - Returns pass/fail with detailed discrepancy information
 - Does NOT make any changes (read-only)
 
-If a developer bypasses lefthook (`--no-verify`), CI will fail with clear instructions to fix.
+If a developer bypasses the hook (`--no-verify`), CI will fail with clear instructions to fix.
 
 See [version-check executor](../version-check/) for implementation details.
 
@@ -195,7 +200,7 @@ Tags are created **after** publish because:
 The `version-check` executor shares validation logic with the version executor:
 
 ```
-tools/package/src/executors/
+libs/workspace/src/executors/
 ├── version/
 │   ├── executor.ts
 │   └── lib/
@@ -250,5 +255,4 @@ The executor returns `{ success: true }` (skip scenarios):
 
 - [README.md](./README.md) — Usage and options
 - [version-check executor](../version-check/) — Validation-only executor for CI
-- [@hyperfrontend/versioning](../../../../libs/versioning) — Underlying versioning library
-- [lefthook.yml](../../../../../lefthook.yml) — Git hooks configuration
+- [@hyperfrontend/versioning](../../../../versioning) — Underlying versioning library

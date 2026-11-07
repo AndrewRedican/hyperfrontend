@@ -12,7 +12,7 @@ import { getLogger } from './logger'
  * Also checks parent commits in merge scenarios (e.g., GitHub PR synthetic merge commits).
  *
  * @param cwd - Working directory
- * @param projectName - The Nx project name to check for
+ * @param projectName - The project name to check for
  * @returns True if current HEAD is a version commit for this specific project
  */
 export function isVersionCommit(cwd: string, projectName: string): boolean {
@@ -55,7 +55,7 @@ export function isVersionCommit(cwd: string, projectName: string): boolean {
  * Checks if a specific commit matches any version commit pattern.
  *
  * @param commit - The commit to check
- * @param projectName - The Nx project name to check for
+ * @param projectName - The project name to check for
  * @param logger - Logger instance for debug output
  * @returns True if the commit is a version commit for this project
  */
@@ -104,18 +104,6 @@ function isCommitVersionCommit(
     logger.debug(`parsed package names from description: ${packages}`)
     if (packages.includes(projectName)) {
       logger.info(`matched CI batch versioning pattern for project "${projectName}", returning true`)
-      return true
-    }
-  }
-
-  logger.debug(
-    `checking alternative release scope pattern for project "${projectName}" - subject should start with "chore(release): " followed by project name`
-  )
-  if (scope === 'release') {
-    logger.debug(`detected "release" scope, checking if description starts with project name "${projectName}"`)
-    const rest = description.trimStart()
-    if (rest === projectName || rest.startsWith(projectName + ' ')) {
-      logger.info(`matched alternative release scope pattern for project "${projectName}", returning true`)
       return true
     }
   }

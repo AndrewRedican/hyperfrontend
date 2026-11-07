@@ -1,4 +1,4 @@
-import type { ProjectRecord, Reason } from '@hyperfrontend/workspace/graph'
+import type { ProjectRecord, Reason } from '../../../graph'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { rebuiltProjects } from './rebuilt-projects'
 

@@ -24,6 +24,21 @@
       "implementation": "./executors/typecheck/index",
       "schema": "./executors/typecheck/schema.json",
       "description": "Run the TypeScript compiler over a project without emitting files."
+    },
+    "version": {
+      "implementation": "./executors/version/index",
+      "schema": "./executors/version/schema.json",
+      "description": "Version a project from its conventional commits, pin its dependents to the new version, and commit the bump."
+    },
+    "version-batch": {
+      "implementation": "./executors/version-batch/index",
+      "schema": "./executors/version-batch/schema.json",
+      "description": "Version every library a change makes due a release, and record the bumps in one commit."
+    },
+    "version-check": {
+      "implementation": "./executors/version-check/index",
+      "schema": "./executors/version-check/schema.json",
+      "description": "Compare a project's manifest and changelog with what its commits call for, without writing anything."
     }
   }
 }

@@ -8,7 +8,8 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 - **Idempotency** — Safe to run multiple times; skips if version already published
 - **Recursion prevention** — Skips if HEAD is a version commit for this project
 - **Documentation support** — `docs` commits trigger MINOR version bumps
-- **Dependent updates** — Automatically updates version references in dependent packages
+- **Dependent updates** — Brings every workspace project that pins the package to the new version
+- **Follow-ups** — An executor that wraps this one passes `followUps`, functions called after the bump and before the commit that answer the files the commit must also carry
 - **Zero external dependencies** — Uses `@hyperfrontend/versioning` which has no transitive dependencies
 
 ## Usage
@@ -30,7 +31,7 @@ For batch versioning of all affected libraries, use the `version:all` target:
 # Preview batch versioning
 npx hf run hyperfrontend:version:all --dryRun
 
-# Run batch versioning (typically done by lefthook)
+# Run batch versioning (typically from a pre-push hook)
 npx hf run hyperfrontend:version:all
 
 # Force a patch on named libraries, for a change to the package artifact
@@ -41,23 +42,15 @@ npx hf run hyperfrontend:version:all \
 
 ## Options
 
-| Option                | Type    | Default          | Description                                              |
-| --------------------- | ------- | ---------------- | -------------------------------------------------------- |
-| `dryRun`              | boolean | false            | Preview changes without committing                       |
-| `releaseAs`           | string  | -                | Force bump type: `major`, `minor`, or `patch`            |
-| `tagPrefix`           | string  | `{projectName}@` | Version tag prefix                                       |
-| `trackDeps`           | boolean | false            | Include dependencies in version calculation              |
-| `skipCommit`          | boolean | false            | Skip creating a version commit                           |
-| `skipTag`             | boolean | true             | Skip creating a git tag (tags created after publish)     |
-| `updateDependents`    | boolean | true             | Update version references in dependent packages          |
-| `skipIfVersionCommit` | boolean | true             | Skip if current commit is a version commit               |
-| `skipIfUnstableGit`   | boolean | true             | Skip if git is in rebase/merge state                     |
-| `verbose`             | boolean | false            | Enable detailed logging                                  |
-| `quiet`               | boolean | false            | Suppress non-error output                                |
-| `showDiff`            | boolean | false            | Show unified diff of changes before committing           |
-| `diffFormat`          | string  | `unified`        | Diff format: `unified` (full patch) or `summary` (stats) |
-| `rollbackOnFailure`   | boolean | true             | Discard all VFS changes if any step fails                |
-| `backupChangelog`     | boolean | false            | Create backup of changelog before modification           |
+| Option       | Type    | Default          | Description                                          |
+| ------------ | ------- | ---------------- | ---------------------------------------------------- |
+| `dryRun`     | boolean | false            | Preview changes without committing                   |
+| `releaseAs`  | string  | -                | Force bump type: `major`, `minor`, or `patch`        |
+| `tagPrefix`  | string  | `{projectName}@` | Version tag prefix                                   |
+| `skipCommit` | boolean | false            | Skip creating a version commit                       |
+| `skipTag`    | boolean | true             | Skip creating a git tag (tags created after publish) |
+| `verbose`    | boolean | false            | Enable detailed logging                              |
+| `quiet`      | boolean | false            | Suppress non-error output                            |
 
 ## Commit Types and Version Impact
 
@@ -106,20 +99,19 @@ When a package is versioned, the executor automatically:
 2. Updates their `package.json` dependency versions
 3. Updates E2E test packages that reference the tarball
 
-This is controlled by the `updateDependents` option (default: true).
+A project that installs from the registry through a lock file of its own is left alone: a pin on a version that is not published yet would break its install until the release lands.
 
 ### CI Integration
 
 #### Local Versioning (Primary)
 
-Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
+Version bumps are applied **locally**, before the push, by the `version-batch` executor; this repository runs it from a pre-push hook as the root project's `version:all` target. The batch:
 
-1. lefthook runs the pipeline (typecheck, lint, test, build and e2e of what the push reaches), then the root project's `version:all` target, which detects affected libraries
-2. For each affected library, package.json and CHANGELOG.md are updated
-3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
-4. Push proceeds with the version commit included
+1. Detects the affected libraries between the base branch and the head
+2. Updates package.json and CHANGELOG.md of each one
+3. Creates a single batch commit: `chore: update versions for lib-a, lib-b`
 
-See [lefthook.yml](../../../../lefthook.yml) for the hook configuration.
+The push then carries the version commit.
 
 #### CI Validation (version-check)
 
@@ -131,7 +123,7 @@ npx hf run lib-xxx:version-check
 # Or:      ❌ lib-xxx: version mismatch (with remediation steps)
 ```
 
-This is read-only validation — CI does NOT create commits. If you bypass lefthook with `--no-verify`, CI will fail with instructions to fix.
+This is read-only validation: CI creates no commits. When the hook was bypassed with `--no-verify`, CI fails with instructions to fix.
 
 See [version-check executor](../version-check/README.md) for details.
 

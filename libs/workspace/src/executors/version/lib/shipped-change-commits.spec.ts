@@ -1,4 +1,4 @@
-import type { ProjectRecord, Reason, TaskDecision } from '@hyperfrontend/workspace/graph'
+import type { ProjectRecord, Reason, TaskDecision } from '../../../graph'
 import type { ChangeSources } from './shipped-change-commits'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createShippedChangeResolver } from './shipped-change-commits'

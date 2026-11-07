@@ -1,6 +1,8 @@
 import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning/flow/models'
+import type { ProjectConfiguration } from '../../../runner/contract'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
@@ -8,9 +10,36 @@ import { stage, amendCommitNoEdit } from '@hyperfrontend/versioning/git/operatio
 import { isInUnstableGitState } from './is-in-unstable-git-state'
 import { isVersionCommit } from './is-version-commit'
 import { getLogger } from './logger'
-import { refreshCompatibilityMatrix } from './refresh-compatibility-matrix'
 import { updateDependentVersions } from './update-dependent-versions'
 import { updateE2eDependencies } from './update-e2e-dependencies'
+
+/** What a version run did to a project, as a follow-up reads it. */
+export interface VersionBump {
+  /** The project's name */
+  readonly projectName: string
+  /** The project's root, workspace-relative */
+  readonly projectRoot: string
+  /** The name of the package the project carries */
+  readonly packageName: string
+  /** The version before the bump, or null for a first release */
+  readonly previousVersion: string | null
+  /** The version the bump wrote */
+  readonly newVersion: string
+}
+
+/** The run a follow-up is called from. */
+export interface FollowUpRun {
+  /** Absolute path to the workspace root */
+  readonly workspaceRoot: string
+  /** Whether the run writes nothing; a follow-up then writes nothing either */
+  readonly dryRun: boolean
+}
+
+/**
+ * Called after a project is bumped and before the commit that records the bump. It answers the
+ * workspace-relative files it changed, and the commit carries them with the bump.
+ */
+export type FollowUp = (bump: VersionBump, run: FollowUpRun) => readonly string[]
 
 /**
  * Options for running version logic on a single project.
@@ -22,6 +51,8 @@ export interface RunVersionOptions {
   workspaceRoot: string
   /** Project root relative to workspace root */
   projectRoot: string
+  /** Every project of the workspace by name: the ones that pin the package are brought to the new version */
+  projects: Readonly<Record<string, ProjectConfiguration>>
   /** Skip creating a git commit */
   skipCommit?: boolean
   /** Skip creating a git tag */
@@ -36,28 +67,12 @@ export interface RunVersionOptions {
   releaseAs?: 'major' | 'minor' | 'patch'
   /** Version tag prefix */
   tagPrefix?: string
-  /** Include dependencies in bump calculation */
-  trackDeps?: boolean
-  /** Update version references in dependent packages */
-  updateDependents?: boolean
-  /** Skip if current commit is a version commit */
-  skipIfVersionCommit?: boolean
-  /** Skip if git is in unstable state */
-  skipIfUnstableGit?: boolean
-  /** Show diff preview */
-  showDiff?: boolean
-  /** Diff output format */
-  diffFormat?: 'unified' | 'summary'
-  /** Rollback on failure */
-  rollbackOnFailure?: boolean
-  /** Repository config for changelog URLs */
-  repository?: FlowConfig['repository']
   /** Scope filtering configuration */
   scopeFiltering?: FlowConfig['scopeFiltering']
   /** Upper bound on the commit window the flow analyzes for bumps and changelogs */
   maxCommitFallback?: FlowConfig['maxCommitFallback']
-  /** Backup changelog before modification */
-  backupChangelog?: boolean
+  /** Called after the bump and before the commit, each answering the files the commit must also carry */
+  followUps?: readonly FollowUp[]
 }
 
 /**
@@ -81,11 +96,22 @@ export interface RunVersionResult {
 }
 
 /**
+ * The projects that depend on one without importing it: the e2e projects that install its tarball.
+ *
+ * @param projects - Every project of the workspace by name
+ * @param projectName - The project depended on
+ * @returns The configurations of the projects whose `implicitDependencies` name it
+ */
+function implicitDependents(projects: Readonly<Record<string, ProjectConfiguration>>, projectName: string): ProjectConfiguration[] {
+  return values(projects).filter((project) => project.implicitDependencies?.includes(projectName) === true)
+}
+
+/**
  * Runs versioning logic for a single project.
  *
- * This function contains the core versioning logic extracted from the Nx executor,
- * allowing it to be called directly by the version-batch executor without going
- * through the Nx executor interface.
+ * This function contains the core versioning logic extracted from the executor, allowing it
+ * to be called directly by the version-batch executor without going through the executor
+ * interface.
  *
  * Key behaviors:
  * - Uses npm registry as source of truth (not git tags)
@@ -99,10 +125,11 @@ export interface RunVersionResult {
  *
  * @example
  * ```typescript
- * const result = await runVersionForProject({
+ * const result = await runVersion({
  *   projectName: 'my-lib',
  *   workspaceRoot: '/path/to/workspace',
  *   projectRoot: 'libs/my-lib',
+ *   projects: context.projects,
  *   skipCommit: true,
  *   skipTag: true,
  * })
@@ -113,11 +140,12 @@ export interface RunVersionResult {
  * }
  * ```
  */
-export async function runVersionForProject(options: RunVersionOptions): Promise<RunVersionResult> {
+export async function runVersion(options: RunVersionOptions): Promise<RunVersionResult> {
   const {
     projectName,
     workspaceRoot,
     projectRoot,
+    projects,
     skipCommit = false,
     skipTag = true,
     dryRun = false,
@@ -125,17 +153,9 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     quiet = false,
     releaseAs,
     tagPrefix = `${projectName}@`,
-    trackDeps = false,
-    updateDependents = true,
-    skipIfVersionCommit = true,
-    skipIfUnstableGit = true,
-    showDiff = false,
-    diffFormat,
-    rollbackOnFailure,
-    repository = 'inferred',
     scopeFiltering,
     maxCommitFallback,
-    backupChangelog = false,
+    followUps = [],
   } = options
 
   const logger = getLogger()
@@ -146,31 +166,27 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
 
   const modifiedFiles: string[] = []
 
-  if (skipIfVersionCommit) {
-    logger.debug('Checking if current commit is a version/release commit')
-    if (isVersionCommit(workspaceRoot, projectName)) {
-      logger.info('Skipping - current commit is a version/release commit for this project')
-      return {
-        success: true,
-        bumped: false,
-        previousVersion: null,
-        newVersion: null,
-        modifiedFiles: [],
-      }
+  logger.debug('Checking if current commit is a version/release commit')
+  if (isVersionCommit(workspaceRoot, projectName)) {
+    logger.info('Skipping - current commit is a version/release commit for this project')
+    return {
+      success: true,
+      bumped: false,
+      previousVersion: null,
+      newVersion: null,
+      modifiedFiles: [],
     }
   }
 
-  if (skipIfUnstableGit) {
-    logger.debug('Checking if git is in an unstable state (rebase/merge)')
-    if (isInUnstableGitState(workspaceRoot)) {
-      logger.info('Skipping - git is in rebase/merge state')
-      return {
-        success: true,
-        bumped: false,
-        previousVersion: null,
-        newVersion: null,
-        modifiedFiles: [],
-      }
+  logger.debug('Checking if git is in an unstable state (rebase/merge)')
+  if (isInUnstableGitState(workspaceRoot)) {
+    logger.info('Skipping - git is in rebase/merge state')
+    return {
+      success: true,
+      bumped: false,
+      previousVersion: null,
+      newVersion: null,
+      modifiedFiles: [],
     }
   }
 
@@ -187,13 +203,11 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     skipGit: skipCommit,
     skipTag,
     skipChangelog: false,
-    trackDeps,
     tagFormat: `${tagPrefix}\${version}`,
     releaseAs,
-    repository,
+    repository: 'inferred',
     scopeFiltering,
     maxCommitFallback,
-    backupChangelog,
   }
 
   logger.debug(
@@ -205,11 +219,10 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
   const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
     dryRun,
     verbose,
-    showDiff,
-    diffFormat,
-    rollbackOnFailure,
     projectRoot,
   })
+  // why: the flow sets the shared logger to its own level while it runs; what follows is reported at the level the run asked for
+  logger.setLogLevel({ verbose, quiet })
 
   const success = flowResult.status === 'success' || flowResult.status === 'skipped'
   const bumped = flowResult.status === 'success' && flowResult.state.nextVersion != null
@@ -267,41 +280,47 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     }
   }
 
-  // why: Everything the bump obliges beyond the package's own files is gathered here and committed with it: the pins of its dependents, and the compatibility document that embeds every package's version.
+  // why: Everything the bump obliges beyond the package's own files is gathered here and committed with it: the pins of its dependents, and whatever the follow-ups of the workspace that runs this derive from the new version.
   const followUpFiles: string[] = []
 
-  if (updateDependents) {
-    const pkg = readPackageJsonIfExists(packageJsonPath)
-    const packageName = pkg?.name ?? null
-    const newVersion = flowResult.state.nextVersion ?? pkg?.version ?? '0.0.0'
+  const packageName = readPackageJsonIfExists(packageJsonPath)?.name ?? null
+  const newVersion = flowResult.state.nextVersion
 
-    logger.debug(`Package: ${packageName}, Version: ${newVersion}`)
-    if (packageName && newVersion !== '0.0.0') {
-      const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, packageJsonPath, dryRun)
-      const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, dryRun)
+  logger.debug(`Package: ${packageName}, Version: ${newVersion}`)
+  if (packageName) {
+    const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, projects, projectName, dryRun)
+    const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, implicitDependents(projects, projectName), dryRun)
 
-      if (updatedFiles.length > 0) {
-        logger.info(`Updated dependency version in ${updatedFiles.length} library package(s):`)
-        for (const file of updatedFiles) {
-          logger.debug(`  - ${file}`)
-        }
+    if (updatedFiles.length > 0) {
+      logger.info(`Updated dependency version in ${updatedFiles.length} library package(s):`)
+      for (const file of updatedFiles) {
+        logger.debug(`  - ${file}`)
       }
-
-      if (e2eUpdatedFiles.length > 0) {
-        logger.info(`Updated e2e app dependency in ${e2eUpdatedFiles.length} package(s):`)
-        for (const file of e2eUpdatedFiles) {
-          logger.debug(`  - ${file}`)
-        }
-      }
-
-      followUpFiles.push(...updatedFiles, ...e2eUpdatedFiles)
     }
-  }
 
-  const matrixFiles = refreshCompatibilityMatrix(workspaceRoot, dryRun)
-  if (matrixFiles.length > 0) {
-    logger.info(`Refreshed ${matrixFiles.join(', ')}`)
-    followUpFiles.push(...matrixFiles)
+    if (e2eUpdatedFiles.length > 0) {
+      logger.info(`Updated e2e app dependency in ${e2eUpdatedFiles.length} package(s):`)
+      for (const file of e2eUpdatedFiles) {
+        logger.debug(`  - ${file}`)
+      }
+    }
+
+    followUpFiles.push(...updatedFiles, ...e2eUpdatedFiles)
+
+    const bump: VersionBump = {
+      projectName,
+      projectRoot,
+      packageName,
+      previousVersion: flowResult.state.currentVersion ?? null,
+      newVersion,
+    }
+    for (const followUp of followUps) {
+      const files = followUp(bump, { workspaceRoot, dryRun })
+      if (files.length > 0) {
+        logger.info(`Follow-up changed ${files.join(', ')}`)
+        followUpFiles.push(...files)
+      }
+    }
   }
 
   if (followUpFiles.length > 0) {
@@ -325,7 +344,7 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     success,
     bumped,
     previousVersion: flowResult.state.currentVersion ?? null,
-    newVersion: flowResult.state.nextVersion ?? null,
+    newVersion,
     modifiedFiles,
     flowResult,
   }

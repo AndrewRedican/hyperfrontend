@@ -1,27 +1,31 @@
-import type { ExecutorContext, ExecutorResult } from '@hyperfrontend/workspace/runner'
-import type { VersionExecutorSchema } from './schema'
-import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+/**
+ * The `version` executor: runs the version flow of `@hyperfrontend/versioning` on one project.
+ *
+ * @module executors/version/executor
+ */
+
+import type { ExecutorContext, ExecutorResult } from '../../runner/contract'
+import type { VersionExecutorOptions } from './options'
+import { workspaceGraph } from '../../graph'
 import { withShippedChanges } from './lib/graph-change-sources'
 import { getLogger } from './lib/logger'
-import { runVersionForProject } from './lib/run-version-for-project'
+import { runVersion } from './lib/run-version-for-project'
 
 /**
- * Nx executor that versions a project using `@hyperfrontend/versioning`.
+ * Versions a project using `@hyperfrontend/versioning`.
  *
  * Key behaviors:
  * - Uses npm registry as source of truth (not git tags)
- * - Zero transitive dependencies
- * - Full control over versioning behavior
  * - Tags as OUTPUT (created after publish), not INPUT
  *
- * This executor delegates to `runVersionForProject()` for the core versioning logic,
+ * This executor delegates to `runVersion()` for the core versioning logic,
  * allowing the same logic to be reused by the `version-batch` executor.
  *
  * @param options - Configuration options for the version executor
  * @param context - The workspace, the project and the target the task runs on
  * @returns Success status
  */
-export default async function versionExecutor(options: VersionExecutorSchema, context: ExecutorContext): Promise<ExecutorResult> {
+export async function versionExecutor(options: VersionExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const { projectName, root: workspaceRoot } = context
   const logger = getLogger()
   logger.setLogLevel(options)
@@ -41,10 +45,11 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
 
   logger.debug(`Executor started with log level: {logLevel}`)
 
-  const result = await runVersionForProject({
+  const result = await runVersion({
     projectName,
     workspaceRoot,
     projectRoot: projectConfig.root,
+    projects: context.projects,
     skipCommit: options.skipCommit,
     skipTag: options.skipTag ?? true,
     dryRun: options.dryRun,
@@ -52,19 +57,13 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     quiet: options.quiet,
     releaseAs: options.releaseAs,
     tagPrefix: options.tagPrefix,
-    trackDeps: options.trackDeps,
-    updateDependents: options.updateDependents,
-    skipIfVersionCommit: options.skipIfVersionCommit,
-    skipIfUnstableGit: options.skipIfUnstableGit,
-    showDiff: options.showDiff,
-    diffFormat: options.diffFormat,
-    rollbackOnFailure: options.rollbackOnFailure,
-    repository: options.repository,
     scopeFiltering: withShippedChanges(options.scopeFiltering, workspaceGraph(workspaceRoot), workspaceRoot),
     maxCommitFallback: options.maxCommitFallback,
-    backupChangelog: options.backupChangelog,
+    followUps: options.followUps,
   })
 
   logger.debug('Executor completed successfully')
   return { success: result.success }
 }
+
+export default versionExecutor

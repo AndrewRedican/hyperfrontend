@@ -96,7 +96,7 @@ export interface ValidateVersionStateOptions {
 /**
  * Validates that a library's version state matches what's expected based on
  * conventional commit analysis. This is used by the version-check executor
- * to verify that lefthook has properly updated versions before CI validation.
+ * to verify that a version run wrote what the commits call for.
  *
  * The validation process:
  * 1. Runs the version flow in dry-run mode to calculate expected state
@@ -217,7 +217,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
       type: 'version-mismatch',
       expected: expected.version,
       actual: actual.version,
-      remedy: `Run: npx hf run ${projectName}:version\nOr push again to trigger lefthook versioning`,
+      remedy: `Run: npx hf run ${projectName}:version`,
     })
   }
 

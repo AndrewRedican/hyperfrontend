@@ -1,8 +1,8 @@
-import type { WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { WorkspaceGraph } from '../../../graph'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { getChangedFilesBetween } from '@hyperfrontend/versioning/git/operations'
-import { hasTarget } from '@hyperfrontend/workspace/graph'
+import { hasTarget } from '../../../graph'
 import { selectReleaseBuilds } from '../../version/lib/graph-change-sources'
 import { rebuiltProjects } from './rebuilt-projects'
 

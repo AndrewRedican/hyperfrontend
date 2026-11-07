@@ -1,13 +1,12 @@
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
+import type { FollowUp } from '../version/lib/run-version-for-project'
 
 /**
- * Schema for the version-batch executor.
+ * Options of the version-batch executor.
  *
- * This executor consolidates batch versioning orchestration logic
- * into TypeScript. It detects affected libraries, versions each one,
- * and creates a single batch commit.
+ * The executor detects affected libraries, versions each one, and creates a single batch commit.
  */
-export interface VersionBatchExecutorSchema {
+export interface VersionBatchExecutorOptions {
   /**
    * Base git ref for affected detection.
    *
@@ -54,4 +53,6 @@ export interface VersionBatchExecutorSchema {
   releaseAs?: FlowConfig['releaseAs']
   /** Project names to version instead of the affected set. Required with `releaseAs`, and only meaningful with it. */
   libraries?: string[]
+  /** Called after each bump and before the batch commit, each answering the files the commit must also carry. No configuration sets this; an executor that wraps this one passes it. */
+  followUps?: readonly FollowUp[]
 }

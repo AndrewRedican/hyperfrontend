@@ -1,8 +1,8 @@
 import type { DependencyCommitResolver } from '@hyperfrontend/versioning/flow/models'
-import type { Reason, TaskDecision, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { Reason, TaskDecision, WorkspaceGraph } from '../../../graph'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { ReasonRule } from '@hyperfrontend/workspace/graph'
+import { ReasonRule } from '../../../graph'
 
 /** The target whose selection says a library must be rebuilt. */
 export const BUILD_TARGET = 'build'

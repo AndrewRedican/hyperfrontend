@@ -111,14 +111,17 @@ The graph is built from the working tree whatever `--head` names, so the analysi
 
 A target names one as `@hyperfrontend/workspace:<name>`; `run-commands` is the engine's own and the rest live under `src/executors/`.
 
-| Executor       | Description                                                            | Docs                                        |
-| -------------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| `run-commands` | Runs shell commands; the short form is a target's bare `command`       | [Command line](#command-line)               |
-| `build`        | Builds a library into a publishable package                            | [README](./src/executors/build/README.md)   |
-| `typecheck`    | TypeScript type checking without emitting files                        | -                                           |
-| `test`         | Runs a project's suites on Node's test runner through the test runtime | -                                           |
-| `e2e`          | Tests a package's build through `npm pack` and a tarball install       | -                                           |
-| `publish`      | Publishes to npm, with a dry run                                       | [README](./src/executors/publish/README.md) |
+| Executor        | Description                                                            | Docs                                              |
+| --------------- | ---------------------------------------------------------------------- | ------------------------------------------------- |
+| `run-commands`  | Runs shell commands; the short form is a target's bare `command`       | [Command line](#command-line)                     |
+| `build`         | Builds a library into a publishable package                            | [README](./src/executors/build/README.md)         |
+| `typecheck`     | TypeScript type checking without emitting files                        | -                                                 |
+| `test`          | Runs a project's suites on Node's test runner through the test runtime | -                                                 |
+| `e2e`           | Tests a package's build through `npm pack` and a tarball install       | -                                                 |
+| `publish`       | Publishes to npm, with a dry run                                       | [README](./src/executors/publish/README.md)       |
+| `version`       | Versions a project from its conventional commits and commits the bump  | [README](./src/executors/version/README.md)       |
+| `version-batch` | Versions every library a change makes due a release, in one commit     | [README](./src/executors/version/README.md)       |
+| `version-check` | Compares a project's version state with what its commits call for      | [README](./src/executors/version-check/README.md) |
 
 ### typecheck
 
@@ -164,6 +167,14 @@ Publishes built packages to npm with:
 - Reads credentials from `NPM_TOKEN` environment variable
 
 **Full documentation:** [src/executors/publish/README.md](./src/executors/publish/README.md)
+
+### version, version-batch and version-check
+
+`version` runs the conventional flow of `@hyperfrontend/versioning` on one project, with the npm registry as the source of truth for what is published: it bumps the manifest, writes the changelog entry, brings every workspace project that pins the package to the new version, and commits. A library is also due a release when the graph selects its build for a change to code it ships or to the toolchain the `build` target declares as inputs. `version-batch` finds the libraries a change between `base` and `head` makes due a release, versions each, and records the bumps in one commit; it stands down on the base branch itself. `version-check` is the read-only half: it computes the state the commits call for and compares it with the manifest and changelog on disk, for CI. The conventions the flow assumes are the ones this repository uses: commit scopes name projects, tags are `{projectName}@<version>`, and the batch commit is `chore: update versions for <projects>`.
+
+An executor that wraps `version` or `version-batch` passes `followUps`: functions called after each bump and before the commit, each answering the workspace-relative files it changed, which the commit then carries. This repository's `@hyperfrontend/package:version` adds the root compatibility document that way.
+
+**Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [src/executors/version-check/README.md](./src/executors/version-check/README.md)
 
 ## License
 

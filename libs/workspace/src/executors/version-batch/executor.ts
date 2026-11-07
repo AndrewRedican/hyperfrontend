@@ -1,11 +1,19 @@
-import type { ExecutorContext } from '@hyperfrontend/workspace/runner'
-import type { VersionBatchExecutorSchema } from './schema'
+/**
+ * The `version-batch` executor: finds the libraries a change makes due a release, versions each
+ * of them, and records every bump in one commit.
+ *
+ * @module executors/version-batch/executor
+ */
+
+import type { ExecutorContext, ExecutorResult } from '../../runner/contract'
+import type { VersionBatchExecutorOptions } from './options'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
-import { workspaceGraph } from '@hyperfrontend/workspace/graph'
+import { workspaceGraph } from '../../graph'
 import { withShippedChanges } from '../version/lib/graph-change-sources'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { getLogger } from '../version/lib/logger'
-import { runVersionForProject } from '../version/lib/run-version-for-project'
+import { runVersion } from '../version/lib/run-version-for-project'
+import { baseBranches, listRemotes } from './lib/base-branch'
 import { createBatchCommit } from './lib/create-batch-commit'
 import { getAffectedLibraries, hasVersionTarget } from './lib/get-affected-libraries'
 import { selectLibraries } from './lib/select-libraries'
@@ -14,9 +22,9 @@ import { withRollback } from './lib/working-tree'
 /** Options declared on the `version` target. */
 interface VersionTargetOptions {
   /** Commit scope filtering declared for single-project versioning. */
-  scopeFiltering?: VersionBatchExecutorSchema['scopeFiltering']
+  scopeFiltering?: VersionBatchExecutorOptions['scopeFiltering']
   /** Commit-window bound declared for single-project versioning. */
-  maxCommitFallback?: VersionBatchExecutorSchema['maxCommitFallback']
+  maxCommitFallback?: VersionBatchExecutorOptions['maxCommitFallback']
 }
 
 /** The `version` target defaults this batch inherits its commit attribution from. */
@@ -40,24 +48,23 @@ export interface VersionBatchResult {
 }
 
 /**
- * version-batch executor
+ * Versions every library a change makes due a release and records the bumps in one commit.
  *
- * Consolidates all batch versioning orchestration logic into TypeScript.
  * This executor:
  * 1. Detects affected libraries programmatically
  * 2. Runs versioning for each affected library
  * 3. Creates a single batch commit
  *
+ * It stands down on the base branch itself: the releases of that branch are made from the
+ * branches merged into it.
+ *
  * @param options - Executor options from schema
  * @param context - The workspace, the project and the target the task runs on
  * @returns Executor result with success status
  */
-export default async function versionBatchExecutor(
-  options: VersionBatchExecutorSchema,
-  context: ExecutorContext
-): Promise<Pick<VersionBatchResult, 'success'>> {
+export async function versionBatchExecutor(options: VersionBatchExecutorOptions, context: ExecutorContext): Promise<ExecutorResult> {
   const workspaceRoot = context.root
-  const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false, releaseAs, libraries } = options
+  const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false, releaseAs, libraries, followUps } = options
 
   const versionTargetDefaults = context.configuration.targetDefaults?.['version'] as VersionTargetDefaults | undefined
   const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
@@ -68,8 +75,8 @@ export default async function versionBatchExecutor(
 
   try {
     const currentBranch = getCurrentBranch({ cwd: workspaceRoot })
-    if (currentBranch === 'main') {
-      logger.log('On main branch, skipping version-batch')
+    if (currentBranch !== null && baseBranches(base, listRemotes(workspaceRoot)).includes(currentBranch)) {
+      logger.log(`On the base branch ${currentBranch}, skipping version-batch`)
       return { success: true }
     }
 
@@ -132,10 +139,11 @@ export default async function versionBatchExecutor(
           logger.debug(`Processing ${lib}...`)
 
           try {
-            const result = await runVersionForProject({
+            const result = await runVersion({
               projectName: lib,
               workspaceRoot,
               projectRoot: project.root,
+              projects: context.projects,
               skipCommit: true,
               skipTag: true,
               dryRun: false,
@@ -144,7 +152,10 @@ export default async function versionBatchExecutor(
               scopeFiltering: tracked,
               maxCommitFallback,
               releaseAs,
+              followUps,
             })
+            // why: each library's run quietens the shared logger; the batch reports its own lines at its own level
+            logger.setLogLevel({ verbose, quiet: false })
 
             if (result.success && result.bumped) {
               bumpedLibs.push(lib)
@@ -192,3 +203,5 @@ export default async function versionBatchExecutor(
     return { success: false }
   }
 }
+
+export default versionBatchExecutor

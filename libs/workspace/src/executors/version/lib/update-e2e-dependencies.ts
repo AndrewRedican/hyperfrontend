@@ -1,18 +1,24 @@
+import type { ProjectConfiguration } from '../../../runner/contract'
 import { join } from 'node:path'
-import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { getProductionDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
-import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
 import { replaceTgzReference } from './replace-dependency-version'
 
 /**
- * Helper to convert absolute path to relative path for cleaner logging
+ * The stem of the tarball `npm pack` writes for a package: the scope and name joined by a dash,
+ * without the `@`.
  *
- * @param absolutePath - The absolute file path to convert
- * @param workspaceRoot - The workspace root directory to make the path relative to
- * @returns The relative path, or '.' if the path equals the workspace root
+ * @param packageName - The package name, scoped or not
+ * @returns The stem the tarball name starts with
+ *
+ * @example The tarball of a scoped package
+ * ```typescript
+ * tarballStem('@scope/core') // 'scope-core'
+ * ```
  */
-const toRelative = (absolutePath: string, workspaceRoot: string): string => workspaceRelativePath(workspaceRoot, absolutePath) || '.'
+export function tarballStem(packageName: string): string {
+  return (packageName.startsWith('@') ? packageName.slice(1) : packageName).split('/').join('-')
+}
 
 /**
  * Checks if a dependency value is a file: reference to a tgz with the expected prefix.
@@ -28,64 +34,70 @@ function isTgzDependency(value: string, tgzPrefix: string): boolean {
 /**
  * Replaces a tgz filename in a file: dependency value string.
  *
- * @param value - The full dependency value (e.g., "file:../../packs/hyperfrontend-my-package-1.0.0.tgz")
- * @param tgzPrefix - The tgz filename prefix
+ * @param value - The full dependency value (e.g., "file:../../packs/scope-core-1.0.0.tgz")
  * @param newTgzName - The new tgz filename
  * @returns The updated value with the new tgz filename
  */
-function updateTgzInValue(value: string, tgzPrefix: string, newTgzName: string): string {
+function updateTgzInValue(value: string, newTgzName: string): string {
   const lastSlashIndex = value.lastIndexOf('/')
   const tgzStartIndex = lastSlashIndex >= 0 ? lastSlashIndex + 1 : value.indexOf(':') + 1
   return value.substring(0, tgzStartIndex) + newTgzName
 }
 
 /**
- * Updates e2e app dependencies when library version bumps.
+ * Brings the tarball pins of the projects that test a package to its new version: an e2e project
+ * installs the package as `file:<path>/<stem>-<version>.tgz`, and the pin names the version.
  *
  * @param packageName - The npm package name that was updated
  * @param newVersion - The new version to set
  * @param workspaceRoot - The workspace root directory
+ * @param dependents - The projects that depend on the package without importing it
  * @param dryRun - If true, don't actually write
- * @returns Array of updated paths (relative)
+ * @returns The manifests whose pin was brought to the new version, workspace-relative
+ *
+ * @example Repinning the e2e project of a package after its bump
+ * ```typescript
+ * updateE2eDependencies('@scope/core', '1.1.0', '/repo', [{ root: 'e2e/core' }], false)
+ * // ['e2e/core/package.json']
+ * ```
  */
-export function updateE2eDependencies(packageName: string, newVersion: string, workspaceRoot: string, dryRun: boolean): string[] {
+export function updateE2eDependencies(
+  packageName: string,
+  newVersion: string,
+  workspaceRoot: string,
+  dependents: readonly ProjectConfiguration[],
+  dryRun: boolean
+): string[] {
   const logger = getLogger().channel('updateE2eDependencies')
-  const rel = (p: string) => toRelative(p, workspaceRoot)
   try {
     logger.step(`updating e2e dependencies for "${packageName}" to version "${newVersion}" (dryRun: ${dryRun})`)
     const updatedFiles: string[] = []
-    const e2eDir = join(workspaceRoot, 'apps', 'package-e2e')
 
-    logger.step(`searching for package.json files in "${rel(e2eDir)}"`)
-    const packageJsonFiles = findFiles(e2eDir, '**/package.json', {
-      ignorePatterns: ['node_modules', 'dist'],
-      absolutePaths: true,
-    })
-    if (packageJsonFiles.length === 0) {
-      logger.step(`no package.json files found in e2e directory, returning empty`)
+    if (dependents.length === 0) {
+      logger.step(`no project depends on "${packageName}" implicitly, returning empty`)
       return updatedFiles
     }
-    logger.step(`found ${packageJsonFiles.length} package.json files to check`)
-    const packageSlug = packageName.startsWith('@hyperfrontend/') ? packageName.slice('@hyperfrontend/'.length) : packageName
-    const tgzPrefix = `hyperfrontend-${packageSlug}-`
-    const newTgzName = `hyperfrontend-${packageSlug}-${newVersion}.tgz`
+    logger.step(`found ${dependents.length} dependent project(s) to check`)
+    const tgzPrefix = `${tarballStem(packageName)}-`
+    const newTgzName = `${tgzPrefix}${newVersion}.tgz`
     logger.step(`looking for tgz references with prefix "${tgzPrefix}" to replace with "${newTgzName}"`)
     logger.step('checking files')
 
-    for (const packageJsonPath of packageJsonFiles) {
+    for (const dependent of dependents) {
+      const relativePath = `${dependent.root}/package.json`
+      const packageJsonPath = join(workspaceRoot, relativePath)
       const pkg = readPackageJsonIfExists(packageJsonPath)
       if (!pkg) {
-        logger.item(`could not read "${rel(packageJsonPath)}", skipping`)
+        logger.item(`"${dependent.root}" carries no package.json, skipping`)
         continue
       }
 
-      logger.item(`"${rel(packageJsonPath)}"`)
+      logger.item(`"${relativePath}"`)
       const currentValue = getProductionDependencies(pkg)[packageName]
 
       if (typeof currentValue === 'string' && isTgzDependency(currentValue, tgzPrefix)) {
-        const newValue = updateTgzInValue(currentValue, tgzPrefix, newTgzName)
+        const newValue = updateTgzInValue(currentValue, newTgzName)
         if (newValue !== currentValue) {
-          const relativePath = workspaceRelativePath(workspaceRoot, packageJsonPath)
           logger.item(`  updating tgz reference from "${currentValue}" to "${newValue}"`)
           if (!dryRun) {
             replaceTgzReference(packageJsonPath, packageName, tgzPrefix, newTgzName)
@@ -101,7 +113,7 @@ export function updateE2eDependencies(packageName: string, newVersion: string, w
     logger.info(`updated ${updatedFiles.length} e2e package(s) for "${packageName}"${dryRun ? ' (dry run)' : ''}`)
     return updatedFiles
   } catch (error) {
-    logger.error(`${error instanceof Error ? error.message : String(error)}`)
+    logger.error(String(error))
     return []
   }
 }

@@ -2,7 +2,7 @@
 
 Validates that version bumps have been correctly applied without making changes.
 
-This executor is used by CI to verify that lefthook versioning ran successfully before push. It compares the expected version state (calculated via dry-run) against actual files on disk.
+This executor is used by CI to verify that the version run before the push wrote what the commits call for. It compares the expected version state (calculated via dry-run) against actual files on disk.
 
 ## Key Features
 
@@ -63,21 +63,17 @@ Discrepancies:
 
 Remedy:
   Run: npx hf run lib-cryptography:version
-  Or push again to trigger lefthook versioning
 
 To fix this issue:
   1. Pull latest changes: git pull origin <branch>
   2. Run versioning: npx hf run lib-cryptography:version
-  3. Commit the changes: git add . && git commit --amend --no-edit
-  4. Push: git push --force-with-lease
-
-Or push without --no-verify to let lefthook handle versioning automatically.
+  3. Push the version commit
 ```
 
 ## When to Use
 
-- **CI validation**: Verify versions were applied by lefthook before merge
-- **Local verification**: Confirm lefthook versioning worked correctly
+- **CI validation**: Verify versions were applied before merge
+- **Local verification**: Confirm a version run wrote what the commits call for
 - **Debugging**: Understand why version state doesn't match expectations
 
 ## How It Works
@@ -111,7 +107,7 @@ If validation fails, CI comments on the PR with:
 The version-check executor shares validation logic with the version executor:
 
 ```
-tools/package/src/executors/
+libs/workspace/src/executors/
 ├── version/
 │   └── lib/
 │       └── validate-version-state.ts  ← Shared validation logic
@@ -125,5 +121,4 @@ This ensures validation in CI matches what the version executor would produce.
 
 - [version executor](../version/README.md): The executor that creates version bumps
 - [version executor ARCHITECTURE.md](../version/ARCHITECTURE.md): Architecture including CI integration
-- [lefthook.yml](../../../../../lefthook.yml): Git hooks that run versioning locally
 - [Versioning roadmap](../../../../../roadmap/versioning/README.md): Future considerations for the versioning library

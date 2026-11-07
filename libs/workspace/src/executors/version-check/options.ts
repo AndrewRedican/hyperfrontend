@@ -1,7 +1,7 @@
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 
-/** Configuration schema for the version-check executor. */
-export interface VersionCheckExecutorSchema {
+/** What a `version-check` target configures: how commits are attributed to the project, and whether the check stands down on a version commit. */
+export interface VersionCheckExecutorOptions {
   /**
    * Scope filtering configuration for commit classification and changelog generation.
    *
