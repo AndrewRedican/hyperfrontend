@@ -3,16 +3,16 @@
  * the aliases whose entries export each name, and an import of a project's own alias becomes
  * relative imports of the files declaring each name.
  *
- * @module rules/projects/shared/remap
+ * @module lint/shared/remap
  */
 
 import type { Node } from '@hyperfrontend/linter'
-import type { ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { ProjectRecord, WorkspaceGraph } from '../../graph'
 import { existsSync } from 'node:fs'
 import { basename, dirname, join, posix } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
-import { fileOf, substituteWildcard } from '@hyperfrontend/workspace/graph'
-import { moduleExports } from '../../workspace/shared/exports-index.ts'
+import { fileOf, substituteWildcard } from '../../graph'
+import { moduleExports } from './exports-index'
 
 /** One name to import from one module. */
 interface Remapped {

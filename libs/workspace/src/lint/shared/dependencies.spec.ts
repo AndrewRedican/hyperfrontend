@@ -1,9 +1,9 @@
-import type { ProjectRecord } from '@hyperfrontend/workspace/graph'
+import type { ProjectRecord } from '../../graph'
 import { existsSync, rmSync } from 'node:fs'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { buildGraph } from '@hyperfrontend/workspace/graph'
-import { createDependencyWorkspace } from '../__test-utils__/dependency-workspace.ts'
-import { inputFiles, installedVersion, usedPackages } from './dependencies.ts'
+import { buildGraph } from '../../graph'
+import { createDependencyWorkspace } from '../__test-utils__/dependency-workspace'
+import { inputFiles, installedVersion, usedPackages } from './dependencies'
 
 const root = createDependencyWorkspace()
 const graph = buildGraph(root)

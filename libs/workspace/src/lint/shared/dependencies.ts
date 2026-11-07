@@ -3,10 +3,10 @@
  * buildable workspace packages its build inputs import, each at the version installed for the
  * importing file.
  *
- * @module rules/projects/shared/dependencies
+ * @module lint/shared/dependencies
  */
 
-import type { FileImport, ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { FileImport, ProjectRecord, WorkspaceGraph } from '../../graph'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -33,7 +33,7 @@ export function inputFiles(project: ProjectRecord, inputs: readonly string[], ig
     .map((pattern) => (pattern.startsWith('./') ? pattern.slice(2) : pattern.startsWith('!./') ? `!${pattern.slice(3)}` : pattern))
   const positive = expanded.filter((pattern) => !pattern.startsWith('!')).map(compileGlob)
   const negative = expanded.filter((pattern) => pattern.startsWith('!')).map((pattern) => compileGlob(pattern.slice(1)))
-  // lint-disable-next-line workspace/cross-platform -- an Nx input is a POSIX glob, whatever the platform
+
   const everything = positive.length === 0 || (positive.length === 1 && positive[0]?.pattern === `${project.root}/**/*`)
   return project.files.filter(
     (file) => (everything || positive.some((glob) => glob.test(file))) && !negative.some((glob) => glob.test(file))

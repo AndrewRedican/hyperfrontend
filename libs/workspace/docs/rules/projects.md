@@ -1,17 +1,16 @@
 # Project rules
 
-Lint rules that read the workspace's project graph, the one Nx would build, built by `@hyperfrontend/workspace/graph` (`libs/workspace/src/graph/`); the rules live in `src/rules/projects/`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
+Lint rules that read the workspace's project graph, the one Nx would build, built by `@hyperfrontend/workspace/graph` (`src/graph/`); the rules live in `src/lint/` and a configuration registers them as `{ families: { projects: PROJECTS_FAMILY } }` from `@hyperfrontend/workspace/lint`. Their options, messages and fixes are those of Nx's ESLint plugin (see [licenses/nx.txt](../../../../tools/lint/licenses/nx.txt)), reduced to the options this workspace configures, and they reach the same verdicts on this workspace while loading nothing from Nx.
 
 | Rule                                               | Checks                                                                   | Files                        |
 | -------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------- |
 | [`projects/module-boundaries`](#module-boundaries) | Imports between projects                                                 | `.ts`, `.tsx`, `.js`, `.jsx` |
 | [`projects/dependency-checks`](#dependency-checks) | A buildable project's `package.json` against what its files import       | `package.json`               |
-| [`projects/plugin-manifests`](#plugin-manifests)   | The generator, executor and migration manifests of a plugin project      | the configured manifests     |
 | [`projects/command-lines`](#command-lines)         | The `@hyperfrontend/workspace:run-commands` lines of a project's targets | `project.json`               |
 
 ## The project graph
 
-`@hyperfrontend/workspace/graph` (`libs/workspace/src/graph/`) builds, once per lint process, the graph Nx would build, and the rules read it:
+`@hyperfrontend/workspace/graph` (`src/graph/`) builds, once per lint process, the graph Nx would build, and the rules read it:
 
 - **Projects**: every directory holding a `project.json` or a `package.json` among the files Git tracks or would track, less what `.hfignore` excludes. Names, types, tags and targets follow Nx: a `package.json` beside a `project.json` adds its scripts as targets and `npm:` tags from `private` and `keywords`.
 - **npm packages**: the root `package-lock.json`, one node per name and version.
@@ -38,15 +37,9 @@ For a project with a build target, compares the `dependencies`, `peerDependencie
 
 Options: `ignoredDependencies` and `ignoredFiles`. Each project's `lint.config.ts` lists what its build bundles or never imports, with the reason beside each entry; the library generator's template starts every new library with `@hyperfrontend/testing` ignored.
 
-## plugin-manifests
-
-In a `package.json`, every version of a migrations `packageGroup` must be valid semver or one of `allowedVersionStrings`, and every member of a listed group must name its version. The workspace enables the rule on the `package.json` of `tools/package` and `tools/app`, which is the only file it reads there.
-
-Options: `allowedVersionStrings`.
-
 ## command-lines
 
-The workspace runner starts every `@hyperfrontend/workspace:run-commands` line through the platform shell (`libs/workspace/src/runner/commands.ts`): `sh` on Linux and macOS, cmd.exe on Windows. In a `project.json`, each target's `command`, the `command` of its `options`, and every entry of their `commands` (a string, or an object's `command`) is checked for what the two shells read differently:
+The workspace runner starts every `@hyperfrontend/workspace:run-commands` line through the platform shell (`src/runner/commands.ts`): `sh` on Linux and macOS, cmd.exe on Windows. In a `project.json`, each target's `command`, the `command` of its `options`, and every entry of their `commands` (a string, or an object's `command`) is checked for what the two shells read differently:
 
 | Message       | Reported when                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------- |

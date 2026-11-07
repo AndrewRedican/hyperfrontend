@@ -1,5 +1,5 @@
 import type { ExpectedError, InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
-import type { DependencyChecksOptions } from './dependency-checks.ts'
+import type { DependencyChecksOptions } from './dependency-checks'
 import { execFileSync } from 'node:child_process'
 import { existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -7,8 +7,8 @@ import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
-import { createDependencyWorkspace } from './__test-utils__/dependency-workspace.ts'
-import rule from './dependency-checks.ts'
+import { createDependencyWorkspace } from './__test-utils__/dependency-workspace'
+import rule from './dependency-checks'
 
 const ROOT = createDependencyWorkspace()
 // why: a workspace with no root project or root manifest is the only place a manifest belongs to no project, or a build reads no root manifest.

@@ -3,18 +3,18 @@
  * through the platform shell, `sh` on Linux and macOS and cmd.exe on Windows, so a quote, a
  * variable, a separator, a glob or an escape that only one of them reads changes what runs.
  *
- * @module rules/projects/command-lines
+ * @module lint/command-lines
  */
 
 import type { JsonNode, JsonObjectNode } from '@hyperfrontend/json-utils'
 import type { JsonTreeNode } from '@hyperfrontend/linter'
 import type { JsonStringNode } from '@hyperfrontend/linter/helpers'
-import type { Selector } from '../workspace/shared/cross-platform/project.ts'
+import type { Selector } from './shared/checked-project'
 import { basename } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
 import { isString, propertyOf, rootObject } from '@hyperfrontend/linter/helpers'
-import { checkedProject } from '../workspace/shared/cross-platform/project.ts'
+import { checkedProject } from './shared/checked-project'
 
 /** The rule's options. */
 export interface CommandLinesOptions {

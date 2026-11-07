@@ -3,7 +3,7 @@
  * declarations with their nodes, and the exported names with the declaration behind each,
  * re-exports followed to the file that holds the declaration.
  *
- * @module rules/workspace/shared/exports-index
+ * @module lint/shared/exports-index
  */
 
 import type { Node } from '@hyperfrontend/linter'

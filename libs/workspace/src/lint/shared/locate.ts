@@ -2,7 +2,7 @@
  * Where a file sits in the workspace: the workspace root above it and the project that owns it.
  * Each answer is read once per directory.
  *
- * @module rules/workspace/shared/locate
+ * @module lint/shared/locate
  */
 
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'

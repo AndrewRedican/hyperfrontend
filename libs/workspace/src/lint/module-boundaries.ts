@@ -5,20 +5,20 @@
  * what it loads lazily elsewhere; a buildable library imports only buildable libraries; and a
  * project imports only projects whose tags its constraints allow.
  *
- * @module rules/projects/module-boundaries
+ * @module lint/module-boundaries
  */
 
 import type { Node, RuleContext } from '@hyperfrontend/linter'
-import type { ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { ProjectRecord, WorkspaceGraph } from '../graph'
 import { dirname, posix } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { defineRule } from '@hyperfrontend/linter'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
-import { workspaceGraph } from '@hyperfrontend/workspace/graph'
-import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
-import { filesImporting, pathBetween, reachesDynamically } from './shared/reach.ts'
-import { aliasImports, relativeImports } from './shared/remap.ts'
+import { workspaceGraph } from '../graph'
+import { baseConfigRootOf } from './shared/aliases'
+import { filesImporting, pathBetween, reachesDynamically } from './shared/reach'
+import { aliasImports, relativeImports } from './shared/remap'
 
 /** A tag constraint. */
 export interface DependencyConstraint {

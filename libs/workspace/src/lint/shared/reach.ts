@@ -2,10 +2,10 @@
  * Walks over the project graph the boundary rule needs: the path a cycle takes, whether a project
  * reaches another through dynamic imports alone, and the files that draw each step.
  *
- * @module rules/projects/shared/reach
+ * @module lint/shared/reach
  */
 
-import type { ProjectEdge, ProjectRecord, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { ProjectEdge, ProjectRecord, WorkspaceGraph } from '../../graph'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'

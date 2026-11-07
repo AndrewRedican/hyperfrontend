@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
-import { BASE_CONFIG, baseConfigRootOf, pathAliases } from './aliases.ts'
+import { BASE_CONFIG, baseConfigRootOf, pathAliases } from './aliases'
 
 const DIR = createTempDir({ prefix: 'lint-aliases-' })
 const ROOT = DIR.path

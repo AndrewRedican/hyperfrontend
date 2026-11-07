@@ -25,10 +25,11 @@ const config: TestConfig = {
     'src/executors/version-batch/lib/working-tree.ts',
     'src/graph/**/*.ts',
     'src/hooks/**/*.ts',
+    'src/lint/**/*.ts',
     'src/runner/**/*.ts',
   ],
   // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract declares types alone.
-  coverageExclude: ['src/**/__test-utils__/**', 'src/graph/index.ts', 'src/runner/index.ts', 'src/runner/contract.ts'],
+  coverageExclude: ['src/**/__test-utils__/**', 'src/graph/index.ts', 'src/lint/index.ts', 'src/runner/index.ts', 'src/runner/contract.ts'],
   coverageThresholds: { lines: 100, branches: 100, functions: 100 },
 }
 

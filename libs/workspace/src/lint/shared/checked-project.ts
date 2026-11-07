@@ -3,15 +3,15 @@
  * its runtime sources under `src` imports a `node:` module. Specs, declaration files, the test
  * setup, fixtures and vendored modules are not runtime sources. Each project is read once.
  *
- * @module rules/workspace/shared/cross-platform/project
+ * @module lint/shared/checked-project
  */
 
 import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, posix, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { projectRootOf, workspaceRootOf } from '../locate.ts'
-import { isPublishableLibrary } from '../project-file.ts'
+import { projectRootOf, workspaceRootOf } from './locate'
+import { isPublishableLibrary } from './project-file'
 
 /** One way a file is selected. */
 export interface Selector {

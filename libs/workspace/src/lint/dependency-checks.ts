@@ -3,7 +3,7 @@
  * build inputs import is declared in a production section, at a range the installed version
  * satisfies, and nothing declared there goes unused.
  *
- * @module rules/projects/dependency-checks
+ * @module lint/dependency-checks
  */
 
 import type { JsonNode, JsonObjectNode, JsonPropertyNode } from '@hyperfrontend/json-utils'
@@ -15,9 +15,9 @@ import { defineRule } from '@hyperfrontend/linter'
 import { isString, rootObject } from '@hyperfrontend/linter/helpers'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { parseRange, parseVersion, satisfies } from '@hyperfrontend/versioning/semver'
-import { readJson, selfInputs, workspaceGraph } from '@hyperfrontend/workspace/graph'
-import { baseConfigRootOf } from '../workspace/shared/aliases.ts'
-import { inputFiles, usedPackages } from './shared/dependencies.ts'
+import { readJson, selfInputs, workspaceGraph } from '../graph'
+import { baseConfigRootOf } from './shared/aliases'
+import { inputFiles, usedPackages } from './shared/dependencies'
 
 /** The rule's options. */
 export interface DependencyChecksOptions {

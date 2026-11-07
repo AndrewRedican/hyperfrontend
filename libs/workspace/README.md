@@ -176,6 +176,22 @@ An executor that wraps `version` or `version-batch` passes `followUps`: function
 
 **Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [src/executors/version-check/README.md](./src/executors/version-check/README.md)
 
+## Lint rules
+
+`src/lint/`, exported as `@hyperfrontend/workspace/lint`, holds the `projects` rule family: `module-boundaries`, `dependency-checks` and `command-lines`, rules for `@hyperfrontend/linter` that read the workspace graph. A configuration registers them under the prefix `projects` and turns them on by id:
+
+```ts
+import { PROJECTS_FAMILY } from '@hyperfrontend/workspace/lint'
+
+export default [
+  { families: { projects: PROJECTS_FAMILY } },
+  { files: ['**/*.ts'], rules: { 'projects/module-boundaries': ['error', { depConstraints: [] }] } },
+  { files: ['**/package.json'], rules: { 'projects/dependency-checks': 'error' } },
+]
+```
+
+The entry also exports the readers the rules share with a workspace's own rules: the workspace root and project that own a file, its project file and manifest, the aliases of `tsconfig.base.json`, and the exports of a module. The rules are documented in [docs/rules/projects.md](./docs/rules/projects.md).
+
 ## License
 
 [MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

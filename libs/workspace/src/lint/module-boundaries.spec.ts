@@ -1,5 +1,5 @@
 import type { InvalidCase, RuleCase } from '@hyperfrontend/linter/testing'
-import type { ModuleBoundariesOptions } from './module-boundaries.ts'
+import type { ModuleBoundariesOptions } from './module-boundaries'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -7,7 +7,7 @@ import { join, posix } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
-import rule, { allows } from './module-boundaries.ts'
+import rule, { allows } from './module-boundaries'
 
 // why: the rule reads the project graph the workspace's files draw, so the fixture is a disposable git workspace whose projects exercise each boundary.
 const ROOT_DIR = createTempDir({ prefix: 'lint-boundaries-' })

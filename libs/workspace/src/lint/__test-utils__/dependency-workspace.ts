@@ -4,7 +4,7 @@
  * a load whose specifier is an expression, a library pinning a prerelease beside a package installed
  * at no version, and the root project.
  *
- * @module rules/projects/__test-utils__/dependency-workspace
+ * @module lint/__test-utils__/dependency-workspace
  */
 
 import { execFileSync } from 'node:child_process'

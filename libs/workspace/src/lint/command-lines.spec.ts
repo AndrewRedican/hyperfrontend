@@ -1,9 +1,9 @@
 import { join } from 'node:path'
 import { testRule } from '@hyperfrontend/linter/testing'
-import { createCrossPlatformWorkspace } from '../workspace/__test-utils__/cross-platform-workspace.ts'
-import rule, { MESSAGES } from './command-lines.ts'
+import { createCommandLinesWorkspace } from './__test-utils__/command-lines-workspace'
+import rule, { MESSAGES } from './command-lines'
 
-const workspace = createCrossPlatformWorkspace()
+const workspace = createCommandLinesWorkspace()
 const LIBRARY = join(workspace.node, 'project.json')
 const TOOL = join(workspace.tool, 'tools', 'app', 'project.json')
 

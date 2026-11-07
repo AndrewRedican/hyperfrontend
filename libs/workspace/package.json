@@ -8,6 +8,7 @@
   "dependencies": {
     "@hyperfrontend/builder": "0.7.2",
     "@hyperfrontend/immutable-api-utils": "1.0.4",
+    "@hyperfrontend/json-utils": "1.1.3",
     "@hyperfrontend/linter": "0.3.1",
     "@hyperfrontend/logging": "1.0.2",
     "@hyperfrontend/project-scope": "0.5.1",
@@ -63,6 +64,7 @@
     "./executors/version-check": "./src/executors/version-check/index.js",
     "./graph": "./src/graph/index.js",
     "./hooks": "./src/hooks/index.js",
+    "./lint": "./src/lint/index.js",
     "./runner": "./src/runner/index.js",
     "./package.json": "./package.json"
   },

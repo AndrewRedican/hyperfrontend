@@ -2,7 +2,7 @@
  * The path aliases of a workspace: the `paths` of its `tsconfig.base.json`, each with the first
  * source file it maps to, read once per workspace root.
  *
- * @module rules/workspace/shared/aliases
+ * @module lint/shared/aliases
  */
 
 import { existsSync, readFileSync } from 'node:fs'

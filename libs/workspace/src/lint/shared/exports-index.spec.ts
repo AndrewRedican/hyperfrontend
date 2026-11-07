@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
-import { moduleDeclarations, moduleExports, parsedModule, resolveModule } from './exports-index.ts'
+import { moduleDeclarations, moduleExports, parsedModule, resolveModule } from './exports-index'
 
 const DIR = createTempDir({ prefix: 'lint-exports-' })
 const ROOT = DIR.path

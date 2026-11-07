@@ -2,7 +2,7 @@
  * The `project.json` of a directory, read once per process, and the facts the manifest rules
  * take from it: whether the project is a publishable library, and its declared name.
  *
- * @module rules/workspace/shared/project-file
+ * @module lint/shared/project-file
  */
 
 import { readFileSync } from 'node:fs'
