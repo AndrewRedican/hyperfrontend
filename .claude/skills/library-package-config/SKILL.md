@@ -1,15 +1,15 @@
 ---
 name: library-package-config
-description: Configure package.json and project.json for hyperfrontend libraries. Use when setting up library configuration, adding entry points, configuring build targets, or fixing ESLint errors about missing fields.
+description: Configure package.json and project.json for hyperfrontend libraries. Use when setting up library configuration, adding entry points, configuring build targets, or fixing lint errors about missing fields.
 ---
 
 # Library Package Config
 
-Generators create compliant configs. Manual edits must pass these ESLint rules.
+Generators create compliant configs (the `library` generator writes `package.json` and `project.json` in code, the other files from templates). Manual edits must pass these lint rules.
 
 ---
 
-## ESLint Rules
+## Lint Rules
 
 | Rule                          | Enforces                                                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |

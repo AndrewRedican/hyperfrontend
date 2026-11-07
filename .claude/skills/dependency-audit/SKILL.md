@@ -41,7 +41,7 @@ done | sort -n
 
 Inspect each low-count entry (`git grep -n -F "$pkg"`):
 
-- Real use: source import, executor/plugin in `nx.json`/`project.json`, require in eslint/jest/vite/tailwind/postcss config, tsconfig `extends`.
+- Real use: source import, executor/plugin in `hf.json`/`project.json`, require in eslint/jest/vite/tailwind/postcss config, tsconfig `extends`.
 - Mention ≠ use: `ignoredDependencies` entry, docs prose, spec fixture string. Zero imports + list-only mention → remove dep **and** stale list entry.
 
 ## Implicit consumers — grep finds none of these

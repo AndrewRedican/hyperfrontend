@@ -14,7 +14,7 @@ Format: `type(scope): subject` — one line, lowercase subject, no period, imper
 | Message lint (`npx cl`)    | `libs/versioning/src/bin/cl.ts` (runs in `commit-msg` hook)       |
 | Guided prompt (`npx cz`)   | `libs/versioning/src/bin/cz.js`                                   |
 | Type list + bump semantics | `libs/versioning/src/commits/models/commit-type.ts`               |
-| Scope filtering            | `nx.json` → `targetDefaults.version.options.scopeFiltering`       |
+| Scope filtering            | `hf.json` → `targetDefaults.version.options.scopeFiltering`       |
 | Hooks                      | `lefthook.yml` (pre-commit format, commit-msg cl, pre-push gates) |
 
 ## Types
@@ -34,7 +34,7 @@ npx hf show projects | grep <hint>   # verify before committing
 ✓ `lib-features` `lib-nexus` `e2e-lib-features` `demo-clock` `docs-site` `tool-app`
 ✗ `package-e2e` `features` `nexus` (directory names, npm names — not project names)
 
-Workspace-level changes (nothing project-owned) use one of the versioning-excluded scopes — these never trigger a bump: `@hyperfrontend/workspace` (docs/roadmap precedent) · `repo` · `ci` · `deps` · `release`.
+Workspace-level changes (nothing project-owned) use one of the versioning-excluded scopes — these never trigger a bump: `hyperfrontend` (the root project) · `repo` · `ci` · `deps` · `release`.
 
 One project per commit. Touching two projects = two commits (see Atomic).
 
@@ -55,7 +55,7 @@ Each commit is self-contained: it compiles, its tests pass, and it makes one log
 
 ## Never commit by hand
 
-The versioning harness owns these — committing them manually corrupts the release flow (when in doubt read `libs/versioning/README.md` + the `version`/`version-check` target defaults in `nx.json`):
+The versioning harness owns these — committing them manually corrupts the release flow (when in doubt read `libs/versioning/README.md` + the `version`/`version-check` target defaults in `hf.json`):
 
 - `CHANGELOG.md` files
 - `package.json` `version` fields (any project)
