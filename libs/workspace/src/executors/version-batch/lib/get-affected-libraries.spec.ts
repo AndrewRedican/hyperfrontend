@@ -74,6 +74,24 @@ function changed(files: readonly string[]): string {
 }
 
 describe('getAffectedLibraries', () => {
+  it('refuses a base that does not resolve, rather than answering no change', async () => {
+    changed([])
+    await expect(getAffectedLibraries(workspace.path, workspaceGraph(workspace.path), 'origin/absent', 'HEAD')).rejects.toThrow(
+      'cannot compare origin/absent with HEAD'
+    )
+  })
+
+  it('refuses a base that shares no history with the head, as in a shallow clone', async () => {
+    const base = changed([])
+    git('checkout', '-q', '--orphan', 'unrelated')
+    // why: an orphan with the root commit's tree, message and second would be that same commit
+    workspace.write('unrelated.txt', 'unrelated\n')
+    commit()
+    await expect(getAffectedLibraries(workspace.path, workspaceGraph(workspace.path), base, 'HEAD')).rejects.toThrow(
+      `cannot compare ${base} with HEAD`
+    )
+  })
+
   it('finds nothing when nothing changed', async () => {
     const base = changed([])
     expect(await getAffectedLibraries(workspace.path, workspaceGraph(workspace.path), base, 'HEAD')).toEqual([])

@@ -1,10 +1,27 @@
 import type { WorkspaceGraph } from '../../../graph'
+import { execFileSync } from 'node:child_process'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { getChangedFilesBetween } from '@hyperfrontend/versioning/git/operations'
 import { hasTarget } from '../../../graph'
 import { selectReleaseBuilds } from '../../version/lib/graph-change-sources'
 import { rebuiltProjects } from './rebuilt-projects'
+
+/**
+ * Refuses revisions git cannot compare, which `getChangedFilesBetween` would answer as no change at all.
+ *
+ * @param workspaceRoot - Absolute path to workspace root
+ * @param base - Base git ref
+ * @param head - Head git ref
+ */
+function assertComparable(workspaceRoot: string, base: string, head: string): void {
+  try {
+    execFileSync('git', ['merge-base', '--end-of-options', base, head], { cwd: workspaceRoot, stdio: 'pipe' })
+  } catch {
+    throw createError(`cannot compare ${base} with ${head}: fetch the revisions with their history, or name another base`)
+  }
+}
 
 /**
  * Gets the libraries a change may make due a release.
@@ -19,6 +36,7 @@ import { rebuiltProjects } from './rebuilt-projects'
  * @param base - Base git ref (default: origin/main)
  * @param head - Head git ref (default: HEAD)
  * @returns List of affected library names that have a version target
+ * @throws {Error} When a revision does not resolve, or the two share no history
  *
  * @example A library is due a release without a changed file of its own
  * ```typescript
@@ -34,6 +52,7 @@ export async function getAffectedLibraries(
   base = 'origin/main',
   head = 'HEAD'
 ): Promise<string[]> {
+  assertComparable(workspaceRoot, base, head)
   const changedFiles = getChangedFilesBetween(base, head, { cwd: workspaceRoot })
 
   if (changedFiles.length === 0) {
