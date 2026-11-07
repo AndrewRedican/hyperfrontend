@@ -16,7 +16,14 @@ import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
 
 const consumer = usePackedConsumer({
   tarball: process.env['HF_E2E_TARBALL'],
-  peers: ['typescript@5.7.3', '@types/node@25.3.3', '@hyperfrontend/testing@0.5.1', '@hyperfrontend/linter@0.3.1', 'prettier@3.8.0'],
+  peers: [
+    'typescript@5.7.3',
+    '@types/node@25.3.3',
+    '@hyperfrontend/testing@0.5.1',
+    '@hyperfrontend/linter@0.3.1',
+    'prettier@3.8.0',
+    'jsdom@26.1.0',
+  ],
 })
 
 /**
@@ -178,14 +185,8 @@ describe('the tasks of a generated library', () => {
 })
 
 describe('hf generate make-publishable', () => {
-  it('plans a browser suite for each browser bundle format', () => {
-    const run = hf(['generate', 'make-publishable', 'alpha', '--formats=esm,cjs,iife,umd', '--dry-run'])
-    expect(['iife', 'umd'].filter((format) => !run.stdout.includes(`CREATE e2e/alpha/src/${format}.spec.ts`))).toEqual([])
-  })
-
   it('gives the library the targets, the manifest fields and the e2e project a published package needs', () => {
-    // why: the embedded builder's browser-bundle worker fails inside an installed package (follow-up F15), so the package tested here ships the module formats alone
-    hf(['generate', 'make-publishable', 'alpha', '--formats=esm,cjs'])
+    hf(['generate', 'make-publishable', 'alpha', '--formats=esm,cjs,iife,umd'])
     expect({
       targets: Object.keys(readJson<{ targets: Record<string, unknown> }>('libs/alpha/project.json').targets),
       manifest: readJson('libs/alpha/package.json'),
@@ -203,6 +204,8 @@ describe('hf generate make-publishable', () => {
         'e2e/alpha/project.json',
         'e2e/alpha/src/cjs.spec.ts',
         'e2e/alpha/src/esm.spec.ts',
+        'e2e/alpha/src/iife.spec.ts',
+        'e2e/alpha/src/umd.spec.ts',
         'e2e/alpha/tsconfig.json',
       ],
     })
@@ -229,7 +232,9 @@ describe('hf generate make-publishable', () => {
     const run = hf(['run', 'e2e-alpha:e2e'])
     expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({
       status: 0,
-      output: expect.stringMatching(/✔ @acme\/alpha CJS[\s\S]*✔ @acme\/alpha ESM/),
+      output: expect.stringMatching(
+        /✔ @acme\/alpha CJS[\s\S]*✔ @acme\/alpha ESM[\s\S]*✔ @acme\/alpha IIFE bundle[\s\S]*✔ @acme\/alpha UMD bundle/
+      ),
     })
   })
 })
