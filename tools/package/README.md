@@ -1,18 +1,14 @@
 # @hyperfrontend/package
 
-Executors and generators for building, type-checking, versioning, and publishing hyperfrontend library packages, run through the workspace's `hf` command line.
+This repository's executors and generators on top of [`@hyperfrontend/workspace`](../../libs/workspace/README.md): the build with the README the registry shows, the version flow with the compatibility document, and the generators that register a library across the repository. The `typecheck`, `test`, `publish`, `e2e` and `version-check` executors are the workspace package's own.
 
 ## Executors
 
-| Executor      | Description                                                       | Docs                                        |
-| ------------- | ----------------------------------------------------------------- | ------------------------------------------- |
-| `build`       | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
-| `typecheck`   | TypeScript type checking without emitting files                   | -                                           |
-| `version`     | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
-| `version:all` | Batch versioning for all affected libraries                       | -                                           |
-| `publish`     | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
-| `e2e`         | Test package outputs via npm pack + tarball install               | -                                           |
-| `test`        | Run a project's suites on Node's test runner via the test runtime | -                                           |
+| Executor        | Description                                                                                                 | Docs                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `build`         | The workspace package's build, then the README the registry shows                                           | [README](../../libs/workspace/src/executors/build/README.md)   |
+| `version`       | The workspace package's version run, then the compatibility document                                        | [README](../../libs/workspace/src/executors/version/README.md) |
+| `version-batch` | The workspace package's batch with the compatibility document as a follow-up; the root `version:all` target | -                                                              |
 
 ## Quick Start
 
@@ -46,15 +42,13 @@ Format-centric build executor. All output formats are opt-in — nothing is buil
 - **ESM/CJS**: Auto-discovers entry points from package.json exports
 - **IIFE/UMD**: Requires explicit `entry` and `globalName`; inlines all dependencies by default
 
-**Full documentation:** [src/executors/build/README.md](./src/executors/build/README.md)
+After the build of a project with a `publish` target, the output README is rewritten for the registry: the title becomes the package banner and the marked regions become committed visuals.
 
-### typecheck
-
-Runs `tsc --noEmit` against the library's `tsconfig.lib.json` and, when the project has one, its `tsconfig.spec.json`. Specs run with their types stripped, so this is the only step that type checks them. Zero configuration needed; `tsConfig` and `specTsConfig` override either path.
+**Full documentation of the options:** [libs/workspace/src/executors/build/README.md](../../libs/workspace/src/executors/build/README.md)
 
 ### version
 
-Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependency conventional commits versioning library:
+The workspace package's `version` executor with one follow-up: after the bump, `LIBRARY_COMPATIBILITY.md` is brought in line with the manifests and committed with it. The executor itself is idempotent, using `@hyperfrontend/versioning`:
 
 - **npm as source of truth** — uses npm registry to determine current version, not git tags
 - **Idempotency** — skips if version is already published to npm
@@ -62,11 +56,11 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 - **Documentation stays out of the bump**: `docs`, `chore` and `build` commits never release on their own; a forced bump lists them
 - **Dependent updates** — automatically updates version references in dependent packages
 
-**Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [Architecture](./src/executors/version/ARCHITECTURE.md)
+**Full documentation:** [libs/workspace/src/executors/version/README.md](../../libs/workspace/src/executors/version/README.md) | [Architecture](../../libs/workspace/src/executors/version/ARCHITECTURE.md)
 
 ### version-batch
 
-Batch versioning executor for all affected libraries. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
+The workspace package's `version-batch` executor with the same follow-up. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
 
 - **Affected detection** — programmatically detects libraries changed between base and head refs
 - **Batch commit** — creates a single commit for all version updates
@@ -88,59 +82,18 @@ Batch versioning executor for all affected libraries. This is the recommended ap
 
 ```bash
 # Preview batch version changes
-npx hf run @hyperfrontend/workspace:version:all --dryRun
+npx hf run hyperfrontend:version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
-npx hf run @hyperfrontend/workspace:version:all
+npx hf run hyperfrontend:version:all
 
 # Release a change to the package artifact that no commit type would release,
 # such as a readme: a forced patch, calculated from each published version
-npx hf run @hyperfrontend/workspace:version:all \
+npx hf run hyperfrontend:version:all \
   --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
 
 A forced bump is for a change that lives in the package artifact rather than its code. The version identifies the artifact, and the readme is part of it, but a `docs` commit never bumps on its own; naming the libraries and the bump is what says the change is worth shipping. The changelog entry then lists every commit attributed to the package since its last release, `docs` and `chore` included, so it says what changed rather than that nothing did.
-
-### publish
-
-Publishes built packages to npm with:
-
-- `--dry-run` mode for testing
-- Automatic access control based on package scope
-- Idempotent — skips if version already exists on npm
-- Reads credentials from `NPM_TOKEN` environment variable
-
-**Full documentation:** [src/executors/publish/README.md](./src/executors/publish/README.md)
-
-### e2e
-
-End-to-end testing for package build outputs. Validates that built packages install and work correctly:
-
-1. Runs `npm pack` in the dist directory to create a tarball
-2. Installs the tarball in the E2E test project
-3. Runs each configured format on the node test runner (cjs, esm, browser, nx), handing the suites the tarball's path as `HF_E2E_TARBALL` so they can install it into an isolated consumer through `@hyperfrontend/testing/consumer`
-4. Cleans up tarball after testing
-
-**Options:**
-
-| Option           | Description                                                      |
-| ---------------- | ---------------------------------------------------------------- |
-| `packageDir`     | Path to built package directory (defaults to `dist/libs/{name}`) |
-| `testDir`        | Path to E2E test project directory                               |
-| `formats`        | Output formats to test (`cjs`, `esm`, `iife`, `umd`)             |
-| `skipInstall`    | Skip npm pack and install step                                   |
-| `cleanupTarball` | Remove tarball after installation (default: true)                |
-
-### test
-
-Runs a project's `test.config.ts` on Node's built-in test runner. The executor starts a Node process with the `@hyperfrontend/testing` preload and `src/executors/test/runner-cli.ts`, which loads the configuration and hands it to the runtime's runner, then prints the coverage table and the reasons a run failed. The runtime is located through the `@hyperfrontend/testing/*` aliases in `tsconfig.base.json`, so the workspace tests every project, the runtime included, on the library's own source, the same way it builds with `@hyperfrontend/builder` from source.
-
-**Options:**
-
-| Option              | Description                                                               |
-| ------------------- | ------------------------------------------------------------------------- |
-| `testConfig`        | Path to the project's test configuration (defaults to `test.config.ts`)   |
-| `coverageDirectory` | Where coverage reports are written (defaults to `coverage/{projectRoot}`) |
 
 ---
 
@@ -162,7 +115,7 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
-A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it. See [the version executor](src/executors/version/README.md#changes-that-reach-a-library-indirectly).
+A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it: `tool-package`, `lib-builder` and the build executor of `lib-workspace`. The rest of `lib-workspace` orchestrates tasks and shapes no output, so a change there releases no other library. See [the version executor](../../libs/workspace/src/executors/version/README.md#what-the-flow-assumes).
 
 ## Development
 

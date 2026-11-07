@@ -1,7 +1,7 @@
 import type { LibraryFacts } from './library-facts'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
-import { findLine, joinLines, splitLines } from './lines'
+import { findLine, joinLines, splitLines } from '@hyperfrontend/workspace/generators'
 
 /** The level-two heading of the section that tables every package. */
 export const PACKAGES_SECTION = 'Packages'

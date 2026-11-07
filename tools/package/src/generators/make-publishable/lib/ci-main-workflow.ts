@@ -1,6 +1,6 @@
 import type { LibraryFacts } from './library-facts'
+import { blockBounds, indentOf, joinLines, splitLines } from '@hyperfrontend/workspace/generators'
 import { isUtilsRoot } from './library-facts'
-import { blockBounds, indentOf, joinLines, splitLines } from './lines'
 
 /** The line that opens the array of coverage uploads. */
 const ARRAY_OPENER = 'LIBS=('

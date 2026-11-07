@@ -1,6 +1,6 @@
 import type { EcosystemTierId } from './library-facts'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { PRINT_WIDTH, blockBounds, indentOf, joinLines, quote, splitLines } from './lines'
+import { PRINT_WIDTH, blockBounds, indentOf, joinLines, quote, splitLines } from '@hyperfrontend/workspace/generators'
 
 /** The line that opens the hierarchy. */
 const TIERS_OPENER = 'export const ECOSYSTEM_TIERS: readonly EcosystemTier[] = ['

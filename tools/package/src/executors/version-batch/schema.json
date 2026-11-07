@@ -54,7 +54,7 @@
     },
     "maxCommitFallback": {
       "type": "number",
-      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs. Left unset, the batch takes the bound the `version` target declares in nx.json, so it analyzes the same commits `version-check` does."
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs. Left unset, the batch takes the bound the `version` target declares in hf.json, so it analyzes the same commits `version-check` does."
     },
     "releaseAs": {
       "type": "string",

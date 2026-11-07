@@ -1,124 +1,31 @@
-import type { Tree } from '../../lib/tree/tree'
+/**
+ * This repository's `library` generator: the packaged one with this repository's conventions,
+ * the stricter lint template, and the local `make-publishable` for a publishable library.
+ *
+ * @module generators/library/generator
+ */
+
+import type { Tree } from '@hyperfrontend/workspace/runner'
 import type { LibraryGeneratorSchema } from './schema'
 import { join } from 'node:path'
-import { derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
-import { formatFiles } from '../../lib/tree/format'
-import { names } from '../../lib/tree/names'
-import { joinPathFragments, offsetFromRoot } from '../../lib/tree/paths'
-import { generateFiles } from '../../lib/tree/templates'
-import { addTsConfigPath } from '../../lib/tsconfig-utils'
+import { formatFiles, generateFiles, updateJson } from '@hyperfrontend/workspace/generators'
+import { libraryGenerator as createLibrary, planLibrary } from '@hyperfrontend/workspace/generators/library'
+import { PACKAGE_SCOPE, derivePackageName, deriveProjectNameFromPath } from '../../lib/naming-utils'
 import { makePublishableGenerator } from '../make-publishable/generator'
 
+/** A project.json as far as its targets go. */
+interface ProjectTargets {
+  /** The targets, by name */
+  targets?: Record<string, unknown>
+}
+
 /** The generator's templates, relative to the workspace root. */
-const TEMPLATES = 'tools/package/src/generators/library'
+const TEMPLATES = 'tools/package/src/generators/library/files'
 
 /**
- * Computed options derived from user input.
- */
-interface NormalizedOptions {
-  /** Library name (e.g., 'my-utils') */
-  name: string
-  /** Project name with lib- prefix (e.g., 'lib-my-utils') */
-  projectName: string
-  /** npm package name (e.g., '@hyperfrontend/my-utils') */
-  packageName: string
-  /** Library directory (e.g., 'libs' or 'libs/utils') */
-  directory: string
-  /** Full project root path (e.g., 'libs/utils/my') */
-  projectRoot: string
-  /** Library description */
-  description: string
-  /** Type tag for module boundary enforcement */
-  type: 'core' | 'util' | 'feature' | 'protocol'
-  /** Whether the library should be publishable */
-  publishable: boolean
-  /** Skip formatting */
-  skipFormat: boolean
-  /** Offset to root (e.g., '../../' or '../../../') */
-  offsetFromRoot: string
-  /** Pascal case name for globalName (e.g., 'HyperfrontendMyUtils') */
-  globalName: string
-}
-
-/**
- * Normalize user-provided options into complete configuration.
- *
- * @param options - User provided generator options
- * @returns Normalized options with computed values
- */
-function normalizeOptions(options: LibraryGeneratorSchema): NormalizedOptions {
-  const name = names(options.name).fileName
-  const directory = options.directory ?? 'libs'
-
-  const projectRoot = joinPathFragments(directory, name)
-
-  const projectName = deriveProjectNameFromPath(projectRoot)
-  const packageName = derivePackageName(projectName)
-
-  const offset = offsetFromRoot(projectRoot)
-  const globalName = `Hyperfrontend${names(name).className}`
-
-  return {
-    name,
-    projectName,
-    packageName,
-    directory,
-    projectRoot,
-    description: options.description ?? `${names(name).className} library.`,
-    type: options.type ?? 'util',
-    publishable: options.publishable ?? false,
-    skipFormat: options.skipFormat ?? false,
-    offsetFromRoot: offset,
-    globalName,
-  }
-}
-
-/**
- * Add TypeScript path mappings to tsconfig.base.json.
- *
- * @param tree - Virtual file system tree
- * @param options - Normalized generator options
- */
-function updateTsConfigPaths(tree: Tree, options: NormalizedOptions): void {
-  addTsConfigPath(tree, {
-    packageName: options.packageName,
-    projectRoot: options.projectRoot,
-  })
-}
-
-/**
- * Generate library files from templates.
- *
- * @param tree - Virtual file system tree
- * @param options - Normalized generator options
- */
-function addFiles(tree: Tree, options: NormalizedOptions): void {
-  const templateOptions = {
-    ...options,
-    template: '',
-    dot: '.',
-  }
-
-  generateFiles(tree, join(tree.root, TEMPLATES, 'files'), options.projectRoot, templateOptions)
-}
-
-/**
- * Generator that creates a new hyperfrontend library.
- *
- * Creates a standardized library structure with:
- * - project.json with the project's targets and tags
- * - package.json with required fields
- * - TypeScript configuration files
- * - ESLint configuration
- * - Test configuration for the node test runner
- * - Source entry point with `@module` JSDoc header
- * - README.md template
- *
- * If publishable option is true, also runs the make-publishable generator
- * to declare runtime compatibility, add build targets, the E2E project and
- * the CI configuration, and register the package in the root README and the
- * docs site. An internal library declares no compatibility, because it is
- * never published for anyone to read it.
+ * Creates a library of this repository: the packaged generator with the `@hyperfrontend` scope,
+ * the `lib-<name>` project name and the `type:`/`scope:` tags, then the lint configuration that
+ * turns on the workspace rules, then the local `make-publishable` when asked.
  *
  * @param tree - The virtual file system tree
  * @param options - Configuration options for the library
@@ -141,15 +48,27 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  * ```
  */
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSchema): Promise<void> {
-  const normalizedOptions = normalizeOptions(options)
-
-  addFiles(tree, normalizedOptions)
-
-  updateTsConfigPaths(tree, normalizedOptions)
-
-  if (normalizedOptions.publishable) {
+  const plan = planLibrary(tree, { name: options.name, directory: options.directory })
+  const projectName = deriveProjectNameFromPath(plan.projectRoot)
+  await createLibrary(tree, {
+    name: options.name,
+    directory: options.directory,
+    scope: PACKAGE_SCOPE,
+    projectName,
+    packageName: derivePackageName(projectName),
+    description: options.description,
+    tags: [`type:${options.type ?? 'util'}`, 'scope:internal'],
+    skipFormat: true,
+  })
+  generateFiles(tree, join(tree.root, TEMPLATES), plan.projectRoot, { offsetFromRoot: plan.offsetFromRoot })
+  // why: an internal library of this repository is never built; make-publishable adds the build target with the formats when the library is published
+  updateJson<ProjectTargets>(tree, join(plan.projectRoot, 'project.json'), (json) => {
+    delete json.targets?.['build']
+    return json
+  })
+  if (options.publishable === true) {
     await makePublishableGenerator(tree, {
-      project: normalizedOptions.projectName,
+      project: projectName,
       keywords: options.keywords,
       compatibility: options.compatibility,
       docsCategory: options.docsCategory,
@@ -157,10 +76,7 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
       skipFormat: true,
     })
   }
-
-  if (!normalizedOptions.skipFormat) {
-    await formatFiles(tree)
-  }
+  if (!options.skipFormat) await formatFiles(tree)
 }
 
 export default libraryGenerator

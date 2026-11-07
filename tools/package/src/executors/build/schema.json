@@ -6,36 +6,87 @@
   "properties": {
     "outputPath": {
       "type": "string",
-      "description": "Output directory. Supports {projectRoot} placeholder. Defaults to dist/{projectRoot}."
+      "description": "Output directory, relative to the workspace root. Defaults to dist/<project root>."
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path to tsconfig. Supports {projectRoot} placeholder. Defaults to {projectRoot}/tsconfig.lib.json."
+      "description": "Path to tsconfig, relative to the workspace root. Defaults to <project root>/tsconfig.lib.json."
+    },
+    "rootAssets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Files at the workspace root copied into the package when they exist, such as a licence. FUNDING.md is copied only into a package that declares funding."
     },
     "assets": {
       "type": "array",
-      "description": "Additional asset specs to copy into the build output (in addition to the wrapper's defaults).",
-      "items": { "$ref": "#/definitions/assetSpec" }
+      "description": "Additional asset specs to copy into the build output, in addition to the project's README and changelog and the root assets.",
+      "items": {
+        "$ref": "#/definitions/assetSpec"
+      }
     },
     "external": {
       "type": "array",
       "description": "Global external dependencies for all formats.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "esm": {
-      "oneOf": [{ "$ref": "#/definitions/esmConfig" }, { "type": "array", "items": { "$ref": "#/definitions/esmConfig" } }],
+      "oneOf": [
+        {
+          "$ref": "#/definitions/esmConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/esmConfig"
+          }
+        }
+      ],
       "description": "ESM output configuration. Omit to skip."
     },
     "cjs": {
-      "oneOf": [{ "$ref": "#/definitions/cjsConfig" }, { "type": "array", "items": { "$ref": "#/definitions/cjsConfig" } }],
+      "oneOf": [
+        {
+          "$ref": "#/definitions/cjsConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cjsConfig"
+          }
+        }
+      ],
       "description": "CJS output configuration. Omit to skip."
     },
     "iife": {
-      "oneOf": [{ "$ref": "#/definitions/iifeConfig" }, { "type": "array", "items": { "$ref": "#/definitions/iifeConfig" } }],
+      "oneOf": [
+        {
+          "$ref": "#/definitions/iifeConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/iifeConfig"
+          }
+        }
+      ],
       "description": "IIFE bundle configuration. Browser-only. Omit to skip."
     },
     "umd": {
-      "oneOf": [{ "$ref": "#/definitions/umdConfig" }, { "type": "array", "items": { "$ref": "#/definitions/umdConfig" } }],
+      "oneOf": [
+        {
+          "$ref": "#/definitions/umdConfig"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/umdConfig"
+          }
+        }
+      ],
       "description": "UMD bundle configuration. Universal format. Omit to skip."
     },
     "unpkg": {
@@ -49,7 +100,9 @@
     "bin": {
       "type": "array",
       "description": "Bin declarations to synthesize alongside the library. Each declaration produces a JS bin (CJS and/or ESM) and optionally a Node SEA native binary per platform.",
-      "items": { "$ref": "#/definitions/binConfig" }
+      "items": {
+        "$ref": "#/definitions/binConfig"
+      }
     },
     "dedupeSharedInternals": {
       "type": "boolean",
@@ -71,38 +124,83 @@
     "assetSpec": {
       "type": "object",
       "properties": {
-        "from": { "type": "string", "description": "Absolute source directory." },
-        "to": { "type": "string", "description": "Output subdirectory relative to outputPath. Defaults to '.'." },
+        "from": {
+          "type": "string",
+          "description": "Absolute source directory."
+        },
+        "to": {
+          "type": "string",
+          "description": "Output subdirectory relative to outputPath. Defaults to '.'."
+        },
         "files": {
           "type": "array",
           "description": "Explicit relative file names to copy.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "glob": { "type": "string", "description": "POSIX-style glob pattern, evaluated relative to 'from'." }
+        "glob": {
+          "type": "string",
+          "description": "POSIX-style glob pattern, evaluated relative to 'from'."
+        }
       },
-      "required": ["from"]
+      "required": [
+        "from"
+      ]
     },
     "entryConfig": {
       "type": "object",
       "properties": {
         "entry": {
-          "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
           "description": "Entry point(s). Exact paths or globs. Omit to use all detected entries."
         },
         "exclude": {
-          "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
           "description": "Entry points to exclude."
         }
       }
     },
     "bundleAllDeps": {
       "oneOf": [
-        { "type": "boolean" },
+        {
+          "type": "boolean"
+        },
         {
           "type": "object",
           "properties": {
-            "include": { "type": "array", "items": { "type": "string" } },
-            "exclude": { "type": "array", "items": { "type": "string" } }
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           },
           "additionalProperties": false
         }
@@ -111,70 +209,144 @@
     },
     "esmConfig": {
       "allOf": [
-        { "$ref": "#/definitions/entryConfig" },
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
         {
           "type": "object",
           "properties": {
-            "sourcemap": { "type": "boolean", "default": false },
-            "external": { "type": "array", "items": { "type": "string" } },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "bundleWorkspaceDeps": {
               "type": "boolean",
               "description": "Inline workspace dependencies (true) or keep them external (false)."
             },
-            "bundleAllDeps": { "$ref": "#/definitions/bundleAllDeps" }
+            "bundleAllDeps": {
+              "$ref": "#/definitions/bundleAllDeps"
+            }
           }
         }
       ]
     },
     "cjsConfig": {
       "allOf": [
-        { "$ref": "#/definitions/entryConfig" },
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
         {
           "type": "object",
           "properties": {
-            "sourcemap": { "type": "boolean", "default": false },
-            "external": { "type": "array", "items": { "type": "string" } },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "bundleWorkspaceDeps": {
               "type": "boolean",
               "description": "Inline workspace dependencies (true) or keep them external (false)."
             },
-            "bundleAllDeps": { "$ref": "#/definitions/bundleAllDeps" }
+            "bundleAllDeps": {
+              "$ref": "#/definitions/bundleAllDeps"
+            }
           }
         }
       ]
     },
     "iifeConfig": {
       "allOf": [
-        { "$ref": "#/definitions/entryConfig" },
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
         {
           "type": "object",
           "properties": {
-            "globalName": { "type": "string" },
-            "minify": { "type": "boolean", "default": true },
-            "output": { "type": "string" },
-            "sourcemap": { "type": "boolean", "default": false },
-            "external": { "type": "array", "items": { "type": "string" } },
-            "globals": { "type": "object", "additionalProperties": { "type": "string" } }
+            "globalName": {
+              "type": "string"
+            },
+            "minify": {
+              "type": "boolean",
+              "default": true
+            },
+            "output": {
+              "type": "string"
+            },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "globals": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
           },
-          "required": ["globalName"]
+          "required": [
+            "globalName"
+          ]
         }
       ]
     },
     "umdConfig": {
       "allOf": [
-        { "$ref": "#/definitions/entryConfig" },
+        {
+          "$ref": "#/definitions/entryConfig"
+        },
         {
           "type": "object",
           "properties": {
-            "globalName": { "type": "string" },
-            "minify": { "type": "boolean", "default": true },
-            "amdId": { "type": "string" },
-            "output": { "type": "string" },
-            "sourcemap": { "type": "boolean", "default": false },
-            "external": { "type": "array", "items": { "type": "string" } },
-            "globals": { "type": "object", "additionalProperties": { "type": "string" } }
+            "globalName": {
+              "type": "string"
+            },
+            "minify": {
+              "type": "boolean",
+              "default": true
+            },
+            "amdId": {
+              "type": "string"
+            },
+            "output": {
+              "type": "string"
+            },
+            "sourcemap": {
+              "type": "boolean",
+              "default": false
+            },
+            "external": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "globals": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
           },
-          "required": ["globalName"]
+          "required": [
+            "globalName"
+          ]
         }
       ]
     },
@@ -187,8 +359,23 @@
         },
         "format": {
           "oneOf": [
-            { "type": "string", "enum": ["cjs", "esm"] },
-            { "type": "array", "items": { "type": "string", "enum": ["cjs", "esm"] } }
+            {
+              "type": "string",
+              "enum": [
+                "cjs",
+                "esm"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cjs",
+                  "esm"
+                ]
+              }
+            }
           ],
           "description": "Required output format(s) for the bin."
         },
@@ -196,20 +383,37 @@
           "type": "string",
           "description": "Named runner export to bootstrap. Defaults to the file's default export."
         },
-        "bootstrap": { "type": "string", "description": "Override the bootstrap footer template." },
+        "bootstrap": {
+          "type": "string",
+          "description": "Override the bootstrap footer template."
+        },
         "sea": {
           "type": "object",
           "properties": {
             "platforms": {
               "type": "array",
-              "items": { "type": "string", "enum": ["linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "win32-x64"] },
+              "items": {
+                "type": "string",
+                "enum": [
+                  "linux-x64",
+                  "linux-arm64",
+                  "darwin-x64",
+                  "darwin-arm64",
+                  "win32-x64"
+                ]
+              },
               "description": "Platforms for which a native binary should be produced."
             }
           },
-          "required": ["platforms"]
+          "required": [
+            "platforms"
+          ]
         }
       },
-      "required": ["name", "format"]
+      "required": [
+        "name",
+        "format"
+      ]
     }
   }
 }

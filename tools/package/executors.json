@@ -3,42 +3,17 @@
     "build": {
       "implementation": "./src/executors/build/executor",
       "schema": "./src/executors/build/schema.json",
-      "description": "Format-centric build executor with explicit output configuration."
-    },
-    "typecheck": {
-      "implementation": "./src/executors/typecheck/executor",
-      "schema": "./src/executors/typecheck/schema.json",
-      "description": "Run TypeScript type checking without emitting files."
-    },
-    "publish": {
-      "implementation": "./src/executors/publish/executor",
-      "schema": "./src/executors/publish/schema.json",
-      "description": "Publish library packages to npm registry with dry-run support."
+      "description": "This repository's build: the workspace package's build executor, then the README the registry shows."
     },
     "version": {
       "implementation": "./src/executors/version/executor",
       "schema": "./src/executors/version/schema.json",
-      "description": "Versioning executor using @hyperfrontend/versioning. Uses npm registry as source of truth."
+      "description": "This repository's version run: the workspace package's version executor, then the compatibility document brought in line with the bump."
     },
     "version-batch": {
       "implementation": "./src/executors/version-batch/executor",
       "schema": "./src/executors/version-batch/schema.json",
-      "description": "Run versioning for all affected libraries and create a single batch commit."
-    },
-    "version-check": {
-      "implementation": "./src/executors/version-check/executor",
-      "schema": "./src/executors/version-check/schema.json",
-      "description": "Validates version state without changes. Used by CI to verify lefthook versioning."
-    },
-    "e2e": {
-      "implementation": "./src/executors/e2e/executor",
-      "schema": "./src/executors/e2e/schema.json",
-      "description": "Test package build outputs via npm pack + tarball install."
-    },
-    "test": {
-      "implementation": "./src/executors/test/executor",
-      "schema": "./src/executors/test/schema.json",
-      "description": "Run a project's suites on Node's built-in test runner."
+      "description": "This repository's batch: the workspace package's version-batch executor with the compatibility document as a follow-up."
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { LibraryFacts } from './library-facts'
 import { posix } from 'node:path'
-import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from './lines'
+import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from '@hyperfrontend/workspace/generators'
 
 /** The line that opens the list of libraries the site renders. */
 const LIBRARIES_OPENER = 'export const LIBRARIES: LibraryInfo[] = ['
