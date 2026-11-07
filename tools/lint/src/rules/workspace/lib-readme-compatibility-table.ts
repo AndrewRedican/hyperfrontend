@@ -14,7 +14,7 @@ import type { MarkdownNode } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { defineRule } from '@hyperfrontend/linter'
-import { isPublishableProject, readPackageFile, readProjectFile } from './shared/project-file.ts'
+import { isPublishableProject, readPackageFile, readProjectFile } from '@hyperfrontend/workspace/lint'
 
 /** The heading that opens the section, matched at the start of a line. */
 const HEADING = '## Compatibility'

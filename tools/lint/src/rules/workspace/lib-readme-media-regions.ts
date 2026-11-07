@@ -15,10 +15,9 @@ import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { defineRule } from '@hyperfrontend/linter'
 import { parseMarkers } from '@hyperfrontend/package/readme/markers'
 import { packageBanner, resolveDocs } from '@hyperfrontend/package/readme/transform'
+import { isPublishableLibrary, readPackageFile, workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { linkProblem } from './shared/docs-anchors.ts'
 import { docsIndex, packageOfFile, repositoryUrl } from './shared/docs-catalog.ts'
-import { workspaceRootOf } from './shared/locate.ts'
-import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
 
 /** The rule's options. */
 interface Options {

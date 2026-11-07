@@ -42,7 +42,7 @@ export default defineRule<Options | undefined, JsonTreeNode>({
   fixable: false,
   create(context) {
     const directory = dirname(context.file.path)
-    if (basename(context.file.path) !== 'package.json' || !existsSync(join(directory, 'nx.json'))) return {}
+    if (basename(context.file.path) !== 'package.json' || !existsSync(join(directory, 'hf.json'))) return {}
     const configFile = context.options?.configFile ?? '.devcontainer/devcontainer.json'
     return {
       document() {

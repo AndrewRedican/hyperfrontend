@@ -8,9 +8,8 @@
 import type { Node } from '@hyperfrontend/linter'
 import { dirname } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
+import { isPublishableLibrary, projectRootOf } from '@hyperfrontend/workspace/lint'
 import { exampleTagAt, exportedApiListeners } from './shared/exported-api.ts'
-import { projectRootOf } from './shared/locate.ts'
-import { isPublishableLibrary } from './shared/project-file.ts'
 
 /** What the rule reports for an example without a label. */
 const MESSAGE =

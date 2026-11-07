@@ -11,9 +11,8 @@ import { basename, dirname, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
+import { readPackageFile, readProjectFile, workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { publishableLibraries } from './shared/libraries.ts'
-import { workspaceRootOf } from './shared/locate.ts'
-import { readPackageFile, readProjectFile } from './shared/project-file.ts'
 
 /** The rule's options. */
 interface Options {

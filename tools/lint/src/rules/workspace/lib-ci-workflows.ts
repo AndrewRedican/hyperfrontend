@@ -10,9 +10,8 @@ import { existsSync } from 'node:fs'
 import { basename, dirname, join, posix } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { positionAt } from '@hyperfrontend/linter/helpers'
+import { readProjectFile, workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { publishableLibraries } from './shared/libraries.ts'
-import { workspaceRootOf } from './shared/locate.ts'
-import { readProjectFile } from './shared/project-file.ts'
 
 /**
  * The coverage flag of a library: its folder name, utilities suffixed `-utils`.

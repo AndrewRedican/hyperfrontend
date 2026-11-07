@@ -9,7 +9,7 @@ import type { JsonObjectNode } from '@hyperfrontend/json-utils'
 import type { JsonTreeNode, Listeners, RuleContext, RuleModule } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { rootObject } from '@hyperfrontend/linter/helpers'
-import { isPublishableLibrary } from './project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 
 /** What a manifest rule does with the root object. */
 export type ManifestCheck<Options> = (root: JsonObjectNode, context: RuleContext<Options, JsonTreeNode>) => void

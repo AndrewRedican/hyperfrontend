@@ -10,8 +10,7 @@ import type { Node } from '@hyperfrontend/linter'
 import { basename, dirname, resolve } from 'node:path'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { defineRule } from '@hyperfrontend/linter'
-import { projectRootOf } from './shared/locate.ts'
-import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
+import { isPublishableLibrary, projectRootOf, readPackageFile } from '@hyperfrontend/workspace/lint'
 import { sourceOf } from './shared/sources.ts'
 
 /**

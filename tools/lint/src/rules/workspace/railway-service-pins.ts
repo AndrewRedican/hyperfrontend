@@ -12,7 +12,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
-import { readProjectFile } from './shared/project-file.ts'
+import { readProjectFile } from '@hyperfrontend/workspace/lint'
 import { sweep } from './shared/sweep.ts'
 
 const PACKAGE = '@hyperfrontend/features'

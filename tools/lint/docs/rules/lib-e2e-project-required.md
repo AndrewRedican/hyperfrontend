@@ -65,7 +65,7 @@ E2E project structure:
   "tags": ["type:e2e", "scope:internal"],
   "targets": {
     "e2e": {
-      "executor": "@hyperfrontend/package:e2e",
+      "executor": "@hyperfrontend/workspace:e2e",
       "dependsOn": ["^build"],
       "options": {
         "formats": ["cjs", "esm", "browser"]

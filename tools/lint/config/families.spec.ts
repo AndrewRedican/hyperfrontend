@@ -20,12 +20,12 @@ describe('WORKSPACE_FAMILIES', () => {
     expect(Object.keys(WORKSPACE_FAMILIES['workspace'] ?? {}).sort()).toEqual(onDisk('workspace'))
   })
 
-  it('registers every project rule module by its file name', () => {
-    expect(Object.keys(WORKSPACE_FAMILIES['projects'] ?? {}).sort()).toEqual(onDisk('projects'))
+  it('registers the projects family the workspace package publishes', () => {
+    expect(Object.keys(WORKSPACE_FAMILIES['projects'] ?? {}).sort()).toEqual(['command-lines', 'dependency-checks', 'module-boundaries'])
   })
 
   it('loads a rule whose id is its family and file name', async () => {
-    const load = WORKSPACE_FAMILIES['projects']?.['module-boundaries'] as () => Promise<{ default: { id: string } }>
-    expect((await load()).default.id).toBe('projects/module-boundaries')
+    const load = WORKSPACE_FAMILIES['workspace']?.['no-direct-console'] as () => Promise<{ default: { id: string } }>
+    expect((await load()).default.id).toBe('workspace/no-direct-console')
   })
 })

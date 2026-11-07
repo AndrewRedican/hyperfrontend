@@ -42,7 +42,7 @@ export function createMarkdownWorkspace(): MarkdownWorkspace {
   const directory = createTempDir({
     prefix: 'lint-md-',
     tree: {
-      'nx.json': '{}',
+      'hf.json': '{}',
       'libs/pub/project.json': PUBLISHABLE,
       'libs/pub/src/host/.keep': '',
       'libs/internal/project.json': INTERNAL,

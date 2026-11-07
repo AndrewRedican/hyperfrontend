@@ -6,7 +6,7 @@
 
 import { existsSync, readdirSync } from 'node:fs'
 import { join, posix, relative, sep } from 'node:path'
-import { isPublishableLibrary } from './project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 
 /** A publishable library. */
 export interface Library {

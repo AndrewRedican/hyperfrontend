@@ -10,7 +10,7 @@ import type { Fix, JsonDocument, JsonTreeNode } from '@hyperfrontend/linter'
 import { basename, dirname } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
 import { indentationAt, propertyOf } from '@hyperfrontend/linter/helpers'
-import { isPublishableLibrary } from './shared/project-file.ts'
+import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
 
 const CONVERT = 'Do not use "main" field in publishable libraries. Use "exports" field instead: "exports": { ".": "./src/index.js" }'
 const REMOVE = 'Remove the "main" field. The "exports" field should be used instead for modern Node.js resolution.'

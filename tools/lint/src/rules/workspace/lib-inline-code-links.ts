@@ -11,10 +11,10 @@ import { basename, dirname, join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
 import { linkProblem } from './shared/docs-anchors.ts'
 import { docsIndex, packageOfFile, repositoryUrl } from './shared/docs-catalog.ts'
 import { resolveMention } from './shared/docs-mentions.ts'
-import { workspaceRootOf } from './shared/locate.ts'
 
 /** The site's origin. */
 const SITE_URL = 'https://www.hyperfrontend.dev'

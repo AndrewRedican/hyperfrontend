@@ -9,7 +9,7 @@ This rule runs on `.github/workflows/ci-main.yml` and validates that every publi
 1. **Status workflow file** - Individual `ci-lib-*.yml` for per-project badges
 2. **Coverage entry in ci-main.yml** - Enables coverage reporting to Codecov
 
-Nothing selects which libraries CI runs: every pull request and every push to `main` plans its work from the owned pipeline (`tools/workspace`), which reads the project graph and runs the tasks of the projects a change reaches. There is no per-library path filter or matrix entry to register.
+Nothing selects which libraries CI runs: every pull request and every push to `main` plans its work from the owned pipeline (`tools/pipeline`), which reads the project graph and runs the tasks of the projects a change reaches. There is no per-library path filter or matrix entry to register.
 
 ### What is a Publishable Library?
 

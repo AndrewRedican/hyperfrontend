@@ -11,7 +11,7 @@
 import type { JsonObjectNode, JsonPropertyNode, JsonSpan } from '@hyperfrontend/json-utils'
 import type { JsonTreeNode, RuleContext } from '@hyperfrontend/linter'
 import { isString, propertyOf, wholeDocument } from '@hyperfrontend/linter/helpers'
-import { exercisedEnvironments } from '@hyperfrontend/workspace'
+import { exercisedEnvironments } from '@hyperfrontend/pipeline'
 import { manifestRule } from './shared/manifest-rule.ts'
 
 /** The runtimes a library declares. */

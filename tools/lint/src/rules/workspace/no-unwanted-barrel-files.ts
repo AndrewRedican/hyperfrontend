@@ -9,8 +9,7 @@ import type { Node } from '@hyperfrontend/linter'
 import { basename, dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { defineRule } from '@hyperfrontend/linter'
-import { projectRootOf } from './shared/locate.ts'
-import { isPublishableLibrary, readPackageFile } from './shared/project-file.ts'
+import { isPublishableLibrary, projectRootOf, readPackageFile } from '@hyperfrontend/workspace/lint'
 
 /**
  * The file an export target names, a condition object read through `import`, `require` and

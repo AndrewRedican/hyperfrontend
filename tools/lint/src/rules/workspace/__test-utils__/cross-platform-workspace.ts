@@ -21,11 +21,11 @@ const PUBLISHABLE = stringify({ projectType: 'library', targets: { build: {}, pu
 
 /** The files of the fixture, by path below its root. */
 const FILES: Readonly<Record<string, string>> = {
-  'node/nx.json': '{}',
+  'node/hf.json': '{}',
   'node/project.json': PUBLISHABLE,
   'node/src/view.ts': 'export {}\n',
   'node/src/deep/runtime.ts': NODE_IMPORT,
-  'browser/nx.json': '{}',
+  'browser/hf.json': '{}',
   'browser/project.json': PUBLISHABLE,
   'browser/src/view.ts': 'export {}\n',
   'browser/src/view.spec.ts': NODE_IMPORT,
@@ -36,10 +36,10 @@ const FILES: Readonly<Record<string, string>> = {
   'browser/src/notes.md': NODE_IMPORT,
   'unpublished/project.json': stringify({ projectType: 'library', targets: { build: {} } }),
   'unpublished/src/runtime.ts': NODE_IMPORT,
-  'tool/nx.json': '{}',
+  'tool/hf.json': '{}',
   'tool/tools/app/project.json': stringify({ projectType: 'application', targets: { build: {}, serve: {} } }),
   'tool/tools/app/src/runtime.ts': NODE_IMPORT,
-  'bare/nx.json': '{}',
+  'bare/hf.json': '{}',
   'bare/project.json': PUBLISHABLE,
   'lonely/project.json': PUBLISHABLE,
   'lonely/src/runtime.ts': NODE_IMPORT,

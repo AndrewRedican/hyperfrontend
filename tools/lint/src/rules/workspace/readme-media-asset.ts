@@ -11,7 +11,7 @@ import type { MarkdownNode, RuleContext } from '@hyperfrontend/linter'
 import { existsSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { defineRule } from '@hyperfrontend/linter'
-import { workspaceRootOf } from './shared/locate.ts'
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
 
 /** The rule's options; the rule is inert until both are set. */
 interface Options {

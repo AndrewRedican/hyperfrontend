@@ -14,7 +14,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { defineRule } from '@hyperfrontend/linter'
 import { isString } from '@hyperfrontend/linter/helpers'
-import { readProjectFile } from './shared/project-file.ts'
+import { readProjectFile } from '@hyperfrontend/workspace/lint'
 
 /** The rule's options. */
 interface Options {

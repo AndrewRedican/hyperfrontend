@@ -13,7 +13,7 @@ const PAGES = 'apps/docs-site/src/app/docs'
 
 /** The files of the full workspace, by workspace-relative path. */
 const FILES: Readonly<Record<string, string>> = {
-  'nx.json': '{}',
+  'hf.json': '{}',
   'libs/alpha/README.md': '# alpha\n',
   'libs/alpha/CHANGELOG.md': '# changes\n',
   'libs/alpha/docs/GUIDE.md': '# guide\n',
@@ -74,7 +74,7 @@ function write(files: Readonly<Record<string, string>>): string {
  * @returns Their roots
  */
 export function createSiteWorkspaces(): SiteWorkspaces {
-  return { full: write(FILES), bare: write({ 'nx.json': '{}', 'libs/alpha/README.md': '# alpha\n' }) }
+  return { full: write(FILES), bare: write({ 'hf.json': '{}', 'libs/alpha/README.md': '# alpha\n' }) }
 }
 
 /** The site's content module, workspace-relative. */
