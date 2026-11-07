@@ -142,6 +142,31 @@ function sortedProjects(graph: WorkspaceGraph): ProjectRecord[] {
 }
 
 /**
+ * Reads the arguments of the graph command, refusing a flag it does not know.
+ *
+ * @param argv - The arguments after `graph`
+ * @returns The flags and the positional arguments
+ */
+function readArguments(argv: readonly string[]) {
+  try {
+    return parseArgs({
+      args: [...argv],
+      options: {
+        json: { type: 'boolean', default: false },
+        explain: { type: 'boolean', default: false },
+        force: { type: 'boolean', default: false },
+        target: { type: 'string' },
+        base: { type: 'string', default: 'main' },
+        head: { type: 'string' },
+      },
+      allowPositionals: true,
+    })
+  } catch (error) {
+    throw refusal((error as Error).message)
+  }
+}
+
+/**
  * Runs the `graph` command.
  *
  * @param argv - The arguments after `graph`
@@ -166,18 +191,7 @@ function sortedProjects(graph: WorkspaceGraph): ProjectRecord[] {
  */
 export function runGraph(argv: readonly string[], root: string, output: GraphOutput): number {
   const { say, note } = output
-  const { values, positionals } = parseArgs({
-    args: [...argv],
-    options: {
-      json: { type: 'boolean', default: false },
-      explain: { type: 'boolean', default: false },
-      force: { type: 'boolean', default: false },
-      target: { type: 'string' },
-      base: { type: 'string', default: 'main' },
-      head: { type: 'string' },
-    },
-    allowPositionals: true,
-  })
+  const { values, positionals } = readArguments(argv)
   const revisions: Revisions = { base: values.base, head: values.head ?? null }
   const [command, argument] = positionals
   if (command === 'projects') {

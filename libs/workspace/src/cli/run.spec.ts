@@ -487,20 +487,17 @@ describe('runWorkspaceCli calls it cannot read', () => {
     [['affected'], 'hf affected: ', 'name the targets with -t', AFFECTED_USAGE],
     [['format'], 'hf format: ', 'pass exactly one of --check and --write', FORMAT_USAGE],
     [['format', '--check', '--nope'], 'hf format: ', 'unknown argument --nope', FORMAT_USAGE],
-  ])('reports %j with what is wrong and its usage', async (argv, prefix, message, usage) => {
-    const { code, stdout, stderr } = await hf(argv)
-    expect({
-      code,
-      stdout,
-      prefix: stderr.startsWith(prefix),
-      message: stderr.includes(message),
-      usage: stderr.endsWith(`${usage}\n`),
-    }).toEqual({
+    [['run-many', '-t', 'build', '-p', 'nobody'], 'hf run-many: ', 'no project matches nobody', MANY_USAGE],
+  ])('reports %j in one line with its usage, and no stack', async (argv, prefix, message, usage) => {
+    expect(await hf(argv)).toEqual({ code: 1, stdout: '', stderr: `${prefix}${message}\n${usage}\n` })
+  })
+
+  it('reports a flag the graph command does not know with no stack', async () => {
+    const { code, stderr } = await hf(['graph', '--nope'])
+    expect({ code, flag: stderr.includes("Unknown option '--nope'"), stack: stderr.includes('    at ') }).toEqual({
       code: 1,
-      stdout: '',
-      prefix: true,
-      message: true,
-      usage: true,
+      flag: true,
+      stack: false,
     })
   })
 })

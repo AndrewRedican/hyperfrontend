@@ -9,7 +9,7 @@
  * @module runner/format
  */
 
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { refusal } from './refusal'
 
 /** What the command line expects. */
 export const FORMAT_USAGE = 'usage: hf format --check|--write [--all | --files=<path[,path]>]'
@@ -45,9 +45,9 @@ export function parseFormatArgs(argv: readonly string[]): FormatRequest {
         .slice('--files='.length)
         .split(',')
         .filter((file) => file !== '')
-    else throw createError(`unknown argument ${arg}`)
+    else throw refusal(`unknown argument ${arg}`)
   }
-  if (check === write) throw createError('pass exactly one of --check and --write')
+  if (check === write) throw refusal('pass exactly one of --check and --write')
   return { write, scope }
 }
 

@@ -9,11 +9,11 @@
 
 import type { WorkspaceGraph } from '../graph/build'
 import type { ProjectRecord } from '../graph/model'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { prerequisitesOf } from '../graph/depends-on'
 import { hasTarget } from '../graph/workspace'
+import { refusal } from './refusal'
 
 /** What the `affected` command line expects. */
 export const AFFECTED_USAGE = 'usage: hf affected -t <target[,target]> [--base=<ref>] [--head=<ref>] [--name=value ...]'
@@ -122,8 +122,8 @@ export function parseManyArgs(argv: readonly string[]): ManyRequest {
     else if (name === '--all') all = true
     else args.push(arg)
   }
-  if (targets.length === 0) throw createError('name the targets with -t')
-  if (projects === null && !all) throw createError('name the projects with -p, or pass --all')
+  if (targets.length === 0) throw refusal('name the targets with -t')
+  if (projects === null && !all) throw refusal('name the projects with -p, or pass --all')
   return { targets, projects: all ? null : projects, args }
 }
 
@@ -155,7 +155,7 @@ export function parseAffectedArgs(argv: readonly string[]): AffectedRequest {
     else if (name === '--head') head = inline ?? argv[++index] ?? null
     else args.push(arg)
   }
-  if (targets.length === 0) throw createError('name the targets with -t')
+  if (targets.length === 0) throw refusal('name the targets with -t')
   return { targets, base, head, args }
 }
 
@@ -210,7 +210,7 @@ export function matchesProject(name: string, pattern: string): boolean {
 export function planMany(graph: WorkspaceGraph, request: ManyRequest): PlannedTask[] {
   const projects = [...graph.projects.values()].sort((a, b) => (a.name < b.name ? -1 : 1))
   for (const pattern of request.projects ?? []) {
-    if (!projects.some((project) => matchesProject(project.name, pattern))) throw createError(`no project matches ${pattern}`)
+    if (!projects.some((project) => matchesProject(project.name, pattern))) throw refusal(`no project matches ${pattern}`)
   }
   const chosen = projects.filter(
     (project) => request.projects === null || request.projects.some((pattern) => matchesProject(project.name, pattern))
@@ -255,7 +255,7 @@ export function planTasks(graph: WorkspaceGraph, tasks: readonly TaskRef[]): Pla
   const place = (project: ProjectRecord, target: string, path: readonly string[]): void => {
     const id = `${project.name}:${target}`
     if (placed.has(id)) return
-    if (path.includes(id)) throw createError(`the tasks' dependsOn form a cycle: ${[...path.slice(path.indexOf(id)), id].join(' -> ')}`)
+    if (path.includes(id)) throw refusal(`the tasks' dependsOn form a cycle: ${[...path.slice(path.indexOf(id)), id].join(' -> ')}`)
     const prerequisites = prerequisitesOf(graph, project, target)
     for (const prerequisite of prerequisites) {
       place(graph.projects.get(prerequisite.project) as ProjectRecord, prerequisite.target, [...path, id])
