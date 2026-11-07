@@ -6,7 +6,6 @@
   "devDependencies": {
     "@hyperfrontend/project-scope": "0.5.1",
     "@types/node": "25.9.9",
-    "prettier": "3.8.0",
     "typescript": "5.9.3"
   },
   "generators": "./generators.json",

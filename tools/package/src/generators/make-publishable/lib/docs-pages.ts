@@ -1,6 +1,6 @@
 import type { LibraryFacts } from './library-facts'
 import { posix } from 'node:path'
-import { names } from '../../../lib/tree/names'
+import { names } from '@hyperfrontend/workspace/generators'
 
 /** The app-router directory every library page lives under. */
 const PAGES_ROOT = 'apps/docs-site/src/app/docs/libraries'

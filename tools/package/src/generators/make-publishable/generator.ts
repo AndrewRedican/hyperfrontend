@@ -1,26 +1,40 @@
-import type { Tree } from '../../lib/tree/tree'
+/**
+ * This repository's `make-publishable` generator: the packaged one with this repository's build
+ * executor and e2e directory, then the compatibility block, the README with its badges, the CI
+ * workflow, and the registrations across the repository.
+ *
+ * @module generators/make-publishable/generator
+ */
+
+import type { Tree } from '@hyperfrontend/workspace/runner'
 import type { DocsCategory, EcosystemTierId } from './lib/library-facts'
 import type { CompatibilityProfile, MakePublishableGeneratorSchema } from './schema'
-import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import {
+  compactVersion,
+  formatFiles,
+  generateFiles,
+  joinPathFragments,
+  nodeFloorOf,
+  readJson,
+  readPackageJsonInfo,
+  readProjectConfiguration,
+  unscopedName,
+  updateJson,
+} from '@hyperfrontend/workspace/generators'
+import { makePublishableGenerator as publish, planPublishable } from '@hyperfrontend/workspace/generators/make-publishable'
+import { E2E_DIRECTORY } from '../../lib/e2e-helpers'
 import { logger } from '../../lib/logger'
-import { derivePackageName } from '../../lib/naming-utils'
-import { readPackageJsonInfo } from '../../lib/package-json-utils'
-import { formatFiles } from '../../lib/tree/format'
-import { names } from '../../lib/tree/names'
-import { joinPathFragments, offsetFromRoot } from '../../lib/tree/paths'
-import { readProjectConfiguration } from '../../lib/tree/projects'
-import { generateFiles } from '../../lib/tree/templates'
-import { updateJson } from '../../lib/tree/tree'
 import { defaultEcosystemTier } from './lib/library-facts'
-import { DEFAULT_NODE_ENGINE, DEFAULT_NPM_ENGINE, compactVersion, nodeFloorOf } from './lib/node-floor'
 import { collectLibraryFacts, registerLibrary } from './registrations'
 
 /** The generator's templates, relative to the workspace root. */
-const TEMPLATES = 'tools/package/src/generators/make-publishable'
+const TEMPLATES = 'tools/package/src/generators/make-publishable/files'
+
+/** The build executor of this repository: the packaged build, then the registry README. */
+const BUILD_EXECUTOR = '@hyperfrontend/package:build'
 
 /**
  * The level a package's support for one runtime is declared at. Profiles only
@@ -65,12 +79,6 @@ const PROFILE_KEYWORDS: Record<CompatibilityProfile, string> = {
 }
 
 /**
- * The bundle formats only a browser or a CDN consumer loads. The name is both
- * the build option key and the stem of the E2E spec that loads it.
- */
-const BROWSER_BUNDLE_FORMATS = ['iife', 'umd'] as const
-
-/**
  * How each support level is written in the generated README.
  *
  * The README's compatibility table and the project's own metadata are two
@@ -79,13 +87,11 @@ const BROWSER_BUNDLE_FORMATS = ['iife', 'umd'] as const
  * is rendered from the profile rather than shipped as fixed text.
  */
 const SUPPORT_GLYPHS: Record<SupportLevel, string> = {
-  full: '\u2705',
-  none: '\u274c',
+  full: '✅',
+  none: '❌',
 }
 
-/**
- * The parts of a project.json this generator rewrites.
- */
+/** The parts of a project.json this generator rewrites. */
 interface PublishableProjectJson {
   /** The module-boundary tags */
   tags?: string[]
@@ -95,71 +101,19 @@ interface PublishableProjectJson {
   metadata?: Record<string, unknown>
 }
 
-/**
- * The parts of a package.json this generator rewrites.
- */
-interface PublishablePackageJson {
-  /** Whether npm refuses to publish the package */
-  private?: boolean
-  /** The license identifier */
-  license?: string
-  /** Whether a bundler may drop unused modules */
-  sideEffects?: boolean
+/** The parts of an e2e project.json this generator rewrites. */
+interface E2eProjectJson extends PublishableProjectJson {
+  /** The library the suite tests */
+  implicitDependencies?: string[]
+}
+
+/** The parts of a package.json this generator reads back. */
+interface PublishedPackageJson {
   /** The runtimes the package declares */
   engines?: Record<string, string>
-  /** The exports map */
-  exports?: Record<string, unknown>
-  /** The npm keywords */
-  keywords?: string[]
-  /** Where sponsorship goes */
-  funding?: Funding
 }
 
-/**
- * Where a package's sponsorship goes.
- */
-interface Funding {
-  /** The platform */
-  type: string
-  /** The page */
-  url: string
-}
-
-/**
- * The options of an e2e target as far as the bundle formats go.
- */
-interface E2eOptions {
-  /** The bundle formats the suite loads */
-  formats?: string[]
-}
-
-/**
- * The e2e target of a project, as far as its options go.
- */
-interface E2eTarget {
-  /** Its options */
-  options: E2eOptions
-}
-
-/**
- * The targets of an e2e project.
- */
-interface E2eTargets {
-  /** The e2e target */
-  e2e: E2eTarget
-}
-
-/**
- * The e2e project's project.json as far as the bundle formats go.
- */
-interface E2eProjectJson {
-  /** The targets */
-  targets: E2eTargets
-}
-
-/**
- * Normalized options for make-publishable generator.
- */
+/** The options settled for this repository. */
 interface NormalizedOptions {
   /** Project name (e.g., 'lib-my-utils') */
   projectName: string
@@ -169,30 +123,20 @@ interface NormalizedOptions {
   packageName: string
   /** URL-encoded package name for badge URLs */
   packageNameEncoded: string
-  /** Global name for IIFE/UMD builds */
-  globalName: string
-  /** npm keywords */
-  keywords: string[]
-  /** Runtimes to declare under metadata.compatibility */
-  compatibility: CompatibilityEnvironments
   /** Library name without prefix */
   libName: string
   /** Library description */
   description: string
-  /** IIFE/UMD bundle entry point */
-  bundleEntry: string
-  /** E2E project name */
-  e2eProjectName: string
+  /** The chosen profile */
+  profile: CompatibilityProfile
+  /** Runtimes to declare under metadata.compatibility */
+  compatibility: CompatibilityEnvironments
+  /** npm keywords */
+  keywords: string[]
   /** E2E project root */
   e2eProjectRoot: string
-  /** Skip E2E creation */
-  skipE2E: boolean
-  /** Skip CI updates */
-  skipCI: boolean
-  /** Skip formatting */
-  skipFormat: boolean
-  /** Offset from project root to workspace root */
-  offsetFromRoot: string
+  /** Whether the project already publishes, so the README and the e2e files it has are kept */
+  republishing: boolean
   /** Section of the docs-site index, when chosen rather than derived */
   docsCategory?: DocsCategory
   /** Level of the docs-site ecosystem hierarchy, when chosen rather than derived */
@@ -200,7 +144,7 @@ interface NormalizedOptions {
 }
 
 /**
- * Normalize user-provided options.
+ * Settles the options: the profile, the package and the keywords it gets.
  *
  * @param tree - Virtual file system tree
  * @param options - User provided options
@@ -214,236 +158,83 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
       `A publishable package must declare where it runs. Re-run with --compatibility=<profile>, where profile is one of: ${keys(COMPATIBILITY_PROFILES).join(', ')}.`
     )
   }
-
-  const projectConfig = readProjectConfiguration(tree, options.project)
-  const projectRoot = projectConfig.root
-  const projectName = options.project
-
-  const fallbackPackageName = derivePackageName(projectName)
-  const pkgInfo = readPackageJsonInfo(tree, projectRoot)
-  const packageName = pkgInfo.name || fallbackPackageName
-  const description = pkgInfo.description
-
-  const libName = packageName.replace('@hyperfrontend/', '')
-
-  const globalName = options.globalName || `Hyperfrontend${names(libName).className}`
-
+  const project = readProjectConfiguration(tree, options.project)
+  const pkgInfo = readPackageJsonInfo(tree, project.root)
+  const packageName = pkgInfo.name ?? planPublishable(tree, { project: options.project }).packageName
+  const libName = unscopedName(packageName)
   // why: keywords a package already chose describe it better than a template can, so they are kept unless the run names its own
   const defaultKeywords =
     pkgInfo.keywords.length > 0 ? pkgInfo.keywords : [libName, 'hyperfrontend', 'typescript', PROFILE_KEYWORDS[options.compatibility]]
-  const keywords = options.keywords ?? defaultKeywords
-
-  const bundleEntry = options.bundleEntry || '.'
-
-  const e2eProjectName = `e2e-${projectName}`
-  const e2eProjectRoot = `apps/package-e2e/${libName}`
-
   return {
-    projectName,
-    projectRoot,
+    projectName: options.project,
+    projectRoot: project.root,
     packageName,
     packageNameEncoded: encodeURIComponent(packageName),
-    globalName,
-    keywords,
-    compatibility: COMPATIBILITY_PROFILES[options.compatibility],
     libName,
-    description,
-    bundleEntry,
-    e2eProjectName,
-    e2eProjectRoot,
-    skipE2E: options.skipE2E ?? false,
-    skipCI: options.skipCI ?? false,
-    skipFormat: options.skipFormat ?? false,
-    offsetFromRoot: offsetFromRoot(projectRoot),
+    description: pkgInfo.description,
+    profile: options.compatibility,
+    compatibility: COMPATIBILITY_PROFILES[options.compatibility],
+    keywords: options.keywords ?? defaultKeywords,
+    e2eProjectRoot: joinPathFragments(E2E_DIRECTORY, libName),
+    republishing: project.targets?.['publish'] !== undefined,
     docsCategory: options.docsCategory,
     ecosystemTier: options.ecosystemTier,
   }
 }
 
 /**
- * Update project.json to declare runtime compatibility, add publishable
- * targets, and change the scope tag.
+ * Declares the runtime compatibility and the public scope in project.json.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
  */
 function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
-  const projectJsonPath = joinPathFragments(options.projectRoot, 'project.json')
-
-  updateJson<PublishableProjectJson>(tree, projectJsonPath, (json) => {
-    const tags = json.tags ?? []
-    const newTags = tags.filter((tag: string) => !tag.startsWith('scope:')).concat('scope:public')
-    json.tags = newTags
-
-    const existingTargets = json.targets ?? {}
-
+  updateJson<PublishableProjectJson>(tree, joinPathFragments(options.projectRoot, 'project.json'), (json) => {
+    json.tags = (json.tags ?? []).filter((tag) => !tag.startsWith('scope:')).concat('scope:public')
+    const targets = json.targets
     // why: metadata sits between tags and targets in every hand-written publishable project.json, and a new key only lands there if targets is removed and re-added after it
     delete json.targets
-
     const metadata = json.metadata ?? {}
     const compatibility = { ...(metadata['compatibility'] as Record<string, unknown> | undefined) }
     // why: a re-run refreshes the environments and keeps what was added by hand beside them, such as the note; a library runs on all three pipeline legs, so a new one declares all three operating systems
     const operatingSystems = compatibility['operatingSystems'] ?? { linux: 'full', macos: 'full', windows: 'full' }
     json.metadata = { ...metadata, compatibility: { ...compatibility, environments: options.compatibility, operatingSystems } }
-
-    const buildOptions: Record<string, unknown> = {
-      esm: { bundleWorkspaceDeps: true },
-      cjs: { bundleWorkspaceDeps: true },
-    }
-
-    // why: an iife or umd bundle is only ever loaded by a browser or a CDN consumer, so a package that reaches no browser ships neither
-    if (options.compatibility.browser !== 'none') {
-      for (const format of BROWSER_BUNDLE_FORMATS) {
-        buildOptions[format] = {
-          entry: options.bundleEntry,
-          globalName: options.globalName,
-        }
-      }
-    }
-
-    const targets: Record<string, unknown> = {
-      version: {},
-      'version-check': {},
-      build: {
-        executor: '@hyperfrontend/package:build',
-        options: buildOptions,
-      },
-      publish: {},
-      typecheck: {},
-    }
-
-    // why: assigning the block outright used to delete every target this generator does not write, including the test target the library template had just added; a target already configured keeps its configuration, so a re-run changes nothing
-    for (const name of keys(existingTargets)) {
-      targets[name] = existingTargets[name]
-    }
-
     json.targets = targets
-
     return json
   })
 }
 
 /**
- * Update package.json with publishable fields.
- *
- * A package that already declares the engines it runs on keeps them: the
- * floor it states is a fact about its code, and the README badge is rendered
- * from whatever floor this writes. Peer and optional dependencies are the
- * package's own business and are not touched.
+ * Gives the e2e project this repository's tags and its `audit` target.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
- * @returns The lowest Node.js version the package now declares, `18.0.0`
  */
-function updatePackageJson(tree: Tree, options: NormalizedOptions): string {
-  const packageJsonPath = joinPathFragments(options.projectRoot, 'package.json')
-  let nodeEngine = DEFAULT_NODE_ENGINE
-
-  updateJson<PublishablePackageJson>(tree, packageJsonPath, (json) => {
-    delete json.private
-
-    json.license = json.license || 'MIT'
-    json.sideEffects = false
-    const engines = json.engines ?? {}
-    nodeEngine = engines['node'] ?? DEFAULT_NODE_ENGINE
-    json.engines = {
-      ...engines,
-      node: nodeEngine,
-      npm: engines['npm'] ?? DEFAULT_NPM_ENGINE,
+function updateE2eProjectJson(tree: Tree, options: NormalizedOptions): void {
+  const projectJsonPath = joinPathFragments(options.e2eProjectRoot, 'project.json')
+  if (!tree.exists(projectJsonPath)) return
+  updateJson<E2eProjectJson>(tree, projectJsonPath, (json) => {
+    // why: tags sit before targets and implicitDependencies last in every hand-written e2e project.json
+    const { targets, implicitDependencies, ...rest } = json
+    return {
+      ...rest,
+      tags: json.tags ?? ['type:e2e', 'scope:internal'],
+      targets: { ...targets, audit: targets?.['audit'] ?? {} },
+      implicitDependencies,
     }
-
-    if (!json.exports) {
-      json.exports = {
-        '.': './src/index.js',
-        './package.json': './package.json',
-      }
-    } else {
-      json.exports['./package.json'] = './package.json'
-    }
-
-    json.keywords = options.keywords
-
-    json.funding = {
-      type: 'github',
-      url: 'https://github.com/sponsors/AndrewRedican',
-    }
-
-    return json
-  })
-
-  return nodeFloorOf(nodeEngine)
-}
-
-/**
- * Writes a template directory's files, keeping every file that already exists when asked to.
- *
- * @param tree - Virtual file system tree
- * @param source - The template directory
- * @param target - The directory the files are written to
- * @param substitutions - The template's values
- * @param keepExisting - Whether a file already at its target is left as it is
- */
-function writeTemplates(tree: Tree, source: string, target: string, substitutions: Record<string, unknown>, keepExisting: boolean): void {
-  const kept = createMap<string, Buffer>()
-  if (keepExisting) {
-    for (const entry of readdirSync(source, { recursive: true, withFileTypes: true })) {
-      if (!entry.isFile()) continue
-      const relative = join(entry.parentPath, entry.name)
-        .slice(source.length + 1)
-        .replace(/\.template$/, '')
-      const path = joinPathFragments(target, relative)
-      const content = tree.read(path)
-      if (content !== null) kept.set(path, content)
-    }
-  }
-  generateFiles(tree, source, target, substitutions)
-  for (const [path, content] of kept) tree.write(path, content)
-}
-
-/**
- * Create E2E project for the publishable library.
- *
- * @param tree - Virtual file system tree
- * @param options - Normalized options
- * @param keepExisting - Whether files the project already has are kept
- */
-function createE2EProject(tree: Tree, options: NormalizedOptions, keepExisting: boolean): void {
-  if (options.skipE2E) return
-
-  const e2eTemplateOptions = {
-    ...options,
-    template: '',
-    e2eOffsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
-  }
-
-  const existingSpecs = BROWSER_BUNDLE_FORMATS.filter((format) =>
-    tree.exists(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
-  )
-  writeTemplates(tree, join(tree.root, TEMPLATES, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions, keepExisting)
-
-  if (options.compatibility.browser !== 'none') return
-
-  // why: the templates cover a package that ships browser bundles, and a package that reaches no browser has none for these checks to load
-  for (const format of BROWSER_BUNDLE_FORMATS) {
-    if (keepExisting && existingSpecs.includes(format)) continue
-    tree.delete(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
-  }
-
-  updateJson<E2eProjectJson>(tree, joinPathFragments(options.e2eProjectRoot, 'project.json'), (json) => {
-    json.targets.e2e.options.formats = ['cjs', 'esm']
-    return json
   })
 }
 
 /**
- * Generate the publishable README with required structure.
+ * Generate the publishable README with required structure, its Node.js badge reading the floor
+ * the package declares.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
- * @param nodeFloor - The lowest Node.js version the package declares, `18.0.0`
- * @param keepExisting - Whether a README the project already has is kept
  */
-function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeFloor: string, keepExisting: boolean): void {
+function generatePublishableReadme(tree: Tree, options: NormalizedOptions): void {
+  const engines = readJson<PublishedPackageJson>(tree, joinPathFragments(options.projectRoot, 'package.json')).engines ?? {}
+  const nodeFloor = nodeFloorOf(engines['node'] ?? '')
   const templateOptions = {
     ...options,
     compatibilityGlyphs: {
@@ -453,10 +244,8 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeF
     },
     nodeFloorEncoded: encodeURIComponent(`>=${nodeFloor}`),
     nodeFloorLabel: compactVersion(nodeFloor),
-    template: '',
   }
-
-  writeTemplates(tree, join(tree.root, TEMPLATES, 'files'), options.projectRoot, templateOptions, keepExisting)
+  generateFiles(tree, join(tree.root, TEMPLATES), options.projectRoot, templateOptions, { keepExisting: options.republishing })
 }
 
 /**
@@ -466,8 +255,6 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeF
  * @param options - Normalized options
  */
 function createCIWorkflow(tree: Tree, options: NormalizedOptions): void {
-  if (options.skipCI) return
-
   const workflowPath = `.github/workflows/ci-${options.projectName}.yml`
 
   const workflowContent = `name: ${options.projectName}
@@ -499,8 +286,9 @@ jobs:
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
+ * @param skipCI - Whether the main CI workflow is left alone
  */
-function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
+function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions, skipCI: boolean): void {
   const facts = collectLibraryFacts(tree, {
     projectName: options.projectName,
     projectRoot: options.projectRoot,
@@ -508,42 +296,25 @@ function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
     docsCategory: options.docsCategory,
   })
   registerLibrary(tree, facts, {
-    skipCI: options.skipCI,
+    skipCI,
     ecosystemTier: options.ecosystemTier ?? defaultEcosystemTier(facts.docsCategory),
   })
 }
 
 /**
- * Log instruction to record the visuals the distribution readme embeds.
- *
- * The banner replaces the readme's title and the runtime strip replaces its
- * compatibility table when the package is built, and both are read from the
- * committed media tree, so neither can be written by a generator; lint
- * reports the readme until they are recorded.
- *
- * @param options - Normalized options
- */
-function recordReadmeMedia(options: NormalizedOptions): void {
-  logger.info(
-    `Note: Record the package banner and runtime strip: npx hf run tool-media:media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
-  )
-}
-
-/**
- * Generator that converts an internal library to a publishable library.
+ * Generator that converts an internal library to a publishable library of this repository.
  *
  * This generator:
- * 1. Updates project.json with build, version, and publish targets, keeping any target it does not write
+ * 1. Runs the packaged `make-publishable`: the targets with this repository's build executor, the browser bundles of a profile that reaches a browser, the manifest fields, and the e2e project under `apps/package-e2e`
  * 2. Declares metadata.compatibility from the chosen runtime profile
  * 3. Changes scope:internal tag to scope:public
- * 4. Adds required package.json fields (exports, engines, sideEffects, keywords), keeping the engines and keywords the package already declares
- * 5. Generates publishable README with required structure, its Node.js badge reading the declared floor
- * 6. Creates E2E project in apps/package-e2e/
- * 7. Creates CI workflow status file
- * 8. Adds the coverage upload to the main CI workflow
- * 9. Lists the package in the root README's packages table, in the order the docs-site index presents the packages
- * 10. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
- * 11. Names the one step left for a human: recording the readme media
+ * 4. Gives the e2e project its tags and its audit target
+ * 5. Generates the publishable README with required structure, its Node.js badge reading the declared floor
+ * 6. Creates the CI workflow status file
+ * 7. Adds the coverage upload to the main CI workflow
+ * 8. Lists the package in the root README's packages table, in the order the docs-site index presents the packages
+ * 9. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
+ * 10. Names the one step left for a human: recording the readme media
  *
  * @param tree - The virtual file system tree
  * @param options - Configuration options
@@ -566,30 +337,32 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {
-  const normalizedOptions = normalizeOptions(tree, options)
-  // why: on a project that already publishes, a re-run must change nothing, so the README and the e2e files it once scaffolded, by now written by hand, are kept
-  const republishing = readProjectConfiguration(tree, options.project).targets?.['publish'] !== undefined
-
-  updateProjectJson(tree, normalizedOptions)
-
-  const nodeFloor = updatePackageJson(tree, normalizedOptions)
-
-  generatePublishableReadme(tree, normalizedOptions, nodeFloor, republishing)
-
-  createE2EProject(tree, normalizedOptions, republishing)
-
-  createCIWorkflow(tree, normalizedOptions)
-
-  registerAcrossWorkspace(tree, normalizedOptions)
-
+  const normalized = normalizeOptions(tree, options)
+  await publish(tree, {
+    project: options.project,
+    // why: an iife or umd bundle is only ever loaded by a browser or a CDN consumer, so a package that reaches no browser ships neither
+    formats: normalized.compatibility.browser === 'none' ? ['esm', 'cjs'] : ['esm', 'cjs', 'iife', 'umd'],
+    globalName: options.globalName,
+    bundleEntry: options.bundleEntry,
+    keywords: normalized.keywords,
+    buildExecutor: BUILD_EXECUTOR,
+    e2eDirectory: E2E_DIRECTORY,
+    skipE2E: options.skipE2E,
+    skipFormat: true,
+  })
+  updateProjectJson(tree, normalized)
+  if (options.skipE2E !== true) updateE2eProjectJson(tree, normalized)
+  generatePublishableReadme(tree, normalized)
+  if (options.skipCI !== true) createCIWorkflow(tree, normalized)
+  registerAcrossWorkspace(tree, normalized, options.skipCI === true)
   logger.info('')
   logger.info('=== Manual Steps Required ===')
-  recordReadmeMedia(normalizedOptions)
+  // why: the banner and the runtime strip the distribution readme embeds are read from the committed media tree, so no generator can write them; lint reports the readme until they are recorded
+  logger.info(
+    `Note: Record the package banner and runtime strip: npx hf run tool-media:media --scene=banner-${normalized.libName} --scene=runtimes-${normalized.libName}`
+  )
   logger.info('')
-
-  if (!normalizedOptions.skipFormat) {
-    await formatFiles(tree)
-  }
+  if (!options.skipFormat) await formatFiles(tree)
 }
 
 export default makePublishableGenerator

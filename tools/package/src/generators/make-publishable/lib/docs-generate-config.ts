@@ -1,5 +1,5 @@
 import type { LibraryFacts } from './library-facts'
-import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from './lines'
+import { PRINT_WIDTH, blockBounds, joinLines, quote, splitLines } from '@hyperfrontend/workspace/generators'
 
 /** The line that opens the list of libraries the generator documents. */
 const LIBRARIES_OPENER = 'const LIBRARIES: LibraryConfig[] = ['
