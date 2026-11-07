@@ -75,7 +75,8 @@ export function listFiles(root: string): string[] {
     maxBuffer: LIST_BUFFER,
   })
   const ignores = ignoredPatterns(root)
-  return listed.split('\0').filter((path) => path !== '' && !matchesAny(ignores, path))
+  // why: installed packages are never the workspace's own files, whatever the repository's ignore files say, and a consumer without a .gitignore would otherwise see every installed package as a project
+  return listed.split('\0').filter((path) => path !== '' && !path.split(posix.sep).includes('node_modules') && !matchesAny(ignores, path))
 }
 
 /**

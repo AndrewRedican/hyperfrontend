@@ -18,6 +18,14 @@ describe('listFiles', () => {
     ).toBe(true)
   })
 
+  it('leaves installed packages out even when nothing ignores them', () => {
+    const gitignore = join(root, '.gitignore')
+    rmSync(gitignore)
+    const files = listFiles(root)
+    writeFileSync(gitignore, 'node_modules\n.hf\n')
+    expect(files.includes('node_modules/left-pad/package.json')).toBe(false)
+  })
+
   it('lists every file when there is no .hfignore', () => {
     rmSync(join(root, '.hfignore'))
     const files = listFiles(root)
