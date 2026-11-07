@@ -231,9 +231,9 @@ export function runGraph(argv: readonly string[], root: string, output: GraphOut
     if (values.json) say(stringify(status, null, 2))
     else {
       say(
-        status.present
-          ? `graph state present (${status.meta?.algorithm.slice(0, 12) ?? ''}, reader ${status.meta?.reader ?? ''})`
-          : 'no graph state'
+        status.meta === null
+          ? 'no graph state'
+          : `graph state present (${status.meta.algorithm.slice(0, 12)}, reader ${status.meta.reader})`
       )
       say(`next build: ${status.plan.mode} (${status.plan.reasons.join(', ')}), ${status.plan.reparse} files to parse`)
       for (const [name, digest] of entries(status.digests ?? {})) say(`  ${name} ${digest}`)

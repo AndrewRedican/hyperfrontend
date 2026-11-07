@@ -12,6 +12,7 @@
  */
 
 import type { ProjectRecord } from '../graph/model'
+import type { AffectedSet } from '../graph/selection'
 import type { Generator } from '../runner/contract'
 import type { HandoverHost, Invocation } from './handover'
 import { execFileSync, spawn } from 'node:child_process'
@@ -133,7 +134,7 @@ function affected(argv: readonly string[], session: Session): Promise<number> {
   const changes = changeSet(root, request.base, request.head)
   const sets = selectAffected({ graph, changes, targets: request.targets, previous: previousGraph(root, changes) })
   const tasks = request.targets.flatMap((target) =>
-    (sets.get(target)?.selected ?? []).map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
+    (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
   )
   session.note(`hf affected: ${tasks.length} tasks selected from ${changes.changes.length} changed files`)
   return runTasks(planTasks(graph, tasks), request.args, session)

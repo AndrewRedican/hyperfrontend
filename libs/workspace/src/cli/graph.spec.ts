@@ -376,11 +376,6 @@ describe('runGraph status', () => {
       '  meta.json m1',
     ])
   })
-
-  it('leaves the algorithm and reader blank for a present state that carries no meta', () => {
-    mockStatus.mockReturnValue(status({ present: true }))
-    expect(run(['status']).said[0]).toBe('graph state present (, reader )')
-  })
 })
 
 describe('runGraph affected', () => {

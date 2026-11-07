@@ -9,12 +9,10 @@ import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { queueMicrotask } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createCapturedOutput, createFakeChildProcess } from '@hyperfrontend/testing/process'
-import { selectAffected } from '../graph/affected/select'
 import { installAliases } from '../hooks/index'
 import { createRunnerWorkspace } from '../runner/__test-utils__/workspace'
 import { searchPath } from '../runner/environment'
@@ -32,15 +30,10 @@ jest.mock('node:child_process', () => ({
   spawn: jest.fn(),
 }))
 jest.mock('../hooks/index', () => ({ installAliases: jest.fn() }))
-jest.mock('../graph/affected/select', () => {
-  const actual = jest.requireActual<typeof import('../graph/affected/select')>('../graph/affected/select')
-  return { ...actual, selectAffected: jest.fn(actual.selectAffected) }
-})
 jest.mock('./handover', () => ({ ...jest.requireActual<typeof import('./handover')>('./handover'), processHost: jest.fn() }))
 
 const mockSpawn = spawn as unknown as Mock
 const mockInstall = installAliases as Mock
-const mockSelect = selectAffected as Mock
 const mockProcessHost = processHost as Mock
 
 /** The directory these cases start in, restored after each changes it. */
@@ -343,13 +336,6 @@ describe('runWorkspaceCli affected', () => {
   it('selects nothing for a target no project has', async () => {
     const { stderr } = await hf(['affected', '-t', 'absent', '--base=HEAD'])
     expect(stderr).toContain('hf affected: 0 tasks selected')
-  })
-
-  it('selects nothing for a target the selection has no answer for', async () => {
-    mockSelect.mockReturnValueOnce(createMap())
-    writeFileSync(join(workspace.path, 'libs/alpha/src/index.ts'), 'export const alpha = 2\n')
-    const { stderr } = await hf(['affected', '-t', 'build', '--base=HEAD'])
-    expect(stderr).toContain('hf affected: 0 tasks selected from 1 changed files\n')
   })
 })
 
