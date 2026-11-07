@@ -6,9 +6,24 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
  */
 const DEPENDENCY_SECTIONS: readonly string[] = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 
+/** An exact version, as a pin is written: `1.2.3` or `1.2.3-rc.1`. */
+const EXACT_VERSION = /^\d+\.\d+\.\d+[^\s|]*$/
+
+/**
+ * Whether a version bump leaves an entry as it is, because the entry says what it accepts rather than what it pins.
+ *
+ * @param section - The manifest section holding the entry
+ * @param declared - The entry's version string
+ * @returns true for a range under `peerDependencies`
+ */
+function isPeerRange(section: string, declared: string): boolean {
+  return section === 'peerDependencies' && !EXACT_VERSION.test(declared)
+}
+
 /**
  * Replaces a dependency version in a package.json file using JSON parsing.
  * This preserves the original key ordering by using JSON.parse/stringify.
+ * A peer declared as a range stays a range: pinning it to a version not yet published makes npm drop the consumer's own install of that peer.
  *
  * @param filePath - Path to the package.json file
  * @param packageName - The npm package name to update
@@ -18,7 +33,7 @@ const DEPENDENCY_SECTIONS: readonly string[] = ['dependencies', 'devDependencies
  * @example Every section that pins the package follows
  * ```typescript
  * replaceDependencyVersion('/repo/libs/consumer/package.json', '@acme/core', '2.0.0')
- * // => true; dependencies, devDependencies and peerDependencies entries for @acme/core now read 2.0.0, key order kept
+ * // => true; the dependencies, devDependencies and exact peerDependencies entries for @acme/core now read 2.0.0, key order kept
  * replaceDependencyVersion('/repo/libs/consumer/package.json', '@acme/core', '2.0.0')
  * // => false the second time: nothing left to change, the file is not rewritten
  * ```
@@ -31,7 +46,7 @@ export function replaceDependencyVersion(filePath: string, packageName: string, 
 
   for (const section of DEPENDENCY_SECTIONS) {
     const deps = pkg[section] as Record<string, string> | undefined
-    if (deps && packageName in deps && deps[packageName] !== newVersion) {
+    if (deps && packageName in deps && deps[packageName] !== newVersion && !isPeerRange(section, deps[packageName])) {
       deps[packageName] = newVersion
       changed = true
     }

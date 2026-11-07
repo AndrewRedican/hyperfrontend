@@ -31,12 +31,31 @@ describe('replaceDependencyVersion', () => {
       name: 'a',
       dependencies: { x: '1.0.0', y: '1.0.0' },
       devDependencies: { x: '1.0.0' },
-      peerDependencies: { x: '^1' },
+      peerDependencies: { x: '1.0.0' },
     })
     expect({ changed: replaceDependencyVersion(path, 'x', '2.0.0'), manifest: read(path) }).toEqual({
       changed: true,
       manifest: { name: 'a', dependencies: { x: '2.0.0', y: '1.0.0' }, devDependencies: { x: '2.0.0' }, peerDependencies: { x: '2.0.0' } },
     })
+  })
+
+  it('leaves a peer declared as a range, and still moves the sections that pin the package', () => {
+    const path = manifest({ name: 'a', dependencies: { x: '1.0.0' }, peerDependencies: { x: '>=1.0.0' } })
+    expect({ changed: replaceDependencyVersion(path, 'x', '2.0.0'), manifest: read(path) }).toEqual({
+      changed: true,
+      manifest: { name: 'a', dependencies: { x: '2.0.0' }, peerDependencies: { x: '>=1.0.0' } },
+    })
+  })
+
+  it('reports no change for a manifest whose only entry is a peer range', () => {
+    const path = manifest({ name: 'a', peerDependencies: { x: '>=1.0.0' } })
+    expect(replaceDependencyVersion(path, 'x', '2.0.0')).toBe(false)
+  })
+
+  it('moves a peer pinned to a prerelease, which is an exact version', () => {
+    const path = manifest({ name: 'a', peerDependencies: { x: '1.0.0-rc.1' } })
+    replaceDependencyVersion(path, 'x', '2.0.0')
+    expect(read(path)).toEqual({ name: 'a', peerDependencies: { x: '2.0.0' } })
   })
 
   it('leaves a manifest that does not pin the package, or pins it at the version already', () => {
