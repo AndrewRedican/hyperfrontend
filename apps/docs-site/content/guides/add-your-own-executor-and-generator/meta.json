@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to add your own executor and generator to a workspace",
+  "problem": "A workspace needs checks and scaffolding particular to its own repository, and wants them run with the same command as the packaged targets rather than as loose scripts.",
+  "outcome": "A local project whose executor runs as a target with typed, schema-defaulted options, and whose generator composes the packaged library generator, both written in TypeScript with no build step.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/workspace"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/workspace@0.0.0",
+    "verifiedOn": "2026-11-07"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/workspace", "symbol": "Executor" },
+    { "package": "@hyperfrontend/workspace", "symbol": "ExecutorContext" },
+    { "package": "@hyperfrontend/workspace", "symbol": "Generator" },
+    { "package": "@hyperfrontend/workspace", "symbol": "Tree" },
+    { "package": "@hyperfrontend/workspace", "symbol": "runGenerator" },
+    { "package": "@hyperfrontend/workspace", "symbol": "updateJson" }
+  ],
+  "prerequisites": {
+    "knowledge": ["A workspace set up with npx hf generate workspace", "Node.js 24 or later"]
+  },
+  "related": {
+    "guides": ["set-up-a-monorepo-and-test-only-what-changed", "release-libraries-from-their-commits"],
+    "reference": ["/docs/libraries/workspace/runner", "/docs/libraries/workspace/generators", "/docs/libraries/workspace/cli"],
+    "explanation": ["/docs/libraries/workspace/architecture"]
+  },
+  "keywords": [
+    "executor",
+    "generator",
+    "custom executor",
+    "custom generator",
+    "scaffold",
+    "executors.json",
+    "generators.json",
+    "schema",
+    "runGenerator",
+    "hf run",
+    "hf generate"
+  ]
+}
