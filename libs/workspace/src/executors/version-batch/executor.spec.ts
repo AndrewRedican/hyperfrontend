@@ -482,6 +482,12 @@ describe('versionBatchExecutor failures', () => {
     })
   })
 
+  it('says libraries when one of several failed', async () => {
+    const directory = repository()
+    mockRun.mockResolvedValueOnce(unchanged()).mockResolvedValueOnce({ ...unchanged(), success: false })
+    expect((await batch(directory)).stderr).toContain('1 of 2 libraries failed to version: lib-b')
+  })
+
   it('reports its commit after the last library threw while the log was quiet', async () => {
     const directory = repository()
     mockRun.mockImplementationOnce(bumps(directory)).mockImplementationOnce(async () => {

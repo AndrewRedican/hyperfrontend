@@ -209,7 +209,7 @@ export async function versionBatchExecutor(options: VersionBatchExecutorOptions,
 
         if (failedLibs.length > 0) {
           logger.error(
-            `\n${failedLibs.length} of ${affectedLibraries.length} librar${failedLibs.length === 1 ? 'y' : 'ies'} failed to version: ${failedLibs.join(', ')}. ` +
+            `\n${failedLibs.length} of ${affectedLibraries.length} librar${affectedLibraries.length === 1 ? 'y' : 'ies'} failed to version: ${failedLibs.join(', ')}. ` +
               `Anything that did version is left in place; resolve the failures and run again.`
           )
           return { success: false }
