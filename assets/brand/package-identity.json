@@ -966,6 +966,55 @@
           "solid": true
         }
       ]
+    },
+    "@hyperfrontend/workspace": {
+      "note": "The graph: projects joined by the edges a change travels, with the one task the change reaches filled.",
+      "hue": 104,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 9,
+            "cy": 9,
+            "r": 3.2
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 9,
+            "cy": 23,
+            "r": 3.2
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.9 10.6 20.4 14.6"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.9 21.4 20.4 17.4"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M9 12.2v7.6"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 23,
+            "cy": 16,
+            "r": 3.2
+          },
+          "solid": true
+        }
+      ]
     }
   }
 }
