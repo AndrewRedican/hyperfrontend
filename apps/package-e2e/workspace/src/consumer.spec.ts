@@ -63,6 +63,8 @@ const WORKSPACE = {
       test: { executor: '@hyperfrontend/workspace:test' },
       build: { executor: '@hyperfrontend/workspace:build', options: { esm: {}, cjs: {} } },
       publish: { executor: '@hyperfrontend/workspace:publish' },
+      version: { executor: '@hyperfrontend/workspace:version' },
+      'version-check': { executor: '@hyperfrontend/workspace:version-check' },
     },
   },
   'packages/core/package.json': {
@@ -272,6 +274,65 @@ describe('the executors of the package', () => {
 
   it('previews the publish of the build output', () => {
     expect(hf(['run', 'core:publish', '--dryRun']).status).toBe(0)
+  })
+})
+
+describe('the release flow', () => {
+  /**
+   * Runs git in the consumer with a fixed identity.
+   *
+   * @param args - The git arguments
+   * @returns What git printed, trimmed
+   */
+  function git(...args: string[]): string {
+    return execFileSync(
+      'git',
+      ['-c', 'user.name=Consumer', '-c', 'user.email=consumer@example.com', '-c', 'commit.gpgsign=false', ...args],
+      {
+        cwd: consumer.path,
+        encoding: 'utf8',
+      }
+    ).trim()
+  }
+
+  before(() => {
+    // why: the package has never been published, so its first release is the configured first version; starting below it makes the bump visible in the manifest
+    consumer.write('packages/core/package.json', {
+      name: '@consumer/core',
+      version: '0.0.0',
+      license: 'MIT',
+      exports: { '.': './src/index.js', './package.json': './package.json' },
+    })
+    git('add', '-A')
+    git('commit', '--quiet', '--no-verify', '-m', 'feat(core): add the core library')
+  })
+
+  it('fails the version check of a library whose commits call for a release it does not have, naming the remedy', () => {
+    const run = hf(['run', 'core:version-check'])
+    expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({
+      status: 1,
+      output: expect.stringMatching(/version-mismatch[\s\S]*npx hf run core:version/),
+    })
+  })
+
+  it('versions the library from its commits, writes its changelog, and commits the bump', () => {
+    const run = hf(['run', 'core:version'])
+    const manifest = JSON.parse(readFileSync(join(consumer.path, 'packages', 'core', 'package.json'), 'utf8')) as { version: string }
+    expect({
+      status: run.status,
+      version: manifest.version,
+      changelog: readFileSync(join(consumer.path, 'packages', 'core', 'CHANGELOG.md'), 'utf8').includes('0.1.0'),
+      subject: git('log', '-1', '--format=%s'),
+      clean: git('status', '--porcelain', '--', 'packages/core'),
+    }).toEqual({ status: 0, version: '0.1.0', changelog: true, subject: 'chore(core): release version 0.1.0', clean: '' })
+  })
+
+  it('passes the version check once the bump is in place', () => {
+    const run = hf(['run', 'core:version-check', '--skipIfVersionCommit=false'])
+    expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({
+      status: 0,
+      output: expect.stringContaining('matches expected'),
+    })
   })
 })
 
