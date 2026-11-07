@@ -1,0 +1,16 @@
+{
+  "name": "<%= e2eProjectName %>",
+  "description": "E2E tests for <%= packageName %> package outputs",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@hyperfrontend/workspace:e2e",
+      "dependsOn": ["^build"],
+      "options": {
+        "formats": <%= e2eFormats %>
+      }
+    }
+  },
+  "implicitDependencies": ["<%= projectName %>"]
+}

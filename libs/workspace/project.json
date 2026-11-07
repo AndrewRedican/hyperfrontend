@@ -24,12 +24,22 @@
         "assets": [
           {
             "from": "libs/workspace",
-            "files": ["executors.json"]
+            "files": ["executors.json", "generators.json"]
           },
           {
             "from": "libs/workspace/src/executors",
             "glob": "**/schema.json",
             "to": "executors"
+          },
+          {
+            "from": "libs/workspace/src/generators",
+            "glob": "**/schema.json",
+            "to": "generators"
+          },
+          {
+            "from": "libs/workspace/src/generators",
+            "glob": "**/files*/**",
+            "to": "generators"
           }
         ],
         "bin": [

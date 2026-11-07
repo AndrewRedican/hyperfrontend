@@ -23,13 +23,23 @@ const config: TestConfig = {
     'src/executors/version-batch/lib/rebuilt-projects.ts',
     'src/executors/version-batch/lib/select-libraries.ts',
     'src/executors/version-batch/lib/working-tree.ts',
+    'src/generators/**/*.ts',
     'src/graph/**/*.ts',
     'src/hooks/**/*.ts',
     'src/lint/**/*.ts',
     'src/runner/**/*.ts',
   ],
-  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract declares types alone.
-  coverageExclude: ['src/**/__test-utils__/**', 'src/graph/index.ts', 'src/lint/index.ts', 'src/runner/index.ts', 'src/runner/contract.ts'],
+  // why: the modules under __test-utils__ build the inputs the specs read, not code the library runs; a barrel re-exports alone, and the contract and the generators' options declare types alone.
+  coverageExclude: [
+    'src/**/__test-utils__/**',
+    'src/generators/index.ts',
+    'src/generators/*/index.ts',
+    'src/generators/*/options.ts',
+    'src/graph/index.ts',
+    'src/lint/index.ts',
+    'src/runner/index.ts',
+    'src/runner/contract.ts',
+  ],
   coverageThresholds: { lines: 100, branches: 100, functions: 100 },
 }
 

@@ -1,10 +1,12 @@
 import type { FileTree } from '@hyperfrontend/testing/fs'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
+import { pathToFileURL } from 'node:url'
+import { createFsTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverProjects, listFiles } from '../graph/workspace'
 import { createRunnerWorkspace } from './__test-utils__/workspace'
-import { generatorNames, locateGenerator } from './generators'
+import { generatorNames, loadGenerator, locateGenerator, runGenerator } from './generators'
 
 /** A workspace whose tooling project and a second project offer generators, with the engine installed. */
 const TREE: FileTree = {
@@ -16,9 +18,14 @@ const TREE: FileTree = {
       shared: { factory: './src/library/generator', schema: './src/library/schema.json' },
       gone: { factory: './src/gone/generator', schema: './src/library/schema.json' },
       'no-schema': { factory: './src/library/generator', schema: './src/none.json' },
+      note: { factory: './src/note/generator', schema: './src/note/schema.json' },
+      plain: { factory: './src/plain/generator', schema: './src/library/schema.json' },
     },
   },
   'tools/tooling/src/library/generator.ts': 'export default (): void => {}\n',
+  'tools/tooling/src/note/generator.ts': "export default (tree, options) => { tree.write('notes/note.txt', `hello ${options.name}`) }\n",
+  'tools/tooling/src/note/schema.json': { properties: { name: { type: 'string' } } },
+  'tools/tooling/src/plain/generator.ts': 'export const plain = 1\n',
   'tools/tooling/src/library/schema.json': { properties: { name: { type: 'string' } } },
   'tools/other/package.json': { name: '@fixture/other', private: true, generators: './generators.json' },
   'tools/other/generators.json': { generators: { shared: { factory: './shared', schema: './shared.json' } } },
@@ -71,7 +78,7 @@ describe('locateGenerator', () => {
     'refuses %s, which nothing lists, naming what there is',
     (written) => {
       expect(() => locateGenerator(workspace.path, projects, written)).toThrow(
-        `no generator ${written}: @fixture/other:shared, @fixture/tooling:library, @fixture/tooling:shared, @fixture/tooling:gone, @fixture/tooling:no-schema, @hyperfrontend/workspace:library, @hyperfrontend/workspace:workspace`
+        `no generator ${written}: @fixture/other:shared, @fixture/tooling:library, @fixture/tooling:shared, @fixture/tooling:gone, @fixture/tooling:no-schema, @fixture/tooling:note, @fixture/tooling:plain, @hyperfrontend/workspace:library, @hyperfrontend/workspace:workspace`
       )
     }
   )
@@ -86,6 +93,49 @@ describe('locateGenerator', () => {
     expect(() => locateGenerator(workspace.path, projects, 'no-schema')).toThrow(
       'the options schema of the generator no-schema is missing or does not parse: ./src/none.json'
     )
+  })
+
+  it('gives a bare name to the workspace project that lists it in front of the engine carried as a project', () => {
+    const carrying = createRunnerWorkspace({
+      'engine/package.json': { name: '@hyperfrontend/workspace', generators: './generators.json' },
+      'engine/generators.json': { generators: { library: { factory: './library', schema: './library.json' } } },
+      'engine/library.js': 'export default () => {}\n',
+      'engine/library.json': { properties: {} },
+      'tools/tooling/package.json': { name: '@fixture/tooling', private: true, generators: './generators.json' },
+      'tools/tooling/generators.json': { generators: { library: { factory: './library', schema: './library.json' } } },
+      'tools/tooling/library.js': 'export default () => {}\n',
+      'tools/tooling/library.json': { properties: {} },
+    })
+    try {
+      expect(locateGenerator(carrying.path, discoverProjects(carrying.path, listFiles(carrying.path)), 'library').file).toBe(
+        join(carrying.path, 'tools/tooling/library.js')
+      )
+    } finally {
+      carrying.remove()
+    }
+  })
+})
+
+describe('loadGenerator', () => {
+  const importModule = (file: string): Promise<Record<string, unknown>> =>
+    import(pathToFileURL(file).href) as Promise<Record<string, unknown>>
+
+  it('answers the default export of the module', async () => {
+    expect(await loadGenerator(locateGenerator(workspace.path, projects, 'library'), importModule, 'library')).toEqual(expect.any(Function))
+  })
+
+  it('refuses a module whose default export is not a function', async () => {
+    await expect(loadGenerator(locateGenerator(workspace.path, projects, 'plain'), importModule, 'plain')).rejects.toThrow(
+      'has no default export implementing the generator plain'
+    )
+  })
+})
+
+describe('runGenerator', () => {
+  it('runs the generator a bare name means over the tree', async () => {
+    const tree = createFsTree(workspace.path)
+    await runGenerator(tree, 'note', { name: 'there' })
+    expect(tree.read('notes/note.txt', 'utf-8')).toBe('hello there')
   })
 })
 

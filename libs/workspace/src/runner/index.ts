@@ -26,7 +26,7 @@ export type { AffectedRequest, ManyHost, ManyRequest, PlannedTask, TaskOutcome, 
 export type { RunHost } from './run'
 export type { StartedAs } from './self'
 export { loadExecutor, locateExecutor, withDefaults } from './executors'
-export { ENGINE_PACKAGE, generatorNames, locateGenerator } from './generators'
+export { ENGINE_PACKAGE, generatorNames, loadGenerator, locateGenerator, runGenerator } from './generators'
 export { manySummary, parseAffectedArgs, parseManyArgs, planMany, planTasks, runPlanned } from './many'
 export { main, runTask } from './run'
 export { selfCommand } from './self'

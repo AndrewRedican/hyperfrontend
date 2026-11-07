@@ -2,17 +2,20 @@
  * The generator a name on the command line means. `<package>:<name>` is the generator of that
  * package, found the way an executor is. A bare name is looked up in the workspace projects that
  * declare generators, so a workspace's own generator stands in front of a packaged one of the
- * same name, then in the engine's own package.
+ * same name, then in the engine's own package, whether that is installed or is itself a project
+ * of the workspace.
  *
  * @module runner/generators
  */
 
 import type { ProjectRecord } from '../graph/model'
-import type { GeneratorEntry, GeneratorsManifest } from './contract'
+import type { Generator, GeneratorEntry, GeneratorsManifest, Tree } from './contract'
+import type { ImportModule } from './executors'
 import type { GeneratorSchema } from './generate'
 import { dirname } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { hasOwn, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { readJson } from '../graph/workspace'
+import { discoverProjects, listFiles, readJson } from '../graph/workspace'
 import { contributionManifest, moduleFile, packagedFile } from './packages'
 import { refusal } from './refusal'
 
@@ -82,7 +85,8 @@ export function generatorNames(root: string, projects: ReadonlyMap<string, Proje
 
 /**
  * The package a bare generator name belongs to: the one workspace project that lists it, else
- * the engine's.
+ * the engine's. The engine's own listing never competes with a workspace project's, so the
+ * workspace the engine is developed in overrides its generators like any other.
  *
  * @param root - The workspace root, absolute
  * @param projects - The workspace's projects by name
@@ -91,7 +95,9 @@ export function generatorNames(root: string, projects: ReadonlyMap<string, Proje
  * @throws {Error} When two workspace projects list the name
  */
 function listingOfBare(root: string, projects: ReadonlyMap<string, ProjectRecord>, name: string): Listing | undefined {
-  const offering = workspaceListings(root, projects).filter((listing) => hasOwn(listing.generators, name))
+  const offering = workspaceListings(root, projects).filter(
+    (listing) => listing.packageName !== ENGINE_PACKAGE && hasOwn(listing.generators, name)
+  )
   if (offering.length > 1)
     throw refusal(`${offering.map((listing) => `${listing.packageName}:${name}`).join(' and ')} both answer to ${name}; name the package`)
   return offering[0] ?? listingOf(root, projects, ENGINE_PACKAGE)
@@ -119,4 +125,40 @@ export function locateGenerator(root: string, projects: ReadonlyMap<string, Proj
   const schema = schemaFile === undefined ? null : readJson<GeneratorSchema>(schemaFile)
   if (schema === null) throw refusal(`the options schema of the generator ${written} is missing or does not parse: ${entry.schema}`)
   return { file, schema }
+}
+
+/**
+ * The generator a located module implements.
+ *
+ * @param source - Where the generator lives
+ * @param importModule - Imports a module from its absolute path
+ * @param written - The generator as the command line names it, for the refusal
+ * @returns The module's default export
+ * @throws {Error} When the module's default export is not a function
+ */
+export async function loadGenerator(source: GeneratorSource, importModule: ImportModule, written: string): Promise<Generator> {
+  const implementation = (await importModule(source.file))['default']
+  if (typeof implementation !== 'function') throw refusal(`${source.file} has no default export implementing the generator ${written}`)
+  return implementation as Generator
+}
+
+/**
+ * Runs the generator a name means over a tree, so a generator composes another by name: a
+ * workspace's own generator of that name, else the engine's.
+ *
+ * @param tree - The tree the generator edits, rooted at the workspace
+ * @param written - The generator as the command line names it, `<name>` or `<package>:<name>`
+ * @param options - The options the generator is called with
+ * @param importModule - Imports a module from its absolute path; the process's own import when omitted
+ * @returns Resolves when the generator has run
+ */
+export async function runGenerator(
+  tree: Tree,
+  written: string,
+  options: Record<string, unknown>,
+  importModule: ImportModule = (file) => import(pathToFileURL(file).href)
+): Promise<void> {
+  const projects = discoverProjects(tree.root, listFiles(tree.root))
+  const generator = await loadGenerator(locateGenerator(tree.root, projects, written), importModule, written)
+  await generator(tree, options)
 }

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the library, which names its directory and, with the scope, its package",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory the library is created under (e.g., 'libs' or 'libs/utils')",
+      "default": "libs"
+    },
+    "scope": {
+      "type": "string",
+      "description": "The npm scope of the package (e.g., '@acme'). Defaults to the scope of the root package.json's name, or no scope when it has none."
+    },
+    "projectName": {
+      "type": "string",
+      "description": "The project's name, as tasks address it. Defaults to the library's name."
+    },
+    "packageName": {
+      "type": "string",
+      "description": "The package's name. Defaults to the library's name under the scope."
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the library"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The tags the module boundaries read (e.g., 'type:util,scope:internal')"
+    },
+    "publishable": {
+      "type": "boolean",
+      "description": "Whether the library is published to npm: when true, the generator named make-publishable runs on it next",
+      "default": false
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "npm keywords for the package, used only when publishable is true"
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The bundle formats the package builds, among esm, cjs, iife and umd; used only when publishable is true"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["name"]
+}

@@ -62,6 +62,12 @@
     "./executors/version": "./src/executors/version/index.js",
     "./executors/version-batch": "./src/executors/version-batch/index.js",
     "./executors/version-check": "./src/executors/version-check/index.js",
+    "./generators": "./src/generators/index.js",
+    "./generators/library": "./src/generators/library/index.js",
+    "./generators/make-publishable": "./src/generators/make-publishable/index.js",
+    "./generators/move": "./src/generators/move/index.js",
+    "./generators/rename": "./src/generators/rename/index.js",
+    "./generators/workspace": "./src/generators/workspace/index.js",
     "./graph": "./src/graph/index.js",
     "./hooks": "./src/hooks/index.js",
     "./lint": "./src/lint/index.js",
@@ -72,6 +78,7 @@
     "hf": "./bin/hf.mjs"
   },
   "executors": "./executors.json",
+  "generators": "./generators.json",
   "engines": {
     "node": ">=24.0.0",
     "npm": ">=8.0.0"

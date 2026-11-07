@@ -1,0 +1,29 @@
+{
+  "generators": {
+    "workspace": {
+      "factory": "./generators/workspace/index",
+      "schema": "./generators/workspace/schema.json",
+      "description": "Write the root configuration the engine reads into a repository that has none."
+    },
+    "library": {
+      "factory": "./generators/library/index",
+      "schema": "./generators/library/schema.json",
+      "description": "Create a TypeScript library of the workspace, publishable on request."
+    },
+    "make-publishable": {
+      "factory": "./generators/make-publishable/index",
+      "schema": "./generators/make-publishable/schema.json",
+      "description": "Give a library the targets, manifest fields, README and e2e project a published package needs."
+    },
+    "rename": {
+      "factory": "./generators/rename/index",
+      "schema": "./generators/rename/schema.json",
+      "description": "Rename a project and carry the new name into everything that refers to it."
+    },
+    "move": {
+      "factory": "./generators/move/index",
+      "schema": "./generators/move/schema.json",
+      "description": "Relocate a project under another directory and bring its names, aliases and references along."
+    }
+  }
+}

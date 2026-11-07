@@ -1,0 +1,17 @@
+import { CODE, CODE_RULES, JAVASCRIPT, BROWSER_AND_NODE_GLOBALS } from '@hyperfrontend/linter'
+import { PROJECTS_FAMILY } from '@hyperfrontend/workspace/lint'
+
+export default [
+  { families: { projects: PROJECTS_FAMILY } },
+  { ignores: ['dist/', 'coverage/', 'tmp/', '**/node_modules/'] },
+  { files: CODE, rules: CODE_RULES },
+  { files: JAVASCRIPT, language: { globals: BROWSER_AND_NODE_GLOBALS } },
+  {
+    files: ['**/*.ts'],
+    rules: {
+      // why: a project's lint configuration extends the base one by a relative path, and every project's specs import the test runtime whatever tags the project carries
+      'projects/module-boundaries': ['error', { allow: ['^.*/lint(\\.base)?\\.config\\.ts$', '^@hyperfrontend/testing(/.*)?$'] }],
+    },
+  },
+  { files: ['**/package.json'], rules: { 'projects/dependency-checks': 'error' } },
+]
