@@ -8,7 +8,7 @@
 
 import type { ConsumerRun } from '@hyperfrontend/testing/consumer'
 import { execFileSync } from 'node:child_process'
-import { existsSync, lstatSync, readFileSync, readlinkSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, readlinkSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -502,13 +502,13 @@ describe('hf linked beside a features package', () => {
   })
 
   /**
-   * The file npm linked as `hf`, read from the link or from the shim it wrote.
+   * The file npm linked as `hf`, read from the symbolic link it makes on POSIX or from the shim it writes on Windows.
    *
    * @returns The bin file of whichever package npm linked
    */
   function linkedBin(): string {
     const shim = join(linked.path, 'node_modules', '.bin', 'hf')
-    if (lstatSync(shim).isSymbolicLink()) return join(linked.path, 'node_modules', '.bin', readlinkSync(shim))
+    if (process.platform !== 'win32') return join(linked.path, 'node_modules', '.bin', readlinkSync(shim))
     const target = /node_modules[\\/]@hyperfrontend[\\/](features|workspace)[\\/]\S*hf\.[cm]js/.exec(readFileSync(shim, 'utf8'))
     if (target === null) throw new Error(`the hf shim at ${shim} names no bin file`)
     return join(linked.path, target[0])
