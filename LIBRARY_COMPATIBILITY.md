@@ -1,6 +1,6 @@
 # Library Compatibility Matrix
 
-> Generated from each package's `project.json` and `package.json`. Regenerate it with `npx hf run @hyperfrontend/workspace:lint:all` rather than editing it by hand.
+> Generated from each package's `project.json` and `package.json`. Regenerate it with `npx hf run hyperfrontend:lint:all` rather than editing it by hand.
 
 ## Platform Support
 
@@ -27,6 +27,7 @@
 | `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| `@hyperfrontend/workspace` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
 Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing declared. CDN Bundle marks the packages whose build produces an IIFE or UMD bundle.
 
@@ -68,6 +69,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendTimeUtils` |
 | `@hyperfrontend/ui-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendUIUtils` |
 | `@hyperfrontend/versioning` | ✅ | ✅ | ❌ | ❌ | - |
+| `@hyperfrontend/workspace` | ✅ | ✅ | ❌ | ❌ | - |
 
 ## Engine Requirements
 
@@ -94,6 +96,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/time-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/ui-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/versioning` | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/workspace` | `>=24.0.0` | `>=8.0.0` |
 
 ## Dependency Graph
 
@@ -120,6 +123,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/time-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/ui-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/list-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils` |
 | `@hyperfrontend/versioning` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions` |
+| `@hyperfrontend/workspace` | `@hyperfrontend/builder`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/linter`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/testing` (peer), `@hyperfrontend/versioning` |
 
 Solid edges are runtime dependencies; dotted edges are peer dependencies.
 
@@ -152,6 +156,7 @@ flowchart TB
     time_utils["time-utils"]
     ui_utils["ui-utils"]
     versioning["versioning"]
+    workspace["workspace"]
     builder --> immutable_api_utils
     builder --> logging
     builder --> project_scope
@@ -212,6 +217,14 @@ flowchart TB
     versioning --> logging
     versioning --> project_scope
     versioning --> questions
+    workspace --> builder
+    workspace --> immutable_api_utils
+    workspace --> json_utils
+    workspace --> linter
+    workspace --> logging
+    workspace --> project_scope
+    workspace -.-> testing
+    workspace --> versioning
 ```
 
 ## Published Versions
@@ -239,3 +252,4 @@ flowchart TB
 | `@hyperfrontend/time-utils` | `1.0.2` |
 | `@hyperfrontend/ui-utils` | `0.0.10` |
 | `@hyperfrontend/versioning` | `0.10.0` |
+| `@hyperfrontend/workspace` | `0.0.0` |
