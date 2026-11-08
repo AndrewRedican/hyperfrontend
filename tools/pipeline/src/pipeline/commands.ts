@@ -47,6 +47,9 @@ export const PROVISION_SCRIPT = 'tools/pipeline/scripts/railway-provision.mjs'
 /** The Railway configuration the provision applies, workspace-relative. */
 export const RAILWAY_CONFIG = '.railway/railway.ts'
 
+/** The files that define the environment jobs, whose own steps run outside any task, workspace-relative; one ending in a slash is a directory. */
+export const ENVIRONMENT_JOB_FILES = freeze(['.github/workflows/ci-pr.yml', '.github/workflows/ci-main.yml', '.github/actions/'] as const)
+
 /** The position of each target inside a chain, prerequisites first. */
 const TARGET_RANK: Readonly<Record<string, number>> = freeze({
   install: 0,

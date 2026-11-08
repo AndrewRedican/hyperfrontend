@@ -1,7 +1,7 @@
 import type { Plan } from './model'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createPipelineWorkspace, modified } from './__test-utils__/workspace'
+import { createPipelineWorkspace, modified, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
 import { CI_TARGETS, createPlan } from './plan'
 
 const workspace = createPipelineWorkspace()
@@ -163,5 +163,59 @@ describe('createPlan', () => {
   it('lists no environment when nothing runs', () => {
     const plan = createPlan({ graph, changes: { base: 'b', head: null, changes: [] }, main: false })
     expect({ chains: plan.chains, environments: plan.environments }).toEqual({ chains: [], environments: [] })
+  })
+})
+
+describe('a change to the environment jobs', () => {
+  const withHf = createPipelineWorkspace({
+    ...PIPELINE_WORKSPACE,
+    'libs/workspace/project.json': '{ "name": "lib-workspace", "targets": { "typecheck": {} } }\n',
+    'libs/workspace/bin/hf.mjs': '',
+  })
+  const rootless = createPipelineWorkspace({
+    'hf.json': '{}\n',
+    'libs/alpha/project.json': '{ "name": "lib-alpha", "targets": { "typecheck": {} } }\n',
+  })
+
+  afterAll(() => {
+    withHf.remove()
+    rootless.remove()
+  })
+
+  it('type checks the project providing hf on every leg when a pipeline workflow changed', () => {
+    expect(chains(createPlan({ graph: withHf.graph, changes: modified('.github/workflows/ci-pr.yml'), main: false }))).toEqual([
+      'linux lib-workspace: typecheck',
+      'macos lib-workspace: typecheck',
+      'windows lib-workspace: typecheck',
+    ])
+  })
+
+  it('type checks the project providing hf on every leg when a file under the actions changed', () => {
+    const plan = createPlan({ graph: withHf.graph, changes: modified('.github/actions/setup-monorepo/action.yml'), main: true })
+    expect(plan.environments).toEqual(['linux', 'windows', 'macos'])
+  })
+
+  it('names the changed file as the reason', () => {
+    const plan = createPlan({ graph: withHf.graph, changes: modified('.github/workflows/ci-main.yml'), main: true })
+    expect(plan.chains[0]?.tasks[0]?.reasons).toEqual([
+      {
+        rule: 'environment-jobs',
+        file: '.github/workflows/ci-main.yml',
+        path: [],
+        message: '.github/workflows/ci-main.yml defines the environment jobs, which start libs/workspace/bin/hf.mjs on every leg',
+      },
+    ])
+  })
+
+  it('plans nothing for a workflow that defines no environment job', () => {
+    expect(chains(createPlan({ graph: withHf.graph, changes: modified('.github/workflows/cla.yml'), main: false }))).toEqual([])
+  })
+
+  it('plans nothing when the project providing hf has no type check', () => {
+    expect(chains(createPlan({ graph, changes: modified('.github/workflows/ci-pr.yml'), main: false }))).toEqual([])
+  })
+
+  it('plans nothing when no project provides hf', () => {
+    expect(chains(createPlan({ graph: rootless.graph, changes: modified('.github/workflows/ci-pr.yml'), main: false }))).toEqual([])
   })
 })
