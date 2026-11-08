@@ -129,29 +129,6 @@ jobs:
           npx hf show projects --json > /dev/null
           (cd libs && npx hf show projects --json > /dev/null)
 
-      - name: Command line through cmd
-        if: matrix.os == 'windows'
-        shell: cmd
-        # why: a person on Windows types into cmd or PowerShell, whose shims npm writes beside the sh one; each must hand a flag with a value, a project:target, and a quoted comma list with a glob to hf unchanged
-        run: |
-          npx hf show projects --with-target=typecheck --json > nul || exit /b 1
-          npx hf run lib-logging:typecheck || exit /b 1
-          npx hf run-many -t typecheck -p "lib-logging,lib-time-*" > shim.txt || exit /b 1
-          type shim.txt
-          findstr /C:"succeeded lib-logging:typecheck" shim.txt > nul || exit /b 1
-          findstr /C:"succeeded lib-time-utils:typecheck" shim.txt > nul || exit /b 1
-
-      - name: Command line through PowerShell
-        if: matrix.os == 'windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          npx hf show projects --with-target=typecheck --json > $null; if ($LASTEXITCODE -ne 0) { exit 1 }
-          npx hf run lib-logging:typecheck; if ($LASTEXITCODE -ne 0) { exit 1 }
-          $out = npx hf run-many -t typecheck -p "lib-logging,lib-time-*" | Out-String; if ($LASTEXITCODE -ne 0) { exit 1 }
-          Write-Output $out
-          if ($out -notmatch 'succeeded lib-logging:typecheck' -or $out -notmatch 'succeeded lib-time-utils:typecheck') { exit 1 }
-
       - name: Run
         env:
           GITHUB_TOKEN: ${{ github.token }} # why: the wait for the Windows and macOS jobs and the chain check runs go through the API; GitHub sets no token in the environment by itself

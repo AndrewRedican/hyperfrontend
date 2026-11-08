@@ -11,8 +11,8 @@ import type { AffectedSet, ChangeSet, PackageManifest, WorkspaceGraph } from '@h
 import type { Environment, Plan, PlanReason, SkippedTask } from './model'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { compareText, hasTarget, selectAffected } from '@hyperfrontend/workspace/graph'
-import { RAILWAY_CONFIG } from './commands'
+import { compareText, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
+import { ENVIRONMENT_JOB_FILES, HF_ENTRY, RAILWAY_CONFIG } from './commands'
 import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, siblingTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
 import { rankChains } from './order'
@@ -115,6 +115,35 @@ function selectDrift(graph: WorkspaceGraph, selection: Selection, targets: reado
 }
 
 /**
+ * Whether a file defines the environment jobs.
+ *
+ * @param path - The workspace-relative path
+ * @returns True for a pipeline workflow or a file under the actions directory
+ */
+function isEnvironmentJobFile(path: string): boolean {
+  return ENVIRONMENT_JOB_FILES.some((entry) => (entry.endsWith('/') ? path.startsWith(entry) : path === entry))
+}
+
+/**
+ * Adds the type check of the project providing hf when a change touches a file that defines the
+ * environment jobs: their own steps, such as starting hf through each shell, run only on a leg that
+ * has a task, and the type check is the cheapest task the sibling environments repeat.
+ *
+ * @param graph - The workspace graph
+ * @param selection - The selection the task joins
+ * @param changes - The change, or null for a plan running everything
+ */
+function selectEnvironmentJobs(graph: WorkspaceGraph, selection: Selection, changes: ChangeSet | null): void {
+  const changed = (changes?.changes ?? []).find((change) => isEnvironmentJobFile(change.path))
+  const owner = projectOfFile(graph.projects, HF_ENTRY)
+  if (changed === undefined || owner === null || !hasTarget(owner, 'typecheck')) return
+  select(selection, `${owner.name}:typecheck`, {
+    ...planReason(PipelineRule.EnvironmentJobs, `${changed.path} defines the environment jobs, which start ${HF_ENTRY} on every leg`),
+    file: changed.path,
+  })
+}
+
+/**
  * The plan of a change, or of everything.
  *
  * @param options - The graph, the change, whether publishes are planned, the targets and the drift
@@ -126,6 +155,7 @@ export function createPlan(options: PlanOptions): Plan {
   const selection = options.changes === null ? selectAll(options.graph, selectionTargets) : selectChange(options, selectionTargets)
   const drift = options.main ? [...(options.drift ?? [])].sort(compareText) : []
   selectDrift(options.graph, selection, targets, drift)
+  selectEnvironmentJobs(options.graph, selection, options.changes)
   const railwayChanged = (options.changes?.changes ?? []).some((change) => change.path === RAILWAY_CONFIG)
   const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged)
   const siblings = [Environments.Windows, Environments.MacOS].flatMap((environment) => siblingTasks(options.graph, linux, environment))

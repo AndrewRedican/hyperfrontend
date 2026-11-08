@@ -36,6 +36,8 @@ export const PipelineRule = freeze({
   FullPlan: 'full-plan',
   /** The registry lacks the library's current version. */
   RegistryDrift: 'registry-drift',
+  /** A file that defines the environment jobs changed, so every leg starts and runs its own steps. */
+  EnvironmentJobs: 'environment-jobs',
   /** The task moved into the chain of the library it tests. */
   Folded: 'folded',
   /** A task the pipeline adds: a probe or a smoke after a build, or a task another planned task needs first. */

@@ -153,6 +153,11 @@ export default [
     files: ['.github/workflows/ci-main.yml'],
     rules: {
       'workspace/lib-ci-workflows': 'error',
+      // why: npm auth writes the token the publishes use, and the Codecov uploads report the coverage main lands; a pull request does neither
+      'workspace/main-steps-on-pr': [
+        'error',
+        { mainOnly: ['npm auth', 'Upload overall coverage to Codecov', 'Upload library coverage to Codecov'] },
+      ],
     },
   },
   {
