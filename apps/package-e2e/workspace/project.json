@@ -13,6 +13,7 @@
           "cjs",
           "esm",
           { "name": "consumer", "specs": ["src/consumer.spec.ts"], "timeoutMs": 300000 },
+          { "name": "shells", "specs": ["src/shells.spec.ts"], "timeoutMs": 300000 },
           { "name": "generators", "specs": ["src/generators.spec.ts"], "timeoutMs": 900000 }
         ]
       }
