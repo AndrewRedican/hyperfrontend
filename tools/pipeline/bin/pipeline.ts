@@ -33,7 +33,7 @@ import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/pro
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { buildState, changeSet, formatAffected, previousGraph, selectAffected } from '@hyperfrontend/workspace/graph'
-import { chainChecks, githubChecks } from '../src/pipeline/checks'
+import { chainChecks, githubChecks, runUrlOf } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
 import { explorerDocument } from '../src/pipeline/explorer'
 import { settleChecks } from '../src/pipeline/finalize'
@@ -328,7 +328,8 @@ function checksOf(environment: Environment): ChainChecks | null {
     api,
     headSha,
     (message) => say(`::notice::${message}`),
-    (records) => writeJson(checksPath(environment), records)
+    (records) => writeJson(checksPath(environment), records),
+    runUrlOf(process.env)
   )
 }
 

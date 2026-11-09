@@ -83,6 +83,8 @@ export interface GitHubEnvironment {
   readonly GITHUB_API_URL?: string
   /** The run id. */
   readonly GITHUB_RUN_ID?: string
+  /** The web root, `https://github.com` unless the server is GitHub Enterprise. */
+  readonly GITHUB_SERVER_URL?: string
 }
 
 /** One page of the jobs endpoint, as far as it is read. */

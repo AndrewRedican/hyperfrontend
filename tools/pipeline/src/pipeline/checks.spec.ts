@@ -4,7 +4,7 @@ import { from as arrayFrom } from '@hyperfrontend/immutable-api-utils/built-in-c
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createDeferred, describe, expect, flushPromises, it } from '@hyperfrontend/testing'
-import { CheckRefusal, chainChecks, chainConclusion, chainOutput, checkName } from './checks'
+import { CheckRefusal, chainChecks, chainConclusion, chainOutput, checkName, runUrlOf } from './checks'
 
 /** A chain of one build. */
 const CHAIN: Chain = {
@@ -94,6 +94,52 @@ describe('chainOutput', () => {
   })
 })
 
+describe('chainOutput retry link', () => {
+  const RUN = 'https://github.com/o/r/actions/runs/7'
+
+  it('links the workflow run between the table and the failures', () => {
+    const { summary } = chainOutput(CHAIN, [{ ...result('failure'), excerpt: '✖ a spec failed' }], 'done', RUN)
+    expect(summary).toMatch(
+      /\| `lib-a:build` \|[^]*\n> Retry from \[the workflow run\]\(https:\/\/github\.com\/o\/r\/actions\/runs\/7\)[^]*### Failures/
+    )
+  })
+
+  it('links the workflow run for a failed task that printed nothing', () => {
+    expect(chainOutput(CHAIN, [result('failure')], 'done', RUN).summary).toContain(`> Retry from [the workflow run](${RUN})`)
+  })
+
+  it('links the workflow run for a cancelled chain', () => {
+    expect(chainOutput(CHAIN, [result('cancelled')], 'done', RUN).summary).toContain(`> Retry from [the workflow run](${RUN})`)
+  })
+
+  it('links nothing for a chain that succeeded', () => {
+    expect(chainOutput(CHAIN, [result('success')], 'done', RUN).summary).not.toContain('Retry from')
+  })
+
+  it('links nothing without the run address', () => {
+    expect(chainOutput(CHAIN, [result('failure')], 'done').summary).not.toContain('Retry from')
+  })
+})
+
+describe('runUrlOf', () => {
+  it('builds the run page on github.com by default', () => {
+    expect(runUrlOf({ GITHUB_REPOSITORY: 'o/r', GITHUB_RUN_ID: '7' })).toBe('https://github.com/o/r/actions/runs/7')
+  })
+
+  it('follows the server address', () => {
+    expect(runUrlOf({ GITHUB_REPOSITORY: 'o/r', GITHUB_RUN_ID: '7', GITHUB_SERVER_URL: 'https://ghe.test' })).toBe(
+      'https://ghe.test/o/r/actions/runs/7'
+    )
+  })
+
+  it.each([[{ GITHUB_RUN_ID: '7' }], [{ GITHUB_REPOSITORY: 'o/r' }], [{ GITHUB_REPOSITORY: 'o/r', GITHUB_RUN_ID: '' }]])(
+    'answers null for %j',
+    (env) => {
+      expect(runUrlOf(env)).toBeNull()
+    }
+  )
+})
+
 describe('checkName', () => {
   it('names the project and the environment', () => {
     expect(checkName(CHAIN)).toBe('lib-a (linux)')
@@ -158,6 +204,26 @@ describe('chainChecks', () => {
       ['create', 'lib-a (linux)', 'abc'],
       ['update', 9, '1 of 1 tasks ended'],
     ])
+  })
+
+  it('links the workflow run in the completion of a failed chain', async () => {
+    const summaries: string[] = []
+    const { api } = recording()
+    const hooks = chainChecks(
+      {
+        ...api,
+        complete: async (_id, _conclusion, output) => {
+          summaries.push(output.summary)
+        },
+      },
+      'abc',
+      () => undefined,
+      () => undefined,
+      'https://github.com/o/r/actions/runs/7'
+    )
+    await hooks.onStart(CHAIN)
+    await hooks.onEnd(CHAIN, [result('failure')])
+    expect(summaries).toEqual([expect.stringContaining('[the workflow run](https://github.com/o/r/actions/runs/7)')])
   })
 
   it('reports the check runs as they are created and completed', async () => {

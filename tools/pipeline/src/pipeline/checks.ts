@@ -175,6 +175,18 @@ export function githubChecks(env: GitHubEnvironment, request: FetchLike, wait: (
 }
 
 /**
+ * The address of the workflow run, which a chain's check run links as the place to retry from.
+ *
+ * @param env - The GitHub environment
+ * @returns The run's page, or null when the environment lacks the repository or run id
+ */
+export function runUrlOf(env: GitHubEnvironment): string | null {
+  const { GITHUB_REPOSITORY: repository, GITHUB_RUN_ID: run } = env
+  if (repository === undefined || repository === '' || run === undefined || run === '') return null
+  return `${env.GITHUB_SERVER_URL ?? 'https://github.com'}/${repository}/actions/runs/${run}`
+}
+
+/**
  * The name of a chain's check run.
  *
  * @param chain - The chain the check run is for
@@ -203,11 +215,17 @@ export function chainConclusion(results: readonly TaskResult[]): string {
  * @param chain - The chain the check run is of
  * @param results - Its ended tasks
  * @param title - What the check run is headed
+ * @param runUrl - The workflow run's page, linked under the table of a chain that did not succeed as the place to retry from; null links nothing
  * @returns The output, its text the chain's state as JSON
  */
-export function chainOutput(chain: Chain, results: readonly TaskResult[], title: string): CheckOutput {
+export function chainOutput(chain: Chain, results: readonly TaskResult[], title: string, runUrl: string | null = null): CheckOutput {
   const failures = failureLines(results)
-  const lines = [...chainTable(chain, results), ...(failures.length === 0 ? [] : ['', ...failures])]
+  // why: GitHub files a check run created with the workflow token under the first workflow run on the commit, often another workflow, so the check's own re-run button can rerun that workflow and run no task; the line sits above the failures so clipping never cuts it
+  const retry =
+    runUrl === null || chainConclusion(results) === 'success'
+      ? []
+      : ['', `> Retry from [the workflow run](${runUrl}) that ran this chain, not with this check's re-run button.`]
+  const lines = [...chainTable(chain, results), ...retry, ...(failures.length === 0 ? [] : ['', ...failures])]
   return { title, summary: clip(lines.join('\n')), text: chainState(chain, results) }
 }
 
@@ -222,13 +240,15 @@ export function chainOutput(chain: Chain, results: readonly TaskResult[], title:
  * @param headSha - The commit the check runs are attached to
  * @param notice - Where the one notice goes when the API refuses
  * @param onRecords - Told the check runs by name whenever one is created or completed
+ * @param runUrl - The workflow run's page, which the check run of a chain that did not succeed links to retry from
  * @returns The hooks; after a refusal they do nothing
  */
 export function chainChecks(
   api: Omit<CheckApi, 'publish'>,
   headSha: string,
   notice: (message: string) => void,
-  onRecords: (records: CheckRecords) => void = () => undefined
+  onRecords: (records: CheckRecords) => void = () => undefined,
+  runUrl: string | null = null
 ): ChainChecks {
   const records = createMap<string, CheckRecord>()
   const queues = createMap<string, ChainQueue>()
@@ -287,7 +307,7 @@ export function chainChecks(
     onTask: async (chain, results) => {
       const queue = open(chain)
       if (queue === null) return
-      queue.latest = chainOutput(chain, results, `${results.length} of ${chain.tasks.length} tasks ended`)
+      queue.latest = chainOutput(chain, results, `${results.length} of ${chain.tasks.length} tasks ended`, runUrl)
       if (queue.queued !== null) return queue.queued
       queue.queued = enqueue(queue, checkName(chain), async (id) => {
         const output = queue.latest
@@ -305,7 +325,7 @@ export function chainChecks(
       const conclusion = chainConclusion(results)
       return enqueue(queue, checkName(chain), async (id) => {
         if (!enabled) return
-        await api.complete(id, conclusion, chainOutput(chain, results, `${results.length} tasks, ${conclusion}`))
+        await api.complete(id, conclusion, chainOutput(chain, results, `${results.length} tasks, ${conclusion}`, runUrl))
         records.set(checkName(chain), { id, completed: true })
         publish()
       })
