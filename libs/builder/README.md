@@ -92,14 +92,7 @@ many packages with shared internals and varied output needs:
 npm install --save-dev @hyperfrontend/builder
 ```
 
-[`typescript`](https://www.npmjs.com/package/typescript) is a regular dependency of the builder, not a peer: installing the
-builder installs a compiler, and the published manifest declares no
-[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit runs the `tsc` entry script of
-the TypeScript resolved from your workspace root on the current Node binary, so
-when your project already depends on TypeScript that is the compiler that runs,
-on Windows as well as POSIX systems. The builder is built against **TypeScript >= 5.9**.
-
-That one install is all a build needs: Rollup and its plugins ship inside the package, and Rollup's native parser is listed under [`optionalDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-optionalDependencies) only because that is how npm picks the binding for your platform, exactly as Rollup itself declares it. The manifest declares Node.js 18 and npm 8, which `engine-strict` enforces with an EBADENGINE error; the bundled Rollup plugins declare Node.js 20 in their own manifests, so Node.js 20 or later is the recommended runtime.
+That one install is all a build needs. TypeScript is a regular dependency rather than a peer, so declaration emit runs the compiler the builder itself depends on, and Rollup and its plugins ship inside the package; the published manifest declares no peer dependencies. The manifest declares Node.js 18 and npm 8, and the bundled Rollup plugins declare Node.js 20, so Node.js 20 or later is the recommended runtime.
 
 ## Quick Start
 
@@ -139,42 +132,24 @@ await runPackagePhase(ctx, config, /* formats */ [])
 
 ## API Overview
 
-The surface is the pipeline, in order. `build(config)` is the whole of it: it derives a [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext), runs the bundle, package and bin phases against it, and resolves
-to a [`BuildResult`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildResult) carrying per-format counts, the artifacts emitted and a wall-clock duration. Each phase stays callable on its own against a context you built
-yourself, so [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/#api-runBundlePhase),
-[`runPackagePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/package/#api-runPackagePhase) and
-[`runBinPhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/#api-runBinPhase) are the seam for driving one step in isolation.
+Import the root for the pipeline, a sub-path to replace one step of it. Entry points are discovered from the `src/` layout and published where the source manifest's exports declare them; see [`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries).
 
-Most of that work is discovery rather than declaration, which is why the config stays small. Entry points come from the folder layout:
-[`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries) walks `src/`, and every directory holding an `index.ts`
-(at most three levels deep) is built as an entry. An entry is published only when the source manifest's
-[`exports`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-exports) declares it, as `"./<dir>": "./src/<dir>/index.ts"`, so adding an
-entry point is adding a folder and declaring it; with no exports map, only the root entry is published. A declared subpath the build cannot publish fails the build.
-
-The seams that could have hard-coded a workspace are plain predicate functions instead:
-[`isWorkspacePackage`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-isWorkspacePackage) is a `(name: string) => boolean`, with
-[`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix) and
-[`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames) as conveniences for the two common answers and a closure of your own just as
-valid an argument.
-
-What ships is measured rather than predicted. Each entry bundles in its own spawned child process, one per entry per format, and that isolation is what keeps peak
-memory flat instead of climbing with the size of the graph; declarations are not synthesized in-process at all, since the builder spawns the workspace's own `tsc` and
-flattens what it emits. The output `package.json` is reflected from what actually landed:
-[`synthesizePackageJson`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-synthesizePackageJson) writes [`exports`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-exports), [`main`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-main), [`module`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-module) and [`types`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-types)
-from the formats that really emitted, and
-[`reflectFilesAllowlist`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-reflectFilesAllowlist) walks the finished output tree for [`files`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-files).
-
-The sub-path entries expose that same machinery a level down, each for a different job: [`/bundle`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/) and its children for entry discovery, externals, rollup dispatch,
-declarations and the shared-internals dedup pass; [`/package`](https://www.hyperfrontend.dev/docs/libraries/builder/package/) for the manifest, assets and third-party licenses; [`/bin`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/) for JavaScript bins and Node SEA binaries;
-[`/memory`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/) for the build-memory monitor; [`/presets`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/) for the predicate factories; and [`/models`](https://www.hyperfrontend.dev/docs/libraries/builder/models/) for the types all of them speak. Import the root when you want the
-pipeline, a sub-path when you are replacing one step of it.
+| Entry                                                                             | What it is                                                                                                                               |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) | The pipeline: [`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build), the context it resolves, the result it returns |
+| [`/bundle`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/)         | Entry discovery, externals, per-entry Rollup dispatch, declarations and the shared-internals dedupe, each an entry of its own beneath it |
+| [`/package`](https://www.hyperfrontend.dev/docs/libraries/builder/package/)       | The output manifest, assets and third-party licences, each an entry of its own beneath it                                                |
+| [`/bin`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/)               | JavaScript bins and Node SEA native binaries                                                                                             |
+| [`/memory`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/)         | The opt-in memory monitor and the between-phases recovery primitive                                                                      |
+| [`/presets`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/)       | The predicate factories for classifying workspace packages                                                                               |
+| [`/models`](https://www.hyperfrontend.dev/docs/libraries/builder/models/)         | The types every phase speaks: the config, the context, the result                                                                        |
+| `hf-build`                                                                        | The command line, driving the pipeline from a JSON config                                                                                |
 
 Every config field, phase signature and result type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/builder/#api-reference).
 
 ## Compatibility
 
-[`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool that runs on Node.js. It is not
-intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later. Node.js 18 runs `hf-build` as is: the rollup worker it spawns receives `--experimental-global-webcrypto` whenever the spawning Node.js lacks the `crypto` global, and only a direct import of the [`/bundle/rollup/worker`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/rollup/worker/) entry on Node.js 18 has to pass that flag itself.
+[`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool for Node.js 18 or later and npm 8 or later; browsers, Web Workers and CDN runtimes are not targets. On Node.js 18 the Rollup worker that `hf-build` spawns receives the flag it needs for the `crypto` global; only a direct import of the [`/bundle/rollup/worker`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/rollup/worker/) entry on Node.js 18 has to pass `--experimental-global-webcrypto` itself.
 
 <!-- hf:media start id="runtimes" scene="runtimes-builder" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
 

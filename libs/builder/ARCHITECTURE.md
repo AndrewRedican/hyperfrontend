@@ -453,4 +453,3 @@ These types are reproduced in [Core Interfaces](#core-interfaces).
 
 - [Main README](./README.md): Installation and quick start
 - [Module Documentation](./src/): Per-module README files
-- [Contributing Guide](../../CONTRIBUTING.md): Development setup
