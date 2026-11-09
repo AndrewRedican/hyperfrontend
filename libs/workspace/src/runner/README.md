@@ -35,7 +35,21 @@ export default hello
 
 The executor is called in the same process with the defaults of its schema and an [`ExecutorContext`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorContext): the root, the project and target names, the target as configured, and every project of the workspace. An option given on the command line is read as the type the schema declares.
 
-A generator is a function of a [`Tree`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-Tree) and its options, listed in a `generators.json` the same way. The tree records every change and writes nothing until the run ends, which is what a dry run prints. A bare generator name goes to the one workspace project that lists it, then to this package; two workspace projects offering the same name are refused until the package is named.
+A generator is a function of a [`Tree`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-Tree) and its options, listed in a `generators.json` the manifest names under [`generators`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-GeneratorsManifest-prop-generators), each entry naming its module under [`factory`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-GeneratorEntry-prop-factory) rather than [`implementation`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorEntry-prop-implementation):
+
+```json
+{
+  "generators": {
+    "note": {
+      "factory": "./src/note/generator",
+      "schema": "./src/note/schema.json",
+      "description": "Writes a note"
+    }
+  }
+}
+```
+
+The manifest's `package.json` points at both files: `"executors": "./executors.json"` and `"generators": "./generators.json"`. The tree records every change and writes nothing until the run ends, which is what a dry run prints. A bare generator name goes to the one workspace project that lists it, then to this package; two workspace projects offering the same name are refused until the package is named.
 
 ## Running tasks
 
