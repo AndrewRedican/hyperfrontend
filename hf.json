@@ -33,8 +33,12 @@
         "{projectRoot}/**/*",
         "^production",
         {
-          "projects": ["tool-package", "lib-builder"],
-          "input": "production"
+          "projects": "tool-package",
+          "input": "buildExecutor"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchain"
         },
         {
           "projects": "lib-workspace",
@@ -55,8 +59,12 @@
         "^production",
         "{workspaceRoot}/assets/media/*/*.json",
         {
-          "projects": ["tool-package", "lib-builder"],
-          "input": "production"
+          "projects": "tool-package",
+          "input": "buildExecutor"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchain"
         },
         {
           "projects": "lib-workspace",
@@ -97,6 +105,23 @@
   },
   "namedInputs": {
     "buildExecutor": ["{projectRoot}/src/executors/build/**/*", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"],
+    "toolchain": [
+      "{projectRoot}/package.json",
+      "{projectRoot}/src/models/**/*",
+      "{projectRoot}/src/presets/**/*",
+      "{projectRoot}/src/bundle/entries/**/*",
+      "{projectRoot}/src/bundle/externals/**/*",
+      "{projectRoot}/src/bundle/dependencies/**/*",
+      "{projectRoot}/src/bundle/dedupe/**/*",
+      "{projectRoot}/src/bundle/rollup/**/*",
+      "{projectRoot}/src/bundle/declarations/**/*",
+      "!{projectRoot}/src/bundle/declarations/resolve-tsc-script.ts",
+      "{projectRoot}/src/bundle/strip-bundle-comments.ts",
+      "{projectRoot}/src/package/**/*",
+      "{projectRoot}/src/bin/**/*",
+      "!{projectRoot}/**/README.md",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+    ],
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "dependencyState": [
       "{projectRoot}/package.json",
