@@ -18,7 +18,7 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
 import { formatAffected, formatTask } from '../graph/affected/explain'
 import { selectAffected } from '../graph/affected/select'
 import { workspaceGraph } from '../graph/build'
-import { changeSet } from '../graph/changes'
+import { changeSet, DEFAULT_BASE, resolveBase } from '../graph/changes'
 import { compareText } from '../graph/order'
 import { previousGraph } from '../graph/revision'
 import { printableProject } from '../graph/store/serialize'
@@ -126,7 +126,7 @@ function build(root: string, force: boolean, report: (line: string) => void): Wo
  * @returns The affected set
  */
 function affected(root: string, graph: WorkspaceGraph, target: string, revisions: Revisions): AffectedSet {
-  const changes = changeSet(root, revisions.base, revisions.head)
+  const changes = changeSet(root, verifiedBase(root, revisions.base), revisions.head)
   const sets = selectAffected({ graph, changes, targets: [target], previous: previousGraph(root, changes) })
   return sets.get(target) as AffectedSet
 }
@@ -139,6 +139,27 @@ function affected(root: string, graph: WorkspaceGraph, target: string, revisions
  */
 function sortedProjects(graph: WorkspaceGraph): ProjectRecord[] {
   return [...graph.projects.values()].sort((left, right) => compareText(left.name, right.name))
+}
+
+/**
+ * The base revision a comparison runs from, once the repository is known to have it.
+ *
+ * @param root - The workspace root, absolute
+ * @param base - The base as written, or the default
+ * @returns The revision git resolves: the base, or `main` for a default base in a repository with no `origin/main`
+ * @throws {Error} A refusal naming the revision the repository lacks and how to name another
+ *
+ * @example The default in a repository that was never pushed
+ * ```typescript
+ * verifiedBase(root, 'origin/main') // => 'main'
+ * verifiedBase(root, 'v1.2.0') // throws: no revision v1.2.0 in this repository: name the base with --base=<ref>
+ * ```
+ */
+export function verifiedBase(root: string, base: string): string {
+  const revision = resolveBase(root, base)
+  if (revision !== null) return revision
+  const lacking = base === DEFAULT_BASE ? `neither ${DEFAULT_BASE} nor main` : `no revision ${base}`
+  throw refusal(`${lacking} in this repository: commit first, or name the base with --base=<ref>`)
 }
 
 /**
@@ -156,7 +177,7 @@ function readArguments(argv: readonly string[]) {
         explain: { type: 'boolean', default: false },
         force: { type: 'boolean', default: false },
         target: { type: 'string' },
-        base: { type: 'string', default: 'main' },
+        base: { type: 'string', default: DEFAULT_BASE },
         head: { type: 'string' },
       },
       allowPositionals: true,

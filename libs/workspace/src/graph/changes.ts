@@ -13,6 +13,12 @@ import { matchesAny } from '@hyperfrontend/linter/helpers'
 import { compareText } from './order'
 import { ignoredPatterns } from './workspace'
 
+/** The base the commands compare with when none is named: the main branch as the remote has it. */
+export const DEFAULT_BASE = 'origin/main'
+
+/** The base a repository without that remote branch is compared with instead. */
+const LOCAL_MAIN = 'main'
+
 /** The largest output git may answer with. */
 const LIST_BUFFER = 64 * 1024 * 1024
 
@@ -35,6 +41,42 @@ const STATUSES: Readonly<Record<string, ChangeStatus>> = {
  */
 function git(root: string, args: readonly string[]): string {
   return execFileSync('git', [...args], { cwd: root, encoding: 'utf8', maxBuffer: LIST_BUFFER, stdio: ['ignore', 'pipe', 'pipe'] })
+}
+
+/**
+ * Whether a revision names a commit of the repository.
+ *
+ * @param root - The workspace root, absolute
+ * @param revision - The revision asked about
+ * @returns True when git resolves it to a commit
+ */
+function isCommit(root: string, revision: string): boolean {
+  try {
+    git(root, ['rev-parse', '--verify', '--quiet', `${revision}^{commit}`])
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * The revision a base names, verified against the repository: the base itself when it is a
+ * commit; `main` when the default base is asked for and the repository has no `origin/main`,
+ * as a repository that was never pushed has none; null when neither is a commit, as in a
+ * repository with no commits yet.
+ *
+ * @param root - The workspace root, absolute
+ * @param base - The base as written, or the default
+ * @returns The revision to compare with, or null when the repository has none to offer
+ *
+ * @example A repository with no remote compares with its own main
+ * ```typescript
+ * resolveBase(root, DEFAULT_BASE) // => 'origin/main' once pushed, 'main' before, null with no commits
+ * resolveBase(root, 'v1.2.0') // => 'v1.2.0', or null when there is no such tag
+ * ```
+ */
+export function resolveBase(root: string, base: string): string | null {
+  return (base === DEFAULT_BASE ? [base, LOCAL_MAIN] : [base]).find((candidate) => isCommit(root, candidate)) ?? null
 }
 
 /**
