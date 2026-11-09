@@ -231,10 +231,10 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.7.3` |
+| `@hyperfrontend/builder` | `0.7.4` |
 | `@hyperfrontend/cryptography` | `1.1.4` |
 | `@hyperfrontend/data-utils` | `1.0.3` |
-| `@hyperfrontend/features` | `0.12.0` |
+| `@hyperfrontend/features` | `0.12.1` |
 | `@hyperfrontend/function-utils` | `1.0.3` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.5` |
 | `@hyperfrontend/json-utils` | `1.1.4` |
@@ -252,4 +252,4 @@ flowchart TB
 | `@hyperfrontend/time-utils` | `1.0.3` |
 | `@hyperfrontend/ui-utils` | `0.0.11` |
 | `@hyperfrontend/versioning` | `0.10.1` |
-| `@hyperfrontend/workspace` | `0.1.0` |
+| `@hyperfrontend/workspace` | `0.1.1` |
