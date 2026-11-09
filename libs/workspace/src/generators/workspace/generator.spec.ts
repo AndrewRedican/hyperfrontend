@@ -7,6 +7,9 @@ import { workspaceGenerator } from './generator'
 /** This repository's root, where prettier resolves from. */
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 
+/** The Node.js type declarations range the generator names: the major of the running Node.js. */
+const NODE_TYPES_RANGE = `^${process.versions.node.split('.')[0]}.0.0`
+
 describe('workspaceGenerator', () => {
   it('writes the root configuration the engine reads', async () => {
     const tree = createMemoryTree()
@@ -44,6 +47,26 @@ describe('workspaceGenerator', () => {
     const tree = createMemoryTree({ '.gitignore': 'mine\n' })
     await workspaceGenerator(tree, { skipFormat: true })
     expect(tree.read('.gitignore', 'utf-8')).toBe('mine\n')
+  })
+
+  it('makes the root manifest an ES module package with the Node.js type declarations the configurations name', async () => {
+    const tree = createMemoryTree({
+      'package.json': '{ "name": "consumer", "type": "commonjs", "devDependencies": { "prettier": "^3.0.0" } }',
+    })
+    await workspaceGenerator(tree, { skipFormat: true })
+    expect(readJson(tree, 'package.json')).toEqual({
+      name: 'consumer',
+      type: 'module',
+      devDependencies: { '@types/node': NODE_TYPES_RANGE, prettier: '^3.0.0' },
+    })
+  })
+
+  it('keeps the Node.js type declarations range the root manifest already states', async () => {
+    const tree = createMemoryTree({ 'package.json': '{ "name": "consumer", "devDependencies": { "@types/node": "^22.0.0" } }' })
+    await workspaceGenerator(tree, { skipFormat: true })
+    expect(readJson<{ devDependencies: Record<string, string> }>(tree, 'package.json').devDependencies).toEqual({
+      '@types/node': '^22.0.0',
+    })
   })
 
   it('refuses a repository that is a workspace already', async () => {
