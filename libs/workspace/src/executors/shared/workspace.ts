@@ -14,6 +14,34 @@ import { readJson } from '../../graph/workspace'
 /** The target whose output a package is packed, tested and published from. */
 export const BUILD_TARGET = 'build'
 
+// why: the CommonJS build of this module has no import.meta.dirname, and the ES module, which the specs load, has no __dirname
+/* node:coverage ignore next 1 */
+const MODULE_DIRECTORY = typeof __dirname === 'string' ? __dirname : import.meta.dirname
+
+/**
+ * The file a module specifier names, resolved from the engine's own installation: a dependency
+ * this package declares is found wherever npm placed it, nested beside the package or hoisted
+ * above it, before anything the workspace installs for itself.
+ *
+ * @param specifier - The module, such as `typescript/bin/tsc`
+ * @param from - The directory the lookup climbs from; this module's own when omitted
+ * @returns The file, or null when nothing above the directory resolves the module
+ *
+ * @example The compiler the engine depends on, whatever TypeScript the workspace installed
+ * ```typescript
+ * resolveFromEngine('typescript/bin/tsc')
+ * // => '/repo/node_modules/@hyperfrontend/workspace/node_modules/typescript/bin/tsc' when the workspace's own TypeScript is another major
+ * // => '/repo/node_modules/typescript/bin/tsc' when npm hoisted one TypeScript for both
+ * ```
+ */
+export function resolveFromEngine(specifier: string, from: string = MODULE_DIRECTORY): string | null {
+  try {
+    return createRequire(join(from, 'package.json')).resolve(specifier)
+  } catch {
+    return null
+  }
+}
+
 /**
  * The file a module specifier names, resolved from the workspace root the way any module of the
  * workspace resolves it: through the workspace's path aliases where the process installed them,

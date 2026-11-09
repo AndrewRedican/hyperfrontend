@@ -7,15 +7,16 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { logger } from '../shared/logger'
-import { resolveFromWorkspace } from '../shared/workspace'
+import { resolveFromEngine, resolveFromWorkspace } from '../shared/workspace'
 import { typecheckExecutor } from './executor'
 
 jest.mock('node:child_process', () => ({ execFileSync: jest.fn() }))
-jest.mock('../shared/workspace', () => ({ resolveFromWorkspace: jest.fn() }))
+jest.mock('../shared/workspace', () => ({ resolveFromEngine: jest.fn(), resolveFromWorkspace: jest.fn() }))
 jest.mock('../shared/logger', () => ({ logger: { info: jest.fn(), error: jest.fn() } }))
 
 const mockExec = execFileSync as Mock
 const mockResolve = resolveFromWorkspace as Mock
+const mockEngine = resolveFromEngine as Mock
 const mockInfo = logger.info as Mock
 const mockError = logger.error as Mock
 
@@ -73,9 +74,11 @@ function errors(): unknown[] {
 beforeEach(() => {
   mockExec.mockReset()
   mockResolve.mockReset()
+  mockEngine.mockReset()
   mockInfo.mockReset()
   mockError.mockReset()
   mockResolve.mockReturnValue(TSC)
+  mockEngine.mockReturnValue(null)
 })
 
 describe('typecheckExecutor', () => {
@@ -88,6 +91,15 @@ describe('typecheckExecutor', () => {
         { cwd: workspace.path, stdio: 'inherit', encoding: 'utf-8' },
       ],
     ])
+  })
+
+  it('runs the compiler the engine itself depends on before the one the workspace installed', async () => {
+    mockEngine.mockReturnValue('/engine/typescript/bin/tsc')
+    await typecheckExecutor({}, context())
+    expect({ script: (mockExec.mock.calls[0]?.[1] as readonly string[])[0], workspaceLookups: mockResolve.mock.calls }).toEqual({
+      script: '/engine/typescript/bin/tsc',
+      workspaceLookups: [],
+    })
   })
 
   it('resolves the compiler from the workspace root', async () => {
@@ -192,7 +204,10 @@ describe('typecheckExecutor', () => {
     const result = await typecheckExecutor({}, context())
     expect({ result, errors: errors(), runs: mockExec.mock.calls.length }).toEqual({
       result: { success: false },
-      errors: [`TypeScript compiler not found from: ${workspace.path}`, 'Please run npm install to ensure TypeScript is installed.'],
+      errors: [
+        `TypeScript compiler not found: nothing resolves typescript/bin/tsc beside the engine or from ${workspace.path}`,
+        "Run npm install so the engine's typescript dependency is present, or install typescript 5 at the workspace root; TypeScript 7 ships no tsc script.",
+      ],
       runs: 0,
     })
   })
