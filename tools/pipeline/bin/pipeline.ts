@@ -32,7 +32,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
-import { buildState, changeSet, formatAffected, previousGraph, selectAffected } from '@hyperfrontend/workspace/graph'
+import { buildState, changeSet, formatAffected, previousGraph, previousWorkspaceFile, selectAffected } from '@hyperfrontend/workspace/graph'
 import { chainChecks, githubChecks, runUrlOf } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
 import { explorerDocument } from '../src/pipeline/explorer'
@@ -227,6 +227,7 @@ async function plan(local: boolean): Promise<Plan> {
     main: values.main,
     drift,
     previous: previousGraph(root as string, changes),
+    previousWorkspace: previousWorkspaceFile(root as string, changes),
   })
 }
 
@@ -572,6 +573,7 @@ if (command === 'plan') {
     changes,
     targets: [values.target],
     previous: previousGraph(root, changes),
+    previousWorkspace: previousWorkspaceFile(root, changes),
   }).get(values.target)
   if (set === undefined) throw createError(`no target ${values.target}`)
   if (values.json) say(stringify(set, null, 2))

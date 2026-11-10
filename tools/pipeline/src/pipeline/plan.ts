@@ -7,7 +7,7 @@
  * @module pipeline/plan
  */
 
-import type { AffectedSet, ChangeSet, PackageManifest, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type { AffectedSet, ChangeSet, PackageManifest, WorkspaceFile, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import type { Environment, Plan, PlanReason, SkippedTask } from './model'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -34,6 +34,8 @@ export interface PlanOptions {
   readonly drift?: readonly string[]
   /** The graph at the base, which lets a deleted or renamed module name the tasks it reached. */
   readonly previous?: WorkspaceGraph
+  /** The `hf.json` at the base, which lets a change to it select only the tasks that resolve differently afterwards. */
+  readonly previousWorkspace?: WorkspaceFile
 }
 
 /** The selected tasks and the skipped decisions of one plan. */
@@ -84,7 +86,7 @@ function selectChange(options: PlanOptions, targets: readonly string[]): Selecti
   const { graph } = options
   const changes = options.changes as ChangeSet
   const selection: Selection = { selected: createMap(), skipped: [] }
-  const sets = selectAffected({ graph, changes, targets, previous: options.previous })
+  const sets = selectAffected({ graph, changes, targets, previous: options.previous, previousWorkspace: options.previousWorkspace })
   for (const target of targets) {
     const set = sets.get(target) as AffectedSet
     for (const decision of set.selected) selection.selected.set(decision.task, [...decision.reasons])
