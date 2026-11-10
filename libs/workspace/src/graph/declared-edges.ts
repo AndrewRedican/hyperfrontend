@@ -198,10 +198,32 @@ function toolOf(context: DeclaredEdgeContext, id: string): ToolNode {
   // why: the engine runs shell commands itself; reading it as an executor of the project that carries the engine would make every shell task answer to every change there
   const owner = colon === -1 || id === RUN_COMMANDS ? undefined : context.byPackage.get(packageNameOf(id.slice(0, colon)))
   if (owner === undefined) return { kind: 'tool', id, project: null, entry: null }
-  const manifest = readJson<ExecutorsManifest>(join(context.root, projectFile(owner, owner.manifest?.executors ?? 'executors.json')))
+  const manifestFile = projectFile(owner, owner.manifest?.executors ?? 'executors.json')
+  const manifest = readJson<ExecutorsManifest>(join(context.root, manifestFile))
   const implementation = manifest?.executors?.[id.slice(colon + 1)]?.implementation
-  const entry = implementation === undefined ? null : fileOf(context.files, posix.normalize(projectFile(owner, implementation)))
+  const entry = implementation === undefined ? null : implementationFile(context.files, posix.dirname(manifestFile), implementation)
   return { kind: 'tool', id, project: owner.name, entry }
+}
+
+/** The directory a source project keeps under the manifest what a built package keeps beside it. */
+const SOURCE_DIRECTORY = 'src'
+
+/**
+ * The file an executors manifest names as an implementation. A built package keeps the file
+ * beside the manifest and a source project keeps it under `src`, so one manifest serves both:
+ * the path is looked for beside the manifest first, then under `src`, with or without its
+ * extension, the way the runner finds it.
+ *
+ * @param files - The workspace's files
+ * @param directory - The manifest's directory, workspace-relative
+ * @param written - The implementation as the manifest writes it, relative to the manifest
+ * @returns The file, or null when neither place has it
+ */
+function implementationFile(files: ReadonlySet<string>, directory: string, written: string): string | null {
+  return (
+    fileOf(files, posix.normalize(posix.join(directory, written))) ??
+    fileOf(files, posix.normalize(posix.join(directory, SOURCE_DIRECTORY, written)))
+  )
 }
 
 /**

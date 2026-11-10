@@ -160,6 +160,29 @@ describe('the shell executor', () => {
   })
 })
 
+describe('a tool of a source project', () => {
+  it('is implemented by the file its manifest names under src, as the built package names it beside the manifest', () => {
+    const engine = createTempDir({
+      prefix: 'lint-graph-source-tool-',
+      tree: {
+        'package.json': '{ "name": "@fixture/root" }',
+        'engine/package.json': '{ "name": "@fixture/engine", "executors": "./executors.json" }',
+        'engine/project.json': '{ "name": "engine" }',
+        'engine/executors.json': '{ "executors": { "report": { "implementation": "./executors/report/index" } } }',
+        'engine/src/executors/report/index.ts': 'export default (): { success: boolean } => ({ success: true })\n',
+        'app/project.json': '{ "name": "app", "targets": { "report": { "executor": "@fixture/engine:report" } } }',
+      },
+    }).path
+    execFileSync('git', ['init', '-q'], { cwd: engine })
+    expect(workspaceGraph(engine).nodes.get('tool:@fixture/engine:report')).toEqual({
+      kind: 'tool',
+      id: '@fixture/engine:report',
+      project: 'engine',
+      entry: 'engine/src/executors/report/index.ts',
+    })
+  })
+})
+
 describe('the nodes', () => {
   it('hold the entries, externals, tools and configurations the edges reach', () => {
     const kinds = [...graph.nodes.values()].filter((node) => node.kind !== 'file' && node.kind !== 'project')
