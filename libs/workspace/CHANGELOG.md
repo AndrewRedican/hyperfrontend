@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/bdd9c9c1a4f231b20b7c26d83c01824a620b88cb...1fd9c385acf8e1b3d849602586e602dda1533b4f) - 2026-11-10
+
+### Features
+
+- judge a changed hf.json per task by what the task resolves to
+- leave a load marked hf-graph opaque out of the graph
+
+### Bug Fixes
+
+- give a package name two manifests carry to the project with a project.json
+- find an executor's implementation under src as the runner does
+
 ## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/b5eefe8d581c111792730f9d42dcbce5ce8c24e7...26bc4bfd43c5b267e36406c600203c603df7c169) - 2026-11-09
 
 ### Bug Fixes

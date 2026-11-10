@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/workspace",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
   "type": "module",
