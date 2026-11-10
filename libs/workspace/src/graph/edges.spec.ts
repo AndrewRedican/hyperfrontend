@@ -2,6 +2,7 @@ import type { Edge, ProjectRecord } from './model'
 import { execFileSync } from 'node:child_process'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
@@ -181,6 +182,48 @@ describe('a tool of a source project', () => {
       entry: 'engine/src/executors/report/index.ts',
     })
   })
+})
+
+describe('a package name two manifests carry', () => {
+  /**
+   * A workspace whose engine project and a directory manifest of it carry one package name.
+   *
+   * @param stubs - The directories of the manifests repeating the name, under the engine
+   * @returns The tool node the app's target resolves to
+   */
+  function toolWithStubs(stubs: readonly string[]): unknown {
+    const engine = createTempDir({
+      prefix: 'lint-graph-twin-manifest-',
+      tree: {
+        'package.json': '{ "name": "@fixture/root" }',
+        ...fromEntries(
+          stubs.flatMap((stub) => [
+            [`engine/${stub}/package.json`, '{ "name": "@fixture/engine", "type": "module" }'],
+            [`engine/${stub}/hf.mjs`, ''],
+          ])
+        ),
+        'engine/package.json': '{ "name": "@fixture/engine", "executors": "./executors.json" }',
+        'engine/project.json': '{ "name": "engine" }',
+        'engine/executors.json': '{ "executors": { "report": { "implementation": "./src/executors/report" } } }',
+        'engine/src/executors/report.ts': 'export default (): { success: boolean } => ({ success: true })\n',
+        'app/project.json': '{ "name": "app", "targets": { "report": { "executor": "@fixture/engine:report" } } }',
+      },
+    }).path
+    execFileSync('git', ['init', '-q'], { cwd: engine })
+    return workspaceGraph(engine).nodes.get('tool:@fixture/engine:report')
+  }
+
+  it.each([[['bin']], [['zz']], [['aa', 'ab']]])(
+    'belongs to the project with a project.json, whichever order the %j manifests are read in',
+    (stubs) => {
+      expect(toolWithStubs(stubs)).toEqual({
+        kind: 'tool',
+        id: '@fixture/engine:report',
+        project: 'engine',
+        entry: 'engine/src/executors/report.ts',
+      })
+    }
+  )
 })
 
 describe('the nodes', () => {

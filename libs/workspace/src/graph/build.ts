@@ -10,7 +10,7 @@
 import type { ImportTable } from './imports'
 import type { Edge, EdgeGroup, EntryNode, GraphNode, NpmUse, ProjectEdge, ProjectRecord, Resolution, ToolNode } from './model'
 import type { Resolver } from './resolve'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -152,6 +152,17 @@ function groupEdges(
 }
 
 /**
+ * Whether a project is configured by a `project.json` of its own, as against being read from a
+ * manifest alone.
+ *
+ * @param project - The project asked about
+ * @returns True when its root holds a `project.json`
+ */
+function hasProjectFile(project: ProjectRecord): boolean {
+  return project.files.includes(posix.join(project.root, 'project.json'))
+}
+
+/**
  * Builds the graph of a workspace.
  *
  * @param root - The workspace root, absolute
@@ -190,7 +201,9 @@ export function buildGraph(root: string, options: BuildOptions = {}): WorkspaceG
       nodes.set(nodeId(entry), entry)
     }
     const name = project.manifest?.name
-    if (name !== undefined && !byPackage.has(name)) byPackage.set(name, project)
+    // why: a manifest that only links a bin into the root install, as the engine's bin folder's does, repeats the package's name without being the project that implements it; the configured project owns the name
+    const holder = name === undefined ? undefined : byPackage.get(name)
+    if (name !== undefined && (holder === undefined || (!hasProjectFile(holder) && hasProjectFile(project)))) byPackage.set(name, project)
   }
   const resolver: Resolver = { root, files, projects, aliases, packages: packagesOf(globs.map(compileGlob), projects), entries }
   const imports = options.imports ?? importsOfFiles(root, fileList)
