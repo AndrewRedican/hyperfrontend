@@ -10,7 +10,7 @@ import { selectAffected } from './affected/select'
 import { buildGraph } from './build'
 import { changeSet } from './changes'
 import { CACHE_FILE } from './imports'
-import { graphAtRevision, previousGraph, withRevision } from './revision'
+import { graphAtRevision, previousGraph, previousWorkspaceFile, withRevision } from './revision'
 
 const planted: PlantedFixture[] = []
 
@@ -129,5 +129,36 @@ describe('previousGraph', () => {
     expect(set?.selected.find((decision) => decision.task === 'app-consumer:build')?.reasons.map((reason) => reason.rule)).toContain(
       'deleted-module'
     )
+  })
+})
+
+describe('previousWorkspaceFile', () => {
+  it('reads nothing for a selection of everything', () => {
+    expect(previousWorkspaceFile('/nowhere', null)).toBeUndefined()
+  })
+
+  it('reads nothing when the change set leaves hf.json alone', () => {
+    expect(
+      previousWorkspaceFile('/nowhere', { base: 'b', head: null, changes: [{ status: 'modified', path: 'a.ts', previousPath: null }] })
+    ).toBeUndefined()
+  })
+
+  it('reads the file as it stood at the base', () => {
+    const { root, base, head } = plant('global-config-target-edit')
+    expect(previousWorkspaceFile(root, changeSet(root, base, head))?.targetDefaults?.['build']?.inputs).toEqual([
+      'production',
+      '^production',
+    ])
+  })
+
+  it('reads the empty file for a base that has none', () => {
+    const { root } = plant('global-config-target-edit')
+    expect(
+      previousWorkspaceFile(root, {
+        base: 'no-such-revision',
+        head: null,
+        changes: [{ status: 'added', path: 'hf.json', previousPath: null }],
+      })
+    ).toEqual({})
   })
 })

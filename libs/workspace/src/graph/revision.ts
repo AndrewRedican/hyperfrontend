@@ -8,11 +8,13 @@
  */
 
 import type { WorkspaceGraph } from './build'
+import type { WorkspaceFile } from './inputs'
 import type { ChangeSet } from './selection'
 import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { buildGraph } from './build'
 import { CACHE_FILE } from './imports'
 import { readWorkspaceFile } from './inputs'
@@ -122,4 +124,39 @@ export function graphAtRevision(root: string, revision: string): WorkspaceGraph 
 export function previousGraph(root: string, changes: ChangeSet | null): WorkspaceGraph | undefined {
   if (changes === null || !changes.changes.some((change) => change.status === 'deleted' || change.status === 'renamed')) return undefined
   return graphAtRevision(root, changes.base)
+}
+
+/** The workspace file, read at the base when the change set touched it. */
+const WORKSPACE_FILE = 'hf.json'
+
+/**
+ * The `hf.json` as it stood at the base of a change set, when the selection needs it: only a
+ * change to the file asks what each task resolved to before.
+ *
+ * @param root - The workspace root, absolute
+ * @param changes - The change set, or null for a selection of everything
+ * @returns The file's content at the base, empty where the base had none, or undefined when the change set leaves the file alone
+ *
+ * @example Read only when the file changed
+ * ```typescript
+ * const changes = changeSet(root, 'main', null)
+ * const previousWorkspace = previousWorkspaceFile(root, changes) // => undefined unless hf.json is among the changes
+ * selectAffected({ graph: workspaceGraph(root), changes, targets: ['test'], previousWorkspace })
+ * ```
+ */
+export function previousWorkspaceFile(root: string, changes: ChangeSet | null): WorkspaceFile | undefined {
+  if (changes === null || !changes.changes.some((change) => change.path === WORKSPACE_FILE || change.previousPath === WORKSPACE_FILE))
+    return undefined
+  try {
+    return parse(
+      execFileSync('git', ['show', `${changes.base}:${WORKSPACE_FILE}`], {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      })
+    ) as WorkspaceFile
+  } catch {
+    // why: a base without the file, or with one that does not parse, is the empty configuration the engine assumes without it
+    return {}
+  }
 }

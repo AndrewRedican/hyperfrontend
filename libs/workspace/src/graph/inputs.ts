@@ -56,7 +56,7 @@ export interface DependsOnObject {
 export type DependsOn = string | DependsOnObject
 
 /** The inputs Nx gives a target configured without any. */
-const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
+export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
 
 /** The root `hf.json`, as far as the targets are read. */
 export interface WorkspaceFile {
@@ -289,9 +289,29 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
  * ```
  */
 export function expandInputs(root: string, project: ProjectRecord, inputs: readonly InputDefinition[]): string[] {
+  return expandWith(readWorkspaceFile(root), project, inputs)
+}
+
+/**
+ * The file patterns a list of inputs stands for against a given `hf.json`, which lets the inputs
+ * of a task be compared between two revisions of the file.
+ *
+ * @param file - The workspace file whose named inputs apply
+ * @param project - The project whose named inputs apply
+ * @param inputs - The inputs to expand
+ * @returns The patterns, `{projectRoot}` still unreplaced
+ *
+ * @example The same inputs under two revisions of the file
+ * ```typescript
+ * expandWith({ namedInputs: { production: ['default', '!{projectRoot}/**\/*.spec.ts'] } }, project, ['production'])
+ * // => ['{projectRoot}/**\/*', '!{projectRoot}/**\/*.spec.ts']
+ * expandWith({}, project, ['production']) // => ['production'], a name no definition knows
+ * ```
+ */
+export function expandWith(file: WorkspaceFile, project: ProjectRecord, inputs: readonly InputDefinition[]): string[] {
   const named: Readonly<Record<string, readonly InputDefinition[]>> = {
     default: ['{projectRoot}/**/*'],
-    ...readWorkspaceFile(root).namedInputs,
+    ...file.namedInputs,
     ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
   }
   const patterns: string[] = []

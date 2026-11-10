@@ -10,11 +10,13 @@
 
 import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { WorkspaceGraph } from '../build'
+import type { WorkspaceFile } from '../inputs'
 import type { Edge, EdgeGroup, EdgePath, ProjectRecord, ToolNode } from '../model'
 import type { Role } from '../roles'
 import type { AffectedSet, ChangeSet, ChangeStatus, Reason, ReasonRule, TaskDecision } from '../selection'
 import type { Closure, Hop } from './closure'
 import type { TaskInputs } from './targets'
+import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
@@ -22,9 +24,21 @@ import { prerequisitesOf } from '../depends-on'
 import { compareText } from '../order'
 import { roleOf } from '../roles'
 import { ReasonRule as Rules } from '../selection'
-import { hasTarget } from '../workspace'
+import { hasTarget, readJson } from '../workspace'
 import { ALL_KINDS, closureOf, hopTo, ruleHop, traceOf } from './closure'
-import { changedInput, configurationKind, dependentTask, fallback, globalConfig, isGlobalConfig, reached, reason, skipped } from './rules'
+import { targetResolution } from './resolution'
+import {
+  changedInput,
+  configurationKind,
+  dependentTask,
+  fallback,
+  globalConfig,
+  isGlobalConfig,
+  reached,
+  reason,
+  sameResolution,
+  skipped,
+} from './rules'
 import { taskInputs } from './targets'
 
 /** What an analysis needs. */
@@ -37,7 +51,12 @@ export interface SelectOptions {
   readonly targets: readonly string[]
   /** The graph at the base of the change, which lets a deleted or renamed module name the tasks it reached. */
   readonly previous?: WorkspaceGraph
+  /** The `hf.json` at the base of the change, which lets a change to it select only the tasks that resolve differently afterwards. */
+  readonly previousWorkspace?: WorkspaceFile
 }
+
+/** The workspace file, whose change is judged task by task when its previous content is at hand. */
+const WORKSPACE_FILE = 'hf.json'
 
 /** One changed path. */
 interface ChangedPath {
@@ -154,9 +173,13 @@ function changedPaths(changes: ChangeSet): ChangedPath[] {
  * ```
  */
 export function selectAffected(options: SelectOptions): Map<string, AffectedSet> {
-  const { graph, changes, previous = null } = options
+  const { graph, changes, previous = null, previousWorkspace } = options
   const paths = changedPaths(changes)
   const globals = paths.filter((change) => isGlobalConfig(change.path))
+  // why: the file is compared only when it changed and its base content was handed over; otherwise its change selects everything, as any global configuration does
+  const judged = previousWorkspace !== undefined && globals.some((change) => change.path === WORKSPACE_FILE) ? previousWorkspace : null
+  // why: the file is read afresh rather than through the per-root memo, which may hold the content of another checkout of the same root
+  const current = judged === null ? null : (readJson<WorkspaceFile>(join(graph.root, WORKSPACE_FILE)) ?? {})
   const deleted = createSet(
     paths.filter((change) => change.status === 'deleted' && !change.renamed).flatMap((change) => [change.path, stemOf(change.path)])
   )
@@ -379,7 +402,19 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
       const task = `${project.name}:${target}`
       const inputs = taskInputs(graph.root, project, target)
       const closure = closureFor(graph, project, inputs, false)
-      const decision: Decision = { reasons: globals.map((change) => globalConfig(change.path, task)), skips: [] }
+      const unchanged =
+        judged !== null && current !== null && targetResolution(judged, project, target) === targetResolution(current, project, target)
+      const decision: Decision = { reasons: [], skips: [] }
+      for (const change of globals) {
+        if (change.path !== WORKSPACE_FILE || !unchanged) {
+          decision.reasons.push(globalConfig(change.path, task))
+          continue
+        }
+        // why: judged, the file keeps its ordinary standing as a file of the root project, so a task that names it among its inputs is still selected
+        const outcome = decideFile(project, target, task, inputs, closure, change)
+        if (outcome.selected) decision.reasons.push(outcome.reason)
+        else decision.skips.push(sameResolution(change.path, task))
+      }
       for (const change of paths) {
         if (isGlobalConfig(change.path)) continue
         const outcome = decideFile(project, target, task, inputs, closure, change)

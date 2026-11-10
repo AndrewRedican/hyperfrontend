@@ -28,7 +28,7 @@ import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { commitChanges, createFsTree } from '@hyperfrontend/project-scope/vfs'
 import { selectAffected } from '../graph/affected/select'
 import { changeSet } from '../graph/changes'
-import { previousGraph } from '../graph/revision'
+import { previousGraph, previousWorkspaceFile } from '../graph/revision'
 import { buildState } from '../graph/store/state'
 import { discoverProjects, listFiles } from '../graph/workspace'
 import { installAliases } from '../hooks/index'
@@ -132,7 +132,13 @@ function affected(argv: readonly string[], session: Session): Promise<number> {
   const request = parseAffectedArgs(argv)
   const { graph } = buildState(root)
   const changes = changeSet(root, verifiedBase(root, request.base), request.head)
-  const sets = selectAffected({ graph, changes, targets: request.targets, previous: previousGraph(root, changes) })
+  const sets = selectAffected({
+    graph,
+    changes,
+    targets: request.targets,
+    previous: previousGraph(root, changes),
+    previousWorkspace: previousWorkspaceFile(root, changes),
+  })
   const tasks = request.targets.flatMap((target) =>
     (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
   )
