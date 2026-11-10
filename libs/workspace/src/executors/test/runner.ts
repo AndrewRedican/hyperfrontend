@@ -59,7 +59,7 @@ function parseArguments(argv: readonly string[]): CliArguments {
  */
 export async function runTestsCli(argv: readonly string[]): Promise<number> {
   const args = parseArguments(argv)
-  const loaded = (await import(pathToFileURL(args.configPath).href)) as TestConfigModule
+  const loaded = (await import(/* hf-graph: opaque */ pathToFileURL(args.configPath).href)) as TestConfigModule
   const config = loaded.default
 
   if (!config) throw createError(`${args.configPath} has no default export`)

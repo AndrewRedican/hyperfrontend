@@ -153,7 +153,7 @@ async function generate(argv: readonly string[], session: Session): Promise<numb
   const projects = discoverProjects(root, listFiles(root))
   const locate = (name: string): ReturnType<typeof locateGenerator> => locateGenerator(root, projects, name)
   const request = parseGenerateArgs(argv, (name) => locate(name).schema)
-  const module = (await import(pathToFileURL(locate(request.generator).file).href)) as GeneratorModule
+  const module = (await import(/* hf-graph: opaque */ pathToFileURL(locate(request.generator).file).href)) as GeneratorModule
   const tree = createFsTree(root)
   await module.default(tree, request.options)
   const result = commitChanges(tree, { dryRun: request.dryRun })
@@ -325,7 +325,7 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
       execPath: process.execPath,
       spawn: (line, spawnOptions) => spawn(line, spawnOptions),
       write: note,
-      importModule: (file) => import(pathToFileURL(file).href),
+      importModule: (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href),
     })
   try {
     return await chosen[0](rest, { root, cwd, say, note })

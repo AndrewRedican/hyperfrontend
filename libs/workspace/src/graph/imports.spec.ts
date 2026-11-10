@@ -73,6 +73,15 @@ describe('importsOfText', () => {
     ).toEqual(['unresolved name 1:1', 'unresolved a + b 2:1', 'unresolved x 3:1'])
   })
 
+  it('leaves out a load marked opaque, whose module belongs to the consumer', () => {
+    expect(
+      importsOfText(
+        'import(/* hf-graph: opaque */ href)\nrequire(/* hf-graph: opaque */ file)\ncreateRequire(import.meta.url)(/* hf-graph: opaque */ file)\nimport(/* why: not a marker */ other)\n',
+        'a.ts'
+      )?.map((item) => `${item.kind} ${item.specifier} ${item.line}:${item.column}`)
+    ).toEqual(['unresolved other 4:1'])
+  })
+
   it('reads nothing from a file that does not parse', () => {
     expect(kinds('const = \n')).toEqual([])
   })
