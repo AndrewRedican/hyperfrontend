@@ -86,6 +86,10 @@ export function locateExecutor(root: string, projects: ReadonlyMap<string, Proje
   const name = executor.slice(colon + 1)
   const entry = readJson<ExecutorsManifest>(manifestFile)?.executors?.[name]
   if (entry === undefined) throw refusal(`${packageName} lists no executor ${name} in ${manifestFile}`)
+  if (typeof entry.implementation !== 'string')
+    throw refusal(
+      `the executor ${executor} names no implementation in ${manifestFile}: an executors.json names each module under "implementation", where a generators.json uses "factory"`
+    )
   const directory = dirname(manifestFile)
   const file = moduleFile(directory, entry.implementation)
   if (file === undefined) throw refusal(`the module implementing ${executor} is missing: ${entry.implementation}`)

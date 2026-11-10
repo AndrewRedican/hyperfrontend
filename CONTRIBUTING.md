@@ -289,7 +289,7 @@ Version bumps happen automatically via **lefthook pre-push hooks**. When you `gi
 - Just write conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
 - Push normally; versioning happens automatically
 - Your PR will include the version bump already applied
-- A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the builder or the package executors releases every library
+- A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the modules of the builder that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor releases every library. That named input is a hand-kept list: a new builder module that changes what lands in a tarball is added to it in the same change
 
 **If you need to bypass versioning (not recommended):**
 

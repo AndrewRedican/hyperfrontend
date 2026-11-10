@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.1](https://github.com/AndrewRedican/hyperfrontend/compare/b5eefe8d581c111792730f9d42dcbce5ce8c24e7...26bc4bfd43c5b267e36406c600203c603df7c169) - 2026-11-09
+
+### Dependency Updates
+
+- **lib-builder:** resolve tsc beside the builder before the workspace root
+
 ## [0.12.0](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...998de01185d0dd0a73bb3c4fff5ca8d33b06703e) - 2026-11-07
 
 ### Features

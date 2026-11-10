@@ -139,6 +139,10 @@ export function locateGenerator(root: string, projects: ReadonlyMap<string, Proj
   const listing = colon > 0 ? listingOf(root, projects, written.slice(0, colon)) : listingOfBare(root, projects, name)
   const entry = listing?.generators[name]
   if (listing === undefined || entry === undefined) throw refusal(`no generator ${written}: ${generatorNames(root, projects).join(', ')}`)
+  if (typeof entry.factory !== 'string')
+    throw refusal(
+      `the generator ${written} names no factory in ${listing.manifestFile}: a generators.json names each module under "factory", where an executors.json uses "implementation"`
+    )
   const directory = dirname(listing.manifestFile)
   const file = moduleFile(directory, entry.factory)
   if (file === undefined) throw refusal(`the module implementing the generator ${written} is missing: ${entry.factory}`)

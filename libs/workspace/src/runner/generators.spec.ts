@@ -20,6 +20,7 @@ const TREE: FileTree = {
       'no-schema': { factory: './src/library/generator', schema: './src/none.json' },
       note: { factory: './src/note/generator', schema: './src/note/schema.json' },
       plain: { factory: './src/plain/generator', schema: './src/library/schema.json' },
+      'mis-keyed': { implementation: './src/library/generator', schema: './src/library/schema.json' },
     },
   },
   'tools/tooling/src/library/generator.ts': 'export default (): void => {}\n',
@@ -78,7 +79,7 @@ describe('locateGenerator', () => {
     'refuses %s, which nothing lists, naming what there is',
     (written) => {
       expect(() => locateGenerator(workspace.path, projects, written)).toThrow(
-        `no generator ${written}: @fixture/other:shared, @fixture/tooling:library, @fixture/tooling:shared, @fixture/tooling:gone, @fixture/tooling:no-schema, @fixture/tooling:note, @fixture/tooling:plain, @hyperfrontend/workspace:library, @hyperfrontend/workspace:workspace`
+        `no generator ${written}: @fixture/other:shared, @fixture/tooling:library, @fixture/tooling:shared, @fixture/tooling:gone, @fixture/tooling:no-schema, @fixture/tooling:note, @fixture/tooling:plain, @fixture/tooling:mis-keyed, @hyperfrontend/workspace:library, @hyperfrontend/workspace:workspace`
       )
     }
   )
@@ -86,6 +87,12 @@ describe('locateGenerator', () => {
   it('refuses a generator whose module is missing', () => {
     expect(() => locateGenerator(workspace.path, projects, 'gone')).toThrow(
       'the module implementing the generator gone is missing: ./src/gone/generator'
+    )
+  })
+
+  it('refuses a generator whose manifest entry names no factory, pointing at the key', () => {
+    expect(() => locateGenerator(workspace.path, projects, 'mis-keyed')).toThrow(
+      `the generator mis-keyed names no factory in ${join(workspace.path, 'tools/tooling/generators.json')}: a generators.json names each module under "factory", where an executors.json uses "implementation"`
     )
   })
 

@@ -11,7 +11,10 @@ import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '../shared/logger'
-import { resolveFromWorkspace } from '../shared/workspace'
+import { resolveFromEngine, resolveFromWorkspace } from '../shared/workspace'
+
+/** The compiler's own entry script, as a module specifier. */
+const TSC_SCRIPT = 'typescript/bin/tsc'
 
 /**
  * Typecheck executor for the projects of a workspace.
@@ -70,10 +73,13 @@ export async function typecheckExecutor(options: TypecheckExecutorOptions, conte
   }
 
   // why: the launcher in node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, so the compiler's own entry script runs on the current Node binary instead
-  const tscScript = resolveFromWorkspace(workspaceRoot, 'typescript/bin/tsc')
+  // why: the engine's own TypeScript comes first, so the check runs on the compiler the build runs on, and a TypeScript the workspace installed that ships no tsc script (7 and later) does not get in the way
+  const tscScript = resolveFromEngine(TSC_SCRIPT) ?? resolveFromWorkspace(workspaceRoot, TSC_SCRIPT)
   if (tscScript === null) {
-    logger.error(`TypeScript compiler not found from: ${workspaceRoot}`)
-    logger.error('Please run npm install to ensure TypeScript is installed.')
+    logger.error(`TypeScript compiler not found: nothing resolves ${TSC_SCRIPT} beside the engine or from ${workspaceRoot}`)
+    logger.error(
+      "Run npm install so the engine's typescript dependency is present, or install typescript 5 at the workspace root; TypeScript 7 ships no tsc script."
+    )
     return { success: false }
   }
 

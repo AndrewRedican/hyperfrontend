@@ -4,8 +4,9 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
 import { fixtureNamed, plantFixture } from './__test-utils__/workspace-fixtures'
-import { changeSet, parseNameStatus } from './changes'
+import { changeSet, DEFAULT_BASE, parseNameStatus, resolveBase } from './changes'
 
 const planted: PlantedFixture[] = []
 
@@ -36,6 +37,28 @@ describe('parseNameStatus', () => {
       { status: 'modified', path: 'h', previousPath: null },
       { status: 'modified', path: 'i', previousPath: null },
     ])
+  })
+})
+
+describe('resolveBase', () => {
+  const unborn = useTempDir({ prefix: 'resolve-base-' })
+
+  it('answers a revision the repository has', () => {
+    const { root, head } = plant('renamed-module')
+    expect(resolveBase(root, head)).toBe(head)
+  })
+
+  it('compares with main when the default base is asked for and the repository has no origin/main', () => {
+    expect(resolveBase(plant('renamed-module').root, DEFAULT_BASE)).toBe('main')
+  })
+
+  it('answers null for a revision the repository does not have', () => {
+    expect(resolveBase(plant('renamed-module').root, 'v9.9.9')).toBeNull()
+  })
+
+  it('answers null for the default base in a repository with no commits', () => {
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], { cwd: unborn.path })
+    expect(resolveBase(unborn.path, DEFAULT_BASE)).toBeNull()
   })
 })
 

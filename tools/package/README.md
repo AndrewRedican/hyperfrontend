@@ -115,7 +115,7 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
-A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it: `tool-package`, `lib-builder` and the build executor of `lib-workspace`. The rest of `lib-workspace` orchestrates tasks and shapes no output, so a change there releases no other library. See [the version executor](../../libs/workspace/src/executors/version/README.md#what-the-flow-assumes).
+A library is also released, by a patch, when a releasable commit changes code it ships or the toolchain that builds it: the build executor of `tool-package`, the modules of `lib-builder` that shape a tarball (the `toolchain` named input in `hf.json`: the models and presets, entry discovery, externals, dependency bundling, deduplication, the Rollup run, declaration flattening, comment stripping, the package and bin phases, and the builder's own manifest) and the build executor of `lib-workspace`. The rest of each orchestrates tasks, finds tools or manages memory and shapes no output, so a change there releases no other library. See [the version executor](../../libs/workspace/src/executors/version/README.md#what-the-flow-assumes).
 
 ## Development
 

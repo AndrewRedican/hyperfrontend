@@ -5,7 +5,7 @@ Node SEA (single-executable application) primitives: turn an already-built CJS b
 `buildNativeBin({ bin, ctx, cjsOutputPath })` orchestrates the full pipeline, in order:
 
 1. Validates the bin declares a CJS format.
-2. Skips silently with an info log when the current host doesn't match any declared [`sea.platforms`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-SeaConfig-prop-platforms) entry. CI orchestrates the matrix, so each declared platform is built on the matching runner.
+2. Skips silently with an info log when the current host doesn't match any declared [`sea.platforms`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-SeaConfig-prop-platforms) entry. A binary for each declared platform comes from running the build on a host of that platform.
 3. Generates the SEA config JSON via [`generateSeaConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/native/#api-generateSeaConfig).
 4. Runs [`generateSeaBlob`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/native/#api-generateSeaBlob), which spawns `node --experimental-sea-config <path>` and emits the SEA preparation blob.
 5. Resolves the Node host via [`resolveHostBinary`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/native/#api-resolveHostBinary) (current platform only, defaulting to `process.execPath`).

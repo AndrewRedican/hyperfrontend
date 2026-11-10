@@ -82,6 +82,19 @@ describe('locateExecutor', () => {
     }
   })
 
+  it('refuses an executor whose manifest entry names no implementation, pointing at the key', () => {
+    const misKeyed = variant({
+      'tools/tooling/executors.json': { executors: { build: { factory: './src/build/executor', schema: './src/build/schema.json' } } },
+    })
+    try {
+      expect(() => locateExecutor(misKeyed.root, misKeyed.projects, '@fixture/tooling:build')).toThrow(
+        `the executor @fixture/tooling:build names no implementation in ${join(misKeyed.root, 'tools/tooling/executors.json')}: an executors.json names each module under "implementation", where a generators.json uses "factory"`
+      )
+    } finally {
+      misKeyed.remove()
+    }
+  })
+
   it('refuses an executor whose module is missing', () => {
     expect(() => locateExecutor(workspace.path, projects, '@fixture/tooling:missing')).toThrow(
       'the module implementing @fixture/tooling:missing is missing: ./src/missing'

@@ -41,7 +41,7 @@ import { describeError, refusal } from '../runner/refusal'
 import { main } from '../runner/run'
 import { selfCommand } from '../runner/self'
 import { SHOW_USAGE, showProjects } from '../runner/show'
-import { GRAPH_USAGE, runGraph } from './graph'
+import { GRAPH_USAGE, runGraph, verifiedBase } from './graph'
 import { handOver, processHost } from './handover'
 
 /** The file that marks a workspace root. */
@@ -131,7 +131,7 @@ function affected(argv: readonly string[], session: Session): Promise<number> {
   const { root } = session
   const request = parseAffectedArgs(argv)
   const { graph } = buildState(root)
-  const changes = changeSet(root, request.base, request.head)
+  const changes = changeSet(root, verifiedBase(root, request.base), request.head)
   const sets = selectAffected({ graph, changes, targets: request.targets, previous: previousGraph(root, changes) })
   const tasks = request.targets.flatMap((target) =>
     (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))

@@ -83,7 +83,7 @@ A local executor is a function of its options and the task's context; a local ge
 npm install --save-dev @hyperfrontend/workspace
 ```
 
-Requires Node.js 24 or later. The peers are optional, so install the ones the workspace uses: [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/) for the test and e2e executors, [`@hyperfrontend/linter`](https://www.hyperfrontend.dev/docs/libraries/linter/) for the inferred lint target, prettier for the format command and the generators, and jsdom for the browser e2e suites.
+Requires Node.js 24 or later. The peers are optional, so install the ones the workspace uses: [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/) for the test and e2e executors, [`@hyperfrontend/linter`](https://www.hyperfrontend.dev/docs/libraries/linter/) for the inferred lint target, prettier for the format command and the generators, and jsdom for the browser e2e suites. The type check and the build run on the TypeScript the package itself depends on, so the root may carry whatever TypeScript the editor wants, or none.
 
 ## Quick Start
 
@@ -91,12 +91,13 @@ In a repository with a root `package.json`:
 
 ```bash
 npx hf generate workspace
+npm install
 npx hf generate library my-utils --publishable
 npx hf run my-utils:test
-npx hf affected -t test --base=origin/main
+npx hf affected -t test
 ```
 
-The first command writes `hf.json` and the base configurations; the second writes a library with its project, manifest, configurations and e2e project; the rest run its tasks. [The commands](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/) and [writing an executor or generator](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/) are each one page.
+The first command writes `hf.json` and the base configurations and settles the root manifest (an ES module package, with `@types/node` among its development dependencies), which the second installs; the third writes a library with its project, manifest, configurations and e2e project; the rest run its tasks. The affected run compares with `origin/main`, or with [`main`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-main) where the repository has no such remote branch, unless `--base` names another revision. [The commands](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/) and [writing an executor or generator](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/) are each one page.
 
 ## API Overview
 

@@ -91,8 +91,8 @@ export function planLibrary(tree: Tree, options: LibraryGeneratorOptions): Libra
 }
 
 /**
- * Writes the library's `package.json`: private until it is made publishable, with the licence and
- * the repository the root manifest states.
+ * Writes the library's `package.json`: an ES module package, private until it is made publishable,
+ * with the licence and the repository the root manifest states.
  *
  * @param tree - The tree written to
  * @param plan - The settled options
@@ -108,6 +108,8 @@ function writePackageJson(tree: Tree, plan: LibraryPlan): void {
     ...(repository === undefined
       ? {}
       : { repository: typeof repository === 'string' ? repository : { ...repository, directory: plan.projectRoot } }),
+    // why: the configurations beside the sources are ES modules, and Node reads how to load them from the nearest manifest
+    type: 'module',
     private: true,
     exports: { '.': './src/index.js', './package.json': './package.json' },
   })

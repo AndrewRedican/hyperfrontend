@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { buildOutputOf, resolveFromWorkspace, workspacePackages } from './workspace'
+import { buildOutputOf, resolveFromEngine, resolveFromWorkspace, workspacePackages } from './workspace'
 
 describe('resolveFromWorkspace', () => {
   const workspace = useTempDir({
@@ -21,6 +21,34 @@ describe('resolveFromWorkspace', () => {
 
   it('answers null for a module the workspace cannot resolve', () => {
     expect(resolveFromWorkspace(workspace.path, '@fixture/absent/hooks')).toBeNull()
+  })
+})
+
+describe('resolveFromEngine', () => {
+  const installs = useTempDir({
+    prefix: 'executors-engine-',
+    tree: {
+      'node_modules/typescript/package.json': '{ "name": "typescript", "version": "7.0.0", "exports": { ".": "./index.js" } }',
+      'node_modules/typescript/index.js': '',
+      'node_modules/typescript/bin/tsc': '',
+      'node_modules/@hyperfrontend/workspace/executors/keep.txt': '',
+      'node_modules/@hyperfrontend/workspace/node_modules/typescript/package.json': '{ "name": "typescript", "version": "5.9.3" }',
+      'node_modules/@hyperfrontend/workspace/node_modules/typescript/bin/tsc': '',
+    },
+  })
+
+  it('finds the dependency nested beside the engine before the one hoisted above it', () => {
+    expect(resolveFromEngine('typescript/bin/tsc', join(installs.path, 'node_modules', '@hyperfrontend', 'workspace', 'executors'))).toBe(
+      join(installs.path, 'node_modules', '@hyperfrontend', 'workspace', 'node_modules', 'typescript', 'bin', 'tsc')
+    )
+  })
+
+  it('answers null when the hoisted package does not export the script and nothing is nested', () => {
+    expect(resolveFromEngine('typescript/bin/tsc', join(installs.path, 'node_modules', 'other'))).toBeNull()
+  })
+
+  it('climbs from this module when no directory is given', () => {
+    expect(resolveFromEngine('typescript/bin/tsc')).toMatch(/typescript[\\/]bin[\\/]tsc$/)
   })
 })
 

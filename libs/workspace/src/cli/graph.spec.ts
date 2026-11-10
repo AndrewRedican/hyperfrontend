@@ -11,20 +11,21 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { selectAffected } from '../graph/affected/select'
 import { workspaceGraph } from '../graph/build'
-import { changeSet } from '../graph/changes'
+import { changeSet, resolveBase } from '../graph/changes'
 import { previousGraph } from '../graph/revision'
 import { buildState, stateStatus, verifyState } from '../graph/store/state'
 import { runGraph } from './graph'
 
 jest.mock('../graph/affected/select', () => ({ selectAffected: jest.fn() }))
 jest.mock('../graph/build', () => ({ workspaceGraph: jest.fn() }))
-jest.mock('../graph/changes', () => ({ changeSet: jest.fn() }))
+jest.mock('../graph/changes', () => ({ changeSet: jest.fn(), DEFAULT_BASE: 'origin/main', resolveBase: jest.fn() }))
 jest.mock('../graph/revision', () => ({ previousGraph: jest.fn() }))
 jest.mock('../graph/store/state', () => ({ buildState: jest.fn(), stateStatus: jest.fn(), verifyState: jest.fn() }))
 
 const mockSelect = selectAffected as Mock
 const mockGraph = workspaceGraph as Mock
 const mockChanges = changeSet as Mock
+const mockResolveBase = resolveBase as Mock
 const mockPrevious = previousGraph as Mock
 const mockBuild = buildState as Mock
 const mockStatus = stateStatus as Mock
@@ -181,6 +182,7 @@ beforeEach(() => {
   mockGraph.mockReturnValue(graph())
   mockBuild.mockReturnValue(built(['graph.json']))
   mockChanges.mockReturnValue(CHANGES)
+  mockResolveBase.mockImplementation((_root: string, base: string) => base)
   mockPrevious.mockReturnValue(PREVIOUS)
   mockSelect.mockImplementation((options: { targets: readonly string[] }) =>
     createMap(options.targets.map((target) => [target, selected(target)]))
@@ -278,9 +280,29 @@ describe('runGraph explain of a task', () => {
     ])
   })
 
-  it('decides against main and the working tree unless told otherwise', () => {
+  it('decides against origin/main and the working tree unless told otherwise', () => {
+    run(['explain', 'app-shop:test'])
+    expect(mockChanges.mock.calls).toEqual([[ROOT, 'origin/main', null]])
+  })
+
+  it('decides against the revision the repository resolves the base to', () => {
+    mockResolveBase.mockReturnValue('main')
     run(['explain', 'app-shop:test'])
     expect(mockChanges.mock.calls).toEqual([[ROOT, 'main', null]])
+  })
+
+  it('refuses a default base the repository cannot resolve, naming both candidates', () => {
+    mockResolveBase.mockReturnValue(null)
+    expect(() => run(['explain', 'app-shop:test'])).toThrow(
+      'neither origin/main nor main in this repository: commit first, or name the base with --base=<ref>'
+    )
+  })
+
+  it('refuses a named base the repository does not have', () => {
+    mockResolveBase.mockReturnValue(null)
+    expect(() => run(['explain', 'app-shop:test', '--base', 'v9'])).toThrow(
+      'no revision v9 in this repository: commit first, or name the base with --base=<ref>'
+    )
   })
 
   it('decides between the revisions it is given', () => {

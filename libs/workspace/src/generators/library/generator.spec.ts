@@ -100,6 +100,7 @@ describe('libraryGenerator', () => {
       description: 'Alpha.',
       license: 'MIT',
       repository: { type: 'git', url: 'git+https://example.test/acme.git', directory: 'libs/alpha' },
+      type: 'module',
       private: true,
       exports: { '.': './src/index.js', './package.json': './package.json' },
     })
@@ -112,6 +113,7 @@ describe('libraryGenerator', () => {
       name: '@acme/alpha',
       version: '0.0.0',
       description: 'Alpha library.',
+      type: 'module',
       private: true,
       exports: { '.': './src/index.js', './package.json': './package.json' },
     })

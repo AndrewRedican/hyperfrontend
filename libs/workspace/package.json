@@ -1,11 +1,11 @@
 {
   "name": "@hyperfrontend/workspace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@hyperfrontend/builder": "0.7.3",
+    "@hyperfrontend/builder": "0.7.4",
     "@hyperfrontend/immutable-api-utils": "1.0.5",
     "@hyperfrontend/json-utils": "1.1.4",
     "@hyperfrontend/linter": "0.3.2",
