@@ -66,7 +66,7 @@ export function workspaceRootFrom(directory: string): string | null {
  */
 export function readSources(root: string): WorkspaceSources {
   const file = join(root, BASE_TSCONFIG)
-  const tsconfig = existsSync(file) ? (createRequire(import.meta.url)(file) as BaseTsconfig) : {}
+  const tsconfig = existsSync(file) ? (createRequire(import.meta.url)(/* hf-graph: opaque */ file) as BaseTsconfig) : {}
   return { root, aliases: tsconfig.compilerOptions?.paths ?? {} }
 }
 

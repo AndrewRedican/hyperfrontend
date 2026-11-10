@@ -4,6 +4,6 @@ import { ChangeStatus, ReasonRule } from './selection'
 
 describe('the selection vocabulary', () => {
   it('closes the change statuses and the reason rules', () => {
-    expect([keys(ChangeStatus), keys(ReasonRule).length]).toEqual([['Added', 'Modified', 'Deleted', 'Renamed'], 19])
+    expect([keys(ChangeStatus), keys(ReasonRule).length]).toEqual([['Added', 'Modified', 'Deleted', 'Renamed'], 20])
   })
 })

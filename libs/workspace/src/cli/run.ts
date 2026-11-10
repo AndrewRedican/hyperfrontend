@@ -28,7 +28,7 @@ import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { commitChanges, createFsTree } from '@hyperfrontend/project-scope/vfs'
 import { selectAffected } from '../graph/affected/select'
 import { changeSet } from '../graph/changes'
-import { previousGraph } from '../graph/revision'
+import { previousGraph, previousWorkspaceFile } from '../graph/revision'
 import { buildState } from '../graph/store/state'
 import { discoverProjects, listFiles } from '../graph/workspace'
 import { installAliases } from '../hooks/index'
@@ -132,7 +132,13 @@ function affected(argv: readonly string[], session: Session): Promise<number> {
   const request = parseAffectedArgs(argv)
   const { graph } = buildState(root)
   const changes = changeSet(root, verifiedBase(root, request.base), request.head)
-  const sets = selectAffected({ graph, changes, targets: request.targets, previous: previousGraph(root, changes) })
+  const sets = selectAffected({
+    graph,
+    changes,
+    targets: request.targets,
+    previous: previousGraph(root, changes),
+    previousWorkspace: previousWorkspaceFile(root, changes),
+  })
   const tasks = request.targets.flatMap((target) =>
     (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
   )
@@ -153,7 +159,7 @@ async function generate(argv: readonly string[], session: Session): Promise<numb
   const projects = discoverProjects(root, listFiles(root))
   const locate = (name: string): ReturnType<typeof locateGenerator> => locateGenerator(root, projects, name)
   const request = parseGenerateArgs(argv, (name) => locate(name).schema)
-  const module = (await import(pathToFileURL(locate(request.generator).file).href)) as GeneratorModule
+  const module = (await import(/* hf-graph: opaque */ pathToFileURL(locate(request.generator).file).href)) as GeneratorModule
   const tree = createFsTree(root)
   await module.default(tree, request.options)
   const result = commitChanges(tree, { dryRun: request.dryRun })
@@ -325,7 +331,7 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
       execPath: process.execPath,
       spawn: (line, spawnOptions) => spawn(line, spawnOptions),
       write: note,
-      importModule: (file) => import(pathToFileURL(file).href),
+      importModule: (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href),
     })
   try {
     return await chosen[0](rest, { root, cwd, say, note })

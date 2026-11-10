@@ -24,7 +24,9 @@ A file's role (production, spec, test config, lint config, build config, script,
 
 ## Affected analysis
 
-[`selectAffected`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/#api-selectAffected) decides, for every task of a target, whether a change set selects it, and writes the reason either way. A task is selected by a changed file among its own inputs, by a changed file of another project its closure reaches, by a changed implementation of a tool it runs, by a changed manifest or configuration of a project it depends on, by a global configuration file, or because a task it runs after is selected. What the graph cannot follow precisely it counts whole, and says so: a dynamic load it cannot name, a file that does not parse, a dangling import, a project re-exported whole, every member of a cross-project cycle, every implicit dependency.
+[`selectAffected`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/#api-selectAffected) decides, for every task of a target, whether a change set selects it, and writes the reason either way. A task is selected by a changed file among its own inputs, by a changed file of another project its closure reaches, by a changed implementation of a tool it runs, by a changed manifest or configuration of a project it depends on, by a global configuration file, or because a task it runs after is selected. `hf.json` is judged per task when its base content is given: a task is selected only if it resolves differently (executor, inputs, dependencies) or names the file as an input.
+
+What the graph cannot follow precisely it counts whole, and says so: a dynamic load it cannot name, a file that does not parse, a dangling import, a project re-exported whole, every member of a cross-project cycle, every implicit dependency. A load of consumer code marked `import(/* hf-graph: opaque */ href)` draws no edge.
 
 Two rules go beyond what the inputs say. A type-only import does not reach test or lint, which strip types before running. And build reaches its dependencies from production files alone, since its artifact derives from nothing else; every other target reaches them from every file it reads.
 

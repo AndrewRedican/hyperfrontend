@@ -261,6 +261,23 @@ function positionOf(starts: readonly number[], offset: number): Position {
   return { line: low + 1, column: offset - (starts[low] as number) + 1 }
 }
 
+/** The marker a load carries, as a block comment before its argument, to say it reaches nothing of the workspace. */
+const OPAQUE_MARKER = /\/\*\s*hf-graph:\s*opaque\s*\*\//
+
+/**
+ * Whether a load is marked opaque: a `hf-graph: opaque` block comment stands between the call and
+ * its argument, as in `import(/* hf-graph: opaque *\/ href)`, saying the module it loads belongs to
+ * the consumer, so the graph draws no edge for it rather than counting the file's project whole.
+ *
+ * @param text - The file's text
+ * @param from - Where the load starts
+ * @param to - Where its argument starts
+ * @returns True when the marker is present
+ */
+function isOpaque(text: string, from: number, to: number): boolean {
+  return OPAQUE_MARKER.test(text.slice(from, to))
+}
+
 /**
  * The imports a tree makes: declarations, re-exports, dynamic imports, `require` and
  * `require.resolve` calls, import equals declarations and import types, as Nx counts them, each
@@ -304,14 +321,16 @@ export function importsOfTree(tree: Node, text: string): FileImport[] {
       push(node, source, false, kind, typeOnly, namesOf(node))
     } else if (node.kind === 'ImportExpression') {
       if (source !== null) push(node, source, true, 'dynamic', false, [])
-      else push(node, textOf(text, node.source as Node), true, 'unresolved', false, [])
+      else if (!isOpaque(text, node.start as number, (node.source as Node).start as number))
+        push(node, textOf(text, node.source as Node), true, 'unresolved', false, [])
     } else if (node.kind === 'CallExpression' && (isRequire(node.callee as Node) || isCreatedRequire(node.callee as Node))) {
       const first = (node.arguments as readonly Node[])[0]
       const argument = stringOf(first)
       if (argument !== null) {
         // why: Nx reads `require` and `require.resolve` calls alone, so a literal through a created require draws no edge of its own.
         if (!isCreatedRequire(node.callee as Node)) push(node, argument, dynamic, 'value', false, [])
-      } else if (first !== undefined) push(node, textOf(text, first), true, 'unresolved', false, [])
+      } else if (first !== undefined && !isOpaque(text, node.start as number, first.start as number))
+        push(node, textOf(text, first), true, 'unresolved', false, [])
     } else if (node.kind === 'TSExternalModuleReference') {
       const argument = stringOf(node.expression as Node)
       const typeOnly = (node.parent as Node).importKind === 'type'

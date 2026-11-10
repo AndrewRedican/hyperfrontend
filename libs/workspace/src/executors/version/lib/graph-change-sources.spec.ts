@@ -9,6 +9,7 @@ import { graphChangeSources, parseCommitFiles, selectReleaseBuilds, withShippedC
 jest.mock('../../../graph', () => ({
   ...jest.requireActual<typeof import('../../../graph')>('../../../graph'),
   changeSet: jest.fn(() => ({ files: [] })),
+  previousWorkspaceFile: jest.fn(),
   selectAffected: jest.fn(),
 }))
 

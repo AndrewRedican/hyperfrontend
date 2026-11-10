@@ -95,6 +95,22 @@ export function globalConfig(file: string, task: string): Reason {
 }
 
 /**
+ * The reason a changed `hf.json` leaves a task out: the task resolves as it did before the change.
+ *
+ * @param file - The changed configuration file
+ * @param task - The task left out
+ * @returns The reason
+ */
+export function sameResolution(file: string, task: string): Reason {
+  return reason(
+    Rules.SameResolution,
+    file,
+    [],
+    `${file} changed, but ${task} resolves as before: the same executor, inputs and dependencies`
+  )
+}
+
+/**
  * The reason a task's own input changed.
  *
  * @param file - The changed file the task lists among its inputs

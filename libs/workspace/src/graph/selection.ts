@@ -53,6 +53,7 @@ export const ReasonRule = freeze({
   DependencyManifest: 'dependency-manifest',
   ProjectConfiguration: 'project-configuration',
   GlobalConfig: 'global-config',
+  SameResolution: 'same-resolution',
   DeletedModule: 'deleted-module',
   RenamedModule: 'renamed-module',
   ToolChanged: 'tool-changed',

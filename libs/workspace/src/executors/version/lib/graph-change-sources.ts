@@ -5,7 +5,7 @@ import type { ChangeSources } from './shipped-change-commits'
 import { execFileSync } from 'node:child_process'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { changeSet, EdgeKind, selectAffected } from '../../../graph'
+import { changeSet, EdgeKind, previousWorkspaceFile, selectAffected } from '../../../graph'
 import { BUILD_TARGET, createShippedChangeResolver } from './shipped-change-commits'
 
 /** The byte that opens each commit in the log format below, which no path or hash contains. */
@@ -48,9 +48,14 @@ export function parseCommitFiles(output: string): Map<string, Set<string>> {
 export function selectReleaseBuilds(graph: WorkspaceGraph, workspaceRoot: string, base: string, head: string): readonly TaskDecision[] {
   const withoutTools: WorkspaceGraph = { ...graph, records: graph.records.filter((edge) => edge.kind !== EdgeKind.Tool) }
   // why: the graph at the base is left out; it only lets a deleted module name what it reached, and a library that imported one changes its own file in the same commit
+  const changes = changeSet(workspaceRoot, base, head)
   return (
-    selectAffected({ graph: withoutTools, changes: changeSet(workspaceRoot, base, head), targets: [BUILD_TARGET] }).get(BUILD_TARGET)
-      ?.selected ?? []
+    selectAffected({
+      graph: withoutTools,
+      changes,
+      targets: [BUILD_TARGET],
+      previousWorkspace: previousWorkspaceFile(workspaceRoot, changes),
+    }).get(BUILD_TARGET)?.selected ?? []
   )
 }
 

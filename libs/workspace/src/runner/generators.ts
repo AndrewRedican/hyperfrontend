@@ -202,7 +202,7 @@ export async function runGenerator(
   tree: Tree,
   written: string,
   options: Record<string, unknown>,
-  importModule: ImportModule = (file) => import(pathToFileURL(file).href)
+  importModule: ImportModule = (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href)
 ): Promise<void> {
   const projects = discoverProjects(tree.root, listFiles(tree.root))
   const generator = await loadGenerator(locateGenerator(tree.root, projects, written), importModule, written)

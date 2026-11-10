@@ -5,10 +5,12 @@ import { rmSync } from 'node:fs'
 import { after as afterAll } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from '../__test-utils__/workspace'
 import { fixtureNamed, plantFixture } from '../__test-utils__/workspace-fixtures'
 import { buildGraph, workspaceGraph } from '../build'
 import { changeSet } from '../changes'
+import { previousWorkspaceFile } from '../revision'
 import { selectAffected } from './select'
 
 /** A scenario analysed: both graphs and the change set. */
@@ -155,6 +157,8 @@ describe('the acceptance scenarios', () => {
     ['root-input-edit', 'build', []],
     ['global-config-edit', 'build', ALL_BUILDS],
     ['global-config-edit', 'docs', ['workspace']],
+    ['global-config-target-edit', 'build', ALL_BUILDS],
+    ['global-config-target-edit', 'docs', ['workspace']],
     ['renamed-module', 'build', ['app-beta', 'app-consumer', 'lib-alpha', 'lib-beta']],
     ['deleted-project-file', 'build', ['app-beta']],
     ['deleted-project-file', 'typecheck', ['app-beta']],
@@ -171,6 +175,81 @@ describe('the acceptance scenarios', () => {
     ['deleted-module-rewired', 'build', ['app-beta', 'app-consumer', 'lib-alpha', 'lib-beta']],
   ])('%s selects for %s', (name, target, expected) => {
     expect(selects(name, target)).toEqual(expected)
+  })
+})
+
+describe('a changed hf.json judged task by task', () => {
+  /**
+   * The set of a target decided with the workspace file as it stood at the base.
+   *
+   * @param name - The scenario
+   * @param target - The target decided
+   * @returns The affected set
+   */
+  function judged(name: string, target: string): AffectedSet {
+    const item = analyse(name)
+    const previousWorkspace = previousWorkspaceFile(item.graph.root, item.changes)
+    return selectAffected({ graph: item.graph, changes: item.changes, targets: [target], previousWorkspace }).get(target) as AffectedSet
+  }
+
+  it.each([
+    ['global-config-edit', 'build', []],
+    ['global-config-edit', 'docs', []],
+    ['global-config-target-edit', 'build', ALL_BUILDS],
+    ['global-config-target-edit', 'typecheck', []],
+    ['global-config-target-edit', 'docs', []],
+  ])('%s selects for %s', (name, target, expected) => {
+    expect(judged(name, target).selected.map((decision) => decision.task.slice(0, -target.length - 1))).toEqual(expected)
+  })
+
+  it('skips a task that resolves as before, naming the file', () => {
+    expect(judged('global-config-edit', 'build').skipped.find((decision) => decision.task === 'lib-alpha:build')?.reasons).toEqual([
+      expect.objectContaining({
+        rule: 'same-resolution',
+        file: 'hf.json',
+        message: 'hf.json changed, but lib-alpha:build resolves as before: the same executor, inputs and dependencies',
+      }),
+    ])
+  })
+
+  it('selects a task that resolves differently by the global rule', () => {
+    expect(
+      judged('global-config-target-edit', 'build')
+        .selected.find((decision) => decision.task === 'lib-alpha:build')
+        ?.reasons.map((reason) => reason.rule)
+    ).toEqual(['global-config'])
+  })
+
+  it('still selects a task that names the file among its inputs, as it selects any other file', () => {
+    const root = createTempDir({
+      prefix: 'lint-graph-named-workspace-file-',
+      tree: {
+        'package.json': '{ "name": "@fixture/root" }',
+        'project.json':
+          '{ "name": "root", "targets": { "audit": { "inputs": ["{workspaceRoot}/hf.json"] }, "docs": { "inputs": ["{projectRoot}/docs/**/*"] } } }',
+        'hf.json': '{ "namedInputs": { "state": ["{projectRoot}/package.json", "{workspaceRoot}/hf.json"] } }',
+        'docs/guide.md': '# Guide\n',
+        'libs/a/project.json':
+          '{ "name": "lib-a", "targets": { "audit": { "inputs": ["state"] }, "docs": { "inputs": ["{projectRoot}/docs/**/*"] } } }',
+        'libs/a/docs/guide.md': '# A\n',
+      },
+    }).path
+    execFileSync('git', ['init', '-q'], { cwd: root })
+    const graph = workspaceGraph(root)
+    const changes: ChangeSet = { base: 'base', head: null, changes: [{ status: 'modified', path: 'hf.json', previousPath: null }] }
+    const previousWorkspace = { namedInputs: { state: ['{projectRoot}/package.json', '{workspaceRoot}/hf.json'] } }
+    const sets = selectAffected({ graph, changes, targets: ['audit', 'docs'], previousWorkspace })
+    const outcome = (target: string): string[] => {
+      const set = sets.get(target) as AffectedSet
+      return [...set.selected, ...set.skipped]
+        .map((decision) => `${decision.task} ${decision.reasons.map((reason) => reason.rule).join(',')}`)
+        .sort()
+    }
+    expect([outcome('audit'), outcome('docs')]).toEqual([
+      ['lib-a:audit changed-input', 'root:audit changed-input'],
+      ['lib-a:docs same-resolution', 'root:docs same-resolution'],
+    ])
+    rmSync(root, { recursive: true, force: true })
   })
 })
 

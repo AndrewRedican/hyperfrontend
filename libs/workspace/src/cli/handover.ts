@@ -69,7 +69,7 @@ export function processHost(entry: string = FEATURES_CLI): HandoverHost {
         return null
       }
     },
-    load: (file) => import(pathToFileURL(file).href) as Promise<FeaturesCli>,
+    load: (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href) as Promise<FeaturesCli>,
   }
 }
 

@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
 import { posix } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries, freeze, fromEntries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 
@@ -191,6 +191,33 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
   }),
 })
 
+/** The defaults of a target, as far as the fixture edits them. */
+interface FixtureTargetDefaults {
+  /** The inputs. */
+  readonly inputs: readonly string[]
+}
+
+/** The fixture's workspace file, as far as it is edited. */
+interface FixtureWorkspaceFile {
+  /** The defaults of each target. */
+  readonly targetDefaults: Record<string, FixtureTargetDefaults>
+}
+
+/**
+ * The workspace file with one more input on the build target.
+ *
+ * @param text - The file as the fixture writes it
+ * @returns The file with the root README among the build inputs
+ */
+function withBuildInput(text: string): string {
+  const file = parse(text) as FixtureWorkspaceFile
+  const build = file.targetDefaults['build'] as FixtureTargetDefaults
+  return json({
+    ...file,
+    targetDefaults: { ...file.targetDefaults, build: { ...build, inputs: [...build.inputs, '{workspaceRoot}/README.md'] } },
+  })
+}
+
 /**
  * A tree with one file replaced or added.
  *
@@ -299,6 +326,12 @@ export const FIXTURES: readonly WorkspaceFixture[] = freeze([
     'global-config-edit',
     'hf.json changes; everything is affected with the file named as the reason',
     edit(FIXTURE_WORKSPACE, 'hf.json', `${FIXTURE_WORKSPACE['hf.json'] as string}\n`),
+    ['M\thf.json']
+  ),
+  scenario(
+    'global-config-target-edit',
+    'hf.json gives the build target one more input; the builds resolve differently, the other targets as before',
+    edit(FIXTURE_WORKSPACE, 'hf.json', withBuildInput(FIXTURE_WORKSPACE['hf.json'] as string)),
     ['M\thf.json']
   ),
   scenario(

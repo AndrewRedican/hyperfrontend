@@ -19,7 +19,7 @@ import { runGraph } from './graph'
 jest.mock('../graph/affected/select', () => ({ selectAffected: jest.fn() }))
 jest.mock('../graph/build', () => ({ workspaceGraph: jest.fn() }))
 jest.mock('../graph/changes', () => ({ changeSet: jest.fn(), DEFAULT_BASE: 'origin/main', resolveBase: jest.fn() }))
-jest.mock('../graph/revision', () => ({ previousGraph: jest.fn() }))
+jest.mock('../graph/revision', () => ({ previousGraph: jest.fn(), previousWorkspaceFile: jest.fn() }))
 jest.mock('../graph/store/state', () => ({ buildState: jest.fn(), stateStatus: jest.fn(), verifyState: jest.fn() }))
 
 const mockSelect = selectAffected as Mock
