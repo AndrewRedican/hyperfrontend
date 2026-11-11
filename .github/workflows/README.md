@@ -59,7 +59,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - `records`: Pushes the run's record and the graph to `ci-records` (`contents: write`)
 - `status`: Aggregates results and provides final status
 - `push-tags`: Creates and pushes version tags
-- `create-github-release`: Creates GitHub releases with changelog
+- `create-github-release`: Creates GitHub releases with changelog for the newest version tags of each project, three unless the `RELEASE_LOOKBACK` repository variable says otherwise
 - `dispatch-native-builds`: Dispatches the native binary workflows for new tags
 
 ### Individual Library CI (ci-lib-\*.yml)

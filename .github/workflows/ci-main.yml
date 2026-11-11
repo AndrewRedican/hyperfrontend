@@ -411,6 +411,9 @@ jobs:
     continue-on-error: true
     permissions:
       contents: write
+    env:
+      # why: a release is created once; the newest few versions of each project are all a run can have tagged, and the rest were released by an earlier run
+      RELEASE_LOOKBACK: ${{ vars.RELEASE_LOOKBACK || 3 }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -420,7 +423,7 @@ jobs:
       - name: Get version tags needing releases
         id: tags
         run: |
-          # Get all version tags (format: project@version)
+          # The newest RELEASE_LOOKBACK version tags of each project (format: project@version), in version order
           ALL_TAGS=$(git tag | grep -E '^(lib-|plugin-).+@[0-9]+\.[0-9]+\.[0-9]+' || echo "")
 
           if [ -z "$ALL_TAGS" ]; then
@@ -429,11 +432,18 @@ jobs:
             exit 0
           fi
 
-          echo "Found version tags:"
-          echo "$ALL_TAGS"
+          NL=$'\n'
+          RECENT_TAGS=""
+          for project in $(echo "$ALL_TAGS" | sed 's/@.*//' | sort -u); do
+            newest=$(echo "$ALL_TAGS" | grep -E "^${project}@" | sort -t@ -k2,2V | tail -n "$RELEASE_LOOKBACK")
+            RECENT_TAGS="${RECENT_TAGS:+${RECENT_TAGS}${NL}}${newest}"
+          done
+
+          echo "Checking the newest $RELEASE_LOOKBACK version tags of each project:"
+          echo "$RECENT_TAGS"
           echo "has_tags=true" >> $GITHUB_OUTPUT
           # Convert newlines to comma-separated list
-          echo "tags=$(echo "$ALL_TAGS" | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+          echo "tags=$(echo "$RECENT_TAGS" | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Releases
         if: steps.tags.outputs.has_tags == 'true'
