@@ -11,7 +11,7 @@
 import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { WorkspaceGraph } from '../build'
 import type { WorkspaceFile } from '../inputs'
-import type { Edge, EdgeGroup, EdgePath, ProjectRecord, ToolNode } from '../model'
+import type { Edge, EdgePath, ProjectRecord, ToolNode } from '../model'
 import type { Role } from '../roles'
 import type { AffectedSet, ChangeSet, ChangeStatus, Reason, ReasonRule, TaskDecision } from '../selection'
 import type { Closure, Hop } from './closure'
@@ -370,7 +370,8 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
     }
     if (hopTo(closureFor(graph, project, inputs, true), path, owner.name) !== null)
       return skip(skipped(Rules.KindIrrelevant, path, task, `reachable only through type-only imports, which ${target} does not follow`))
-    const groups = (graph.groups.get(project.name) as readonly EdgeGroup[]).filter((group) => group.target === `project:${owner.name}`)
+    // why: a project with no edges at all, such as a hand-written tool project nothing lints, has no group entry
+    const groups = (graph.groups.get(project.name) ?? []).filter((group) => group.target === `project:${owner.name}`)
     const through =
       groups.length === 0
         ? `${project.name} does not depend on ${owner.name}`
