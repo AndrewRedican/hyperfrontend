@@ -62,6 +62,7 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
     },
   }),
   'lint.base.config.ts': 'export default []\n',
+  'lint.config.ts': 'export default []\n',
   'project.json': json({ name: 'workspace', projectType: 'application', targets: { lint: { inputs: ['{workspaceRoot}/*.md'] } } }),
   'README.md': '# fixture\n',
   'libs/alpha/package.json': json({
