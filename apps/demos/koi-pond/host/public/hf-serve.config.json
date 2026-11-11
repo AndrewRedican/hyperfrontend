@@ -15,6 +15,66 @@
       "headers": {
         "Content-Security-Policy": "frame-ancestors 'self' https://demo-koi-pond-production.up.railway.app https://www.hyperfrontend.dev https://hyperfrontend.dev https://*.vercel.app"
       }
+    },
+    {
+      "suffix": ".html",
+      "headers": {
+        "Cache-Control": "public, max-age=60, s-maxage=3600"
+      }
+    },
+    {
+      "prefix": "/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-angular/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-lit/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-preact/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-react/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-solid/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-svelte/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-vanilla/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "prefix": "/fish-vue/assets/",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     }
   ]
 }

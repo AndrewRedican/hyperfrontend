@@ -135,6 +135,30 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `full-run`: Dispatches the weekly full run of `ci-main.yml`
 
+### Railway Redeploy ([railway-redeploy.yml](./railway-redeploy.yml))
+
+**Trigger**: Manual dispatch, with the services (any of the eleven demo services, separated by commas or spaces, or `all`) and an optional commit
+
+**Purpose**: Rebuild a demo on Railway by hand without changing any setting of its service, the way a main run deploys it
+
+**How it works**:
+
+1. `services` checks every chosen name against the services `.railway/railway.ts` declares, failing before anything deploys when one is unknown, and turns the set (every service for `all`) into a matrix
+2. One `redeploy` job per service runs `tools/pipeline/scripts/railway-deploy.mjs` with the `RAILWAY_TOKEN` secret: the Railway CLI's `redeploy --commit` builds the commit from the service's connected repository and the job waits for the deployment to end, so a green job means the demo is serving that commit
+3. The commit is the head of the branch the run was dispatched on unless one is given; it has to exist on GitHub, since Railway fetches it from there
+
+**Features**:
+
+- No install: the deploy script has no dependencies and fetches the CLI itself at the release the pipeline pins
+- Read-only repository permissions; nothing is written, tagged or published
+- One job per service, so each deployment has its own log and its own outcome
+- Never add a variable to a service in the Railway dashboard to force a rebuild: `provision` on the next main run refuses any variable `.railway/railway.ts` does not declare, and every demo deploy behind it is skipped
+
+**Jobs**:
+
+- `services`: Checks the chosen names and builds the matrix
+- `redeploy`: Deploys the commit to one service and waits for the deployment
+
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
 
 **Trigger**:

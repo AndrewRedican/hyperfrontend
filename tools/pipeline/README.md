@@ -59,7 +59,7 @@ HF_DEPLOY_SERVICE=clock RAILWAY_TOKEN=<project token> node tools/pipeline/script
 HF_DEPLOY_SERVICE=clock HF_DEPLOY_COMMIT=<sha> HF_DEPLOY_TIMEOUT=45 node tools/pipeline/scripts/railway-deploy.mjs
 ```
 
-`HF_DEPLOY_SERVICE` is the service as the demo's `metadata.deploy.service` names it; `RAILWAY_TOKEN` is a project token of the production environment (the `RAILWAY_TOKEN` repository secret on CI); the commit defaults to `GITHUB_SHA`, then the checked-out head; the wait defaults to 30 minutes. The script reads the deployment's status every 15 seconds and exits non-zero when it ends as anything but `SUCCESS`, so the task's outcome means the demo is serving the commit.
+`HF_DEPLOY_SERVICE` is the service as the demo's `metadata.deploy.service` names it; `RAILWAY_TOKEN` is a project token of the production environment (the `RAILWAY_TOKEN` repository secret on CI); the commit defaults to `GITHUB_SHA`, then the checked-out head; the wait defaults to 30 minutes. The script reads the deployment's status every 15 seconds and exits non-zero when it ends as anything but `SUCCESS`, so the task's outcome means the demo is serving the commit. The `railway-redeploy` workflow (`.github/workflows/railway-redeploy.yml`) runs the same script by hand, for any set of services or all of them, when a demo has to be rebuilt without a change to its service; a variable added in the dashboard to force a rebuild is drift the provision refuses on the next push to `main`.
 
 ## Railway provision
 
