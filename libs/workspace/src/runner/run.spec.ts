@@ -108,6 +108,26 @@ describe('main', () => {
     await main(['run', 'lib-alpha:build', 'plan'], host)
     expect(lines).toEqual(['hf run lib-alpha:build: expected --name=value or --name after the task, got plan'])
   })
+
+  it('refuses a task leaving out the options its executor requires, naming each and the executor', async () => {
+    const greet = executor()
+    const { host, lines } = recordingHost({ 'tools/tooling/src/greet/executor.ts': { default: greet } })
+    const code = await main(['run', 'lib-alpha:greet-nobody'], host)
+    expect({ code, lines, calls: greet.mock.calls.length }).toEqual({
+      code: 1,
+      lines: [
+        'hf run lib-alpha:greet-nobody: lib-alpha:greet-nobody needs --name, --title: the options of @fixture/tooling:greet require it',
+      ],
+      calls: 0,
+    })
+  })
+
+  it('runs a task whose required options the target and the command line give between them', async () => {
+    const greet = executor()
+    const { host } = recordingHost({ 'tools/tooling/src/greet/executor.ts': { default: greet } })
+    const code = await main(['run', 'lib-alpha:greet', '--title=Dr'], host)
+    expect({ code, options: greet.mock.calls[0]?.[0] }).toEqual({ code: 0, options: { name: 'alpha', title: 'Dr', loud: false } })
+  })
 })
 
 describe('runTask', () => {

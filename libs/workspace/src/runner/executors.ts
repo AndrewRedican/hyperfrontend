@@ -36,6 +36,8 @@ export interface SchemaProperty {
 export interface ExecutorSchema {
   /** The options. */
   readonly properties?: Readonly<Record<string, SchemaProperty>>
+  /** The options a run must give, from the target or the command line. */
+  readonly required?: readonly string[]
 }
 
 /** What an executor answers when it resolves, as far as the runner reads it. */
