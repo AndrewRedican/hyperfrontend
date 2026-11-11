@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/c9764464e392d066128caacbaa07d3ca29a5f1cc...bde40bd09cdb30b8d5bb9f87ca451f274d65d1f2) - 2026-11-11
+
+### Bug Fixes
+
+- leave ignored packages out of the missing dependency sections report
+- refuse a task leaving out the options its executor requires
+- infer the lint target only where the linter finds a lint config
+- explain the skipped task of a project with no edges instead of crashing
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/bdd9c9c1a4f231b20b7c26d83c01824a620b88cb...1fd9c385acf8e1b3d849602586e602dda1533b4f) - 2026-11-10
 
 ### Features
