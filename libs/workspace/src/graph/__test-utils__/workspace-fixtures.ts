@@ -128,6 +128,7 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
     },
   }),
   'lint.base.config.ts': 'export default []\n',
+  'lint.config.ts': 'export default []\n',
   '.gitignore': '.hf\nnode_modules\n',
   'project.json': json({ name: 'workspace', projectType: 'application', targets: { docs: { inputs: ['{workspaceRoot}/docs/**/*'] } } }),
   'docs/guide.md': '# Guide\n',

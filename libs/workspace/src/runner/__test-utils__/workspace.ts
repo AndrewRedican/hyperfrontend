@@ -27,6 +27,7 @@ export const RUNNER_WORKSPACE: FileTree = freeze({
     lint: { command: 'node {workspaceRoot}/tools/lint/bin/lint.ts .', exclude: ['apps/demos/**/*'] },
   },
   'project.json': { name: 'workspace', targets: { lint: { command: 'node tools/lint/bin/lint.ts .' } } },
+  'lint.config.ts': 'export default []\n',
   'libs/alpha/package.json': { name: '@fixture/alpha', version: '1.0.0' },
   'libs/alpha/project.json': {
     name: 'lib-alpha',
