@@ -143,9 +143,10 @@ export default defineRule<DependencyChecksOptions | undefined, JsonTreeNode>({
      * @param declared - The production dependencies declared, which the fix extends
      */
     function checkSections(manifestObject: JsonObjectNode, declared: Record<string, string>): void {
-      if (!expected.some((name) => !ignoredDependencies.includes(name))) return
+      const wanted = expected.filter((name) => !ignoredDependencies.includes(name))
+      if (wanted.length === 0) return
       if (manifestObject.properties.some((property) => PRODUCTION_SECTIONS.includes(keyOf(property)))) return
-      for (const name of [...expected].sort()) declared[name] = versionFor(name)
+      for (const name of [...wanted].sort()) declared[name] = versionFor(name)
       const listed = keys(declared)
         .map((name) => `\n    "${name}": "${declared[name]}"`)
         .join(',')
@@ -161,7 +162,7 @@ export default defineRule<DependencyChecksOptions | undefined, JsonTreeNode>({
       context.report({
         start: manifestObject.start,
         end: manifestObject.end,
-        message: `Dependency sections are missing from the "package.json" but following dependencies were detected:${expected.map((name) => `\n- "${name}"`).join()}`,
+        message: `Dependency sections are missing from the "package.json" but following dependencies were detected:${wanted.map((name) => `\n- "${name}"`).join()}`,
         fix,
       })
     }
