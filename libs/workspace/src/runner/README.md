@@ -33,7 +33,7 @@ const hello: Executor<Options> = (options, context) => {
 export default hello
 ```
 
-The executor is called in the same process with the defaults of its schema and an [`ExecutorContext`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorContext): the root, the project and target names, the target as configured, and every project of the workspace. An option given on the command line is read as the type the schema declares.
+The executor is called in the same process with the defaults of its schema and an [`ExecutorContext`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorContext): the root, the project and target names, the target as configured, and every project of the workspace. An option given on the command line is read as the type the schema declares. An option the schema lists under [`required`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorSchema-prop-required) that neither the target nor the command line gives is refused before the executor runs, naming the option and the executor.
 
 A generator is a function of a [`Tree`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-Tree) and its options, listed in a `generators.json` the manifest names under [`generators`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-GeneratorsManifest-prop-generators), each entry naming its module under [`factory`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-GeneratorEntry-prop-factory) rather than [`implementation`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-ExecutorEntry-prop-implementation):
 

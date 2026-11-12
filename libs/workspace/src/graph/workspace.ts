@@ -57,6 +57,9 @@ const LIST_BUFFER = 64 * 1024 * 1024
 /** The command of the inferred `lint` target where `hf.json` names none: the linter's own executable, on the project. */
 export const LINT_COMMAND = 'hf-lint .'
 
+/** The configuration file the linter reads, in a project's root or above it. */
+const LINT_CONFIG = 'lint.config.ts'
+
 /** The token of a lint command that stands for the path from the project to the workspace root. */
 const WORKSPACE_ROOT_TOKEN = '{workspaceRoot}'
 
@@ -267,8 +270,26 @@ function lintSettings(root: string): LintSettings {
 }
 
 /**
+ * Whether the linter would find a configuration for a project: a `lint.config.ts` in the
+ * project's root or a directory above it, up to the workspace root.
+ *
+ * @param root - The workspace root, absolute
+ * @param projectRoot - The project root, workspace-relative and POSIX
+ * @returns True when a directory from the project's root up to the workspace root holds one
+ */
+function hasLintConfig(root: string, projectRoot: string): boolean {
+  let directory = projectRoot
+  for (;;) {
+    if (existsSync(join(root, directory, LINT_CONFIG))) return true
+    if (directory === '.') return false
+    directory = posix.dirname(directory)
+  }
+}
+
+/**
  * Gives every project but the workspace root a `lint` target where it declares none, leaving
- * out the projects whose project files `hf.json` lists under `lint.exclude`. The target runs the
+ * out the projects whose project files `hf.json` lists under `lint.exclude` and the projects
+ * the linter would find no `lint.config.ts` for, in their root or above it. The target runs the
  * command `hf.json` names under `lint.command`, or the linter's own executable. A project with
  * an `install` target lints after it.
  *
@@ -284,6 +305,7 @@ function lintSettings(root: string): LintSettings {
  * // => { executor: '@hyperfrontend/workspace:run-commands',
  * //      options: { command: 'node ../../tools/lint/bin/lint.ts .', cwd: 'libs/features' } }
  * hasTarget(inferred.get('@scope/vendored')!, 'lint') // => false, excluded
+ * hasTarget(inferred.get('tool-local')!, 'lint') // => false, no lint.config.ts in tools/local or above it
  * hasTarget(inferred.get('hyperfrontend')!, 'lint') // => false, the workspace root never gets one
  * ```
  */
@@ -295,7 +317,11 @@ export function inferLintTargets(root: string, projects: ReadonlyMap<string, Pro
     const files = project.files.filter(
       (file) => posix.dirname(file) === project.root && (posix.basename(file) === 'project.json' || posix.basename(file) === 'package.json')
     )
-    const skip = project.root === '.' || hasTarget(project, 'lint') || files.every((file) => matchesAny(exclusions, file))
+    const skip =
+      project.root === '.' ||
+      hasTarget(project, 'lint') ||
+      files.every((file) => matchesAny(exclusions, file)) ||
+      !hasLintConfig(root, project.root)
     if (skip) {
       inferred.set(name, project)
       continue

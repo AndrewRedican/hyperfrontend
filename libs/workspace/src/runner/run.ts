@@ -19,7 +19,7 @@ import { runCommands } from './commands'
 import { executorContext, projectConfigurations } from './context'
 import { loadExecutor, locateExecutor, settle, withDefaults } from './executors'
 import { parseOverrides, typedOverrides } from './overrides'
-import { describeError } from './refusal'
+import { describeError, refusal } from './refusal'
 import { executorOf, parseTaskId } from './targets'
 
 /** What the command line expects. */
@@ -73,6 +73,9 @@ export async function runTask(id: string, args: readonly string[], host: RunHost
   const source = locateExecutor(host.root, projects, executor)
   const implementation = await loadExecutor(source, host.importModule, executor)
   const options = withDefaults({ ...target.options, ...typedOverrides(overrides.options, source.schema) }, source.schema)
+  const missing = (source.schema.required ?? []).filter((option) => options[option] === undefined)
+  if (missing.length > 0)
+    throw refusal(`${id} needs ${missing.map((option) => `--${option}`).join(', ')}: the options of ${executor} require it`)
   const context = executorContext({
     root: host.root,
     cwd: host.cwd,

@@ -84,9 +84,12 @@ describe('discoverProjects', () => {
   it('infers a lint target that runs after the install of a project that installs its own packages', () => {
     const installing = createTempDir({
       prefix: 'lint-install-',
-      tree: { 'apps/site/project.json': '{ "name": "site", "targets": { "install": { "executor": "@hyperfrontend/app:install" } } }' },
+      tree: {
+        'lint.config.ts': 'export default []\n',
+        'apps/site/project.json': '{ "name": "site", "targets": { "install": { "executor": "@hyperfrontend/app:install" } } }',
+      },
     })
-    const projects = discoverProjects(installing.path, ['apps/site/project.json'])
+    const projects = discoverProjects(installing.path, ['lint.config.ts', 'apps/site/project.json'])
     expect(projects.get('site')?.configuration?.targets?.['lint']?.dependsOn).toEqual(['install'])
   })
 
@@ -103,15 +106,32 @@ describe('discoverProjects', () => {
       prefix: 'lint-infer-',
       tree: {
         'hf.json': '{ "lint": { "exclude": ["apps/demos/**/*"] } }',
+        'lint.config.ts': 'export default []\n',
         'apps/demos/one/project.json': '{ "name": "demo-one" }',
         'libs/two/package.json': '{ "name": "@fixture/two" }',
       },
     })
-    const projects = discoverProjects(excluded.path, ['hf.json', 'apps/demos/one/project.json', 'libs/two/package.json'])
+    const projects = discoverProjects(excluded.path, ['hf.json', 'lint.config.ts', 'apps/demos/one/project.json', 'libs/two/package.json'])
     expect([
       hasTarget(projects.get('demo-one') as ProjectRecord, 'lint'),
       hasTarget(projects.get('@fixture/two') as ProjectRecord, 'lint'),
     ]).toEqual([false, true])
+  })
+
+  it('infers no lint target for a project the linter would find no lint.config.ts for, while one below a config keeps it', () => {
+    const partial = createTempDir({
+      prefix: 'lint-config-',
+      tree: {
+        'libs/lint.config.ts': 'export default []\n',
+        'libs/one/package.json': '{ "name": "@fixture/one" }',
+        'tools/local/project.json': '{ "name": "tool-local" }',
+      },
+    })
+    const projects = discoverProjects(partial.path, ['libs/lint.config.ts', 'libs/one/package.json', 'tools/local/project.json'])
+    expect({
+      one: hasTarget(projects.get('@fixture/one') as ProjectRecord, 'lint'),
+      local: hasTarget(projects.get('tool-local') as ProjectRecord, 'lint'),
+    }).toEqual({ one: true, local: false })
   })
 
   it('gives the root project the files no other owns', () => {

@@ -23,6 +23,7 @@ const workspace = useTempDir({
     'package.json': { name: '@fixture/workspace', private: true },
     'package-lock.json': { name: '@fixture/workspace', lockfileVersion: 3, packages: { '': { name: '@fixture/workspace' } } },
     'hf.json': {},
+    'lint.config.ts': 'export default []\n',
     'tsconfig.base.json': { compilerOptions: { paths: { '@fixture/core': ['libs/core/src/index.ts'] } } },
     'libs/core/project.json': { name: 'lib-core', projectType: 'library', tags: ['scope:core'], targets: { build: {} } },
     'libs/core/src/index.ts': 'export const core = 1\n',

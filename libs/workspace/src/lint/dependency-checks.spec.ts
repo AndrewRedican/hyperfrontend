@@ -185,6 +185,13 @@ testRule(rule, {
     ),
     invalid('an empty manifest', '{}', [at('{}', '{}', SECTIONS)], `{\n  "dependencies": {${LISTED}\n  }\n}`),
     invalid(
+      'a manifest without dependency sections, one used package ignored: the message and the fix leave it out',
+      '{}',
+      [at('{}', '{}', SECTIONS.replace(',\n- "hoisted"', ''))],
+      `{\n  "dependencies": {${LISTED.replace('\n    "hoisted": "2.0.0",', '')}\n  }\n}`,
+      { ignoredDependencies: ['hoisted'] }
+    ),
+    invalid(
       'a used package whose importing file is ignored',
       `{"dependencies":{${ALL}}}`,
       [at(`{"dependencies":{${ALL}}}`, '"@ws/dep":"2.0.0"', UNUSED('@ws/dep'))],
