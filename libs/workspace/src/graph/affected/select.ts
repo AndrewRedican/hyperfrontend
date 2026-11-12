@@ -13,7 +13,7 @@
 import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { WorkspaceGraph } from '../build'
 import type { WorkspaceFile } from '../inputs'
-import type { Edge, EdgePath, ProjectRecord, ToolNode } from '../model'
+import type { Edge, EdgeKind, EdgePath, ProjectRecord, ToolNode } from '../model'
 import type { Role } from '../roles'
 import type { AffectedSet, ChangeSet, ChangeStatus, Reason, ReasonRule, TaskDecision } from '../selection'
 import type { Closure, Hop } from './closure'
@@ -24,6 +24,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { prerequisitesOf } from '../depends-on'
 import { readJson } from '../json'
+import { EdgeKind as Kinds } from '../model'
 import { compareText } from '../order'
 import { roleOf } from '../roles'
 import { ReasonRule as Rules } from '../selection'
@@ -97,6 +98,9 @@ interface Decision {
 
 /** The prefix of a workspace-rooted input. */
 const WORKSPACE_ROOT = '{workspaceRoot}/'
+
+/** The edge kinds a tool's implementation reaches through: every kind but `type`, since a type-only import changes nothing the tool does. */
+const TOOL_KINDS: ReadonlySet<EdgeKind> = createSet([...ALL_KINDS].filter((kind) => kind !== Kinds.Type))
 
 /** The extension a code file's specifier leaves out, and the index file a directory specifier stands for. */
 const CODE_EXTENSION = /(\/index)?\.(d\.)?[cm]?[jt]sx?$/
@@ -306,7 +310,7 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
                 const role = roleOf(file, implementer.root)
                 return role !== 'spec' && role !== 'test-config' && role !== 'lint-config'
               })
-        reach = closureOf(graph, seeds, ALL_KINDS)
+        reach = closureOf(graph, seeds, TOOL_KINDS)
         tools.set(tool.id, reach)
       }
       if (hopTo(reach, change.path, owner) !== null) return { id: tool.id, project: tool.project }

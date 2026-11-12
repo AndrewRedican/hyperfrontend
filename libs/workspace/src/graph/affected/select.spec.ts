@@ -35,6 +35,7 @@ const ALL_BUILDS = [
   'lib-cycle-a',
   'lib-cycle-b',
   'lib-delta',
+  'lib-epsilon',
   'lib-gamma',
   'lib-testing',
   'lib-tooling',
@@ -154,6 +155,9 @@ describe('the acceptance scenarios', () => {
     ['tool-edit', 'build', ALL_BUILDS],
     ['tool-edit', 'e2e', ['e2e-alpha']],
     ['tool-edit', 'test', ['lib-tooling']],
+    ['tool-type-dependency-edit', 'build', ['lib-epsilon', 'lib-tooling']],
+    ['tool-type-dependency-edit', 'typecheck', ['lib-epsilon', 'lib-tooling']],
+    ['tool-type-dependency-edit', 'test', ['lib-epsilon']],
     ['root-input-edit', 'docs', ['workspace']],
     ['root-input-edit', 'build', []],
     ['global-config-edit', 'build', ALL_BUILDS],
@@ -266,6 +270,8 @@ describe('the rules behind the decisions', () => {
     ['spec-only-dependency-edit', 'lib-alpha:build', ['unreachable']],
     ['spec-only-dependency-edit', 'lib-alpha:test', ['reachable-from-entry']],
     ['type-only-edit', 'lib-beta:test', ['kind-irrelevant']],
+    ['tool-type-dependency-edit', 'lib-alpha:build', ['unreachable']],
+    ['tool-type-dependency-edit', 'lib-tooling:build', ['reachable-from-entry']],
     ['side-effect-target-edit', 'app-beta:build', ['side-effect-import']],
     ['barrel-target-edit', 'app-beta:build', ['reachable-from-entry']],
     ['cycle-edit', 'lib-cycle-a:build', ['cycle']],
@@ -290,6 +296,12 @@ describe('the rules behind the decisions', () => {
     ['deleted-module-rewired', 'app-consumer:build', ['deleted-module', 'reachable-from-entry']],
   ])('%s decides %s by %s', (name, task, rules) => {
     expect(rulesOf(name, task)).toEqual(rules)
+  })
+
+  it('leaves a type the build tool imports out of the tool reach', () => {
+    expect(decisionOf('tool-type-dependency-edit', 'lib-alpha:build').messages).toEqual([
+      expect.stringContaining('lib-alpha does not depend on lib-epsilon'),
+    ])
   })
 
   it('names the spec-only edges a skipped build task reaches the changed project through', () => {
