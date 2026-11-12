@@ -21,14 +21,14 @@ const NX_VERSION = '23.3.0'
 /** 10 minutes: create-nx-workspace runs a real npm install over the network, then the packed SDK tarball installs on top of it. */
 export const SETUP_TIMEOUT = 600000
 
-/** 4 minutes covers up to two cold nx invocations (daemon disabled) plus the workspace file copy on slow CI hosts. */
-export const SCENARIO_TIMEOUT = 240000
+/** 400s covers two install-triggering nx invocations at their own bound plus the workspace file copy, so a slow run fails on the run's bound, not the scenario's. */
+export const SCENARIO_TIMEOUT = 400000
 
 /** 90s bounds one cold nx process so a hung child fails the suite instead of blocking the test runner forever. */
 export const NX_COMMAND_TIMEOUT = 90000
 
-/** 3 minutes bounds an nx run whose generator callback additionally spawns a package-manager reconcile of the workspace tree. */
-export const NX_INSTALL_COMMAND_TIMEOUT = 180000
+/** 190s bounds an nx run whose generator callback additionally spawns a package-manager reconcile of the workspace tree: 1.5 times the slowest such run recorded on a Windows runner (122s, main run #133). */
+export const NX_INSTALL_COMMAND_TIMEOUT = 190000
 
 // note: 8 minutes bounds the create-nx-workspace child itself; the enclosing suite hook uses SETUP_TIMEOUT.
 const WORKSPACE_CREATE_TIMEOUT = 480000
