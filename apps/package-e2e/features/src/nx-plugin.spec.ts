@@ -270,7 +270,8 @@ describe('@hyperfrontend/features Nx plugin', () => {
         before = readManifestText(scenarioDir)
         defaultRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
         afterDefaultRun = readManifestText(scenarioDir)
-        repinRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--keepExistingVersions=false'])
+        // why: re-pinning changes the manifest, so the generator's install task runs npm inside this nx process; the plain bound killed it on a loaded Windows runner
+        repinRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--keepExistingVersions=false'], NX_INSTALL_COMMAND_TIMEOUT)
         repinnedManifest = readManifest(scenarioDir)
       },
       { timeout: SCENARIO_TIMEOUT }
