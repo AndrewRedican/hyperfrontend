@@ -1,4 +1,5 @@
 import type { WorkspaceGraph } from '../build'
+import type { ProjectRecord } from '../model'
 import type { AffectedSet, ChangeSet, ReasonRule } from '../selection'
 import { execFileSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
@@ -427,6 +428,32 @@ describe('inputs naming other projects and tools with an implementation file', (
         'tool-changed tools/tooling/src/executors/build/executor.ts: tools/tooling/src/executors/build/executor.ts reaches lib-d:build: lib-d:build runs @fixture/tooling:build, implemented by tooling',
       ])
     )
+  })
+
+  it('read from a tool only the files a projects input names once the input names its project', () => {
+    const libD = graph.projects.get('lib-d') as ProjectRecord
+    const declared: ProjectRecord = {
+      ...libD,
+      configuration: {
+        ...libD.configuration,
+        namedInputs: { toolingBin: ['{projectRoot}/src/bin/**/*'] },
+        targets: { build: { inputs: ['production', '^production', { projects: 'tooling', input: 'toolingBin' }] } },
+      },
+    }
+    const projects = createMap([...graph.projects].map(([name, project]) => [name, name === 'lib-d' ? declared : project]))
+    const set = selectAffected({ graph: { ...graph, projects }, changes, targets: ['build'] }).get('build') as AffectedSet
+    expect({
+      selected: set.selected.some((decision) => decision.task === 'lib-d:build'),
+      skips: set.skipped
+        .find((decision) => decision.task === 'lib-d:build')
+        ?.reasons.filter((reason) => reason.file === 'tools/tooling/src/executors/build/executor.ts')
+        .map((reason) => `${reason.rule}: ${reason.message}`),
+    }).toEqual({
+      selected: false,
+      skips: [
+        'unreachable: tools/tooling/src/executors/build/executor.ts does not reach lib-d:build: tools/tooling/src/executors/build/executor.ts is not reachable from the files lib-d:build reads; lib-d:build runs @fixture/tooling:build, reading from tooling only the files its projects input names',
+      ],
+    })
   })
 
   it('leave an installed tool out of the tool reach', () => {

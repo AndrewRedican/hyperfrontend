@@ -3,7 +3,9 @@
  * it and why, with every skip resting on a named rule. A task is selected by its own changed
  * inputs, by a changed file another project owns that its closure reaches under the target's
  * edge kinds, by a tool it runs, by the configuration of a dependency whose identity changed, by a
- * global configuration file, or by a task it runs after being selected.
+ * global configuration file, or by a task it runs after being selected. A tool reaches the task
+ * through the closure of its implementation only where the task's inputs do not name the tool's
+ * project; where they do, the named files are the whole of what the task reads from it.
  *
  * @module graph/affected/select
  */
@@ -271,11 +273,29 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
     return null
   }
 
-  const toolReaching = (project: ProjectRecord, target: string, change: ChangedPath, owner: string | null): WorkspaceTool | null => {
+  const declares = (inputs: TaskInputs, tool: ToolNode): boolean => inputs.projects.some((input) => input.project === tool.project)
+
+  const toolsOf = (project: ProjectRecord, target: string): ToolNode[] => {
+    const nodes: ToolNode[] = []
     for (const edge of byProject.get(`project:${project.name}`) as Edge[]) {
-      if (edge.kind !== 'tool' || !edge.targets.includes(target)) continue
-      const tool = graph.nodes.get(edge.target) as ToolNode
-      if (tool.project === null) continue
+      if (edge.kind === 'tool' && edge.targets.includes(target)) nodes.push(graph.nodes.get(edge.target) as ToolNode)
+    }
+    return nodes
+  }
+
+  const declaredTool = (project: ProjectRecord, target: string, inputs: TaskInputs, owner: string): ToolNode | null =>
+    toolsOf(project, target).find((tool) => tool.project === owner && declares(inputs, tool)) ?? null
+
+  const toolReaching = (
+    project: ProjectRecord,
+    target: string,
+    inputs: TaskInputs,
+    change: ChangedPath,
+    owner: string | null
+  ): WorkspaceTool | null => {
+    for (const tool of toolsOf(project, target)) {
+      // why: a projects input naming the tool's project is the workspace saying which of its files the task reads; the closure of the implementation would say more
+      if (tool.project === null || declares(inputs, tool)) continue
       let reach = tools.get(tool.id)
       if (reach === undefined) {
         const implementer = graph.projects.get(tool.project) as ProjectRecord
@@ -319,7 +339,7 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
     }
     const named = namedInput(project, target, inputs, change, owner, role)
     if (named !== null) return select(changedInput(path, task, named))
-    const tool = toolReaching(project, target, change, owner?.name ?? null)
+    const tool = toolReaching(project, target, inputs, change, owner?.name ?? null)
     if (tool !== null)
       return select(reached(Rules.ToolChanged, path, task, [`tool:${tool.id}`], `${task} runs ${tool.id}, implemented by ${tool.project}`))
     if (owner === null) return skip(skipped(Rules.Unreachable, path, task, 'no project owns the file'))
@@ -373,10 +393,13 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
       return skip(skipped(Rules.KindIrrelevant, path, task, `reachable only through type-only imports, which ${target} does not follow`))
     // why: a project with no edges at all, such as a hand-written tool project nothing lints, has no group entry
     const groups = (graph.groups.get(project.name) ?? []).filter((group) => group.target === `project:${owner.name}`)
+    const declared = declaredTool(project, target, inputs, owner.name)
     const through =
-      groups.length === 0
-        ? `${project.name} does not depend on ${owner.name}`
-        : `${project.name} depends on ${owner.name} only through ${groups.map((group) => `${group.kind} ${group.role} (${group.files.length} file${group.files.length === 1 ? '' : 's'})`).join(', ')}`
+      declared !== null
+        ? `${task} runs ${declared.id}, reading from ${owner.name} only the files its projects input names`
+        : groups.length === 0
+          ? `${project.name} does not depend on ${owner.name}`
+          : `${project.name} depends on ${owner.name} only through ${groups.map((group) => `${group.kind} ${group.role} (${group.files.length} file${group.files.length === 1 ? '' : 's'})`).join(', ')}`
     return skip(skipped(Rules.Unreachable, path, task, `${path} is not reachable from the files ${task} reads; ${through}`))
   }
 
