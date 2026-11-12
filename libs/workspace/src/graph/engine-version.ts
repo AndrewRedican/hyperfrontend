@@ -8,7 +8,7 @@
  */
 
 import { dirname, join } from 'node:path'
-import { readJson } from './workspace'
+import { readJson } from './json'
 
 /** The package whose version identifies the installed engine. */
 const ENGINE_PACKAGE_NAME = '@hyperfrontend/workspace'

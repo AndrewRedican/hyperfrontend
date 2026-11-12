@@ -12,8 +12,8 @@ import type { ProjectRecord, TargetOptions, TargetRecord } from './model'
 import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { readJson } from './json'
 import { RUN_COMMANDS } from './model'
-import { readJson } from './workspace'
 
 /** An input of a target, as `hf.json` and `project.json` write it. */
 export type InputDefinition = string | InputObject

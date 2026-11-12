@@ -11,10 +11,10 @@ import type { Edge, EdgeKind, GraphNode, PackageManifest, ProjectRecord, ToolNod
 import { join, posix } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { selfInputs, targetExecutor, targetInputs } from './inputs'
+import { readJson } from './json'
 import { nodeId, RUN_COMMANDS } from './model'
 import { fileOf, packageNameOf, projectOfFile } from './resolve'
 import { Role } from './roles'
-import { readJson } from './workspace'
 
 /** The manifest sections whose packages a project depends on. */
 const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const

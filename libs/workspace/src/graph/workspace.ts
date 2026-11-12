@@ -10,11 +10,11 @@ import type { PackageManifest, ProjectConfiguration, ProjectRecord, TargetRecord
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { compileGlob, matchesAny } from '@hyperfrontend/linter/helpers'
 import { gitEnvironment } from './git'
+import { readJson } from './json'
 import { RUN_COMMANDS } from './model'
 
 /** The project files found in one directory. */
@@ -113,28 +113,6 @@ export function ignoredPatterns(root: string): ReturnType<typeof compileGlob>[] 
     .map((line) => line.trim())
     .filter((line) => line !== '' && !line.startsWith('#'))
     .map(compileGlob)
-}
-
-/**
- * Reads a JSON file, or nothing when it does not exist or does not parse.
- *
- * @param path - The file's absolute path
- * @returns The value, or null
- *
- * @example A missing or malformed file reads as null rather than throwing
- * ```typescript
- * readJson<{ name?: string }>(join(root, 'package.json'))?.name // => 'hyperfrontend'
- * readJson(join(root, 'absent.json')) // => null
- * readJson(join(root, 'broken.json')) // => null, for a file holding `{ "name": `
- * ```
- */
-export function readJson<Value>(path: string): Value | null {
-  if (!existsSync(path)) return null
-  try {
-    return parse(readFileSync(path, 'utf8')) as Value
-  } catch {
-    return null
-  }
 }
 
 /**

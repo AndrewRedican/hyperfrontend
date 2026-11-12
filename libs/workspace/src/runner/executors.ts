@@ -11,7 +11,7 @@ import type { ProjectRecord } from '../graph/model'
 import type { ExecutorContext, ExecutorsManifest } from './contract'
 import { dirname } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { readJson } from '../graph/workspace'
+import { readJson } from '../graph/json'
 import { contributionManifest, moduleFile, packagedFile } from './packages'
 import { refusal } from './refusal'
 
