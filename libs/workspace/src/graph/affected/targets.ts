@@ -42,7 +42,7 @@ export interface ProjectInput {
 export interface TaskInputs {
   /** Whether one of the project's own files is an input. */
   readonly self: FileFilter
-  /** Whether one of the project's own files is a start of the task's dependency closure. */
+  /** Whether one of the project's own files is a start of the task's dependency closure: the inputs, less the lint configuration for a target other than lint. */
   readonly reach: FileFilter
   /** Which files of the project's dependencies count, given a dependency's root, or null when the task reads no dependency input. */
   readonly dependencies: OwnerFilter | null
@@ -59,6 +59,9 @@ export const TYPE_BLIND_TARGETS = freeze(['test', 'lint'] as const)
 
 /** The targets whose artifact derives from production files alone, so only those reach their dependencies. */
 export const PRODUCTION_REACH_TARGETS = freeze(['build'] as const)
+
+/** The targets that read the lint configuration; every other target's closure starts without it, whatever its inputs say. */
+export const LINT_CONFIG_READERS = freeze(['lint'] as const)
 
 /** The roles the `production` named input excludes. */
 const PRODUCTION_EXCLUDED: ReadonlySet<Role> = createSet<Role>([Roles.Spec, Roles.TestConfig, Roles.LintConfig])
@@ -212,6 +215,13 @@ function dependencyInputs(inputs: readonly InputDefinition[]): string[] {
  * // inputs: ['default']
  * taskInputs(root, project, 'lint').dependencies // => null
  * ```
+ *
+ * @example The lint configuration starts the lint closure alone
+ * ```typescript
+ * // inputs: ['default', '^production'] for test; lint.config.ts imports the base config, which imports the rules
+ * taskInputs(root, project, 'lint').reach('libs/features/lint.config.ts', 'lint-config') // => true
+ * taskInputs(root, project, 'test').reach('libs/features/lint.config.ts', 'lint-config') // => false, a test never loads it
+ * ```
  */
 export function taskInputs(root: string, project: ProjectRecord, target: string): TaskInputs {
   const own = selfInputs(root, project, target)
@@ -227,12 +237,19 @@ export function taskInputs(root: string, project: ProjectRecord, target: string)
   const kinds = relevantKinds(target)
   const self = fileFilterOf(own, project.root)
   const production = (PRODUCTION_REACH_TARGETS as readonly string[]).includes(target)
+  const lintReader = (LINT_CONFIG_READERS as readonly string[]).includes(target)
+  // why: a project's lint configuration imports the rules it turns on, so letting it start another target's closure would make every rule module an input of that target
+  const reach: FileFilter = production
+    ? (path, role) => self(path, role) && !PRODUCTION_EXCLUDED.has(role)
+    : lintReader
+      ? self
+      : (path, role) => role !== Roles.LintConfig && self(path, role)
   return {
     self,
-    reach: production ? (path, role) => self(path, role) && !PRODUCTION_EXCLUDED.has(role) : self,
+    reach,
     dependencies: filters.length === 0 ? null : (ownerRoot) => (path, role) => filters.some((filter) => filter(ownerRoot)(path, role)),
     projects,
     kinds,
-    key: `${project.name}\u0000${own.join(',')}\u0000${production ? 'production' : 'all'}\u0000${[...kinds].join(',')}`,
+    key: `${project.name}\u0000${own.join(',')}\u0000${production ? 'production' : lintReader ? 'all' : 'no-lint-config'}\u0000${[...kinds].join(',')}`,
   }
 }
