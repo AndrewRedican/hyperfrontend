@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/90724553facc3f94b57e1d93ae0d0c872e5a5100...53c5568a9af0f5ee16b6188d3373feb7375ed249) - 2026-11-12
+
+### Features
+
+- leave named inputs out of a selection by name
+
+### Bug Fixes
+
+- leave the engine input out of the release selection instead of the tool edges
+- follow a tool's value imports alone when it reaches a task
+- read from a tool only the files a projects input names when one names its project
+- start only the lint closure from a project's lint configuration
+
 ## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/c9764464e392d066128caacbaa07d3ca29a5f1cc...bde40bd09cdb30b8d5bb9f87ca451f274d65d1f2) - 2026-11-11
 
 ### Bug Fixes

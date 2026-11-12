@@ -80,6 +80,7 @@ export { libraryOfE2e, prerequisitesOf } from './depends-on'
 export { entriesOfProject, exportTarget } from './entries'
 export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 export {
+  ENGINE_INPUT,
   expandInputs,
   isCompatibleTarget,
   readWorkspaceFile,
@@ -89,6 +90,7 @@ export {
   targetExecutor,
   targetInputs,
 } from './inputs'
+export { readJson } from './json'
 export { installedPackages } from './lockfile'
 export { EdgeKind, ImportKind, NodeKind, nodeId, RUN_COMMANDS, taskId } from './model'
 export { compareEdges, compareText, sortEdges } from './order'
@@ -114,5 +116,4 @@ export {
   listFiles,
   ignoredPatterns,
   readAliases,
-  readJson,
 } from './workspace'

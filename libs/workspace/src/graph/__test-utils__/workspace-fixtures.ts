@@ -123,6 +123,7 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
         '@fixture/cycle-b': ['libs/cycle-b/src/index.ts'],
         '@fixture/gamma': ['libs/gamma/src/index.ts'],
         '@fixture/delta': ['libs/delta/src/index.ts'],
+        '@fixture/epsilon': ['libs/epsilon/src/index.ts'],
         '@fixture/tooling': ['tools/tooling/src/index.ts'],
       },
     },
@@ -160,7 +161,11 @@ export const FIXTURE_WORKSPACE: FileTree = freeze({
   'libs/gamma/src/index.ts': 'export const load = (name: string): Promise<unknown> => import(name)\nexport const gamma = 1\n',
   'libs/gamma/src/other.ts': 'export const other = 2\n',
   ...library('tools/tooling', '@fixture/tooling'),
-  'tools/tooling/src/index.ts': 'export const build = (): void => undefined\n',
+  ...library('libs/epsilon', '@fixture/epsilon'),
+  'libs/epsilon/src/index.ts': 'export interface BuildOptions {\n  verbose: boolean\n}\n',
+  // why: the tool's type-only import of epsilon must reach no build task through the tool; a type changes nothing a tool does
+  'tools/tooling/src/index.ts':
+    "import type { BuildOptions } from '@fixture/epsilon'\nexport const build = (options?: BuildOptions): void => undefined\n",
   'apps/consumer/package.json': json({ name: '@fixture/consumer', private: true }),
   'apps/consumer/project.json': json({
     name: 'app-consumer',
@@ -314,8 +319,18 @@ export const FIXTURES: readonly WorkspaceFixture[] = freeze([
   scenario(
     'tool-edit',
     'the build executor changes; every build task runs through the tool edge',
-    edit(FIXTURE_WORKSPACE, 'tools/tooling/src/index.ts', 'export const build = (): void => {\n  return undefined\n}\n'),
+    edit(
+      FIXTURE_WORKSPACE,
+      'tools/tooling/src/index.ts',
+      "import type { BuildOptions } from '@fixture/epsilon'\nexport const build = (options?: BuildOptions): void => {\n  return undefined\n}\n"
+    ),
     ['M\ttools/tooling/src/index.ts']
+  ),
+  scenario(
+    'tool-type-dependency-edit',
+    'a type the build tool imports changes; the tool reaches no task through it, only the tool project itself does',
+    edit(FIXTURE_WORKSPACE, 'libs/epsilon/src/index.ts', 'export interface BuildOptions {\n  verbose: boolean\n  quiet?: boolean\n}\n'),
+    ['M\tlibs/epsilon/src/index.ts']
   ),
   scenario(
     'root-input-edit',

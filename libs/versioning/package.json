@@ -1,13 +1,13 @@
 {
   "name": "@hyperfrontend/versioning",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.5",
-    "@hyperfrontend/json-utils": "1.1.4",
-    "@hyperfrontend/logging": "1.0.3",
-    "@hyperfrontend/project-scope": "0.6.0",
-    "@hyperfrontend/questions": "0.3.3"
+    "@hyperfrontend/immutable-api-utils": "1.0.6",
+    "@hyperfrontend/json-utils": "1.1.5",
+    "@hyperfrontend/logging": "1.0.4",
+    "@hyperfrontend/project-scope": "0.6.1",
+    "@hyperfrontend/questions": "0.3.4"
   },
   "bin": {
     "cz": "./bin/cz.js",

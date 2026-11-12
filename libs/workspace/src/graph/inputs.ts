@@ -12,8 +12,8 @@ import type { ProjectRecord, TargetOptions, TargetRecord } from './model'
 import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { readJson } from './json'
 import { RUN_COMMANDS } from './model'
-import { readJson } from './workspace'
 
 /** An input of a target, as `hf.json` and `project.json` write it. */
 export type InputDefinition = string | InputObject
@@ -57,6 +57,14 @@ export type DependsOn = string | DependsOnObject
 
 /** The inputs Nx gives a target configured without any. */
 export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
+
+/**
+ * The named input the workspace file gives the code that runs every task: the runner, the loader
+ * hooks and the command line of the engine. A target naming it among its inputs runs when that
+ * code changes; the release flow leaves it out, since the engine changes what a task does and
+ * never what a build emits.
+ */
+export const ENGINE_INPUT = 'engine'
 
 /** The root `hf.json`, as far as the targets are read. */
 export interface WorkspaceFile {

@@ -82,9 +82,9 @@ describe('taskInputs', () => {
         dependency?.('libs/b/src/x.ts', 'production'),
         dependency?.('libs/c/x.ts', 'production'),
       ],
-      projects: inputs.projects.map((input) => `${input.project} ${input.files('libs/b')('libs/b/src/x.spec.ts', 'spec')}`),
+      projects: inputs.projects.map((input) => `${input.project} ${input.input} ${input.files('libs/b')('libs/b/src/x.spec.ts', 'spec')}`),
       kinds: inputs.kinds.size,
-    }).toEqual({ dependencies: [false, true, false], projects: ['@fixture/b false'], kinds: 10 })
+    }).toEqual({ dependencies: [false, true, false], projects: ['@fixture/b production false'], kinds: 10 })
   })
 
   it('answers no dependency filter for a target reading no dependency input', () => {
@@ -107,23 +107,28 @@ describe('taskInputs', () => {
     }).toEqual({ spec: true, projects: ['root true', '@fixture/b true'] })
   })
 
-  it('starts a build closure from production files alone and a test closure from every input', () => {
+  it('starts a build closure from production files alone, a lint closure from every input, and the others from every input but the lint configuration', () => {
     const build = taskInputs(root, libA, 'build')
     const test = taskInputs(root, libA, 'test')
+    const lint = taskInputs(root, libA, 'lint')
     expect([
       build.reach('libs/a/src/a.spec.ts', 'spec'),
       build.reach('libs/a/src/a.ts', 'production'),
       test.reach('libs/a/src/a.spec.ts', 'spec'),
-    ]).toEqual([false, true, true])
+      test.reach('libs/a/lint.config.ts', 'lint-config'),
+      test.self('libs/a/lint.config.ts', 'lint-config'),
+      lint.reach('libs/a/lint.config.ts', 'lint-config'),
+    ]).toEqual([false, true, true, false, true, true])
   })
 
-  it('keys tasks reading the same own files alike and build apart from the rest', () => {
-    const [build, typecheck, test] = [
+  it('keys tasks reading the same own files alike and build and lint apart from the rest', () => {
+    const [build, typecheck, test, lint] = [
       taskInputs(root, libA, 'build').key,
       taskInputs(root, libA, 'typecheck').key,
       taskInputs(root, libA, 'test').key,
+      taskInputs(root, libA, 'lint').key,
     ]
-    expect([build === typecheck, typecheck === test]).toEqual([false, false])
+    expect([build === typecheck, typecheck === test, lint === test]).toEqual([false, false, false])
   })
 })
 

@@ -19,12 +19,13 @@ import { declaredEdges } from './declared-edges'
 import { entriesOfProject } from './entries'
 import { fileEdge, unresolvedEdge } from './file-edges'
 import { importsOfFiles, isCodeFile } from './imports'
+import { readJson } from './json'
 import { installedPackages } from './lockfile'
 import { nodeId } from './model'
 import { sortEdges } from './order'
 import { packagesOf, projectOfFile, resolveSpecifier } from './resolve'
 import { roleOf } from './roles'
-import { discoverProjects, listFiles, readAliases, readJson } from './workspace'
+import { discoverProjects, listFiles, readAliases } from './workspace'
 
 /** A workspace's graph. */
 export interface WorkspaceGraph extends Resolver {

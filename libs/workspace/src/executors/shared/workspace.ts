@@ -9,7 +9,7 @@ import type { ProjectConfiguration } from '../../runner/contract'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { readJson } from '../../graph/workspace'
+import { readJson } from '../../graph/json'
 
 /** The target whose output a package is packed, tested and published from. */
 export const BUILD_TARGET = 'build'

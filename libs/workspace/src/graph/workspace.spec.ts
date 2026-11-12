@@ -4,7 +4,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
-import { discoverProjects, hasTarget, listFiles, readAliases, readJson } from './workspace'
+import { readJson } from './json'
+import { discoverProjects, hasTarget, listFiles, readAliases } from './workspace'
 
 const root = createGraphWorkspace()
 

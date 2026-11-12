@@ -11,7 +11,7 @@
 import type { PackageManifest, ProjectRecord } from '../graph/model'
 import { join } from 'node:path'
 import { isFile } from '@hyperfrontend/project-scope/core'
-import { readJson } from '../graph/workspace'
+import { readJson } from '../graph/json'
 
 /** What a package contributes through a manifest its `package.json` names. */
 export type Contribution = 'executors' | 'generators'

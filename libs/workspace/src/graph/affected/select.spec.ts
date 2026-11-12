@@ -1,4 +1,5 @@
 import type { WorkspaceGraph } from '../build'
+import type { ProjectRecord } from '../model'
 import type { AffectedSet, ChangeSet, ReasonRule } from '../selection'
 import { execFileSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
@@ -34,6 +35,7 @@ const ALL_BUILDS = [
   'lib-cycle-a',
   'lib-cycle-b',
   'lib-delta',
+  'lib-epsilon',
   'lib-gamma',
   'lib-testing',
   'lib-tooling',
@@ -153,6 +155,9 @@ describe('the acceptance scenarios', () => {
     ['tool-edit', 'build', ALL_BUILDS],
     ['tool-edit', 'e2e', ['e2e-alpha']],
     ['tool-edit', 'test', ['lib-tooling']],
+    ['tool-type-dependency-edit', 'build', ['lib-epsilon', 'lib-tooling']],
+    ['tool-type-dependency-edit', 'typecheck', ['lib-epsilon', 'lib-tooling']],
+    ['tool-type-dependency-edit', 'test', ['lib-epsilon']],
     ['root-input-edit', 'docs', ['workspace']],
     ['root-input-edit', 'build', []],
     ['global-config-edit', 'build', ALL_BUILDS],
@@ -265,6 +270,8 @@ describe('the rules behind the decisions', () => {
     ['spec-only-dependency-edit', 'lib-alpha:build', ['unreachable']],
     ['spec-only-dependency-edit', 'lib-alpha:test', ['reachable-from-entry']],
     ['type-only-edit', 'lib-beta:test', ['kind-irrelevant']],
+    ['tool-type-dependency-edit', 'lib-alpha:build', ['unreachable']],
+    ['tool-type-dependency-edit', 'lib-tooling:build', ['reachable-from-entry']],
     ['side-effect-target-edit', 'app-beta:build', ['side-effect-import']],
     ['barrel-target-edit', 'app-beta:build', ['reachable-from-entry']],
     ['cycle-edit', 'lib-cycle-a:build', ['cycle']],
@@ -289,6 +296,12 @@ describe('the rules behind the decisions', () => {
     ['deleted-module-rewired', 'app-consumer:build', ['deleted-module', 'reachable-from-entry']],
   ])('%s decides %s by %s', (name, task, rules) => {
     expect(rulesOf(name, task)).toEqual(rules)
+  })
+
+  it('leaves a type the build tool imports out of the tool reach', () => {
+    expect(decisionOf('tool-type-dependency-edit', 'lib-alpha:build').messages).toEqual([
+      expect.stringContaining('lib-alpha does not depend on lib-epsilon'),
+    ])
   })
 
   it('names the spec-only edges a skipped build task reaches the changed project through', () => {
@@ -416,7 +429,7 @@ describe('inputs naming other projects and tools with an implementation file', (
     expect(reasonsOf('test', 'lib-a:test')).toEqual([
       'changed-input apps/app/src/main.ts: apps/app/src/main.ts is an input of lib-a:test (targets.test.inputs in libs/a/project.json)',
       'changed-input libs/a/src/index.ts: libs/a/src/index.ts is an input of lib-a:test (production file of lib-a)',
-      'changed-input libs/b/src/index.ts: libs/b/src/index.ts is an input of lib-a:test (projects input naming @fixture/b)',
+      'changed-input libs/b/src/index.ts: libs/b/src/index.ts is an input of lib-a:test (default input of @fixture/b)',
       'tool-changed tools/tooling/src/executors/build/executor.ts: tools/tooling/src/executors/build/executor.ts reaches lib-a:test: lib-a:test runs @fixture/tooling:test, implemented by tooling',
     ])
   })
@@ -427,6 +440,42 @@ describe('inputs naming other projects and tools with an implementation file', (
         'tool-changed tools/tooling/src/executors/build/executor.ts: tools/tooling/src/executors/build/executor.ts reaches lib-d:build: lib-d:build runs @fixture/tooling:build, implemented by tooling',
       ])
     )
+  })
+
+  it('read from a tool only the files a projects input names once the input names its project', () => {
+    const libD = graph.projects.get('lib-d') as ProjectRecord
+    const declared: ProjectRecord = {
+      ...libD,
+      configuration: {
+        ...libD.configuration,
+        namedInputs: { toolingBin: ['{projectRoot}/src/bin/**/*'] },
+        targets: { build: { inputs: ['production', '^production', { projects: 'tooling', input: 'toolingBin' }] } },
+      },
+    }
+    const projects = createMap([...graph.projects].map(([name, project]) => [name, name === 'lib-d' ? declared : project]))
+    const set = selectAffected({ graph: { ...graph, projects }, changes, targets: ['build'] }).get('build') as AffectedSet
+    expect({
+      selected: set.selected.some((decision) => decision.task === 'lib-d:build'),
+      skips: set.skipped
+        .find((decision) => decision.task === 'lib-d:build')
+        ?.reasons.filter((reason) => reason.file === 'tools/tooling/src/executors/build/executor.ts')
+        .map((reason) => `${reason.rule}: ${reason.message}`),
+    }).toEqual({
+      selected: false,
+      skips: [
+        'unreachable: tools/tooling/src/executors/build/executor.ts does not reach lib-d:build: tools/tooling/src/executors/build/executor.ts is not reachable from the files lib-d:build reads; lib-d:build runs @fixture/tooling:build, reading from tooling only the files its projects input names',
+      ],
+    })
+  })
+
+  it('leave out the files of a named input the caller ignores, by name', () => {
+    const set = selectAffected({ graph, changes, targets: ['test'], ignoredInputs: ['default'] }).get('test') as AffectedSet
+    const decision = set.selected.find((item) => item.task === 'lib-a:test')
+    expect(decision?.reasons.map((reason) => `${reason.rule} ${reason.file ?? ''}`)).toEqual([
+      'changed-input apps/app/src/main.ts',
+      'changed-input libs/a/src/index.ts',
+      'tool-changed tools/tooling/src/executors/build/executor.ts',
+    ])
   })
 
   it('leave an installed tool out of the tool reach', () => {

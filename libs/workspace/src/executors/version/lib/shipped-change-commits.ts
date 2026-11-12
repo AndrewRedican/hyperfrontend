@@ -29,7 +29,7 @@ export function reachedThrough(graph: Pick<WorkspaceGraph, 'projectOf'>, project
 
 /** What the resolver reads about the history after a base commit. */
 export interface ChangeSources {
-  /** The build tasks selected for the changes since the base commit, each with its reasons, read from the graph without the executors' own imports. */
+  /** The build tasks selected for the changes since the base commit, each with its reasons, read with the engine input left out. */
   readonly affectedBuilds: (baseCommit: string) => readonly TaskDecision[]
   /** The hashes of the commits since the base commit that changed each file, by workspace-relative path. */
   readonly commitsByFile: (baseCommit: string) => ReadonlyMap<string, ReadonlySet<string>>

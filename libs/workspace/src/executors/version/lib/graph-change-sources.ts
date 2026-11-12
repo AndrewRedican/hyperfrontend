@@ -5,7 +5,7 @@ import type { ChangeSources } from './shipped-change-commits'
 import { execFileSync } from 'node:child_process'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { changeSet, EdgeKind, previousWorkspaceFile, selectAffected } from '../../../graph'
+import { changeSet, ENGINE_INPUT, previousWorkspaceFile, selectAffected } from '../../../graph'
 import { BUILD_TARGET, createShippedChangeResolver } from './shipped-change-commits'
 
 /** The byte that opens each commit in the log format below, which no path or hash contains. */
@@ -33,11 +33,11 @@ export function parseCommitFiles(output: string): Map<string, Set<string>> {
 /**
  * The build tasks a change between two revisions selects, with the reasons a release answers to.
  *
- * The graph is read without its tool edges. With them, a file the build executor happens to
- * import selects every build as a changed tool, and that label also hides whether the library
- * itself reaches the file. Without them a build is selected for its own files, for the projects
- * its inputs declare (the toolchain), for code it reaches through imports, or for global
- * configuration, and each reason says which.
+ * The selection is the pipeline's, with one named input left out: the engine that runs every
+ * task. A build is selected for its own files, for the projects its inputs declare (the toolchain
+ * and the build executor), for code it reaches through imports, or for global configuration, and
+ * each reason says which; the engine changes what a task does and never what a build emits, so it
+ * releases nothing but the library shipping it.
  *
  * @param graph - The workspace graph at the head
  * @param workspaceRoot - The workspace root, absolute
@@ -46,15 +46,16 @@ export function parseCommitFiles(output: string): Map<string, Set<string>> {
  * @returns The selected build tasks
  */
 export function selectReleaseBuilds(graph: WorkspaceGraph, workspaceRoot: string, base: string, head: string): readonly TaskDecision[] {
-  const withoutTools: WorkspaceGraph = { ...graph, records: graph.records.filter((edge) => edge.kind !== EdgeKind.Tool) }
   // why: the graph at the base is left out; it only lets a deleted module name what it reached, and a library that imported one changes its own file in the same commit
   const changes = changeSet(workspaceRoot, base, head)
   return (
     selectAffected({
-      graph: withoutTools,
+      graph,
       changes,
       targets: [BUILD_TARGET],
       previousWorkspace: previousWorkspaceFile(workspaceRoot, changes),
+      // why: the engine runs the build and shapes nothing it emits, so a change to it releases no library but the one shipping the engine
+      ignoredInputs: [ENGINE_INPUT],
     }).get(BUILD_TARGET)?.selected ?? []
   )
 }

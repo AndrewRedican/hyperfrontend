@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.3](https://github.com/AndrewRedican/hyperfrontend/compare/b5eefe8d581c111792730f9d42dcbce5ce8c24e7...53c5568a9af0f5ee16b6188d3373feb7375ed249) - 2026-11-12
+
+### Dependency Updates
+
+- **lib-workspace:** typecheck on the engine's own typescript before the workspace's
+
 ## [0.3.2](https://github.com/AndrewRedican/hyperfrontend/compare/6cfa324760214038890a3a4212fed76a840fa38e...998de01185d0dd0a73bb3c4fff5ca8d33b06703e) - 2026-11-07
 
 ### Dependency Updates
