@@ -1,15 +1,15 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with a session-keyed authenticated envelope, routing, and message queueing.",
   "dependencies": {
-    "@hyperfrontend/cryptography": "1.1.4",
-    "@hyperfrontend/data-utils": "1.0.3",
-    "@hyperfrontend/json-utils": "1.1.4",
-    "@hyperfrontend/logging": "1.0.3",
-    "@hyperfrontend/random-generator-utils": "0.2.3",
-    "@hyperfrontend/string-utils": "1.0.4",
-    "@hyperfrontend/immutable-api-utils": "1.0.5"
+    "@hyperfrontend/cryptography": "1.1.5",
+    "@hyperfrontend/data-utils": "1.0.4",
+    "@hyperfrontend/json-utils": "1.1.5",
+    "@hyperfrontend/logging": "1.0.4",
+    "@hyperfrontend/random-generator-utils": "0.2.4",
+    "@hyperfrontend/string-utils": "1.0.5",
+    "@hyperfrontend/immutable-api-utils": "1.0.6"
   },
   "exports": {
     "./browser/channel": "./src/browser/channel/index.js",
