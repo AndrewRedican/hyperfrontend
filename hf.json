@@ -8,15 +8,19 @@
         "{workspaceRoot}/package.json",
         "{projectRoot}/package.json",
         "{projectRoot}/lint.config.ts",
-        "{workspaceRoot}/libs/linter/src/**/*",
-        "{workspaceRoot}/tools/lint/src/**/*",
-        "{workspaceRoot}/tools/lint/config/**/*",
-        "{workspaceRoot}/libs/workspace/src/graph/**/*",
-        "{workspaceRoot}/libs/workspace/src/lint/**/*"
+        {
+          "projects": ["lib-linter", "tool-lint"],
+          "input": "lintTooling"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "lintRules"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        }
       ]
-    },
-    "@hyperfrontend/workspace:test": {
-      "inputs": ["default", "^production"]
     },
     "version": {
       "executor": "@hyperfrontend/package:version",
@@ -43,6 +47,10 @@
         {
           "projects": "lib-workspace",
           "input": "buildExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "versionFlow"
         }
       ],
       "executor": "@hyperfrontend/workspace:version-check",
@@ -55,7 +63,7 @@
     },
     "build": {
       "inputs": [
-        "default",
+        "production",
         "^production",
         "{workspaceRoot}/assets/media/*/*.json",
         {
@@ -69,6 +77,10 @@
         {
           "projects": "lib-workspace",
           "input": "buildExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
         }
       ],
       "executor": "@hyperfrontend/package:build",
@@ -87,7 +99,18 @@
       }
     },
     "typecheck": {
-      "inputs": ["default", "^production"],
+      "inputs": [
+        "code",
+        "^production",
+        {
+          "projects": "lib-workspace",
+          "input": "typecheckExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        }
+      ],
       "executor": "@hyperfrontend/workspace:typecheck"
     },
     "audit": {
@@ -99,12 +122,60 @@
       }
     },
     "test": {
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "projects": "lib-workspace",
+          "input": "testExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        }
+      ],
       "executor": "@hyperfrontend/workspace:test",
       "options": {}
+    },
+    "e2e": {
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "projects": "lib-workspace",
+          "input": "e2eExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        }
+      ]
+    },
+    "install": {
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        }
+      ]
     }
   },
   "namedInputs": {
-    "buildExecutor": ["{projectRoot}/src/executors/build/**/*", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"],
+    "buildExecutor": ["executorCore", "{projectRoot}/src/executors/build/**/*"],
+    "versionFlow": [
+      "executorCore",
+      "{projectRoot}/src/graph/**/*",
+      "{projectRoot}/src/executors/version/**/*",
+      "{projectRoot}/src/executors/version-batch/**/*",
+      "{projectRoot}/src/executors/version-check/**/*"
+    ],
+    "lintTooling": ["{projectRoot}/bin/**/*", "{projectRoot}/config/**/*", "{projectRoot}/src/**/*", "noTestMaterial"],
+    "lintRules": ["{projectRoot}/src/graph/**/*", "{projectRoot}/src/lint/**/*", "noTestMaterial"],
+    "typecheckExecutor": ["executorCore", "{projectRoot}/src/executors/typecheck/**/*"],
+    "testExecutor": ["executorCore", "{projectRoot}/src/executors/test/**/*"],
+    "e2eExecutor": ["executorCore", "{projectRoot}/src/executors/e2e/**/*", "{projectRoot}/src/hooks/**/*"],
     "toolchain": [
       "{projectRoot}/package.json",
       "{projectRoot}/src/models/**/*",
@@ -140,7 +211,15 @@
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": ["{workspaceRoot}/patches/**"]
+    "sharedGlobals": ["{workspaceRoot}/patches/**"],
+    "noTestMaterial": [
+      "!{projectRoot}/**/__test-utils__/**",
+      "!{projectRoot}/**/README.md",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+    ],
+    "code": ["default", "!{projectRoot}/**/*.md"],
+    "engine": ["{projectRoot}/src/runner/**/*", "{projectRoot}/src/hooks/**/*", "{projectRoot}/src/cli/**/*", "noTestMaterial"],
+    "executorCore": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]
   },
   "lint": {
     "command": "node {workspaceRoot}/tools/lint/bin/lint.ts .",
