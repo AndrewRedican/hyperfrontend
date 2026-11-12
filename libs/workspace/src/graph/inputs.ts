@@ -58,6 +58,14 @@ export type DependsOn = string | DependsOnObject
 /** The inputs Nx gives a target configured without any. */
 export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
 
+/**
+ * The named input the workspace file gives the code that runs every task: the runner, the loader
+ * hooks and the command line of the engine. A target naming it among its inputs runs when that
+ * code changes; the release flow leaves it out, since the engine changes what a task does and
+ * never what a build emits.
+ */
+export const ENGINE_INPUT = 'engine'
+
 /** The root `hf.json`, as far as the targets are read. */
 export interface WorkspaceFile {
   /** The named inputs. */

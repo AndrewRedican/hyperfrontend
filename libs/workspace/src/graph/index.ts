@@ -80,6 +80,7 @@ export { libraryOfE2e, prerequisitesOf } from './depends-on'
 export { entriesOfProject, exportTarget } from './entries'
 export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 export {
+  ENGINE_INPUT,
   expandInputs,
   isCompatibleTarget,
   readWorkspaceFile,

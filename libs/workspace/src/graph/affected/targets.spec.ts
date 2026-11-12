@@ -82,9 +82,9 @@ describe('taskInputs', () => {
         dependency?.('libs/b/src/x.ts', 'production'),
         dependency?.('libs/c/x.ts', 'production'),
       ],
-      projects: inputs.projects.map((input) => `${input.project} ${input.files('libs/b')('libs/b/src/x.spec.ts', 'spec')}`),
+      projects: inputs.projects.map((input) => `${input.project} ${input.input} ${input.files('libs/b')('libs/b/src/x.spec.ts', 'spec')}`),
       kinds: inputs.kinds.size,
-    }).toEqual({ dependencies: [false, true, false], projects: ['@fixture/b false'], kinds: 10 })
+    }).toEqual({ dependencies: [false, true, false], projects: ['@fixture/b production false'], kinds: 10 })
   })
 
   it('answers no dependency filter for a target reading no dependency input', () => {

@@ -429,7 +429,7 @@ describe('inputs naming other projects and tools with an implementation file', (
     expect(reasonsOf('test', 'lib-a:test')).toEqual([
       'changed-input apps/app/src/main.ts: apps/app/src/main.ts is an input of lib-a:test (targets.test.inputs in libs/a/project.json)',
       'changed-input libs/a/src/index.ts: libs/a/src/index.ts is an input of lib-a:test (production file of lib-a)',
-      'changed-input libs/b/src/index.ts: libs/b/src/index.ts is an input of lib-a:test (projects input naming @fixture/b)',
+      'changed-input libs/b/src/index.ts: libs/b/src/index.ts is an input of lib-a:test (default input of @fixture/b)',
       'tool-changed tools/tooling/src/executors/build/executor.ts: tools/tooling/src/executors/build/executor.ts reaches lib-a:test: lib-a:test runs @fixture/tooling:test, implemented by tooling',
     ])
   })
@@ -466,6 +466,16 @@ describe('inputs naming other projects and tools with an implementation file', (
         'unreachable: tools/tooling/src/executors/build/executor.ts does not reach lib-d:build: tools/tooling/src/executors/build/executor.ts is not reachable from the files lib-d:build reads; lib-d:build runs @fixture/tooling:build, reading from tooling only the files its projects input names',
       ],
     })
+  })
+
+  it('leave out the files of a named input the caller ignores, by name', () => {
+    const set = selectAffected({ graph, changes, targets: ['test'], ignoredInputs: ['default'] }).get('test') as AffectedSet
+    const decision = set.selected.find((item) => item.task === 'lib-a:test')
+    expect(decision?.reasons.map((reason) => `${reason.rule} ${reason.file ?? ''}`)).toEqual([
+      'changed-input apps/app/src/main.ts',
+      'changed-input libs/a/src/index.ts',
+      'tool-changed tools/tooling/src/executors/build/executor.ts',
+    ])
   })
 
   it('leave an installed tool out of the tool reach', () => {

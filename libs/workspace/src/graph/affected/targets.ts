@@ -34,6 +34,8 @@ export type OwnerFilter = (ownerRoot: string) => FileFilter
 export interface ProjectInput {
   /** The project. */
   readonly project: string
+  /** The named input evaluated on that project's files. */
+  readonly input: string
   /** Which of its files count, given its root. */
   readonly files: OwnerFilter
 }
@@ -231,8 +233,10 @@ export function taskInputs(root: string, project: ProjectRecord, target: string)
   const projects: ProjectInput[] = []
   for (const input of configured) {
     if (typeof input === 'string' || input.projects === undefined || input.projects === 'self') continue
-    const files = ownerFilterOf(expandInputs(root, project, [input.input ?? 'default']))
-    for (const name of typeof input.projects === 'string' ? [input.projects] : input.projects) projects.push({ project: name, files })
+    const named = input.input ?? 'default'
+    const files = ownerFilterOf(expandInputs(root, project, [named]))
+    for (const name of typeof input.projects === 'string' ? [input.projects] : input.projects)
+      projects.push({ project: name, input: named, files })
   }
   const kinds = relevantKinds(target)
   const self = fileFilterOf(own, project.root)

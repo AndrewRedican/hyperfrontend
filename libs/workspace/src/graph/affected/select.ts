@@ -5,7 +5,9 @@
  * edge kinds, by a tool it runs, by the configuration of a dependency whose identity changed, by a
  * global configuration file, or by a task it runs after being selected. A tool reaches the task
  * through the closure of its implementation only where the task's inputs do not name the tool's
- * project; where they do, the named files are the whole of what the task reads from it.
+ * project; where they do, the named files are the whole of what the task reads from it. A caller
+ * may leave named inputs out by name, which is how the release flow reads the same graph without
+ * the engine that runs every task.
  *
  * @module graph/affected/select
  */
@@ -57,6 +59,8 @@ export interface SelectOptions {
   readonly previous?: WorkspaceGraph
   /** The `hf.json` at the base of the change, which lets a change to it select only the tasks that resolve differently afterwards. */
   readonly previousWorkspace?: WorkspaceFile
+  /** Named inputs whose files do not count, by name: the release flow leaves out the engine, which changes what a task does and never what a build emits. An ignored input still names its project, so it still bounds what a tool implemented there reaches. */
+  readonly ignoredInputs?: readonly string[]
 }
 
 /** The workspace file, whose change is judged task by task when its previous content is at hand. */
@@ -180,7 +184,7 @@ function changedPaths(changes: ChangeSet): ChangedPath[] {
  * ```
  */
 export function selectAffected(options: SelectOptions): Map<string, AffectedSet> {
-  const { graph, changes, previous = null, previousWorkspace } = options
+  const { graph, changes, previous = null, previousWorkspace, ignoredInputs = [] } = options
   const paths = changedPaths(changes)
   const globals = paths.filter((change) => isGlobalConfig(change.path))
   // why: the file is compared only when it changed and its base content was handed over; otherwise its change selects everything, as any global configuration does
@@ -262,8 +266,9 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
     role: Role
   ): string | null => {
     for (const input of inputs.projects) {
+      if (ignoredInputs.includes(input.input)) continue
       if (owner !== null && owner.name === input.project && input.files(owner.root)(change.path, role))
-        return `projects input naming ${input.project}`
+        return `${input.input} input of ${input.project}`
     }
     for (const edge of byProject.get(`project:${project.name}`) as Edge[]) {
       if (edge.kind !== 'config' || !edge.targets.includes(target) || edge.evidence.kind !== 'configuration') continue
