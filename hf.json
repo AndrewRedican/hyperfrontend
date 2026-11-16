@@ -80,6 +80,10 @@
         },
         {
           "projects": "lib-workspace",
+          "input": "executorShared"
+        },
+        {
+          "projects": "lib-workspace",
           "input": "engine"
         }
       ],
@@ -163,9 +167,9 @@
     }
   },
   "namedInputs": {
-    "buildExecutor": ["executorCore", "{projectRoot}/src/executors/build/**/*"],
+    "buildExecutor": ["{projectRoot}/src/executors/build/**/*", "noTestMaterial"],
     "versionFlow": [
-      "executorCore",
+      "executorShared",
       "{projectRoot}/src/graph/**/*",
       "{projectRoot}/src/executors/version/**/*",
       "{projectRoot}/src/executors/version-batch/**/*",
@@ -173,9 +177,9 @@
     ],
     "lintTooling": ["{projectRoot}/bin/**/*", "{projectRoot}/config/**/*", "{projectRoot}/src/**/*", "noTestMaterial"],
     "lintRules": ["{projectRoot}/src/graph/**/*", "{projectRoot}/src/lint/**/*", "noTestMaterial"],
-    "typecheckExecutor": ["executorCore", "{projectRoot}/src/executors/typecheck/**/*"],
-    "testExecutor": ["executorCore", "{projectRoot}/src/executors/test/**/*"],
-    "e2eExecutor": ["executorCore", "{projectRoot}/src/executors/e2e/**/*", "{projectRoot}/src/hooks/**/*"],
+    "typecheckExecutor": ["executorShared", "{projectRoot}/src/executors/typecheck/**/*"],
+    "testExecutor": ["executorShared", "{projectRoot}/src/executors/test/**/*"],
+    "e2eExecutor": ["executorShared", "{projectRoot}/src/executors/e2e/**/*"],
     "toolchain": [
       "{projectRoot}/package.json",
       "{projectRoot}/src/models/**/*",
@@ -219,7 +223,7 @@
     ],
     "code": ["default", "!{projectRoot}/**/*.md"],
     "engine": ["{projectRoot}/src/runner/**/*", "{projectRoot}/src/hooks/**/*", "{projectRoot}/src/cli/**/*", "noTestMaterial"],
-    "executorCore": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]
+    "executorShared": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]
   },
   "lint": {
     "command": "node {workspaceRoot}/tools/lint/bin/lint.ts .",
