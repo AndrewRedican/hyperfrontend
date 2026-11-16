@@ -234,11 +234,11 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.7.4` |
 | `@hyperfrontend/cryptography` | `1.1.5` |
 | `@hyperfrontend/data-utils` | `1.0.4` |
-| `@hyperfrontend/features` | `0.12.1` |
+| `@hyperfrontend/features` | `0.12.2` |
 | `@hyperfrontend/function-utils` | `1.0.4` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.6` |
 | `@hyperfrontend/json-utils` | `1.1.5` |
-| `@hyperfrontend/linter` | `0.3.3` |
+| `@hyperfrontend/linter` | `0.3.4` |
 | `@hyperfrontend/list-utils` | `0.1.4` |
 | `@hyperfrontend/logging` | `1.0.4` |
 | `@hyperfrontend/network-protocol` | `2.0.4` |
@@ -251,5 +251,5 @@ flowchart TB
 | `@hyperfrontend/testing` | `0.5.3` |
 | `@hyperfrontend/time-utils` | `1.0.4` |
 | `@hyperfrontend/ui-utils` | `0.0.12` |
-| `@hyperfrontend/versioning` | `0.10.2` |
+| `@hyperfrontend/versioning` | `0.10.3` |
 | `@hyperfrontend/workspace` | `0.3.1` |
