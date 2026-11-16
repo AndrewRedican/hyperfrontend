@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/AndrewRedican/hyperfrontend/compare/ec05257ef2e7854b22a608317abbeb8fd196f960...22c425233861029d0ffcf0031d33dbf548eca23b) - 2026-11-16
+
+### Bug Fixes
+
+- leave the shared executor helpers out of the release selection
+
 ## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/90724553facc3f94b57e1d93ae0d0c872e5a5100...53c5568a9af0f5ee16b6188d3373feb7375ed249) - 2026-11-12
 
 ### Features
