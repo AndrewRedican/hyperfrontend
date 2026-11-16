@@ -13,8 +13,8 @@ import { build } from '@hyperfrontend/builder'
 import { byNames } from '@hyperfrontend/builder/presets'
 import { join } from '@hyperfrontend/project-scope/core'
 import { logger } from '../shared/logger'
-import { workspacePackages } from '../shared/workspace'
 import { rootAssetSpecs } from './root-assets'
+import { workspacePackages } from './workspace-packages'
 
 /**
  * Schema-validated executor options. Mirrors `BuildConfig` from

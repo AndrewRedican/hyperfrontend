@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { buildOutputOf, resolveFromEngine, resolveFromWorkspace, workspacePackages } from './workspace'
+import { buildOutputOf, resolveFromEngine, resolveFromWorkspace } from './workspace'
 
 describe('resolveFromWorkspace', () => {
   const workspace = useTempDir({
@@ -64,22 +64,5 @@ describe('buildOutputOf', () => {
     ['builds without an output path', { root: 'libs/a', targets: { build: { options: {} } } }],
   ])('answers dist under the project root for a project that %s', (_, project) => {
     expect(buildOutputOf('/work', project)).toBe(join('/work', 'dist', 'libs', 'a'))
-  })
-})
-
-describe('workspacePackages', () => {
-  const workspace = useTempDir({
-    prefix: 'executors-packages-',
-    tree: {
-      'libs/a/package.json': '{ "name": "@fixture/a" }',
-      'libs/unnamed/package.json': '{ "private": true }',
-      'apps/site/project.json': '{ "name": "site" }',
-    },
-  })
-
-  it('names the package of every project that carries one', () => {
-    expect(
-      workspacePackages(workspace.path, { a: { root: 'libs/a' }, unnamed: { root: 'libs/unnamed' }, site: { root: 'apps/site' } })
-    ).toEqual(['@fixture/a'])
   })
 })
