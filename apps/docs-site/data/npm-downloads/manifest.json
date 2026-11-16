@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "refreshedAt": "2026-11-09T22:01:45.498Z",
-  "frontier": "2026-11-08",
+  "refreshedAt": "2026-11-16T02:58:20.990Z",
+  "frontier": "2026-11-14",
   "revalidationDays": 7,
   "packages": {
     "@hyperfrontend/nexus": {
