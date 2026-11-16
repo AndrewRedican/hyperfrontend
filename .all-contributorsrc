@@ -22,6 +22,20 @@
       "avatar_url": "https://github.com/bbsmithy.png",
       "profile": "https://github.com/bbsmithy",
       "contributions": ["ideas"]
+    },
+    {
+      "login": "trackoor",
+      "name": "trackoor",
+      "avatar_url": "https://github.com/trackoor.png",
+      "profile": "https://github.com/trackoor",
+      "contributions": ["bug"]
+    },
+    {
+      "login": "UCSB-PLSE",
+      "name": "PLSE Group at UCSB",
+      "avatar_url": "https://github.com/UCSB-PLSE.png",
+      "profile": "https://ucsbplse.github.io/",
+      "contributions": [{ "type": "research", "url": "https://github.com/AndrewRedican/hyperfrontend/issues/201" }]
     }
   ],
   "contributorsPerLine": 7,
