@@ -339,19 +339,33 @@ describe('satisfies - or group edge cases', () => {
   })
 })
 
-describe('satisfiesComparator - operator fallback', () => {
-  it('handles caret operator as >= fallback', () => {
-    const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
+describe('satisfiesComparator - operators', () => {
+  it('admits a version inside the span of a caret comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 9, patch: 0 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
     const comp = createComparator('^', v2)
     expect(satisfiesComparator(v1, comp)).toBe(true)
   })
 
-  it('handles tilde operator as >= fallback', () => {
+  it('rejects the next major for a caret comparator', () => {
     const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
+    const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const comp = createComparator('^', v2)
+    expect(satisfiesComparator(v1, comp)).toBe(false)
+  })
+
+  it('admits a version inside the span of a tilde comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 0, patch: 9 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
     const comp = createComparator('~', v2)
     expect(satisfiesComparator(v1, comp)).toBe(true)
+  })
+
+  it('rejects the next minor for a tilde comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 1, patch: 0 })
+    const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const comp = createComparator('~', v2)
+    expect(satisfiesComparator(v1, comp)).toBe(false)
   })
 
   it('returns false for caret operator when version is lower', () => {

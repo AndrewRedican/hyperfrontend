@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createComparator, createComparatorSet, createRange, createAnyRange, createExactRange, isWildcard } from './range'
+import { ceilingOf, createComparator, createComparatorSet, createRange, createAnyRange, createExactRange, isWildcard } from './range'
 import { createSemVer } from './version'
 
 describe('createComparator', () => {
@@ -62,4 +62,20 @@ describe('isWildcard', () => {
     const range = createExactRange(v)
     expect(isWildcard(range)).toBe(false)
   })
+})
+
+describe('ceilingOf', () => {
+  const CASES = [
+    ['^', { major: 1, minor: 2, patch: 3 }, { major: 2, minor: 0, patch: 0 }],
+    ['^', { major: 0, minor: 2, patch: 3 }, { major: 0, minor: 3, patch: 0 }],
+    ['^', { major: 0, minor: 0, patch: 3 }, { major: 0, minor: 0, patch: 4 }],
+    ['~', { major: 1, minor: 2, patch: 3 }, { major: 1, minor: 3, patch: 0 }],
+    ['~', { major: 0, minor: 0, patch: 3 }, { major: 0, minor: 1, patch: 0 }],
+  ] as const
+
+  for (const [operator, version, ceiling] of CASES) {
+    it(`ends the span of ${operator}${version.major}.${version.minor}.${version.patch} before ${ceiling.major}.${ceiling.minor}.${ceiling.patch}`, () => {
+      expect(ceilingOf(operator, createSemVer(version))).toEqual(expect.objectContaining({ ...ceiling, prerelease: [] }))
+    })
+  }
 })
