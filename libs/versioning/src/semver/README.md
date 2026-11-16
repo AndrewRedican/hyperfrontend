@@ -48,16 +48,16 @@ flowchart LR
 ### Parsing Versions
 
 ```typescript
-import { parseVersion, parseVersionOrThrow, coerceVersion } from '@hyperfrontend/versioning'
+import { parseVersion, parseVersionStrict, coerceVersion } from '@hyperfrontend/versioning'
 
-// Safe parsing (returns null on invalid)
-const v1 = parseVersion('1.2.3') // SemVer { major: 1, minor: 2, patch: 3 }
-const v2 = parseVersion('invalid') // null
+// Safe parsing (returns a result, never throws)
+const parsed = parseVersion('1.2.3') // { success: true, version: SemVer 1.2.3 }
+const failed = parseVersion('invalid') // { success: false, error: 'Expected digit' }
 
-// Strict parsing (throws on invalid)
-const v3 = parseVersionOrThrow('2.0.0-beta.1')
+// Strict parsing (returns the SemVer, throws on invalid)
+const v3 = parseVersionStrict('2.0.0-beta.1')
 
-// Coerce with best effort
+// Coerce with best effort (returns null when no version can be read)
 const v4 = coerceVersion('v1.2.3') // strips 'v' prefix
 const v5 = coerceVersion('1.2') // normalizes to 1.2.0
 ```
@@ -65,44 +65,47 @@ const v5 = coerceVersion('1.2') // normalizes to 1.2.0
 ### Comparing Versions
 
 ```typescript
-import { compare, gt, lt, satisfies, parseVersion, parseRange } from '@hyperfrontend/versioning'
+import { compare, gt, lt, satisfies, parseVersionStrict, parseRangeStrict } from '@hyperfrontend/versioning'
 
-const a = parseVersion('1.0.0')!
-const b = parseVersion('2.0.0')!
+const a = parseVersionStrict('1.0.0')
+const b = parseVersionStrict('2.0.0')
 
 compare(a, b) // -1 (a < b)
 gt(b, a) // true
 lt(a, b) // true
 
-// Range satisfaction
-const range = parseRange('^1.0.0')!
-satisfies(parseVersion('1.5.0')!, range) // true
-satisfies(parseVersion('2.0.0')!, range) // false
+// Range satisfaction, with ranges read the way npm reads them
+const range = parseRangeStrict('^1.0.0')
+satisfies(parseVersionStrict('1.5.0'), range) // true
+satisfies(parseVersionStrict('2.0.0'), range) // false
+
+// A partial version stands for every version it leaves open
+satisfies(parseVersionStrict('18.3.1'), parseRangeStrict('18 || 20')) // true
 ```
 
 ### Incrementing Versions
 
 ```typescript
-import { bump, parseVersion, format } from '@hyperfrontend/versioning'
+import { increment, parseVersionStrict, format } from '@hyperfrontend/versioning'
 
-const version = parseVersion('1.2.3')!
+const version = parseVersionStrict('1.2.3')
 
-format(bump(version, 'major')) // '2.0.0'
-format(bump(version, 'minor')) // '1.3.0'
-format(bump(version, 'patch')) // '1.2.4'
-format(bump(version, 'prerelease')) // '1.2.4-0'
+format(increment(version, 'major')) // '2.0.0'
+format(increment(version, 'minor')) // '1.3.0'
+format(increment(version, 'patch')) // '1.2.4'
+format(increment(version, 'prerelease')) // '1.2.4-alpha.0'
 ```
 
 ### Sorting Versions
 
 ```typescript
-import { sort, max, min, parseVersion, format } from '@hyperfrontend/versioning'
+import { sort, max, min, parseVersionStrict, format } from '@hyperfrontend/versioning'
 
-const versions = ['2.0.0', '1.0.0', '1.5.0'].map((raw) => parseVersion(raw)!)
+const versions = ['2.0.0', '1.0.0', '1.5.0'].map(parseVersionStrict)
 
 sort(versions).map(format) // ['1.0.0', '1.5.0', '2.0.0']
-format(max(versions)!) // '2.0.0'
-format(min(versions)!) // '1.0.0'
+max(versions) // SemVer 2.0.0, or null for an empty list
+min(versions) // SemVer 1.0.0, or null for an empty list
 ```
 
 ## Design Principles
@@ -110,7 +113,7 @@ format(min(versions)!) // '1.0.0'
 1. **Immutable**: All operations return new objects
 2. **Pure Functions**: No side effects, deterministic output
 3. **No Regex**: Character-by-character parsing eliminates ReDoS
-4. **Null Safety**: Parse functions return `null` on invalid input
+4. **No Surprise Throws**: Parsing reports failure in the result it returns, and only the strict variants throw
 5. **Factory Pattern**: Use `create*` functions for object construction
 
 ## See Also

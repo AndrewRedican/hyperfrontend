@@ -429,10 +429,11 @@ flowchart LR
 
 **Key Components:**
 
-- `parse/` - Version string parser
-- `compare/` - Version comparison functions
+- `parse/` - Version and range string parsers
+- `compare/` - Version comparison and range satisfaction
 - `increment/` - Version bumping logic
-- `range/` - Version range utilities
+- `format/` - Version and range formatting
+- `models/` - Version, range and comparator types with their factories
 
 **Architecture:**
 
@@ -444,19 +445,20 @@ flowchart TB
     end
 
     subgraph "Compare"
-        compareVersions[compareVersions]
-        satisfiesRange[satisfiesRange]
+        compare[compare]
+        satisfies[satisfies]
     end
 
     subgraph "Transform"
-        incrementVersion[incrementVersion]
-        formatVersion[formatVersion]
+        increment[increment]
+        format[format]
     end
 
-    parseVersion --> compareVersions
-    parseRange --> satisfiesRange
-    parseVersion --> incrementVersion
-    incrementVersion --> formatVersion
+    parseVersion --> compare
+    parseVersion --> satisfies
+    parseRange --> satisfies
+    parseVersion --> increment
+    increment --> format
 ```
 
 📖 [Full semver/ documentation](./src/semver/README.md)
