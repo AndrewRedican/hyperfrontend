@@ -1,6 +1,6 @@
 # Automated Contributors Management
 
-This project uses automated workflows to recognize contributors.
+Contributors are recognized through the [All Contributors bot](https://allcontributors.org/docs/en/bot/overview), installed on this repository, helped by a workflow that suggests what to credit. Maintainers add every contributor themselves, so nobody needs to ask for credit; what this automation saves is the work of deciding which contribution types to record.
 
 ## 🤖 Smart Contribution Type Suggestions
 
@@ -17,18 +17,18 @@ When a maintainer **approves a pull request**, our automated system analyzes the
 
 The system automatically detects contribution types based on file patterns:
 
-| Contribution Type | Detected From             | Example Files                                         |
-| ----------------- | ------------------------- | ----------------------------------------------------- |
-| **doc**           | Documentation files       | `docs/`, `*.md`, `README`, `CONTRIBUTING`             |
-| **code**          | Source code files         | `src/**/*.ts`, `packages/**/*.js`, `apps/**/*.tsx`    |
-| **test**          | Test files                | `*.test.ts`, `*.spec.js`, `__tests__/`, `*.e2e.*`     |
-| **infra**         | CI/CD and infrastructure  | `.github/workflows/`, `.devcontainer/`, `Dockerfile`  |
-| **tool**          | Configuration and tooling | `lint.config.ts`, `tsconfig.json`, `scripts/`         |
-| **design**        | Design and styling        | `*.css`, `*.scss`, `assets/`, `*.svg`, `packages/ui/` |
-| **example**       | Examples and demos        | `examples/`, `demos/`, sample files                   |
-| **plugin**        | Plugin development        | `plugins/`                                            |
+| Contribution Type | Detected From             | Example Files                                          |
+| ----------------- | ------------------------- | ------------------------------------------------------ |
+| **doc**           | Documentation files       | `docs/`, `*.md`, `README`, `CONTRIBUTING`              |
+| **code**          | Source code files         | `libs/**/*.ts`, `apps/**/*.tsx`, `plugins/**/*.js`     |
+| **test**          | Test files                | `*.test.ts`, `*.spec.js`, `__tests__/`, `*.e2e.*`      |
+| **infra**         | CI/CD and infrastructure  | `.github/workflows/`, `.devcontainer/`, `Dockerfile`   |
+| **tool**          | Configuration and tooling | `tools/`, `lint.config.ts`, `hf.json`, `tsconfig.json` |
+| **design**        | Design and styling        | `*.css`, `*.scss`, `assets/`, `*.svg`, `packages/ui/`  |
+| **example**       | Examples and demos        | `apps/demos/`, `examples/`, sample files               |
+| **plugin**        | Plugin development        | `plugins/`                                             |
 
-The bot provides a **non-intrusive advisory comment** with:
+Each file counts toward one type: the first match among doc, test, infra, tool, design, example and plugin, and code only when none of those matched. A spec under `libs/` therefore counts as a test, and a demo's source as an example. The workflow posts a **non-intrusive advisory comment** with:
 
 - Suggested contribution types based on file analysis
 - Sample of detected files
@@ -68,29 +68,7 @@ You can also add contributors manually by commenting on any issue or PR:
 
 ### Available Contribution Types
 
-| Type        | Description         | Comment Usage     |
-| ----------- | ------------------- | ----------------- |
-| code        | Code contributions  | `for code`        |
-| doc         | Documentation       | `for doc`         |
-| design      | Design              | `for design`      |
-| bug         | Bug reports         | `for bug`         |
-| ideas       | Ideas & Planning    | `for ideas`       |
-| infra       | Infrastructure      | `for infra`       |
-| maintenance | Maintenance         | `for maintenance` |
-| review      | Code reviews        | `for review`      |
-| test        | Tests               | `for test`        |
-| tool        | Tools               | `for tool`        |
-| translation | Translation         | `for translation` |
-| tutorial    | Tutorials           | `for tutorial`    |
-| question    | Answering Questions | `for question`    |
-| talk        | Talks               | `for talk`        |
-| blog        | Blog posts          | `for blog`        |
-| financial   | Financial support   | `for financial`   |
-| video       | Videos              | `for video`       |
-| example     | Examples            | `for example`     |
-| plugin      | Plugins             | `for plugin`      |
-| platform    | Packaging/porting   | `for platform`    |
-| mentoring   | Mentoring           | `for mentoring`   |
+Any type the All Contributors specification defines works, for example `code`, `doc`, `bug`, `ideas`, `research`, `review`, `test` or `tool`. The [contributors guide](CONTRIBUTORS_GUIDE.md#recognition-types) lists them all with their emoji.
 
 ### Examples
 
@@ -104,7 +82,7 @@ You can also add contributors manually by commenting on any issue or PR:
 
 ### Smart Suggestions on PR Approval
 
-1. Maintainer approves a PR with review
+1. Maintainer approves a PR from someone else (GitHub does not let authors approve their own PRs)
 2. GitHub Actions workflow (`contributor-suggest.yml`) triggers
 3. System analyzes changed files using pattern matching
 4. Bot posts a comment with suggested contribution types
@@ -117,16 +95,19 @@ You can also add contributors manually by commenting on any issue or PR:
 1. Maintainer or contributor comments with `@all-contributors` command
 2. All Contributors bot processes the comment
 3. Contributor is added with specified types
-4. Bot creates a PR with the changes
+4. Bot creates a PR that updates `.all-contributorsrc` and `README.md`
 5. Maintainer merges the PR
+
+The bot's commit is `docs: add @username as a contributor`. It carries no scope, so it never triggers a version bump, and the commit-msg check accepts it.
 
 ## Permissions
 
-The workflow has these permissions:
+The suggestion workflow has these permissions:
 
-- `contents: write` - To commit changes to the repository
-- `pull-requests: write` - To create PRs for manual additions
-- `issues: write` - To respond to comments
+- `contents: read` - To check out the repository
+- `pull-requests: write` - To list the PR's files and post the suggestion comment
+
+The All Contributors bot works under its own GitHub App installation, not under this workflow.
 
 ## Updating Contribution Types
 
@@ -140,32 +121,33 @@ If a contributor should have additional contribution types:
 
 2. Or manually edit `.all-contributorsrc` and run:
    ```bash
-   npm run contributors:generate
+   npx --yes all-contributors-cli@6.26.1 generate
+   npx hf format --write --files=README.md
    ```
 
 ## Troubleshooting
 
-### Workflow didn't trigger on PR merge
+### No suggestion appeared on a PR
 
-- Check that the PR was from a fork (not a branch in the main repo)
+- The workflow runs only when the repository owner approves a PR in a review, so it never runs on the owner's own PRs
 - Check the Actions tab for any errors
-- Verify GitHub Actions are enabled
 
 ### Bot didn't respond to comment
 
 - Ensure you used the exact format: `@all-contributors please add @username for type`
 - Check that you have the proper permissions
 - The bot may take a minute to respond
+- If it answers "We had trouble processing your request", check that `.all-contributorsrc` still parses and that `badgeTemplate` holds no template variables: a template the bot cannot render fails every request
 
 ### Manual fallback
 
 If automation fails, you can always add contributors manually:
 
 ```bash
-npm run contributors:add -- username code,doc
-npm run contributors:generate
+npx --yes all-contributors-cli@6.26.1 add username code,doc
+npx hf format --write --files=README.md
 git add .all-contributorsrc README.md
-git commit -m "docs: add @username as a contributor"
+git commit -m "docs(hyperfrontend): add @username as a contributor"
 ```
 
 ## Configuration
@@ -173,7 +155,7 @@ git commit -m "docs: add @username as a contributor"
 The automation is configured in:
 
 - `.github/workflows/contributor-suggest.yml` - Smart contribution type suggestion workflow
-- `.all-contributorsrc` - Contributors database
+- `.all-contributorsrc` - Contributors database, read by both the bot and the CLI
 
 ## Benefits of Smart Suggestions
 
