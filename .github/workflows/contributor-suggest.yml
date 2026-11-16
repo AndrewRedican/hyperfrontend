@@ -55,16 +55,9 @@ jobs:
                 exclude: [/package\.json$/, /src\/.*\.md$/],
                 description: 'Documentation changes'
               },
-              code: {
-                patterns: [
-                  /^(src|packages|apps)\/.*\.(ts|js|tsx|jsx|vue|svelte|py|go|rs|java|cs|cpp|c|h)$/,
-                  /^(src|packages|apps)\/.*\.html$/
-                ],
-                description: 'Code contributions'
-              },
               test: {
                 patterns: [
-                  /\.(test|spec)\.(ts|js|tsx|jsx)$/,
+                  /\.(test|spec)\.(ts|js|mjs|cjs|tsx|jsx)$/,
                   /__tests__\//,
                   /^.*\.e2e\./,
                   /cypress\//,
@@ -88,15 +81,14 @@ jobs:
               },
               tool: {
                 patterns: [
-                  /^(tools|scripts)\//,
-                  /eslint.*config/,
+                  /^tools\//,
+                  /lint.*config/,
                   /prettier.*config/,
                   /tsconfig.*\.json$/,
-                  /^(webpack|vite|rollup|esbuild)\.config/,
-                  /^nx\.json$/,
-                  /^project\.json$/,
-                  /jest.*config/,
-                  /commitlint\.config/
+                  /(webpack|vite|rollup|esbuild)\.config/,
+                  /^hf\.json$/,
+                  /project\.json$/,
+                  /test\.config/
                 ],
                 exclude: [/^\.github\/workflows\//],
                 description: 'Tooling and configuration'
@@ -114,6 +106,7 @@ jobs:
               example: {
                 patterns: [
                   /^(examples?|demos?)\//,
+                  /^apps\/demos\//,
                   /sample/i
                 ],
                 description: 'Example implementations or demos'
@@ -123,6 +116,13 @@ jobs:
                   /^plugins?\//
                 ],
                 description: 'Plugin development'
+              },
+              code: {
+                patterns: [
+                  /^(libs|apps|plugins)\/.*\.(ts|js|mjs|cjs|tsx|jsx|vue|svelte)$/,
+                  /^(libs|apps|plugins)\/.*\.html$/
+                ],
+                description: 'Code contributions'
               }
             };
 
