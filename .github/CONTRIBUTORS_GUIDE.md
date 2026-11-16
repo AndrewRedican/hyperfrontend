@@ -12,17 +12,13 @@ This guide explains how to manage contributors recognition and funding for the h
 
 ## Automated Contributors
 
-**Good news!** Contributors from merged PRs are automatically added! 🎉
-
-See [AUTOMATED_CONTRIBUTORS.md](AUTOMATED_CONTRIBUTORS.md) for full details.
+Everyone who contributes is credited, whether through code, documentation, bug reports, ideas or research, and nobody has to ask. Merging a pull request does not add its author by itself, though: a maintainer adds each contributor through the All Contributors bot or the CLI. See [AUTOMATED_CONTRIBUTORS.md](AUTOMATED_CONTRIBUTORS.md) for full details.
 
 ### Quick Summary
 
-- ✅ **Automatic**: Contributors are auto-added when PRs from forks are merged
-- 💬 **Via Comments**: Use `@all-contributors please add @username for code` in any issue/PR
-- 🔧 **Manual**: Use `npm run contributors:add` if automation fails
-
-The workflow handles everything automatically, but you can still manage contributors manually if needed.
+- 💬 **Via Comments**: comment `@all-contributors please add @username for code` on any issue or PR, and the All Contributors bot opens a PR with the change
+- 🏆 **Suggestions**: when a maintainer approves an outside PR, a workflow comments with the contribution types the changed files suggest
+- 🔧 **Locally**: run the All Contributors CLI, then commit the result yourself
 
 ## All Contributors Setup
 
@@ -32,12 +28,12 @@ The workflow handles everything automatically, but you can still manage contribu
 
 ### Configuration
 
-The configuration is in [.all-contributorsrc](.all-contributorsrc) and includes:
+The configuration is in [.all-contributorsrc](../.all-contributorsrc) and includes:
 
 - Project name and owner
 - Contributors list with their contribution types
-- Badge and template settings
-- Commit conventions
+- The badge, written out in full so every version of the CLI and the bot renders it the same way
+- `"commit": false`, so the CLI leaves its changes for you to commit under the repository's commit conventions
 
 ### Files Modified
 
@@ -48,30 +44,19 @@ All Contributors automatically manages:
 
 ## Adding Contributors
 
-### Interactive Method (Recommended)
-
-Use the interactive CLI to add a contributor:
-
-```bash
-npm run contributors:add
-```
-
-This will prompt you for:
-
-1. GitHub username or name
-2. Contribution type(s)
+The CLI is not a dependency of the repository. Run it with `npx`, pinned to the version the README is checked against:
 
 ### Command Line Method
 
-Add a contributor directly:
-
 ```bash
 # Add a code contributor
-npm run contributors:add -- AndrewRedican code
+npx --yes all-contributors-cli@6.26.1 add username code
 
 # Add multiple contribution types
-npm run contributors:add -- username code,doc,design
+npx --yes all-contributors-cli@6.26.1 add username code,doc,design
 ```
+
+The CLI reads the name and avatar from the GitHub profile, then updates `.all-contributorsrc` and `README.md`. Run `npx hf format --write --files=README.md` afterwards: the generator drops the blank lines around the badge and the formatter puts them back.
 
 ### Manual Method
 
@@ -90,61 +75,76 @@ Edit `.all-contributorsrc` directly and add to the `contributors` array:
 Then regenerate:
 
 ```bash
-npm run contributors:generate
+npx --yes all-contributors-cli@6.26.1 generate
+npx hf format --write --files=README.md
+```
+
+`profile` may be any URL, such as a research group's site, and a contribution may be an object that points its badge at a specific issue or PR:
+
+```json
+"contributions": [{ "type": "bug", "url": "https://github.com/AndrewRedican/hyperfrontend/issues/201" }]
 ```
 
 ## Recognition Types
 
-All Contributors supports many contribution types:
+All Contributors supports these contribution types (from `all-contributors-cli` 6.26.1):
 
-| Emoji | Type              | Description              |
-| ----- | ----------------- | ------------------------ |
-| 💻    | code              | Code contributions       |
-| 📖    | doc               | Documentation            |
-| 🎨    | design            | Design                   |
-| 🐛    | bug               | Bug reports              |
-| 💡    | ideas             | Ideas & Planning         |
-| 🤔    | ideas             | Ideas & Planning (alias) |
-| 🚇    | infra             | Infrastructure           |
-| 🚧    | maintenance       | Maintenance              |
-| 📆    | projectManagement | Project Management       |
-| 👀    | review            | Reviewed Pull Requests   |
-| ⚠️    | test              | Tests                    |
-| 🔧    | tool              | Tools                    |
-| 🌍    | translation       | Translation              |
-| ✅    | tutorial          | Tutorials                |
-| 💬    | question          | Answering Questions      |
-| 📢    | talk              | Talks                    |
-| 📝    | blog              | Blog posts               |
-| 💵    | financial         | Financial support        |
-| 🔍    | fundingFinding    | Funding finding          |
-| 📋    | eventOrganizing   | Event organizing         |
-| 🎥    | video             | Videos                   |
-| 📓    | example           | Examples                 |
-| 🔌    | plugin            | Plugin/utility libraries |
-| 📦    | platform          | Packaging/porting        |
-| 🚀    | mentoring         | Mentoring                |
+| Emoji | Type              | Description                                |
+| ----- | ----------------- | ------------------------------------------ |
+| ♿️    | a11y              | Accessibility                              |
+| 🔊    | audio             | Audio                                      |
+| 📝    | blog              | Blogposts                                  |
+| 🐛    | bug               | Bug reports                                |
+| 💼    | business          | Business development                       |
+| 💻    | code              | Code                                       |
+| 🖋    | content           | Content                                    |
+| 🔣    | data              | Data                                       |
+| 🎨    | design            | Design                                     |
+| 📖    | doc               | Documentation                              |
+| 📋    | eventOrganizing   | Event Organizing                           |
+| 💡    | example           | Examples                                   |
+| 💵    | financial         | Financial                                  |
+| 🔍    | fundingFinding    | Funding Finding                            |
+| 🤔    | ideas             | Ideas, Planning, & Feedback                |
+| 🚇    | infra             | Infrastructure (Hosting, Build-Tools, etc) |
+| 🚧    | maintenance       | Maintenance                                |
+| 🧑‍🏫    | mentoring         | Mentoring                                  |
+| 📦    | platform          | Packaging/porting to new platform          |
+| 🔌    | plugin            | Plugin/utility libraries                   |
+| 📆    | projectManagement | Project Management                         |
+| 📣    | promotion         | Promotion                                  |
+| 💬    | question          | Answering Questions                        |
+| 🔬    | research          | Research                                   |
+| 👀    | review            | Reviewed Pull Requests                     |
+| 🛡️    | security          | Security                                   |
+| 📢    | talk              | Talks                                      |
+| ⚠️    | test              | Tests                                      |
+| 🔧    | tool              | Tools                                      |
+| 🌍    | translation       | Translation                                |
+| ✅    | tutorial          | Tutorials                                  |
+| 📓    | userTesting       | User Testing                               |
+| 📹    | video             | Videos                                     |
 
 ### Examples
 
 ```bash
 # Code contributor
-npm run contributors:add -- username code
+npx --yes all-contributors-cli@6.26.1 add username code
 
 # Documentation writer
-npm run contributors:add -- username doc
+npx --yes all-contributors-cli@6.26.1 add username doc
 
 # Designer
-npm run contributors:add -- username design
+npx --yes all-contributors-cli@6.26.1 add username design
 
 # Bug reporter
-npm run contributors:add -- username bug
+npx --yes all-contributors-cli@6.26.1 add username bug
 
 # Financial supporter
-npm run contributors:add -- username financial
+npx --yes all-contributors-cli@6.26.1 add username financial
 
 # Multiple types
-npm run contributors:add -- username code,doc,test,review
+npx --yes all-contributors-cli@6.26.1 add username code,doc,test,review
 ```
 
 ## Funding Setup
@@ -197,22 +197,18 @@ See [FUNDING.md](../FUNDING.md) for:
 1. **Add the contributor**:
 
    ```bash
-   npm run contributors:add
+   npx --yes all-contributors-cli@6.26.1 add username bug
    ```
 
-2. **Follow the prompts**:
-   - Enter GitHub username or name
-   - Select contribution type(s)
-
-3. **The tool will automatically**:
+2. **The tool will**:
    - Update `.all-contributorsrc`
    - Update `README.md` with the new contributor
-   - Create a commit (if configured)
 
-4. **Review and commit**:
+3. **Format, review and commit**, under the root project's scope:
    ```bash
+   npx hf format --write --files=README.md
    git add .all-contributorsrc README.md
-   git commit -m "docs: add @username as a contributor"
+   git commit -m "docs(hyperfrontend): add @username as a contributor"
    ```
 
 ### Checking Contributors
@@ -220,17 +216,18 @@ See [FUNDING.md](../FUNDING.md) for:
 Verify all contributors are properly recognized:
 
 ```bash
-npm run contributors:check
+npx --yes all-contributors-cli@6.26.1 check
 ```
 
-This checks if anyone is missing from the contributors list.
+This compares the list with the repository's commit authors on GitHub and names anyone missing. People who contributed without a commit, such as bug reporters, never show up here.
 
 ### Regenerating Contributors Section
 
 If you manually edit `.all-contributorsrc`, regenerate the README section:
 
 ```bash
-npm run contributors:generate
+npx --yes all-contributors-cli@6.26.1 generate
+npx hf format --write --files=README.md
 ```
 
 ## Best Practices
@@ -253,7 +250,7 @@ Many contributors help in multiple ways:
 
 ```bash
 # Example: Someone who codes, writes docs, and reviews PRs
-npm run contributors:add -- username code,doc,review
+npx --yes all-contributors-cli@6.26.1 add username code,doc,review
 ```
 
 ### Keep It Updated
@@ -273,7 +270,7 @@ For additional recognition:
 1. Add them to the contributors list:
 
    ```bash
-   npm run contributors:add -- username financial
+   npx --yes all-contributors-cli@6.26.1 add username financial
    ```
 
 2. Update `FUNDING.md` with sponsor tier (Bronze/Silver/Gold/Platinum)
@@ -290,17 +287,15 @@ Recognize one-time donors by:
 ## Commands Reference
 
 ```bash
-# Add a contributor interactively
-npm run contributors:add
-
 # Add a contributor with specific types
-npm run contributors:add -- username type1,type2
+npx --yes all-contributors-cli@6.26.1 add username type1,type2
 
-# Regenerate the contributors section
-npm run contributors:generate
+# Regenerate the contributors section, then restore the formatting
+npx --yes all-contributors-cli@6.26.1 generate
+npx hf format --write --files=README.md
 
 # Check for missing contributors
-npm run contributors:check
+npx --yes all-contributors-cli@6.26.1 check
 
 # View funding information
 npm fund

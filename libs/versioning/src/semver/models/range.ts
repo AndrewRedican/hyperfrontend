@@ -1,4 +1,5 @@
 import type { SemVer } from './version'
+import { createSemVer } from './version'
 
 /**
  * Comparison operator for version ranges.
@@ -60,6 +61,34 @@ export interface Range {
  */
 export function createComparator(operator: RangeOperator, version: SemVer): Comparator {
   return { operator, version }
+}
+
+/**
+ * Gives the first version past everything a caret or tilde written on a version admits.
+ *
+ * A tilde holds the major and minor parts. A caret holds the leftmost non-zero part: the major
+ * from 1.0.0 up, the minor below that, and the patch below 0.1.0.
+ *
+ * @param operator - The caret or tilde
+ * @param version - The version the operator is written on
+ * @returns The exclusive upper bound of the span
+ *
+ * @example Find where a caret or tilde span ends
+ * ```typescript
+ * ceilingOf('^', parseVersionStrict('1.2.3')) // => 2.0.0
+ * ceilingOf('^', parseVersionStrict('0.2.3')) // => 0.3.0
+ * ceilingOf('^', parseVersionStrict('0.0.3')) // => 0.0.4
+ * ceilingOf('~', parseVersionStrict('1.2.3')) // => 1.3.0
+ * ```
+ */
+export function ceilingOf(operator: '^' | '~', version: SemVer): SemVer {
+  if (operator === '^' && version.major > 0) {
+    return createSemVer({ major: version.major + 1, minor: 0, patch: 0 })
+  }
+  if (operator === '~' || version.minor > 0) {
+    return createSemVer({ major: version.major, minor: version.minor + 1, patch: 0 })
+  }
+  return createSemVer({ major: version.major, minor: version.minor, patch: version.patch + 1 })
 }
 
 /**

@@ -5,7 +5,7 @@ import type { ChangeSources } from './shipped-change-commits'
 import { execFileSync } from 'node:child_process'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { changeSet, ENGINE_INPUT, previousWorkspaceFile, selectAffected } from '../../../graph'
+import { changeSet, ENGINE_INPUT, EXECUTOR_SHARED_INPUT, previousWorkspaceFile, selectAffected } from '../../../graph'
 import { BUILD_TARGET, createShippedChangeResolver } from './shipped-change-commits'
 
 /** The byte that opens each commit in the log format below, which no path or hash contains. */
@@ -33,11 +33,13 @@ export function parseCommitFiles(output: string): Map<string, Set<string>> {
 /**
  * The build tasks a change between two revisions selects, with the reasons a release answers to.
  *
- * The selection is the pipeline's, with one named input left out: the engine that runs every
- * task. A build is selected for its own files, for the projects its inputs declare (the toolchain
- * and the build executor), for code it reaches through imports, or for global configuration, and
- * each reason says which; the engine changes what a task does and never what a build emits, so it
- * releases nothing but the library shipping it.
+ * The selection is the pipeline's, with two named inputs left out: the engine that runs every
+ * task and the helpers every executor shares. A build is selected for its own files, for the
+ * projects its inputs declare (the toolchain and the build executor), for code it reaches through
+ * imports, or for global configuration, and each reason says which. The engine and the shared
+ * helpers change what a task does and never what a build emits, so they release nothing but the
+ * library shipping them; every other input the build target names must shape the output, because
+ * a change to any file it names releases every library.
  *
  * @param graph - The workspace graph at the head
  * @param workspaceRoot - The workspace root, absolute
@@ -54,8 +56,8 @@ export function selectReleaseBuilds(graph: WorkspaceGraph, workspaceRoot: string
       changes,
       targets: [BUILD_TARGET],
       previousWorkspace: previousWorkspaceFile(workspaceRoot, changes),
-      // why: the engine runs the build and shapes nothing it emits, so a change to it releases no library but the one shipping the engine
-      ignoredInputs: [ENGINE_INPUT],
+      // why: the engine runs the build and the shared helpers find tools and read manifests; neither shapes what the build emits, so a change to them releases no library but the one shipping them
+      ignoredInputs: [ENGINE_INPUT, EXECUTOR_SHARED_INPUT],
     }).get(BUILD_TARGET)?.selected ?? []
   )
 }

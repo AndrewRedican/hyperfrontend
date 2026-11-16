@@ -25,7 +25,7 @@ Versions a project from its conventional commits with [`@hyperfrontend/versionin
 ## What the flow assumes
 
 - A commit's scope names a project: `feat(my-utils): ...` belongs to the project named my-utils.
-- A library is due a release when a commit touches code it ships, or when the graph selects its build for a change to the toolchain its build target declares as inputs. The build target's engine input, the code that runs every task, is left out: it changes what a task does and never what a build emits.
+- A library is due a release when a commit touches code it ships, or when the graph selects its build for a change to a project its build target names as an input. A releasable commit to any file such an input names releases every library built with it, so these inputs should name the code that shapes the output. The input names engine and executorShared are reserved for the engine's own code in the workspace that develops it, and the flow leaves them out.
 - A package still below 1.0.0 takes a minor bump for a breaking change.
 - A run whose head commit is already the project's version commit does nothing, so the task is safe to repeat.
 

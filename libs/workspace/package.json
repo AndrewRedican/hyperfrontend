@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/workspace",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
   "type": "module",
@@ -8,10 +8,10 @@
     "@hyperfrontend/builder": "0.7.4",
     "@hyperfrontend/immutable-api-utils": "1.0.6",
     "@hyperfrontend/json-utils": "1.1.5",
-    "@hyperfrontend/linter": "0.3.3",
+    "@hyperfrontend/linter": "0.3.4",
     "@hyperfrontend/logging": "1.0.4",
     "@hyperfrontend/project-scope": "0.6.1",
-    "@hyperfrontend/versioning": "0.10.2",
+    "@hyperfrontend/versioning": "0.10.3",
     "tslib": "2.8.1",
     "typescript": "5.9.3"
   },

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.2](https://github.com/AndrewRedican/hyperfrontend/compare/bdd9c9c1a4f231b20b7c26d83c01824a620b88cb...344550374035f097ad1bdbac4075c46c756e235d) - 2026-11-16
+
+### Dependency Updates
+
+- **lib-versioning:** read semver ranges the way npm does
+- **lib-versioning:** bound caret and tilde comparators by the span they stand for
+
 ## [0.12.1](https://github.com/AndrewRedican/hyperfrontend/compare/b5eefe8d581c111792730f9d42dcbce5ce8c24e7...26bc4bfd43c5b267e36406c600203c603df7c169) - 2026-11-09
 
 ### Dependency Updates

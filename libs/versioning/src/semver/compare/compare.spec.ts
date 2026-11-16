@@ -339,19 +339,33 @@ describe('satisfies - or group edge cases', () => {
   })
 })
 
-describe('satisfiesComparator - operator fallback', () => {
-  it('handles caret operator as >= fallback', () => {
-    const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
+describe('satisfiesComparator - operators', () => {
+  it('admits a version inside the span of a caret comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 9, patch: 0 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
     const comp = createComparator('^', v2)
     expect(satisfiesComparator(v1, comp)).toBe(true)
   })
 
-  it('handles tilde operator as >= fallback', () => {
+  it('rejects the next major for a caret comparator', () => {
     const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
+    const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const comp = createComparator('^', v2)
+    expect(satisfiesComparator(v1, comp)).toBe(false)
+  })
+
+  it('admits a version inside the span of a tilde comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 0, patch: 9 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
     const comp = createComparator('~', v2)
     expect(satisfiesComparator(v1, comp)).toBe(true)
+  })
+
+  it('rejects the next minor for a tilde comparator', () => {
+    const v1 = createSemVer({ major: 1, minor: 1, patch: 0 })
+    const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const comp = createComparator('~', v2)
+    expect(satisfiesComparator(v1, comp)).toBe(false)
   })
 
   it('returns false for caret operator when version is lower', () => {
@@ -481,4 +495,41 @@ describe('satisfies - prerelease versions', () => {
   it('selects the lowest admitted version in minSatisfying', () => {
     expect(minSatisfying(CANDIDATES, parseRangeStrict('>=1.0.0-alpha.6'))).toBe(CANDIDATES[1])
   })
+})
+
+describe('satisfies - partial versions and wildcards', () => {
+  const CASES = [
+    ['1.2.3', '1.2', true],
+    ['1.3.0', '1.2', false],
+    ['18.3.1', '18 || 19', true],
+    ['20.0.0', '18 || 19', false],
+    ['1.3.0', '~1', true],
+    ['2.0.0', '~1', false],
+    ['0.2.0', '^0', true],
+    ['1.0.0', '^0', false],
+    ['0.0.2', '^0.0', true],
+    ['0.1.0', '^0.0', false],
+    ['1.2.4', '>1.2', false],
+    ['1.3.0', '>1.2', true],
+    ['1.2.3', '<=1.2', true],
+    ['1.3.0', '<=1.2', false],
+    ['1.5.0', '1.0.0 - 1', true],
+    ['2.0.0', '1.0.0 - 1', false],
+    ['0.9.9', '<1.x', true],
+    ['1.0.0', '<1.x', false],
+    ['2.0.0', '>=1.x', true],
+    ['1.9.9', '>1.x', false],
+    ['19.0.0-next.5', '^19.0.0-next.3', true],
+    ['19.1.0', '^19.0.0-next.3', true],
+    ['20.0.0-next.1', '^19.0.0-next.3', false],
+    ['18.3.1', '>= 18', true],
+    ['5.0.0', '* || 1.2.3', true],
+    ['5.0.0', '>*', false],
+  ] as const
+
+  for (const [version, range, expected] of CASES) {
+    it(`${expected ? 'admits' : 'rejects'} ${version} for the range ${range}`, () => {
+      expect(satisfies(parseVersionStrict(version), parseRangeStrict(range))).toBe(expected)
+    })
+  }
 })

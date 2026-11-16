@@ -2,6 +2,7 @@ import type { Comparator, ComparatorSet, Range } from '../models/range'
 import type { SemVer } from '../models/version'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
+import { ceilingOf } from '../models/range'
 
 /**
  * Compares two semantic versions.
@@ -162,6 +163,9 @@ export function neq(a: SemVer, b: SemVer): boolean {
 /**
  * Checks if a version satisfies a comparator.
  *
+ * A caret or tilde comparator admits the span the operator stands for: `^1.2.0` is at least
+ * 1.2.0 and below 2.0.0, `~1.2.0` is at least 1.2.0 and below 1.3.0.
+ *
  * @param version - Version to check
  * @param comparator - Comparator to test against
  * @returns True if version satisfies the comparator
@@ -189,7 +193,7 @@ export function satisfiesComparator(version: SemVer, comparator: Comparator): bo
       return cmp <= 0
     case '^':
     case '~':
-      return cmp >= 0
+      return cmp >= 0 && compare(version, ceilingOf(comparator.operator, comparator.version)) === -1
     default:
       return false
   }

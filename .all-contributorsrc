@@ -5,7 +5,7 @@
   "repoHost": "https://github.com",
   "files": ["README.md"],
   "imageSize": 100,
-  "commit": true,
+  "commit": false,
   "commitType": "docs",
   "commitConvention": "angular",
   "contributors": [
@@ -22,10 +22,23 @@
       "avatar_url": "https://github.com/bbsmithy.png",
       "profile": "https://github.com/bbsmithy",
       "contributions": ["ideas"]
+    },
+    {
+      "login": "trackoor",
+      "name": "trackoor",
+      "avatar_url": "https://github.com/trackoor.png",
+      "profile": "https://github.com/trackoor",
+      "contributions": ["bug"]
+    },
+    {
+      "login": "UCSB-PLSE",
+      "name": "PLSE Group at UCSB",
+      "avatar_url": "https://github.com/UCSB-PLSE.png",
+      "profile": "https://ucsbplse.github.io/",
+      "contributions": [{ "type": "research", "url": "https://github.com/AndrewRedican/hyperfrontend/issues/201" }]
     }
   ],
   "contributorsPerLine": 7,
   "linkToUsage": true,
-  "badgeTemplate": "[![All Contributors](https://img.shields.io/github/all-contributors/<%= options.projectOwner %>/<%= options.projectName %>?color=ee8449&style=flat-square&labelColor=161b26)](#contributors)",
-  "contributorTemplate": "<a href=\"<%= contributor.profile %>\"><img src=\"<%= contributor.avatar_url %>\" width=\"<%= options.imageSize %>px;\" alt=\"<%= contributor.name %>\"/><br /><sub><b><%= contributor.name %></b></sub></a>"
+  "badgeTemplate": "[![All Contributors](https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?color=ee8449&style=flat-square&labelColor=161b26)](#contributors)"
 }

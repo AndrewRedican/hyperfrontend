@@ -81,6 +81,7 @@ export { entriesOfProject, exportTarget } from './entries'
 export { importsOfFiles, importsOfText, isCodeFile, readerVersion, readImports } from './imports'
 export {
   ENGINE_INPUT,
+  EXECUTOR_SHARED_INPUT,
   expandInputs,
   isCompatibleTarget,
   readWorkspaceFile,
