@@ -96,11 +96,11 @@ describe('graphChangeSources', () => {
 })
 
 describe('selectReleaseBuilds', () => {
-  it('asks the selection for the build tasks of the change, with the engine input left out', () => {
+  it('asks the selection for the build tasks of the change, with the engine and shared-helper inputs left out', () => {
     const selected = selectReleaseBuilds(GRAPH, '/repo', 'base', 'head')
     expect({ selected, request: mockSelect.mock.calls[0]?.[0], changes: mockChanges.mock.calls[0] }).toEqual({
       selected: [DECISION],
-      request: expect.objectContaining({ graph: GRAPH, targets: ['build'], ignoredInputs: ['engine'] }),
+      request: expect.objectContaining({ graph: GRAPH, targets: ['build'], ignoredInputs: ['engine', 'executorShared'] }),
       changes: ['/repo', 'base', 'head'],
     })
   })

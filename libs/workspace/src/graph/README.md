@@ -30,9 +30,7 @@ What the graph cannot follow precisely it counts whole, and says so: a dynamic l
 
 Three rules go beyond what the inputs say. A type-only import does not reach test or lint, which strip types before running. Build reaches its dependencies from production files alone, since its artifact derives from nothing else; every other target reaches them from every file it reads, less the project's lint configuration, which only lint loads: the configuration imports the rules it turns on, and following it from a test or typecheck closure would make every rule module an input of those targets.
 
-A changed implementation of a tool reaches every task running the tool through the value imports of the implementation file, unless the task's inputs name the tool's project. Then the named files are the whole of what the task reads from it, the way the workspace file names the executor modules of the workspace package for build, typecheck, test and e2e.
-
-The code that runs every task, the runner, the loader hooks and the command line, is named the same way under a named input called engine on every pipeline target, so a change to it runs everything and the plan says why. A caller may leave named inputs out by name: the release flow leaves the engine out, since the engine changes what a task does and never what a build emits.
+A changed implementation of a tool reaches every task running the tool through the value imports of the implementation file, unless the task's inputs name the tool's project. Then the named files are the whole of what the task reads from it. A caller may also leave named inputs out of a selection by name, which is how the version flow asks the same graph which builds a change can alter without counting the inputs reserved for the engine's own code.
 
 ```bash
 npx hf graph explain lib-logging

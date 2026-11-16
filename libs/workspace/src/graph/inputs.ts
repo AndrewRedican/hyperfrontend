@@ -66,6 +66,14 @@ export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default
  */
 export const ENGINE_INPUT = 'engine'
 
+/**
+ * The named input the workspace file gives the helpers every executor of the engine shares: the
+ * JSON reader, the logger, and where the workspace resolves a package or writes a build. A task
+ * running an executor runs when they change; the release flow leaves them out, since they find
+ * tools and read manifests and never shape what a build emits.
+ */
+export const EXECUTOR_SHARED_INPUT = 'executorShared'
+
 /** The root `hf.json`, as far as the targets are read. */
 export interface WorkspaceFile {
   /** The named inputs. */
