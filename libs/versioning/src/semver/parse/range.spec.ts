@@ -1,4 +1,5 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { formatComparator } from '../format/to-string'
 import { parseRange, parseRangeStrict } from './range'
 
 describe('parseRange', () => {
@@ -166,9 +167,9 @@ describe('parseRange - x-range variations', () => {
     expect(result.success).toBe(true)
   })
 
-  it('parses empty string as x', () => {
+  it('rejects a version that ends in a dot', () => {
     const result = parseRange('1.')
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 })
 
@@ -179,9 +180,9 @@ describe('parseRange - error conditions', () => {
     expect(result).toEqual(expect.objectContaining({ success: false, error: expect.stringContaining('maximum length') }))
   })
 
-  it('parses extra dots leniently', () => {
+  it('rejects a version with a fourth part', () => {
     const result = parseRange('1.2.3.4')
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 })
 
@@ -853,7 +854,7 @@ describe('parseRange - prerelease and build identifiers', () => {
 
 describe('parseRange - x-range with an empty leading segment', () => {
   it('rejects a range that starts with two dots', () => {
-    expect(parseRange('../x')).toEqual(expect.objectContaining({ success: false, error: 'Invalid x-range: "../x"' }))
+    expect(parseRange('../x')).toEqual(expect.objectContaining({ success: false, error: 'Invalid version in comparator: "../x"' }))
   })
 
   it('rejects a range that starts with a dot', () => {
@@ -863,4 +864,172 @@ describe('parseRange - x-range with an empty leading segment', () => {
   it('still treats an x in the leading segment as any version', () => {
     expect(parseRange('x.1')).toEqual(expect.objectContaining({ success: true, range: expect.objectContaining({ sets: [] }) }))
   })
+})
+
+describe('parseRange - what a range means', () => {
+  const reading = (input: string) =>
+    parseRangeStrict(input)
+      .sets.map((set) => set.comparators.map(formatComparator).join(' '))
+      .join(' || ')
+
+  const PARTIAL_VERSIONS = [
+    ['1', '>=1.0.0 <2.0.0'],
+    ['1.2', '>=1.2.0 <1.3.0'],
+    ['=1.2', '>=1.2.0 <1.3.0'],
+    ['v1', '>=1.0.0 <2.0.0'],
+    ['18 || 19', '>=18.0.0 <19.0.0 || >=19.0.0 <20.0.0'],
+    ['~1', '>=1.0.0 <2.0.0'],
+    ['~1.2', '>=1.2.0 <1.3.0'],
+    ['^1', '>=1.0.0 <2.0.0'],
+    ['^1.2', '>=1.2.0 <2.0.0'],
+    ['^0', '>=0.0.0 <1.0.0'],
+    ['^0.0', '>=0.0.0 <0.1.0'],
+    ['^0.2', '>=0.2.0 <0.3.0'],
+    ['>1', '>=2.0.0'],
+    ['>1.2', '>=1.3.0'],
+    ['>=1', '>=1.0.0'],
+    ['>=1.2', '>=1.2.0'],
+    ['<1', '<1.0.0'],
+    ['<1.2', '<1.2.0'],
+    ['<=1', '<2.0.0'],
+    ['<=1.2', '<1.3.0'],
+    ['1.2+build', '>=1.2.0 <1.3.0'],
+  ] as const
+
+  for (const [input, expected] of PARTIAL_VERSIONS) {
+    it(`reads the partial version in ${input} as ${expected}`, () => {
+      expect(reading(input)).toBe(expected)
+    })
+  }
+
+  const HYPHEN_RANGES = [
+    ['1.0.0 - 1', '>=1.0.0 <2.0.0'],
+    ['1.0.0 - 1.2', '>=1.0.0 <1.3.0'],
+    ['1 - 2', '>=1.0.0 <3.0.0'],
+    ['1.2 - 2.0.0', '>=1.2.0 <=2.0.0'],
+    ['1.0.0 - 2.x', '>=1.0.0 <3.0.0'],
+    ['* - 2.0.0', '<=2.0.0'],
+    ['1.0.0 - *', '>=1.0.0'],
+    ['1.0.0\t-\t2.0.0', '>=1.0.0 <=2.0.0'],
+  ] as const
+
+  for (const [input, expected] of HYPHEN_RANGES) {
+    it(`reads the hyphen range ${JSON.stringify(input)} as ${expected}`, () => {
+      expect(reading(input)).toBe(expected)
+    })
+  }
+
+  const OPERATORS_ON_WILDCARDS = [
+    ['>1.x', '>=2.0.0'],
+    ['>=1.x', '>=1.0.0'],
+    ['<1.x', '<1.0.0'],
+    ['<=1.x', '<2.0.0'],
+    ['>1.2.x', '>=1.3.0'],
+    ['<=1.2.*', '<1.3.0'],
+    ['^1.2.x', '>=1.2.0 <2.0.0'],
+    ['^0.2.x', '>=0.2.0 <0.3.0'],
+    ['~1.x', '>=1.0.0 <2.0.0'],
+    ['1.x.3', '>=1.0.0 <2.0.0'],
+    ['>*', '<0.0.0-0'],
+    ['<x', '<0.0.0-0'],
+  ] as const
+
+  for (const [input, expected] of OPERATORS_ON_WILDCARDS) {
+    it(`reads the operator on the wildcard in ${input} as ${expected}`, () => {
+      expect(reading(input)).toBe(expected)
+    })
+  }
+
+  const IDENTIFIERS_SPELLED_WITH_AN_X = [
+    ['^19.0.0-next.3', '>=19.0.0-next.3 <20.0.0'],
+    ['>=1.2.3-next.1', '>=1.2.3-next.1'],
+    ['1.2.3-experimental', '1.2.3-experimental'],
+    ['<2.0.0-next.0', '<2.0.0-next.0'],
+    ['~1.2.3-exp', '>=1.2.3-exp <1.3.0'],
+    ['1.2.3+linux.x64', '1.2.3+linux.x64'],
+    ['>=1.0.0+exp.sha.5114f85', '>=1.0.0+exp.sha.5114f85'],
+  ] as const
+
+  for (const [input, expected] of IDENTIFIERS_SPELLED_WITH_AN_X) {
+    it(`keeps the identifiers of ${input} instead of reading their x as a wildcard`, () => {
+      expect(reading(input)).toBe(expected)
+    })
+  }
+
+  const SPACED_OPERATORS = [
+    ['>= 1.2.3', '>=1.2.3'],
+    ['> 1.2', '>=1.3.0'],
+    ['^ 1.2.3', '>=1.2.3 <2.0.0'],
+    ['~ 1.2', '>=1.2.0 <1.3.0'],
+    ['= 1.2.3', '1.2.3'],
+    ['>=1.0.0 < 2.0.0', '>=1.0.0 <2.0.0'],
+    ['>=\t1.2.3', '>=1.2.3'],
+    ['>=1.0.0\n<2.0.0', '>=1.0.0 <2.0.0'],
+    ['\r\n^1.2.3\r\n', '>=1.2.3 <2.0.0'],
+  ] as const
+
+  for (const [input, expected] of SPACED_OPERATORS) {
+    it(`reads ${JSON.stringify(input)} as ${expected} whatever the spacing`, () => {
+      expect(reading(input)).toBe(expected)
+    })
+  }
+
+  const WILDCARDS = [
+    '>=*',
+    '<=x',
+    '^*',
+    '~x',
+    '=*',
+    '* || 1.2.3',
+    '1.2.3 ||',
+    '|| 1.2.3',
+    '1.x || *',
+    '1.0.0 || || 2.0.0',
+    '* - *',
+  ] as const
+
+  for (const input of WILDCARDS) {
+    it(`reads ${input} as the wildcard`, () => {
+      expect(parseRangeStrict(input).sets).toEqual([])
+    })
+  }
+
+  it('keeps the largest safe integer as a version part', () => {
+    expect(reading('9007199254740991.0.0')).toBe('9007199254740991.0.0')
+  })
+})
+
+describe('parseRange - malformed versions', () => {
+  const MALFORMED = [
+    ['an empty part between dots', '1..3'],
+    ['a leading dot', '.1'],
+    ['a leading zero in the major part', '01.2.3'],
+    ['a leading zero in the minor part', '1.02.3'],
+    ['a leading zero in the patch part', '1.2.03'],
+    ['an exponent', '1e3'],
+    ['letters after the patch part', '1.2.3abc'],
+    ['letters after the patch part behind an operator', '>=1.2.3abc'],
+    ['a hexadecimal part', '0x1.2.3'],
+    ['a part past the largest safe integer', '9007199254740992.0.0'],
+    ['comparators joined by a comma', '>=1.0.0,<2.0.0'],
+    ['a comparator after a hyphen range', '1.0.0 - 2.0.0 >=1.5.0'],
+    ['a comparator before a hyphen range', '>=1.5.0 1.0.0 - 2.0.0'],
+    ['a second hyphen', '1.0.0 - 2.0.0 - 3.0.0'],
+    ['a hyphen with nothing after it', '1.2.3 -'],
+    ['a hyphen with nothing before it', '- 1.2.3'],
+    ['an operator on the left side of a hyphen range', '>=1.0.0 - 2.0.0'],
+    ['an operator on the right side of a hyphen range', '1.0.0 - >=2.0.0'],
+    ['a prerelease on a version with no patch part', '1.2-alpha'],
+    ['a prerelease on a wildcard', '1.x-alpha'],
+    ['a part that is not a number after a wildcard', '1.x.abc'],
+    ['an operator with no version', '>='],
+    ['an operator with no version before another comparator', '1.2.3 >= '],
+    ['two operators on one version', '^ ~1.2.3'],
+  ] as const
+
+  for (const [what, input] of MALFORMED) {
+    it(`rejects ${what}`, () => {
+      expect(parseRange(input)).toEqual(expect.objectContaining({ success: false }))
+    })
+  }
 })

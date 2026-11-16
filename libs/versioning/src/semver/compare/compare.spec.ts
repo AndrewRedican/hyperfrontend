@@ -496,3 +496,40 @@ describe('satisfies - prerelease versions', () => {
     expect(minSatisfying(CANDIDATES, parseRangeStrict('>=1.0.0-alpha.6'))).toBe(CANDIDATES[1])
   })
 })
+
+describe('satisfies - partial versions and wildcards', () => {
+  const CASES = [
+    ['1.2.3', '1.2', true],
+    ['1.3.0', '1.2', false],
+    ['18.3.1', '18 || 19', true],
+    ['20.0.0', '18 || 19', false],
+    ['1.3.0', '~1', true],
+    ['2.0.0', '~1', false],
+    ['0.2.0', '^0', true],
+    ['1.0.0', '^0', false],
+    ['0.0.2', '^0.0', true],
+    ['0.1.0', '^0.0', false],
+    ['1.2.4', '>1.2', false],
+    ['1.3.0', '>1.2', true],
+    ['1.2.3', '<=1.2', true],
+    ['1.3.0', '<=1.2', false],
+    ['1.5.0', '1.0.0 - 1', true],
+    ['2.0.0', '1.0.0 - 1', false],
+    ['0.9.9', '<1.x', true],
+    ['1.0.0', '<1.x', false],
+    ['2.0.0', '>=1.x', true],
+    ['1.9.9', '>1.x', false],
+    ['19.0.0-next.5', '^19.0.0-next.3', true],
+    ['19.1.0', '^19.0.0-next.3', true],
+    ['20.0.0-next.1', '^19.0.0-next.3', false],
+    ['18.3.1', '>= 18', true],
+    ['5.0.0', '* || 1.2.3', true],
+    ['5.0.0', '>*', false],
+  ] as const
+
+  for (const [version, range, expected] of CASES) {
+    it(`${expected ? 'admits' : 'rejects'} ${version} for the range ${range}`, () => {
+      expect(satisfies(parseVersionStrict(version), parseRangeStrict(range))).toBe(expected)
+    })
+  }
+})
