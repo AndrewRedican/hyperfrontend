@@ -30,6 +30,13 @@ export default [
     },
   },
   {
+    // A package's pages are listed as the tree their routes form, so the sidebar and the drawer group every package's subpaths alike
+    files: ['src/lib/navigation.ts'],
+    rules: {
+      'workspace/docs-site-navigation-tree': 'error',
+    },
+  },
+  {
     // Every app router page must export metadata following the src/lib/metadata.ts conventions
     files: ['src/app/**/page.tsx'],
     rules: {
