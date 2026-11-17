@@ -142,6 +142,48 @@ describe('navigationEntry', () => {
     ])
   })
 
+  it('nests secondary entries by path segment, linking a segment only when an entry point sits at it', () => {
+    const secondaryEntries = ['cli', 'executors/build', 'executors/test', 'generators', 'generators/library', 'nx/generators/init']
+    expect(navigationEntry({ ...TESTING, secondaryEntries }).slice(4, -1)).toEqual([
+      '    children: [',
+      "      { slug: 'cli', href: '/docs/libraries/testing/cli' },",
+      '      {',
+      "        slug: 'executors',",
+      '        children: [',
+      "          { slug: 'build', href: '/docs/libraries/testing/executors/build' },",
+      "          { slug: 'test', href: '/docs/libraries/testing/executors/test' },",
+      '        ],',
+      '      },',
+      '      {',
+      "        slug: 'generators',",
+      "        href: '/docs/libraries/testing/generators',",
+      "        children: [{ slug: 'library', href: '/docs/libraries/testing/generators/library' }],",
+      '      },',
+      '      {',
+      "        slug: 'nx',",
+      '        children: [',
+      '          {',
+      "            slug: 'generators',",
+      "            children: [{ slug: 'init', href: '/docs/libraries/testing/nx/generators/init' }],",
+      '          },',
+      '        ],',
+      '      },',
+      '    ],',
+    ])
+  })
+
+  it('breaks a child across lines when it would not fit the print width on one', () => {
+    const long = 'a-route-whose-name-runs-on-and-on-past-the-width-the-formatter-wraps-at-even-when-it-stands-on-a-line-of-its-own-below'
+    expect(navigationEntry({ ...TESTING, secondaryEntries: ['runner'], routeSlug: long }).slice(4, 10)).toEqual([
+      '    children: [',
+      '      {',
+      "        slug: 'runner',",
+      `        href: '/docs/libraries/${long}/runner',`,
+      '      },',
+      '    ],',
+    ])
+  })
+
   it('breaks a lone child onto its own line when it would not fit the print width', () => {
     const long = 'a-route-whose-name-runs-on-and-on-past-the-width-the-formatter-wraps-at-even-alone'
     expect(navigationEntry({ ...TESTING, secondaryEntries: ['runner'], routeSlug: long }).slice(4, 7)).toEqual([
