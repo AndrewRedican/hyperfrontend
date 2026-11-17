@@ -2,14 +2,16 @@ import type { MarkdownSection } from '@/lib/slug'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ChangelogTimeline } from '@/components/changelog/changelog-timeline'
+import { DocumentActions } from '@/components/document/document-actions'
 import { RawFileIcon } from '@/components/document/document-icons'
 import { DocumentShell } from '@/components/document/document-shell'
 import { H1 } from '@/components/heading-with-anchor'
 import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageIcon } from '@/components/package/package-icon'
 import { PageAccent } from '@/components/page-accent'
-import { getPackageChangelog } from '@/lib/changelog'
+import { changelogRouteFor, changelogTitleFor, getPackageChangelog } from '@/lib/changelog'
 import { releaseAnchor } from '@/lib/changelog-view'
+import { documentSubject } from '@/lib/document-model'
 import { npmPackageUrl } from '@/lib/npm-url'
 import { REPO_URL } from '@/lib/site'
 import Link from 'next/link'
@@ -23,7 +25,7 @@ export interface LibraryChangelogPageProps {
   packageName: string
 }
 
-/** The quiet text rows the actions column is made of, matching the document actions elsewhere. */
+/** The quiet text rows the changelog's own links are made of, matching the document actions above them. */
 const ACTION_CLASSES =
   'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
 
@@ -33,8 +35,10 @@ const ACTION_CLASSES =
  * Built from the package's own `CHANGELOG.md` at build time and nothing
  * else: the file the release flow writes is the record, and this page is a
  * reading of it. It takes the same shell as every other document here, so
- * the index beside it lists the releases and the actions beside that reach
- * the file itself.
+ * the index beside it lists the releases, and the actions under that are the
+ * ones every document offers: the history as Markdown, copied, opened, or
+ * handed to an assistant. The two links a changelog alone has, to the file in
+ * the repository and to the versions on npm, follow them.
  * @param props - See {@link LibraryChangelogPageProps}.
  * @param props.packageRoute - Route of the package's own page
  * @param props.packageName - Full npm package name
@@ -56,16 +60,26 @@ export async function LibraryChangelogPage({ packageRoute, packageName }: Librar
   const newest = changelog.releases[0]
 
   const actions = (
-    <div className="flex flex-col gap-0.5">
-      <a href={`${REPO_URL}/blob/main/${changelog.sourcePath}`} target="_blank" rel="noopener noreferrer" className={ACTION_CLASSES}>
-        <RawFileIcon className="h-4 w-4" />
-        View CHANGELOG.md
-      </a>
-      <TrackedLink href={npmPackageUrl(packageName)} event={{ kind: 'npm', packageName }} external className={ACTION_CLASSES}>
-        <NpmIcon className="h-4 w-4" />
-        Versions on npm
-      </TrackedLink>
-    </div>
+    <>
+      <DocumentActions
+        descriptor={{
+          route: changelogRouteFor(packageRoute),
+          title: changelogTitleFor(packageName),
+          subject: documentSubject('changelog', packageName),
+          kind: 'changelog',
+        }}
+      />
+      <div className="mt-2 flex flex-col gap-0.5 border-t border-slate-200 pt-2 dark:border-slate-800">
+        <a href={`${REPO_URL}/blob/main/${changelog.sourcePath}`} target="_blank" rel="noopener noreferrer" className={ACTION_CLASSES}>
+          <RawFileIcon className="h-4 w-4" />
+          CHANGELOG.md on GitHub
+        </a>
+        <TrackedLink href={npmPackageUrl(packageName)} event={{ kind: 'npm', packageName }} external className={ACTION_CLASSES}>
+          <NpmIcon className="h-4 w-4" />
+          Versions on npm
+        </TrackedLink>
+      </div>
+    </>
   )
 
   return (

@@ -4,7 +4,8 @@ import type { NavItem } from './navigation'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { renderApiReferenceMarkdown } from './api-markdown'
 import { getAllArticles } from './articles'
-import { removeBadges, transformLinks } from './content'
+import { changelogRouteFor, changelogTitleFor, getChangelogMarkdown } from './changelog'
+import { LIBRARIES, removeBadges, transformLinks } from './content'
 import {
   getAcknowledgments,
   getLibraryApi,
@@ -231,6 +232,37 @@ function collectSubmoduleDocuments(items: NavItem[], packageName: string | undef
 }
 
 /**
+ * Collect every package's release history.
+ *
+ * Read from the same list and the same route rule the changelog pages are
+ * routed by, so a package gets the counterpart with its first release, when
+ * the versioning flow writes the file, and not before.
+ *
+ * @returns One source per documented package that has a changelog
+ */
+function collectChangelogDocuments(): DocumentSource[] {
+  const documents: DocumentSource[] = []
+
+  for (const library of LIBRARIES) {
+    const markdown = getChangelogMarkdown(library.packageName)
+    if (markdown) {
+      documents.push(
+        source(
+          changelogRouteFor(`${LIBRARIES_PREFIX}${library.slug}`),
+          'changelog',
+          changelogTitleFor(library.packageName),
+          library.packageName,
+          `Every published release of ${library.packageName}, newest first.`,
+          markdown
+        )
+      )
+    }
+  }
+
+  return documents
+}
+
+/**
  * Collect every compiled guide.
  *
  * @returns One source per guide in the corpus
@@ -330,8 +362,8 @@ function collectRootDocuments(): DocumentSource[] {
  * Every document the site publishes in both HTML and markdown.
  *
  * The list is derived entirely from content that already exists: the docs
- * manifest, the sidebar tree, the compiled guide corpus, the article
- * directory, and the workspace-root documents. Nothing here is a second list
+ * manifest, the sidebar tree, each package's changelog, the compiled guide
+ * corpus, the article directory, and the workspace-root documents. Nothing here is a second list
  * to maintain, so a document cannot be published as a page without also being
  * addressable as markdown.
  *
@@ -342,7 +374,13 @@ function collectRootDocuments(): DocumentSource[] {
  * @returns Every markdown-backed document, route-sorted
  */
 export function collectDocuments(): DocumentSource[] {
-  const documents = [...collectLibraryDocuments(), ...collectGuideDocuments(), ...collectArticleDocuments(), ...collectRootDocuments()]
+  const documents = [
+    ...collectLibraryDocuments(),
+    ...collectChangelogDocuments(),
+    ...collectGuideDocuments(),
+    ...collectArticleDocuments(),
+    ...collectRootDocuments(),
+  ]
 
   collectSubmoduleDocuments(docsNavigation, undefined, documents)
 
