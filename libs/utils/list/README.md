@@ -157,7 +157,7 @@ Every signature, type parameter and thrown error is in the [API reference](https
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/list-utils"></script>
 
 <script>
-  const { createQueue, forEach } = HyperfrontendListUtils
+  const { createFifoList, createRange } = HyperfrontendListUtils
 </script>
 ```
 
