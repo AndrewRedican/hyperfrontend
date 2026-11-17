@@ -259,6 +259,8 @@ createProtocol(null)
 createProtocol(logger, 'short')
 // Error: 'Cannot create the v4 protocol without a shared key of at least 16 characters'
 
+const protocolProvider = createProtocol(logger, sharedKey)
+
 protocolProvider(null, receiveFn, session)
 // Error: 'Cannot create protocol without a valid send function'
 
