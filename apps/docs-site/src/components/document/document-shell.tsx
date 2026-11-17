@@ -71,16 +71,17 @@ export function DocumentShell({ descriptor, sections = [], actions, note, childr
 
       <aside className={`${navVisibility.documentRail} w-52 shrink-0 print:hidden`} aria-label="Document tools">
         {/* why: no border and no fill, so the column reads as a margin note beside the document rather than as a second panel competing with it */}
-        <div className="sticky top-20 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain pb-10 pt-1">
+        {/* why: the column is as tall as the screen allows and no taller, and the index is the part that gives: the heading and the actions keep their place while a long list scrolls between them. The column itself scrolls only on a screen too short to hold even that. */}
+        <div className="sticky top-20 flex max-h-[calc(100vh-7rem)] flex-col overflow-y-auto overscroll-contain pb-10 pt-1">
           {indexed.length > 0 ? (
-            <nav aria-label="On this page">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">On this page</p>
-              <DocumentIndex sections={indexed} />
+            <nav aria-label="On this page" className="flex min-h-24 flex-col">
+              <p className="mb-3 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">On this page</p>
+              <DocumentIndex sections={indexed} viewportClassName="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
             </nav>
           ) : null}
 
           {companion || note ? (
-            <div className={indexed.length > 0 ? 'mt-6 border-t border-slate-200 pt-4 dark:border-slate-800' : ''}>
+            <div className={`shrink-0 ${indexed.length > 0 ? 'mt-6 border-t border-slate-200 pt-4 dark:border-slate-800' : ''}`}>
               {companion}
               {note ? <p className="px-2 pt-2 text-xs leading-relaxed text-slate-400 dark:text-slate-500">{note}</p> : null}
             </div>
@@ -132,7 +133,12 @@ function DocumentToolbar({ sections, companion, note }: DocumentToolbarProps) {
       <div id={panelId} hidden={!open} className="pb-2 pt-1">
         {sections.length > 0 ? (
           <nav aria-label="On this page">
-            <DocumentIndex sections={sections} onNavigate={() => setOpen(false)} />
+            {/* why: the panel sits above the document, so an index left to its full length would push a long history's first line a screen or more down; held to part of the screen, it scrolls and the actions under it stay in reach */}
+            <DocumentIndex
+              sections={sections}
+              onNavigate={() => setOpen(false)}
+              viewportClassName="max-h-[45svh] overflow-y-auto overscroll-contain"
+            />
           </nav>
         ) : null}
         {companion || note ? (
