@@ -178,6 +178,11 @@ export default [
     ignores: ['**/docs/rules/**'],
     rules: on('workspace/markdown-example-api'),
   },
+  {
+    // why: an example in a JSDoc block is printed into the API reference and compiled by nothing, so its imports are held to what the packages export.
+    files: SCRIPT,
+    rules: on('workspace/jsdoc-example-api'),
+  },
   // why: a lint process runs from its project's root, so the working directory names the project whose documentation these blocks scope.
   ...documentationScopes(process.cwd()),
 ]
