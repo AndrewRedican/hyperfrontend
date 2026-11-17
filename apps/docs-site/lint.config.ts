@@ -3,7 +3,8 @@ import baseConfig from '../../lint.base.config.ts'
 
 export default [
   {
-    ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts'],
+    // context: the Markdown under public/ is each page's generated counterpart, written by the docs generation and never committed; its source is the READMEs and the JSDoc it is rendered from, which are linted where they are written.
+    ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts', 'public/**/*.md'],
   },
   ...baseConfig,
   {
