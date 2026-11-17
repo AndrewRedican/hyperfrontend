@@ -97,6 +97,45 @@ node tools/pipeline/scripts/check-binary-budget.mjs --base <rev> --allow-over-bu
 
 It is plain JavaScript with no dependencies, so the CI job runs it without installing the workspace. When `GITHUB_STEP_SUMMARY` is set it also appends the new binary files to the job summary.
 
+## Dependency audit
+
+`scripts/audit.mjs` fails a lockfile whose dependencies carry a security advisory, apart from the advisories recorded in `audit-exceptions.json` at the repository root. `npm audit` has one dial, a severity floor, and no way to excuse a single advisory. When an advisory has no patched release there is nothing to upgrade to or override with, and the dial leaves two moves: stay red, or stop looking at every advisory of that severity. The script reads the same report and excuses only the advisories that are named, each with the reason it cannot be fixed and the day the exception ends.
+
+An exception is a debt with a due date, and the check collects it:
+
+| Situation                                                     | What the check does                                                         |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| The advisory is reported and its exception is current         | passes, and prints the exception with its reason and last day on every run  |
+| The exception's `until` day has passed                        | fails, and says to look for a patched release before moving the day forward |
+| A root listed in the exception's `roots` no longer reports it | fails, and says to remove the root, or the entry when it was the last       |
+| The advisory is not in the file                               | fails at or above the level, as `npm audit` would                           |
+
+```json
+{
+  "advisory": "GHSA-fc5q-39xc-vjpf",
+  "package": "picomatch",
+  "recorded": "2026-11-17",
+  "until": "2026-12-17",
+  "reason": "No patched release exists: the advisory covers every version through 4.0.7, the latest.",
+  "resolve": "upgrade the parents that pin picomatch, or override it to the first patched release, then delete this entry."
+}
+```
+
+`advisory`, `package`, `reason`, `resolve` and `until` are required. `roots` limits an exception to the lockfile directories it lists, for a cause that belongs to one project; without it the exception holds wherever the advisory is reported. Keep `until` about a month out: its only job is to make someone look again.
+
+It runs in three places, with one list of exceptions between them:
+
+- The `audit` target every lockfile root declares runs it at `moderate`; `npx hf run-many -t audit --all` covers them all.
+- The lefthook `pre-push` hook runs that command first, and a failure stops the push.
+- The `dependency audit` job in `security-scan.yml` runs it on the root lockfile at `high`.
+
+```bash
+node tools/pipeline/scripts/audit.mjs
+node tools/pipeline/scripts/audit.mjs --root apps/docs-site --level high
+```
+
+It is plain JavaScript with no dependencies, so the CI job runs it without installing the workspace. It exits 0 when nothing is left outside the exceptions, 1 on a failure of the table above, and 2 on bad arguments, an unreadable exceptions file, or an audit that could not be run.
+
 ## Pipeline
 
 `src/pipeline/` plans and runs the continuous integration: what the pull-request and main workflows execute and what the pre-push hook executes locally. `bin/pipeline.ts` runs on the workspace Node.js with the alias hook, like the lint CLI.
