@@ -1,0 +1,21 @@
+{
+  "exceptions": [
+    {
+      "advisory": "GHSA-fc5q-39xc-vjpf",
+      "package": "picomatch",
+      "recorded": "2026-11-17",
+      "until": "2026-12-17",
+      "reason": "No patched release exists: the advisory covers every version through 4.0.7, the latest, so there is nothing to upgrade to or override with. It is a regular-expression denial of service through a crafted glob; every pattern picomatch compiles in this workspace comes from its own build and test configuration, never from a request.",
+      "resolve": "upgrade the parents that pin picomatch, or override it to the first patched release, then delete this entry."
+    },
+    {
+      "advisory": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch",
+      "roots": ["apps/docs-site"],
+      "recorded": "2026-10-31",
+      "until": "2026-12-17",
+      "reason": "typedoc 0.28 requires minimatch 10 and calls its matchOne, which minimatch 11 made private, so an override to the patched 11.0.1 breaks the documentation generation. It is a pattern-driven denial of service; every pattern here is repository-controlled.",
+      "resolve": "upgrade typedoc once a release requires minimatch >=11.0.1, then delete this entry."
+    }
+  ]
+}
