@@ -34,6 +34,22 @@ export const REVALIDATION_DAYS = 7
  */
 export const MIN_REQUEST_GAP_MS = 1_000
 
+/**
+ * Time, in milliseconds, the first retry of a rate-limited request waits; each
+ * further retry doubles it.
+ *
+ * A rate limit is a closed window, not a moment of trouble, so it gets a wait
+ * of its own rather than the short backoff a failing server gets. Measured on
+ * 2026-11-17: the range endpoint answered twenty requests paced a second
+ * apart, refused the twenty-first, and went on refusing it for between
+ * twenty-five and thirty seconds, with a `retry-after` of zero throughout.
+ * The short backoff's three retries were all spent inside that window, and a
+ * refresh of more than twenty packages could no longer finish at all. One
+ * wait of this length outlasts the window, and the run carries on from the
+ * request it stopped at.
+ */
+export const RATE_LIMIT_PAUSE_MS = 30_000
+
 /** Times a request that failed for a reason worth retrying is tried again. */
 export const MAX_RETRIES = 3
 
