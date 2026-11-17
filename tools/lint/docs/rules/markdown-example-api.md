@@ -6,7 +6,7 @@ Ensure the code examples in Markdown use API that exists, so a README or an ARCH
 
 Documentation examples are not compiled, so nothing fails when the API under them changes. An `@example` in a JSDoc block sits beside the code it describes and is reviewed with it; a fenced block in a README, an ARCHITECTURE.md or a guide sits far from it and drifts.
 
-This rule reads every fenced block whose language is TypeScript or JavaScript (`ts`, `typescript`, `tsx`, `mts`, `cts`, `js`, `javascript`, `jsx`, `mjs`, `cjs`) in every Markdown file except `CHANGELOG.md`, parses it, and makes two checks.
+This rule reads every fenced block whose language is TypeScript or JavaScript (`ts`, `typescript`, `tsx`, `mts`, `cts`, `js`, `javascript`, `jsx`, `mjs`, `cjs`), and the inline scripts of every `html` block, in every Markdown file except `CHANGELOG.md`. It parses each and makes two checks.
 
 ### 1. What an example takes from a workspace package exists
 
@@ -22,8 +22,13 @@ Wherever an example names a publishable workspace package, the entry point it na
 | Whole-module binding | `const lib = require('…')`, then `lib.parse`             | `parse`, at each use          |
 | Dynamic import       | `const { parse } = await import('…')`                    | `parse`                       |
 | Entry point          | any of the above, `export * from '…'`, a bare `import()` | the subpath after the package |
+| Bundle global        | `const { parse } = HyperfrontendVersioning`, `Global.x`  | `parse`, `x`                  |
 
 A default import and the package's `package.json` subpath are not checked. A package the workspace does not publish (`react`, a private project) is not checked either.
+
+A bundle global is the name a package's `iife` or `umd` build assigns itself to, declared as `globalName` in its `project.json`. It is what the script of a CDN snippet reads the package off, so the script of an `html` block is checked the same way a module is; a block that declares a variable of that name itself is left alone.
+
+An example that does not parse, usually a sketch with an elision in it, still has its `import … from` and `export … from` statements read, each on its own. They are whole even when the code around them is not, and they are the part that drifts.
 
 When another entry point of the same package exports the name, the message says which, since the usual cause is a name that moved to a secondary entry point.
 
@@ -32,7 +37,7 @@ When another entry point of the same package exports the name, the message says 
 In a publishable package's own documentation, a function or constructor an example calls **at its top level** must come from somewhere. It is provided when any of these holds:
 
 - the example declares or imports the name, anywhere in the block;
-- it is a language, browser, Node or test-runner global (`parseInt`, `fetch`, `expect`);
+- it is a language, browser, Node or test-runner global (`parseInt`, `fetch`, `expect`), or an export of a common Node module (`readFileSync`, `join`, `spawn`), which examples about files and processes call without importing;
 - an entry point of any workspace package exports it;
 - the package's own sources declare it, exported or not, as an ARCHITECTURE.md describing internals needs.
 
@@ -40,12 +45,20 @@ Only top-level calls are checked. What an example runs itself is what it demonst
 
 An example that shows what **not** to write marks it with ❌, on the line of the call or on a comment line above it. The nearest ❌ or ✅ at or above a call speaks for it, so a block may show both.
 
-### What is not checked
+### What is not checked, and why
 
-- A block that does not parse, such as a sketch with `...` in it: it states no API precisely enough to check.
-- Calls inside function bodies, member calls, and names that are only read.
-- Inline code in prose. [`lib-inline-code-links`](./lib-inline-code-links.md) covers it: a name there must link to documentation that resolves.
-- `@example` blocks in JSDoc. [`lib-require-jsdoc-example`](./lib-require-jsdoc-example.md) requires them, beside the code they describe.
+Each of these was measured against the workspace's own documentation, 620 Markdown examples and 2,052 JSDoc examples, before it was left out.
+
+| Not checked                             | Candidates found | Real drift among them | Why not                                                           |
+| --------------------------------------- | ---------------- | --------------------- | ----------------------------------------------------------------- |
+| Calls inside function bodies            | 81               | 0                     | every one was the reader's own handler, renderer or fetch         |
+| Top-level calls in JSDoc examples       | 25               | 0                     | an example beside its code shows a setting, which is the reader's |
+| Type names nothing declares             | 14               | at most 4             | placeholders such as `User`, and it needs every library type name |
+| Constants, members of an imported value | 1                | 0                     | nothing to catch; a member check has no type to go on             |
+| Relative imports                        | 35               | 0                     | none names a file that exists: they stand for the reader's files  |
+| The rest of a block that does not parse | n/a              | n/a                   | only its module statements are precise enough to read             |
+
+Inline code in prose is the business of [`lib-inline-code-links`](./lib-inline-code-links.md): a name there must link to documentation that resolves.
 
 ### Why?
 
@@ -69,6 +82,16 @@ An entry point the package does not have:
 ```typescript
 import { createBroker } from '@hyperfrontend/nexus/broker'
 // Error: Example imports from `@hyperfrontend/nexus/broker`, but @hyperfrontend/nexus has no entry point `./broker`. Update the example to the API as it is now.
+```
+
+A name a CDN snippet reads off a bundle global:
+
+```html
+<script src="https://unpkg.com/@hyperfrontend/random-generator-utils"></script>
+<script>
+  const { uuid4 } = HyperfrontendRandomGenerator
+</script>
+<!-- Error: Example takes `uuid4` from `HyperfrontendRandomGenerator`, which exports no `uuid4`. Update the example to the API as it is now. -->
 ```
 
 A top-level call nothing provides, in `libs/versioning/ARCHITECTURE.md`:
