@@ -79,10 +79,10 @@ function readBoundedRange(
  *
  * @example Analyzing commits since last release
  * ```typescript
- * import { createAnalyzeCommitsStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createAnalyzeCommitsStep } from '@hyperfrontend/versioning'
  *
  * const step = createAnalyzeCommitsStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Access analyzed commits
  * console.log(result.stateUpdates?.commits)

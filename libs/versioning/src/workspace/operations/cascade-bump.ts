@@ -299,9 +299,9 @@ function computeNextVersion(current: SemVer, bumpType: BumpType, prereleaseId?: 
  *
  * @example Calculate cascade bumps from a single package
  * ```typescript
- * import { discoverWorkspace, calculateCascadeBumpsFromPackage } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, calculateCascadeBumpsFromPackage } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const result = calculateCascadeBumpsFromPackage(workspace, '@myorg/utils', 'minor')
  *
  * console.log(`${result.totalAffected} packages will be bumped`)

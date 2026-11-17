@@ -107,7 +107,7 @@ export function findProjectChangelog(projectPath: string): string | null {
  *
  * @example Find changelogs using VFS tree
  * ```typescript
- * import { findChangelogsInTree, discoverPackages } from '@hyperfrontend/versioning'
+ * import { findChangelogsInTree, discoverPackages } from '@hyperfrontend/versioning/workspace'
  *
  * // Inside an Nx generator
  * export default function myGenerator(tree: Tree) {
@@ -143,7 +143,7 @@ export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[
  *
  * @example Find project changelog using VFS tree
  * ```typescript
- * import { findProjectChangelogInTree } from '@hyperfrontend/versioning'
+ * import { findProjectChangelogInTree } from '@hyperfrontend/versioning/workspace'
  *
  * // Inside an Nx generator
  * export default function myGenerator(tree: Tree) {

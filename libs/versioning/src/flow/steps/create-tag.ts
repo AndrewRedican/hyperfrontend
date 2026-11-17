@@ -19,10 +19,10 @@ export const CREATE_TAG_STEP_ID = 'create-tag'
  *
  * @example Creating an annotated version tag
  * ```typescript
- * import { createTagStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createTagStep } from '@hyperfrontend/versioning'
  *
  * const step = createTagStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Get the created tag name
  * console.log(result.stateUpdates?.tagName)
@@ -107,10 +107,10 @@ export function createTagStep(): FlowStep {
  *
  * @example Pushing the tag to remote
  * ```typescript
- * import { createPushTagStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createPushTagStep } from '@hyperfrontend/versioning'
  *
  * const step = createPushTagStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Tag is pushed to remote
  * console.log(result.message)

@@ -26,10 +26,10 @@ export const UPDATE_PACKAGES_STEP_ID = 'update-packages'
  *
  * @example Updating the package.json version field
  * ```typescript
- * import { createUpdatePackageStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createUpdatePackageStep } from '@hyperfrontend/versioning'
  *
  * const step = createUpdatePackageStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // package.json version field is updated
  * console.log(result.stateUpdates?.modifiedFiles)
@@ -92,10 +92,10 @@ export function createUpdatePackageStep(): FlowStep {
  *
  * @example Updating dependent packages in a monorepo
  * ```typescript
- * import { createCascadeDependenciesStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createCascadeDependenciesStep } from '@hyperfrontend/versioning'
  *
  * const step = createCascadeDependenciesStep()
- * const result = await executeStep(step, contextWithTrackDeps)
+ * const result = await step.execute(contextWithTrackDeps)
  *
  * // Dependent packages are updated
  * console.log(result.message)

@@ -28,10 +28,10 @@ export const FETCH_REGISTRY_STEP_ID = 'fetch-registry'
  *
  * @example Fetching published version from registry
  * ```typescript
- * import { createFetchRegistryStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createFetchRegistryStep } from '@hyperfrontend/versioning'
  *
  * const step = createFetchRegistryStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Check if first release
  * if (result.stateUpdates?.isFirstRelease) {

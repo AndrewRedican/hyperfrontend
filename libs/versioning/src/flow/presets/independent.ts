@@ -37,10 +37,10 @@ export const INDEPENDENT_FLOW_CONFIG: FlowConfig = {
  *
  * @example Checking if dependent packages need bumps
  * ```typescript
- * import { createCheckDependentBumpsStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createCheckDependentBumpsStep } from '@hyperfrontend/versioning'
  *
  * const step = createCheckDependentBumpsStep()
- * const result = await executeStep(step, contextWithTrackDeps)
+ * const result = await step.execute(contextWithTrackDeps)
  *
  * // Result indicates if any dependents need bumps
  * console.log(result.message)

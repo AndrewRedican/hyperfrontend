@@ -247,10 +247,10 @@ function describeChangelogFreeRelease(isInitial: boolean, isStabilityPromotion: 
  *
  * @example Generating a changelog entry from commits
  * ```typescript
- * import { createGenerateChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createGenerateChangelogStep } from '@hyperfrontend/versioning'
  *
  * const step = createGenerateChangelogStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Access the generated changelog entry
  * const entry = result.stateUpdates?.changelogEntry
@@ -444,10 +444,10 @@ export function createGenerateChangelogStep(): FlowStep {
  *
  * @example Writing the changelog entry to CHANGELOG.md
  * ```typescript
- * import { createWriteChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createWriteChangelogStep } from '@hyperfrontend/versioning'
  *
  * const step = createWriteChangelogStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // CHANGELOG.md is updated with the new entry
  * console.log(result.message)

@@ -35,10 +35,10 @@ export const SYNCED_FLOW_CONFIG: FlowConfig = {
  *
  * @example Syncing all packages to the same version
  * ```typescript
- * import { createSyncAllPackagesStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createSyncAllPackagesStep } from '@hyperfrontend/versioning'
  *
  * const step = createSyncAllPackagesStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // All packages updated to same version
  * console.log(result.stateUpdates?.modifiedFiles)
@@ -93,10 +93,10 @@ export function createSyncAllPackagesStep(): FlowStep {
  *
  * @example Generating a combined changelog for all packages
  * ```typescript
- * import { createCombinedChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createCombinedChangelogStep } from '@hyperfrontend/versioning'
  *
  * const step = createCombinedChangelogStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Single changelog for all packages
  * console.log(result.message)

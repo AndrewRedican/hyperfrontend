@@ -20,10 +20,10 @@ export const CREATE_COMMIT_STEP_ID = 'create-commit'
  *
  * @example Creating and staging a release commit
  * ```typescript
- * import { createGitCommitStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createGitCommitStep } from '@hyperfrontend/versioning'
  *
  * const step = createGitCommitStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Get the created commit hash
  * console.log(result.stateUpdates?.commitHash)

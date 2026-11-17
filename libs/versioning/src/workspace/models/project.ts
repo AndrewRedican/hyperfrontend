@@ -65,7 +65,8 @@ export interface CreateProjectOptions {
  *
  * @example Create a new Project object
  * ```typescript
- * import { createProject, readPackageJson } from '@hyperfrontend/versioning'
+ * import { readPackageJson } from '@hyperfrontend/project-scope'
+ * import { createProject } from '@hyperfrontend/versioning'
  *
  * const packageJson = readPackageJson('./libs/my-lib/package.json')
  * const project = createProject({

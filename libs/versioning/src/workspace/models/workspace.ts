@@ -168,9 +168,9 @@ export function createWorkspace(options: CreateWorkspaceOptions): Workspace {
  *
  * @example Get a project by name from the workspace
  * ```typescript
- * import { discoverWorkspace, getProject } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getProject } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const project = getProject(workspace, '@myorg/utils')
  * if (project) {
  *   console.log(`Version: ${project.version}`)
@@ -190,9 +190,9 @@ export function getProject(workspace: Workspace, projectName: string): Project |
  *
  * @example Check if a project exists in the workspace
  * ```typescript
- * import { discoverWorkspace, hasProject } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, hasProject } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * if (hasProject(workspace, '@myorg/utils')) {
  *   console.log('Package exists in workspace')
  * }
@@ -210,9 +210,9 @@ export function hasProject(workspace: Workspace, projectName: string): boolean {
  *
  * @example Get all project names in the workspace
  * ```typescript
- * import { discoverWorkspace, getProjectNames } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getProjectNames } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const names = getProjectNames(workspace)
  * console.log(`Found ${names.length} projects:`, names)
  * ```
@@ -229,9 +229,9 @@ export function getProjectNames(workspace: Workspace): readonly string[] {
  *
  * @example Get the count of projects in the workspace
  * ```typescript
- * import { discoverWorkspace, getProjectCount } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getProjectCount } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * console.log(`Workspace contains ${getProjectCount(workspace)} projects`)
  * ```
  */
@@ -248,9 +248,9 @@ export function getProjectCount(workspace: Workspace): number {
  *
  * @example Get projects that depend on a given project
  * ```typescript
- * import { discoverWorkspace, getDependents } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getDependents } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const dependents = getDependents(workspace, '@myorg/utils')
  * console.log(`Packages depending on @myorg/utils:`, dependents)
  * ```
@@ -268,9 +268,9 @@ export function getDependents(workspace: Workspace, projectName: string): readon
  *
  * @example Get projects that the given project depends on
  * ```typescript
- * import { discoverWorkspace, getDependencies } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getDependencies } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const deps = getDependencies(workspace, '@myorg/app')
  * console.log(`@myorg/app depends on:`, deps)
  * ```
@@ -289,9 +289,9 @@ export function getDependencies(workspace: Workspace, projectName: string): read
  *
  * @example Check if one project depends on another
  * ```typescript
- * import { discoverWorkspace, dependsOn } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, dependsOn } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * if (dependsOn(workspace, '@myorg/app', '@myorg/utils')) {
  *   console.log('@myorg/app directly depends on @myorg/utils')
  * }
