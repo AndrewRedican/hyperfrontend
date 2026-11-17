@@ -172,6 +172,12 @@ export default [
     ignores: ['**/README.md'],
     rules: on('no-ascii-art-diagrams codeblock-line-width workspace/lib-inline-code-links'),
   },
+  {
+    // why: a rule's own documentation shows the code the rule reads, right and wrong, not a use of an API, so the names in it are subjects and not references.
+    files: ['**/*.md'],
+    ignores: ['**/docs/rules/**'],
+    rules: on('workspace/markdown-example-api'),
+  },
   // why: a lint process runs from its project's root, so the working directory names the project whose documentation these blocks scope.
   ...documentationScopes(process.cwd()),
 ]
