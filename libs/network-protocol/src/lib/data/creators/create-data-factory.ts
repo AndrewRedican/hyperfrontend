@@ -19,7 +19,6 @@ import { getSchema } from './get-schema'
  * @example Creating data with automatic schema hashing
  * ```typescript
  * import { createHash } from '@hyperfrontend/cryptography/browser'
- * import { createDataFactory } from '@hyperfrontend/network-protocol/lib/data/creators/create-data-factory'
  *
  * const createData = createDataFactory(createHash)
  * const data = await createData('process-123', 1, { hello: 'world' })
