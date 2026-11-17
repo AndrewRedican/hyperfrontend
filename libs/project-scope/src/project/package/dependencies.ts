@@ -257,8 +257,6 @@ export function hasInstalledPackage(projectPath: string, packageName: string): b
  *
  * @example Getting installed package version
  * ```typescript
- * import { getInstalledVersion } from '@hyperfrontend/project-scope'
- *
  * const version = getInstalledVersion('/project', 'typescript')
  * // => '5.3.2' or null
  * ```

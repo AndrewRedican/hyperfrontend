@@ -277,7 +277,7 @@ export function detectAll(projectPath: string, packageJsonOrOptions?: PackageJso
  *
  * @example Clearing the tech detection cache
  * ```typescript
- * import { detectAll, clearTechDetectionCache } from '@hyperfrontend/project-scope'
+ * import { detectAll, clearTechDetectionCache } from '@hyperfrontend/project-scope/tech'
  *
  * // Initial detection (cached)
  * const first = detectAll('./my-project')

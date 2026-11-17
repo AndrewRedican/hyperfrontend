@@ -12,8 +12,6 @@ import { join } from '../../core/path'
  *
  * @example Collecting all dependencies
  * ```typescript
- * import { collectAllDependencies } from '@hyperfrontend/project-scope'
- *
  * const allDeps = collectAllDependencies(packageJson)
  * // => { 'react': '^18.0.0', 'typescript': '^5.0.0', ... }
  * ```
@@ -37,8 +35,6 @@ export function collectAllDependencies(packageJson?: PackageJson): Record<string
  *
  * @example Parsing version strings
  * ```typescript
- * import { parseVersionString } from '@hyperfrontend/project-scope'
- *
  * parseVersionString('^1.2.3')   // => '1.2.3'
  * parseVersionString('~2.0.0')   // => '2.0.0'
  * parseVersionString('>=3.0.0')  // => '3.0.0'
@@ -69,8 +65,6 @@ export function parseVersionString(versionString?: string): string | undefined {
  *
  * @example Finding a config file
  * ```typescript
- * import { locateConfigFile } from '@hyperfrontend/project-scope'
- *
  * const eslintConfig = locateConfigFile('/project', ['.eslintrc', '.eslintrc.js', 'eslint.config.js'])
  * // => '.eslintrc.js'
  * ```
@@ -94,8 +88,6 @@ export function locateConfigFile(projectPath: string, patterns: readonly string[
  *
  * @example Filtering scripts by command
  * ```typescript
- * import { filterScriptsByCommand } from '@hyperfrontend/project-scope'
- *
  * const jestScripts = filterScriptsByCommand(pkg.scripts, 'jest')
  * // => ['test', 'test:watch', 'test:coverage']
  * ```
