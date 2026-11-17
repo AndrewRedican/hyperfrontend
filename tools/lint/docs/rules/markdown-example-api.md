@@ -6,7 +6,7 @@ Ensure the code examples in Markdown use API that exists, so a README or an ARCH
 
 Documentation examples are not compiled, so nothing fails when the API under them changes. An `@example` in a JSDoc block sits beside the code it describes and is reviewed with it; a fenced block in a README, an ARCHITECTURE.md or a guide sits far from it and drifts.
 
-This rule reads every fenced block whose language is TypeScript or JavaScript (`ts`, `typescript`, `tsx`, `mts`, `cts`, `js`, `javascript`, `jsx`, `mjs`, `cjs`), and the inline scripts of every `html` block, in every Markdown file except `CHANGELOG.md`. It parses each and makes two checks.
+This rule reads every fenced block whose language is TypeScript or JavaScript (`ts`, `typescript`, `tsx`, `mts`, `cts`, `js`, `javascript`, `jsx`, `mjs`, `cjs`), and the inline scripts of every `html` block, in every Markdown file except `CHANGELOG.md`. It parses each and makes two checks. [`jsdoc-example-api`](./jsdoc-example-api.md) makes the first of them on the examples in JSDoc blocks.
 
 ### 1. What an example takes from a workspace package exists
 
@@ -140,5 +140,6 @@ The rule takes no options.
 
 ## Related Rules
 
+- [jsdoc-example-api](./jsdoc-example-api.md) - Makes the same check of the examples in JSDoc blocks
 - [lib-inline-code-links](./lib-inline-code-links.md) - Ensures inline code naming an API links to documentation that resolves
 - [lib-require-jsdoc-example](./lib-require-jsdoc-example.md) - Ensures every exported function carries an example
