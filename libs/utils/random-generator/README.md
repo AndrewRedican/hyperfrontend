@@ -234,7 +234,7 @@ const terrain = {
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/random-generator-utils"></script>
 
 <script>
-  const { randomGaussian, randomUniform, uuid4 } = HyperfrontendRandomGenerator
+  const { randomGaussian, randomUniform, uuidV4 } = HyperfrontendRandomGenerator
 </script>
 ```
 
