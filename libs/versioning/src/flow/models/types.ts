@@ -204,7 +204,7 @@ export interface ScopeFilteringConfig {
    *
    * @example
    * // Composable matcher
-   * import { anyOf, scopeMatcher, scopePrefixMatcher } from '@hyperfrontend/versioning'
+   * import { anyOf, scopeMatcher, scopePrefixMatcher } from '@hyperfrontend/versioning/commits/classify'
    * infrastructure: {
    *   paths: ['tools/'],
    *   matcher: anyOf(

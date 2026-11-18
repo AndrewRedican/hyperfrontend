@@ -2,14 +2,17 @@ import type { MarkdownSection } from '@/lib/slug'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ChangelogTimeline } from '@/components/changelog/changelog-timeline'
-import { RawFileIcon } from '@/components/document/document-icons'
+import { ACTION_CLASSES } from '@/components/document/action-styles'
+import { DocumentActions } from '@/components/document/document-actions'
+import { DestinationIcon } from '@/components/document/document-icons'
 import { DocumentShell } from '@/components/document/document-shell'
 import { H1 } from '@/components/heading-with-anchor'
 import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageIcon } from '@/components/package/package-icon'
 import { PageAccent } from '@/components/page-accent'
-import { getPackageChangelog } from '@/lib/changelog'
+import { changelogRouteFor, changelogTitleFor, getPackageChangelog } from '@/lib/changelog'
 import { releaseAnchor } from '@/lib/changelog-view'
+import { documentSubject } from '@/lib/document-model'
 import { npmPackageUrl } from '@/lib/npm-url'
 import { REPO_URL } from '@/lib/site'
 import Link from 'next/link'
@@ -23,18 +26,17 @@ export interface LibraryChangelogPageProps {
   packageName: string
 }
 
-/** The quiet text rows the actions column is made of, matching the document actions elsewhere. */
-const ACTION_CLASSES =
-  'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
-
 /**
  * A package's release history, published under its page.
  *
  * Built from the package's own `CHANGELOG.md` at build time and nothing
  * else: the file the release flow writes is the record, and this page is a
  * reading of it. It takes the same shell as every other document here, so
- * the index beside it lists the releases and the actions beside that reach
- * the file itself.
+ * the index beside it lists the releases, and the actions under that are the
+ * ones every document offers: the history as Markdown, copied, opened, or
+ * handed to an assistant. The two places a changelog alone can be opened in,
+ * its file in the repository and its versions on npm, are rows of that same
+ * list.
  * @param props - See {@link LibraryChangelogPageProps}.
  * @param props.packageRoute - Route of the package's own page
  * @param props.packageName - Full npm package name
@@ -56,16 +58,23 @@ export async function LibraryChangelogPage({ packageRoute, packageName }: Librar
   const newest = changelog.releases[0]
 
   const actions = (
-    <div className="flex flex-col gap-0.5">
+    <DocumentActions
+      descriptor={{
+        route: changelogRouteFor(packageRoute),
+        title: changelogTitleFor(packageName),
+        subject: documentSubject('changelog', packageName),
+        kind: 'changelog',
+      }}
+    >
       <a href={`${REPO_URL}/blob/main/${changelog.sourcePath}`} target="_blank" rel="noopener noreferrer" className={ACTION_CLASSES}>
-        <RawFileIcon className="h-4 w-4" />
-        View CHANGELOG.md
+        <DestinationIcon id="github" className="h-4 w-4" />
+        Open in GitHub
       </a>
       <TrackedLink href={npmPackageUrl(packageName)} event={{ kind: 'npm', packageName }} external className={ACTION_CLASSES}>
-        <NpmIcon className="h-4 w-4" />
-        Versions on npm
+        <DestinationIcon id="npm" className="h-4 w-4" />
+        Open in npm
       </TrackedLink>
-    </div>
+    </DocumentActions>
   )
 
   return (
@@ -95,34 +104,5 @@ export async function LibraryChangelogPage({ packageRoute, packageName }: Librar
         </div>
       </DocumentShell>
     </>
-  )
-}
-
-/** Props for the inline icon. */
-interface IconProps {
-  /** Sizing and colour classes */
-  className?: string
-}
-
-/**
- * The npm wordmark's block, reduced to a glyph.
- * @param props - See {@link IconProps}.
- * @param props.className - Sizing and colour classes
- * @returns The icon.
- */
-function NpmIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.7}
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="1.5" />
-      <path d="M8 16V8h8v8h-3v-5h-2v5H8z" />
-    </svg>
   )
 }

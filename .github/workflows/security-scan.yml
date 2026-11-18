@@ -49,18 +49,6 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      # why: the same check as the local audit target, so an advisory with a dated exception in audit-exceptions.json is excused here exactly as it is before a push
       - name: Check for security vulnerabilities
-        run: |
-          echo "Checking for high and critical vulnerabilities..."
-          AUDIT_RESULT=$(npm audit --json || true)
-          HIGH=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.high // 0')
-          CRITICAL=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.critical // 0')
-
-          echo "Found $HIGH high and $CRITICAL critical vulnerabilities"
-
-          if [ "$HIGH" -gt 0 ] || [ "$CRITICAL" -gt 0 ]; then
-            echo "❌ Security check failed"
-            exit 1
-          else
-            echo "✅ No high or critical vulnerabilities found"
-          fi
+        run: node tools/pipeline/scripts/audit.mjs --level high

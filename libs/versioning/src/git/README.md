@@ -165,7 +165,7 @@ const tags = getTagsForPackage('@hyperfrontend/versioning')
 ### Working with Commits
 
 ```typescript
-import { createGitCommit, isMergeCommit, extractType, extractScope } from '@hyperfrontend/versioning'
+import { isMergeCommit, extractType, extractScope } from '@hyperfrontend/versioning'
 
 // Parse conventional commits
 const subject = 'feat(lib-versioning): add git operations'

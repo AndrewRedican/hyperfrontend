@@ -7,7 +7,7 @@ import { SITE_URL } from './site'
  * machine-readable counterpart possible at all. Pages written directly in TSX
  * have no such source and are deliberately absent.
  */
-export type DocumentKind = 'package' | 'architecture' | 'submodule' | 'guide' | 'article' | 'page'
+export type DocumentKind = 'package' | 'architecture' | 'submodule' | 'changelog' | 'guide' | 'article' | 'page'
 
 /**
  * Minimum number of sections a document needs before an index earns its place
@@ -117,6 +117,7 @@ export function buildHandoffPrompt(descriptor: DocumentDescriptor): string {
  * @example
  * ```typescript
  * documentSubject('package', '@hyperfrontend/features')   // '@hyperfrontend/features'
+ * documentSubject('changelog', '@hyperfrontend/features') // 'the release history of @hyperfrontend/features'
  * documentSubject('guide', 'Compose independent features') // 'the guide "Compose independent features"'
  * ```
  */
@@ -127,6 +128,8 @@ export function documentSubject(kind: DocumentKind, name: string): string {
       return name
     case 'architecture':
       return `the architecture of ${name}`
+    case 'changelog':
+      return `the release history of ${name}`
     case 'guide':
       return `the guide "${name}"`
     case 'article':

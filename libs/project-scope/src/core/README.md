@@ -86,10 +86,10 @@ const joined = joinPath('src', 'utils', 'helper.ts') // 'src/utils/helper.ts'
 Utilities for detecting and converting file encodings.
 
 ```typescript
-import { detectEncoding, convertEncoding } from '@hyperfrontend/project-scope'
+import { detectEncoding, toUtf8 } from '@hyperfrontend/project-scope'
 
 const encoding = detectEncoding(buffer)
-const utf8Content = convertEncoding(buffer, 'utf-8')
+const utf8Content = toUtf8(buffer, encoding)
 ```
 
 ### Platform Detection (`platform/`)

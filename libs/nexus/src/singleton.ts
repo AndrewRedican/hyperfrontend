@@ -35,10 +35,10 @@ function resolveBroker(): BrokerHandle {
  *
  * @example
  * ```typescript
- * import { broker } from '@hyperfrontend/nexus'
+ * import { defaultBroker } from '@hyperfrontend/nexus'
  *
  * // Create a channel
- * const channel = broker.addChannel('my-channel', targetWindow)
+ * const channel = defaultBroker.addChannel('my-channel', targetWindow)
  * channel.connect()
  * channel.send('MESSAGE', { hello: 'world' })
  * ```

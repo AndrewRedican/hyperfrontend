@@ -59,7 +59,7 @@ flowchart TB
 ### Basic Classification
 
 ```typescript
-import { classifyCommits, createClassificationContext, deriveProjectScopes } from '@hyperfrontend/versioning'
+import { classifyCommits, createClassificationContext, deriveProjectScopes } from '@hyperfrontend/versioning/commits/classify'
 
 // Create context with project info
 const context = createClassificationContext({
@@ -78,7 +78,7 @@ console.log(result.summary) // Statistics
 ### With Dependency Tracking
 
 ```typescript
-import { classifyCommits, createClassificationContext, deriveProjectScopes } from '@hyperfrontend/versioning'
+import { classifyCommits, createClassificationContext, deriveProjectScopes } from '@hyperfrontend/versioning/commits/classify'
 
 const context = createClassificationContext({
   projectScopes: deriveProjectScopes('lib-app'),
@@ -108,7 +108,7 @@ import {
   scopeMatcher,
   scopePrefixMatcher,
   anyOf,
-} from '@hyperfrontend/versioning'
+} from '@hyperfrontend/versioning/commits/classify'
 
 const context = createClassificationContext({
   projectScopes: deriveProjectScopes('lib-app'),
@@ -124,7 +124,7 @@ const infraMatcher = anyOf(scopeMatcher(['ci', 'build']), scopePrefixMatcher(['t
 ### Converting to Changelog Format
 
 ```typescript
-import { classifyCommits, toChangelogCommit, filterIncluded } from '@hyperfrontend/versioning'
+import { classifyCommits, toChangelogCommit, filterIncluded } from '@hyperfrontend/versioning/commits/classify'
 
 const result = classifyCommits(commits, context)
 

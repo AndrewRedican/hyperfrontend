@@ -1,9 +1,11 @@
 'use client'
 
 import type { DocumentDescriptor } from '@/lib/document-model'
+import type { ReactNode } from 'react'
 import { buildHandoffTargets, markdownPathFor } from '@/lib/document-model'
 import { useCallback, useEffect, useState } from 'react'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { ACTION_CLASSES } from './action-styles'
 import { AssistantIcon, CheckIcon, CopyIcon, RawFileIcon } from './document-icons'
 
 /** How far the copy confirmation stays up before the button reverts. */
@@ -24,6 +26,8 @@ const COPY_LABELS: Record<CopyState, string> = {
 export interface DocumentActionsProps {
   /** The document these actions act on */
   descriptor: DocumentDescriptor
+  /** Rows a single kind of document adds after the standard ones, each drawn with the shared action classes */
+  children?: ReactNode
 }
 
 /**
@@ -38,15 +42,22 @@ export interface DocumentActionsProps {
  * which keeps the link short enough to survive every browser and app in the
  * path, and means the model reads the current documentation rather than a copy
  * frozen at the moment the button was drawn.
+ *
+ * A kind of document with somewhere else of its own to be opened, as a
+ * changelog has its file in the repository and its versions on the registry,
+ * passes those rows as children. They join the same list instead of forming a
+ * second group under it, because to a reader they are the same offer: open
+ * this somewhere else.
  * @param props - See {@link DocumentActionsProps}.
  * @param props.descriptor - The document these actions act on
+ * @param props.children - Rows added after the standard ones
  * @returns The action list.
  * @example
  * ```tsx
  * <DocumentActions descriptor={{ route: '/docs/libraries/features', title: 'Features', subject: '@hyperfrontend/features', kind: 'package' }} />
  * ```
  */
-export function DocumentActions({ descriptor }: DocumentActionsProps) {
+export function DocumentActions({ descriptor, children }: DocumentActionsProps) {
   const [copyState, setCopyState] = useState<CopyState>('idle')
   const markdownPath = markdownPathFor(descriptor.route)
 
@@ -87,14 +98,8 @@ export function DocumentActions({ descriptor }: DocumentActionsProps) {
           {target.label}
         </a>
       ))}
+
+      {children}
     </div>
   )
 }
-
-/**
- * Shared chrome for every action: a quiet text row that only picks up a
- * background on hover, so the group reads as a list of verbs rather than as a
- * panel of buttons.
- */
-const ACTION_CLASSES =
-  'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-default disabled:opacity-60 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'

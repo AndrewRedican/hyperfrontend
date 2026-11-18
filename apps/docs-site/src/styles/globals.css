@@ -553,6 +553,41 @@
     container: doc-column / inline-size;
   }
 
+  /* The document index's viewport.
+
+     A long index scrolls inside the room the shell gives it. The scrollbar is
+     kept thin and quiet so the column still reads as a margin note, and an
+     edge with entries behind it fades out, which is what says the list goes
+     on: a list cut off cleanly between two entries looks complete. The fade
+     is drawn only at an end that has more, set by the index as it is
+     scrolled, so a list that fits is never dimmed. */
+  .document-index-viewport {
+    --index-fade: 1.75rem;
+    --index-fade-top: 0rem;
+    --index-fade-bottom: 0rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-slate-300) transparent;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--index-fade-top),
+      #000 calc(100% - var(--index-fade-bottom)),
+      transparent
+    );
+  }
+
+  .dark .document-index-viewport {
+    scrollbar-color: var(--color-slate-700) transparent;
+  }
+
+  .document-index-viewport[data-more-above] {
+    --index-fade-top: var(--index-fade);
+  }
+
+  .document-index-viewport[data-more-below] {
+    --index-fade-bottom: var(--index-fade);
+  }
+
   @container doc-column (min-width: 56rem) {
     .prose pre.shiki[data-code-layout='compact'],
     .code-block[data-code-layout='compact'] {

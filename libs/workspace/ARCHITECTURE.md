@@ -60,7 +60,7 @@ The bin installs the resolution hook and calls the command line. The command lin
 
    ```ts
    // ✅ the manifest decides where the module is
-   const { implementation } = executorsManifest(packageDir).executors[name]
+   const { implementation } = readJson(manifestFile).executors[name]
    // ❌ a registry the package has to be told about
    registerExecutor('@acme/local:hello', hello)
    ```

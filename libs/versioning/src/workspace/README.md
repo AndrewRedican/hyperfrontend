@@ -89,30 +89,25 @@ flowchart TB
 ## Usage Example
 
 ```typescript
+import { createTree } from '@hyperfrontend/project-scope'
 import {
-  discoverPackages,
-  buildDependencyGraph,
-  createWorkspace,
-  calculateCascadeBumps,
   applyBumps,
+  calculateCascadeBumps,
+  createWorkspaceFromDisk,
+  summarizeBatchUpdate,
+  summarizeCascadeBumps,
+  summarizeValidation,
   validateWorkspace,
 } from '@hyperfrontend/versioning'
 
-// 1. Discover workspace
-const projects = await discoverPackages('/path/to/monorepo')
-const depGraph = buildDependencyGraph(projects)
-const workspace = createWorkspace({
-  root: '/path/to/monorepo',
-  type: 'nx',
-  projects,
-  dependencyGraph: depGraph,
-  reverseDependencyGraph: buildReverseDependencyGraph(depGraph),
-})
+// 1. Discover workspace: its packages and both dependency graphs
+const workspaceRoot = '/path/to/monorepo'
+const workspace = createWorkspaceFromDisk({ workspaceRoot })
 
 // 2. Validate workspace
 const report = validateWorkspace(workspace)
-if (!report.isValid) {
-  console.error(formatValidationReport(report))
+if (!report.valid) {
+  console.error(summarizeValidation(report))
   process.exit(1)
 }
 
@@ -121,12 +116,10 @@ const result = calculateCascadeBumps(workspace, [{ name: 'core', bumpType: 'mino
 console.log(summarizeCascadeBumps(result))
 // Output: "3 package(s) affected (1 direct, 2 cascade)"
 
-// 4. Apply bumps
-const updateResult = applyBumps(workspace, result.bumps, {
-  dryRun: true,
-  updateChangelogs: true,
-})
-console.log(formatBatchResult(updateResult))
+// 4. Apply bumps to a buffered tree; nothing is written until the tree is committed
+const tree = createTree(workspaceRoot)
+const updateResult = applyBumps(tree, workspace, result.bumps)
+console.log(summarizeBatchUpdate(updateResult))
 ```
 
 ## Dependencies

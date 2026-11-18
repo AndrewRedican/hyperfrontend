@@ -225,7 +225,9 @@ interface LlmsSection {
  * Secondary entry points are deliberately left out. There are hundreds of
  * them, listing them would push the index past the context budget the
  * convention exists to protect, and each one is reachable by appending `.md`
- * to its own route anyway.
+ * to its own route anyway. Release histories are left out for the same reason:
+ * one per package, each long, and each at a route the package's own entry
+ * already implies.
  *
  * @param documents - Every collected document
  * @returns Sections in reading order, empty ones removed
@@ -277,6 +279,7 @@ function renderLlmsTxt(documents: DocumentSource[]): string {
     '## Optional',
     '',
     `- [Secondary entry points](${SITE_URL}/sitemap.xml): each package documents its subpath exports on its own page, and each of those has a \`.md\` counterpart under the same rule. The sitemap lists every route.`,
+    `- [Release histories](${SITE_URL}/sitemap.xml): each package's changelog is published at its own route followed by \`/releases\`, with a \`.md\` counterpart under the same rule.`,
     `- [Search index](${SITE_URL}/search-index.json): every page, section anchor, and exported API symbol on the site, as JSON.`,
     ''
   )

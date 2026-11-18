@@ -41,11 +41,12 @@ it('connects a host and its frame', async () => {
 
 ```typescript
 const observers = installResizeObserver()
-const panel = mountPanel(container)
+const widths: number[] = []
+new ResizeObserver(([entry]) => widths.push(entry.contentRect.width)).observe(container)
 
 observers.resize(container, { width: 320, height: 200 })
 
-expect(panel.layout()).toBe('compact')
+expect(widths).toEqual([320])
 ```
 
 Observers behave like real ones, observing, unobserving and disconnecting, and each entry carries the content rectangle and every box size. A callback runs only when the test calls [`resize`](https://www.hyperfrontend.dev/docs/libraries/testing/browser/#api-ResizeObserverController), never on its own, not even for the initial notification a browser sends when observation starts. [`resizeLate`](https://www.hyperfrontend.dev/docs/libraries/testing/browser/#api-ResizeObserverController) also reaches observers that have stopped watching the element, the way a notification already queued when observation stopped still arrives, for testing code that must ignore one. The stub is installed as a stubbed global, so [`jest.restoreAllMocks`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) removes it.

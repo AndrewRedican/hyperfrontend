@@ -127,10 +127,10 @@ export function createStep(id: string, name: string, execute: StepExecutor, opti
  *
  * @example Creating a placeholder step
  * ```typescript
- * import { createNoopStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createNoopStep } from '@hyperfrontend/versioning'
  *
  * const step = createNoopStep('placeholder', 'Placeholder Step')
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * console.log(result.status)
  * // => 'success'

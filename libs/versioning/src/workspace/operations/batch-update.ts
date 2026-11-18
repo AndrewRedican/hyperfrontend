@@ -223,7 +223,7 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
  *
  * @example Update dependency version references using VFS Tree
  * ```typescript
- * import { updateDependencyReferencesInTree } from '@hyperfrontend/versioning'
+ * import { updateDependencyReferencesInTree } from '@hyperfrontend/versioning/workspace'
  *
  * // Inside an Nx generator
  * export default function syncDeps(tree: Tree) {
@@ -299,9 +299,9 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
  *
  * @example Create a summary of the batch update result
  * ```typescript
- * import { batchUpdateVersions, summarizeBatchUpdate } from '@hyperfrontend/versioning'
+ * import { applyBumps, summarizeBatchUpdate } from '@hyperfrontend/versioning'
  *
- * const result = batchUpdateVersions(workspace, updates)
+ * const result = applyBumps(tree, workspace, bumps)
  * console.log(summarizeBatchUpdate(result))
  * // Output:
  * // Successfully updated 3 package(s)

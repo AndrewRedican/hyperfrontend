@@ -252,7 +252,7 @@ Every signature, option and return type is in the [API reference](https://www.hy
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/time-utils"></script>
 
 <script>
-  const { createResumableInterval, sleep } = HyperfrontendTimeUtils
+  const { createTimer, sleep } = HyperfrontendTimeUtils
 </script>
 ```
 

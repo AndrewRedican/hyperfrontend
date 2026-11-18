@@ -24,7 +24,7 @@ All complex objects are created via factory functions rather than class construc
 
 ```typescript
 // Factory function pattern used throughout
-const context = createFlowContext({ workspaceRoot, projectName })
+const flow = createVersionFlow('conventional')
 const client = createGitClient({ tree, workspaceRoot })
 ```
 

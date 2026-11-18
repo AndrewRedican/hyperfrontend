@@ -62,7 +62,7 @@ Besides the project's own files, the E2E project and the status workflow, the ge
 | `README.md`                                                | Row in the Packages table after the package the ecosystem hierarchy places before it; summary count              |
 | `apps/docs-site/scripts/generate-docs.ts`                  | `LIBRARIES` entry; `LIBRARY_SLUGS` entry for a core or supporting package                                        |
 | `apps/docs-site/src/lib/content.ts`                        | `LIBRARIES` entry with every export's entry point and the architecture document when `ARCHITECTURE.md` exists    |
-| `apps/docs-site/src/lib/navigation.ts`                     | Entry in the section's array at its alphabetical position, one child per secondary export (plus architecture)    |
+| `apps/docs-site/src/lib/navigation.ts`                     | Entry in the section's array at its alphabetical position, its secondary exports nested by path segment          |
 | `apps/docs-site/src/lib/ecosystem.ts`                      | Package appended to the `--ecosystemTier` level of `ECOSYSTEM_TIERS`                                             |
 | `apps/docs-site/src/app/docs/libraries/{slug}/**/page.tsx` | `page.tsx`, `releases/page.tsx`, `architecture/page.tsx` when the document exists, one page per secondary export |
 
@@ -70,7 +70,7 @@ Besides the project's own files, the E2E project and the status workflow, the ge
 
 **Left to do by hand**: record the package banner and runtime strip (`npx hf run tool-media:media --scene=banner-{slug} --scene=runtimes-{slug}`), replace the README template's placeholder sections, and add `fallbackFeatures` to the docs page if the README cannot supply key features. Leave `package.json` at version `0.0.0` and never seed a `CHANGELOG.md`: the versioning flow computes the first version from the commits and writes the changelog with it, and until then the `releases` page answers not found and the sitemap check skips it.
 
-The transforms live in `tools/package/src/generators/make-publishable/lib/` as pure functions with specs beside them; the CI entries are the ones `lib-ci-workflows` checks, and the docs-site entries are the ones `docs-site-libraries`, `docs-site-routes`, `docs-site-secondary-entries` and `docs-site-library-docs` check.
+The transforms live in `tools/package/src/generators/make-publishable/lib/` as pure functions with specs beside them; the CI entries are the ones `lib-ci-workflows` checks, and the docs-site entries are the ones `docs-site-libraries`, `docs-site-routes`, `docs-site-secondary-entries`, `docs-site-navigation-tree` and `docs-site-library-docs` check.
 
 ---
 

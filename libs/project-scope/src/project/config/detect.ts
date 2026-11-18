@@ -206,8 +206,6 @@ export function findConfigFile(rootPath: string, type: ConfigType): string | nul
  *
  * @example Getting config file patterns
  * ```typescript
- * import { getConfigPaths } from '@hyperfrontend/project-scope'
- *
  * const patterns = getConfigPaths('typescript')
  * // => ['tsconfig.json', 'tsconfig.*.json']
  * ```

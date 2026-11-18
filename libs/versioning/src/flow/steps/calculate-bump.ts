@@ -77,10 +77,10 @@ function calculateBumpFromCommits(
  *
  * @example Running the calculate-bump step
  * ```typescript
- * import { createCalculateBumpStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createCalculateBumpStep } from '@hyperfrontend/versioning'
  *
  * const step = createCalculateBumpStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // Get the calculated bump
  * console.log(result.stateUpdates?.bumpType)
@@ -268,10 +268,10 @@ export function createCalculateBumpStep(): FlowStep {
  *
  * @example Preventing duplicate releases
  * ```typescript
- * import { createCheckIdempotencyStep, executeStep } from '@hyperfrontend/versioning'
+ * import { createCheckIdempotencyStep } from '@hyperfrontend/versioning'
  *
  * const step = createCheckIdempotencyStep()
- * const result = await executeStep(step, context)
+ * const result = await step.execute(context)
  *
  * // If version already published, step skips with bumpType: 'none'
  * if (result.status === 'skipped') {

@@ -122,6 +122,47 @@ export function getPendingChangelogRoutes(): string[] {
   return LIBRARIES.filter((library) => !hasChangelog(library)).map((library) => changelogRouteFor(`/docs/libraries/${library.slug}`))
 }
 
+/** The heading the versioning flow opens every changelog with, which names no package. */
+const CHANGELOG_HEADING = /^# Changelog[ \t]*$/m
+
+/**
+ * A package's changelog as the Markdown the page's counterpart publishes.
+ *
+ * The file is published as the release flow wrote it, apart from its first
+ * heading: every changelog opens with the same `# Changelog`, and a file read
+ * on its own, far from the page it came from, has to say whose history it is.
+ *
+ * @param packageName - Full npm package name
+ * @returns The changelog with the package named in its heading, or null when the package has no changelog
+ *
+ * @example
+ * ```typescript
+ * getChangelogMarkdown('@hyperfrontend/features')?.split('\n')[0] // '# @hyperfrontend/features changelog'
+ * ```
+ */
+export function getChangelogMarkdown(packageName: string): string | null {
+  const sourcePath = changelogPathFor(packageName)
+  if (sourcePath === null) return null
+  const absolute = join(WORKSPACE_ROOT, sourcePath)
+  if (!existsSync(absolute)) return null
+  return readFileSync(absolute, 'utf8').replace(CHANGELOG_HEADING, `# ${changelogTitleFor(packageName)}`)
+}
+
+/**
+ * The title a package's changelog is published under.
+ *
+ * @param packageName - Full npm package name
+ * @returns The title, `@hyperfrontend/features changelog`
+ *
+ * @example
+ * ```typescript
+ * changelogTitleFor('@hyperfrontend/features') // '@hyperfrontend/features changelog'
+ * ```
+ */
+export function changelogTitleFor(packageName: string): string {
+  return `${packageName} changelog`
+}
+
 /**
  * Read and render a package's changelog.
  *

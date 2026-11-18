@@ -409,8 +409,6 @@ export function parseConfig(filePath: string, type?: ConfigType): ParsedConfig {
  *
  * @example Reading config if it exists
  * ```typescript
- * import { readConfigIfExists } from '@hyperfrontend/project-scope'
- *
  * const config = readConfigIfExists<{ strict: boolean }>('/project/tsconfig.json')
  * if (config?.strict) {
  *   console.log('Strict mode enabled')

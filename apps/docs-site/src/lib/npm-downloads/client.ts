@@ -3,7 +3,15 @@ import type { DailyDownloads } from './model'
 import type { RangeRequest } from './validate'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { DOWNLOADS_API, MAX_RETRIES, MIN_REQUEST_GAP_MS, NpmStatsError, REGISTRY_API, TRANSIENT_FAILURES } from './model'
+import {
+  DOWNLOADS_API,
+  MAX_RETRIES,
+  MIN_REQUEST_GAP_MS,
+  NpmStatsError,
+  RATE_LIMIT_PAUSE_MS,
+  REGISTRY_API,
+  TRANSIENT_FAILURES,
+} from './model'
 import { validateCreatedResponse, validateLastDayResponse, validateRangeResponse } from './validate'
 
 /** The subset of `fetch` the client needs, so a test can hand it canned responses. */
@@ -20,6 +28,8 @@ export interface NpmClientOptions {
   sleep?: SleepLike
   /** Least milliseconds between one request completing and the next starting; defaults to {@link MIN_REQUEST_GAP_MS} */
   minGapMs?: number
+  /** Milliseconds the first retry of a rate-limited request waits, doubling after; defaults to {@link RATE_LIMIT_PAUSE_MS} */
+  rateLimitPauseMs?: number
   /** Times a transient failure is retried; defaults to {@link MAX_RETRIES} */
   maxRetries?: number
   /** Called with a line of progress for whoever is watching the run */
@@ -108,7 +118,9 @@ function classifyStatus(status: number, packageName: string, url: string): NpmSt
  * request that fails for a transient reason (the API is down, or asks for a
  * pause) is retried with doubling backoff on top of that gap; a request that
  * fails for any other reason is not retried, because retrying a missing
- * package or a changed schema would only delay the same answer.
+ * package or a changed schema would only delay the same answer. A request
+ * npm rate-limits waits far longer than one a failing server gets, because
+ * the limit is a window that has to pass rather than a fault that may clear.
  *
  * Every response is validated before it is returned, so a caller only ever
  * sees data that matches what it asked for.
@@ -126,6 +138,7 @@ export function createNpmClient(options: NpmClientOptions = {}): NpmClient {
   const transport = options.fetch ?? ((url: string) => fetch(url))
   const sleep = options.sleep ?? sleepFor
   const minGapMs = options.minGapMs ?? MIN_REQUEST_GAP_MS
+  const rateLimitPauseMs = options.rateLimitPauseMs ?? RATE_LIMIT_PAUSE_MS
   const maxRetries = options.maxRetries ?? MAX_RETRIES
   const onProgress = options.onProgress ?? (() => undefined)
   let requestCount = 0
@@ -171,7 +184,7 @@ export function createNpmClient(options: NpmClientOptions = {}): NpmClient {
         return await requestJson(url, packageName)
       } catch (error) {
         if (!(error instanceof NpmStatsError) || !TRANSIENT_FAILURES.includes(error.kind) || attempt >= maxRetries) throw error
-        const backoff = minGapMs * 2 ** (attempt + 1)
+        const backoff = error.kind === 'rate-limited' ? rateLimitPauseMs * 2 ** attempt : minGapMs * 2 ** (attempt + 1)
         onProgress(`  ↻ ${error.message}; retrying in ${backoff}ms (${attempt + 1}/${maxRetries})`)
         await sleep(backoff)
       }

@@ -119,6 +119,14 @@ describe('createNpmClient', () => {
     await expect(client.fetchRange(RANGE)).resolves.toHaveLength(2)
   })
 
+  it('waits out a rate limit for far longer than it waits on a failing server', async () => {
+    const transport = queue([reply('', 429, 'text/plain'), reply('', 429, 'text/plain'), reply(GOOD_RANGE)])
+    const clock = recordedSleep()
+    const client = createNpmClient({ fetch: transport.fetch, sleep: clock.sleep, minGapMs: 1000, rateLimitPauseMs: 30_000 })
+    await client.fetchRange(RANGE)
+    expect(clock.waits).toEqual([30_000, 1000, 60_000, 1000])
+  })
+
   it('gives up on a rate limit after the retry budget', async () => {
     const transport = queue([reply('', 429, 'text/plain'), reply('', 429, 'text/plain'), reply('', 429, 'text/plain')])
     const client = createNpmClient({ fetch: transport.fetch, sleep: recordedSleep().sleep, maxRetries: 2 })

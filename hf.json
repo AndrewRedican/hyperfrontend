@@ -121,8 +121,7 @@
       "inputs": ["dependencyState"],
       "executor": "@hyperfrontend/workspace:run-commands",
       "options": {
-        "command": "npm audit --audit-level=moderate",
-        "cwd": "{projectRoot}"
+        "command": "node tools/pipeline/scripts/audit.mjs --root {projectRoot}"
       }
     },
     "test": {
@@ -204,7 +203,9 @@
       "{projectRoot}/.npmrc",
       "{projectRoot}/project.json",
       "{workspaceRoot}/.npmrc",
-      "{workspaceRoot}/hf.json"
+      "{workspaceRoot}/hf.json",
+      "{workspaceRoot}/audit-exceptions.json",
+      "{workspaceRoot}/tools/pipeline/scripts/audit.mjs"
     ],
     "production": [
       "default",

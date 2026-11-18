@@ -32,7 +32,7 @@ pre-push:
     audit:
       priority: 1
       run: npx hf run-many -t audit --all
-      fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
+      fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see the advisories. Fix one through package.json; when no patched release exists, record a dated exception in audit-exceptions.json.'
     binary-budget:
       priority: 2
       run: node tools/pipeline/scripts/check-binary-budget.mjs --allow-over-budget

@@ -103,7 +103,8 @@ export function findInternalDependencies(packageJson: PackageJson, workspacePack
  *
  * @example Find internal dependencies with type information
  * ```typescript
- * import { findInternalDependenciesWithTypes, readPackageJson } from '@hyperfrontend/versioning'
+ * import { readPackageJson } from '@hyperfrontend/project-scope'
+ * import { findInternalDependenciesWithTypes } from '@hyperfrontend/versioning'
  *
  * const packageJson = readPackageJson('./libs/my-lib/package.json')
  * const workspacePackages = new Set(['@myorg/utils', '@myorg/core'])
@@ -400,9 +401,9 @@ export function getTransitiveDependents(workspace: Workspace, packageName: strin
  *
  * @example Get all transitive dependencies of a package
  * ```typescript
- * import { discoverWorkspace, getTransitiveDependencies } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, getTransitiveDependencies } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  * const allDeps = getTransitiveDependencies(workspace, '@myorg/app')
  *
  * console.log(`@myorg/app transitively depends on ${allDeps.size} packages`)
@@ -443,9 +444,9 @@ export function getTransitiveDependencies(workspace: Workspace, packageName: str
  *
  * @example Check if one package transitively depends on another
  * ```typescript
- * import { discoverWorkspace, transitivelyDependsOn } from '@hyperfrontend/versioning'
+ * import { createWorkspaceFromDisk, transitivelyDependsOn } from '@hyperfrontend/versioning'
  *
- * const workspace = discoverWorkspace()
+ * const workspace = createWorkspaceFromDisk()
  *
  * if (transitivelyDependsOn(workspace, '@myorg/app', '@myorg/utils')) {
  *   console.log('Bumping @myorg/utils will affect @myorg/app')

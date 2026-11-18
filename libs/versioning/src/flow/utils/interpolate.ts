@@ -11,8 +11,6 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  *
  * @example Interpolating version placeholders
  * ```typescript
- * import { interpolate } from '@hyperfrontend/versioning'
- *
  * const message = interpolate('chore(${projectName}): release ${version}', {
  *   projectName: 'my-lib',
  *   version: '1.2.0'

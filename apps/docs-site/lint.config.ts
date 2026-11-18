@@ -3,7 +3,8 @@ import baseConfig from '../../lint.base.config.ts'
 
 export default [
   {
-    ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts'],
+    // context: the Markdown under public/ is each page's generated counterpart, written by the docs generation and never committed; its source is the READMEs and the JSDoc it is rendered from, which are linted where they are written.
+    ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts', 'public/**/*.md'],
   },
   ...baseConfig,
   {
@@ -27,6 +28,13 @@ export default [
       'workspace/docs-site-routes': 'error',
       'workspace/docs-site-library-docs': 'error',
       'workspace/docs-site-secondary-entries': 'error',
+    },
+  },
+  {
+    // A package's pages are listed as the tree their routes form, so the sidebar and the drawer group every package's subpaths alike
+    files: ['src/lib/navigation.ts'],
+    rules: {
+      'workspace/docs-site-navigation-tree': 'error',
     },
   },
   {
