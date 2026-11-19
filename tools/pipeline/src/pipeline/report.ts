@@ -125,21 +125,27 @@ function skippedLines(decision: SkippedTask): string[] {
 }
 
 /**
+ * A plan in one sentence: how it was selected, its range, and how much it holds.
+ *
+ * @param plan - The plan described
+ * @returns The sentence
+ */
+export function planLine(plan: Plan): string {
+  const tasks = plan.chains.reduce((count, chain) => count + chain.tasks.length, 0)
+  const counts = plan.environments
+    .map((environment) => `${plan.chains.filter((chain) => chain.environment === environment).length} ${environment}`)
+    .join(', ')
+  return `${plan.mode === 'all' ? 'Full' : 'Affected'} plan (${rangeOf(plan)}): ${plan.chains.length} chains (${counts}), ${tasks} tasks${plan.main ? ', publishing' : ''}.`
+}
+
+/**
  * The Markdown summary of a plan.
  *
  * @param plan - The plan summarised
  * @returns The lines
  */
 export function planSummary(plan: Plan): string[] {
-  const tasks = plan.chains.reduce((count, chain) => count + chain.tasks.length, 0)
-  const counts = plan.environments
-    .map((environment) => `${plan.chains.filter((chain) => chain.environment === environment).length} ${environment}`)
-    .join(', ')
-  const lines = [
-    '## Pipeline plan',
-    '',
-    `${plan.mode === 'all' ? 'Full' : 'Affected'} plan (${rangeOf(plan)}): ${plan.chains.length} chains (${counts}), ${tasks} tasks${plan.main ? ', publishing' : ''}.`,
-  ]
+  const lines = ['## Pipeline plan', '', planLine(plan)]
   if (plan.drift.length > 0) lines.push('', `Registry drift: ${plan.drift.join(', ')}.`)
   if (plan.chains.length === 0) return [...lines, '', 'Nothing to run.']
   lines.push('', '| # | chain | environment | tasks |', '| --- | --- | --- | --- |')
