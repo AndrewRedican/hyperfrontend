@@ -124,11 +124,20 @@ npx hf run-many -t build --all
 ```
 
 ```text
-hf run-many: format:build
-hf run-many: cli:build
-hf run-many: report:build
-3 succeeded, 0 failed, 0 skipped
+✓ format:build  2.1s  [1/3]
+✓ cli:build  1.8s  [2/3]
+✓ report:build  1.9s  [3/3]
+
+        build
+cli     ✓
+format  ✓
+report  ✓
+✓ passed  ✗ failed  - skipped  · not run
+
+3 tasks in 5.8s: 3 passed
 ```
+
+Each task wrote its own output to `.hf/logs/`, one file per task; add `--stream` to see it in the terminal as it runs instead. Your durations will differ.
 
 `format` builds first. Nothing told it to: the `build` default in `hf.json` says `"dependsOn": ["^build"]`, and the workspace knows from the imports that `report` and `cli` depend on `format`.
 
@@ -169,8 +178,15 @@ npx hf affected -t test --base=HEAD
 
 ```text
 hf affected: 2 tasks selected from 1 changed files
-  succeeded format:test
-  succeeded report:test
+✓ format:test  1.9s  [1/2]
+✓ report:test  1.7s  [2/2]
+
+        test
+format  ✓
+report  ✓
+✓ passed  ✗ failed  - skipped  · not run
+
+2 tasks in 3.6s: 2 passed
 ```
 
 Two of three. Ask why:

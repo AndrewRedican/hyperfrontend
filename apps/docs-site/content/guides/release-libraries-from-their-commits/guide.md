@@ -83,10 +83,10 @@ To version every library a branch changed in one commit, give the root project a
 ## 5. Publish
 
 ```bash
-npx hf run-many -t publish -p format --dryRun
+npx hf run-many -t publish -p format --dryRun --stream
 ```
 
-`run-many` runs the `build` the `publish` target depends on, then previews what npm would upload. In CI, with `NPM_TOKEN` set, drop `--dryRun`. A version the registry already has is skipped, so the publish job can run on every merge.
+`run-many` runs the `build` the `publish` target depends on, then previews what npm would upload; `--stream` puts that preview in the terminal, where it would otherwise go to the task's log under `.hf/logs/`. In CI, with `NPM_TOKEN` set, drop `--dryRun`. A version the registry already has is skipped, so the publish job can run on every merge.
 
 ## Check it worked
 
