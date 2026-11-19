@@ -9,7 +9,7 @@
 import type { Chain, Outcome as OutcomeKind, Plan, PlanReason, PlanTask, RunResults, SkippedTask, TaskResult } from './model'
 import type { ScheduleResult } from './schedule'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { failureExcerpt, formatDuration } from '@hyperfrontend/workspace/runner'
+import { failureExcerpt, formatDuration } from '@hyperfrontend/workspace/progress'
 import { Outcome } from './model'
 
 /** The mark of each outcome in a table. */

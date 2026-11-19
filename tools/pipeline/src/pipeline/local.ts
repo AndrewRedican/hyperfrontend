@@ -6,7 +6,7 @@
  * @module pipeline/local
  */
 
-import type { ProgressView, TaskEnd, Terminal } from '@hyperfrontend/workspace/runner'
+import type { ProgressView, TaskEnd, Terminal } from '@hyperfrontend/workspace/progress'
 import type { RunOutcome } from './execute'
 import type { Environment, Outcome as OutcomeKind, Plan, PlanTask, RunResults } from './model'
 import type { ScheduleResult, ScheduleTask } from './schedule'
@@ -14,7 +14,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { assignStages, createProgressView, Ending, failureExcerpt, runStages } from '@hyperfrontend/workspace/runner'
+import { assignStages, createProgressView, Ending, failureExcerpt, runStages } from '@hyperfrontend/workspace/progress'
 import { Outcome, PipelineRule } from './model'
 import { planLine, taskResult } from './report'
 import { runSchedule } from './schedule'

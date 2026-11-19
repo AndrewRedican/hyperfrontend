@@ -4,7 +4,7 @@ import type { Plan } from './model'
 import type { ScheduleResult } from './schedule'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createTerminal } from '@hyperfrontend/workspace/runner'
+import { createTerminal } from '@hyperfrontend/workspace/progress'
 import { runLocal, runLocalPlan } from './local'
 
 /** A local run of a case, with what it wrote and what it ran. */

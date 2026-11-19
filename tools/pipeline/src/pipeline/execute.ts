@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { shimCommand } from '@hyperfrontend/project-scope/core/process'
-import { taskLogPath } from '@hyperfrontend/workspace/runner'
+import { taskLogPath } from '@hyperfrontend/workspace/progress'
 import { Outcome } from './model'
 
 /** What a child process ended as. */

@@ -34,7 +34,7 @@ import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/pro
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { buildState, changeSet, formatAffected, previousGraph, previousWorkspaceFile, selectAffected } from '@hyperfrontend/workspace/graph'
-import { createTerminal } from '@hyperfrontend/workspace/runner'
+import { createTerminal } from '@hyperfrontend/workspace/progress'
 import { chainChecks, githubChecks, runUrlOf } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
 import { explorerDocument } from '../src/pipeline/explorer'
