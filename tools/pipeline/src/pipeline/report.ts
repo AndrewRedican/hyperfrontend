@@ -9,7 +9,7 @@
 import type { Chain, Outcome as OutcomeKind, Plan, PlanReason, PlanTask, RunResults, SkippedTask, TaskResult } from './model'
 import type { ScheduleResult } from './schedule'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { max, round, trunc } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { failureExcerpt, formatDuration } from '@hyperfrontend/workspace/runner'
 import { Outcome } from './model'
 
 /** The mark of each outcome in a table. */
@@ -17,43 +17,6 @@ const MARKS: Readonly<Record<OutcomeKind, string>> = { success: '✅', failure: 
 
 /** The Mermaid tag of each outcome; a skipped task never ran, so it never draws a bar. */
 const TAGS: Readonly<Record<OutcomeKind, string>> = { success: 'done', failure: 'crit', cancelled: 'active', skipped: 'done' }
-
-/**
- * A duration as a reader sees it.
- *
- * @param ms - Milliseconds
- * @returns `18m 17s`, `47s` or `0.8s`
- */
-export function formatDuration(ms: number): string {
-  const seconds = ms / 1000
-  if (seconds < 10) return `${round(seconds * 10) / 10}s`
-  if (seconds < 60) return `${round(seconds)}s`
-  const minutes = trunc(seconds / 60)
-  return `${minutes}m ${round(seconds - minutes * 60)}s`
-}
-
-/** How many lines of a failed task's output the reports show. */
-export const EXCERPT_LINES = 60
-
-/**
- * The part of a failed task's output that explains the failure: from the test runner's list of
- * failing tests up to its coverage table when it printed one, else the last lines.
- *
- * @param log - Everything the task printed
- * @param limit - The most lines kept
- * @returns The lines, or null when the task printed nothing
- */
-export function failureExcerpt(log: string, limit: number = EXCERPT_LINES): string | null {
-  const lines = log.trimEnd().split(/\r?\n/)
-  if (lines.length === 1 && lines[0] === '') return null
-  const failing = lines.findIndex((line) => /failing tests:\s*$/.test(line))
-  if (failing === -1) return lines.slice(max(0, lines.length - limit)).join('\n')
-  const coverage = lines.findIndex((line, index) => index > failing && /^file\s+\|/.test(line))
-  return lines
-    .slice(failing, coverage === -1 ? undefined : coverage)
-    .slice(0, limit)
-    .join('\n')
-}
 
 /**
  * A task's result from what the scheduler recorded, with the excerpt of its log when it failed.

@@ -10,10 +10,11 @@ import type { ChildProcess, SpawnOptions } from 'node:child_process'
 import type { Outcome as OutcomeKind, PlanTask } from './model'
 import { spawn } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { join, posix } from 'node:path'
+import { join } from 'node:path'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { shimCommand } from '@hyperfrontend/project-scope/core/process'
+import { taskLogPath } from '@hyperfrontend/workspace/runner'
 import { Outcome } from './model'
 
 /** What a child process ended as. */
@@ -208,7 +209,7 @@ export function runCommand(command: readonly string[], options: CommandOptions):
  * @returns The path, workspace-relative and POSIX
  */
 export function logPathOf(task: PlanTask, logDirectory: string): string {
-  return posix.join(logDirectory, `${task.id.replace(/[^A-Za-z0-9._-]/g, '__')}.log`)
+  return taskLogPath(task.id, logDirectory)
 }
 
 /**
