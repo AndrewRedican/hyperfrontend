@@ -444,6 +444,7 @@ const supportingLibraries: NavItem[] = [
       { slug: 'graph', href: '/docs/libraries/workspace/graph' },
       { slug: 'hooks', href: '/docs/libraries/workspace/hooks' },
       { slug: 'lint', href: '/docs/libraries/workspace/lint' },
+      { slug: 'progress', href: '/docs/libraries/workspace/progress' },
       { slug: 'runner', href: '/docs/libraries/workspace/runner' },
     ],
   },

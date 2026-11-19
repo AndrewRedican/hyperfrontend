@@ -252,6 +252,7 @@ export const LIBRARIES: LibraryInfo[] = [
       'libs/workspace/src/graph/index.ts',
       'libs/workspace/src/hooks/index.ts',
       'libs/workspace/src/lint/index.ts',
+      'libs/workspace/src/progress/index.ts',
       'libs/workspace/src/runner/index.ts',
     ],
     category: 'supporting',
