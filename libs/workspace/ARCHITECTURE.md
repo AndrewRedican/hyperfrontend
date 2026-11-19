@@ -83,7 +83,7 @@ The bin installs the resolution hook and calls the command line. The command lin
 | `src/bin/hf.ts`       | The executable the build bundles: parses nothing, calls the command line                                                                    |
 | `src/cli/`            | The commands, their arguments and usage; the handover to the features command line; the graph commands                                      |
 | `src/runner/`         | The contract types; resolution of executors, generators and the packages that provide them; one task; many tasks in order; the affected run |
-| `src/progress/`       | The stages of a run and the view of it: stage assignment, the stop, the lines, the matrix; exported through the runner entry                |
+| `src/progress/`       | The stages of a run and the view of it: stage assignment, the stop, the lines, the matrix; an entry of its own                              |
 | `src/graph/`          | Discovery of projects and files; imports and their cache; entries; the lock file's packages; roles; the graph and its canonical order       |
 | `src/graph/affected/` | The closure of a task, the rules that select it, the selection and its explanation                                                          |
 | `src/graph/store/`    | The persisted state: files, imports, graph, entries, meta; the lock; the incremental update plan; verification                              |

@@ -93,7 +93,7 @@ const INTERVAL_MS = 30_000
  *
  * @example One task that fails, and what the run ends on
  * ```typescript
- * import { createProgressView, createTerminal, Ending } from '@hyperfrontend/workspace/runner'
+ * import { createProgressView, createTerminal, Ending } from '@hyperfrontend/workspace/progress'
  *
  * const view = createProgressView({
  *   tasks: [

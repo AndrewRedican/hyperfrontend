@@ -58,7 +58,7 @@ const DEFAULT_COLUMNS = 80
  *
  * @example A stream that is not a terminal gets plain lines and no status
  * ```typescript
- * import { createTerminal, Style } from '@hyperfrontend/workspace/runner'
+ * import { createTerminal, Style } from '@hyperfrontend/workspace/progress'
  *
  * const terminal = createTerminal(process.stderr, process.env)
  * terminal.status('lib-core:build 42s')

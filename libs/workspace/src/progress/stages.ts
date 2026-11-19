@@ -55,7 +55,7 @@ export interface StagedOptions<Task extends Identified> {
  *
  * @example A build one test needs runs with the tests, the other builds after them
  * ```typescript
- * import { assignStages } from '@hyperfrontend/workspace/runner'
+ * import { assignStages } from '@hyperfrontend/workspace/progress'
  *
  * assignStages(
  *   [
@@ -100,7 +100,7 @@ export function assignStages(tasks: readonly StagedTask[], stages: readonly (rea
  *
  * @example A failed first stage keeps the second from starting
  * ```typescript
- * import { runStages } from '@hyperfrontend/workspace/runner'
+ * import { runStages } from '@hyperfrontend/workspace/progress'
  *
  * const tasks = [{ id: 'lib-core:lint' }, { id: 'lib-core:test' }]
  * const stageOf = new Map([

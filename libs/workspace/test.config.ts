@@ -23,6 +23,7 @@ const config: TestConfig = {
     'src/generators/*/options.ts',
     'src/graph/index.ts',
     'src/lint/index.ts',
+    'src/progress/index.ts',
     'src/runner/index.ts',
     'src/runner/contract.ts',
   ],

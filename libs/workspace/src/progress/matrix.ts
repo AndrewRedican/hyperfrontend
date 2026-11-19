@@ -62,7 +62,7 @@ const GRAVEST_FIRST: readonly Ending[] = freeze([Ending.Failed, Ending.Skipped, 
  *
  * @example The same marks lead a task's line and fill the matrix
  * ```typescript
- * import { createTerminal, Ending, markOf } from '@hyperfrontend/workspace/runner'
+ * import { createTerminal, Ending, markOf } from '@hyperfrontend/workspace/progress'
  *
  * markOf(Ending.Failed, createTerminal(process.stderr, process.env).paint) // => '✗', red on a terminal
  * ```
@@ -82,7 +82,7 @@ export function markOf(ending: Ending, paint: Terminal['paint']): string {
  *
  * @example A failed type check that kept the build from running
  * ```typescript
- * import { createTerminal, Ending, matrixLines } from '@hyperfrontend/workspace/runner'
+ * import { createTerminal, Ending, matrixLines } from '@hyperfrontend/workspace/progress'
  *
  * matrixLines(
  *   [

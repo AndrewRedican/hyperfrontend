@@ -78,6 +78,7 @@
     "./graph": "./src/graph/index.js",
     "./hooks": "./src/hooks/index.js",
     "./lint": "./src/lint/index.js",
+    "./progress": "./src/progress/index.js",
     "./runner": "./src/runner/index.js",
     "./package.json": "./package.json"
   },

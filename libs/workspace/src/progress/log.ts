@@ -19,7 +19,7 @@ export const EXCERPT_LINES = 60
  *
  * @example Tenths under ten seconds, whole seconds under a minute
  * ```typescript
- * import { formatDuration } from '@hyperfrontend/workspace/runner'
+ * import { formatDuration } from '@hyperfrontend/workspace/progress'
  *
  * formatDuration(800) // => '0.8s'
  * formatDuration(47_000) // => '47s'
@@ -43,7 +43,7 @@ export function formatDuration(ms: number): string {
  *
  * @example The colon of a task id never reaches a file name
  * ```typescript
- * import { taskLogPath } from '@hyperfrontend/workspace/runner'
+ * import { taskLogPath } from '@hyperfrontend/workspace/progress'
  *
  * taskLogPath('lib-core:build', '.hf/logs') // => '.hf/logs/lib-core__build.log'
  * ```
@@ -62,7 +62,7 @@ export function taskLogPath(id: string, directory: string): string {
  *
  * @example The end of the output, unless the test runner listed its failing tests
  * ```typescript
- * import { failureExcerpt } from '@hyperfrontend/workspace/runner'
+ * import { failureExcerpt } from '@hyperfrontend/workspace/progress'
  *
  * failureExcerpt('one\ntwo\nthree\n', 2) // => 'two\nthree'
  * failureExcerpt('✔ passes\n✖ failing tests:\n✖ breaks\nfile | line %') // => '✖ failing tests:\n✖ breaks'
