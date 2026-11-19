@@ -223,12 +223,58 @@ describe('hf run', () => {
 
 describe('hf run-many', () => {
   it('runs a prerequisite before the task that depends on it, each through the installed executable', () => {
-    expect(lines(hf(['run-many', '-t', 'build', '-p', 'beta']).stdout)).toEqual(['built alpha', 'built beta'])
+    expect(lines(hf(['run-many', '-t', 'build', '-p', 'beta', '--stream']).stdout)).toEqual(['built alpha', 'built beta'])
   })
 
   it('skips the dependents of a task that fails and exits 1', () => {
-    const run = hf(['run-many', '-t', 'broken', '-p', 'beta'])
+    const run = hf(['run-many', '-t', 'broken', '-p', 'beta', '--stream'])
     expect({ status: run.status, ranBeta: run.stdout.includes('never') }).toEqual({ status: 1, ranBeta: false })
+  })
+
+  it('shows the run in place of the output of its tasks unless asked to stream', () => {
+    const run = hf(['run-many', '-t', 'build', '-p', 'beta'])
+    expect({ stdout: run.stdout, matrix: lines(run.stderr).filter((line) => /^(alpha|beta) /.test(line)) }).toEqual({
+      stdout: '',
+      matrix: ['alpha  ✓', 'beta   ✓'],
+    })
+  })
+})
+
+describe('hf run-many in stages', () => {
+  before(() => {
+    consumer.writeTree({
+      'libs/staged/project.json': {
+        name: 'staged',
+        targets: {
+          lint: { command: 'node -e "console.log(\'a finding\'); process.exit(1)"' },
+          test: { command: "node -e \"require('node:fs').writeFileSync('staged-tested.txt', '')\"" },
+          build: { command: 'node -e "console.log(\'built staged\')"' },
+        },
+      },
+    })
+  })
+
+  it('ends after the stage of a failing lint, starts no test, and says both in the view', () => {
+    const run = hf(['run-many', '-t', 'lint', '-t', 'test', '-t', 'build', '-p', 'staged'])
+    expect({
+      status: run.status,
+      tested: existsSync(join(consumer.path, 'staged-tested.txt')),
+      view: lines(run.stderr).filter((line) => /^(staged {2}| {4}(a finding|log:)|stage 1 \()/.test(line)),
+    }).toEqual({
+      status: 1,
+      tested: false,
+      view: [
+        '    a finding',
+        '    log: .hf/logs/staged__lint.log',
+        'stage 1 (lint) did not succeed: 2 tasks not run',
+        'staged  ✗     ·     ·',
+      ],
+    })
+  })
+
+  it('keeps what a task printed in its log', () => {
+    hf(['run-many', '-t', 'lint', '-p', 'staged'])
+    expect(readFileSync(join(consumer.path, '.hf', 'logs', 'staged__lint.log'), 'utf8')).toContain('a finding')
   })
 })
 

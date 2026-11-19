@@ -184,6 +184,14 @@ describe('the tasks of a generated library', () => {
     expect(run.stdout + run.stderr).toContain('hf affected: 2 tasks selected')
   })
 
+  it('runs the tasks a change selects in the stages the command line names', () => {
+    const run = hf(['affected', '-t', 'lint', '-t', 'test', '--base=HEAD'])
+    expect(run.stderr.split(/\r?\n/).filter((line) => line.startsWith('stage '))).toEqual([
+      expect.stringMatching(/^stage 1 of 2: lint \(\d+ tasks?\)$/),
+      expect.stringMatching(/^stage 2 of 2: test \(\d+ tasks?\)$/),
+    ])
+  })
+
   it('leaves generated code formatted', () => {
     expect(hf(['format', '--check', '--all'])).toEqual(expect.objectContaining({ status: 0 }))
   })
