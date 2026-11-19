@@ -2,7 +2,8 @@
  * Runs many tasks of the workspace, `run-many -t <targets> [-p <names and globs> | --all]`: the
  * requested tasks and every task their `dependsOn` reaches, in an order where each runs after its
  * prerequisites, one at a time, each in a child of its own. A task whose prerequisite failed is
- * skipped; the rest still run. Nothing is cached or restored.
+ * skipped; the rest still run. Each `-t` names one stage, and a stage that did not succeed whole
+ * ends the run before the next. Nothing is cached or restored.
  *
  * @module runner/many
  */
@@ -16,15 +17,21 @@ import { hasTarget } from '../graph/workspace'
 import { refusal } from './refusal'
 
 /** What the `affected` command line expects. */
-export const AFFECTED_USAGE = 'usage: hf affected -t <target[,target]> [--base=<ref>] [--head=<ref>] [--name=value ...]'
+export const AFFECTED_USAGE =
+  'usage: hf affected -t <target[,target]> [-t <next stage> ...] [--base=<ref>] [--head=<ref>] [--stream] [--name=value ...]'
 
 /** What the command line expects. */
-export const MANY_USAGE = 'usage: hf run-many -t <target[,target]> [-p <name|glob[,...]> | --all] [--name=value ...]'
+export const MANY_USAGE =
+  'usage: hf run-many -t <target[,target]> [-t <next stage> ...] [-p <name|glob[,...]> | --all] [--stream] [--name=value ...]'
 
 /** The tasks asked for and the arguments every requested task receives. */
 export interface ManyRequest {
   /** The targets. */
   readonly targets: readonly string[]
+  /** The targets of each stage, in the order the stages run: one group per `-t`. */
+  readonly stages: readonly (readonly string[])[]
+  /** Whether each task writes straight to the terminal, rather than to its log behind the progress view. */
+  readonly stream: boolean
   /** The project names and globs, or null for every project. */
   readonly projects: readonly string[] | null
   /** The arguments after the selection, passed to each requested task. */
@@ -35,6 +42,10 @@ export interface ManyRequest {
 export interface AffectedRequest {
   /** The targets. */
   readonly targets: readonly string[]
+  /** The targets of each stage, in the order the stages run: one group per `-t`. */
+  readonly stages: readonly (readonly string[])[]
+  /** Whether each task writes straight to the terminal, rather than to its log behind the progress view. */
+  readonly stream: boolean
   /** The base revision, `origin/main` when none is named. */
   readonly base: string
   /** The head revision, or null for the working tree. */
@@ -69,6 +80,8 @@ export interface TaskOutcome {
   readonly status: 'succeeded' | 'failed' | 'skipped'
   /** How long it ran, in milliseconds; 0 when skipped. */
   readonly durationMs: number
+  /** The prerequisite that did not succeed, for a skipped task. */
+  readonly blockedBy?: string
 }
 
 /** What running the tasks needs. */
@@ -79,6 +92,10 @@ export interface ManyHost {
   readonly now: () => number
   /** Writes a line to standard error. */
   readonly write: (line: string) => void
+  /** Called as a task starts, with its id. */
+  readonly onStart?: (id: string) => void
+  /** Called as a task ends or is skipped. */
+  readonly onEnd?: (outcome: TaskOutcome) => void
 }
 
 /**
@@ -95,6 +112,19 @@ function listOf(value: string): string[] {
 }
 
 /**
+ * The stages a command line names: the groups that name a target, and every target once.
+ *
+ * @param groups - The targets of each `-t`, in order
+ * @returns The stages and the targets
+ * @throws {Error} When no target is named
+ */
+function stagesOf(groups: readonly (readonly string[])[]): Pick<ManyRequest, 'targets' | 'stages'> {
+  const stages = groups.filter((targets) => targets.length > 0)
+  if (stages.length === 0) throw refusal('name the targets with -t')
+  return { targets: [...createSet(stages.flat())], stages }
+}
+
+/**
  * Reads the command line of `run-many`.
  *
  * @param argv - The arguments after `run-many`
@@ -104,27 +134,33 @@ function listOf(value: string): string[] {
  * @example Everything after the selection reaches the tasks
  * ```typescript
  * parseManyArgs(['-t', 'build,test', '-p', 'lib-*', '--verbose'])
- * // => { targets: ['build', 'test'], projects: ['lib-*'], args: ['--verbose'] }
- * parseManyArgs(['-t', 'build', '--all'])
- * // => { targets: ['build'], projects: null, args: [] }
+ * // => { targets: ['build', 'test'], stages: [['build', 'test']], projects: ['lib-*'], args: ['--verbose'], stream: false }
+ * ```
+ *
+ * @example Each `-t` is a stage of its own
+ * ```typescript
+ * parseManyArgs(['-t', 'typecheck,lint', '-t', 'test', '--all', '--stream'])
+ * // => { targets: ['typecheck', 'lint', 'test'], stages: [['typecheck', 'lint'], ['test']], projects: null, args: [], stream: true }
  * ```
  */
 export function parseManyArgs(argv: readonly string[]): ManyRequest {
-  const targets: string[] = []
+  const groups: string[][] = []
   let projects: string[] | null = null
   let all = false
+  let stream = false
   const args: string[] = []
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index] as string
     const [name, inline] = arg.includes('=') ? [arg.slice(0, arg.indexOf('=')), arg.slice(arg.indexOf('=') + 1)] : [arg, undefined]
-    if (name === '-t' || name === '--targets' || name === '--target') targets.push(...listOf(inline ?? argv[++index] ?? ''))
+    if (name === '-t' || name === '--targets' || name === '--target') groups.push(listOf(inline ?? argv[++index] ?? ''))
     else if (name === '-p' || name === '--projects') projects = [...(projects ?? []), ...listOf(inline ?? argv[++index] ?? '')]
     else if (name === '--all') all = true
+    else if (name === '--stream') stream = true
     else args.push(arg)
   }
-  if (targets.length === 0) throw refusal('name the targets with -t')
+  const named = stagesOf(groups)
   if (projects === null && !all) throw refusal('name the projects with -p, or pass --all')
-  return { targets, projects: all ? null : projects, args }
+  return { ...named, projects: all ? null : projects, args, stream }
 }
 
 /**
@@ -137,26 +173,27 @@ export function parseManyArgs(argv: readonly string[]): ManyRequest {
  * @example The working tree against `origin/main` unless told otherwise
  * ```typescript
  * parseAffectedArgs(['-t', 'test'])
- * // => { targets: ['test'], base: 'origin/main', head: null, args: [] }
- * parseAffectedArgs(['-t', 'test', '--base=v1.2.0', '--head', 'HEAD'])
- * // => { targets: ['test'], base: 'v1.2.0', head: 'HEAD', args: [] }
+ * // => { targets: ['test'], stages: [['test']], base: 'origin/main', head: null, args: [], stream: false }
+ * parseAffectedArgs(['-t', 'lint', '-t', 'test', '--base=v1.2.0', '--head', 'HEAD'])
+ * // => { targets: ['lint', 'test'], stages: [['lint'], ['test']], base: 'v1.2.0', head: 'HEAD', args: [], stream: false }
  * ```
  */
 export function parseAffectedArgs(argv: readonly string[]): AffectedRequest {
-  const targets: string[] = []
+  const groups: string[][] = []
   let base = 'origin/main'
   let head: string | null = null
+  let stream = false
   const args: string[] = []
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index] as string
     const [name, inline] = arg.includes('=') ? [arg.slice(0, arg.indexOf('=')), arg.slice(arg.indexOf('=') + 1)] : [arg, undefined]
-    if (name === '-t' || name === '--targets' || name === '--target') targets.push(...listOf(inline ?? argv[++index] ?? ''))
+    if (name === '-t' || name === '--targets' || name === '--target') groups.push(listOf(inline ?? argv[++index] ?? ''))
     else if (name === '--base') base = inline ?? argv[++index] ?? base
     else if (name === '--head') head = inline ?? argv[++index] ?? null
+    else if (name === '--stream') stream = true
     else args.push(arg)
   }
-  if (targets.length === 0) throw refusal('name the targets with -t')
-  return { targets, base, head, args }
+  return { ...stagesOf(groups), base, head, args, stream }
 }
 
 /**
@@ -191,7 +228,7 @@ export function matchesProject(name: string, pattern: string): boolean {
  * Every task to run for a request, each after its prerequisites; a cycle is refused with its path.
  *
  * @param graph - The workspace graph
- * @param request - The targets and projects asked for
+ * @param request - The targets and projects asked for, as much of a request as planning reads
  * @returns The tasks in the order they run
  * @throws {Error} When a named project is unknown, or the tasks' prerequisites form a cycle
  *
@@ -200,14 +237,14 @@ export function matchesProject(name: string, pattern: string): boolean {
  * import { workspaceGraph } from '@hyperfrontend/workspace/graph'
  * import { planMany } from '@hyperfrontend/workspace/runner'
  *
- * planMany(workspaceGraph(root), { targets: ['build'], projects: ['app-shell'], args: [] })
+ * planMany(workspaceGraph(root), { targets: ['build'], projects: ['app-shell'] })
  * // => [
  * //   { id: 'lib-core:build', requested: false, after: [] },
  * //   { id: 'app-shell:build', requested: true, after: ['lib-core:build'] },
  * // ]
  * ```
  */
-export function planMany(graph: WorkspaceGraph, request: ManyRequest): PlannedTask[] {
+export function planMany(graph: WorkspaceGraph, request: Pick<ManyRequest, 'targets' | 'projects'>): PlannedTask[] {
   const projects = [...graph.projects.values()].sort((a, b) => (a.name < b.name ? -1 : 1))
   for (const pattern of request.projects ?? []) {
     if (!projects.some((project) => matchesProject(project.name, pattern))) throw refusal(`no project matches ${pattern}`)
@@ -268,7 +305,8 @@ export function planTasks(graph: WorkspaceGraph, tasks: readonly TaskRef[]): Pla
 }
 
 /**
- * Runs planned tasks one at a time, skipping any whose prerequisite did not succeed.
+ * Runs planned tasks one at a time, skipping any whose prerequisite did not succeed. A
+ * prerequisite that is not among the tasks given is taken as met: it belongs to an earlier stage.
  *
  * @param tasks - The tasks in order
  * @param args - The arguments every requested task receives
@@ -289,26 +327,33 @@ export function planTasks(graph: WorkspaceGraph, tasks: readonly TaskRef[]): Pla
  *   now: Date.now,
  *   write: (line) => process.stderr.write(`${line}\n`),
  * })
- * // => [{ id: 'lib-core:build', status: 'failed', durationMs: 1840 }, { id: 'app-shell:build', status: 'skipped', durationMs: 0 }]
+ * // => [
+ * //   { id: 'lib-core:build', status: 'failed', durationMs: 1840 },
+ * //   { id: 'app-shell:build', status: 'skipped', durationMs: 0, blockedBy: 'lib-core:build' },
+ * // ]
  * ```
  */
 export async function runPlanned(tasks: readonly PlannedTask[], args: readonly string[], host: ManyHost): Promise<TaskOutcome[]> {
   const outcomes: TaskOutcome[] = []
+  const own = createSet(tasks.map((task) => task.id))
   const ended = createMap<string, TaskOutcome['status']>()
+  const end = (outcome: TaskOutcome): void => {
+    ended.set(outcome.id, outcome.status)
+    outcomes.push(outcome)
+    host.onEnd?.(outcome)
+  }
   for (const task of tasks) {
-    const blocked = task.after.find((id) => ended.get(id) !== 'succeeded')
+    const blocked = task.after.find((id) => own.has(id) && ended.get(id) !== 'succeeded')
     if (blocked !== undefined) {
       host.write(`hf run-many: skipping ${task.id}: ${blocked} did not succeed`)
-      ended.set(task.id, 'skipped')
-      outcomes.push({ id: task.id, status: 'skipped', durationMs: 0 })
+      end({ id: task.id, status: 'skipped', durationMs: 0, blockedBy: blocked })
       continue
     }
     host.write(`hf run-many: ${task.id}`)
+    host.onStart?.(task.id)
     const started = host.now()
     const code = await host.runChild(task.id, task.requested ? args : [])
-    const status = code === 0 ? 'succeeded' : 'failed'
-    ended.set(task.id, status)
-    outcomes.push({ id: task.id, status, durationMs: host.now() - started })
+    end({ id: task.id, status: code === 0 ? 'succeeded' : 'failed', durationMs: host.now() - started })
   }
   return outcomes
 }
