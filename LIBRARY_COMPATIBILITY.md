@@ -252,4 +252,4 @@ flowchart TB
 | `@hyperfrontend/time-utils` | `1.0.4` |
 | `@hyperfrontend/ui-utils` | `0.0.12` |
 | `@hyperfrontend/versioning` | `0.10.3` |
-| `@hyperfrontend/workspace` | `0.4.0` |
+| `@hyperfrontend/workspace` | `0.5.0` |
