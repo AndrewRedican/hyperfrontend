@@ -4,13 +4,14 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'n
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { fixtureNamed, plantFixture } from './__test-utils__/workspace-fixtures'
 import { selectAffected } from './affected/select'
 import { buildGraph } from './build'
 import { changeSet } from './changes'
 import { CACHE_FILE } from './imports'
-import { graphAtRevision, previousGraph, previousWorkspaceFile, withRevision } from './revision'
+import { baseRecords, graphAtRevision, previousBaseTsconfigFile, previousGraph, previousWorkspaceFile, withRevision } from './revision'
 
 const planted: PlantedFixture[] = []
 
@@ -160,5 +161,46 @@ describe('previousWorkspaceFile', () => {
         changes: [{ status: 'added', path: 'hf.json', previousPath: null }],
       })
     ).toEqual({})
+  })
+})
+
+describe('previousBaseTsconfigFile', () => {
+  it('reads nothing for a selection of everything', () => {
+    expect(previousBaseTsconfigFile('/nowhere', null)).toBeUndefined()
+  })
+
+  it('reads nothing when the change set leaves tsconfig.base.json alone', () => {
+    expect(
+      previousBaseTsconfigFile('/nowhere', { base: 'b', head: null, changes: [{ status: 'modified', path: 'a.ts', previousPath: null }] })
+    ).toBeUndefined()
+  })
+
+  it('reads the file as it stood at the base', () => {
+    const { root, base, head } = plant('alias-edit')
+    expect(keys(previousBaseTsconfigFile(root, changeSet(root, base, head))?.compilerOptions?.paths ?? {})).not.toContain(
+      '@fixture/testing/extra'
+    )
+  })
+
+  it('reads nothing for a base that has none', () => {
+    const { root } = plant('alias-edit')
+    expect(
+      previousBaseTsconfigFile(root, {
+        base: 'no-such-revision',
+        head: null,
+        changes: [{ status: 'added', path: 'tsconfig.base.json', previousPath: null }],
+      })
+    ).toBeUndefined()
+  })
+})
+
+describe('baseRecords', () => {
+  it('reads from the base only what the change asks for', () => {
+    const { root, base, head } = plant('alias-edit')
+    expect(baseRecords(root, changeSet(root, base, head))).toEqual({
+      previous: undefined,
+      previousWorkspace: undefined,
+      previousBaseTsconfig: expect.objectContaining({ compilerOptions: expect.anything() }),
+    })
   })
 })

@@ -54,6 +54,8 @@ export const ReasonRule = freeze({
   ProjectConfiguration: 'project-configuration',
   GlobalConfig: 'global-config',
   SameResolution: 'same-resolution',
+  AliasChanged: 'alias-changed',
+  SameAliases: 'same-aliases',
   DeletedModule: 'deleted-module',
   RenamedModule: 'renamed-module',
   ToolChanged: 'tool-changed',

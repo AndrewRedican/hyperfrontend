@@ -111,6 +111,43 @@ export function sameResolution(file: string, task: string): Reason {
 }
 
 /**
+ * The reason a change to the path aliases selects a task: the task reads a file importing
+ * through an alias that changed.
+ *
+ * @param file - The changed base tsconfig
+ * @param task - The task selected
+ * @param alias - The alias that changed
+ * @param importer - The file the task reads
+ * @param specifier - What the file imports
+ * @returns The reason
+ */
+export function aliasChanged(file: string, task: string, alias: string, importer: string, specifier: string): Reason {
+  return reason(
+    Rules.AliasChanged,
+    file,
+    [`file:${importer}`],
+    `${file} changed the alias ${alias}; ${task} reads ${importer}, which imports ${specifier}`
+  )
+}
+
+/**
+ * The reason a change to the path aliases leaves a task out: no file the task reads imports
+ * through an alias that changed.
+ *
+ * @param file - The changed base tsconfig
+ * @param task - The task left out
+ * @returns The reason
+ */
+export function sameAliases(file: string, task: string): Reason {
+  return reason(
+    Rules.SameAliases,
+    file,
+    [],
+    `${file} changed only in its path aliases, and no file ${task} reads imports through one that differs`
+  )
+}
+
+/**
  * The reason a task's own input changed.
  *
  * @param file - The changed file the task lists among its inputs

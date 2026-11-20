@@ -4,6 +4,7 @@
  *
  * @module @hyperfrontend/workspace/graph
  */
+export type { AliasedImport, BaseCompilerOptions, BaseTsconfig } from './affected/aliases'
 export type { Closure, Fallback, Hop } from './affected/closure'
 export type { ExplainMode } from './affected/explain'
 export type { ConfigurationKind } from './affected/rules'
@@ -95,8 +96,8 @@ export { readJson } from './json'
 export { installedPackages } from './lockfile'
 export { EdgeKind, ImportKind, NodeKind, nodeId, RUN_COMMANDS, taskId } from './model'
 export { compareEdges, compareText, sortEdges } from './order'
-export { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve'
-export { previousGraph, previousWorkspaceFile } from './revision'
+export { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard, wildcardCapture } from './resolve'
+export { baseRecords, previousBaseTsconfigFile, previousGraph, previousWorkspaceFile } from './revision'
 export { PRODUCTION_EXCLUSIONS, Role, roleOf } from './roles'
 export { ChangeStatus, ReasonRule } from './selection'
 export { hashesByPath, listFileRecords } from './store/files'

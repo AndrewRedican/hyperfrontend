@@ -6,7 +6,7 @@ import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createGraphWorkspace } from './__test-utils__/workspace'
 import { entriesOfProject } from './entries'
-import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard } from './resolve'
+import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard, wildcardCapture } from './resolve'
 import { discoverProjects, listFiles } from './workspace'
 
 const root = createGraphWorkspace()
@@ -76,6 +76,18 @@ describe('substituteWildcard', () => {
       substituteWildcard('libs/*/*', "$&'"),
       substituteWildcard('libs/a', 'deep'),
     ]).toEqual(['libs/a/src/deep.ts', "libs/$&'/*", 'libs/a'])
+  })
+})
+
+describe('wildcardCapture', () => {
+  it.each([
+    ['@fixture/a/*', '@fixture/a/deep/er', 'deep/er'],
+    ['@fixture/*/src', '@fixture/a/src', 'a'],
+    ['@fixture/a/*', '@fixture/b', null],
+    ['@fixture/*/src', '@fixture/src', null],
+    ['@fixture/a', '@fixture/a', null],
+  ])('reads from %s what its wildcard stands for in %s', (pattern, specifier, expected) => {
+    expect(wildcardCapture(pattern, specifier)).toBe(expected)
   })
 })
 

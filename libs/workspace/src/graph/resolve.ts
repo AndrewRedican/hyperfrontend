@@ -248,15 +248,33 @@ function aliasTargets(aliases: ReadonlyMap<string, readonly string[]>, specifier
   const exact = aliases.get(specifier)
   if (exact !== undefined) return exact
   for (const [pattern, targets] of aliases) {
-    const star = pattern.indexOf('*')
-    if (star === -1) continue
-    const prefix = pattern.slice(0, star)
-    const suffix = pattern.slice(star + 1)
-    if (specifier.length < prefix.length + suffix.length || !specifier.startsWith(prefix) || !specifier.endsWith(suffix)) continue
-    const captured = specifier.slice(prefix.length, specifier.length - suffix.length)
-    return targets.map((target) => substituteWildcard(target, captured))
+    const captured = wildcardCapture(pattern, specifier)
+    if (captured !== null) return targets.map((target) => substituteWildcard(target, captured))
   }
   return []
+}
+
+/**
+ * What the wildcard of an alias pattern stands for in a specifier the pattern matches.
+ *
+ * @param pattern - The alias, as a tsconfig path alias writes it
+ * @param specifier - The specifier matched against it
+ * @returns The text in the wildcard's place, or null when the pattern has no wildcard or does not match
+ *
+ * @example Only a pattern with a wildcard captures
+ * ```typescript
+ * wildcardCapture('@acme/data/*', '@acme/data/csv/read') // => 'csv/read'
+ * wildcardCapture('@acme/data/*', '@acme/report') // => null
+ * wildcardCapture('@acme/data', '@acme/data') // => null, an exact alias has nothing to capture
+ * ```
+ */
+export function wildcardCapture(pattern: string, specifier: string): string | null {
+  const star = pattern.indexOf('*')
+  if (star === -1) return null
+  const prefix = pattern.slice(0, star)
+  const suffix = pattern.slice(star + 1)
+  if (specifier.length < prefix.length + suffix.length || !specifier.startsWith(prefix) || !specifier.endsWith(suffix)) return null
+  return specifier.slice(prefix.length, specifier.length - suffix.length)
 }
 
 /**

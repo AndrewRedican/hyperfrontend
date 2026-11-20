@@ -3,7 +3,10 @@
  * it and why, with every skip resting on a named rule. A task is selected by its own changed
  * inputs, by a changed file another project owns that its closure reaches under the target's
  * edge kinds, by a tool it runs, by the configuration of a dependency whose identity changed, by a
- * global configuration file, or by a task it runs after being selected. A tool reaches the task
+ * global configuration file, or by a task it runs after being selected. Two global files are
+ * judged when their content at the base is at hand: `hf.json` selects a task only where the task
+ * resolves differently, and a `tsconfig.base.json` whose path aliases alone changed selects a task
+ * only where it reads a file importing through an alias that differs. A tool reaches the task
  * through the closure of its implementation only where the task's inputs do not name the tool's
  * project; where they do, the named files are the whole of what the task reads from it. A caller
  * may leave named inputs out by name, which is how the release flow reads the same graph without
@@ -15,9 +18,10 @@
 import type { Glob } from '@hyperfrontend/linter/helpers'
 import type { WorkspaceGraph } from '../build'
 import type { WorkspaceFile } from '../inputs'
-import type { Edge, EdgeKind, EdgePath, ProjectRecord, ToolNode } from '../model'
+import type { Edge, EdgeKind, EdgePath, FileNode, ProjectRecord, ToolNode } from '../model'
 import type { Role } from '../roles'
 import type { AffectedSet, ChangeSet, ChangeStatus, Reason, ReasonRule, TaskDecision } from '../selection'
+import type { AliasedImport, BaseTsconfig } from './aliases'
 import type { Closure, Hop } from './closure'
 import type { TaskInputs } from './targets'
 import { join } from 'node:path'
@@ -31,9 +35,11 @@ import { compareText } from '../order'
 import { roleOf } from '../roles'
 import { ReasonRule as Rules } from '../selection'
 import { hasTarget } from '../workspace'
+import { aliasImporters, BASE_TSCONFIG, changedAliases } from './aliases'
 import { ALL_KINDS, closureOf, hopTo, ruleHop, traceOf } from './closure'
 import { targetResolution } from './resolution'
 import {
+  aliasChanged,
   changedInput,
   configurationKind,
   dependentTask,
@@ -42,6 +48,7 @@ import {
   isGlobalConfig,
   reached,
   reason,
+  sameAliases,
   sameResolution,
   skipped,
 } from './rules'
@@ -59,6 +66,8 @@ export interface SelectOptions {
   readonly previous?: WorkspaceGraph
   /** The `hf.json` at the base of the change, which lets a change to it select only the tasks that resolve differently afterwards. */
   readonly previousWorkspace?: WorkspaceFile
+  /** The `tsconfig.base.json` at the base of the change, which lets a change to its path aliases alone select only the tasks reading a file that imports through an alias that differs. */
+  readonly previousBaseTsconfig?: BaseTsconfig
   /** Named inputs whose files do not count, by name: the release flow leaves out the engine, which changes what a task does and never what a build emits. An ignored input still names its project, so it still bounds what a tool implemented there reaches. */
   readonly ignoredInputs?: readonly string[]
 }
@@ -184,13 +193,19 @@ function changedPaths(changes: ChangeSet): ChangedPath[] {
  * ```
  */
 export function selectAffected(options: SelectOptions): Map<string, AffectedSet> {
-  const { graph, changes, previous = null, previousWorkspace, ignoredInputs = [] } = options
+  const { graph, changes, previous = null, previousWorkspace, previousBaseTsconfig, ignoredInputs = [] } = options
   const paths = changedPaths(changes)
   const globals = paths.filter((change) => isGlobalConfig(change.path))
   // why: the file is compared only when it changed and its base content was handed over; otherwise its change selects everything, as any global configuration does
   const judged = previousWorkspace !== undefined && globals.some((change) => change.path === WORKSPACE_FILE) ? previousWorkspace : null
   // why: the file is read afresh rather than through the per-root memo, which may hold the content of another checkout of the same root
   const current = judged === null ? null : (readJson<WorkspaceFile>(join(graph.root, WORKSPACE_FILE)) ?? {})
+  // why: only an edit is compared; a base tsconfig added, deleted or unreadable at the head selects everything, as any global configuration does
+  const edited =
+    previousBaseTsconfig !== undefined && globals.some((change) => change.path === BASE_TSCONFIG && change.status === 'modified')
+  const headTsconfig = edited ? readJson<BaseTsconfig>(join(graph.root, BASE_TSCONFIG)) : null
+  const aliased = headTsconfig === null ? null : changedAliases(previousBaseTsconfig as BaseTsconfig, headTsconfig)
+  const importers: ReadonlyMap<string, AliasedImport> | null = aliased === null ? null : aliasImporters(graph, aliased)
   const deleted = createSet(
     paths.filter((change) => change.status === 'deleted' && !change.renamed).flatMap((change) => [change.path, stemOf(change.path)])
   )
@@ -412,6 +427,18 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
     return skip(skipped(Rules.Unreachable, path, task, `${path} is not reachable from the files ${task} reads; ${through}`))
   }
 
+  const reads = (project: ProjectRecord, target: string, inputs: TaskInputs, closure: Closure, path: string): boolean => {
+    // why: an importer is a file an edge of this graph was drawn from, so the graph holds its node
+    const { role, project: owning } = graph.nodes.get(`file:${path}`) as FileNode
+    if (owning === project.name) return inputs.reach(path, role)
+    const owner = graph.projectOf(path)
+    const change: ChangedPath = { path, status: 'modified', renamed: false }
+    if (namedInput(project, target, inputs, change, owner, role) !== null) return true
+    if (toolReaching(project, target, inputs, change, owning) !== null) return true
+    if (owner === null || inputs.dependencies === null) return false
+    return hopTo(closure, path, owner.name) !== null && inputs.dependencies(owner.root)(path, role)
+  }
+
   const fallbackReason = (edge: Edge, rule: ReasonRule, project: string): Reason => {
     const labelled = relabel(rule, edge)
     return fallback(
@@ -440,14 +467,20 @@ export function selectAffected(options: SelectOptions): Map<string, AffectedSet>
         judged !== null && current !== null && targetResolution(judged, project, target) === targetResolution(current, project, target)
       const decision: Decision = { reasons: [], skips: [] }
       for (const change of globals) {
-        if (change.path !== WORKSPACE_FILE || !unchanged) {
+        const aliases = change.path === BASE_TSCONFIG ? importers : null
+        if (change.path === WORKSPACE_FILE ? !unchanged : aliases === null) {
           decision.reasons.push(globalConfig(change.path, task))
           continue
         }
         // why: judged, the file keeps its ordinary standing as a file of the root project, so a task that names it among its inputs is still selected
         const outcome = decideFile(project, target, task, inputs, closure, change)
         if (outcome.selected) decision.reasons.push(outcome.reason)
-        else decision.skips.push(sameResolution(change.path, task))
+        else if (aliases === null) decision.skips.push(sameResolution(change.path, task))
+        else {
+          const read = [...aliases].find(([path]) => reads(project, target, inputs, closure, path))
+          if (read === undefined) decision.skips.push(sameAliases(change.path, task))
+          else decision.reasons.push(aliasChanged(change.path, task, read[1].alias, read[0], read[1].specifier))
+        }
       }
       for (const change of paths) {
         if (isGlobalConfig(change.path)) continue

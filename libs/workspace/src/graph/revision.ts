@@ -7,6 +7,7 @@
  * @module graph/revision
  */
 
+import type { BaseTsconfig } from './affected/aliases'
 import type { WorkspaceGraph } from './build'
 import type { WorkspaceFile } from './inputs'
 import type { ChangeSet } from './selection'
@@ -15,6 +16,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { BASE_TSCONFIG } from './affected/aliases'
 import { buildGraph } from './build'
 import { CACHE_FILE } from './imports'
 import { readWorkspaceFile } from './inputs'
@@ -130,6 +132,25 @@ export function previousGraph(root: string, changes: ChangeSet | null): Workspac
 const WORKSPACE_FILE = 'hf.json'
 
 /**
+ * A JSON file as it stood at the base of a change set, when the change set touched it.
+ *
+ * @param root - The workspace root, absolute
+ * @param changes - The change set, or null for a selection of everything
+ * @param path - The file, workspace-relative
+ * @returns The content at the base, null where the base had none or it does not parse, or undefined when the change set leaves the file alone
+ */
+function jsonAtBase<Value>(root: string, changes: ChangeSet | null, path: string): Value | null | undefined {
+  if (changes === null || !changes.changes.some((change) => change.path === path || change.previousPath === path)) return undefined
+  try {
+    return parse(
+      execFileSync('git', ['show', `${changes.base}:${path}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+    ) as Value
+  } catch {
+    return null
+  }
+}
+
+/**
  * The `hf.json` as it stood at the base of a change set, when the selection needs it: only a
  * change to the file asks what each task resolved to before.
  *
@@ -145,18 +166,59 @@ const WORKSPACE_FILE = 'hf.json'
  * ```
  */
 export function previousWorkspaceFile(root: string, changes: ChangeSet | null): WorkspaceFile | undefined {
-  if (changes === null || !changes.changes.some((change) => change.path === WORKSPACE_FILE || change.previousPath === WORKSPACE_FILE))
-    return undefined
-  try {
-    return parse(
-      execFileSync('git', ['show', `${changes.base}:${WORKSPACE_FILE}`], {
-        cwd: root,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      })
-    ) as WorkspaceFile
-  } catch {
-    // why: a base without the file, or with one that does not parse, is the empty configuration the engine assumes without it
-    return {}
+  const file = jsonAtBase<WorkspaceFile>(root, changes, WORKSPACE_FILE)
+  // why: a base without the file, or with one that does not parse, is the empty configuration the engine assumes without it
+  return file === null ? {} : file
+}
+
+/**
+ * The `tsconfig.base.json` as it stood at the base of a change set, when the selection needs it:
+ * only a change to the file asks which path aliases it had before.
+ *
+ * @param root - The workspace root, absolute
+ * @param changes - The change set, or null for a selection of everything
+ * @returns The file's content at the base, or undefined when the change set leaves the file alone, or the base had none or one that does not parse
+ *
+ * @example Read only when the file changed
+ * ```typescript
+ * const changes = changeSet(root, 'main', null)
+ * const previousBaseTsconfig = previousBaseTsconfigFile(root, changes) // => undefined unless tsconfig.base.json is among the changes
+ * selectAffected({ graph: workspaceGraph(root), changes, targets: ['test'], previousBaseTsconfig })
+ * ```
+ */
+export function previousBaseTsconfigFile(root: string, changes: ChangeSet | null): BaseTsconfig | undefined {
+  // why: without a readable base there is nothing to compare the aliases with, and the change selects everything
+  return jsonAtBase<BaseTsconfig>(root, changes, BASE_TSCONFIG) ?? undefined
+}
+
+/** What a selection reads from the base of a change. */
+export interface BaseRecords {
+  /** The graph at the base, when a path was deleted or renamed. */
+  readonly previous?: WorkspaceGraph
+  /** The `hf.json` at the base, when the change touched it. */
+  readonly previousWorkspace?: WorkspaceFile
+  /** The `tsconfig.base.json` at the base, when the change touched it. */
+  readonly previousBaseTsconfig?: BaseTsconfig
+}
+
+/**
+ * Everything a selection reads from the base of a change set, each part only where the change
+ * asks for it.
+ *
+ * @param root - The workspace root, absolute
+ * @param changes - The change set, or null for a selection of everything
+ * @returns The graph and the two judged configuration files as they stood at the base
+ *
+ * @example Handing a selection the base of its change
+ * ```typescript
+ * const changes = changeSet(root, 'main', null)
+ * selectAffected({ graph: workspaceGraph(root), changes, targets: ['test'], ...baseRecords(root, changes) })
+ * ```
+ */
+export function baseRecords(root: string, changes: ChangeSet | null): BaseRecords {
+  return {
+    previous: previousGraph(root, changes),
+    previousWorkspace: previousWorkspaceFile(root, changes),
+    previousBaseTsconfig: previousBaseTsconfigFile(root, changes),
   }
 }
