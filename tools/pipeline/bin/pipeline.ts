@@ -33,7 +33,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
-import { buildState, changeSet, formatAffected, previousGraph, previousWorkspaceFile, selectAffected } from '@hyperfrontend/workspace/graph'
+import { baseRecords, buildState, changeSet, formatAffected, selectAffected } from '@hyperfrontend/workspace/graph'
 import { createTerminal } from '@hyperfrontend/workspace/progress'
 import { chainChecks, githubChecks, runUrlOf } from '../src/pipeline/checks'
 import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
@@ -208,14 +208,7 @@ async function plan(local: boolean): Promise<Plan> {
     values.main && values['catch-up']
       ? await registryDrift(graph.projects.values(), npmProbe({ cwd: root as string, run: runCommand }))
       : []
-  return createPlan({
-    graph,
-    changes,
-    main: values.main,
-    drift,
-    previous: previousGraph(root as string, changes),
-    previousWorkspace: previousWorkspaceFile(root as string, changes),
-  })
+  return createPlan({ graph, changes, main: values.main, drift, ...baseRecords(root as string, changes) })
 }
 
 /**
@@ -574,13 +567,7 @@ if (command === 'plan') {
 } else if (command === 'affected') {
   if (values.target === undefined) throw createError('affected needs --target <target>')
   const changes = changeSet(root, values.base ?? 'main', values.head ?? null)
-  const set = selectAffected({
-    graph: graphOf(),
-    changes,
-    targets: [values.target],
-    previous: previousGraph(root, changes),
-    previousWorkspace: previousWorkspaceFile(root, changes),
-  }).get(values.target)
+  const set = selectAffected({ graph: graphOf(), changes, targets: [values.target], ...baseRecords(root, changes) }).get(values.target)
   if (set === undefined) throw createError(`no target ${values.target}`)
   if (values.json) say(stringify(set, null, 2))
   else if (values.projects) for (const decision of set.selected) say(decision.task.slice(0, decision.task.lastIndexOf(':')))
