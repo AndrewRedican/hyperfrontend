@@ -2,8 +2,8 @@
  * The workspace's command line as a function. From anywhere inside the workspace:
  * `run <project>:<target> [--name=value ...]` runs that one task, nothing it depends on first and
  * nothing cached; `run-many -t <targets> [-p <names and globs> | --all]` runs those tasks and
- * their prerequisites, one child each; `affected -t <targets> [--base=<ref>] [--head=<ref>]`
- * does the same for the tasks a change selects; `format --check|--write [--all | --files=<list>]`
+ * their prerequisites, one child each, each `-t` a stage of its own; `affected -t <targets>
+ * [--base=<ref>] [--head=<ref>]` does the same for the tasks a change selects; `format --check|--write [--all | --files=<list>]`
  * runs prettier; `generate <generator> [...] [--dry-run]` runs a generator over the workspace;
  * `show projects [--with-target=<target>] [--json]` lists the projects; `graph <command>` prints
  * and persists the graph.
@@ -15,15 +15,14 @@ import type { ProjectRecord } from '../graph/model'
 import type { AffectedSet } from '../graph/selection'
 import type { Generator } from '../runner/contract'
 import type { HandoverHost, Invocation } from './handover'
+import type { TaskSession } from './tasks'
 import { execFileSync, spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { commitChanges, createFsTree } from '@hyperfrontend/project-scope/vfs'
 import { selectAffected } from '../graph/affected/select'
@@ -36,13 +35,13 @@ import { pathKey, searchPath } from '../runner/environment'
 import { changedFiles, FORMAT_USAGE, parseFormatArgs, prettierRuns } from '../runner/format'
 import { GENERATE_USAGE, parseGenerateArgs } from '../runner/generate'
 import { locateGenerator } from '../runner/generators'
-import { AFFECTED_USAGE, MANY_USAGE, manySummary, parseAffectedArgs, parseManyArgs, planMany, planTasks, runPlanned } from '../runner/many'
+import { AFFECTED_USAGE, MANY_USAGE, parseAffectedArgs, parseManyArgs, planMany, planTasks } from '../runner/many'
 import { describeError, refusal } from '../runner/refusal'
 import { main } from '../runner/run'
-import { selfCommand } from '../runner/self'
 import { SHOW_USAGE, showProjects } from '../runner/show'
 import { GRAPH_USAGE, runGraph, verifiedBase } from './graph'
 import { handOver, processHost } from './handover'
+import { runChild, runTasks } from './tasks'
 
 /** The file that marks a workspace root. */
 export const WORKSPACE_FILE = 'hf.json'
@@ -51,15 +50,11 @@ export const WORKSPACE_FILE = 'hf.json'
 export type WorkspaceCliOptions = Invocation
 
 /** What every command works with. */
-interface Session {
-  /** The workspace root, absolute. */
-  readonly root: string
+interface Session extends TaskSession {
   /** The directory the command line was started in. */
   readonly cwd: string
   /** Writes a line of a result. */
   readonly say: (line: string) => void
-  /** Writes a line of the command line's own. */
-  readonly note: (line: string) => void
 }
 
 /** A generator's module, as the command line calls it. */
@@ -72,43 +67,6 @@ interface GeneratorModule {
 type Command = (argv: readonly string[], session: Session) => Promise<number> | number
 
 /**
- * Runs a program in a child with inherited standard streams, from the workspace root.
- *
- * @param root - The workspace root, absolute
- * @param command - The program
- * @param args - Its arguments
- * @returns The exit code
- */
-function runChild(root: string, command: string, args: readonly string[]): Promise<number> {
-  return createPromise((resolve) => {
-    const child = spawn(command, args, { cwd: root, stdio: 'inherit' })
-    child.on('error', () => resolve(1))
-    child.on('close', (code) => resolve(code ?? 1))
-  })
-}
-
-/**
- * Runs planned tasks, each in a child started the way this process was, and prints the summary.
- *
- * @param tasks - The tasks in order
- * @param args - The arguments every requested task receives
- * @param session - The workspace root and where to write
- * @returns The exit code
- */
-async function runTasks(tasks: Parameters<typeof runPlanned>[0], args: readonly string[], session: Session): Promise<number> {
-  const outcomes = await runPlanned(tasks, args, {
-    runChild: (id, extra) => {
-      const [program, ...rest] = selfCommand(process, ['run', id, ...extra]) as [string, ...string[]]
-      return runChild(session.root, program, rest)
-    },
-    now: dateNow,
-    write: session.note,
-  })
-  for (const line of manySummary(outcomes)) session.note(line)
-  return outcomes.every((outcome) => outcome.status === 'succeeded') ? 0 : 1
-}
-
-/**
  * Runs `run-many`: plans the tasks on the owned graph, then runs each in a child.
  *
  * @param argv - The arguments after `run-many`
@@ -117,7 +75,7 @@ async function runTasks(tasks: Parameters<typeof runPlanned>[0], args: readonly 
  */
 function runMany(argv: readonly string[], session: Session): Promise<number> {
   const request = parseManyArgs(argv)
-  return runTasks(planMany(buildState(session.root).graph, request), request.args, session)
+  return runTasks({ ...request, tasks: planMany(buildState(session.root).graph, request) }, session)
 }
 
 /**
@@ -143,7 +101,7 @@ function affected(argv: readonly string[], session: Session): Promise<number> {
     (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
   )
   session.note(`hf affected: ${tasks.length} tasks selected from ${changes.changes.length} changed files`)
-  return runTasks(planTasks(graph, tasks), request.args, session)
+  return runTasks({ ...request, tasks: planTasks(graph, tasks) }, session)
 }
 
 /**
@@ -239,8 +197,8 @@ Usage: hf <command> [options]
 
 Commands:
   run <project>:<target> [--name=value ...]            Run one task, nothing it depends on first
-  run-many -t <targets> [-p <projects> | --all]        Run tasks and what they depend on
-  affected -t <targets> [--base=<ref>] [--head=<ref>]  Run the tasks a change selects
+  run-many -t <targets> [-p <projects> | --all]        Run tasks and what they depend on; each -t is a stage
+  affected -t <targets> [--base=<ref>] [--head=<ref>]  Run the tasks a change selects; each -t is a stage
   format --check|--write [--all | --files=<list>]      Run prettier over changed, named or all files
   generate <generator> [...] [--dry-run]               Run a generator of the workspace or of an installed package
   show projects [--with-target=<target>] [--json]      List the projects
@@ -334,7 +292,7 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
       importModule: (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href),
     })
   try {
-    return await chosen[0](rest, { root, cwd, say, note })
+    return await chosen[0](rest, { root, cwd, say, note, sink: options.stderr })
   } catch (error) {
     note(`hf ${command}: ${describeError(error)}`)
     note(chosen[1])

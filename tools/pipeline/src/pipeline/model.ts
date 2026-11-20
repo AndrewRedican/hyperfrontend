@@ -19,6 +19,17 @@ export const Environment = freeze({
 /** One of the environments. */
 export type Environment = (typeof Environment)[keyof typeof Environment]
 
+/**
+ * The environment a platform is.
+ *
+ * @param platform - A platform as Node.js names it, such as `win32` or `darwin`
+ * @returns Windows on win32, macOS on darwin, Linux otherwise
+ */
+export function environmentOf(platform: string): Environment {
+  if (platform === 'win32') return Environment.Windows
+  return platform === 'darwin' ? Environment.MacOS : Environment.Linux
+}
+
 /** How much of a runner a task occupies. */
 export const Weight = freeze({
   /** One of the light slots: typecheck, lint, test, e2e, probes, publishes. */
@@ -44,6 +55,8 @@ export const PipelineRule = freeze({
   PipelineTask: 'pipeline-task',
   /** A prerequisite did not succeed. */
   PrerequisiteFailed: 'prerequisite-failed',
+  /** An earlier stage of a local run did not succeed, so the run ended before the task's stage. */
+  StageFailed: 'stage-failed',
   /** A sibling environment, Windows or macOS, did not succeed before the publishes. */
   SiblingEnvironment: 'sibling-environment',
   /** The run was interrupted before the task started. */

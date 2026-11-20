@@ -121,6 +121,8 @@ npx hf run-many -t lint --all
 
 `run <project>:<target>` runs one task alone; `run-many` runs the named tasks and their `dependsOn` prerequisites, one at a time, and skips the dependents of a failure. Nothing is cached, so every task runs every time.
 
+`run-many` and `affected` show a run as it goes: one line per task as it ends, the excerpt of a failed task's log, and a matrix of projects by targets at the end. Each task writes its whole output to `.hf/logs/<project>__<target>.log`. Pass `--stream` to have the tasks write straight to the terminal instead, which a target that keeps running (a server) or asks for input needs. Each `-t` is a stage: `-t typecheck,lint -t test -t build` runs the type checks and lints to the end, and starts the tests only when all of them passed.
+
 ### Working with Documentation
 
 The documentation site is a Next.js application located in `apps/docs-site/`.
@@ -132,7 +134,7 @@ The documentation site is a Next.js application located in `apps/docs-site/`.
 npx hf run docs-site:install
 
 # Build the site and serve it
-npx hf run-many -t serve -p docs-site
+npx hf run-many -t serve -p docs-site --stream
 ```
 
 The site will be available at `http://localhost:3000`.
@@ -323,8 +325,8 @@ CI runs `version-check` to validate that versions were correctly applied. If you
 Publishing happens via CI after PR merge. To test locally:
 
 ```bash
-# Dry run (preview); the build runs first
-npx hf run-many -t publish -p lib-nexus --dryRun
+# Dry run (preview); the build runs first, and --stream shows the preview in the terminal
+npx hf run-many -t publish -p lib-nexus --dryRun --stream
 
 # Publish to local Verdaccio for testing
 npx hf run-many -t publish -p lib-nexus \

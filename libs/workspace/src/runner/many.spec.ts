@@ -1,5 +1,5 @@
 import type { FileTree } from '@hyperfrontend/testing/fs'
-import type { PlannedTask } from './many'
+import type { ManyRequest, PlannedTask, TaskOutcome } from './many'
 import { after as afterAll } from 'node:test'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -41,17 +41,52 @@ function ids(tasks: readonly PlannedTask[]): string[] {
   return tasks.map((task) => task.id)
 }
 
+/**
+ * A request for targets in one stage, with nothing passed on.
+ *
+ * @param targets - What every chosen project is asked to run
+ * @param projects - The project names and globs, or null for every project
+ * @returns A request that streams nothing and passes nothing on
+ */
+function request(targets: readonly string[], projects: readonly string[] | null): ManyRequest {
+  return { targets, stages: [targets], projects, args: [], stream: false }
+}
+
 describe('parseManyArgs', () => {
   it('reads targets, projects and the arguments passed on', () => {
     expect(parseManyArgs(['-t', 'build,test', '--projects=lib-*', '-p', 'app-shop', '--verbose'])).toEqual({
       targets: ['build', 'test'],
+      stages: [['build', 'test']],
       projects: ['lib-*', 'app-shop'],
       args: ['--verbose'],
+      stream: false,
     })
   })
 
   it('reads every project', () => {
-    expect(parseManyArgs(['--targets=audit', '--all'])).toEqual({ targets: ['audit'], projects: null, args: [] })
+    expect(parseManyArgs(['--targets=audit', '--all'])).toEqual({
+      targets: ['audit'],
+      stages: [['audit']],
+      projects: null,
+      args: [],
+      stream: false,
+    })
+  })
+
+  it('reads each target option as a stage of its own, naming a target twice once', () => {
+    expect(parseManyArgs(['-t', 'typecheck,lint', '--all', '-t', 'test,lint', '--target='])).toEqual(
+      expect.objectContaining({
+        targets: ['typecheck', 'lint', 'test'],
+        stages: [
+          ['typecheck', 'lint'],
+          ['test', 'lint'],
+        ],
+      })
+    )
+  })
+
+  it('keeps the stream option to itself', () => {
+    expect(parseManyArgs(['-t', 'build', '--all', '--stream'])).toEqual(expect.objectContaining({ args: [], stream: true }))
   })
 
   it('reads a target named last without a value as none', () => {
@@ -71,14 +106,27 @@ describe('parseAffectedArgs', () => {
   it('reads targets, the base, the head and the arguments passed on', () => {
     expect(parseAffectedArgs(['-t', 'build', '--targets=test', '--base=main', '--head', 'HEAD~1', '--fix'])).toEqual({
       targets: ['build', 'test'],
+      stages: [['build'], ['test']],
       base: 'main',
       head: 'HEAD~1',
       args: ['--fix'],
+      stream: false,
     })
   })
 
   it('defaults to origin/main and the working tree', () => {
-    expect(parseAffectedArgs(['-t', 'build'])).toEqual({ targets: ['build'], base: 'origin/main', head: null, args: [] })
+    expect(parseAffectedArgs(['-t', 'build'])).toEqual({
+      targets: ['build'],
+      stages: [['build']],
+      base: 'origin/main',
+      head: null,
+      args: [],
+      stream: false,
+    })
+  })
+
+  it('keeps the stream option to itself', () => {
+    expect(parseAffectedArgs(['-t', 'build', '--stream'])).toEqual(expect.objectContaining({ args: [], stream: true }))
   })
 
   it('keeps the base for a base option named last without a value', () => {
@@ -122,36 +170,28 @@ describe('matchesProject', () => {
 
 describe('planMany', () => {
   it('places every build after the builds it depends on', () => {
-    expect(ids(planMany(graph, { targets: ['build'], projects: ['app-shop'], args: [] }))).toEqual([
-      'lib-core:build',
-      'lib-util:build',
-      'app-shop:build',
-    ])
+    expect(ids(planMany(graph, request(['build'], ['app-shop'])))).toEqual(['lib-core:build', 'lib-util:build', 'app-shop:build'])
   })
 
   it('places a prerequisite outside the requested targets and marks it unrequested', () => {
-    expect(planMany(graph, { targets: ['test'], projects: null, args: [] })).toEqual([
+    expect(planMany(graph, request(['test'], null))).toEqual([
       { id: 'lib-core:build', requested: false, after: [] },
       { id: 'lib-core:test', requested: true, after: ['lib-core:build'] },
     ])
   })
 
   it('runs a task reached twice once', () => {
-    expect(ids(planMany(graph, { targets: ['build'], projects: ['lib-*', 'app-shop'], args: [] }))).toEqual([
-      'lib-core:build',
-      'lib-util:build',
-      'app-shop:build',
-    ])
+    expect(ids(planMany(graph, request(['build'], ['lib-*', 'app-shop'])))).toEqual(['lib-core:build', 'lib-util:build', 'app-shop:build'])
   })
 
   it('refuses a cycle with its path', () => {
-    expect(() => planMany(graph, { targets: ['ping'], projects: ['app-shop'], args: [] })).toThrow(
+    expect(() => planMany(graph, request(['ping'], ['app-shop']))).toThrow(
       "the tasks' dependsOn form a cycle: app-shop:ping -> app-shop:pong -> app-shop:ping"
     )
   })
 
   it('refuses a project nothing matches', () => {
-    expect(() => planMany(graph, { targets: ['build'], projects: ['nobody'], args: [] })).toThrow('no project matches nobody')
+    expect(() => planMany(graph, request(['build'], ['nobody']))).toThrow('no project matches nobody')
   })
 })
 
@@ -175,6 +215,28 @@ describe('runPlanned', () => {
       write: () => undefined,
     })
     expect(outcomes.map((outcome) => outcome.status)).toEqual(['failed', 'skipped', 'succeeded'])
+  })
+
+  it('names the prerequisite that kept a task from running', async () => {
+    const outcomes = await runPlanned(tasks, [], { runChild: async () => 1, now: () => 0, write: () => undefined })
+    expect(outcomes[1]).toEqual({ id: 'b:build', status: 'skipped', durationMs: 0, blockedBy: 'a:build' })
+  })
+
+  it('takes a prerequisite that is not among the tasks as met', async () => {
+    const outcomes = await runPlanned(tasks.slice(1), [], { runChild: async () => 0, now: () => 0, write: () => undefined })
+    expect(outcomes.map((outcome) => outcome.status)).toEqual(['succeeded', 'succeeded'])
+  })
+
+  it('tells the host of each task that starts and of each that ends or is skipped', async () => {
+    const events: string[] = []
+    await runPlanned(tasks, [], {
+      runChild: async (id) => (id === 'a:build' ? 1 : 0),
+      now: () => 0,
+      write: () => undefined,
+      onStart: (id) => events.push(`start ${id}`),
+      onEnd: (outcome: TaskOutcome) => events.push(`${outcome.status} ${outcome.id}`),
+    })
+    expect(events).toEqual(['start a:build', 'failed a:build', 'skipped b:build', 'start c:build', 'succeeded c:build'])
   })
 
   it('passes the arguments to requested tasks alone', async () => {

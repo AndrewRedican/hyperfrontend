@@ -98,11 +98,11 @@ for (const shell of SHELLS) {
     })
 
     it('hands a quoted comma list with a glob to run-many, whose tasks print on stdout', () => {
-      expect(lines(type(shell, 'npx hf run-many -t build -p "alpha,bet*"').stdout)).toEqual(['built alpha', 'built beta'])
+      expect(lines(type(shell, 'npx hf run-many -t build -p "alpha,bet*" --stream').stdout)).toEqual(['built alpha', 'built beta'])
     })
 
     it('prints the run-many summary on stderr', () => {
-      const run = type(shell, 'npx hf run-many -t build -p "alpha,bet*"')
+      const run = type(shell, 'npx hf run-many -t build -p "alpha,bet*" --stream')
       expect({ status: run.status, summary: lines(run.stderr) }).toEqual({
         status: 0,
         summary: expect.arrayContaining([

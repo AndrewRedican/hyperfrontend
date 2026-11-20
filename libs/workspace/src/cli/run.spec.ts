@@ -278,26 +278,44 @@ describe('runWorkspaceCli run', () => {
 
 describe('runWorkspaceCli run-many', () => {
   it('runs each task in a child started the way this process was, from the workspace root', async () => {
-    await hf(['run-many', '-t', 'build', '-p', 'lib-alpha'])
+    await hf(['run-many', '-t', 'build', '-p', 'lib-alpha', '--stream'])
     expect(mockSpawn.mock.calls).toEqual([
       [process.execPath, [...process.execArgv, process.argv[1], 'run', 'lib-alpha:build'], { cwd: workspace.path, stdio: 'inherit' }],
     ])
   })
 
   it('passes the arguments after the selection to the requested tasks', async () => {
-    await hf(['run-many', '-t', 'build', '-p', 'lib-alpha', '--verbose'])
+    await hf(['run-many', '-t', 'build', '-p', 'lib-alpha', '--stream', '--verbose'])
     expect((mockSpawn.mock.calls[0]?.[1] as string[]).slice(-3)).toEqual(['run', 'lib-alpha:build', '--verbose'])
   })
 
   it('exits cleanly and prints the summary when every task succeeds', async () => {
-    const { code, stderr } = await hf(['run-many', '-t', 'build', '-p', 'lib-alpha'])
+    const { code, stderr } = await hf(['run-many', '-t', 'build', '-p', 'lib-alpha', '--stream'])
     expect({ code, stderr }).toEqual({ code: 0, stderr: expect.stringContaining('1 succeeded, 0 failed, 0 skipped\n') })
   })
 
   it('exits with 1 when a task fails, and still runs the rest', async () => {
     childrenExit(3, 0)
-    const { code, stderr } = await hf(['run-many', '-t', 'audit,build', '-p', 'lib-alpha'])
+    const { code, stderr } = await hf(['run-many', '-t', 'audit,build', '-p', 'lib-alpha', '--stream'])
     expect({ code, stderr }).toEqual({ code: 1, stderr: expect.stringContaining('1 succeeded, 1 failed, 0 skipped\n') })
+  })
+
+  it('runs behind the progress view unless asked to stream, each task writing to its log', async () => {
+    const { stderr } = await hf(['run-many', '-t', 'build', '-p', 'lib-alpha'])
+    expect({ stderr, log: existsSync(join(workspace.path, '.hf/logs/lib-alpha__build.log')) }).toEqual({
+      stderr: expect.stringMatching(/^✓ lib-alpha:build {2}\S+ {2}\[1\/1\]\n/),
+      log: true,
+    })
+  })
+
+  it('stops after the stage of the first target option when a task of it fails', async () => {
+    childrenExit(3)
+    const { code, stderr } = await hf(['run-many', '-t', 'audit', '-t', 'build', '-p', 'lib-alpha'])
+    expect({ code, stderr, started: mockSpawn.mock.calls.length }).toEqual({
+      code: 1,
+      stderr: expect.stringContaining('stage 1 (audit) did not succeed: 1 task not run\n'),
+      started: 1,
+    })
   })
 
   it('counts a child that could not start as failed', async () => {
@@ -314,7 +332,7 @@ describe('runWorkspaceCli run-many', () => {
 describe('runWorkspaceCli affected', () => {
   it('runs the tasks the change selects, with what comes after the selection', async () => {
     writeFileSync(join(workspace.path, 'libs/alpha/src/index.ts'), 'export const alpha = 2\n')
-    await hf(['affected', '-t', 'build', '--base=HEAD', '--verbose'])
+    await hf(['affected', '-t', 'build', '--base=HEAD', '--stream', '--verbose'])
     expect(mockSpawn.mock.calls.map(([, args]) => (args as string[]).slice(-3))).toEqual([['run', 'lib-alpha:build', '--verbose']])
   })
 
@@ -328,7 +346,7 @@ describe('runWorkspaceCli affected', () => {
     const { code, stderr } = await hf(['affected', '-t', 'build', '--base=HEAD'])
     expect({ code, stderr, started: mockSpawn.mock.calls.length }).toEqual({
       code: 0,
-      stderr: 'hf affected: 0 tasks selected from 0 changed files\n0 succeeded, 0 failed, 0 skipped\n',
+      stderr: 'hf affected: 0 tasks selected from 0 changed files\nno task to run\n',
       started: 0,
     })
   })

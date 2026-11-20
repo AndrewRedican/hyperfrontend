@@ -4,6 +4,7 @@ import type { ShellHandle } from './host/types'
 import type { FeatureHandle } from './hostee/types'
 import type { FeatureContract, SecurityProtocol, ShellOptions } from './shared/types'
 import { afterEach, beforeEach } from 'node:test'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createBroker } from '@hyperfrontend/nexus'
 import { describe, expect, it, jest, sleep, waitUntil } from '@hyperfrontend/testing'
@@ -41,8 +42,8 @@ const schemaContract: FeatureContract = {
 // how: posting to either window delivers to its own listeners on a later task, with the counterpart as the source and origin, so a reply never lands inside the call that provoked it. Sealed frames travel as the Uint8Array they were posted as.
 const ORIGINS = [HOST_ORIGIN, FEATURE_ORIGIN] as const
 
-// magic: the polling budget a handshake, a confirmation or a deadline close settles within on this machine.
-const SETTLE = { timeout: 6000, interval: 25 }
+// magic: longer than the 10 seconds a pair gives its own handshake and the confirmation of its session by default. A v4 session stretches its key on both sides, which is CPU-bound, so a loaded machine decides how long that takes; the pair, never a wait in this file, decides when a handshake has failed.
+const SETTLE = { timeout: 12_000, interval: 25 }
 
 /** Which side of a crossing-REQUEST glare a broker takes; the lower rank yields and answers as responder. */
 type GlareRank = 'yields' | 'wins'
@@ -188,7 +189,13 @@ describe('Integration: host and hostee across the security envelope', () => {
     const feature = connectFeature(featureContract, security)
     await feature.handle.ready()
     // why: The session opens before the hello exchange confirms it; sealed traffic is only provable once both transports report ready.
-    await waitUntil(() => host.handle.isOpen && host.secured() !== null && feature.secured() !== null, { ...SETTLE, timeout: 3000 })
+    await waitUntil(() => {
+      // why: a pair that gave up says why; waiting on would end as a timeout that names nothing
+      if (hasClosed(host) || hasClosed(feature)) {
+        throw createError(`the pair closed before its session was confirmed: ${stringify({ host: host.events, feature: feature.events })}`)
+      }
+      return host.handle.isOpen && host.secured() !== null && feature.secured() !== null
+    }, SETTLE)
     return { host, feature }
   }
 

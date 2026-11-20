@@ -73,7 +73,7 @@ describe('lintReportExecutor', () => {
       await lintReportExecutor({ failOnError: true }, context)
       expect(mockExec.mock.calls[0]?.slice(0, 2)).toEqual([
         process.execPath,
-        ['--import', ALIAS_HOOK, HF_ENTRY, 'run-many', '-t', 'lint', '--all', '--fix'],
+        ['--import', ALIAS_HOOK, HF_ENTRY, 'run-many', '-t', 'lint', '--all', '--stream', '--fix'],
       ])
     })
 
@@ -139,7 +139,7 @@ describe('lintReportExecutor', () => {
     it('reports the exit code of the command', async () => {
       failWith({ status: 2, stdout: 'Oops! Something went wrong! :(\n', stderr: '\u001B[31mError: rule threw\u001B[39m\n' })
       await lintReportExecutor({}, context)
-      expect(report()).toEqual(expect.stringContaining('`npx hf run-many -t lint --all --fix` exited with code 2'))
+      expect(report()).toEqual(expect.stringContaining('`npx hf run-many -t lint --all --stream --fix` exited with code 2'))
     })
 
     it('reports the tail of the raw output without colour codes', async () => {
@@ -191,7 +191,7 @@ describe('lintReportExecutor', () => {
       failWith({ message: 'spawnSync node ENOENT' })
       await lintReportExecutor({}, context)
       expect(report()).toEqual(
-        expect.stringContaining('`npx hf run-many -t lint --all --fix` could not be launched (spawnSync node ENOENT)')
+        expect.stringContaining('`npx hf run-many -t lint --all --stream --fix` could not be launched (spawnSync node ENOENT)')
       )
     })
   })
@@ -207,7 +207,7 @@ describe('lintReportExecutor', () => {
 
     it('fails when one project crashed and another reported errors', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
         'run lib-b:lint --fix': crash,
       })
       expect(await lintReportExecutor({ failOnError: true }, context)).toEqual({ success: false })
@@ -215,7 +215,7 @@ describe('lintReportExecutor', () => {
 
     it('counts the errors and the crashed projects in the summary', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
         'run lib-b:lint --fix': crash,
       })
       await lintReportExecutor({ failOnError: true }, context)
@@ -224,7 +224,7 @@ describe('lintReportExecutor', () => {
 
     it('reports the crashed project with its rerun command, exit code and output tail', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
         'run lib-b:lint --fix': crash,
       })
       await lintReportExecutor({ failOnError: true }, context)
@@ -244,7 +244,7 @@ describe('lintReportExecutor', () => {
 
     it('keeps the findings of the other projects in the report when one project crashed', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
         'run lib-b:lint --fix': crash,
       })
       await lintReportExecutor({ failOnError: true }, context)
@@ -253,7 +253,7 @@ describe('lintReportExecutor', () => {
 
     it('reruns only the failed projects that own no error', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'lib-b')),
         'run lib-b:lint --fix': crash,
       })
       await lintReportExecutor({}, context)
@@ -261,30 +261,36 @@ describe('lintReportExecutor', () => {
     })
 
     it('fails on a crash even when failOnError is off', async () => {
-      respondPerCommand({ 'run-many -t lint --all --fix': combined(failedTasks('lib-b')), 'run lib-b:lint --fix': crash })
+      respondPerCommand({ 'run-many -t lint --all --stream --fix': combined(failedTasks('lib-b')), 'run lib-b:lint --fix': crash })
       expect(await lintReportExecutor({ failOnError: false }, context)).toEqual({ success: false })
     })
 
     it('reports a crash under the Crashed Projects heading', async () => {
-      respondPerCommand({ 'run-many -t lint --all --fix': combined(failedTasks('lib-b')), 'run lib-b:lint --fix': crash })
+      respondPerCommand({ 'run-many -t lint --all --stream --fix': combined(failedTasks('lib-b')), 'run lib-b:lint --fix': crash })
       await lintReportExecutor({ failOnError: false }, context)
       expect(report()).toEqual(expect.stringContaining('## Crashed Projects'))
     })
 
     it('fails on the crash of a failed project the workspace does not know', async () => {
-      respondPerCommand({ 'run-many -t lint --all --fix': combined(failedTasks('lib-unknown')), 'run lib-unknown:lint --fix': crash })
+      respondPerCommand({
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-unknown')),
+        'run lib-unknown:lint --fix': crash,
+      })
       expect(await lintReportExecutor({}, { root } as ExecutorContext)).toEqual({ success: false })
     })
 
     it('reports the crash of a failed project the workspace does not know', async () => {
-      respondPerCommand({ 'run-many -t lint --all --fix': combined(failedTasks('lib-unknown')), 'run lib-unknown:lint --fix': crash })
+      respondPerCommand({
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-unknown')),
+        'run lib-unknown:lint --fix': crash,
+      })
       await lintReportExecutor({}, { root } as ExecutorContext)
       expect(report()).toEqual(expect.stringContaining('**lib-unknown**'))
     })
 
     it('attributes an error to the deepest project containing the file', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(findings('error') + failedTasks('lib-a', 'workspace')),
+        'run-many -t lint --all --stream --fix': combined(findings('error') + failedTasks('lib-a', 'workspace')),
         'run workspace:lint --fix': crash,
       })
       await lintReportExecutor({}, context)
@@ -293,7 +299,7 @@ describe('lintReportExecutor', () => {
 
     it('succeeds when the failed project passes on its own', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(failedTasks('lib-b')),
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-b')),
         'run lib-b:lint --fix': 'All files pass linting\n',
       })
       expect(await lintReportExecutor({ failOnError: true }, context)).toEqual({ success: true })
@@ -301,7 +307,7 @@ describe('lintReportExecutor', () => {
 
     it('reports no issues when the failed project passes on its own', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(failedTasks('lib-b')),
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-b')),
         'run lib-b:lint --fix': 'All files pass linting\n',
       })
       await lintReportExecutor({ failOnError: true }, context)
@@ -310,7 +316,7 @@ describe('lintReportExecutor', () => {
 
     it('fails on the errors a rerun surfaces when failOnError is set', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(failedTasks('lib-a')),
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-a')),
         'run lib-a:lint --fix': failure({ status: 1, stdout: findings('error'), stderr: '' }),
       })
       expect(await lintReportExecutor({ failOnError: true }, context)).toEqual({ success: false })
@@ -318,7 +324,7 @@ describe('lintReportExecutor', () => {
 
     it('reports the errors a rerun surfaces', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(failedTasks('lib-a')),
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-a')),
         'run lib-a:lint --fix': failure({ status: 1, stdout: findings('error'), stderr: '' }),
       })
       await lintReportExecutor({ failOnError: true }, context)
@@ -327,7 +333,7 @@ describe('lintReportExecutor', () => {
 
     it('reports no crash when a rerun surfaces errors', async () => {
       respondPerCommand({
-        'run-many -t lint --all --fix': combined(failedTasks('lib-a')),
+        'run-many -t lint --all --stream --fix': combined(failedTasks('lib-a')),
         'run lib-a:lint --fix': failure({ status: 1, stdout: findings('error'), stderr: '' }),
       })
       await lintReportExecutor({ failOnError: true }, context)

@@ -238,7 +238,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
 
   logger.info('Running lint...')
 
-  const args = ['run-many', '-t', 'lint', '--all', '--fix']
+  const args = ['run-many', '-t', 'lint', '--all', '--stream', '--fix']
   const run = runLint(args, context.root)
 
   logger.info('Parsing lint output...')

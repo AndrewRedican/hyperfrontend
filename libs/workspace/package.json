@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/workspace",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
   "type": "module",
@@ -78,6 +78,7 @@
     "./graph": "./src/graph/index.js",
     "./hooks": "./src/hooks/index.js",
     "./lint": "./src/lint/index.js",
+    "./progress": "./src/progress/index.js",
     "./runner": "./src/runner/index.js",
     "./package.json": "./package.json"
   },
