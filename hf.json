@@ -225,7 +225,20 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
     ],
     "code": ["default", "!{projectRoot}/**/*.md"],
-    "engine": ["{projectRoot}/src/runner/**/*", "{projectRoot}/src/hooks/**/*", "{projectRoot}/src/cli/**/*", "noTestMaterial"],
+    "engine": [
+      "{projectRoot}/src/runner/**/*",
+      "{projectRoot}/src/hooks/**/*",
+      "{projectRoot}/src/cli/**/*",
+      "!{projectRoot}/src/runner/many.ts",
+      "!{projectRoot}/src/runner/self.ts",
+      "!{projectRoot}/src/runner/format.ts",
+      "!{projectRoot}/src/runner/generate.ts",
+      "!{projectRoot}/src/runner/generators.ts",
+      "!{projectRoot}/src/runner/show.ts",
+      "!{projectRoot}/src/cli/tasks.ts",
+      "!{projectRoot}/src/cli/graph.ts",
+      "noTestMaterial"
+    ],
     "executorShared": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]
   },
   "lint": {
