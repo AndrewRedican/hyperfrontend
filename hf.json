@@ -95,6 +95,7 @@
       }
     },
     "publish": {
+      "inputs": ["{projectRoot}/package.json"],
       "dependsOn": ["build"],
       "executor": "@hyperfrontend/workspace:publish",
       "options": {
