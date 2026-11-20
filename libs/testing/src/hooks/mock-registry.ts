@@ -135,7 +135,7 @@ export function resolveActualUrl(require: NodeJS.Require, specifier: string, par
   const workspace = parentUrl ? workspaceResolver()?.(specifier, parentUrl) : null
   if (workspace) return workspace
 
-  const resolved = require.resolve(specifier)
+  const resolved = require.resolve(/* hf-graph: opaque */ specifier)
   if (resolved.startsWith(MOCK_SCHEME)) return mockTarget(resolved)
   return pathToFileURL(resolved).href
 }
@@ -328,7 +328,7 @@ function registerDeclarations(sourceUrl: string, source: string): void {
  * @returns The names to replace with mock functions.
  */
 function automockedNames(require: NodeJS.Require, specifier: string, target: string): string[] {
-  const actual = require(specifier) as Record<string, unknown>
+  const actual = require(/* hf-graph: opaque */ specifier) as Record<string, unknown>
   // why: this form generates its exports rather than importing the module, so publishing here is the only chance `jest.requireActual` gets to see past it.
   mockContext().actuals.set(target, actual)
   return Object.keys(actual).filter((key) => /^[A-Za-z_$][\w$]*$/.test(key))
