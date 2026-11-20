@@ -59,10 +59,11 @@ export type DependsOn = string | DependsOnObject
 export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default']
 
 /**
- * The named input the workspace file gives the code that runs every task: the runner, the loader
- * hooks and the command line of the engine. A target naming it among its inputs runs when that
- * code changes; the release flow leaves it out, since the engine changes what a task does and
- * never what a build emits.
+ * The named input the workspace file gives the code one task passes through when it runs: the
+ * loader hooks, the command line's dispatch and the runner of a single task. A target naming it
+ * among its inputs runs when that code changes; the release flow leaves it out, since the engine
+ * changes what a task does and never what a build emits. The commands that plan several tasks,
+ * format, generate or print run no task of another project, so a workspace leaves them out of it.
  */
 export const ENGINE_INPUT = 'engine'
 
