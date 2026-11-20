@@ -209,7 +209,8 @@ function afterBuild(graph: WorkspaceGraph, library: ProjectRecord, environment: 
 
 /**
  * The deploy after a demo's build: the commit the run is of goes to the Railway service the demo
- * declares, once the chain's other tasks have passed.
+ * declares, once the chain's other tasks have passed. A deploy is a demo's release, so it follows
+ * a build the change can alter and never a build selected only to check the engine that runs it.
  *
  * @param project - The built project
  * @param environment - Where the task runs
@@ -330,20 +331,23 @@ function addPrerequisites(graph: WorkspaceGraph, tasks: Map<string, PlanTask>, e
 /**
  * The Linux tasks of a selection: one per selected task, e2e tasks folded into their library's
  * chain, then every task they need first, then the probes and smokes after the library builds
- * and, on `main`, the deploys after the builds of the demos that declare a Railway service and
- * the provision, whenever a deploy is planned or the Railway configuration changed.
+ * and, on `main`, the deploy after the build of a demo that declares a Railway service and whose
+ * build the change can alter, and the provision, whenever a deploy is planned or the Railway
+ * configuration changed.
  *
  * @param graph - The graph the projects belong to
  * @param selected - The selected task ids with their reasons
  * @param main - Whether publish, provision and deploy tasks are kept
  * @param railwayChanged - Whether the change reaches the Railway configuration
+ * @param shipped - The builds whose output the change can alter, by task id; a demo deploys only after one of them
  * @returns The tasks, without needs
  */
 export function linuxTasks(
   graph: WorkspaceGraph,
   selected: ReadonlyMap<string, readonly PlanReason[]>,
   main: boolean,
-  railwayChanged = false
+  railwayChanged = false,
+  shipped: ReadonlySet<string> = createSet()
 ): PlanTask[] {
   const tasks = createMap<string, PlanTask>()
   for (const [id, reasons] of selected) {
@@ -358,7 +362,7 @@ export function linuxTasks(
     if (item.target !== 'build') continue
     const project = graph.projects.get(item.project) as ProjectRecord
     for (const added of afterBuild(graph, project, Environments.Linux, false)) tasks.set(added.id, added)
-    const deploy = main ? deployTask(project, Environments.Linux) : null
+    const deploy = main && shipped.has(item.id) ? deployTask(project, Environments.Linux) : null
     if (deploy !== null) tasks.set(deploy.id, deploy)
   }
   const deploys = [...tasks.values()].some((item) => item.target === PipelineTarget.Deploy)

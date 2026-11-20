@@ -1,7 +1,7 @@
 /**
  * The plan of a change: the owned selection of every pipeline target, the tasks the pipeline adds
  * (every task a planned task needs first, the probes and smokes after the builds, and on `main`
- * the deploys and the provision they wait on), the
+ * the deploys of the demos whose build the change can alter and the provision they wait on), the
  * registry drift of `main`, and the chains the two environments run, ranked for the scheduler.
  *
  * @module pipeline/plan
@@ -19,7 +19,8 @@ import type {
 import type { Environment, Plan, PlanReason, SkippedTask } from './model'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { compareText, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { compareText, ENGINE_INPUT, EXECUTOR_SHARED_INPUT, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
 import { ENVIRONMENT_JOB_FILES, HF_ENTRY, RAILWAY_CONFIG } from './commands'
 import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, siblingTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
@@ -27,6 +28,9 @@ import { rankChains } from './order'
 
 /** The targets the pipeline selects on every change. */
 export const CI_TARGETS = freeze(['typecheck', 'lint', 'test', 'build', 'e2e'] as const)
+
+/** The target whose output a deploy ships. */
+const BUILD_TARGET = 'build'
 
 /** What a plan needs. */
 export interface PlanOptions {
@@ -120,6 +124,20 @@ function revisions(options: PlanOptions): Omit<SelectOptions, 'targets'> {
 }
 
 /**
+ * The builds whose output the change can alter, as a release reads them: the selection of the
+ * build target with the engine that runs every task and the helpers every executor shares left
+ * out, since neither shapes what a build emits. A plan of everything has no change to ship.
+ *
+ * @param options - The graph, the change and whether the plan is main's
+ * @returns The ids of those build tasks, none off `main` or for a plan of everything
+ */
+function shippedBuilds(options: PlanOptions): Set<string> {
+  if (!options.main || options.changes === null) return createSet()
+  const builds = selectAffected({ ...revisions(options), targets: [BUILD_TARGET], ignoredInputs: [ENGINE_INPUT, EXECUTOR_SHARED_INPUT] })
+  return createSet((builds.get(BUILD_TARGET) as AffectedSet).selected.map((decision) => decision.task))
+}
+
+/**
  * Adds the whole chain of every drifted library: its own targets, its e2e tasks and its publish.
  *
  * @param graph - The workspace graph
@@ -183,7 +201,7 @@ export function createPlan(options: PlanOptions): Plan {
   selectDrift(options.graph, selection, targets, drift)
   selectEnvironmentJobs(options.graph, selection, options.changes)
   const railwayChanged = (options.changes?.changes ?? []).some((change) => change.path === RAILWAY_CONFIG)
-  const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged)
+  const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged, shippedBuilds(options))
   const siblings = [Environments.Windows, Environments.MacOS].flatMap((environment) => siblingTasks(options.graph, linux, environment))
   const tasks = withNeeds(options.graph, [...linux, ...siblings])
   const chains = rankChains(options.graph, buildChains(tasks))
