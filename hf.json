@@ -5,6 +5,7 @@
         "default",
         "{workspaceRoot}/lint.config.ts",
         "{workspaceRoot}/lint.base.config.ts",
+        "{workspaceRoot}/tsconfig.base.json",
         "{workspaceRoot}/package.json",
         "{projectRoot}/package.json",
         "{projectRoot}/lint.config.ts",
