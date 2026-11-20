@@ -144,7 +144,7 @@
     "e2e": {
       "inputs": [
         "default",
-        "^default",
+        "^production",
         {
           "projects": "lib-workspace",
           "input": "e2eExecutor"
