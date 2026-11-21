@@ -60,7 +60,7 @@ The workspace package's `version` executor with one follow-up: after the bump, `
 
 ### version-batch
 
-The workspace package's `version-batch` executor with the same follow-up. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
+The workspace package's `version-batch` executor with the same follow-up. This is the recommended approach for batch operations, and it is the step `npx hf push` runs before it pushes.
 
 - **Affected detection** — programmatically detects libraries changed between base and head refs
 - **Batch commit** — creates a single commit for all version updates
@@ -84,7 +84,7 @@ The workspace package's `version-batch` executor with the same follow-up. This i
 # Preview batch version changes
 npx hf run hyperfrontend:version:all --dryRun
 
-# Run batch versioning (typically done by lefthook)
+# Run batch versioning (typically done by npx hf push)
 npx hf run hyperfrontend:version:all
 
 # Release a change to the package artifact that no commit type would release,
