@@ -1,9 +1,23 @@
 /** Conventional commit type identifier (e.g., 'feat', 'fix', 'docs'). */
-export type CommitType = 'feat' | 'fix' | 'docs' | 'style' | 'refactor' | 'perf' | 'test' | 'build' | 'ci' | 'chore' | 'revert' | string
+export type CommitType =
+  | 'feat'
+  | 'fix'
+  | 'security'
+  | 'docs'
+  | 'style'
+  | 'refactor'
+  | 'perf'
+  | 'test'
+  | 'build'
+  | 'ci'
+  | 'chore'
+  | 'revert'
+  | string
 
 export const COMMIT_TYPES = {
   feat: { description: 'A new feature', semverBump: 'minor' },
   fix: { description: 'A bug fix', semverBump: 'patch' },
+  security: { description: 'A dependency or code change made for a security reason', semverBump: 'patch' },
   docs: { description: 'Documentation only changes', semverBump: 'none' },
   style: { description: 'Code style changes (formatting, etc.)', semverBump: 'none' },
   refactor: { description: 'Code refactoring without feature or fix', semverBump: 'none' },
@@ -15,9 +29,9 @@ export const COMMIT_TYPES = {
   revert: { description: 'Revert a previous commit', semverBump: 'patch' },
 } as const
 
-export const RELEASE_TYPES = ['feat', 'fix', 'perf', 'revert'] as const
+export const RELEASE_TYPES = ['feat', 'fix', 'security', 'perf', 'revert'] as const
 export const MINOR_TYPES = ['feat'] as const
-export const PATCH_TYPES = ['fix', 'perf', 'revert'] as const
+export const PATCH_TYPES = ['fix', 'security', 'perf', 'revert'] as const
 
 /**
  * Checks if a commit type is a standard type.

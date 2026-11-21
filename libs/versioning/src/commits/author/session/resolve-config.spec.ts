@@ -48,6 +48,13 @@ describe('resolveSessionConfig', () => {
     )
   })
 
+  it('offers the security type with its hint on the default type list', () => {
+    expect(DEFAULT_SESSION_TYPES).toContainEqual({
+      name: 'security',
+      description: 'A dependency or code change made for a security reason',
+    })
+  })
+
   it('exposes the conventional type hints on the default type list', () => {
     expect(DEFAULT_SESSION_TYPES).toEqual(
       expect.arrayContaining([

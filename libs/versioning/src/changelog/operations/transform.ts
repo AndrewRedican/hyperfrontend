@@ -294,6 +294,7 @@ export function reverseEntries(changelog: Changelog): Changelog {
 export function sortSections(changelog: Changelog, order?: readonly ChangelogSectionType[]): Changelog {
   const defaultOrder: ChangelogSectionType[] = [
     'breaking',
+    'security',
     'features',
     'fixes',
     'performance',

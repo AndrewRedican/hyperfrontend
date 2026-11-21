@@ -23,6 +23,7 @@ export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
 export const DEFAULT_COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
   feat: 'features',
   fix: 'fixes',
+  security: 'security',
   perf: 'performance',
   docs: 'documentation',
   refactor: 'refactoring',
@@ -338,6 +339,7 @@ export function createGenerateChangelogStep(): FlowStep {
         const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
         const sectionOrder: readonly ChangelogSectionOrderEntry[] = [
+          { type: 'security', heading: 'Security' },
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },
@@ -383,6 +385,7 @@ export function createGenerateChangelogStep(): FlowStep {
         }
 
         const sectionOrder: readonly ChangelogSectionOrderEntry[] = [
+          { type: 'security', heading: 'Security' },
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },

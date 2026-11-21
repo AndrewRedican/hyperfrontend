@@ -7,6 +7,7 @@ import { getStagedPaths } from '../resolvers/staged-paths'
 const TYPE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   feat: 'A new feature',
   fix: 'A bug fix',
+  security: 'A dependency or code change made for a security reason',
   docs: 'Documentation only changes',
   style: 'Changes that do not affect meaning (white-space, formatting, etc.)',
   refactor: 'A code change that neither fixes a bug nor adds a feature',

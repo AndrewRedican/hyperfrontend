@@ -187,7 +187,7 @@ export function createCalculateBumpStep(): FlowStep {
       }
 
       const minorTypes = config.minorTypes ?? ['feat']
-      const patchTypes = config.patchTypes ?? ['fix', 'perf', 'revert']
+      const patchTypes = config.patchTypes ?? ['fix', 'security', 'perf', 'revert']
 
       const ownBump = calculateBumpFromCommits(directCommits ?? commits, minorTypes, patchTypes, currentVersion ?? '0.0.0')
       // why: a change that reaches the project only through a dependency or infrastructure says its contents changed, not that its own interface did

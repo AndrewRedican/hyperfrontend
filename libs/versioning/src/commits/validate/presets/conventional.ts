@@ -1,10 +1,11 @@
 import type { Ruleset } from '../models/ruleset'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
-/** Conventional Commits default type enum used by the preset. */
+/** Type enum used by the preset: the Conventional Commits defaults and `security`. */
 export const CONVENTIONAL_TYPES: readonly string[] = freeze([
   'feat',
   'fix',
+  'security',
   'docs',
   'style',
   'refactor',
@@ -17,7 +18,7 @@ export const CONVENTIONAL_TYPES: readonly string[] = freeze([
 ] as const)
 
 /**
- * Default ruleset mirroring `@commitlint/config-conventional`'s baseline.
+ * Default ruleset mirroring `@commitlint/config-conventional`'s baseline, with `security` added to the types.
  *
  * | Rule               | Level | Options                  |
  * | ------------------ | ----- | ------------------------ |

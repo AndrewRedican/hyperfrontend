@@ -326,6 +326,24 @@ describe('Generate Changelog Step', () => {
       expect(perfSection).toBeDefined()
     })
 
+    it('maps security to the Security section', async () => {
+      const ctx = createMockContext({
+        nextVersion: '1.0.1',
+        bumpType: 'patch',
+        commits: [createMockCommit({ type: 'security', subject: 'bump a vulnerable dependency' })],
+      })
+
+      const result = await createGenerateChangelogStep().execute(ctx)
+
+      expect(result.stateUpdates?.changelogEntry?.sections).toEqual([
+        expect.objectContaining({
+          type: 'security',
+          heading: 'Security',
+          items: [expect.objectContaining({ description: 'bump a vulnerable dependency' })],
+        }),
+      ])
+    })
+
     it('maps docs to documentation section', async () => {
       const step = createGenerateChangelogStep()
       const ctx = createMockContext({
@@ -590,6 +608,27 @@ describe('Generate Changelog Step', () => {
       const types = entry.sections.map((s: { type: string }) => s.type)
 
       expect(types).toEqual(['features', 'fixes', 'documentation', 'chores'])
+    })
+
+    it('orders the security section after breaking changes and ahead of features', async () => {
+      const ctx = createMockContext({
+        nextVersion: '2.0.0',
+        bumpType: 'major',
+        commits: [
+          createMockCommit({ type: 'fix', subject: 'fix' }),
+          createMockCommit({ type: 'feat', subject: 'feature', breaking: true }),
+          createMockCommit({ type: 'security', subject: 'security' }),
+        ],
+      })
+
+      const result = await createGenerateChangelogStep().execute(ctx)
+
+      expect(result.stateUpdates?.changelogEntry?.sections.map((section) => section.type)).toEqual([
+        'breaking',
+        'security',
+        'features',
+        'fixes',
+      ])
     })
   })
 

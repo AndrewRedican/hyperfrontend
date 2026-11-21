@@ -5,6 +5,7 @@
  */
 export type ChangelogSectionType =
   | 'breaking'
+  | 'security'
   | 'features'
   | 'fixes'
   | 'performance'
@@ -25,6 +26,8 @@ export const SECTION_TYPE_MAP: Record<string, ChangelogSectionType> = {
   'breaking changes': 'breaking',
   breaking: 'breaking',
   'breaking change': 'breaking',
+
+  security: 'security',
 
   features: 'features',
   feature: 'features',
@@ -72,7 +75,6 @@ export const SECTION_TYPE_MAP: Record<string, ChangelogSectionType> = {
   changed: 'other',
   changes: 'other',
   removed: 'other',
-  security: 'other',
 }
 
 /**
@@ -81,6 +83,7 @@ export const SECTION_TYPE_MAP: Record<string, ChangelogSectionType> = {
  */
 export const SECTION_HEADINGS: Record<ChangelogSectionType, string> = {
   breaking: 'Breaking Changes',
+  security: 'Security',
   features: 'Features',
   fixes: 'Bug Fixes',
   performance: 'Performance',

@@ -58,6 +58,7 @@ export const DEFAULT_SERIALIZE_OPTIONS: Required<SerializeOptions> = {
   includeRawContent: false,
   sectionOrder: [
     'breaking',
+    'security',
     'features',
     'fixes',
     'performance',

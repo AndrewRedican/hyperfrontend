@@ -28,6 +28,10 @@ describe('getSectionType', () => {
     expect(getSectionType('Performance')).toBe('performance')
   })
 
+  it('maps the Security heading to security', () => {
+    expect(getSectionType('Security')).toBe('security')
+  })
+
   it('ignores upper case in a heading', () => {
     expect(getSectionType('FEATURES')).toBe('features')
   })
@@ -44,5 +48,9 @@ describe('getSectionType', () => {
 describe('SECTION_HEADINGS', () => {
   it('names the core section types', () => {
     expect(SECTION_HEADINGS).toMatchObject({ features: 'Features', fixes: 'Bug Fixes', breaking: 'Breaking Changes' })
+  })
+
+  it('names the security section Security', () => {
+    expect(SECTION_HEADINGS.security).toBe('Security')
   })
 })

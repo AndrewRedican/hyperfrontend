@@ -132,7 +132,8 @@ export function createAnalyzeCommitsStep(): FlowStep {
       const strategy = resolveStrategy(scopeFilteringConfig.strategy ?? 'hybrid', rawCommits)
 
       // why: a forced release names its bump itself, so the commits it lists are everything attributed to the package since the last release, not only the types that could have caused a bump; that is what lets a readme-only release say what changed
-      const releaseTypes = config.releaseAs === undefined ? (config.releaseTypes ?? ['feat', 'fix', 'perf', 'revert']) : keys(COMMIT_TYPES)
+      const releaseTypes =
+        config.releaseAs === undefined ? (config.releaseTypes ?? ['feat', 'fix', 'security', 'perf', 'revert']) : keys(COMMIT_TYPES)
       const parsedCommits: CommitWithRaw[] = []
 
       for (const rawCommit of rawCommits) {

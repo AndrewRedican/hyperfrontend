@@ -130,7 +130,7 @@ export function createMockGitClient(options: MockGitClientOptions = {}): GitClie
 
 /**
  * Builds the flow context the analyze-commits step executes against, with a
- * conventional preset and the four default release types already in place.
+ * conventional preset and the default release types already in place.
  *
  * @param overrides - Git client, logger, state, config, and naming swaps
  * @returns Flow context ready to hand to `step.execute`
@@ -153,7 +153,7 @@ export function createMockContext(overrides?: MockContextOverrides): FlowContext
     logger: overrides?.logger ?? createMock<Logger>(),
     config: {
       preset: 'conventional',
-      releaseTypes: ['feat', 'fix', 'perf', 'revert'],
+      releaseTypes: ['feat', 'fix', 'security', 'perf', 'revert'],
       ...overrides?.config,
     },
     state: overrides?.state ?? {},

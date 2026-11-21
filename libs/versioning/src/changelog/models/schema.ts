@@ -105,6 +105,7 @@ const changelogSectionSchema: Schema = {
       type: 'string',
       enum: [
         'breaking',
+        'security',
         'features',
         'fixes',
         'performance',
