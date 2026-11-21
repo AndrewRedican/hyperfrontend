@@ -6,7 +6,8 @@
  * [--base=<ref>] [--head=<ref>]` does the same for the tasks a change selects; `format --check|--write [--all | --files=<list>]`
  * runs prettier; `generate <generator> [...] [--dry-run]` runs a generator over the workspace;
  * `show projects [--with-target=<target>] [--json]` lists the projects; `graph <command>` prints
- * and persists the graph; `hooks run <hook>` runs the steps of a Git hook.
+ * and persists the graph; `hooks run <hook>` runs the steps of a Git hook; `push` runs the steps
+ * that come before a push, then pushes.
  *
  * @module cli/run
  */
@@ -25,7 +26,7 @@ import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { commitChanges, createFsTree } from '@hyperfrontend/project-scope/vfs'
-import { HOOKS_USAGE, runHooksCommand } from '../git-hooks/command'
+import { HOOKS_USAGE, PUSH_USAGE, runHooksCommand, runPushCommand } from '../git-hooks/command'
 import { selectAffected } from '../graph/affected/select'
 import { changeSet } from '../graph/changes'
 import { baseRecords } from '../graph/revision'
@@ -181,6 +182,7 @@ const COMMANDS: Readonly<Record<string, readonly [Command, string]>> = {
   show: [show, SHOW_USAGE],
   graph: [(argv, session) => runGraph(argv, session.root, session), GRAPH_USAGE],
   hooks: [runHooksCommand, HOOKS_USAGE],
+  push: [runPushCommand, PUSH_USAGE],
 }
 
 /** The words that ask for the usage. */
@@ -200,6 +202,7 @@ Commands:
   show projects [--with-target=<target>] [--json]      List the projects
   graph <command>                                      Print and explain the workspace graph
   hooks run <hook> [--only=<steps>] [--skip=<steps>]   Run the steps of a Git hook, as its stub does
+  push [arguments of git push]                         Run the steps that come before a push, then push
 `
 
 /**

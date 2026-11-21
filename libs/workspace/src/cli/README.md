@@ -25,6 +25,7 @@ const code = await runWorkspaceCli({
 | `show projects [--with-target=<target>] [--json]`     | Lists the project names                                                                                                                                            |
 | `graph <command>`                                     | Prints, verifies and explains the workspace graph ([`runGraph`](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/#api-runGraph))                         |
 | `hooks run <hook> [--only=<steps>] [--skip=<steps>]`  | Runs the steps `hooks.config.ts` lists for a Git hook, as the hook's stub does ([`/git-hooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/)) |
+| `push [arguments of git push]`                        | Runs the steps `hooks.config.ts` lists under push, then `git push` with the arguments given                                                                        |
 
 Every command finds the workspace root from any directory below it; generate also runs where no `hf.json` exists yet, taking the working directory as the root. A task's option is given after it as `--name=value`, read as the type the executor's schema declares, or `--name` alone for true; after a shell target the arguments reach the command. The command line's own messages go to standard error, and the exit code is 0 when the command succeeded and 1 otherwise.
 

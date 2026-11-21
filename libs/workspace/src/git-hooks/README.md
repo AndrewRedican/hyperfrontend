@@ -1,10 +1,10 @@
 # git-hooks
 
-Git hooks owned by the workspace: a typed configuration of named steps per hook, the runner behind `hf hooks run`, and the stubs Git starts.
+Git hooks owned by the workspace: a typed configuration of named steps per hook, the runner behind `hf hooks run` and `hf push`, and the stubs Git starts.
 
 ## Configuration
 
-The hooks live in `hooks.config.ts` at the workspace root, declared with [`defineHooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/#api-defineHooks). Each of `pre-commit`, `commit-msg` and `pre-push` is a list of named steps that run in order, and the first step that fails ends the hook.
+The hooks live in `hooks.config.ts` at the workspace root, declared with [`defineHooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/#api-defineHooks). Each of `pre-commit`, `commit-msg` and `pre-push` is a list of named steps that run in order, and the first step that fails ends the hook. A fourth list, named push, holds the steps `hf push` runs before it pushes.
 
 ```ts
 import { defineHooks } from '@hyperfrontend/workspace/git-hooks'
@@ -29,12 +29,18 @@ export default defineHooks({
     {
       name: 'version-check',
       run: ['hf', 'affected', '-t', 'version-check'],
-      failText: 'A library is due a version bump.',
+      failText: 'Push with npx hf push.',
     },
     {
       name: 'checks',
       run: ['hf', 'affected', '-t', 'typecheck,lint', '-t', 'test'],
       env: { CI: '1' },
+    },
+  ],
+  push: [
+    {
+      name: 'version',
+      run: ['hf', 'run', 'workspace:version:all'],
     },
   ],
 })
@@ -77,13 +83,19 @@ pre-push
   - checks         skipped by hooks.local.config.ts
 ```
 
-## Rehearsing
+## Rehearsing and pushing
 
 `hf hooks run <hook>` is what a stub starts, and by hand it rehearses the hook without committing or pushing. `--only` and `--skip` select steps by name:
 
 ```bash
 npx hf hooks run pre-push
 npx hf hooks run pre-push --only=version-check
+```
+
+`hf push` runs the push steps and then `git push` with the arguments it was given. Git resolves what a push sends before the pre-push hook runs, so a commit made inside that hook is left behind; a step that commits, such as a version bump, belongs among the push steps, where its commit is part of what the push carries and of what the pre-push hook then checks.
+
+```bash
+npx hf push --set-upstream origin feature
 ```
 
 ## Building on the parts

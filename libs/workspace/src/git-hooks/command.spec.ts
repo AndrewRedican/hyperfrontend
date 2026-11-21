@@ -9,7 +9,7 @@ import { queueMicrotask } from '@hyperfrontend/immutable-api-utils/built-in-copy
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { createFakeChildProcess } from '@hyperfrontend/testing/process'
-import { runHooksCommand } from './command'
+import { runHooksCommand, runPushCommand } from './command'
 
 jest.mock('node:child_process', () => ({
   ...jest.requireActual<typeof import('node:child_process')>('node:child_process'),
@@ -76,7 +76,7 @@ describe('the commands of the hooks', () => {
   /**
    * Runs a command of the hooks in the directory.
    *
-   * @param command - What runs: the command of the hooks
+   * @param command - Which of the two commands runs
    * @param argv - Its arguments
    * @returns The exit code and what was written
    */
@@ -181,6 +181,39 @@ describe('the commands of the hooks', () => {
       })
       await ran(runHooksCommand, ['run', 'pre-commit'])
       expect(execFileSync('git', ['show', ':a.ts'], { cwd: dir.path, encoding: 'utf8' })).toBe('a, formatted\n')
+    })
+  })
+
+  describe('push', () => {
+    it('runs the push steps, then git push with the arguments given', async () => {
+      await ran(runPushCommand, ['--set-upstream', 'origin', 'feature'])
+      expect(started().map((child) => [child.file, ...child.args])).toEqual([
+        [process.execPath, 'version.mjs'],
+        ['git', 'push', '--set-upstream', 'origin', 'feature'],
+      ])
+    })
+
+    it('exits with the code of git push', async () => {
+      children((child, script) => child.exit(script === 'push' ? 128 : 0))
+      expect((await ran(runPushCommand, [])).code).toBe(128)
+    })
+
+    it('does not push when a push step fails', async () => {
+      children((child) => child.exit(1))
+      expect([(await ran(runPushCommand, [])).code, started().map((child) => child.file)]).toEqual([1, [process.execPath]])
+    })
+
+    it('pushes straight away where the configuration lists no push step', async () => {
+      dir.write('hooks.config.ts', 'export default {}\n')
+      await ran(runPushCommand, ['origin'])
+      expect(started().map((child) => [child.file, ...child.args])).toEqual([['git', 'push', 'origin']])
+    })
+
+    it.each([['--help'], ['-h']])('prints its usage for %s and runs nothing', async (flag) => {
+      expect([await ran(runPushCommand, [flag]), started()]).toEqual([
+        { code: 0, written: 'usage: hf push [arguments of git push ...]\n' },
+        [],
+      ])
     })
   })
 })

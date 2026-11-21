@@ -1,6 +1,8 @@
 /**
- * The command the hooks add to the command line: `hooks run <hook>` is what a stub starts, and by
- * hand it rehearses the hook without committing or pushing.
+ * The two commands the hooks add to the command line. `hooks run <hook>` is what a stub starts,
+ * and by hand it rehearses the hook without committing or pushing; `push` runs the steps the
+ * configuration lists under `push` and then pushes, so a commit those steps make is part of what
+ * the push carries.
  *
  * @module git-hooks/command
  */
@@ -23,6 +25,9 @@ import { fullyStaged, gitIn, restage } from './staged'
 
 /** What the command line expects. */
 export const HOOKS_USAGE = 'usage: hf hooks run <hook> [--only=<step[,step]>] [--skip=<step[,step]>] [arguments of the hook ...]'
+
+/** What the command line expects. */
+export const PUSH_USAGE = 'usage: hf push [arguments of git push ...]'
 
 /** Where a command of the hooks runs and writes. */
 export interface HooksSession {
@@ -54,6 +59,9 @@ interface RunRequest {
 
 /** The hooks the command line runs by name. */
 const RUNNABLE: readonly string[] = [...GIT_HOOKS, PUSH_STEPS]
+
+/** The arguments of `push` that ask what it takes, which no step runs for. */
+const HELP = ['--help', '-h']
 
 /** The flags `hooks run` takes. */
 const RUN_FLAGS = ['only', 'skip']
@@ -156,4 +164,31 @@ async function runNamed(request: RunRequest, session: HooksSession): Promise<num
  */
 export function runHooksCommand(argv: readonly string[], session: HooksSession): Promise<number> {
   return runNamed(parseRun(argv), session)
+}
+
+/**
+ * Runs `push`: the configuration's `push` steps, then `git push` with the arguments given. The
+ * pre-push hook then runs as on any push, on the commits the push carries. Asked for help, it
+ * prints its usage and runs nothing.
+ *
+ * @param argv - The arguments after `push`, passed to `git push`
+ * @param session - The workspace root and the stream written to
+ * @returns The exit code of the first step that failed, else of `git push`
+ * @throws {Error} A refusal for a configuration it cannot load
+ *
+ * @example Pushing a branch for the first time
+ * ```typescript
+ * import { runPushCommand } from '@hyperfrontend/workspace/git-hooks'
+ *
+ * const code = await runPushCommand(['--set-upstream', 'origin', 'feature'], { root: process.cwd(), sink: process.stderr })
+ * // => 0 once the push steps succeeded and git pushed
+ * ```
+ */
+export async function runPushCommand(argv: readonly string[], session: HooksSession): Promise<number> {
+  if (argv.some((arg) => HELP.includes(arg))) {
+    session.sink.write(`${PUSH_USAGE}\n`)
+    return 0
+  }
+  const code = await runNamed({ hook: PUSH_STEPS, args: [], only: [], skip: [] }, session)
+  return code === 0 ? started(session.root, 'git', ['push', ...argv], {}) : code
 }

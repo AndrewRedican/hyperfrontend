@@ -1,5 +1,5 @@
 /**
- * Git hooks owned by the workspace: the typed configuration of their steps, the runner behind `hf hooks run`, and the stubs Git starts.
+ * Git hooks owned by the workspace: the typed configuration of their steps, the runner behind `hf hooks run` and `hf push`, and the stubs Git starts.
  *
  * @module @hyperfrontend/workspace/git-hooks
  */
@@ -12,7 +12,7 @@ export type { HookHost, HookRun } from './run'
 export type { SkipSources } from './skips'
 export type { Git } from './staged'
 export type { StubPlace, StubPlan } from './stubs'
-export { HOOKS_USAGE, runHooksCommand } from './command'
+export { HOOKS_USAGE, PUSH_USAGE, runHooksCommand, runPushCommand } from './command'
 export { checkHooks, checkLocalHooks, defineHooks, defineLocalHooks, GIT_HOOKS, PUSH_STEPS, stepNames } from './config'
 export { HOOKS_CONFIG, loadHooks, LOCAL_HOOKS_CONFIG } from './load'
 export { launchOf } from './program'
