@@ -69,8 +69,6 @@ checkout.open({ displayMode: DisplayMode.Dialog })
   </a>
 </p>
 
-It is organized into independent subpath entry points so consumers import only the surface they need.
-
 ### Key Features
 
 - **[Host SDK](https://www.hyperfrontend.dev/docs/libraries/features/host/)** - Embed features with a shell factory, display modes (embedded, dialog, popup, standalone), and open/close lifecycle.
@@ -127,6 +125,23 @@ shell.open()
 shell.send('set-timezone', { tz: 'UTC' })
 ```
 
+**From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
+
+```bash
+# scaffold the hostee glue into an app
+npx @hyperfrontend/features init
+# generate and bundle a publishable shell package
+npx @hyperfrontend/features build --protocol v4
+# serve apps with the debug UI
+npx @hyperfrontend/features dev
+# serve a built site for production
+npx @hyperfrontend/features serve --root dist
+```
+
+[`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.
+
+## Runtime Contract
+
 Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports ([`display.modes`](https://www.hyperfrontend.dev/docs/libraries/features/#api-DisplayConfig-prop-modes) in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open.
 
 At runtime the SDK measures the host-side space and reports it to the feature as exact pixels (the initial size travels with the mode announcement itself), and frames stay hidden until the session opens. In dialog mode the feature draws its own dialog box inside a transparent full-viewport pane and backdrop/Escape dismissal is coordinated for you. The [host SDK docs](https://www.hyperfrontend.dev/docs/libraries/features/host/) cover the modes one by one.
@@ -154,21 +169,6 @@ A refused handshake ends at once. Whichever gate refuses (contract, policy, vers
 Contract entries with a [`schema`](https://www.hyperfrontend.dev/docs/libraries/features/#api-ActionDescription-prop-schema) are enforced on both ends: [`send`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) validates the payload against the sender's own [`emitted`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-emitted) schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own [`accepted`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-accepted) schema. An invalid payload is dropped and surfaced as an [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
 
 What each of these controls is actually worth, and which parts of an integration's security remain the operator's job rather than the SDK's, is stated once, in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
-
-**From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
-
-```bash
-# scaffold the hostee glue into an app
-npx @hyperfrontend/features init
-# generate and bundle a publishable shell package
-npx @hyperfrontend/features build --protocol v4
-# serve apps with the debug UI
-npx @hyperfrontend/features dev
-# serve a built site for production
-npx @hyperfrontend/features serve --root dist
-```
-
-[`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.
 
 ## API Overview
 
@@ -227,6 +227,12 @@ Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/librari
 **Global variables:** [`HyperfrontendFeaturesHost`](https://www.hyperfrontend.dev/docs/libraries/features/host/), [`HyperfrontendFeaturesHostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/)
 
 The package also installs the `hf` command.
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/features)**
 
 ## License
 
