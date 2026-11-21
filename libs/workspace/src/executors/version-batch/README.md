@@ -1,6 +1,6 @@
 # version-batch
 
-Versions every library a change between two refs makes due a release, in dependency order, and records the bumps in one commit. It stands down on the base branch itself, so a pre-push hook can run it on every branch.
+Versions every library a change between two refs makes due a release, in dependency order, and records the bumps in one commit. It stands down on the base branch itself, so a step that runs before every push, such as a push step of `hooks.config.ts`, can run it on every branch.
 
 ```json
 {

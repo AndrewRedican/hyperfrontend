@@ -18,4 +18,4 @@ Compares a project's manifest and changelog with what its commits call for, with
 | `--scopeFiltering`      | Which commit scopes count for the project                                                              |
 | `--verbose, --quiet`    | More or less output                                                                                    |
 
-A failing check names the remedy: run the project's version target and push again.
+A failing check names the remedy: run the project's version target and push again. In a workspace whose push steps run the version batch, `hf push` does both.
