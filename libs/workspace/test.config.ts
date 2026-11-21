@@ -21,6 +21,7 @@ const config: TestConfig = {
     'src/generators/index.ts',
     'src/generators/*/index.ts',
     'src/generators/*/options.ts',
+    'src/git-hooks/index.ts',
     'src/graph/index.ts',
     'src/lint/index.ts',
     'src/progress/index.ts',

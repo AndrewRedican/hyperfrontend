@@ -75,6 +75,7 @@
     "./generators/move": "./src/generators/move/index.js",
     "./generators/rename": "./src/generators/rename/index.js",
     "./generators/workspace": "./src/generators/workspace/index.js",
+    "./git-hooks": "./src/git-hooks/index.js",
     "./graph": "./src/graph/index.js",
     "./hooks": "./src/hooks/index.js",
     "./lint": "./src/lint/index.js",

@@ -15,15 +15,16 @@ const code = await runWorkspaceCli({
 
 ## Commands
 
-| Command                                               | What it does                                                                                                                               |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `run <project>:<target> [--name=value ...]`           | Runs that one task alone, without the tasks it depends on                                                                                  |
-| `run-many -t <targets> (-p <names> \| --all)`         | Runs the tasks and their prerequisites in order, skipping the dependents of a failure; each `-t` is a stage                                |
-| `affected -t <targets> [--base=<ref>] [--head=<ref>]` | Runs the tasks the change selects, from the merge base with the default branch unless a base is given; each `-t` is a stage                |
-| `format --check\|--write [--all \| --files=<list>]`   | Runs prettier on the changed files, every file, or the files named                                                                         |
-| `generate <generator> [--option=value ...]`           | Runs a generator of the workspace or of an installed package, by bare name or as `<package>:<name>`                                        |
-| `show projects [--with-target=<target>] [--json]`     | Lists the project names                                                                                                                    |
-| `graph <command>`                                     | Prints, verifies and explains the workspace graph ([`runGraph`](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/#api-runGraph)) |
+| Command                                               | What it does                                                                                                                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `run <project>:<target> [--name=value ...]`           | Runs that one task alone, without the tasks it depends on                                                                                                          |
+| `run-many -t <targets> (-p <names> \| --all)`         | Runs the tasks and their prerequisites in order, skipping the dependents of a failure; each `-t` is a stage                                                        |
+| `affected -t <targets> [--base=<ref>] [--head=<ref>]` | Runs the tasks the change selects, from the merge base with the default branch unless a base is given; each `-t` is a stage                                        |
+| `format --check\|--write [--all \| --files=<list>]`   | Runs prettier on the changed files, every file, or the files named                                                                                                 |
+| `generate <generator> [--option=value ...]`           | Runs a generator of the workspace or of an installed package, by bare name or as `<package>:<name>`                                                                |
+| `show projects [--with-target=<target>] [--json]`     | Lists the project names                                                                                                                                            |
+| `graph <command>`                                     | Prints, verifies and explains the workspace graph ([`runGraph`](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/#api-runGraph))                         |
+| `hooks run <hook> [--only=<steps>] [--skip=<steps>]`  | Runs the steps `hooks.config.ts` lists for a Git hook, as the hook's stub does ([`/git-hooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/)) |
 
 Every command finds the workspace root from any directory below it; generate also runs where no `hf.json` exists yet, taking the working directory as the root. A task's option is given after it as `--name=value`, read as the type the executor's schema declares, or `--name` alone for true; after a shell target the arguments reach the command. The command line's own messages go to standard error, and the exit code is 0 when the command succeeded and 1 otherwise.
 
