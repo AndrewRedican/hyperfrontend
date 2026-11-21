@@ -251,5 +251,5 @@ flowchart TB
 | `@hyperfrontend/testing` | `0.5.3` |
 | `@hyperfrontend/time-utils` | `1.0.4` |
 | `@hyperfrontend/ui-utils` | `0.0.12` |
-| `@hyperfrontend/versioning` | `0.10.3` |
+| `@hyperfrontend/versioning` | `0.11.0` |
 | `@hyperfrontend/workspace` | `0.5.0` |

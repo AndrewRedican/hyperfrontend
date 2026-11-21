@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0](https://github.com/AndrewRedican/hyperfrontend/compare/92d4d378897da6165a87f5ae6334a0e60e9bc229...10275f0f99c6dd64b9f56158790585b2b5627863) - 2026-11-21
+
+### Features
+
+- add a security commit type that releases a patch
+
 ## [0.10.3](https://github.com/AndrewRedican/hyperfrontend/compare/ec05257ef2e7854b22a608317abbeb8fd196f960...344550374035f097ad1bdbac4075c46c756e235d) - 2026-11-16
 
 ### Bug Fixes

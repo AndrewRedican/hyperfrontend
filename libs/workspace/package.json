@@ -11,7 +11,7 @@
     "@hyperfrontend/linter": "0.3.4",
     "@hyperfrontend/logging": "1.0.4",
     "@hyperfrontend/project-scope": "0.6.1",
-    "@hyperfrontend/versioning": "0.10.3",
+    "@hyperfrontend/versioning": "0.11.0",
     "tslib": "2.8.1",
     "typescript": "5.9.3"
   },

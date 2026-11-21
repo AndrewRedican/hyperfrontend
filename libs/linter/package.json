@@ -6,7 +6,7 @@
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "1.0.6",
     "@hyperfrontend/json-utils": "1.1.5",
-    "@hyperfrontend/versioning": "0.10.3"
+    "@hyperfrontend/versioning": "0.11.0"
   },
   "bin": {
     "hf-lint": "./bin/hf-lint.mjs"
