@@ -434,6 +434,7 @@ const supportingLibraries: NavItem[] = [
         slug: 'generators',
         href: '/docs/libraries/workspace/generators',
         children: [
+          { slug: 'hooks', href: '/docs/libraries/workspace/generators/hooks' },
           { slug: 'library', href: '/docs/libraries/workspace/generators/library' },
           { slug: 'make-publishable', href: '/docs/libraries/workspace/generators/make-publishable' },
           { slug: 'move', href: '/docs/libraries/workspace/generators/move' },
@@ -441,6 +442,7 @@ const supportingLibraries: NavItem[] = [
           { slug: 'workspace', href: '/docs/libraries/workspace/generators/workspace' },
         ],
       },
+      { slug: 'git-hooks', href: '/docs/libraries/workspace/git-hooks' },
       { slug: 'graph', href: '/docs/libraries/workspace/graph' },
       { slug: 'hooks', href: '/docs/libraries/workspace/hooks' },
       { slug: 'lint', href: '/docs/libraries/workspace/lint' },
