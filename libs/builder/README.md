@@ -117,7 +117,7 @@ Or build straight from a JSON config with the bundled CLI:
 
 ```bash
 # Reads ./builder.config.json by default
-hf-build --config ./builder.config.json --verbose
+npx hf-build --config ./builder.config.json --verbose
 ```
 
 Need finer control? Compose the phases yourself:
@@ -126,8 +126,8 @@ Need finer control? Compose the phases yourself:
 import { createBuildContext, runBundlePhase, runPackagePhase } from '@hyperfrontend/builder'
 
 const ctx = createBuildContext(config)
-await runBundlePhase(ctx, config)
-await runPackagePhase(ctx, config, /* formats */ [])
+const outputs = await runBundlePhase(ctx, config)
+await runPackagePhase(ctx, config, outputs)
 ```
 
 ## API Overview
@@ -175,6 +175,12 @@ Every config field, phase signature and result type is in the [API reference](ht
 | CJS    | `index.cjs` |       ❌       |
 
 The package installs the `hf-build` command, and ships Node SEA native binaries alongside it for `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, and `win32-x64`.
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/builder)**
 
 ## License
 
