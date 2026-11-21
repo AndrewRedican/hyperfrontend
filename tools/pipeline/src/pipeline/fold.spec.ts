@@ -3,6 +3,7 @@ import type { PlanReason, PlanTask } from './model'
 import { after as afterAll } from 'node:test'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { libraryOfE2e } from '@hyperfrontend/workspace/graph'
 import { createPipelineWorkspace, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
@@ -26,6 +27,9 @@ afterAll(() => workspace.remove())
 
 /** The files a root project is read from. */
 const ROOT_MANIFESTS = ['project.json', 'package.json', 'package-lock.json']
+
+/** The builds of the two demos, as builds the change can alter. */
+const SHIPPED = createSet(['demo-one:build', 'demo-two:build'])
 
 /**
  * A project of the fixture.
@@ -309,12 +313,19 @@ describe('linuxTasks', () => {
     ])
   })
 
-  it('adds the deploy after the build of a demo that declares a Railway service on main', () => {
-    expect(placed(linuxTasks(graph, selection('demo-one:build'), true))).toEqual([
+  it('adds the deploy after a build the change can alter, of a demo that declares a Railway service, on main', () => {
+    expect(placed(linuxTasks(graph, selection('demo-one:build'), true, false, SHIPPED))).toEqual([
       'demo-one:build in demo-one',
       'demo-one:deploy in demo-one',
       'demo-one:install in demo-one',
       'workspace:provision in workspace',
+    ])
+  })
+
+  it('leaves a demo undeployed, and nothing provisioned, after a build the change cannot alter', () => {
+    expect(placed(linuxTasks(graph, selection('demo-one:build'), true))).toEqual([
+      'demo-one:build in demo-one',
+      'demo-one:install in demo-one',
     ])
   })
 
@@ -339,7 +350,7 @@ describe('linuxTasks', () => {
   it('leaves the provision out when no project owns the Railway configuration', () => {
     const other = createPipelineWorkspace(fromEntries(entries(PIPELINE_WORKSPACE).filter(([file]) => !ROOT_MANIFESTS.includes(file))))
     try {
-      expect(placed(linuxTasks(other.graph, selection('demo-one:build'), true))).toEqual([
+      expect(placed(linuxTasks(other.graph, selection('demo-one:build'), true, false, SHIPPED))).toEqual([
         'demo-one:build in demo-one',
         'demo-one:deploy in demo-one',
         'demo-one:install in demo-one',
@@ -350,14 +361,14 @@ describe('linuxTasks', () => {
   })
 
   it('drops the deploy off main', () => {
-    expect(placed(linuxTasks(graph, selection('demo-one:build'), false))).toEqual([
+    expect(placed(linuxTasks(graph, selection('demo-one:build'), false, false, SHIPPED))).toEqual([
       'demo-one:build in demo-one',
       'demo-one:install in demo-one',
     ])
   })
 
   it('leaves a built demo that declares no Railway service undeployed', () => {
-    expect(placed(linuxTasks(graph, selection('demo-two:build'), true))).toEqual([
+    expect(placed(linuxTasks(graph, selection('demo-two:build'), true, false, SHIPPED))).toEqual([
       'demo-one:install in demo-one',
       'demo-one:verify in demo-one',
       'demo-two:build in demo-two',
@@ -366,7 +377,7 @@ describe('linuxTasks', () => {
   })
 
   it('deploys through the deploy script with the service in the environment', () => {
-    const deploy = linuxTasks(graph, selection('demo-one:build'), true).find((task) => task.target === 'deploy') as PlanTask
+    const deploy = linuxTasks(graph, selection('demo-one:build'), true, false, SHIPPED).find((task) => task.target === 'deploy') as PlanTask
     expect({ command: deploy.command, env: deploy.env, weight: deploy.weight, reasons: deploy.reasons }).toEqual({
       command: ['node', 'tools/pipeline/scripts/railway-deploy.mjs'],
       env: { HF_DEPLOY_SERVICE: 'one' },
@@ -521,7 +532,7 @@ describe('withNeeds across projects', () => {
   })
 
   it('runs a deploy after every other task of its chain', () => {
-    const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-one:build', 'demo-one:typecheck'), true))
+    const tasks = withNeeds(graph, linuxTasks(graph, selection('demo-one:build', 'demo-one:typecheck'), true, false, SHIPPED))
     expect(tasks.find((task) => task.id === 'demo-one:deploy')?.needs).toEqual([
       'demo-one:build',
       'demo-one:install',
@@ -531,7 +542,7 @@ describe('withNeeds across projects', () => {
   })
 
   it('runs the provision after every other task of the workspace chain', () => {
-    const tasks = withNeeds(graph, linuxTasks(graph, selection('workspace:lint', 'demo-one:build'), true))
+    const tasks = withNeeds(graph, linuxTasks(graph, selection('workspace:lint', 'demo-one:build'), true, false, SHIPPED))
     expect(tasks.find((task) => task.id === 'workspace:provision')?.needs).toEqual(['workspace:lint'])
   })
 })

@@ -5,7 +5,14 @@ import type { ChangeSources } from './shipped-change-commits'
 import { execFileSync } from 'node:child_process'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { changeSet, ENGINE_INPUT, EXECUTOR_SHARED_INPUT, previousWorkspaceFile, selectAffected } from '../../../graph'
+import {
+  changeSet,
+  ENGINE_INPUT,
+  EXECUTOR_SHARED_INPUT,
+  previousBaseTsconfigFile,
+  previousWorkspaceFile,
+  selectAffected,
+} from '../../../graph'
 import { BUILD_TARGET, createShippedChangeResolver } from './shipped-change-commits'
 
 /** The byte that opens each commit in the log format below, which no path or hash contains. */
@@ -56,6 +63,7 @@ export function selectReleaseBuilds(graph: WorkspaceGraph, workspaceRoot: string
       changes,
       targets: [BUILD_TARGET],
       previousWorkspace: previousWorkspaceFile(workspaceRoot, changes),
+      previousBaseTsconfig: previousBaseTsconfigFile(workspaceRoot, changes),
       // why: the engine runs the build and the shared helpers find tools and read manifests; neither shapes what the build emits, so a change to them releases no library but the one shipping them
       ignoredInputs: [ENGINE_INPUT, EXECUTOR_SHARED_INPUT],
     }).get(BUILD_TARGET)?.selected ?? []

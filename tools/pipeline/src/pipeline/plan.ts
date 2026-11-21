@@ -1,17 +1,26 @@
 /**
  * The plan of a change: the owned selection of every pipeline target, the tasks the pipeline adds
  * (every task a planned task needs first, the probes and smokes after the builds, and on `main`
- * the deploys and the provision they wait on), the
+ * the deploys of the demos whose build the change can alter and the provision they wait on), the
  * registry drift of `main`, and the chains the two environments run, ranked for the scheduler.
  *
  * @module pipeline/plan
  */
 
-import type { AffectedSet, ChangeSet, PackageManifest, WorkspaceFile, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
+import type {
+  AffectedSet,
+  BaseTsconfig,
+  ChangeSet,
+  PackageManifest,
+  SelectOptions,
+  WorkspaceFile,
+  WorkspaceGraph,
+} from '@hyperfrontend/workspace/graph'
 import type { Environment, Plan, PlanReason, SkippedTask } from './model'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { compareText, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { compareText, ENGINE_INPUT, EXECUTOR_SHARED_INPUT, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
 import { ENVIRONMENT_JOB_FILES, HF_ENTRY, RAILWAY_CONFIG } from './commands'
 import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, siblingTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
@@ -19,6 +28,9 @@ import { rankChains } from './order'
 
 /** The targets the pipeline selects on every change. */
 export const CI_TARGETS = freeze(['typecheck', 'lint', 'test', 'build', 'e2e'] as const)
+
+/** The target whose output a deploy ships. */
+const BUILD_TARGET = 'build'
 
 /** What a plan needs. */
 export interface PlanOptions {
@@ -36,6 +48,8 @@ export interface PlanOptions {
   readonly previous?: WorkspaceGraph
   /** The `hf.json` at the base, which lets a change to it select only the tasks that resolve differently afterwards. */
   readonly previousWorkspace?: WorkspaceFile
+  /** The `tsconfig.base.json` at the base, which lets a change to its path aliases alone select only the tasks reading a file that imports through an alias that differs. */
+  readonly previousBaseTsconfig?: BaseTsconfig
 }
 
 /** The selected tasks and the skipped decisions of one plan. */
@@ -83,16 +97,44 @@ function selectAll(graph: WorkspaceGraph, targets: readonly string[]): Selection
  * @returns The selected tasks with their reasons and the skipped decisions
  */
 function selectChange(options: PlanOptions, targets: readonly string[]): Selection {
-  const { graph } = options
-  const changes = options.changes as ChangeSet
   const selection: Selection = { selected: createMap(), skipped: [] }
-  const sets = selectAffected({ graph, changes, targets, previous: options.previous, previousWorkspace: options.previousWorkspace })
+  const sets = selectAffected({ ...revisions(options), targets })
   for (const target of targets) {
     const set = sets.get(target) as AffectedSet
     for (const decision of set.selected) selection.selected.set(decision.task, [...decision.reasons])
     selection.skipped.push(...set.skipped)
   }
   return selection
+}
+
+/**
+ * What every selection of a change reads: the graph, the change set and the base's records.
+ *
+ * @param options - The options of a plan of a change
+ * @returns The graph, the change set, and the graph and configuration at the base
+ */
+function revisions(options: PlanOptions): Omit<SelectOptions, 'targets'> {
+  return {
+    graph: options.graph,
+    changes: options.changes as ChangeSet,
+    previous: options.previous,
+    previousWorkspace: options.previousWorkspace,
+    previousBaseTsconfig: options.previousBaseTsconfig,
+  }
+}
+
+/**
+ * The builds whose output the change can alter, as a release reads them: the selection of the
+ * build target with the engine that runs every task and the helpers every executor shares left
+ * out, since neither shapes what a build emits. A plan of everything has no change to ship.
+ *
+ * @param options - The graph, the change and whether the plan is main's
+ * @returns The ids of those build tasks, none off `main` or for a plan of everything
+ */
+function shippedBuilds(options: PlanOptions): Set<string> {
+  if (!options.main || options.changes === null) return createSet()
+  const builds = selectAffected({ ...revisions(options), targets: [BUILD_TARGET], ignoredInputs: [ENGINE_INPUT, EXECUTOR_SHARED_INPUT] })
+  return createSet((builds.get(BUILD_TARGET) as AffectedSet).selected.map((decision) => decision.task))
 }
 
 /**
@@ -159,7 +201,7 @@ export function createPlan(options: PlanOptions): Plan {
   selectDrift(options.graph, selection, targets, drift)
   selectEnvironmentJobs(options.graph, selection, options.changes)
   const railwayChanged = (options.changes?.changes ?? []).some((change) => change.path === RAILWAY_CONFIG)
-  const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged)
+  const linux = linuxTasks(options.graph, selection.selected, options.main, railwayChanged, shippedBuilds(options))
   const siblings = [Environments.Windows, Environments.MacOS].flatMap((environment) => siblingTasks(options.graph, linux, environment))
   const tasks = withNeeds(options.graph, [...linux, ...siblings])
   const chains = rankChains(options.graph, buildChains(tasks))

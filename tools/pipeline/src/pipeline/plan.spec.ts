@@ -1,5 +1,6 @@
 import type { Plan } from './model'
 import { after as afterAll } from 'node:test'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createPipelineWorkspace, modified, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
 import { CI_TARGETS, createPlan } from './plan'
@@ -8,6 +9,14 @@ const workspace = createPipelineWorkspace()
 const { graph } = workspace
 
 afterAll(() => workspace.remove())
+
+/** The fixture's workspace file, as far as a spec extends it. */
+interface FixtureWorkspaceFile {
+  /** The named inputs. */
+  readonly namedInputs: Readonly<Record<string, readonly string[]>>
+  /** The defaults of each target. */
+  readonly targetDefaults: Readonly<Record<string, unknown>>
+}
 
 /**
  * The chains of a plan as one line each.
@@ -126,6 +135,32 @@ describe('createPlan', () => {
       'linux demo-two: install build',
       'linux workspace: provision',
     ])
+  })
+
+  it('plans no deploy of a demo built only because the engine running it changed', () => {
+    const file = parse(PIPELINE_WORKSPACE['hf.json'] as string) as FixtureWorkspaceFile
+    const engined = createPipelineWorkspace({
+      ...PIPELINE_WORKSPACE,
+      'hf.json': stringify({
+        ...file,
+        namedInputs: { ...file.namedInputs, engine: ['{projectRoot}/src/**/*'] },
+        targetDefaults: { ...file.targetDefaults, install: { inputs: ['default', { projects: 'tool-ling', input: 'engine' }] } },
+      }),
+    })
+    try {
+      const plan = createPlan({ graph: engined.graph, changes: modified('tools/tooling/src/publish.ts'), main: true })
+      expect(chains(plan).filter((chain) => chain.includes('demo-') || chain.includes('provision'))).toEqual([
+        'linux demo-one: install typecheck build verify',
+        'linux demo-two: install build',
+      ])
+    } finally {
+      engined.remove()
+    }
+  })
+
+  it('plans no deploy on main when everything is planned, since no change ships', () => {
+    const targets = createPlan({ graph, changes: null, main: true }).chains.flatMap((chain) => chain.tasks.map((task) => task.target))
+    expect(targets.filter((target) => target === 'deploy' || target === 'provision')).toEqual([])
   })
 
   it('plans the provision alone on main when only the Railway configuration changed', () => {

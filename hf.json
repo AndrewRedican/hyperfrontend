@@ -5,6 +5,7 @@
         "default",
         "{workspaceRoot}/lint.config.ts",
         "{workspaceRoot}/lint.base.config.ts",
+        "{workspaceRoot}/tsconfig.base.json",
         "{workspaceRoot}/package.json",
         "{projectRoot}/package.json",
         "{projectRoot}/lint.config.ts",
@@ -94,6 +95,7 @@
       }
     },
     "publish": {
+      "inputs": ["{projectRoot}/package.json"],
       "dependsOn": ["build"],
       "executor": "@hyperfrontend/workspace:publish",
       "options": {
@@ -143,7 +145,7 @@
     "e2e": {
       "inputs": [
         "default",
-        "^default",
+        "^production",
         {
           "projects": "lib-workspace",
           "input": "e2eExecutor"
@@ -223,7 +225,20 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
     ],
     "code": ["default", "!{projectRoot}/**/*.md"],
-    "engine": ["{projectRoot}/src/runner/**/*", "{projectRoot}/src/hooks/**/*", "{projectRoot}/src/cli/**/*", "noTestMaterial"],
+    "engine": [
+      "{projectRoot}/src/runner/**/*",
+      "{projectRoot}/src/hooks/**/*",
+      "{projectRoot}/src/cli/**/*",
+      "!{projectRoot}/src/runner/many.ts",
+      "!{projectRoot}/src/runner/self.ts",
+      "!{projectRoot}/src/runner/format.ts",
+      "!{projectRoot}/src/runner/generate.ts",
+      "!{projectRoot}/src/runner/generators.ts",
+      "!{projectRoot}/src/runner/show.ts",
+      "!{projectRoot}/src/cli/tasks.ts",
+      "!{projectRoot}/src/cli/graph.ts",
+      "noTestMaterial"
+    ],
     "executorShared": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]
   },
   "lint": {

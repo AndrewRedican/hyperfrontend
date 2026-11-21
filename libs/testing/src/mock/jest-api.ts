@@ -143,6 +143,6 @@ export const jest: JestApi = {
     // why: a module with a replacement is reachable only through the namespace that replacement published, since requiring it again would return the replacement.
     const published = context.actuals.get(resolveActualUrl(createRequire(context.specUrl), specifier, context.specUrl))
     if (published) return published as TModule
-    return createRequire(context.specUrl)(specifier) as TModule
+    return createRequire(context.specUrl)(/* hf-graph: opaque */ specifier) as TModule
   },
 }

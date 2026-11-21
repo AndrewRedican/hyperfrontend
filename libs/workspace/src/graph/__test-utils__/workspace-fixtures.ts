@@ -224,6 +224,29 @@ function withBuildInput(text: string): string {
   })
 }
 
+/** The fixture's base tsconfig, as far as it is edited. */
+interface FixtureBaseTsconfig {
+  /** The compiler options. */
+  readonly compilerOptions: FixtureCompilerOptions
+}
+
+/** The compiler options of the fixture's base tsconfig. */
+interface FixtureCompilerOptions {
+  /** The path aliases. */
+  readonly paths: Record<string, readonly string[]>
+}
+
+/**
+ * The base tsconfig with one more alias.
+ *
+ * @param text - The file as the fixture writes it
+ * @returns The file with an alias for the testing library's extra module
+ */
+function withAlias(text: string): string {
+  const { compilerOptions } = parse(text) as FixtureBaseTsconfig
+  return json({ compilerOptions: { paths: { ...compilerOptions.paths, '@fixture/testing/extra': ['libs/testing/src/extra.ts'] } } })
+}
+
 /**
  * A tree with one file replaced or added.
  *
@@ -349,6 +372,12 @@ export const FIXTURES: readonly WorkspaceFixture[] = freeze([
     'hf.json gives the build target one more input; the builds resolve differently, the other targets as before',
     edit(FIXTURE_WORKSPACE, 'hf.json', withBuildInput(FIXTURE_WORKSPACE['hf.json'] as string)),
     ['M\thf.json']
+  ),
+  scenario(
+    'alias-edit',
+    'tsconfig.base.json gains an alias; only a task reading a file that imports through it is affected',
+    edit(FIXTURE_WORKSPACE, 'tsconfig.base.json', withAlias(FIXTURE_WORKSPACE['tsconfig.base.json'] as string)),
+    ['M\ttsconfig.base.json']
   ),
   scenario(
     'renamed-module',

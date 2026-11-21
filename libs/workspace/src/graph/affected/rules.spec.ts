@@ -1,6 +1,17 @@
 import type { ProjectRecord } from '../model'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { changedInput, configurationKind, dependentTask, fallback, globalConfig, isGlobalConfig, reached, skipped } from './rules'
+import {
+  aliasChanged,
+  changedInput,
+  configurationKind,
+  dependentTask,
+  fallback,
+  globalConfig,
+  isGlobalConfig,
+  reached,
+  sameAliases,
+  skipped,
+} from './rules'
 
 const lib: ProjectRecord = {
   name: 'lib-a',
@@ -37,6 +48,26 @@ describe('configurationKind', () => {
     ['docs/guide.md', root, null],
   ])('classifies %s', (path, project, kind) => {
     expect(configurationKind(path, project)).toBe(kind)
+  })
+})
+
+describe('the reasons of a change to the path aliases', () => {
+  it('name the alias, the file read and its import for a task selected', () => {
+    expect(aliasChanged('tsconfig.base.json', 'lib-a:test', '@fixture/b/csv', 'libs/a/src/x.ts', '@fixture/b/csv')).toEqual({
+      rule: 'alias-changed',
+      file: 'tsconfig.base.json',
+      path: ['file:libs/a/src/x.ts'],
+      message: 'tsconfig.base.json changed the alias @fixture/b/csv; lib-a:test reads libs/a/src/x.ts, which imports @fixture/b/csv',
+    })
+  })
+
+  it('name the file for a task left out', () => {
+    expect(sameAliases('tsconfig.base.json', 'lib-a:test')).toEqual({
+      rule: 'same-aliases',
+      file: 'tsconfig.base.json',
+      path: [],
+      message: 'tsconfig.base.json changed only in its path aliases, and no file lib-a:test reads imports through one that differs',
+    })
   })
 })
 

@@ -20,7 +20,7 @@ import { selectAffected } from '../graph/affected/select'
 import { workspaceGraph } from '../graph/build'
 import { changeSet, DEFAULT_BASE, resolveBase } from '../graph/changes'
 import { compareText } from '../graph/order'
-import { previousGraph, previousWorkspaceFile } from '../graph/revision'
+import { baseRecords } from '../graph/revision'
 import { printableProject } from '../graph/store/serialize'
 import { buildState, stateStatus, verifyState } from '../graph/store/state'
 import { refusal } from '../runner/refusal'
@@ -127,13 +127,7 @@ function build(root: string, force: boolean, report: (line: string) => void): Wo
  */
 function affected(root: string, graph: WorkspaceGraph, target: string, revisions: Revisions): AffectedSet {
   const changes = changeSet(root, verifiedBase(root, revisions.base), revisions.head)
-  const sets = selectAffected({
-    graph,
-    changes,
-    targets: [target],
-    previous: previousGraph(root, changes),
-    previousWorkspace: previousWorkspaceFile(root, changes),
-  })
+  const sets = selectAffected({ graph, changes, targets: [target], ...baseRecords(root, changes) })
   return sets.get(target) as AffectedSet
 }
 

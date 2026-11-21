@@ -12,21 +12,21 @@ import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { selectAffected } from '../graph/affected/select'
 import { workspaceGraph } from '../graph/build'
 import { changeSet, resolveBase } from '../graph/changes'
-import { previousGraph } from '../graph/revision'
+import { baseRecords } from '../graph/revision'
 import { buildState, stateStatus, verifyState } from '../graph/store/state'
 import { runGraph } from './graph'
 
 jest.mock('../graph/affected/select', () => ({ selectAffected: jest.fn() }))
 jest.mock('../graph/build', () => ({ workspaceGraph: jest.fn() }))
 jest.mock('../graph/changes', () => ({ changeSet: jest.fn(), DEFAULT_BASE: 'origin/main', resolveBase: jest.fn() }))
-jest.mock('../graph/revision', () => ({ previousGraph: jest.fn(), previousWorkspaceFile: jest.fn() }))
+jest.mock('../graph/revision', () => ({ baseRecords: jest.fn() }))
 jest.mock('../graph/store/state', () => ({ buildState: jest.fn(), stateStatus: jest.fn(), verifyState: jest.fn() }))
 
 const mockSelect = selectAffected as Mock
 const mockGraph = workspaceGraph as Mock
 const mockChanges = changeSet as Mock
 const mockResolveBase = resolveBase as Mock
-const mockPrevious = previousGraph as Mock
+const mockBase = baseRecords as Mock
 const mockBuild = buildState as Mock
 const mockStatus = stateStatus as Mock
 const mockVerify = verifyState as Mock
@@ -178,12 +178,12 @@ function status(difference: Partial<StateStatus> = {}): StateStatus {
 }
 
 beforeEach(() => {
-  for (const mock of [mockSelect, mockGraph, mockChanges, mockPrevious, mockBuild, mockStatus, mockVerify]) mock.mockReset()
+  for (const mock of [mockSelect, mockGraph, mockChanges, mockBase, mockBuild, mockStatus, mockVerify]) mock.mockReset()
   mockGraph.mockReturnValue(graph())
   mockBuild.mockReturnValue(built(['graph.json']))
   mockChanges.mockReturnValue(CHANGES)
   mockResolveBase.mockImplementation((_root: string, base: string) => base)
-  mockPrevious.mockReturnValue(PREVIOUS)
+  mockBase.mockReturnValue({ previous: PREVIOUS })
   mockSelect.mockImplementation((options: { targets: readonly string[] }) =>
     createMap(options.targets.map((target) => [target, selected(target)]))
   )
@@ -322,9 +322,9 @@ describe('runGraph explain of a task', () => {
     ])
   })
 
-  it('reads the graph at the base revision for the change set it found', () => {
+  it('reads the base of the change set it found', () => {
     run(['explain', 'app-shop:test'])
-    expect(mockPrevious.mock.calls).toEqual([[ROOT, CHANGES]])
+    expect(mockBase.mock.calls).toEqual([[ROOT, CHANGES]])
   })
 })
 
