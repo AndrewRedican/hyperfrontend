@@ -2,6 +2,16 @@
   "$schema": "http://json-schema.org/schema",
   "type": "object",
   "properties": {
+    "hooks": {
+      "type": "boolean",
+      "description": "Write a first hooks configuration and install its Git hooks into the clone",
+      "default": false
+    },
+    "prepare": {
+      "type": "boolean",
+      "description": "With hooks, add the root prepare script that installs them on every install",
+      "default": false
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the generated files",

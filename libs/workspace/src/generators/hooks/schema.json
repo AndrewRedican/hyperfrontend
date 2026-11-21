@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "force": {
+      "type": "boolean",
+      "description": "Replace a hook file that neither this generator nor Lefthook wrote",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the configuration written",
+      "default": false
+    }
+  },
+  "required": []
+}

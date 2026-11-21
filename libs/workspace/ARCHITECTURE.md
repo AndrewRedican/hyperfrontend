@@ -90,7 +90,7 @@ The bin installs the resolution hook and calls the command line. The command lin
 | `src/graph/store/`    | The persisted state: files, imports, graph, entries, meta; the lock; the incremental update plan; verification                              |
 | `src/hooks/`          | The resolution hook: aliases from `tsconfig.base.json`, extensionless relative imports, installed on import                                 |
 | `src/executors/`      | Build, typecheck, test, e2e, publish, version, version-batch and version-check, each an entry with its schema                               |
-| `src/generators/`     | The five generators, each an entry with its schema and templates, and the tree helpers a local generator composes                           |
+| `src/generators/`     | The six generators, each an entry with its schema and templates, and the tree helpers a local generator composes                            |
 | `src/lint/`           | The projects rule family and the readers a workspace's own rules share with it                                                              |
 
 ## Data Flow

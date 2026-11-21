@@ -59,6 +59,22 @@ A step is an argument array, so nothing is quoted and no variable is written in 
 
 [`stageFixed`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/#api-HookStep-prop-stageFixed) never stashes and never touches unstaged content: a file that was only partly staged is left exactly as it was staged.
 
+## Installing
+
+```bash
+npx hf generate hooks
+```
+
+The generator writes one POSIX `sh` stub per hook that has steps into the repository's hooks directory, each starting `hf hooks run <hook>` with the arguments Git gave. It rewrites its own stubs, takes the place of Lefthook's, removes the stubs of hooks that no longer have steps, and refuses to replace a hook file somebody else wrote unless given `--force`. A workspace without a configuration gets a first one.
+
+Installing the package runs nothing. A repository that wants its hooks installed on every install says so in its own root manifest:
+
+```json
+{ "scripts": { "prepare": "hf generate hooks" } }
+```
+
+That is safe in a deploy build: where the CI variable is set or there is no repository, the generator writes nothing and succeeds. It also writes nothing, and says why, where the workspace is not the root of its repository or Git reads the hooks from a directory outside the workspace, as it does in a linked working tree.
+
 ## Skipping
 
 A clone that does not want a step names it in an untracked `hooks.local.config.ts` beside the configuration, declared with [`defineLocalHooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/#api-defineLocalHooks):

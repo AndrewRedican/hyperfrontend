@@ -17,5 +17,6 @@ export type {
   TargetConfiguration,
   Tree,
   TreeChange,
+  TreeWriteOptions,
   WorkspaceConfiguration,
 } from './runner/contract'
