@@ -7,6 +7,7 @@
 export type { GraphOutput } from './graph'
 export type { FeaturesCli, HandoverHost, Invocation, TextSink } from './handover'
 export type { WorkspaceCliOptions } from './run'
+export { isOwnCommand, USAGE } from './catalogue'
 export { GRAPH_USAGE, runGraph } from './graph'
 export { FEATURES_CLI, handOver, processHost } from './handover'
-export { isOwnCommand, runWorkspaceCli, USAGE, WORKSPACE_FILE } from './run'
+export { runWorkspaceCli, WORKSPACE_FILE } from './run'

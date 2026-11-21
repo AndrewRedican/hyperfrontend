@@ -21,9 +21,10 @@ import { GENERATE_USAGE } from '../runner/generate'
 import { AFFECTED_USAGE, MANY_USAGE } from '../runner/many'
 import { USAGE as RUN_USAGE } from '../runner/run'
 import { SHOW_USAGE } from '../runner/show'
+import { USAGE } from './catalogue'
 import { GRAPH_USAGE } from './graph'
 import { processHost } from './handover'
-import { isOwnCommand, runWorkspaceCli, USAGE } from './run'
+import { runWorkspaceCli } from './run'
 
 jest.mock('node:child_process', () => ({
   ...jest.requireActual<typeof import('node:child_process')>('node:child_process'),
@@ -157,16 +158,6 @@ afterEach(() => {
   process.chdir(START)
   process.env['PATH'] = SEARCH_PATH
   workspace.remove()
-})
-
-describe('isOwnCommand', () => {
-  it.each(['run', 'run-many', 'affected', 'format', 'generate', 'show', 'graph'])('owns %s', (word) => {
-    expect(isOwnCommand(word)).toBe(true)
-  })
-
-  it.each(['pack', 'toString', ''])('does not own %j', (word) => {
-    expect(isOwnCommand(word)).toBe(false)
-  })
 })
 
 describe('runWorkspaceCli usage', () => {
