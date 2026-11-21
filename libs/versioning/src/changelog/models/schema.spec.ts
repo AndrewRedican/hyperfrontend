@@ -48,6 +48,16 @@ describe('validateChangelog', () => {
     expect(validateChangelog(validChangelog)).toEqual({ valid: true, errors: [] })
   })
 
+  it('validates a changelog carrying a security section', () => {
+    const secured = {
+      ...validChangelog,
+      entries: [
+        { ...validChangelog.entries[0], sections: [{ ...validChangelog.entries[0].sections[0], type: 'security', heading: 'Security' }] },
+      ],
+    }
+    expect(validateChangelog(secured)).toEqual({ valid: true, errors: [] })
+  })
+
   it('rejects missing header', () => {
     const invalid = { ...validChangelog, header: undefined }
     const result = validateChangelog(invalid)

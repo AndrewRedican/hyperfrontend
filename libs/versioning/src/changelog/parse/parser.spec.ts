@@ -286,6 +286,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
       const changelog = parseChangelog(content)
       expect(changelog.metadata.format).toBe('conventional')
     })
+
+    it('detects conventional format from a Security section alone', () => {
+      const content = `# Changelog
+
+## 1.0.1 - 2026-11-21
+
+### Security
+
+- bump a vulnerable dependency
+`
+
+      expect(parseChangelog(content).metadata.format).toBe('conventional')
+    })
+
+    it('reads a Security heading as the security section', () => {
+      const content = `# Changelog
+
+## 1.0.1 - 2026-11-21
+
+### Security
+
+- bump a vulnerable dependency
+`
+
+      expect(parseChangelog(content).entries[0]?.sections).toEqual([
+        expect.objectContaining({
+          type: 'security',
+          heading: 'Security',
+          items: [expect.objectContaining({ description: 'bump a vulnerable dependency' })],
+        }),
+      ])
+    })
   })
 
   describe('source tracking', () => {

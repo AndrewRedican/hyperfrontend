@@ -132,6 +132,12 @@ export interface TreeChange {
   readonly content?: Buffer | null
 }
 
+/** How a tree writes a file. */
+export interface TreeWriteOptions {
+  /** The file's permissions, such as `0o755` for a file that is executed. */
+  readonly permissions?: number
+}
+
 /** A virtual file tree: reads fall through to the files, writes are recorded until committed. */
 export interface Tree {
   /** The directory every path is relative to, absolute. */
@@ -141,7 +147,7 @@ export interface Tree {
   /** The text of a file, or null when there is none. */
   read(path: string, encoding: 'utf-8'): string | null
   /** Records a file's content. */
-  write(path: string, content: Buffer | string): void
+  write(path: string, content: Buffer | string, options?: TreeWriteOptions): void
   /** Whether a file or directory is there. */
   exists(path: string): boolean
   /** Records a file's deletion. */

@@ -60,6 +60,45 @@ All notable changes to this project will be documented in this file.
 - **BREAKING** **BREAKING:** **BREAKING:** ⚠️ BREAKING: adopt asynchronous wire-gated open
 `
 
+const SECURED = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## 2.0.0 - 2026-11-21
+
+### Breaking Changes
+
+- **BREAKING** drop the option a vulnerable dependency needed
+
+### Security
+
+- **BREAKING** drop the option a vulnerable dependency needed
+- bump a vulnerable dependency
+
+### Features
+
+- add a safer option
+
+### Bug Fixes
+
+- close the leak
+`
+
+const SECURED_LAST = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## 1.0.1 - 2026-11-21
+
+### Bug Fixes
+
+- close the leak
+
+### Security
+
+- bump a vulnerable dependency
+`
+
 describe('changelog round trip', () => {
   it('leaves serialized output untouched', () => {
     expect(regenerate(CLEAN)).toBe(CLEAN)
@@ -95,5 +134,22 @@ describe('changelog round trip', () => {
 
   it('keeps referenced items a fixpoint across repeated rewrites', () => {
     expect(regenerate(regenerate(REFERENCED))).toBe(REFERENCED)
+  })
+
+  it('leaves a Security section untouched', () => {
+    expect(regenerate(SECURED)).toBe(SECURED)
+  })
+
+  it('reads the Security section back as the security type', () => {
+    expect(parseChangelog(regenerate(SECURED)).entries[0]?.sections.map((section) => section.type)).toEqual([
+      'breaking',
+      'security',
+      'features',
+      'fixes',
+    ])
+  })
+
+  it('moves a Security section written last ahead of the bug fixes', () => {
+    expect(regenerate(SECURED_LAST)).toContain('### Security\n\n- bump a vulnerable dependency\n\n### Bug Fixes\n\n- close the leak\n')
   })
 })

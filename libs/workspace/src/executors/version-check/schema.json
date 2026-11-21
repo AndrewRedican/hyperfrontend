@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "type": "object",
   "title": "Version Check executor schema",
-  "description": "Validates that version bumps have been correctly applied without making changes. Used by CI to verify that lefthook versioning ran successfully.",
+  "description": "Validates that version bumps have been correctly applied without making changes. Used by CI and by the pre-push hook to verify that the bumps a change calls for are in place.",
   "properties": {
     "verbose": {
       "type": "boolean",

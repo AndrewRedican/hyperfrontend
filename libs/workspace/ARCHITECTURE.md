@@ -84,12 +84,13 @@ The bin installs the resolution hook and calls the command line. The command lin
 | `src/cli/`            | The commands, their arguments and usage; the handover to the features command line; the graph commands                                      |
 | `src/runner/`         | The contract types; resolution of executors, generators and the packages that provide them; one task; many tasks in order; the affected run |
 | `src/progress/`       | The stages of a run and the view of it: stage assignment, the stop, the lines, the matrix; an entry of its own                              |
+| `src/git-hooks/`      | Git hooks as typed steps: the configuration and the local skips, the step runner, re-staging of fixed files, the stubs; an entry of its own |
 | `src/graph/`          | Discovery of projects and files; imports and their cache; entries; the lock file's packages; roles; the graph and its canonical order       |
 | `src/graph/affected/` | The closure of a task, the rules that select it, the selection and its explanation                                                          |
 | `src/graph/store/`    | The persisted state: files, imports, graph, entries, meta; the lock; the incremental update plan; verification                              |
 | `src/hooks/`          | The resolution hook: aliases from `tsconfig.base.json`, extensionless relative imports, installed on import                                 |
 | `src/executors/`      | Build, typecheck, test, e2e, publish, version, version-batch and version-check, each an entry with its schema                               |
-| `src/generators/`     | The five generators, each an entry with its schema and templates, and the tree helpers a local generator composes                           |
+| `src/generators/`     | The six generators, each an entry with its schema and templates, and the tree helpers a local generator composes                            |
 | `src/lint/`           | The projects rule family and the readers a workspace's own rules share with it                                                              |
 
 ## Data Flow

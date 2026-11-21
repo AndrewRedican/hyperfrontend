@@ -235,10 +235,19 @@ git push origin main
 
 ### Testing Your Changes
 
-Run the pipeline the pre-push hook and CI run, from the merge base with `origin/main` to your working tree:
+Rehearse a push without pushing. This runs every step of the pre-push hook, in order, and stops at the first that fails:
 
 ```bash
-# Typecheck, lint, test, build and e2e of what your change reaches, one task at a time, with a reason per task
+npx hf hooks run pre-push
+
+# Only the pipeline step: typecheck and lint, then tests, then build and e2e of what your change reaches
+npx hf hooks run pre-push --only=pipeline
+```
+
+The pipeline is the one the pre-push hook and CI run, from the merge base with `origin/main` to your working tree. It can also be started and planned on its own:
+
+```bash
+# Typecheck, lint, test, build and e2e of what your change reaches, in three stages, with a reason per task
 node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --local
 
 # Only plan: which chains and tasks a change reaches, and why every other task is skipped
@@ -278,25 +287,31 @@ Output goes to `dist/libs/<library>/` with ESM + CJS formats.
 
 ### Versioning (Automatic)
 
-Version bumps happen automatically via **lefthook pre-push hooks**. When you `git push`:
+Version bumps are made by `npx hf push`, which bumps, commits and pushes in one go:
 
-1. lefthook runs the pipeline: typecheck, lint, test, build and e2e of what your change reaches
-2. The `version:all` target detects affected libraries
-3. For each affected library, versioning runs (package.json, CHANGELOG.md updated)
-4. A single batch commit is created: `chore: update versions for lib-a, lib-b`
-5. Push proceeds with both your changes and the version commit
+```bash
+npx hf push                                # or, the first time: npx hf push --set-upstream origin my-branch
+```
+
+1. The `version:all` target detects the libraries your commits release
+2. For each of them, versioning runs (package.json, CHANGELOG.md updated)
+3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
+4. `git push` runs with the arguments you gave, and carries your changes and the version commit
+5. The pre-push hook then checks what is being pushed: the binary budget, the dependency audit, the versions, and the pipeline
+
+A plain `git push` still works whenever no bump is due. When one is due, the pre-push hook refuses the push and tells you to use `npx hf push`. A commit made inside a pre-push hook is not part of the push in flight, which is why the bump happens before the push and the hook only checks.
 
 **What this means for you:**
 
-- Just write conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
-- Push normally; versioning happens automatically
+- Just write conventional commit messages (`feat:`, `fix:`, `security:`, `docs:`, etc.)
+- Push with `npx hf push`; versioning happens as part of it
 - Your PR will include the version bump already applied
 - A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the modules of the builder that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor releases every library. That named input is a hand-kept list: a new builder module that changes what lands in a tarball is added to it in the same change
 
-**If you need to bypass versioning (not recommended):**
+**If you need to bypass the hook (not recommended):**
 
 ```bash
-# This will cause CI to fail with remediation instructions
+# CI fails with remediation instructions when a due bump is missing
 git push --no-verify
 ```
 
@@ -318,7 +333,7 @@ npx hf run lib-nexus:version-check
 
 **CI Validation:**
 
-CI runs `version-check` to validate that versions were correctly applied. If you pushed with `--no-verify` (bypassing lefthook), CI will fail and comment on your PR with instructions to fix.
+CI runs `version-check` to validate that versions were correctly applied. It never bumps. If you pushed with `--no-verify` (bypassing the pre-push hook) while a bump was due, CI will fail and comment on your PR with instructions to fix.
 
 ### Publishing (Maintainers)
 
@@ -396,7 +411,7 @@ The project uses GitHub Actions for CI/CD automation. All pull requests must pas
 When you open a pull request:
 
 - **Fast Checks**: Only affected projects are validated (format, lint, build, test)
-- **Version Check**: Validates that version bumps were applied by lefthook
+- **Version Check**: Validates that the version bumps your commits call for were applied by `npx hf push`
 - **Typical Duration**: < 10 minutes
 - **Status Check**: "status" must pass to merge
 
@@ -533,6 +548,7 @@ This walks you through `type → scope → subject → body → breaking → iss
 
 - **feat**: A new feature
 - **fix**: A bug fix
+- **security**: A dependency or code change made for a security reason
 - **docs**: Documentation changes
 - **style**: Code style changes (formatting, missing semicolons, etc.)
 - **refactor**: Code refactoring
@@ -541,6 +557,10 @@ This walks you through `type → scope → subject → body → breaking → iss
 - **build**: Build system changes
 - **ci**: CI/CD changes
 - **chore**: Other changes that don't modify src or test files
+
+`feat`, `fix`, `security`, `perf` and `revert` release the library they are scoped to; the other types release nothing.
+
+A dependency change made for a security reason is `security(<project>)`, whatever the size of the bump. It releases the package by a patch and is listed under "Security" in its changelog. It carries `!` when it breaks public API, and a change that adds public API is a `feat`. Bumping a dependency a package inlines, even across its major, breaks nothing for consumers; raising a real dependency or a peer range can.
 
 ### Examples
 
@@ -562,10 +582,25 @@ Fixes #456
 
 ### Commit Hooks
 
-The project uses [Lefthook](https://github.com/evilmartians/lefthook) for Git hooks:
+The Git hooks are the workspace's own. Their steps are in [`hooks.config.ts`](https://github.com/AndrewRedican/hyperfrontend/blob/main/hooks.config.ts) at the repository root, and `npm install` installs them into your clone through the root `prepare` script (`npx hf generate hooks` does the same by hand).
 
-- **Pre-commit**: Runs linting on staged files
-- **Commit-msg**: Validates commit message format with commitlint
+- **pre-commit**: checks the binary budget of the staged files, and runs `hf format --write`, staging again the files it fixed
+- **commit-msg**: validates the commit message with `cl`
+- **pre-push**: checks the binary budget of the branch, audits the dependencies, checks that the version bumps your commits call for are in place, and runs the pipeline
+
+Each hook runs its steps in order, stops at the first that fails, and ends on a list of the steps with how each ended. `npx hf hooks run <hook>` runs a hook by hand; `--only` and `--skip` select steps by name.
+
+**The pipeline step is on for every clone.** It runs the same typecheck, lint, test, build and e2e tasks CI plans for your change, in three stages, so a pull request that would fail is known before it is raised. It covers your operating system only; the pull request still runs Linux, Windows and macOS.
+
+A clone opts out of a step in an untracked `hooks.local.config.ts` beside the configuration:
+
+```ts
+import { defineLocalHooks } from '@hyperfrontend/workspace/git-hooks'
+
+export default defineLocalHooks({ skip: ['pipeline'] })
+```
+
+For one push, `HF_HOOKS_SKIP=pipeline git push` does the same, and `HF_HOOKS=0` skips every step. A skipped step is always listed as skipped, with what skipped it.
 
 ## Questions
 

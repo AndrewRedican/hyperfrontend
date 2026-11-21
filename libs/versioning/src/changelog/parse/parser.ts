@@ -346,7 +346,7 @@ function detectFormat(header: ChangelogHeader, entries: ChangelogEntry[]): Chang
   }
 
   const hasConventionalSections = entries.some((entry) =>
-    entry.sections.some((section) => ['features', 'fixes', 'performance'].includes(section.type))
+    entry.sections.some((section) => ['security', 'features', 'fixes', 'performance'].includes(section.type))
   )
 
   if (hasConventionalSections) {

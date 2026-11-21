@@ -19,9 +19,9 @@ import {
  */
 export const CONVENTIONAL_FLOW_CONFIG: FlowConfig = {
   preset: 'conventional',
-  releaseTypes: ['feat', 'fix', 'perf', 'revert'],
+  releaseTypes: ['feat', 'fix', 'security', 'perf', 'revert'],
   minorTypes: ['feat'],
-  patchTypes: ['fix', 'perf', 'revert'],
+  patchTypes: ['fix', 'security', 'perf', 'revert'],
   skipGit: false,
   skipTag: true,
   skipChangelog: false,

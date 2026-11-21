@@ -48,7 +48,7 @@ Inspect each low-count entry (`git grep -n -F "$pkg"`):
 
 | Consumer                  | Evidence                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Script bins               | scripts + `lefthook.yml`: `run-p`/`run-s` → npm-run-all2, `cl`/`cz` → @hyperfrontend/versioning, `format:write` → prettier |
+| Script bins               | scripts + `hooks.config.ts`: `run-p`/`run-s` → npm-run-all2, `cl`/`cz` → @hyperfrontend/versioning, `hf format` → prettier |
 | TS-config loaders         | `jest.config.ts` → `ts-node`; `eslint.config.ts` → `jiti`                                                                  |
 | tsconfig `types`          | `"types": ["node", "jsdom"]` = `@types/node` + `@types/jsdom` by bare name — grep tsconfigs                                |
 | Walk-up resolution        | app eslint config requires plugins it doesn't declare → root devDep is the provider                                        |

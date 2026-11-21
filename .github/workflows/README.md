@@ -12,7 +12,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 **How it works**:
 
 1. The `plan` job builds the graph state cold, checks the formatting of every file, and runs `pipeline plan`: the owned selection of `typecheck`, `lint`, `test`, `build` and `e2e` from the merge base, folded into **chains** (one project on one environment, its tasks and the prerequisites between them), ranked heaviest first. The plan and the graph are uploaded as `pipeline-plan`, summarised on the run page with a reason per task and per skip, published as the `pipeline plan` check run on the head commit, and set the `environments` matrix.
-2. `version-check` checks, without changing anything, the version of every library owning a changed file (every library when a global configuration file changes), and gates the environments; the pre-push hook is what bumps versions.
+2. `version-check` checks, without changing anything, the version of every library owning a changed file (every library when a global configuration file changes), and gates the environments; `npx hf push` is what bumps versions, and the pre-push hook refuses a push that lacks a due bump.
 3. One `linux` job and, when any library or tool is selected, one `windows` and one `macos` job download the plan and run `pipeline run`: a scheduler starts every task whose prerequisites succeeded, as many at once as the runner affords (light tasks up to the CPU count, library builds two at a time), skips the dependents of a failure and keeps everything independent running. Each task of a project runs alone through `libs/workspace/bin/hf.mjs run <project>:<target>`, in its own process group so a cancel ends everything it started (the floor probe and the linter consumer smoke run their scripts on the Node.js release they are meant for); its output is replayed as one folded block when it ends. Linux chains carry build, e2e, probe and smoke; Windows and macOS chains each carry typecheck, lint, test, build and e2e of the libraries and tools, plus the smokes, and compare the graph-state digest with Linux.
 4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
 5. `status` aggregates `binary-budget`, `plan`, `version-check` and the environments, and passes when the plan finds nothing to run.
@@ -199,7 +199,7 @@ Sets up the Node.js environment, caches the npm download directory and installs 
 
 ### version-check
 
-Checks the version of every library owning a changed file (every library when a global configuration file changes), selected through the owned graph with `pipeline affected --target version-check --projects`, and keeps one comment on the pull request. It changes nothing: the pre-push hook bumps versions.
+Checks the version of every library owning a changed file (every library when a global configuration file changes), selected through the owned graph with `pipeline affected --target version-check --projects`, and keeps one comment on the pull request. It changes nothing: `npx hf push` bumps versions before it pushes.
 
 The selection and execution of work are not actions: `tools/pipeline/bin/pipeline.ts` plans and runs, and the workflow files hold only what GitHub itself must read. See [`tools/pipeline/README.md`](../../tools/pipeline/README.md).
 
@@ -337,7 +337,7 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 **Important Notes**:
 
 - The `version-check` job runs after the plan and gates the environments (validation only, no commits)
-- Version bumps are applied locally via lefthook pre-push hooks
+- Version bumps are applied locally by `npx hf push`, before the push; the pre-push hook only checks them
 - CI validates that expected versions match committed versions
 - Uses GITHUB_TOKEN with read-only contents permission
 

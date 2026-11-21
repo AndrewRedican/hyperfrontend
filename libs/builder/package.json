@@ -7,7 +7,7 @@
     "@hyperfrontend/logging": "1.0.4",
     "@hyperfrontend/immutable-api-utils": "1.0.6",
     "@hyperfrontend/project-scope": "0.6.1",
-    "@hyperfrontend/versioning": "0.10.3",
+    "@hyperfrontend/versioning": "0.11.0",
     "@rollup/plugin-commonjs": "29.0.3",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",

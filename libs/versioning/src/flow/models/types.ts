@@ -396,9 +396,9 @@ export interface FlowConfig {
 export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection' | 'releaseAs'>> &
   Pick<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection' | 'releaseAs'> = {
   preset: 'conventional',
-  releaseTypes: ['feat', 'fix', 'perf', 'revert'],
+  releaseTypes: ['feat', 'fix', 'security', 'perf', 'revert'],
   minorTypes: ['feat'],
-  patchTypes: ['fix', 'perf', 'revert'],
+  patchTypes: ['fix', 'security', 'perf', 'revert'],
   skipGit: false,
   skipTag: false,
   skipChangelog: false,

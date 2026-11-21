@@ -5,6 +5,11 @@
       "schema": "./generators/workspace/schema.json",
       "description": "Write the root configuration the engine reads into a repository that has none."
     },
+    "hooks": {
+      "factory": "./generators/hooks/index",
+      "schema": "./generators/hooks/schema.json",
+      "description": "Install the Git hooks a workspace configures into the clone, with a first configuration where there is none."
+    },
     "library": {
       "factory": "./generators/library/index",
       "schema": "./generators/library/schema.json",

@@ -2,6 +2,12 @@ import type { SerializeOptions } from './templates'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveOptions, getSectionHeading, formatLink, getListMarker, createSpacing, DEFAULT_SERIALIZE_OPTIONS } from './templates'
 
+describe('DEFAULT_SERIALIZE_OPTIONS', () => {
+  it('orders the security section between breaking changes and features', () => {
+    expect(DEFAULT_SERIALIZE_OPTIONS.sectionOrder.slice(0, 3)).toEqual(['breaking', 'security', 'features'])
+  })
+})
+
 describe('resolveOptions', () => {
   it('returns defaults when no options provided', () => {
     const result = resolveOptions()

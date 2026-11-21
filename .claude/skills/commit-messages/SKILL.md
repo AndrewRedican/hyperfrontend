@@ -9,19 +9,21 @@ Format: `type(scope): subject` — one line, lowercase subject, no period, imper
 
 ## Paths
 
-| Role                       | Where                                                             |
-| -------------------------- | ----------------------------------------------------------------- |
-| Message lint (`npx cl`)    | `libs/versioning/src/bin/cl.ts` (runs in `commit-msg` hook)       |
-| Guided prompt (`npx cz`)   | `libs/versioning/src/bin/cz.js`                                   |
-| Type list + bump semantics | `libs/versioning/src/commits/models/commit-type.ts`               |
-| Scope filtering            | `hf.json` → `targetDefaults.version.options.scopeFiltering`       |
-| Hooks                      | `lefthook.yml` (pre-commit format, commit-msg cl, pre-push gates) |
+| Role                       | Where                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| Message lint (`npx cl`)    | `libs/versioning/src/bin/cl.ts` (runs in `commit-msg` hook)                     |
+| Guided prompt (`npx cz`)   | `libs/versioning/src/bin/cz.js`                                                 |
+| Type list + bump semantics | `libs/versioning/src/commits/models/commit-type.ts`                             |
+| Scope filtering            | `hf.json` → `targetDefaults.version.options.scopeFiltering`                     |
+| Hooks                      | `hooks.config.ts` (pre-commit format, commit-msg cl, pre-push gates, push bump) |
 
 ## Types
 
-`feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
+`feat` `fix` `security` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
 
-Version impact (computed at pre-push by the root `version:all` target, never by hand): `feat` → minor · `fix`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump. A releasable commit also patch-bumps every library that ships a copy of the code it changes, and one to the builder modules that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor patch-bumps every library.
+Version impact (computed by `npx hf push` through the root `version:all` target, never by hand; pre-push only checks it): `feat` → minor · `fix`/`security`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump. A releasable commit also patch-bumps every library that ships a copy of the code it changes, and one to the builder modules that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor patch-bumps every library.
+
+**`security`**: a dependency change made for a security reason is `security(<project>)`, whatever the size of the bump; it is listed under "Security" in the changelog. It carries `!` when it breaks public API, and a change that adds public API is a `feat`. A fix made only in the root manifest or lock is `security(hyperfrontend)`, which releases nothing, like every root-scoped commit.
 
 ## Scopes
 
@@ -51,7 +53,8 @@ Each commit is self-contained: it compiles, its tests pass, and it makes one log
 ## Committing
 
 - `git commit -m "type(scope): subject"` or `npx cz` — both fine when the message meets the rules above.
-- **`--no-verify` is forbidden.** Hooks are the contract: pre-commit formats (auto-stages fixes), commit-msg runs `npx cl`, pre-push runs typecheck/lint/test/build/e2e + the root `version:all` target.
+- **`--no-verify` is forbidden.** Hooks are the contract: pre-commit formats (auto-stages fixes), commit-msg runs `cl`, pre-push runs the binary budget, the audit, the version check and the pipeline (typecheck/lint/test/build/e2e).
+- **Push with `npx hf push`**: it runs the root `version:all` target, commits the bump and pushes. A plain `git push` is refused while a bump is due. A clone skips a pre-push step in its untracked `hooks.local.config.ts`; never by editing `hooks.config.ts`.
 
 ## Never commit by hand
 

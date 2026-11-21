@@ -10,10 +10,12 @@ import type { ChildProcess } from 'node:child_process'
 import type { TempDir } from '@hyperfrontend/testing/fs'
 import type { ChildExit } from '@hyperfrontend/testing/process'
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
 import { createRequire } from 'node:module'
+import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
 import { before as beforeAll, after as afterAll } from 'node:test'
 import { gunzipSync } from 'node:zlib'
@@ -90,23 +92,98 @@ async function waitForUrl(url: string, timeoutMs: number): Promise<{ status: num
   throw lastError instanceof Error ? lastError : new Error(String(lastError))
 }
 
+/** A command line that is running and answering. */
+interface StartedCli {
+  /** The process. */
+  readonly child: ChildProcess
+  /** The ports it was given, in the order they were asked for. */
+  readonly ports: readonly number[]
+  /** Reads everything the process has written so far, on both streams. */
+  readonly output: () => string
+}
+
+/** How many times a start is tried, each on ports of its own, before the suite gives up. */
+const START_ATTEMPTS = 3
+
+/** What Node prints when the operating system refuses a bind: the port is reserved, or something else holds it. */
+const REFUSED_BIND = /listen E(ACCES|ADDRINUSE)/
+
 /**
- * Waits for the child's collected output to satisfy a predicate.
+ * Asks the operating system for ports nothing holds, bound the way the command line binds its
+ * own: on every interface. A port picked blindly can lie in a range the system reserves or be in
+ * use, which it refuses with EACCES or EADDRINUSE; a port the system hands out is neither.
  *
- * @param getOutput - Reads the output collected so far.
- * @param predicate - The condition the output must satisfy.
- * @param timeoutMs - How long to keep waiting.
- * @returns The output once the predicate holds.
+ * @param count - How many ports to ask for.
+ * @returns That many distinct ports, each free when this resolves.
  */
-async function waitForOutput(getOutput: () => string, predicate: (output: string) => boolean, timeoutMs: number): Promise<string> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    if (predicate(getOutput())) {
-      return getOutput()
-    }
-    await delay(100)
+async function findFreePorts(count: number): Promise<number[]> {
+  const probes = Array.from({ length: count }, () => createServer())
+  try {
+    // why: Every probe stays bound until all have answered, so no two of them are handed the same port.
+    return await Promise.all(
+      probes.map(
+        (probe) =>
+          new Promise<number>((resolve, reject) => {
+            probe.once('error', reject)
+            probe.listen(0, () => resolve((probe.address() as AddressInfo).port))
+          })
+      )
+    )
+  } finally {
+    await Promise.all(probes.map((probe) => new Promise<void>((resolve) => probe.close(() => resolve()))))
   }
-  throw new Error(`Timed out waiting for CLI output. Collected so far:\n${getOutput()}`)
+}
+
+/**
+ * Starts a command line on ports the operating system handed out and waits until its output says
+ * it is ready. A start whose bind is refused all the same, because the port was taken between the
+ * probe and the bind, is tried again on new ports; any other early exit fails at once with what
+ * the process printed, instead of after the full wait.
+ *
+ * @param portCount - How many ports the command line listens on.
+ * @param start - Spawns the command line on the ports it is given.
+ * @param isReady - Whether the output collected so far shows the servers are up.
+ * @param timeoutMs - How long one attempt may take to become ready.
+ * @returns The process, its ports and a reader of its output.
+ */
+async function startOnFreePorts(
+  portCount: number,
+  start: (ports: readonly number[]) => ChildProcess,
+  isReady: (output: string) => boolean,
+  timeoutMs: number
+): Promise<StartedCli> {
+  let lastOutput = ''
+  for (let attempt = 1; attempt <= START_ATTEMPTS; attempt += 1) {
+    const ports = await findFreePorts(portCount)
+    const child = start(ports)
+    let output = ''
+    let closed = false
+    child.stdout?.on('data', (chunk: Buffer) => {
+      output += chunk.toString('utf8')
+    })
+    child.stderr?.on('data', (chunk: Buffer) => {
+      output += chunk.toString('utf8')
+    })
+    // why: 'close' fires after both streams have ended, so the output is complete by then.
+    child.once('close', () => {
+      closed = true
+    })
+    const deadline = Date.now() + timeoutMs
+    while (!isReady(output) && !closed && !REFUSED_BIND.test(output) && Date.now() < deadline) {
+      await delay(100)
+    }
+    if (isReady(output)) {
+      return { child, ports, output: () => output }
+    }
+    if (!closed) {
+      child.kill('SIGKILL')
+    }
+    lastOutput = output
+    if (!REFUSED_BIND.test(output)) {
+      throw new Error(`${closed ? 'The CLI exited before it was ready' : 'Timed out waiting for CLI output'}. Collected so far:\n${output}`)
+    }
+  }
+  throw new Error(`The CLI could not bind its ports in ${START_ATTEMPTS} attempts. The last one printed:\n${lastOutput}`)
 }
 
 /**
@@ -145,33 +222,24 @@ describe('@hyperfrontend/features hf CLI', () => {
         scratch = createTempDir({ prefix: 'hf-dev-e2e-' })
         mkdirSync(join(scratch.path, 'app'))
         writeFileSync(join(scratch.path, 'app', 'index.html'), '<!doctype html><html><body>dummy-app-ok</body></html>\n')
-        // note: Randomized high ports keep parallel CI jobs from colliding on a fixed port.
-        const appPort = 42000 + Math.floor(Math.random() * 10000)
-        const debugPort = appPort + 10000
-        writeFileSync(
-          join(scratch.path, 'hf-dev.config.json'),
-          `${JSON.stringify({ apps: [{ name: 'dummy-app', outputDir: './app', port: appPort }] }, null, 2)}\n`
-        )
-
-        child = spawn('node', [hfBin, 'dev', '--port', String(debugPort)], {
-          cwd: scratch.path,
-          detached: true,
-          stdio: ['ignore', 'pipe', 'pipe'],
-        })
-        let output = ''
-        child.stdout?.on('data', (chunk: Buffer) => {
-          output += chunk.toString('utf8')
-        })
-        child.stderr?.on('data', (chunk: Buffer) => {
-          output += chunk.toString('utf8')
-        })
-
-        await waitForOutput(
-          () => output,
+        const started = await startOnFreePorts(
+          2,
+          ([appPort, debugPort]) => {
+            writeFileSync(
+              join(scratch.path, 'hf-dev.config.json'),
+              `${JSON.stringify({ apps: [{ name: 'dummy-app', outputDir: './app', port: appPort }] }, null, 2)}\n`
+            )
+            return spawn('node', [hfBin, 'dev', '--port', String(debugPort)], {
+              cwd: scratch.path,
+              detached: true,
+              stdio: ['ignore', 'pipe', 'pipe'],
+            })
+          },
           (collected) => collected.includes('dummy-app → ') && collected.includes('Debug UI: '),
           30000
         )
-        const match = output.match(/dummy-app → (\S+)/)
+        child = started.child
+        const match = started.output().match(/dummy-app → (\S+)/)
         appUrl = match ? match[1] : ''
         firstResponse = await waitForUrl(appUrl, 10000)
 
@@ -415,7 +483,7 @@ describe('hf serve', () => {
   let siteDir = ''
   let servePort = 0
   let child: ChildProcess | undefined
-  let cliOutput = ''
+  let cliOutput: () => string = () => ''
   let firstResponse: { status: number; body: string } | undefined
   let rootHeaders: IncomingHttpHeaders | undefined
   let widgetResponse: { status: number; body: string } | undefined
@@ -438,28 +506,22 @@ describe('hf serve', () => {
         join(siteDir, 'hf-serve.config.json'),
         `${JSON.stringify({ headers: [{ headers: { 'X-Frame-Test': 'e2e' } }] }, null, 2)}\n`
       )
-      // why: A randomized 32xxx port keeps parallel CI jobs from colliding while staying clear of the dev suite's 42000+ band.
-      servePort = 32000 + Math.floor(Math.random() * 10000)
-
       // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
-      child = spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(servePort)], {
-        cwd: scratch.path,
-        detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-      child.stdout?.on('data', (chunk: Buffer) => {
-        cliOutput += chunk.toString('utf8')
-      })
-      child.stderr?.on('data', (chunk: Buffer) => {
-        cliOutput += chunk.toString('utf8')
-      })
-
-      await waitForOutput(
-        () => cliOutput,
+      const started = await startOnFreePorts(
+        1,
+        ([port]) =>
+          spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(port)], {
+            cwd: scratch.path,
+            detached: true,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          }),
         (collected) => collected.includes('→ http://'),
         30000
       )
-      const match = cliOutput.match(/→ (\S+)/)
+      child = started.child
+      servePort = started.ports[0] as number
+      cliOutput = started.output
+      const match = cliOutput().match(/→ (\S+)/)
       const serveUrl = match ? match[1] : ''
       firstResponse = await waitForUrl(serveUrl, 10000)
 
@@ -489,7 +551,7 @@ describe('hf serve', () => {
   })
 
   it('prints the serving line with the root and its URL', () => {
-    expect(cliOutput).toContain(`${siteDir} → http://localhost:${servePort}/`)
+    expect(cliOutput()).toContain(`${siteDir} → http://localhost:${servePort}/`)
   })
 
   it('serves the root index over HTTP', () => {
@@ -524,7 +586,8 @@ describe('hf serve', () => {
 
   it('emits an access-log line for each request', () => {
     // why: Two distinct request paths prove per-request logging rather than a single lucky line.
-    expect({ root: cliOutput.includes('GET / 200'), widget: cliOutput.includes('GET /widget/ 200') }).toEqual({ root: true, widget: true })
+    const output = cliOutput()
+    expect({ root: output.includes('GET / 200'), widget: output.includes('GET /widget/ 200') }).toEqual({ root: true, widget: true })
   })
 
   it('stays alive and keeps serving past three seconds', () => {

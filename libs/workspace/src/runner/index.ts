@@ -18,6 +18,7 @@ export type {
   TargetConfiguration,
   Tree,
   TreeChange,
+  TreeWriteOptions,
   WorkspaceConfiguration,
 } from './contract'
 export type { ExecutorFunction, ExecutorModule, ExecutorSchema, ExecutorSource, ImportModule, SchemaProperty } from './executors'

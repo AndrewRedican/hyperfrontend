@@ -56,21 +56,22 @@ Scope choices come from what you staged: each staged path resolves to its neares
 
 ## 4. Enforce it in the `commit-msg` hook
 
-`cl` takes the path git hands the hook and exits non-zero on any error-level violation, which is exactly the contract [husky](https://typicode.github.io/husky/) and [lefthook](https://lefthook.dev/) already expect.
+`cl` takes the path git hands the hook and exits non-zero on any error-level violation, which is exactly the contract a `commit-msg` hook expects, whoever installs it.
 
-`.husky/commit-msg`:
+With [husky](https://typicode.github.io/husky/), in `.husky/commit-msg`:
 
 ```bash
 npx cl "$1"
 ```
 
-Or in `lefthook.yml`:
+Or as a step of the hooks [`@hyperfrontend/workspace`](/docs/libraries/workspace/git-hooks) owns, in `hooks.config.ts`:
 
-```yaml
-commit-msg:
-  commands:
-    validate:
-      run: npx cl {1}
+```ts
+import { defineHooks } from '@hyperfrontend/workspace/git-hooks'
+
+export default defineHooks({
+  'commit-msg': [{ name: 'message', run: ['cl'], passArgs: true }],
+})
 ```
 
 Warnings print and let the commit through; errors print and stop it:

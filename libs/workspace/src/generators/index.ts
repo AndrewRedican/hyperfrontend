@@ -5,7 +5,7 @@
  * @module @hyperfrontend/workspace/generators
  */
 
-export type { Generator, Tree, TreeChange } from '../runner/contract'
+export type { Generator, Tree, TreeChange, TreeWriteOptions } from '../runner/contract'
 export type { UpdateContentOptions } from './shared/content-updaters'
 export type { Prettier } from './shared/format'
 export type { JsonWithDescription, NamedJson } from './shared/json-updaters'

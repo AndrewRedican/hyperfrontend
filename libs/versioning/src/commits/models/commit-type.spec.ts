@@ -20,6 +20,10 @@ describe('isStandardType', () => {
   it('returns false for non-standard types', () => {
     expect(isStandardType('custom')).toBe(false)
   })
+
+  it('counts security among the standard types', () => {
+    expect(isStandardType('security')).toBe(true)
+  })
 })
 
 describe('isReleaseType', () => {
@@ -31,6 +35,10 @@ describe('isReleaseType', () => {
   it('returns false for non-release types', () => {
     const types = ['docs', 'chore']
     expect(types.map((type) => [type, isReleaseType(type)])).toEqual(types.map((type) => [type, false]))
+  })
+
+  it('returns true for a security change', () => {
+    expect(isReleaseType('security')).toBe(true)
   })
 })
 
@@ -46,6 +54,14 @@ describe('getSemverBump', () => {
 
   it('returns patch for fixes', () => {
     expect(getSemverBump('fix', false)).toBe('patch')
+  })
+
+  it('returns patch for a security change', () => {
+    expect(getSemverBump('security', false)).toBe('patch')
+  })
+
+  it('returns major for a breaking security change', () => {
+    expect(getSemverBump('security', true)).toBe('major')
   })
 
   it('returns none for non-release types', () => {
@@ -70,5 +86,17 @@ describe('type arrays', () => {
 
   it('PATCH_TYPES includes fix', () => {
     expect(PATCH_TYPES).toContain('fix')
+  })
+
+  it('RELEASE_TYPES includes security', () => {
+    expect(RELEASE_TYPES).toContain('security')
+  })
+
+  it('PATCH_TYPES includes security', () => {
+    expect(PATCH_TYPES).toContain('security')
+  })
+
+  it('MINOR_TYPES leaves security out', () => {
+    expect(MINOR_TYPES).not.toContain('security')
   })
 })

@@ -147,6 +147,7 @@ The module recognizes these standard changelog section types:
 | Type                                                                                                                  | Common Headings            |
 | --------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | [`breaking`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)      | Breaking Changes, BREAKING |
+| [`security`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)      | Security                   |
 | [`features`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)      | Features, Added, New       |
 | [`fixes`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)         | Bug Fixes, Fixed           |
 | `performance`                                                                                                         | Performance, Perf          |

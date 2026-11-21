@@ -1,5 +1,5 @@
 {
-  "name": "@hyperfrontend/workspace",
+  "name": "@hyperfrontend/hf-link",
   "version": "0.0.0",
   "description": "Links hf into this repository's node_modules/.bin. It has no dependencies on purpose: the root install must never resolve the pins of libs/workspace, which name versions that exist only once a merge has published them.",
   "private": true,

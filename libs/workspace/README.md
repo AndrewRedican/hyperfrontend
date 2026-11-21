@@ -107,6 +107,7 @@ The first command writes `hf.json` and the base configurations and settles the r
 | [`/cli`](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/)                                      | The command line as a function                                                                    |
 | [`/runner`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/)                                | Executors and generators by name; one task, many in order, the affected run                       |
 | [`/progress`](https://www.hyperfrontend.dev/docs/libraries/workspace/progress/)                            | The stages of a run and the view of it: the stop, the task lines, the matrix                      |
+| [`/git-hooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/git-hooks/)                          | Git hooks as typed steps: the configuration, the runner behind the hooks and the push, the stubs  |
 | [`/graph`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/)                                  | The workspace graph, its persisted state and the affected analysis                                |
 | [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/workspace/hooks/)                                  | Loads a workspace's TypeScript from source, for scripts of your own                               |
 | [`/lint`](https://www.hyperfrontend.dev/docs/libraries/workspace/lint/)                                    | The projects rule family and the readers a rule of your own shares with it                        |

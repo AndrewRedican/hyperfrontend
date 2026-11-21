@@ -2,12 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/58e496517df8dcfda15e670fd4d8e7efb2a19ace...23ca33e6ca49b50f74c21c9f97123d29f8caefd2) - 2026-11-20
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/58e496517df8dcfda15e670fd4d8e7efb2a19ace...10275f0f99c6dd64b9f56158790585b2b5627863) - 2026-11-21
 
 ### Features
 
+- install git hooks with the hooks generator
+- add hf push, which runs the push steps and then pushes
+- run git hooks from a typed configuration
 - judge the base tsconfig in affected runs and releases
 - judge a changed tsconfig.base.json by its path aliases
+
+### Dependency Updates
+
+- **lib-versioning:** add a security commit type that releases a patch
 
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/92d4d378897da6165a87f5ae6334a0e60e9bc229...804e8b420896c50c5ae5b1cd20dd675ce28e40c4) - 2026-11-20
 

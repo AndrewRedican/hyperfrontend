@@ -52,6 +52,18 @@ describe('conventionalPreset', () => {
     )
   })
 
+  it('accepts a security commit', () => {
+    expect(validateCommitMessage('security(lib-x): bump a vulnerable dependency', conventionalPreset).valid).toBe(true)
+  })
+
+  it('accepts a breaking security commit', () => {
+    expect(validateCommitMessage('security(lib-x)!: drop a vulnerable option', conventionalPreset).valid).toBe(true)
+  })
+
+  it('lists security among the types', () => {
+    expect(CONVENTIONAL_TYPES).toContain('security')
+  })
+
   it('exposes the conventional type list', () => {
     expect(CONVENTIONAL_TYPES).toEqual(
       expect.arrayContaining(['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'])

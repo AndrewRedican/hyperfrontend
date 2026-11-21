@@ -71,7 +71,7 @@ runs:
         echo "Validating versions for affected libraries..."
 
         # The libraries owning a changed file, the ones that ship code the change touches, every library when the toolchain changes, and every library when a global configuration file changes (hf.json, package.json, package-lock.json, tsconfig.base.json)
-        # This job only checks versions; the pre-push hook bumps them
+        # This job only checks versions; `npx hf push` bumps them before it pushes
         AFFECTED=$(node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts affected --target version-check --base "${{ inputs.base-ref }}" --head "${{ inputs.head-ref }}" --projects)
 
         if [ -z "$AFFECTED" ]; then
@@ -154,9 +154,6 @@ runs:
           DETAILED_MESSAGES=$(cat /tmp/version-check-messages.txt)
         fi
 
-        # Parse library list
-        IFS=', ' read -ra LIBS <<< "$INVALID_LIBS"
-
         # Build comment body in a file
         {
           echo '<!-- hyperfrontend-version-check -->'
@@ -167,16 +164,12 @@ runs:
           echo '### How to Fix'
           echo ''
           echo "1. Pull latest: \`git pull origin ${HEAD_REF}\`"
-          echo '2. Run versioning for affected libraries:'
-          for lib in "${LIBS[@]}"; do
-            echo '   ```bash'
-            echo "   npx hf run ${lib}:version"
-            echo '   ```'
-          done
-          echo '3. Amend your commit: `git commit --amend --no-edit`'
-          echo '4. Force push: `git push --force-with-lease`'
+          echo '2. Push with the command that bumps the libraries that are due, commits the bump and pushes:'
+          echo '   ```bash'
+          echo '   npx hf push'
+          echo '   ```'
           echo ''
-          echo '**Or** push without `--no-verify` to let lefthook handle versioning automatically.'
+          echo 'A plain `git push` is refused by the pre-push hook while a bump is due; this comment means the hook was skipped or not installed (`npm install` installs it).'
           echo ''
           echo '---'
           echo ''
