@@ -140,6 +140,18 @@ jobs:
               }
             }
 
+            // A security change is told by its commit type, since no file path says what a change is for
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            if (commits.some(({ commit }) => /^security(\([^)]*\))?!?:/.test(commit.message))) {
+              patterns.security = { description: 'Security fixes' };
+              contributionTypes.add('security');
+              details.push('- **security**: a `security` commit');
+            }
+
             // Default to 'code' if no specific type detected but code files changed
             if (contributionTypes.size === 0 && files.length > 0) {
               contributionTypes.add('code');
