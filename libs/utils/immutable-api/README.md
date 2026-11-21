@@ -46,7 +46,7 @@ Decorators and utilities for creating immutable, tamper-proof object APIs with b
 
 ## What is @hyperfrontend/immutable-api-utils?
 
-@hyperfrontend/immutable-api-utils provides low-level utilities for locking object properties and methods to prevent modification. Using JavaScript's property descriptors (`Object.defineProperty`), it creates truly immutable APIs where neither values nor method bindings can be altered after definition.
+@hyperfrontend/immutable-api-utils provides low-level utilities for locking object properties and methods to prevent modification. Using JavaScript's property descriptors (`Object.defineProperty`), it creates APIs whose locked properties are non-writable and non-configurable, so neither their values nor their method bindings can be altered after definition.
 
 The library offers three approaches: a TypeScript decorator (`@locked()`) for class methods, a functional API (`lockedProps()`) for bulk property locking, and descriptor builders (`lockedPropertyDescriptors()`) for granular control. All utilities enforce non-writable, non-configurable descriptors while maintaining correct `this` binding through per-instance caching.
 
@@ -71,11 +71,11 @@ The safe built-in copies are captured at module initialization time. **Important
 
 ### Prevents Accidental API Tampering in Shared Contexts
 
-When exposing objects to third-party code, plugin systems, or sandboxed environments, you need guarantees that critical methods won't be overwritten. `@locked()` makes methods truly immutable: attempting reassignment throws a TypeError. This protects public APIs from accidental or malicious modification.
+When exposing objects to third-party code, plugin systems, or sandboxed environments, you need guarantees that critical methods won't be overwritten. `@locked()` makes methods non-writable and non-configurable: attempting reassignment throws a TypeError. This protects public APIs from accidental or malicious modification.
 
 ### Eliminates `this` Binding Bugs Without Arrow Functions
 
-Arrow functions in class fields break inheritance and bloat bundle sizes due to per-instance function creation. The `@locked()` decorator provides correct `this` binding (like arrow functions) while using efficient prototype methods. Methods are bound once per instance and cached with Symbol keys.
+Arrow functions in class fields break inheritance and cost a function per instance. The `@locked()` decorator provides correct `this` binding (like arrow functions) while using efficient prototype methods. Methods are bound once per instance and cached with Symbol keys.
 
 ### Simplifies Immutable Object Construction
 
@@ -164,7 +164,6 @@ Every export, on every subpath, is in the [API reference](https://www.hyperfront
 - **Sandboxed execution**: Expose safe APIs to untrusted code
 - **Configuration objects**: Lock critical config values after initialization
 - **Public library interfaces**: Protect exported classes from mutation
-- **Event emitters**: Prevent handler list manipulation
 - **Prototype pollution mitigation**: Safe built-in copies reduce attack surface when loaded early
 - **Secure logging**: Use safe `console` copies to prevent tampered log output
 - **Safe timers**: Prevent timer functions from being hijacked
