@@ -58,7 +58,7 @@ Designed for tooling authors building code generators, IDE extensions, CI/CD pip
 - **[Monorepo Intelligence](https://www.hyperfrontend.dev/docs/libraries/project-scope/tech/monorepo/)** - Detect NX, Turborepo, Lerna, pnpm/npm/Yarn workspaces; read project configurations
 - **[Dependency Graph](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/dependencies/)** - Build internal import graphs from source code with root/leaf node identification
 - **[Entry Point Discovery](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/entry-points/)** - Find application entries from package.json exports, bin fields, and convention patterns
-- **[CLI Interface](https://www.hyperfrontend.dev/docs/libraries/project-scope/cli/)** - Command-line access to all features with JSON/YAML output
+- **[CLI Interface](https://www.hyperfrontend.dev/docs/libraries/project-scope/cli/)** - Analysis, config, dependency and tree commands with JSON/YAML output, called through `run(argv)` from your own binary
 - **Zero Runtime Dependencies** - All dependencies bundled for minimal footprint
 
 ### Architecture Highlights
@@ -71,15 +71,15 @@ The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/project-sc
 
 ### Accurate Framework Detection for Code Generators
 
-Simple `package.json` parsing misses meta-frameworks, optional dependencies, and configuration-based setups. A project with [`next`](https://www.npmjs.com/package/next) installed might be Next.js, but could also be a library that exports Next.js components. This library's multi-signal heuristics analyze dependencies, directory structure (`pages/`, `app/`), and config files (`next.config.js`) together, returning confidence-scored results. Your generator knows _with certainty_ whether to scaffold Next.js pages or React components.
+Simple `package.json` parsing misses meta-frameworks, optional dependencies, and configuration-based setups. A project with [`next`](https://www.npmjs.com/package/next) installed might be Next.js, but could also be a library that exports Next.js components. This library's multi-signal heuristics analyze dependencies, directory structure (`pages/`, `app/`), and config files (`next.config.js`) together, returning confidence-scored results. Your generator reads the score to decide whether to scaffold Next.js pages or React components, and can ask when the score is low.
 
 ### Safe File Modifications with Rollback
 
-Code generators that write directly to disk risk leaving projects in broken states when errors occur mid-generation. The VFS buffers all changes in memory - write 50 files, validate the result, then `commitChanges()` atomically or `rollbackChanges()` to discard everything. Path traversal attacks are blocked at the VFS layer, making generators safe to run on untrusted input.
+Code generators that write directly to disk risk leaving projects in broken states when errors occur mid-generation. The VFS buffers all changes in memory - write 50 files, validate the result, then `commitChanges()` atomically or `rollbackChanges()` to discard everything. Path traversal is blocked at the VFS layer, so a generated path cannot escape the project root.
 
 ### Adaptive Tooling in Heterogeneous Monorepos
 
-Monorepos contain React apps, Vue libraries, Node.js services, and Cypress suites - each requiring different lint rules, build configs, and CI pipelines. Use `detectAll()` per project to get technology detection with version info, then conditionally apply configurations. Cached results (30-60s TTL) ensure repeated analysis during builds stays fast.
+Monorepos contain React apps, Vue libraries, Node.js services, and Cypress suites - each requiring different lint rules, build configs, and CI pipelines. Use `detectAll()` per project to get technology detection with version info, then conditionally apply configurations.
 
 ### IDE Extensions Without Manual Configuration
 
@@ -226,9 +226,6 @@ Every export, option and return type is in the [API reference](https://www.hyper
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
 
 **📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/project-scope)**
-
-- Works seamlessly with [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus) for cross-window communication tooling
-- Looking for cryptographic utilities? See [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography)
 
 ## License
 

@@ -32,6 +32,14 @@ export const CI_TARGETS = freeze(['typecheck', 'lint', 'test', 'build', 'e2e'] a
 /** The target whose output a deploy ships. */
 const BUILD_TARGET = 'build'
 
+/**
+ * The named input `hf.json` gives the manifest of the builder. A release counts it, since the
+ * builder's dependencies shape what every library ships; a plan leaves it out, since a build
+ * inside the workspace takes those dependencies from the root install, whose manifest and lock
+ * file select every task when they change.
+ */
+export const TOOLCHAIN_MANIFEST_INPUT = 'toolchainManifest'
+
 /** What a plan needs. */
 export interface PlanOptions {
   /** The graph at the head. */
@@ -90,7 +98,8 @@ function selectAll(graph: WorkspaceGraph, targets: readonly string[]): Selection
 }
 
 /**
- * The selection of a change: the owned decision of every target.
+ * The selection of a change: the owned decision of every target, the builder's manifest left out
+ * of what a task reads from the toolchain.
  *
  * @param options - The graph, the change and the targets
  * @param targets - The targets selected
@@ -98,7 +107,7 @@ function selectAll(graph: WorkspaceGraph, targets: readonly string[]): Selection
  */
 function selectChange(options: PlanOptions, targets: readonly string[]): Selection {
   const selection: Selection = { selected: createMap(), skipped: [] }
-  const sets = selectAffected({ ...revisions(options), targets })
+  const sets = selectAffected({ ...revisions(options), targets, ignoredInputs: [TOOLCHAIN_MANIFEST_INPUT] })
   for (const target of targets) {
     const set = sets.get(target) as AffectedSet
     for (const decision of set.selected) selection.selected.set(decision.task, [...decision.reasons])

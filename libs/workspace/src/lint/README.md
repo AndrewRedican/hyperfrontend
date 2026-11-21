@@ -29,7 +29,7 @@ The [graph entry](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/)
 
 - **Projects**: every directory holding a `project.json` or a `package.json` among the files Git tracks or would track, less what `.hfignore` excludes. Names, types, tags and targets follow Nx: a `package.json` beside a `project.json` adds its scripts as targets and `npm:` tags from its [`private`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/#api-PackageManifest-prop-private) flag and its keywords.
 - **npm packages**: the root `package-lock.json`, one node per name and version.
-- **Dependencies**: each code file's imports, read with the linter's own parser under Nx's rules, so a `require` inside a function or an `import()` counts as dynamic exactly when Nx counts it so; each `package.json`'s dependencies; and the implicit dependencies a project declares.
+- **Dependencies**: each code file's imports, read with the linter's own parser under Nx's rules, so a `require` inside a function or an `import()` counts as dynamic exactly when Nx counts it so; each `package.json`'s dependencies; and the implicit dependencies a project declares. A project that installs a workspace package from a registry for itself, with a lock file of its own and no TypeScript configuration extending the base one, depends on the installed package and not on the project carrying the name.
 
 Imports are remembered in `node_modules/.cache/hyperfrontend-lint/imports.json`: a file whose size and modification time are unchanged is not read again, and one whose content hash is unchanged is not parsed again. Like Nx's cached graph, the graph reflects the files on disk, not unsaved editor buffers.
 

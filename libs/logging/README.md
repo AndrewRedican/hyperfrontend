@@ -69,7 +69,7 @@ Debugging production issues requires adjusting log verbosity on running systems 
 
 ### Prevent Logging Failures from Cascading
 
-Logging operations can fail (network issues for remote transports, serialization errors for complex objects, disk space for file logs). Standard console methods throw synchronously, potentially crashing applications during log operations. This library wraps every log function with error suppression - if logging fails, the error is swallowed and execution continues. Your application stays stable even when logging infrastructure fails.
+Logging operations can fail (network issues for remote transports, serialization errors for complex objects, disk space for file logs). A sink that throws would otherwise crash the caller in the middle of a log call. This library wraps every log function with error suppression - if logging fails, the error is swallowed and execution continues. Your application stays stable even when logging infrastructure fails.
 
 ### Uniform Logging Interface Across Environments
 
@@ -81,7 +81,7 @@ Testing code with direct `console.log()` calls requires mocking global objects o
 
 ### Minimize Production Log Volume Costs
 
-Cloud logging services charge per log entry and storage volume. Applications using `console.log()` everywhere generate excessive logs, inflating costs without proportional debugging value. Set default log level to 'error' in production to capture only critical issues, then selectively enable verbose logging during investigations. Reduce log volume by 90%+ while maintaining debugging capabilities when needed.
+Cloud logging services charge per log entry and storage volume. Applications using `console.log()` everywhere generate excessive logs, inflating costs without proportional debugging value. Set default log level to 'error' in production to capture only critical issues, then selectively enable verbose logging during investigations.
 
 ## Installation
 
@@ -122,7 +122,7 @@ import winston from 'winston'
 const winstonLogger = createLogger(
   winston.error.bind(winston),
   winston.warn.bind(winston),
-  winston.log.bind(winston),
+  (...args) => winston.log('info', ...args),
   winston.info.bind(winston),
   winston.debug.bind(winston)
 )

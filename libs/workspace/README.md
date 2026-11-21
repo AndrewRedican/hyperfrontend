@@ -97,7 +97,7 @@ npx hf run my-utils:test
 npx hf affected -t test
 ```
 
-The first command writes `hf.json` and the base configurations and settles the root manifest (an ES module package, with `@types/node` among its development dependencies), which the second installs; the third writes a library with its project, manifest, configurations and e2e project; the rest run its tasks. The affected run compares with `origin/main`, or with [`main`](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/#api-main) where the repository has no such remote branch, unless `--base` names another revision. [The commands](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/) and [writing an executor or generator](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/) are each one page.
+The first command writes `hf.json` and the base configurations and settles the root manifest (an ES module package, with `@types/node` among its development dependencies), which the second installs; the third writes a library with its project, manifest, configurations and e2e project; the rest run its tasks. The affected run compares with `origin/main`, or with the local main branch where the repository has no such remote branch, unless `--base` names another revision. [The commands](https://www.hyperfrontend.dev/docs/libraries/workspace/cli/) and [writing an executor or generator](https://www.hyperfrontend.dev/docs/libraries/workspace/runner/) are each one page.
 
 ## API Overview
 

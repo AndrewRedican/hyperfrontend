@@ -1,6 +1,7 @@
 /**
- * The versions installed in the workspace, read off `package-lock.json`: each top-level
- * package's, and the versions installed below another package.
+ * What a `package-lock.json` installs: the version of each top-level package of the workspace and
+ * the versions installed below another package, and the packages a lock file takes from a
+ * registry.
  *
  * @module graph/lockfile
  */
@@ -15,7 +16,17 @@ import { readJson } from './json'
 interface LockEntry {
   /** The installed version. */
   readonly version?: string
+  /** Where the package was fetched from: a registry address, a `file:` path, or the directory a link points at. */
+  readonly resolved?: string
+  /** Whether the entry links a directory in place of installing a package. */
+  readonly link?: boolean
 }
+
+/** The path of a package installed at the top level starts with this. */
+const TOP_LEVEL = 'node_modules/'
+
+/** The address of a package a registry serves. */
+const REGISTRY_ADDRESS = /^https?:\/\//
 
 /** The lock file, as far as the versions are read. */
 interface LockFile {
@@ -58,4 +69,29 @@ export function installedPackages(root: string): InstalledPackages {
     else nested.add(`${name}@${entry.version}`)
   }
   return { hoisted, nested }
+}
+
+/**
+ * The packages a lock file installs from a registry at its top level, where an import of the
+ * directory beside it finds them. A package installed from a tarball on disk, a linked directory
+ * and a package installed below another are left out.
+ *
+ * @param lockFile - The lock file, absolute
+ * @returns The package names, in the order the lock file lists them; none without a lock file
+ *
+ * @example Only what a registry serves counts
+ * ```typescript
+ * // "node_modules/@acme/data": { "version": "1.0.0", "resolved": "https://registry.npmjs.org/@acme/data/-/data-1.0.0.tgz" }
+ * // "node_modules/@acme/shell": { "version": "0.1.0", "resolved": "file:vendor/acme-shell-0.1.0.tgz" }
+ * // "node_modules/@acme/linked": { "resolved": "../../libs/linked", "link": true }
+ * registryInstalls(join(root, 'apps/site/package-lock.json')) // => Set { '@acme/data' }
+ * ```
+ */
+export function registryInstalls(lockFile: string): Set<string> {
+  const names = createSet<string>()
+  for (const [path, entry] of entries(readJson<LockFile>(lockFile)?.packages ?? {})) {
+    if (path.lastIndexOf(TOP_LEVEL) === 0 && entry.link !== true && REGISTRY_ADDRESS.test(entry.resolved ?? ''))
+      names.add(path.slice(TOP_LEVEL.length))
+  }
+  return names
 }

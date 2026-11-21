@@ -77,7 +77,7 @@ Every distribution is a mathematical transform over a unit draw. The draw comes 
 
 ### UUID Generation Without External Dependencies
 
-Many projects pull in the [`uuid`](https://www.npmjs.com/package/uuid) package (500KB+) just for v4 UUIDs. This library provides a lightweight alternative with both generation and validation. Ideal for test fixtures, trace IDs, or non-security-critical unique identifiers without bloating bundles.
+Many projects pull in the [`uuid`](https://www.npmjs.com/package/uuid) package just for v4 UUIDs. This library provides a lightweight alternative with both generation and validation. Ideal for test fixtures, trace IDs, or non-security-critical unique identifiers without bloating bundles.
 
 ### Functional Composition for Data Pipelines
 
@@ -246,7 +246,7 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 **📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator)**
 
-- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for secure random generation
+- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for time-window password derivation
 
 ## License
 

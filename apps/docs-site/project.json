@@ -5,6 +5,19 @@
   "projectType": "application",
   "tags": ["type:app", "scope:standalone"],
   "implicitDependencies": ["demo-clock", "demo-heartbeat", "demo-koi-pond"],
+  "namedInputs": {
+    "documented": [
+      "{workspaceRoot}/ACKNOWLEDGMENTS.md",
+      "{workspaceRoot}/ARCHITECTURE.md",
+      "{workspaceRoot}/CONTRIBUTING.md",
+      "{workspaceRoot}/MANIFESTO.md",
+      "{workspaceRoot}/REGARDING_AI.md",
+      "{workspaceRoot}/libs/**/*.md",
+      "{workspaceRoot}/libs/**/src/**/*.ts",
+      "{workspaceRoot}/libs/**/package.json",
+      "{workspaceRoot}/libs/**/project.json"
+    ]
+  },
   "targets": {
     "typecheck": {
       "executor": "@hyperfrontend/workspace:run-commands",
@@ -53,17 +66,9 @@
       "dependsOn": ["install"],
       "inputs": [
         "default",
-        "{workspaceRoot}/ACKNOWLEDGMENTS.md",
-        "{workspaceRoot}/ARCHITECTURE.md",
-        "{workspaceRoot}/CONTRIBUTING.md",
-        "{workspaceRoot}/MANIFESTO.md",
-        "{workspaceRoot}/REGARDING_AI.md",
+        "documented",
         "{workspaceRoot}/.all-contributorsrc",
         "{workspaceRoot}/assets/media/**",
-        "{workspaceRoot}/libs/**/*.md",
-        "{workspaceRoot}/libs/**/src/**/*.ts",
-        "{workspaceRoot}/libs/**/package.json",
-        "{workspaceRoot}/libs/**/project.json",
         "{workspaceRoot}/plugins/**/*.md",
         "{workspaceRoot}/plugins/**/src/**/*.ts"
       ],

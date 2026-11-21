@@ -99,8 +99,13 @@ export function aliasResolving(aliases: readonly string[], specifier: string): s
   return aliases.find((alias) => alias === specifier || wildcardCapture(alias, specifier) !== null) ?? null
 }
 
+/** The prefix of the id of an installed package, which an import resolved without an alias names. */
+const EXTERNAL = 'external:'
+
 /**
- * The files importing through a set of changed aliases, each with the first such import.
+ * The files importing through a set of changed aliases, each with the first such import. An
+ * import that resolved to an installed package is not one: its file belongs to a project that
+ * takes the package from a registry, which the aliases do not reach.
  *
  * @param graph - The graph at the head of the change
  * @param aliases - The aliases that changed
@@ -117,7 +122,8 @@ export function aliasImporters(graph: WorkspaceGraph, aliases: readonly string[]
   const importers = createMap<string, AliasedImport>()
   const resolving = createMap<string, string | null>()
   for (const edge of graph.records) {
-    if (edge.evidence.kind !== 'source' || edge.path === null || importers.has(edge.evidence.file)) continue
+    if (edge.evidence.kind !== 'source' || edge.path === null || edge.target.startsWith(EXTERNAL) || importers.has(edge.evidence.file))
+      continue
     const { specifier } = edge.path
     if (!resolving.has(specifier)) resolving.set(specifier, aliasResolving(aliases, specifier))
     const alias = resolving.get(specifier) as string | null

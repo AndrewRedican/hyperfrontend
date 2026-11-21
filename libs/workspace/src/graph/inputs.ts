@@ -63,7 +63,9 @@ export const IMPLICIT_INPUTS: readonly InputDefinition[] = ['default', '^default
  * loader hooks, the command line's dispatch and the runner of a single task. A target naming it
  * among its inputs runs when that code changes; the release flow leaves it out, since the engine
  * changes what a task does and never what a build emits. The commands that plan several tasks,
- * format, generate or print run no task of another project, so a workspace leaves them out of it.
+ * format, generate or print, and the catalogue the dispatch looks them up in, run no task of
+ * another project, so a workspace leaves them out of it, along with a module that declares types
+ * alone and the entry that re-exports the runner, neither of which a task loads.
  */
 export const ENGINE_INPUT = 'engine'
 

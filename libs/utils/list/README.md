@@ -169,8 +169,6 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 **📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/list)**
 
-- Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for message queue management
-
 ## License
 
 [MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

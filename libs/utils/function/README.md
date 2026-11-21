@@ -87,7 +87,7 @@ The [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logg
 
 ### 5. Type-Safe No-Op for Optional Callbacks
 
-Default parameters and optional callback patterns often require placeholder no-op functions. Using `() => {}` loses type information and creates subtle bugs when functions expect specific signatures. The [`noop`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop) utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
+Default parameters and optional callback patterns often require placeholder no-op functions. The [`noop`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop) utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
 
 ## Installation
 

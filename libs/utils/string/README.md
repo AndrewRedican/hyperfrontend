@@ -64,7 +64,7 @@ Rather than wrapping platform differences behind abstraction layers, the library
 
 ### 1. Eliminates Cross-Platform Encoding Complexity
 
-String encoding operations differ significantly between browsers and Node.js. Browser APIs like `btoa()` don't handle UTF-8 correctly, and Node.js lacks native base64-to-Uint8Array converters. This library provides consistent APIs that "just work" across platforms while handling edge cases like multi-byte UTF-8 characters and binary string conversions.
+String encoding operations differ significantly between browsers and Node.js. Browser APIs like `btoa()` don't handle UTF-8 correctly, and Node.js does the same work through `Buffer`, with a different API. This library provides one API for both platforms and handles multi-byte UTF-8 characters and binary string conversions.
 
 **Example pain point solved:** `btoa('こんにちは')` throws in browsers because it expects Latin-1 encoding, but `toBase64('こんにちは')` correctly handles UTF-8 encoding in both environments.
 

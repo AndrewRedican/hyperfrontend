@@ -20,7 +20,8 @@
         {
           "projects": "lib-workspace",
           "input": "engine"
-        }
+        },
+        "documented"
       ]
     },
     "version": {
@@ -44,6 +45,10 @@
         {
           "projects": "lib-builder",
           "input": "toolchain"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchainManifest"
         },
         {
           "projects": "lib-workspace",
@@ -74,6 +79,10 @@
         {
           "projects": "lib-builder",
           "input": "toolchain"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchainManifest"
         },
         {
           "projects": "lib-workspace",
@@ -182,7 +191,6 @@
     "testExecutor": ["executorShared", "{projectRoot}/src/executors/test/**/*"],
     "e2eExecutor": ["executorShared", "{projectRoot}/src/executors/e2e/**/*"],
     "toolchain": [
-      "{projectRoot}/package.json",
       "{projectRoot}/src/models/**/*",
       "{projectRoot}/src/presets/**/*",
       "{projectRoot}/src/bundle/entries/**/*",
@@ -198,6 +206,8 @@
       "!{projectRoot}/**/README.md",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
     ],
+    "toolchainManifest": ["{projectRoot}/package.json"],
+    "documented": [],
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "dependencyState": [
       "{projectRoot}/package.json",
@@ -235,8 +245,11 @@
       "!{projectRoot}/src/runner/generate.ts",
       "!{projectRoot}/src/runner/generators.ts",
       "!{projectRoot}/src/runner/show.ts",
+      "!{projectRoot}/src/runner/contract.ts",
+      "!{projectRoot}/src/runner/index.ts",
       "!{projectRoot}/src/cli/tasks.ts",
       "!{projectRoot}/src/cli/graph.ts",
+      "!{projectRoot}/src/cli/catalogue.ts",
       "noTestMaterial"
     ],
     "executorShared": ["{projectRoot}/src/graph/json.ts", "{projectRoot}/src/executors/shared/**/*", "noTestMaterial"]

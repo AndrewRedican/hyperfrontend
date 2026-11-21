@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/a4177536ceb498d803d2dd3039ee691ed342cdea...07659cde52fac26784a4a945672637887d7e63ff) - 2026-11-21
+
+### Features
+
+- resolve a package a project installs itself as npm
+
 ## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/58e496517df8dcfda15e670fd4d8e7efb2a19ace...10275f0f99c6dd64b9f56158790585b2b5627863) - 2026-11-21
 
 ### Features

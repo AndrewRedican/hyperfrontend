@@ -1,6 +1,8 @@
 /**
  * What an import specifier names, seen from a file: a workspace project through a path alias,
- * a package name or a relative path, an npm package, a Node built-in, or nothing known.
+ * a package name or a relative path, an npm package, a Node built-in, or nothing known. A path
+ * alias reaches every file but those of a project that takes the package from a registry for
+ * itself, where the name means the installed package.
  *
  * @module graph/resolve
  */
@@ -14,6 +16,8 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
 import { matchesAny } from '@hyperfrontend/linter/helpers'
+import { registryPackages } from './own-install'
+import { Role, roleOf } from './roles'
 
 /** The Node modules a bare name may import. */
 const BUILTINS = createSet<string>(builtinModules)
@@ -143,10 +147,11 @@ export function packagesOf(workspaces: readonly Glob[], projects: ReadonlyMap<st
 }
 
 /**
- * Resolves a specifier seen from a file as Nx does: a relative path or an alias target names the
- * project whose root holds it, whether or not the file exists; an alias that names no project
- * falls through to the package lookup, where a package name resolves to the file of the entry it
- * names.
+ * Resolves a specifier seen from a file: a relative path or an alias target names the project
+ * whose root holds it, whether or not the file exists; an alias that names no project falls
+ * through to the package lookup, where a package name resolves to the file of the entry it names.
+ * An alias does not reach a file of a project that takes the package from a registry for itself:
+ * there the name is the installed package, as it is for the tools that project runs.
  *
  * @param resolver - What is known of the workspace
  * @param from - The importing file, workspace-relative
@@ -164,6 +169,15 @@ export function packagesOf(workspaces: readonly Glob[], projects: ReadonlyMap<st
  * // 'unknown' is answered only where no project, the workspace root included, holds the path
  * ```
  *
+ * @example An aliased name means the installed package to a project that installs it for itself
+ * ```typescript
+ * // apps/site has its own package-lock.json taking @acme/data from the registry, and extends no tsconfig of the workspace
+ * resolveSpecifier(graph, 'apps/site/src/main.ts', '@acme/data') // => { kind: 'npm', name: '@acme/data' }
+ * resolveSpecifier(graph, 'libs/report/src/index.ts', '@acme/data') // => { kind: 'project', project: <lib-data>, ... }
+ * // the lint command loads a lint configuration under the workspace's aliases, whatever its project installs
+ * resolveSpecifier(graph, 'apps/site/lint.config.ts', '@acme/data') // => { kind: 'project', project: <lib-data>, ... }
+ * ```
+ *
  * @example A relative path to a file that does not exist still names its project
  * ```typescript
  * const resolution = resolveSpecifier(graph, from, './missing')
@@ -174,7 +188,7 @@ export function resolveSpecifier(resolver: Resolver, from: string, specifier: st
   if (specifier.startsWith('./') || specifier.startsWith('../'))
     return locate(resolver, posix.normalize(posix.join(posix.dirname(from), specifier)))
   const aliased = viaAlias(resolver, specifier)
-  if (aliased !== null) return aliased
+  if (aliased !== null) return fromOwnInstall(resolver, from, specifier) ?? aliased
   if (specifier.startsWith('node:') || BUILTINS.has(specifier)) return { kind: 'builtin' }
   const packageName = packageNameOf(specifier)
   const owner = resolver.packages.get(packageName)
@@ -182,6 +196,23 @@ export function resolveSpecifier(resolver: Resolver, from: string, specifier: st
   if (owner !== undefined && !isInstalled(resolver.root, from, packageName))
     return { kind: 'project', project: owner, file: resolver.entries.get(specifier)?.file ?? null, path: null }
   return { kind: 'npm', name: packageName }
+}
+
+/**
+ * The installed package an aliased specifier names for the importing file, where its project
+ * takes the package from a registry for itself.
+ *
+ * @param resolver - What is known of the workspace
+ * @param from - The importing file, workspace-relative
+ * @param specifier - A specifier an alias matches
+ * @returns The npm resolution, or null where the alias applies
+ */
+function fromOwnInstall(resolver: Resolver, from: string, specifier: string): Resolution | null {
+  const project = projectOfFile(resolver.projects, from)
+  const name = packageNameOf(specifier)
+  if (project === null || !registryPackages(resolver.root, resolver.files, project).has(name)) return null
+  // why: the lint command loads a project's lint configuration under the workspace's aliases, whatever the project installs
+  return roleOf(from, project.root) === Role.LintConfig ? null : { kind: 'npm', name }
 }
 
 /** Each resolver's alias resolutions by specifier, which do not depend on the importing file. */

@@ -4,7 +4,9 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compileGlob } from '@hyperfrontend/linter/helpers'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { createConsumerWorkspace } from './__test-utils__/consumer-workspace'
 import { createGraphWorkspace } from './__test-utils__/workspace'
+import { workspaceGraph } from './build'
 import { entriesOfProject } from './entries'
 import { fileOf, packageNameOf, packagesOf, projectOfFile, resolveSpecifier, substituteWildcard, wildcardCapture } from './resolve'
 import { discoverProjects, listFiles } from './workspace'
@@ -39,10 +41,11 @@ let resolver: Resolver
  *
  * @param from - The importing file
  * @param specifier - The specifier resolved
+ * @param of - The workspace it is resolved in, the fixture's unless named
  * @returns A compact label
  */
-function label(from: string, specifier: string): string {
-  const resolution = resolveSpecifier(resolver, from, specifier)
+function label(from: string, specifier: string, of: Resolver = resolver): string {
+  const resolution = resolveSpecifier(of, from, specifier)
   if (resolution.kind === 'project') return `project ${resolution.project.name} ${resolution.file}`
   if (resolution.kind === 'npm') return `npm ${resolution.name}`
   return resolution.kind
@@ -185,6 +188,35 @@ describe('resolveSpecifier', () => {
       kind: 'unknown',
       path: 'lint.config',
     })
+  })
+})
+
+describe('resolveSpecifier for a project that installs for itself', () => {
+  const consumer = workspaceGraph(createConsumerWorkspace())
+
+  it.each([
+    ['an installed package from a file of the project', 'apps/site/src/main.ts', '@fixture/kit', 'npm @fixture/kit'],
+    ['an installed package from a subpath of it', 'apps/site/src/main.ts', '@fixture/kit/deep', 'npm @fixture/kit'],
+    [
+      'the library from its lint configuration, which loads under the aliases',
+      'apps/site/lint.config.ts',
+      '@fixture/rules',
+      'project lib-rules libs/rules/src/index.ts',
+    ],
+    [
+      'the library from a project whose configuration extends the base',
+      'apps/seed/src/main.ts',
+      '@fixture/kit',
+      'project lib-kit libs/kit/src/index.ts',
+    ],
+    ['the library from the workspace root', 'main.ts', '@fixture/kit', 'project lib-kit libs/kit/src/index.ts'],
+  ])('answers %s', (_title, from, specifier, expected) => {
+    expect(label(from, specifier, consumer)).toBe(expected)
+  })
+
+  it('answers the library from a file no project holds', () => {
+    const projects = createMap([...consumer.projects].filter(([name]) => name !== 'root'))
+    expect(label('main.ts', '@fixture/kit', { ...consumer, projects })).toBe('project lib-kit libs/kit/src/index.ts')
   })
 })
 
