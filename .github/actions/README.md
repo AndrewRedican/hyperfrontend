@@ -67,7 +67,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **What it does**:
 
 1. **Removes stale comments**: Deletes any existing version-check comments from previous runs (idempotency)
-2. **Validates versions**: Lists the libraries owning a changed file, or every library when a global configuration file (`hf.json`, `package.json`, `package-lock.json`, `tsconfig.base.json`) changes (`pipeline affected --target version-check --projects`), and runs `hf.ts run <library>:version-check --verbose=true` for each. The job only checks versions; the pre-push hook bumps them
+2. **Validates versions**: Lists the libraries owning a changed file, or every library when a global configuration file (`hf.json`, `package.json`, `package-lock.json`, `tsconfig.base.json`) changes (`pipeline affected --target version-check --projects`), and runs `hf.ts run <library>:version-check --verbose=true` for each. The job only checks versions; `npx hf push` bumps them before it pushes
 3. **Posts failure comment**: If validation fails, posts a comment with:
    - List of libraries with issues
    - Step-by-step fix instructions
