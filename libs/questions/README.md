@@ -50,7 +50,7 @@ A terminal prompting library built on functional programming principles. Create 
 
 ### Key Features
 
-- **Pure Functions**: Every prompt is a pure function returning `Promise<PromptOutcome<T>>`, making results predictable and easily testable
+- **Outcomes, Not Exceptions**: Every prompt is an async function resolving to `Promise<PromptOutcome<T>>`, so an answer and a cancellation are both values you branch on
 - **[Composable API](https://www.hyperfrontend.dev/docs/guides/build-a-setup-wizard-for-your-cli/)**: Build complex interactive flows by combining simple prompt functions
 - **[Type-Safe](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptOutcome)**: Full TypeScript support with discriminated unions for prompt outcomes
 - **Zero External Dependencies**: Uses only Node.js built-ins and `@hyperfrontend` utilities
@@ -75,7 +75,7 @@ When building CLI tools, you need interactive prompts that are:
 3. **Cancellable**: Handle Ctrl+C gracefully with structured cancellation
 4. **Lightweight**: No large dependency trees for simple prompts
 
-This library provides all four while staying true to functional programming principles.
+This library provides all four.
 
 ## Installation
 
@@ -178,6 +178,12 @@ Prompts run on a TTY, where the session redraws when the terminal is resized, an
 | CJS    | `index.cjs` |       ❌       |
 
 No browser bundle is published: the library drives a terminal, so an IIFE or UMD build would have nothing to run against.
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/questions)**
 
 ## License
 
