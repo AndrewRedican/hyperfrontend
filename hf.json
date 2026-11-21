@@ -20,7 +20,8 @@
         {
           "projects": "lib-workspace",
           "input": "engine"
-        }
+        },
+        "documented"
       ]
     },
     "version": {
@@ -206,6 +207,7 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
     ],
     "toolchainManifest": ["{projectRoot}/package.json"],
+    "documented": [],
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "dependencyState": [
       "{projectRoot}/package.json",
