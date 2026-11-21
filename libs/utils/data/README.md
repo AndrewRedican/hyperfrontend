@@ -100,7 +100,7 @@ npm install @hyperfrontend/data-utils
 ### Enhanced Type Detection
 
 ```typescript
-import { getType } from '@hyperfrontend/data-utils'
+import { getType, registerClassTypes } from '@hyperfrontend/data-utils'
 
 getType(null) // 'null' (not 'object')
 getType([1, 2, 3]) // 'array' (not 'object')
@@ -228,19 +228,19 @@ const data = { user_id: 1, user_name: 'Alice' }
 renameKey(data, 'user_id', 'userId')
 // { userId: 1, user_name: 'Alice' }
 
-// Remove keys by pattern
-removeKey(data, /^user_/)
-// { userId: 1 } (removes keys starting with 'user_')
-
 // Replace text in all string values
 replaceText(data, 'Alice', 'Bob')
 // { userId: 1, user_name: 'Bob' }
+
+// Remove keys by pattern
+removeKey(data, /^user_/)
+// { userId: 1 } (removes keys starting with 'user_')
 ```
 
 ### Register Custom Classes
 
 ```typescript
-import { registerIterableClass, registerClassTypes } from '@hyperfrontend/data-utils'
+import { isIdentical, registerIterableClass, selectiveCopy } from '@hyperfrontend/data-utils'
 
 class Graph {
   nodes = new Map()
