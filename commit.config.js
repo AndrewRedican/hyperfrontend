@@ -10,6 +10,7 @@ module.exports = {
   types: [
     { name: 'feat', description: 'A new feature' },
     { name: 'fix', description: 'A bug fix' },
+    { name: 'security', description: 'A dependency or code change made for a security reason' },
     { name: 'docs', description: 'Documentation only changes' },
     { name: 'style', description: 'Changes that do not affect code meaning (whitespace, formatting)' },
     { name: 'refactor', description: 'A code change that neither fixes a bug nor adds a feature' },
@@ -27,7 +28,10 @@ module.exports = {
   headerMaxLength: 72,
 
   validateRuleset: {
-    'type-enum': ['error', { types: ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'] }],
+    'type-enum': [
+      'error',
+      { types: ['feat', 'fix', 'security', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'] },
+    ],
     'subject-empty': ['error'],
     'subject-case': ['off'],
     'header-max-length': ['warn', { maxLength: 72 }],
