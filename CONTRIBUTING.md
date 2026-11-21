@@ -303,7 +303,7 @@ A plain `git push` still works whenever no bump is due. When one is due, the pre
 
 **What this means for you:**
 
-- Just write conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
+- Just write conventional commit messages (`feat:`, `fix:`, `security:`, `docs:`, etc.)
 - Push with `npx hf push`; versioning happens as part of it
 - Your PR will include the version bump already applied
 - A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the modules of the builder that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor releases every library. That named input is a hand-kept list: a new builder module that changes what lands in a tarball is added to it in the same change
@@ -548,6 +548,7 @@ This walks you through `type → scope → subject → body → breaking → iss
 
 - **feat**: A new feature
 - **fix**: A bug fix
+- **security**: A dependency or code change made for a security reason
 - **docs**: Documentation changes
 - **style**: Code style changes (formatting, missing semicolons, etc.)
 - **refactor**: Code refactoring
@@ -556,6 +557,10 @@ This walks you through `type → scope → subject → body → breaking → iss
 - **build**: Build system changes
 - **ci**: CI/CD changes
 - **chore**: Other changes that don't modify src or test files
+
+`feat`, `fix`, `security`, `perf` and `revert` release the library they are scoped to; the other types release nothing.
+
+A dependency change made for a security reason is `security(<project>)`, whatever the size of the bump. It releases the package by a patch and is listed under "Security" in its changelog. It carries `!` when it breaks public API, and a change that adds public API is a `feat`. Bumping a dependency a package inlines, even across its major, breaks nothing for consumers; raising a real dependency or a peer range can.
 
 ### Examples
 
