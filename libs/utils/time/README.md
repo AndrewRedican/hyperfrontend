@@ -48,7 +48,7 @@ Functional time utilities for async operations, intervals, and time normalizatio
 
 [`@hyperfrontend/time-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/time/) provides composable, testable utilities for working with time-based operations in JavaScript. The library focuses on enhancing the control and flexibility of standard timing APIs (`setTimeout`, `setInterval`) while adding specialized utilities for async workflows and time window calculations.
 
-Unlike the native timing APIs which offer limited lifecycle control, this library wraps them in functional interfaces that support pausing, resuming, resetting, and subscription management. All utilities return immutable objects with frozen APIs, preventing accidental mutation while maintaining predictable behavior.
+Unlike the native timing APIs which offer limited lifecycle control, this library wraps them in functional interfaces that support pausing, resuming, resetting, and subscription management. Timers and clocks are frozen objects, which prevents accidental mutation.
 
 ### Key Features
 
@@ -57,7 +57,7 @@ Unlike the native timing APIs which offer limited lifecycle control, this librar
 - **[Promise-based delays](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-sleep)** - Async/await compatible `sleep()` utility for sequential code flows
 - **[Time window normalization](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-normalizeToBaseTimeWindow)** - Bucket timestamps into fixed intervals (e.g., 5-minute windows for aggregation)
 - **Functional cleanup** - All repeating operations return cleanup functions for straightforward teardown
-- **Immutable APIs** - All returned objects are frozen, preventing accidental state modifications
+- **Immutable APIs** - Timers and clocks are frozen objects, preventing accidental state modifications
 - **Zero dependencies** - Self-contained timing utilities with no external dependencies
 - **TypeScript native** - Full type definitions with comprehensive JSDoc documentation
 
@@ -71,7 +71,7 @@ JavaScript's `setTimeout` and `setInterval` cannot be paused: once started, they
 
 ### 2. Multi-Subscriber Interval Management
 
-Native `setInterval` requires creating separate intervals for each callback that needs to run at the same frequency, leading to drift and coordination issues. `createClock()` lets multiple callbacks subscribe to a single interval loop, ensuring they all fire synchronously at exact intervals. Perfect for real-time dashboards, clocks, or animation frames.
+Native `setInterval` requires creating separate intervals for each callback that needs to run at the same frequency, leading to drift and coordination issues. `createClock()` lets multiple callbacks subscribe to a single interval loop, so they all fire on the same tick. Perfect for real-time dashboards, clocks, or animation frames.
 
 **Example:** A dashboard with 5 widgets updating every second would require 5 separate `setInterval` calls, potentially drifting apart. A single clock can notify all widgets simultaneously from one interval.
 
@@ -89,7 +89,7 @@ Real-time data aggregation often requires grouping events into time buckets (5-m
 
 ### 5. Immutable, Testable Timing Abstractions
 
-Testing code with `setTimeout` and `setInterval` typically requires jest timers or sinon fakes, adding complexity. These utilities use standard timing APIs internally but expose functional interfaces that are easier to mock and test. The frozen return objects prevent accidental mutations that could cause subtle timing bugs.
+Testing code with `setTimeout` and `setInterval` typically requires jest timers or sinon fakes, adding complexity. These utilities sit on the standard timing APIs, so the fake timers a test already uses drive them too. The frozen return objects prevent accidental mutations that could cause subtle timing bugs.
 
 ## Installation
 
@@ -128,15 +128,16 @@ const clock = createClock(1000)
 
 // Multiple subscribers can listen
 clock.subscribe((time) => console.log('Widget 1:', time))
-clock.subscribe((time) => console.log('Widget 2:', time))
+const widget2 = (time: Date) => console.log('Widget 2:', time)
+clock.subscribe(widget2)
 
 clock.start() // Both widgets update every second
 
 // Later, stop all updates
 clock.stop()
 
-// Unsubscribe specific callbacks
-clock.unsubscribe(callback)
+// Unsubscribe a specific callback
+clock.unsubscribe(widget2)
 ```
 
 **Async delays:**
