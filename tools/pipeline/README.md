@@ -84,8 +84,8 @@ RAILWAY_TOKEN=<project token> HF_PROVISION_PLAN=/tmp/railway-plan.json node tool
 It runs in three places:
 
 - The `binary-budget` job in `ci-pr.yml` checks the pull request against its base and gates `status`. To approve a budget overrun, add the `binary-budget-approved` label to the pull request and re-run the failed jobs; the label is read when the job runs.
-- The lefthook `pre-commit` hook checks the staged changes as the next commit. Only what that commit adds is held to the per-file limit, so later commits are not blocked by an oversized earlier one.
-- The lefthook `pre-push` hook checks the checked-out branch against `origin/main`, the way CI does. Like the other pre-push commands, lefthook skips it when the push changes no files, and it checks the checked-out branch rather than each pushed ref; CI covers both.
+- The `pre-commit` hook checks the staged changes as the next commit. Only what that commit adds is held to the per-file limit, so later commits are not blocked by an oversized earlier one.
+- The `pre-push` hook checks the checked-out branch against `origin/main`, the way CI does. It checks the checked-out branch rather than each pushed ref; CI covers both.
 
 Both hooks report a budget overrun as a warning, because approval is a decision for the pull request. Without an `origin/main` they warn and measure from `HEAD`, so a clone without it can still commit and push. Nothing overrides the per-file limit: a file that large belongs outside Git, for example as an absolute-URL video source on the docs site or a release asset. Raising a limit means editing the constant at the top of the script, in a reviewed commit.
 
@@ -126,7 +126,7 @@ An exception is a debt with a due date, and the check collects it:
 It runs in three places, with one list of exceptions between them:
 
 - The `audit` target every lockfile root declares runs it at `moderate`; `npx hf run-many -t audit --all` covers them all.
-- The lefthook `pre-push` hook runs that command first, and a failure stops the push.
+- The `pre-push` hook runs that command after the binary budget, and a failure stops the push before the longer steps start.
 - The `dependency audit` job in `security-scan.yml` runs it on the root lockfile at `high`.
 
 ```bash
