@@ -50,5 +50,7 @@ lint-output.txt
 
 _
 .claude/worktrees
+# One clone's preferences about the Git hooks
+hooks.local.config.ts
 # Owned graph and replay state
 .hf/
