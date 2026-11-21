@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
+import { createConsumerWorkspace } from './__test-utils__/consumer-workspace'
 import { createGraphWorkspace } from './__test-utils__/workspace'
 import { buildGraph, workspaceGraph } from './build'
 import { fileEdge } from './file-edges'
@@ -312,6 +313,30 @@ describe('the groups', () => {
         { source: '@fixture/app', target: 'file:lint.config', kind: 'unresolved', role: 'production', files: ['apps/app/src/main.ts'] },
       ])
     )
+  })
+})
+
+describe('the manifest edges of a project that installs for itself', () => {
+  const consumer = workspaceGraph(createConsumerWorkspace())
+
+  /**
+   * What the manifest of a project of the consumer workspace depends on.
+   *
+   * @param project - The project's name
+   * @returns `<package> -> <target>` per dependency
+   */
+  function dependencies(project: string): string[] {
+    return consumer.records
+      .filter((edge) => edge.source === `project:${project}` && edge.kind === 'manifest')
+      .map((edge) => `${edge.path?.specifier} -> ${edge.target}`)
+  }
+
+  it('name the installed package, whatever project of the workspace carries the name', () => {
+    expect(dependencies('site')).toEqual(['@fixture/kit -> external:@fixture/kit@1.0.0', 'left-pad -> external:left-pad@1.3.0'])
+  })
+
+  it('name the project of the workspace where its aliases reach', () => {
+    expect(dependencies('seed')).toEqual(['left-pad -> external:left-pad@1.3.0', '@fixture/kit -> project:lib-kit'])
   })
 })
 

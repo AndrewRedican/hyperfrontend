@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { ALIAS_TSCONFIG, createAliasWorkspace } from '../__test-utils__/alias-workspace'
+import { createConsumerWorkspace } from '../__test-utils__/consumer-workspace'
 import { workspaceGraph } from '../build'
 import { aliasImporters, aliasResolving, changedAliases } from './aliases'
 
@@ -62,5 +63,10 @@ describe('aliasImporters', () => {
 
   it('lists nothing when no alias changed', () => {
     expect([...aliasImporters(graph, [])]).toEqual([])
+  })
+
+  it('leaves out a file whose project takes the package from a registry', () => {
+    const importers = aliasImporters(workspaceGraph(createConsumerWorkspace()), ['@fixture/kit'])
+    expect(['apps/site/src/main.ts', 'apps/seed/src/main.ts'].filter((file) => importers.has(file))).toEqual(['apps/seed/src/main.ts'])
   })
 })

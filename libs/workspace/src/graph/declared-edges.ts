@@ -13,6 +13,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { selfInputs, targetExecutor, targetInputs } from './inputs'
 import { readJson } from './json'
 import { nodeId, RUN_COMMANDS } from './model'
+import { registryPackages } from './own-install'
 import { fileOf, packageNameOf, projectOfFile } from './resolve'
 import { Role } from './roles'
 
@@ -109,7 +110,8 @@ type Configure = (target: string, kind: EdgeKind, file: string, key: string, pat
 
 /**
  * The edges a manifest's dependency sections declare: to the workspace project carrying a
- * package, else to the installed package.
+ * package, else to the installed package. A project that takes a package from a registry for
+ * itself depends on the installed package, whatever project of the workspace carries the name.
  *
  * @param context - The packages and versions
  * @param project - The project whose manifest is read
@@ -118,9 +120,10 @@ type Configure = (target: string, kind: EdgeKind, file: string, key: string, pat
 function manifestEdges(context: DeclaredEdgeContext, project: ProjectRecord, configured: Configure): void {
   const manifest = project.manifest as PackageManifest
   const file = projectFile(project, 'package.json')
+  const installed = registryPackages(context.root, context.files, project)
   for (const section of DEPENDENCY_SECTIONS) {
     for (const name of keys(manifest[section] ?? {})) {
-      const owner = context.byPackage.get(name)
+      const owner = installed.has(name) ? undefined : context.byPackage.get(name)
       const target =
         owner === undefined
           ? nodeId({ kind: 'external', name, version: context.versions.get(name) ?? null })

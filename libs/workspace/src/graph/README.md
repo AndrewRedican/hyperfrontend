@@ -2,7 +2,7 @@
 
 The owned workspace graph: what a workspace is made of and how its parts reach one another, qualified more finely than a project-level graph can be, so that a change can be traced to exactly the tasks it affects.
 
-[`workspaceGraph`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/#api-workspaceGraph) builds it once per process from the files git tracks or would track (less `.hfignore`), the `project.json` and `package.json` files among them, `tsconfig.base.json`, `hf.json` and `package-lock.json`.
+[`workspaceGraph`](https://www.hyperfrontend.dev/docs/libraries/workspace/graph/#api-workspaceGraph) builds it once per process from the files git tracks or would track (less `.hfignore`), the `project.json` and `package.json` files among them, `tsconfig.base.json`, `hf.json` and `package-lock.json`, and for a project that installs for itself its own lock file and the TypeScript configurations at its root.
 
 | Node kind | Identity                                     | Read from                                                    |
 | --------- | -------------------------------------------- | ------------------------------------------------------------ |
@@ -13,6 +13,10 @@ The owned workspace graph: what a workspace is made of and how its parts reach o
 | tool      | the executor a target runs                   | `project.json` targets, `hf.json` defaults, `executors.json` |
 | config    | a configuration file or glob a target reads  | target inputs after the named inputs expand                  |
 | task      | `<project>:<target>`                         | targets after the defaults merge                             |
+
+A path alias of `tsconfig.base.json` names a library's source to every file but those of a project that takes the package from a registry for itself. Such a project has a `package-lock.json` of its own that installs the package from a registry, no TypeScript configuration at its root that extends the base one, and no target running the engine's test or e2e executor, which load files through the aliases.
+
+There the name is the installed package, in the project's imports and in its manifest, so a change to the library selects none of its tasks. Its lint configuration is the exception, since the lint command loads it under the aliases. All of this is read from tracked files, so the graph of a commit does not depend on what a checkout has installed.
 
 ## Two views of the same imports
 
