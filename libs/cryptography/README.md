@@ -48,7 +48,7 @@ Production-grade cryptographic primitives with isomorphic APIs for browser and N
 
 @hyperfrontend/cryptography provides a comprehensive suite of cryptographic utilities designed for secure data handling in full-stack JavaScript applications. The library implements industry-standard encryption (AES-GCM), key derivation (PBKDF2), and hashing (SHA-256) with identical APIs across browser and Node.js environments, eliminating platform-specific code branching.
 
-The library features three modular entry points: platform-specific implementations ([`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/), [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/)) for optimized runtime performance, and a shared entry point ([`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/)) for platform-agnostic utilities. Core capabilities include secure password-based encryption/decryption, cryptographic vault storage with single-use modes, time-based password generation for rotating credentials, and cryptographically-secure random value generation.
+The library features three modular entry points: platform-specific implementations ([`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/), [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/)) for optimized runtime performance, and a shared entry point ([`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/)) for platform-agnostic utilities. Core capabilities include secure password-based encryption/decryption, cryptographic vault storage with single-use modes, time-window values two machines derive alike, and cryptographically-secure random value generation.
 
 ### Key Features
 
@@ -56,7 +56,7 @@ The library features three modular entry points: platform-specific implementatio
 - **[AES-GCM Encryption](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-encrypt)** - Industry-standard authenticated encryption with password-derived keys using PBKDF2 (100,000 iterations)
 - **[Session Key Agreement](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createKeyAgreement)** - Ephemeral P-256 ECDH, HKDF key expansion with usage-restricted keys, and raw AEAD sealing for many messages under one agreed key
 - **[Secure Vault Storage](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createVault)** - Password-protected in-memory storage with optional single-use mode for sensitive data
-- **[Time-Based Passwords](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-getTimeBasedPassword)** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
+- **[Time-Based Passwords](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-getTimeBasedPassword)** - Derive the same rotating value on two machines from the UTC time window alone; not a secret unless you combine it with one
 - **[Cryptographic Hashing](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createHash)** - SHA-256 hash generation with hexadecimal output and validation utilities
 - **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs
 - **Functional Architecture** - Pure functions with dependency injection for testability and composability
@@ -74,15 +74,15 @@ Full-stack applications typically require separate cryptography implementations 
 
 ### Production-Hardened Encryption Without Configuration Complexity
 
-Implementing secure encryption requires careful selection of algorithms, key derivation parameters, and IV/salt generation strategies. This library encapsulates cryptographic best practices (PBKDF2 with 100,000 iterations, unique salt/IV per operation, AES-GCM authenticated encryption) in simple `encrypt(message, password)` and `decrypt(encrypted, password)` functions. No configuration decisions, no security footguns - just production-grade encryption out of the box.
+Implementing secure encryption requires careful selection of algorithms, key derivation parameters, and IV/salt generation strategies. This library encapsulates cryptographic best practices (PBKDF2 with 100,000 iterations, unique salt/IV per operation, AES-GCM authenticated encryption) in simple `encrypt(message, password)` and `decrypt(encrypted, password)` functions.
 
-### Secure Credential Rotation with Time-Based Passwords
+### Rotating Values Two Systems Agree On Without a Round-Trip
 
-APIs requiring short-lived credentials (temporary links, time-boxed access tokens) need synchronized password generation across systems. The `getTimeBasedPasswords()` function generates cryptographically-secure passwords based on UTC time windows, enabling coordinated credential rotation without database round-trips. Generate passwords for current/previous/next windows to handle clock drift gracefully.
+Systems that need the same short-lived value (an expiring link, a rotating cache key) can each derive it from the UTC time window, with no database or network between them. The `getTimeBasedPasswords()` function returns the value for the current, previous and next window, so a receiver tolerates clock drift. The value comes from the clock alone: anyone who knows the window can compute it, so it identifies a window and authenticates nothing by itself. Combine it with a secret before relying on it as a credential.
 
 ### In-Memory Vaults for Sensitive Data Handling
 
-Processing sensitive data (credit cards, API keys, personal information) in memory creates exposure risks during debugging and logging. The `createVault()` API provides encrypted storage with password protection - data is encrypted at rest in memory and requires the vault password for retrieval. Single-use mode automatically closes the vault after first read, preventing accidental data leakage in long-lived processes.
+Processing sensitive data (credit cards, API keys, personal information) in memory creates exposure risks during debugging and logging. The `createVault()` API provides encrypted storage with password protection - data is encrypted at rest in memory and requires the vault password for retrieval. Single-use mode automatically closes the vault after first read, preventing accidental data leakage in long-lived processes. The vault's password lives in the same process, so this guards against accidental exposure, not against code running in that process.
 
 ### Dependency-Free Security for Minimal Attack Surface
 
@@ -118,8 +118,8 @@ const decrypted = await decrypt(encrypted, password)
 // Create encrypted in-memory storage
 const vault = createVault()
 await vault.write('api-key', 'sk-1234567890')
-const password = vault.getPassword() // Share password securely
-const value = await vault.read('api-key', password) // Returns 'sk-1234567890'
+const vaultPassword = vault.getPassword() // Share password securely
+const value = await vault.read('api-key', vaultPassword) // Returns 'sk-1234567890'
 
 // Generate SHA-256 hash
 const hash = await createHash('data-to-hash') // Returns hex string
@@ -134,7 +134,7 @@ import { encrypt, decrypt, createVault, getTimeBasedPasswords } from '@hyperfron
 const encrypted = await encrypt('Sensitive data', 'secure-password')
 const decrypted = await decrypt(encrypted, 'secure-password')
 
-// Time-based rotating passwords; the window is counted in minutes, so this is a 5-minute window
+// Time-window values; the window is counted in minutes, so this is a 5-minute window
 const generators = getTimeBasedPasswords(new Date(), 5)
 const currentPassword = await generators.current()
 const previousPassword = await generators.previous() // Handle clock drift
@@ -158,7 +158,7 @@ The session layer inverts the trade: it hands you the key and the nonce rather t
 
 [`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-seal) and [`open`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-open) then carry individual messages under those keys, taking a 12-byte nonce and an additional-data buffer that is authenticated but not encrypted, so a header can be bound to a payload without being hidden. That control costs you one rule: a nonce must never repeat under a given key, which a per-message counter scoped to a per-session key satisfies by construction. This is the layer [@hyperfrontend/network-protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) builds its envelope on.
 
-Beside both sit the small utilities: SHA-256 hashing with its format guard, raw random bytes, and [`getTimeBasedPasswords`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getTimeBasedPasswords), which derives the same rotating credential on two machines from the clock alone and returns [`current`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-current), [`previous`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-previous) and [`next`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-next) so a receiver tolerates a peer one window out of step; that window is counted in minutes, not milliseconds. As for which entry point to import, [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) is backed by the Web Crypto API and [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) by the Node.js `crypto` module, exporting the same names with the same signatures, so the choice is only about the runtime; [`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/) is the narrow shared slice, currently just [`isSHA256Hash`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-isSHA256Hash).
+Beside both sit the small utilities: SHA-256 hashing with its format guard, raw random bytes, and [`getTimeBasedPasswords`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getTimeBasedPasswords), which derives the same rotating value on two machines from the clock alone and returns [`current`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-current), [`previous`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-previous) and [`next`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-next) so a receiver tolerates a peer one window out of step; that window is counted in minutes, not milliseconds. As for which entry point to import, [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) is backed by the Web Crypto API and [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) by the Node.js `crypto` module, exporting the same names with the same signatures, so the choice is only about the runtime; [`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/) is the narrow shared slice, currently just [`isSHA256Hash`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-isSHA256Hash).
 
 Every signature, option type and thrown error is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-reference).
 
