@@ -30,11 +30,16 @@
   "prerequisites": {
     "knowledge": [
       "A git repository using [Conventional Commits](https://www.conventionalcommits.org/)",
-      "A git hook manager such as husky or lefthook, or the willingness to add one"
+      "A way to install a `commit-msg` hook, such as husky or the hooks of `@hyperfrontend/workspace`, or the willingness to add one"
     ]
   },
   "related": {
-    "reference": ["/docs/libraries/versioning", "/docs/libraries/versioning/bin", "/docs/libraries/versioning/commits/validate"]
+    "reference": [
+      "/docs/libraries/versioning",
+      "/docs/libraries/versioning/bin",
+      "/docs/libraries/versioning/commits/validate",
+      "/docs/libraries/workspace/git-hooks"
+    ]
   },
   "keywords": [
     "commitizen",
@@ -44,8 +49,8 @@
     "cl",
     "commit-msg",
     "husky",
-    "lefthook",
     "git hook",
+    "hooks.config.ts",
     "commit.config.js",
     "scope",
     "ruleset",
