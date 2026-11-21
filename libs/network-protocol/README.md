@@ -49,7 +49,7 @@ Production-grade network protocol for secure, real-time cross-window and cross-p
 
 You already have a transport: a WebSocket, `postMessage` to another window or a worker, a Node IPC pipe. What you do not have is the envelope to put on it. That is this library. Hand it a function that transmits bytes, a callback for delivered messages, a protocol provider, and the session the two ends agreed on, and you get a channel back.
 
-Each end mints a random nonce and an ephemeral P-256 key pair, advertises them in a 99-byte hello frame, and derives two AES-GCM-256 keys from the agreement, one per direction. Every message is sealed under the sending key with a counter that serves as the nonce and as the replay check; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
+The two ends exchange a hello and derive one key per direction for the session. Every message is sealed under the sending key and counted against replay; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
 
 Two protocols share that wire format. [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) keys the session from the agreement alone, which defeats anything that can only listen. [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) mixes a pre-shared key into the schedule, stretched once per session, so a script without the key can neither read frames nor produce frames the counterpart accepts.
 
@@ -103,16 +103,16 @@ The worker mirrors this with `role: 'responder'` and the two identities swapped;
 - **[Replay rejection before decryption](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/#what-each-protocol-claims)** - Frame counters start at 1 and must increase; a frame whose counter is not above the last accepted one is refused before any key is touched
 - **[One-shot sessions](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange)** - The first hello keys the session, a repeat of it is a duplicate, anything else is rejected, and a live session is never rekeyed
 - **Isomorphic design** - Identical APIs for browser (`postMessage`) and Node.js (IPC); a browser-composed side and a Node-composed side produce identical frames and interoperate
-- **[Ordered pipelines](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/)** - One seal stage outbound and one open stage inbound, each an array-backed FIFO that finishes a frame before pulling the next, with independent stop/resume
+- **[Ordered pipelines](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/)** - One seal stage outbound and one open stage inbound, each finishing a frame before pulling the next, with independent stop/resume
 - **[Drop reporting](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop)** - [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) receives every packet either stage discards, with the direction, the stage, the reason, and the protocol error that caused it
 - **[Machine-readable errors](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode)** - Six protocol error codes (`unsupported-version`, [`replayed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode), `authentication-failed`, [`malformed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode), `counter-exhausted`, `invalid-session`) survive the drop report
-- **[Topic-based routing](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/)** - Pub/sub message distribution with dynamic subscription resolution and WeakMap-based channel tracking
+- **[Topic-based routing](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/)** - Pub/sub message distribution with dynamic subscription resolution
 - **[Channel management](https://www.hyperfrontend.dev/docs/libraries/network-protocol/channel/)** - Named channels with UUID tracking, lifecycle control (stop/resume), and per-direction queue depth
 - **[Schema validation](https://www.hyperfrontend.dev/docs/libraries/network-protocol/data/)** - Each message carries a generated JSON Schema and a hash of it, so the receiver can check the shape it was sent
 
 ### Architecture Highlights
 
-The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. The cost is one ECDH agreement plus one HKDF expansion per direction per session (plus one PBKDF2 stretch for [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4)), then one AES-GCM operation per message in each direction; the stretch runs once, when the session is keyed, so it lands on the handshake and not on traffic.
+The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. Keying costs one handshake per session, the [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) stretch included; traffic costs one AES-GCM operation per message in each direction.
 
 The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/) works through the hello exchange, the wire format, the injected platform primitives, and what each protocol does and does not claim.
 
@@ -124,7 +124,7 @@ Raw `postMessage` and IPC give you bytes and nothing else. Everything above them
 
 ### A real key schedule, and you can read all of it
 
-Each side contributes a 32-byte nonce and an ephemeral P-256 public key in its hello. The salt is the two nonces in role order, the input key material is the ECDH shared secret ([`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3)) or the shared secret followed by a PBKDF2 stretch of the pre-shared key ([`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4)), and two keys come out of HKDF-SHA256 under info strings that name the protocol and both identities. Each side seals with its own direction's key and opens with the other's, raw material is zeroed after derivation, and the AES-GCM nonce is the frame counter, unique by construction. What each protocol promises is stated claim by claim in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/); neither hides the hello, because public keys and nonces are public by design.
+Nothing in the key schedule is bespoke or hidden: an ephemeral agreement, a standard key derivation and an authenticated cipher whose nonce is the frame counter, unique by construction. What each protocol promises is stated claim by claim in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/); neither hides the hello, because public keys and nonces are public by design.
 
 ### Ordering and backpressure come from the queues, not from a promise
 
@@ -236,77 +236,13 @@ window.addEventListener('message', ({ origin, data }) => {
 
 A guest holding a different key derives different keys: every frame from the host fails to authenticate and is reported through [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) with code `authentication-failed`, and nothing is delivered.
 
-### Node.js: the same channel between threads with v3
+### Node.js
 
-The main thread:
-
-```typescript
-import { randomUUID } from 'node:crypto'
-import { Worker } from 'node:worker_threads'
-import { logger } from '@hyperfrontend/logging'
-import { createChannel } from '@hyperfrontend/network-protocol/node/channel'
-import { createData, deserializeData } from '@hyperfrontend/network-protocol/node/data'
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v3'
-
-const mainId = randomUUID()
-const workerId = randomUUID()
-const worker = new Worker('./worker.js', { workerData: { mainId, workerId } })
-
-const channel = createChannel('thread-link', {
-  send: (frame) => worker.postMessage(frame, [frame.buffer]),
-  receive: (packet) => handle(packet.data.message),
-  protocolProvider: createProtocol(logger),
-  session: {
-    protocol: 'v3',
-    role: 'initiator',
-    localId: mainId,
-    peerId: workerId,
-  },
-})
-
-worker.on('message', (frame: Uint8Array) => (channel.isHello(frame) ? channel.acceptHello(frame) : channel.receive(frame)))
-worker.postMessage(await channel.hello())
-
-const data = deserializeData(
-  await createData(randomUUID(), 1, {
-    job: 'resize',
-    file: 'a.png',
-  })
-)
-channel.send(mainId, workerId, data)
-```
-
-The worker (`worker.js`):
-
-```typescript
-import { parentPort, workerData } from 'node:worker_threads'
-import { logger } from '@hyperfrontend/logging'
-import { createChannel } from '@hyperfrontend/network-protocol/node/channel'
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v3'
-
-const { mainId, workerId } = workerData
-
-const channel = createChannel('thread-link', {
-  send: (frame) => parentPort.postMessage(frame, [frame.buffer]),
-  receive: (packet) => handle(packet.data.message),
-  protocolProvider: createProtocol(logger),
-  session: {
-    protocol: 'v3',
-    role: 'responder',
-    localId: workerId,
-    peerId: mainId,
-  },
-})
-
-parentPort.on('message', (frame: Uint8Array) => (channel.isHello(frame) ? channel.acceptHello(frame) : channel.receive(frame)))
-parentPort.postMessage(await channel.hello())
-```
-
-Hello frames are posted by copy and sealed frames by transfer: the protocol hands out the same hello bytes on every call, so a transport may re-post it until the counterpart answers, while each sealed frame owns its buffer and is never needed again once sent.
+The [`/node`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/) entry points export the same names with the same signatures; its page shows the worker-thread equivalent.
 
 ## API Overview
 
-Nothing is exported from the package root: every import names a subpath, and the subpaths sit on two axes. One is the platform that supplies the crypto and text primitives, [`/browser`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/) or [`/node`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/). The other is the protocol version that keys the session, [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/) or [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/). A browser subpath and its Node twin export the same names with the same signatures, and a session between the two works because both sides derive their keys from the same bytes, so moving code between a page and a worker, or between a renderer and a main process, is an edit to the import path and nothing else.
+Nothing is exported from the package root: every import names a subpath, and the subpaths sit on two axes. One is the platform that supplies the crypto and text primitives, [`/browser`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/) or [`/node`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/). The other is the protocol version that keys the session, [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/) or [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/).
 
 Two calls get a link running. [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/#api-createProtocol) takes your logger, and on [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/) the pre-shared key as well, and hands back a provider. [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-createChannel) takes a label and an options object holding the [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-send) and [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-receive) callbacks that reach your transport, that provider, and the session the two ends agreed on.
 
@@ -321,13 +257,13 @@ const channel = createChannel(label, {
 // session: { protocol: 'v3' | 'v4', role: 'initiator' | 'responder', localId, peerId }
 ```
 
-What comes back is a [`Channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-Channel), and for most code it is the only object in play: the hello exchange your transport carries, `send(origin, target, data)` for traffic, [`stop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-StopResumeControl-prop-stop) and [`resume`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-StopResumeControl-prop-resume) for both directions at once, and [`outbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-outbound) and [`inbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-inbound) for per-direction queue depth. Nothing rejects. A frame that will not seal or will not open is dropped inside its own stage and reported to your [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) as a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-PacketDrop), while the rest of the pipeline keeps running.
+What comes back is a [`Channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-Channel), and for most code it is the only object in play: the hello exchange your transport carries, `send(origin, target, data)` for traffic, [`stop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-StopResumeControl-prop-stop) and [`resume`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-StopResumeControl-prop-resume) for both directions at once, and [`outbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-outbound) and [`inbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-inbound) for per-direction queue depth.
 
-The version is the security decision, and it is the only thing that differs between [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/) and [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/). [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) keys the session from the ephemeral agreement alone, which defeats anything that can only listen but says nothing about who the counterpart is. [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) mixes in a pre-shared key, stretched once when the session is keyed, so a script without that key can neither read frames nor produce frames the far side accepts; it carries two extra exports for that key, [`isValidSharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-isValidSharedKey) and [`MIN_SHARED_KEY_LENGTH`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-MIN_SHARED_KEY_LENGTH), and otherwise mirrors [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/). Both are built on the same [session protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/protocol/): the hello exchange, the key schedule, and the seal and open pipeline.
+The version is the security decision, and it is the only thing that differs between [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/) and [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/). [`/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/) carries two extra exports for its pre-shared key, [`isValidSharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-isValidSharedKey) and [`MIN_SHARED_KEY_LENGTH`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-MIN_SHARED_KEY_LENGTH), and otherwise mirrors [`/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/); what each protocol defeats is stated above. Both are built on the same [session protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/protocol/): the hello exchange, the key schedule, and the seal and open pipeline.
 
 Four subpaths name no platform because they hold no crypto. [`/queue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/) is the FIFO stage both pipelines are built from, [`/routing`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/) and [`/topic`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/) are the pub/sub layer that names message categories and decides which channels a topic's messages reach, and [`/security`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/) holds the session types and the six [`ProtocolErrorCode`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) values a drop can carry. The remaining per-platform subpaths are for taking one piece rather than a whole channel: [`/data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/data/) builds the message envelope, stamping a conversation id, a sequence number and a schema hash onto your payload, [`/packet`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/packet/) holds the packet builders and validators, and [`/sender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/sender/) and [`/receiver`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/receiver/) are the outbound and inbound halves on their own.
 
-Every option, type and validator is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference). The claims above are exercised end to end by the [session envelope integration test](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/integration-tests/session-envelope.browser.spec.ts), which wires two channels in memory over [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) and [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) and checks delivery in both directions, sealed bytes only on the wire, order across a burst, replay and foreign-session rejection reported as drops, a key mismatch delivering nothing, and a browser-composed side talking to a Node-composed side.
+Every option, type and validator is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference).
 
 ## Compatibility
 
