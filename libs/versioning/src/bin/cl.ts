@@ -55,7 +55,7 @@ export interface RunClOptions extends RunClDeps {
  * @param argv - Argument list following the bin name (e.g. `process.argv.slice(2)`)
  * @returns Parsed arguments
  *
- * @example Typical lefthook commit-msg invocation
+ * @example Typical commit-msg hook invocation
  * ```typescript
  * parseClArgs(['.git/COMMIT_EDITMSG'])
  * // => { messagePath: '.git/COMMIT_EDITMSG' }
@@ -139,7 +139,7 @@ export function formatValidationResult(result: ValidationResult): string {
  * @param options - argv, cwd, stderr, and optional dependency overrides
  * @returns Exit code the process should terminate with
  *
- * @example Running against a commit-msg file under a lefthook hook
+ * @example Running against a commit-msg file from a Git hook
  * ```typescript
  * const code = await runCl({
  *   argv: process.argv.slice(2),

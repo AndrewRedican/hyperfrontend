@@ -46,12 +46,10 @@ Reads the raw message from the given path, validates it against the configured
 ruleset, and prints errors (`✖`) and warnings (`⚠`) to stderr. Typical use is
 as a `commit-msg` hook:
 
-```yaml
-# lefthook.yml
-commit-msg:
-  commands:
-    commitlint:
-      run: npx cl {1}
+```bash
+#!/bin/sh
+# .git/hooks/commit-msg, or the command a hook manager runs for commit-msg
+npx cl "$1"
 ```
 
 The ruleset comes from `commit.config.*` ([`validateRuleset`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/author/#api-SessionConfig-prop-validateRuleset)) when one is
