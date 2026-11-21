@@ -3,7 +3,7 @@ import { after as afterAll } from 'node:test'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createPipelineWorkspace, modified, PIPELINE_WORKSPACE } from './__test-utils__/workspace'
-import { CI_TARGETS, createPlan } from './plan'
+import { CI_TARGETS, createPlan, TOOLCHAIN_MANIFEST_INPUT } from './plan'
 
 const workspace = createPipelineWorkspace()
 const { graph } = workspace
@@ -155,6 +155,31 @@ describe('createPlan', () => {
       ])
     } finally {
       engined.remove()
+    }
+  })
+
+  it('plans no build for a change to the manifest of the builder alone, which a build inside the workspace does not read', () => {
+    const file = parse(PIPELINE_WORKSPACE['hf.json'] as string) as FixtureWorkspaceFile
+    const build = file.targetDefaults['build'] as { readonly inputs: readonly unknown[] }
+    const pinned = createPipelineWorkspace({
+      ...PIPELINE_WORKSPACE,
+      'hf.json': stringify({
+        ...file,
+        namedInputs: { ...file.namedInputs, [TOOLCHAIN_MANIFEST_INPUT]: ['{projectRoot}/package.json'] },
+        targetDefaults: {
+          ...file.targetDefaults,
+          build: { ...build, inputs: [...build.inputs, { projects: 'tool-ling', input: TOOLCHAIN_MANIFEST_INPUT }] },
+        },
+      }),
+    })
+    try {
+      expect(chains(createPlan({ graph: pinned.graph, changes: modified('tools/tooling/package.json'), main: false }))).toEqual([
+        'linux tool-ling: typecheck lint test',
+        'macos tool-ling: typecheck lint test',
+        'windows tool-ling: typecheck lint test',
+      ])
+    } finally {
+      pinned.remove()
     }
   })
 
