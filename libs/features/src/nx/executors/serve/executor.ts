@@ -1,7 +1,7 @@
 import type { DevServerHandle } from '../../../server'
 import type { AsyncIteratorExecutor, ExecutorContext } from '../../model'
+import { waitForShutdown } from '@hyperfrontend/server'
 import { EXIT_OK, runDev } from '../../../cli'
-import { waitForShutdown } from '../../../shared/shutdown'
 import { resolveProjectCwd } from '../../shared/context'
 import { headlessFlags } from '../../shared/flags'
 

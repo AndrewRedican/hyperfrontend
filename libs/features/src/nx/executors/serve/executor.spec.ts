@@ -1,12 +1,12 @@
 import type { ExecutorContext } from '../../model'
 import { beforeEach } from 'node:test'
+import { waitForShutdown } from '@hyperfrontend/server'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDev } from '../../../cli'
-import { waitForShutdown } from '../../../shared/shutdown'
 import serveExecutor from './executor'
 
 jest.mock('../../../cli', () => ({ runDev: jest.fn(), EXIT_OK: 0 }))
-jest.mock('../../../shared/shutdown', () => ({ waitForShutdown: jest.fn() }))
+jest.mock('@hyperfrontend/server', () => ({ waitForShutdown: jest.fn() }))
 
 const runDevMock = jest.mocked(runDev)
 const waitForShutdownMock = jest.mocked(waitForShutdown)

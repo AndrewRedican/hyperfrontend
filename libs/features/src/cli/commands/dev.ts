@@ -1,9 +1,9 @@
 import type { DevServerHandle } from '../../server/dev-server'
 import type { CliFlags } from '../args'
 import { resolve } from 'node:path'
+import { waitForShutdown } from '@hyperfrontend/server'
 import { resolveDevConfig } from '../../server/config'
 import { startDevServer } from '../../server/dev-server'
-import { waitForShutdown } from '../../shared/shutdown'
 import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 
 /** Injectable boundaries for `runDev`, defaulted for production and overridden in tests. */

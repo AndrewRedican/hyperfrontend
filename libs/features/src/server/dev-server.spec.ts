@@ -4,10 +4,10 @@ import type { DevServerHandle } from './dev-server'
 import { createServer, get } from 'node:http'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
+import { closeServer, listen } from '@hyperfrontend/server'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir, useTempDir } from '@hyperfrontend/testing/fs'
 import { startDevServer } from './dev-server'
-import { closeServer, listen } from './listen'
 
 const fetchUrl = (url: string): Promise<{ status: number; body: string }> =>
   new Promise((resolve, reject) => {
