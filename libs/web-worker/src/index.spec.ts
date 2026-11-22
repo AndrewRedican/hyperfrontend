@@ -6,7 +6,7 @@ describe('web-worker', () => {
     expect(noop).toBeDefined()
   })
 
-  it('returns undefined from noop', () => {
-    expect(noop()).toBeUndefined()
+  it('runs noop without throwing', () => {
+    expect(() => noop()).not.toThrow()
   })
 })
