@@ -193,6 +193,7 @@ jobs:
             "nexus:libs/nexus"
             "project-scope:libs/project-scope"
             "questions:libs/questions"
+            "server:libs/server"
             "state-machine:libs/state-machine"
             "testing:libs/testing"
             "versioning:libs/versioning"
