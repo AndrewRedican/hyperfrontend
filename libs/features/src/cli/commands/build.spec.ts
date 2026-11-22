@@ -1,12 +1,15 @@
+import type { ReleaseManifest } from '@hyperfrontend/server/manifest'
 import type { CliFlags } from '../args'
 import type { ResolvedBuildBundle } from '../config/resolve'
 import type { RunBuildOptions } from './build'
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { build } from '@hyperfrontend/builder'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { shimCommand } from '@hyperfrontend/project-scope/core/process'
+import { parseReleaseManifest, verifyRelease } from '@hyperfrontend/server/manifest'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
 import { createCapturedOutput } from '@hyperfrontend/testing/process'
@@ -297,13 +300,15 @@ describe('runBuild', () => {
     expect(tmp.read('dist/clock-shell/metadata.json')).toContain('"protocol": "v4"')
   })
 
-  it('lists metadata.json in the built manifest files array so npm pack ships it', async () => {
+  it('lists metadata.json and hf-release.json in the built manifest files array so npm pack ships them', async () => {
     const runBuilder = jest.fn((input: { outputPath: string }) => {
       writeFileSync(join(input.outputPath, 'package.json'), '{ "name": "clock-shell", "files": ["**/index.*"] }')
       return Promise.resolve()
     })
     await runBuild(deps({ runBuilder }))
-    expect(parse(tmp.read('dist/clock-shell/package.json'))).toEqual(expect.objectContaining({ files: ['**/index.*', 'metadata.json'] }))
+    expect(parse(tmp.read('dist/clock-shell/package.json'))).toEqual(
+      expect.objectContaining({ files: ['**/index.*', 'metadata.json', 'hf-release.json'] })
+    )
   })
 
   it('leaves a built manifest without a files array untouched', async () => {
@@ -313,6 +318,83 @@ describe('runBuild', () => {
     })
     await runBuild(deps({ runBuilder }))
     expect(parse(tmp.read('dist/clock-shell/package.json'))).not.toHaveProperty('files')
+  })
+
+  const releaseManifest = (out = join('dist', 'clock-shell')): ReleaseManifest =>
+    parseReleaseManifest(tmp.read(join(out, 'hf-release.json')), tmp.resolve(join(out, 'hf-release.json')))
+
+  it('writes a release manifest beside the metadata', async () => {
+    await runBuild(deps({}))
+    expect(tmp.exists(join('dist', 'clock-shell', 'hf-release.json'))).toBe(true)
+  })
+
+  it('describes exactly the files of the delivered shell in the release manifest', async () => {
+    await runBuild(deps({}))
+    expect(verifyRelease(tmp.resolve(join('dist', 'clock-shell')), releaseManifest())).toEqual([])
+  })
+
+  it('names the shell package in the release manifest', async () => {
+    await runBuild(deps({}))
+    expect(releaseManifest().name).toBe('clock-shell')
+  })
+
+  it('stamps the canonical version into the release manifest', async () => {
+    const resolved = bundle('v4')
+    await runBuild(deps({ resolveConfig: () => Promise.resolve({ ...resolved, config: { ...resolved.config, version: 'v1.2.0' } }) }))
+    expect(releaseManifest().version).toBe('1.2.0')
+  })
+
+  it('hashes the package manifest as it is packed', async () => {
+    let packed = Buffer.alloc(0)
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'package.json'), '{ "name": "clock-shell", "files": ["**/index.*"] }')
+      return Promise.resolve()
+    })
+    const packTarball = (packageDir: string): string => {
+      packed = readFileSync(join(packageDir, 'package.json'))
+      return 'clock-shell-1.0.0.tgz'
+    }
+    await runBuild(deps({ runBuilder, packTarball }))
+    expect(releaseManifest().files.filter((file) => file.path === 'package.json')).toEqual([
+      { path: 'package.json', size: packed.length, sha256: createHash('sha256').update(packed).digest('hex') },
+    ])
+  })
+
+  it('leaves the release manifest out of its own list', async () => {
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'hf-release.json'), 'left by an earlier pass')
+      return Promise.resolve()
+    })
+    await runBuild(deps({ runBuilder }))
+    expect(releaseManifest().files.map((file) => file.path)).toEqual(['README.md', 'metadata.json'])
+  })
+
+  it('writes the release manifest before packing', async () => {
+    let present = false
+    const packTarball = (packageDir: string): string => {
+      present = existsSync(join(packageDir, 'hf-release.json'))
+      return 'clock-shell-1.0.0.tgz'
+    }
+    await runBuild(deps({ packTarball }))
+    expect(present).toBe(true)
+  })
+
+  it('rebuilds an unchanged feature to the same release manifest', async () => {
+    await runBuild(deps({ flags: mkFlags({ out: 'first' }) }))
+    await runBuild(deps({ flags: mkFlags({ out: 'second' }) }))
+    expect(tmp.read(join('second', 'hf-release.json'))).toBe(tmp.read(join('first', 'hf-release.json')))
+  })
+
+  it('fails the build on a feature name the release manifest cannot hold', async () => {
+    const err = createCapturedOutput()
+    const resolved = bundle('v4')
+    const resolveConfig = (): Promise<ResolvedBuildBundle> =>
+      Promise.resolve({ ...resolved, config: { ...resolved.config, name: 'wall clock' } })
+    const code = await runBuild(deps({ resolveConfig, stderr: err }))
+    expect({ code, stderr: err.text() }).toEqual({
+      code: 1,
+      stderr: expect.stringContaining('name must be a non-empty string with no whitespace, control character or U+FFFD.'),
+    })
   })
 
   it('normalizes declaration-map sources before packing', async () => {
@@ -373,6 +455,54 @@ describe('runBuild', () => {
       packTarball: () => 'clock.tgz',
     })
     expect(code).toBe(0)
+  })
+
+  const runUnreleasable = async (
+    field: string,
+    flags: Partial<CliFlags>
+  ): Promise<{ code: number; stdout: string; stderr: string; builderRuns: number }> => {
+    const stdout = createCapturedOutput()
+    const stderr = createCapturedOutput()
+    const runBuilder = jest.fn()
+    tmp.write('clock.contract.json', '{ "emitted": [], "accepted": [] }')
+    tmp.write(
+      'feature.config.json',
+      stringify({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', protocol: 'v4', ...parse(field) })
+    )
+    const code = await runBuild({ flags: mkFlags(flags), cwd: tmp.path, stdout, stderr, runBuilder, packTarball: () => 'clock.tgz' })
+    return { code, stdout: stdout.text(), stderr: stderr.text(), builderRuns: runBuilder.mock.calls.length }
+  }
+
+  it.each([
+    ['a feature name with whitespace', '{ "name": "wall clock" }'],
+    ['a version with a leading zero in a numeric prerelease identifier', '{ "version": "1.2.3-01" }'],
+  ])('refuses %s before the builder runs', async (_label, field) => {
+    const { code, builderRuns } = await runUnreleasable(field, {})
+    expect({ code, builderRuns }).toEqual({ code: 1, builderRuns: 0 })
+  })
+
+  it.each([
+    ['name', '{ "name": "wall clock" }'],
+    ['version', '{ "version": "1.2.3-01" }'],
+  ])('names the config field "%s" when it refuses it', async (key, field) => {
+    const { stderr } = await runUnreleasable(field, {})
+    expect(stderr).toContain(`Invalid config: "${key}" `)
+  })
+
+  it.each([
+    ['name', '{ "name": "wall clock" }'],
+    ['version', '{ "version": "1.2.3-01" }'],
+  ])('names no staging path when it refuses the config "%s"', async (_key, field) => {
+    const { stderr } = await runUnreleasable(field, {})
+    expect(stderr).not.toContain('.hf-shell-')
+  })
+
+  it.each([
+    ['name', '{ "name": "wall clock" }'],
+    ['version', '{ "version": "1.2.3-01" }'],
+  ])('reports the same refusal of the config "%s" on a dry run', async (key, field) => {
+    const { code, stdout, stderr } = await runUnreleasable(field, { dryRun: true })
+    expect({ code, stdout, stderr }).toEqual({ code: 1, stdout: '', stderr: expect.stringContaining(`Invalid config: "${key}" `) })
   })
 
   const runWithoutRunners = async (): Promise<void> => {
