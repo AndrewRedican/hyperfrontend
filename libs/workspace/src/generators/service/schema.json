@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the service, which names its directory and, with the scope of the root package.json's name, its package",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory the service is created under (e.g., 'apps' or 'apps/internal')",
+      "default": "apps"
+    },
+    "projectName": {
+      "type": "string",
+      "description": "The project's name, as tasks address it. Defaults to the service's name."
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the service"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The tags the module boundaries read (e.g., 'type:app,scope:internal')"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["name"]
+}

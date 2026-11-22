@@ -54,7 +54,7 @@ It is one small tool a team can read end to end. It keeps no task cache and load
 
 - **Affected analysis that explains itself** - every task a change selects or skips carries the rule and the file behind the decision
 - **The package lifecycle as targets** - typecheck, test, build, e2e, publish, version-check and version, named once in `hf.json`
-- **Generators that compose** - workspace, library, make-publishable, rename and move, callable by name from a generator of your own
+- **Generators that compose** - workspace, library, application, service, make-publishable, rename and move, callable by name from a generator of your own
 - **Releases from commits** - the version flow reads conventional commits, pins dependents, writes the changelog and commits the bump
 - **Lint rules on the graph** - module boundaries, dependency checks and shell command lines, for [`@hyperfrontend/linter`](https://www.hyperfrontend.dev/docs/libraries/linter/)
 - **Your own executors and generators** - a TypeScript function and a schema, found through a manifest, run with the same command

@@ -1,0 +1,2 @@
+/** The configuration the <%= projectName %> service runs with. */
+export default {}
