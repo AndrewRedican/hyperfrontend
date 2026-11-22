@@ -22,4 +22,10 @@ npx hf generate library my-utils --publishable --formats=esm,cjs
 | `--formats`     | The bundle formats, used with `--publishable`                                                                       |
 | `--skipFormat`  | Leave the written files unformatted                                                                                 |
 
-The licence and the repository come from the root manifest, with the project's directory recorded, so a package published from the library carries them.
+The licence comes from the root manifest. The manifest states no repository: the build writes the root manifest's, with the library's directory, into the package it publishes, so a package published from the library carries both. The version flow links the changelog it writes to the root manifest's repository too, so the root is the one place either is stated.
+
+The README names the package and what it is for. A library is private until it is made publishable, so its README says nothing of installing it; make-publishable replaces a README nobody has edited with one that does, whether or not formatting has rewritten its description since.
+
+Any description is accepted: where it is written into the comment that heads the entry module, the two characters that would end the comment are written apart, a word that opens a line with `@`, which the comment would read as a tag, is wrapped in backticks, and each further line starts as a line of the comment does. A package name that holds a quote, a backslash, a control character or those two characters is refused, since the comments it is written into could not carry it.
+
+It refuses to run where the library's directory already exists or another project already holds its project name, so nothing is written over; pass `--directory` or `--projectName` to place it beside what is there. It also refuses a package name another project's package states or `tsconfig.base.json` already holds an alias under, so no alias is written over; pass `--packageName` to choose another.

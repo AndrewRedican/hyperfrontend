@@ -2,10 +2,10 @@ import { mkdirSync, symlinkSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, sep } from 'node:path'
 import { beforeEach } from 'node:test'
-import { createFsTree } from '@hyperfrontend/project-scope/vfs'
+import { createFsTree, createMemoryTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { formatFiles, prettierOf } from './format'
+import { formatFiles, formatText, formatWhere, prettierOf } from './format'
 
 const workspace = useTempDir({
   prefix: 'format-',
@@ -53,5 +53,32 @@ describe('formatFiles', () => {
     const tree = createFsTree(workspace.path)
     tree.write('bad.ts', 'const = ;')
     await expect(formatFiles(tree)).rejects.toThrow('Variable declaration expected')
+  })
+})
+
+describe('formatWhere', () => {
+  it('formats the created and updated files the predicate takes, and leaves the others as they were written', async () => {
+    const tree = createFsTree(workspace.path)
+    tree.write('a.ts', 'const  a = "x";')
+    tree.write('b.ts', 'const  b = "x";')
+    await formatWhere(tree, (path) => path === 'a.ts')
+    expect({ a: tree.read('a.ts', 'utf-8'), b: tree.read('b.ts', 'utf-8') }).toEqual({ a: "const a = 'x'\n", b: 'const  b = "x";' })
+  })
+})
+
+describe('formatText', () => {
+  it('formats a text with the configuration that applies at the path', async () => {
+    expect(await formatText(createFsTree(workspace.path), 'a.ts', 'const  a = "x";')).toBe("const a = 'x'\n")
+  })
+
+  it.each([
+    ['the ignore file covers', 'skip.ts'],
+    ['prettier has no parser for', 'notes.unknown'],
+  ])('answers the text as it is for a path %s', async (_case, path) => {
+    expect(await formatText(createFsTree(workspace.path), path, 'const  a = "x";')).toBe('const  a = "x";')
+  })
+
+  it('answers the text as it is in a workspace that installs no prettier', async () => {
+    expect(await formatText(createMemoryTree({}, { root: join(sep, 'no-workspace') }), 'a.ts', 'const  a = "x";')).toBe('const  a = "x";')
   })
 })

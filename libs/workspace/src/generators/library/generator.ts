@@ -10,11 +10,12 @@ import type { LibraryGeneratorOptions } from './options'
 import { join } from 'node:path'
 import { runGenerator } from '../../runner/generators'
 import { formatFiles } from '../shared/format'
-import { names } from '../shared/names'
+import { assertWritableName, names } from '../shared/names'
 import { readRootManifest } from '../shared/package-json'
 import { joinPathFragments, offsetFromRoot } from '../shared/paths'
+import { assertNewProject, assertPackageNameFree } from '../shared/projects'
 import { scopeOf, scopedName } from '../shared/scope'
-import { generateFiles } from '../shared/templates'
+import { commentText, generateFiles } from '../shared/templates'
 import { writeJson } from '../shared/tree'
 import { addTsConfigPath } from '../shared/tsconfig-paths'
 
@@ -60,6 +61,7 @@ function withAt(scope: string | undefined): string | undefined {
  * @param tree - The tree, whose root manifest gives the default scope
  * @param options - The options as given
  * @returns The names, the root and the description the generator writes from
+ * @throws {Error} When the package name holds what the comments it is written into could not carry
  *
  * @example The names a spelling and the root manifest's scope settle to
  * ```typescript
@@ -79,10 +81,12 @@ export function planLibrary(tree: Tree, options: LibraryGeneratorOptions): Libra
   const name = names(options.name).fileName
   const projectRoot = joinPathFragments(options.directory ?? 'libs', name)
   const scope = withAt(options.scope) ?? scopeOf(readRootManifest(tree).name ?? '')
+  const packageName = options.packageName ?? scopedName(scope, name)
+  assertWritableName('package name', packageName)
   return {
     name,
     projectName: options.projectName ?? name,
-    packageName: options.packageName ?? scopedName(scope, name),
+    packageName,
     projectRoot,
     description: options.description ?? `${names(name).className} library.`,
     tags: options.tags ?? [],
@@ -92,22 +96,19 @@ export function planLibrary(tree: Tree, options: LibraryGeneratorOptions): Libra
 
 /**
  * Writes the library's `package.json`: an ES module package, private until it is made publishable,
- * with the licence and the repository the root manifest states.
+ * with the licence the root manifest states. It states no repository: the build writes the root
+ * manifest's, with the library's directory, into the package it publishes.
  *
  * @param tree - The tree written to
  * @param plan - The settled options
  */
 function writePackageJson(tree: Tree, plan: LibraryPlan): void {
   const root = readRootManifest(tree)
-  const repository = root.repository
   writeJson(tree, joinPathFragments(plan.projectRoot, 'package.json'), {
     name: plan.packageName,
     version: '0.0.0',
     description: plan.description,
     ...(root.license === undefined ? {} : { license: root.license }),
-    ...(repository === undefined
-      ? {}
-      : { repository: typeof repository === 'string' ? repository : { ...repository, directory: plan.projectRoot } }),
     // why: the configurations beside the sources are ES modules, and Node reads how to load them from the nearest manifest
     type: 'module',
     private: true,
@@ -137,11 +138,15 @@ function writeProjectJson(tree: Tree, plan: LibraryPlan): void {
 /**
  * Creates a library: its manifests, the files of its templates, and its alias in
  * `tsconfig.base.json`; then, for a publishable one, runs the generator named
- * `make-publishable` on it, the workspace's own where it provides one.
+ * `make-publishable` on it, the workspace's own where it provides one. The README names the
+ * package and what it is for, and says how to install it only once the library is publishable.
+ * It writes nothing where the library's directory is already there, another project holds its
+ * name, or another package or an alias of the base tsconfig holds its package name.
  *
  * @param tree - The tree, rooted at the workspace
  * @param options - What to create
  * @returns Resolves when the library is written
+ * @throws {Error} When the directory already exists, a project already has the name, or the package name is in use or cannot be written
  *
  * @example An internal library
  * ```bash
@@ -165,7 +170,9 @@ function writeProjectJson(tree: Tree, plan: LibraryPlan): void {
  */
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorOptions): Promise<void> {
   const plan = planLibrary(tree, options)
-  generateFiles(tree, TEMPLATES, plan.projectRoot, { ...plan })
+  assertNewProject(tree, plan.projectRoot, plan.projectName)
+  assertPackageNameFree(tree, plan.packageName, plan.projectRoot)
+  generateFiles(tree, TEMPLATES, plan.projectRoot, { ...plan, comment: { description: commentText(plan.description) } })
   writePackageJson(tree, plan)
   writeProjectJson(tree, plan)
   addTsConfigPath(tree, { packageName: plan.packageName, projectRoot: plan.projectRoot })

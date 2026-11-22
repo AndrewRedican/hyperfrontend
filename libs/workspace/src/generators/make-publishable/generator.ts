@@ -13,14 +13,15 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { tarballStem } from '../../executors/version/lib/update-e2e-dependencies'
 import { E2E_PREFIX } from '../shared/e2e-project'
-import { formatFiles } from '../shared/format'
+import { formatFiles, formatText } from '../shared/format'
+import { assertWritableName } from '../shared/names'
 import { DEFAULT_NODE_ENGINE, DEFAULT_NPM_ENGINE } from '../shared/node-floor'
 import { readPackageJsonInfo, readRootManifest } from '../shared/package-json'
 import { joinPathFragments, offsetFromRoot } from '../shared/paths'
 import { readProjectConfiguration } from '../shared/projects'
 import { globalNameOf, scopeOf, scopedName, unscopedName } from '../shared/scope'
 import { generateFiles } from '../shared/templates'
-import { readJson, updateJson } from '../shared/tree'
+import { amendJson, readJson } from '../shared/tree'
 
 /** The formats the build writes, in the order a target lists them. */
 const FORMATS: readonly BundleFormat[] = ['esm', 'cjs', 'iife', 'umd']
@@ -128,7 +129,7 @@ function bundleFormats(formats: readonly string[] | undefined): BundleFormat[] {
  * @param tree - The tree the project lives in
  * @param options - The options as given
  * @returns The names, the formats and the e2e project the generator writes from
- * @throws {Error} When the project has no `package.json` with a name, or a format is unknown
+ * @throws {Error} When the project has no `package.json` with a name, a format is unknown, or a name cannot be written into the files of the e2e project
  *
  * @example The formats fall into the build's order and the e2e names follow the package's
  * ```typescript
@@ -157,6 +158,11 @@ export function planPublishable(tree: Tree, options: MakePublishableGeneratorOpt
   const manifest = readPackageJsonInfo(tree, project.root)
   if (manifest.name === null) throw createError(`${options.project} has no package.json naming its package, so it cannot be published`)
   const packageName = manifest.name
+  const globalName = options.globalName ?? globalNameOf(packageName)
+  // why: the e2e project is written from templates that hold these names between quotes and in comments
+  assertWritableName('project name', options.project)
+  assertWritableName('package name', packageName)
+  assertWritableName('global name', globalName)
   const name = unscopedName(packageName)
   const scope = scopeOf(packageName)
   const formats = bundleFormats(options.formats)
@@ -167,7 +173,7 @@ export function planPublishable(tree: Tree, options: MakePublishableGeneratorOpt
     packageName,
     description: manifest.description,
     formats,
-    globalName: options.globalName ?? globalNameOf(packageName),
+    globalName,
     bundleEntry: options.bundleEntry ?? '.',
     // why: keywords a package already chose describe it better than a default can, so they are kept unless the run names its own
     keywords:
@@ -224,13 +230,13 @@ function mergedBuildTarget(plan: PublishablePlan, existing: BuildTarget): BuildT
  * Adds the targets a published package runs to `project.json`: `version`, `version-check`,
  * `build` with the formats, `publish` and `typecheck`. A target the project already configures
  * keeps its configuration, the `build` target gaining the formats it lacks, so a re-run changes
- * nothing.
+ * nothing and leaves the file as it is written.
  *
  * @param tree - The tree written to
  * @param plan - The settled options
  */
 function updateProjectJson(tree: Tree, plan: PublishablePlan): void {
-  updateJson<PublishableProjectJson>(tree, joinPathFragments(plan.projectRoot, 'project.json'), (json) => {
+  amendJson<PublishableProjectJson>(tree, joinPathFragments(plan.projectRoot, 'project.json'), (json) => {
     const targets: Record<string, unknown> = { version: {}, 'version-check': {}, build: {}, publish: {}, typecheck: {}, ...json.targets }
     targets['build'] = mergedBuildTarget(plan, (json.targets?.['build'] ?? {}) as BuildTarget)
     json.targets = targets
@@ -248,7 +254,7 @@ function updateProjectJson(tree: Tree, plan: PublishablePlan): void {
  */
 function updatePackageJson(tree: Tree, plan: PublishablePlan): void {
   const root = readRootManifest(tree)
-  updateJson<PublishablePackageJson>(tree, joinPathFragments(plan.projectRoot, 'package.json'), (json) => {
+  amendJson<PublishablePackageJson>(tree, joinPathFragments(plan.projectRoot, 'package.json'), (json) => {
     delete json.private
     const license = json.license ?? root.license
     if (license !== undefined) json.license = license
@@ -304,8 +310,27 @@ function createE2eProject(tree: Tree, plan: PublishablePlan): void {
 }
 
 /**
+ * Whether the project's README is still the one a private library is created with: its title and
+ * its description, nothing a hand has added. It is recognised as the library generator writes it
+ * and as the workspace's formatting leaves it, which rewrites a description that holds markup.
+ *
+ * @param tree - The tree read
+ * @param plan - The settled options
+ * @returns True for the README the library generator writes, formatted or not; false for any other and for none
+ */
+async function hasCreatedReadme(tree: Tree, plan: PublishablePlan): Promise<boolean> {
+  const path = joinPathFragments(plan.projectRoot, 'README.md')
+  const readme = tree.read(path, 'utf-8')?.trim()
+  const created = `# ${plan.packageName}\n\n${plan.description}\n`
+  return readme === created.trim() || readme === (await formatText(tree, path, created)).trim()
+}
+
+/**
  * Makes a library publishable: the targets a package runs, the manifest fields a registry
- * asks for, a README when the project has none, and the project that tests the package.
+ * asks for, the README of a published package, and the project that tests the package. The
+ * README is written when the project has none, and in place of the one the library generator
+ * wrote when nobody has edited it since; any other README, and every README of a project that
+ * already publishes, is kept.
  *
  * @param tree - The tree, rooted at the workspace
  * @param options - Which project, and how it is built and tested
@@ -334,7 +359,14 @@ export async function makePublishableGenerator(tree: Tree, options: MakePublisha
   const plan = planPublishable(tree, options)
   updateProjectJson(tree, plan)
   updatePackageJson(tree, plan)
-  generateFiles(tree, join(TEMPLATES, 'files'), plan.projectRoot, { ...plan }, { keepExisting: true })
+  // why: the library generator says nothing of installing a package that is not published, so the README it wrote is the one file a first run replaces
+  generateFiles(
+    tree,
+    join(TEMPLATES, 'files'),
+    plan.projectRoot,
+    { ...plan },
+    { keepExisting: plan.republishing || !(await hasCreatedReadme(tree, plan)) }
+  )
   if (plan.createE2e) createE2eProject(tree, plan)
   if (!options.skipFormat) await formatFiles(tree)
 }

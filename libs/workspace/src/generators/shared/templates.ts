@@ -1,7 +1,8 @@
 /**
  * Writes a directory of templates into a tree: each file lands under the target with its
  * `.template` suffix dropped, and every `<%= expression %>` in it replaced by the value the
- * substitutions hold for it.
+ * substitutions hold for it. A text that a template writes into a block comment is first put
+ * the way a comment holds it.
  *
  * @module generators/shared/templates
  */
@@ -18,6 +19,65 @@ export type Substitutions = Readonly<Record<string, unknown>>
 
 /** The suffix a template file carries and loses. */
 const TEMPLATE_SUFFIX = '.template'
+
+/** What ends a block comment, which no text written into one may hold as it is. */
+export const COMMENT_END = '*/'
+
+/** How the text of a block comment writes those two characters without ending it. */
+const COMMENT_END_APART = '*\\/'
+
+/** What starts each further line of a block comment. */
+const COMMENT_LINE = ' *'
+
+/** The start of a line that a block comment would read as a tag: its indentation, then an at sign and the word it opens. */
+const TAG_LEAD = /^([ \t]*)(@[\w/.-]*)/
+
+/** The punctuation a word may end in, which stays outside the backticks the word is wrapped in. */
+const WORD_PUNCTUATION = '_/.-'
+
+/** What a description wraps a word in for a comment to read it as text. */
+const CODE_MARK = '`'
+
+/**
+ * A line of a description with the word that opens it wrapped in backticks where that word
+ * starts with an at sign, which a block comment would otherwise read as a tag.
+ *
+ * @param line - One line of the description
+ * @returns The line a comment reads as text, or the line as it is when no at sign opens it
+ */
+function withoutTagLead(line: string): string {
+  return line.replace(TAG_LEAD, (_lead, indent: string, word: string) => {
+    let end = word.length
+    // why: the at sign itself is always wrapped, so the scan stops before it
+    while (end > 1 && WORD_PUNCTUATION.includes(word.charAt(end - 1))) end -= 1
+    return `${indent}${CODE_MARK}${word.slice(0, end)}${CODE_MARK}${word.slice(end)}`
+  })
+}
+
+/**
+ * A text as the lines of a block comment hold it, for a template that writes a description into
+ * one: the two characters that would end the comment are written apart, a word that opens a line
+ * with an at sign, which a comment would read as a tag, is wrapped in backticks, and each further
+ * line starts as a line of the comment does.
+ *
+ * @param text - The text as given, of one line or several
+ * @returns The text to write after the lead of a comment line
+ *
+ * @example A description that would end the comment it is written into, or open a tag in it
+ * ```typescript
+ * commentText('Finds src/**\/*.ts') // => 'Finds src/**\\/*.ts', which a reader of the comment sees as the same glob
+ * commentText('First.\n\nSecond.') // => 'First.\n *\n * Second.'
+ * commentText("@acme/core's test helpers.") // => "`@acme/core`'s test helpers."
+ * ```
+ */
+export function commentText(text: string): string {
+  return text
+    .replaceAll(COMMENT_END, COMMENT_END_APART)
+    .split(/\r?\n|\r/)
+    .map(withoutTagLead)
+    .map((line, index) => (index === 0 ? line : `${COMMENT_LINE}${line === '' ? '' : ` ${line}`}`))
+    .join('\n')
+}
 
 /**
  * The value a dotted path names in the substitutions.

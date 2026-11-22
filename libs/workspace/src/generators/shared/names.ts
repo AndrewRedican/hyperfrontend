@@ -1,9 +1,14 @@
 /**
  * The spellings of one name: the class, property, constant and file forms a generator writes
- * into templates and paths.
+ * into templates and paths, and the refusal of a name that the files written from it could not
+ * carry.
  *
  * @module generators/shared/names
  */
+
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { COMMENT_END } from './templates'
 
 /** The forms of a name. */
 export interface Names {
@@ -72,4 +77,28 @@ export function names(name: string): Names {
       .toUpperCase(),
     fileName: toFileName(name),
   }
+}
+
+/**
+ * Refuses a name that the files a generator writes could not carry as it is written: one that
+ * holds a quote, a backslash or a control character, a line break among them, which would end
+ * the quoted string or the line it stands in, or the two characters that end a comment.
+ *
+ * @param what - What the value names, such as `project name`, for the error
+ * @param name - The name as given
+ * @throws {Error} When the name holds a quote, a backslash, a control character or the end of a comment
+ *
+ * @example At the boundary of a generator's options
+ * ```typescript
+ * assertWritableName('project name', 'site-web') // passes
+ * assertWritableName('project name', "it's")
+ * // throws: Invalid project name "it's": a name cannot hold a quote, a backslash, a control character or the end of a comment, *\/
+ * ```
+ */
+export function assertWritableName(what: string, name: string): void {
+  // why: JSON writes a string between quotes unchanged only when it holds no double quote, backslash or control character
+  if (stringify(name) === `"${name}"` && !name.includes("'") && !name.includes(COMMENT_END)) return
+  throw createError(
+    `Invalid ${what} ${stringify(name)}: a name cannot hold a quote, a backslash, a control character or the end of a comment, ${COMMENT_END}`
+  )
 }

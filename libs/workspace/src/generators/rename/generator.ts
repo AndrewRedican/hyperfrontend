@@ -1,6 +1,6 @@
 /**
  * The `rename` generator: a project's new name, carried into its manifests, its alias, the
- * projects that refer to it, its README and module header, and the project that tests it.
+ * configurations that refer to it, its README and module header, and the projects that test it.
  *
  * @module generators/rename/generator
  */
@@ -11,13 +11,14 @@ import type { RenameGeneratorOptions } from './options'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '../../executors/shared/logger'
 import { updateContentReferences } from '../shared/content-updaters'
-import { renameE2eProject } from '../shared/e2e-project'
+import { renameE2eProjects } from '../shared/e2e-project'
 import { formatFiles } from '../shared/format'
 import { replaceDescriptionPackageName } from '../shared/json-updaters'
 import { getPackageNameFromProject } from '../shared/package-json'
 import { joinPathFragments } from '../shared/paths'
 import { updateProjectReferences } from '../shared/project-references'
 import { readProjectConfiguration } from '../shared/projects'
+import { assertRenameFree } from '../shared/rename-refusals'
 import { scopeOf, scopedName } from '../shared/scope'
 import { updateJson } from '../shared/tree'
 import { renameTsConfigPaths } from '../shared/tsconfig-paths'
@@ -45,7 +46,7 @@ export interface RenamePlan {
  * @param tree - The tree the project lives in
  * @param options - The options as given
  * @returns The root and the names the rename writes from
- * @throws {Error} When the new name is the current one
+ * @throws {Error} When the new name is the current one, or a name the project, its package or a project that tests it would take is in use
  *
  * @example The package keeps its scope
  * ```typescript
@@ -63,7 +64,7 @@ export function planRename(tree: Tree, options: RenameGeneratorOptions): RenameP
   if (options.project === options.newName) throw createError(`New name must be different from current name: ${options.project}`)
   const projectRoot = readProjectConfiguration(tree, options.project).root
   const currentPackageName = getPackageNameFromProject(tree, projectRoot) ?? undefined
-  return {
+  const plan = {
     currentProjectName: options.project,
     projectRoot,
     newProjectName: options.newName,
@@ -71,18 +72,21 @@ export function planRename(tree: Tree, options: RenameGeneratorOptions): RenameP
     newPackageName:
       currentPackageName === undefined ? undefined : (options.packageName ?? scopedName(scopeOf(currentPackageName), options.newName)),
   }
+  assertRenameFree(tree, plan)
+  return plan
 }
 
 /**
  * Renames a project: its `project.json` and `package.json`, its aliases in `tsconfig.base.json`,
- * the `implicitDependencies` and `dependsOn` entries that name it, the package name its README
- * and module header mention, and the project that tests it. The directory stays where it is;
- * the `move` generator relocates it.
+ * the `implicitDependencies`, the `project:target` entries of `dependsOn` and the `inputs` that
+ * name it, in every project and in `hf.json`, the package name its README and module header
+ * mention, and the projects that test it. The directory stays where it is; the `move` generator
+ * relocates it.
  *
  * @param tree - The tree, rooted at the workspace
  * @param options - Which project, and its new names
  * @returns Resolves when the rename is written
- * @throws {Error} When the project is unknown or the new name is the current one
+ * @throws {Error} When the project is unknown, the new name is the current one, or a name the project, its package or a project that tests it would take is in use
  *
  * @example Renaming a project from the command line
  * ```bash
@@ -118,12 +122,13 @@ export async function renameGenerator(tree: Tree, options: RenameGeneratorOption
   logger.info(`Project renamed from ${plan.currentProjectName} to ${plan.newProjectName}`)
   if (packages !== undefined) {
     logger.info(`Package name changed from ${packages.currentPackageName} to ${packages.newPackageName}`)
-    const e2eRoot = renameE2eProject(tree, {
+    const e2eRoots = renameE2eProjects(tree, {
       currentProjectName: plan.currentProjectName,
       newProjectName: plan.newProjectName,
       ...packages,
     })
-    if (e2eRoot !== undefined) logger.info(`The project testing the package was renamed in ${e2eRoot}; its directory was not moved`)
+    for (const e2eRoot of e2eRoots)
+      logger.info(`The project testing the package was brought along in ${e2eRoot}; its directory was not moved`)
   }
   logger.info('The project directory was not renamed; the move generator relocates a project')
   if (!options.skipFormat) await formatFiles(tree)

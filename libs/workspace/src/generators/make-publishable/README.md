@@ -1,6 +1,6 @@
 # make-publishable
 
-Gives a library what a published package needs: a build target in the chosen formats, the publish, version and version-check targets, the manifest fields a registry asks for, a README where the project has none, and an e2e project with one suite per format that installs the packed tarball into a consumer outside the workspace.
+Gives a library what a published package needs: a build target in the chosen formats, the publish, version and version-check targets, the manifest fields a registry asks for, a README that says how to install the package, and an e2e project with one suite per format that installs the packed tarball into a consumer outside the workspace.
 
 ```bash
 npx hf generate make-publishable my-utils
@@ -21,4 +21,4 @@ npx hf generate make-publishable my-utils \
 | `--skipE2E`       | Write no e2e project                                                                                                                                                           |
 | `--skipFormat`    | Leave the written files unformatted                                                                                                                                            |
 
-A target the project already configures is kept; the build target gains the executor and the formats it lacks. A project that already publishes keeps every e2e file it has. The browser suites of the e2e project preload a DOM, which needs jsdom installed beside [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/).
+A target the project already configures is kept; the build target gains the executor and the formats it lacks. The README is written where the project has none, and in place of the one the library generator wrote when nobody has edited it since, as the generator wrote it or as the workspace's prettier formats it; any other README is kept, and a project that already publishes keeps its README and every e2e file it has. The browser suites of the e2e project preload a DOM, which needs jsdom installed beside [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/).

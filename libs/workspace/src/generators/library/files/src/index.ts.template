@@ -1,5 +1,5 @@
 /**
- * <%= description %>
+ * <%= comment.description %>
  *
  * @module <%= packageName %>
  */

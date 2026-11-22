@@ -7,9 +7,3 @@
 ```bash
 npm install <%= packageName %>
 ```
-
-## Usage
-
-```typescript
-import {} from '<%= packageName %>'
-```

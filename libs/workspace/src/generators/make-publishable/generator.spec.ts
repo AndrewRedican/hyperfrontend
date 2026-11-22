@@ -1,6 +1,8 @@
 import { join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMemoryTree } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { libraryGenerator } from '../library/generator'
 import { readJson } from '../shared/tree'
 import { makePublishableGenerator, planPublishable } from './generator'
 
@@ -175,12 +177,77 @@ describe('makePublishableGenerator', () => {
     })
   })
 
+  it('adds no repository, which the build writes from the root manifest', async () => {
+    const tree = treeWith({ 'package.json': '{ "repository": { "type": "git", "url": "https://example.test/acme.git" } }' })
+    await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
+    expect(readJson(tree, 'libs/a/package.json')).not.toHaveProperty('repository')
+  })
+
   it('writes a README where the project has none', async () => {
     const tree = treeWith()
     await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
-    expect(tree.read('libs/a/README.md', 'utf-8')).toBe(
-      "# @acme/a\n\nA.\n\n## Installation\n\n```bash\nnpm install @acme/a\n```\n\n## Usage\n\n```typescript\nimport {} from '@acme/a'\n```\n"
+    expect(tree.read('libs/a/README.md', 'utf-8')).toBe('# @acme/a\n\nA.\n\n## Installation\n\n```bash\nnpm install @acme/a\n```\n')
+  })
+
+  it('replaces the README a private library is created with by one that says how to install the package', async () => {
+    const tree = treeWith({ 'libs/a/README.md': '# @acme/a\n\nA.\n' })
+    await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
+    expect(tree.read('libs/a/README.md', 'utf-8')).toBe('# @acme/a\n\nA.\n\n## Installation\n\n```bash\nnpm install @acme/a\n```\n')
+  })
+
+  it('gives a library the library generator created, then made publishable, the README of a published package', async () => {
+    const tree = createMemoryTree({ 'package.json': '{ "name": "@acme/monorepo" }', 'tsconfig.base.json': '{}' })
+    await libraryGenerator(tree, { name: 'alpha', description: 'Alpha.', skipFormat: true })
+    await makePublishableGenerator(tree, { project: 'alpha', skipFormat: true })
+    expect(tree.read('libs/alpha/README.md', 'utf-8')).toBe(
+      '# @acme/alpha\n\nAlpha.\n\n## Installation\n\n```bash\nnpm install @acme/alpha\n```\n'
     )
+  })
+
+  it.each([
+    ['holds what prettier reads as emphasis', 'Reads *.ts files and *.js files.'],
+    ['holds underscores prettier escapes', 'Uses __dirname and snake_case_names.'],
+    ['holds two spaces in a row', 'Two  spaces.'],
+    ['ends in a space', 'Ends in a space. '],
+    ['opens like a numbered list', '1) first thing'],
+    ['breaks its lines the way Windows does', 'First line.\r\nSecond line.'],
+  ])('replaces the README of a library created with formatting on whose description %s', async (_case, description) => {
+    const tree = createMemoryTree({ 'package.json': '{ "name": "@acme/monorepo" }', 'tsconfig.base.json': '{}' }, { root: REPO_ROOT })
+    await libraryGenerator(tree, { name: 'globs', description })
+    await makePublishableGenerator(tree, { project: 'globs', skipE2E: true })
+    expect(tree.read('libs/globs/README.md', 'utf-8')).toContain('## Installation')
+  })
+
+  it('replaces the README of a library created with formatting off whose description ends in a space', async () => {
+    const tree = createMemoryTree({ 'package.json': '{ "name": "@acme/monorepo" }', 'tsconfig.base.json': '{}' })
+    await libraryGenerator(tree, { name: 'globs', description: 'Ends in a space. ', skipFormat: true })
+    await makePublishableGenerator(tree, { project: 'globs', skipE2E: true, skipFormat: true })
+    expect(tree.read('libs/globs/README.md', 'utf-8')).toContain('## Installation')
+  })
+
+  it('keeps a README a hand has added to, in a workspace whose prettier would format it', async () => {
+    const tree = createMemoryTree({ 'package.json': '{ "name": "@acme/monorepo" }', 'tsconfig.base.json': '{}' }, { root: REPO_ROOT })
+    await libraryGenerator(tree, { name: 'globs', description: 'Reads *.ts files.' })
+    tree.write('libs/globs/README.md', `${tree.read('libs/globs/README.md', 'utf-8')}\nMine.\n`)
+    await makePublishableGenerator(tree, { project: 'globs', skipE2E: true })
+    expect(tree.read('libs/globs/README.md', 'utf-8')).not.toContain('## Installation')
+  })
+
+  it('keeps such a README once the project publishes, so a re-run changes nothing', async () => {
+    const tree = treeWith({
+      'libs/a/project.json': '{ "name": "lib-a", "projectType": "library", "targets": { "publish": {} } }',
+      'libs/a/README.md': '# @acme/a\n\nA.\n',
+    })
+    await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
+    expect(tree.read('libs/a/README.md', 'utf-8')).toBe('# @acme/a\n\nA.\n')
+  })
+
+  it.each([
+    ['the package', { 'libs/a/package.json': '{ "name": "@acme/it\'s", "version": "1.0.0" }' }, {}, /^Invalid package name /],
+    ['the global of the browser bundles', {}, { globalName: 'A"; drop' }, /^Invalid global name /],
+    ['the project', { 'libs/a/project.json': '{ "name": "lib\'a" }' }, { project: "lib'a" }, /^Invalid project name /],
+  ])('refuses a name of %s that the files it writes could not carry', (_what, files, options, refusal) => {
+    expect(() => planPublishable(treeWith(files), { project: 'lib-a', ...options })).toThrow(refusal)
   })
 
   it('keeps the README the project has', async () => {
@@ -278,6 +345,19 @@ describe('makePublishableGenerator', () => {
       cjs: 'mine\n',
       iife: 'browser\n',
     })
+  })
+
+  it('leaves both manifests as they are written on a re-run that has nothing to add', async () => {
+    const tree = treeWith()
+    await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
+    const spaced = {
+      project: stringify(readJson(tree, 'libs/a/project.json'), null, 4),
+      pkg: stringify(readJson(tree, 'libs/a/package.json'), null, 4),
+    }
+    tree.write('libs/a/project.json', spaced.project)
+    tree.write('libs/a/package.json', spaced.pkg)
+    await makePublishableGenerator(tree, { project: 'lib-a', skipFormat: true })
+    expect({ project: tree.read('libs/a/project.json', 'utf-8'), pkg: tree.read('libs/a/package.json', 'utf-8') }).toEqual(spaced)
   })
 
   it('writes no e2e project when asked not to', async () => {

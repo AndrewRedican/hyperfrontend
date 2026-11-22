@@ -5,6 +5,8 @@
  * @module generators/shared/json-updaters
  */
 
+import { replacePackageMentions } from './package-mentions'
+
 /**
  * JSON object with an optional description field.
  */
@@ -23,6 +25,7 @@ export interface NamedJson extends JsonWithDescription {
 
 /**
  * Update description field by replacing package name references.
+ * A longer name that starts with the package's, such as `@acme/core-ui` beside `@acme/core`, is left alone.
  * Mutates the json object in place for use inside updateJson callbacks.
  *
  * @param json - The JSON object to update
@@ -36,12 +39,12 @@ export interface NamedJson extends JsonWithDescription {
  *
  * updateJson<NamedJson>(tree, 'e2e/core/project.json', (json) => {
  *   replaceDescriptionPackageName(json, '@acme/core', '@acme/kernel')
- *   return json // description "E2E tests for @acme/core" now reads "E2E tests for @acme/kernel"
+ *   return json // description "E2E tests for @acme/core and @acme/core-ui" now reads "E2E tests for @acme/kernel and @acme/core-ui"
  * })
  * ```
  */
 export function replaceDescriptionPackageName(json: JsonWithDescription, currentPackageName: string, newPackageName: string): void {
   if (json.description && typeof json.description === 'string') {
-    json.description = json.description.replaceAll(currentPackageName, newPackageName)
+    json.description = replacePackageMentions(json.description, currentPackageName, newPackageName)
   }
 }

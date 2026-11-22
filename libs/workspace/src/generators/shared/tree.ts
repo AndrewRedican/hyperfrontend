@@ -74,4 +74,29 @@ export function updateJson<Value>(tree: Tree, path: string, updater: (value: Val
   writeJson(tree, path, updater(readJson<Value>(tree, path)))
 }
 
+/**
+ * Rewrites a JSON file through an updater when that changes its value, and leaves the file as it
+ * is written when it does not, so a file a generator has nothing to change in keeps its spacing.
+ *
+ * @param tree - The tree the file lives in
+ * @param path - The file, relative to the root
+ * @param updater - Maps the current value to the one written; it may change the value in place
+ * @returns Whether the file was written
+ *
+ * @example A rename that reaches a file with nothing to rename
+ * ```typescript
+ * amendJson<{ name: string }>(tree, 'libs/core/project.json', (json) => ({ ...json, name: 'kernel' })) // => true, the file is rewritten
+ * amendJson<{ name: string }>(tree, 'libs/core/project.json', (json) => ({ ...json, name: 'kernel' })) // => false, nothing is written
+ * ```
+ */
+export function amendJson<Value>(tree: Tree, path: string, updater: (value: Value) => Value): boolean {
+  const value = readJson<Value>(tree, path)
+  // why: the updater may change the value in place, so what it started from is kept as text
+  const before = stringify(value)
+  const updated = updater(value)
+  if (stringify(updated) === before) return false
+  writeJson(tree, path, updated)
+  return true
+}
+
 export type { Tree, TreeChange } from '../../runner/contract'
