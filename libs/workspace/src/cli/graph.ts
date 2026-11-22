@@ -2,7 +2,7 @@
  * The `graph` command: prints and persists the owned workspace graph. `npx hf graph <command>`,
  * where the command is `projects [--json]`, `graph [--json]`, `explain <project>`,
  * `explain <project:target> [--base <ref>] [--head <ref>]`, `build [--force]`, `verify`,
- * `status [--json]` or `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain]`.
+ * `status [--json]` or `affected -t <target> [--base <ref>] [--head <ref>] [--json|--explain]`.
  *
  * @module cli/graph
  */
@@ -30,7 +30,7 @@ const LISTED_FILES = 3
 
 /** What the command expects. */
 export const GRAPH_USAGE =
-  'usage: hf graph projects [--json] | graph [--json] | explain <project|project:target> | build [--force] | verify | status [--json] | affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain]'
+  'usage: hf graph projects [--json] | graph [--json] | explain <project|project:target> | build [--force] | verify | status [--json] | affected -t <target> [--base <ref>] [--head <ref>] [--json|--explain]'
 
 /** Where the command writes. */
 export interface GraphOutput {
@@ -176,7 +176,7 @@ function readArguments(argv: readonly string[]) {
         json: { type: 'boolean', default: false },
         explain: { type: 'boolean', default: false },
         force: { type: 'boolean', default: false },
-        target: { type: 'string' },
+        target: { type: 'string', short: 't', multiple: true },
         base: { type: 'string', default: DEFAULT_BASE },
         head: { type: 'string' },
       },
@@ -185,6 +185,22 @@ function readArguments(argv: readonly string[]) {
   } catch (error) {
     throw refusal((error as Error).message)
   }
+}
+
+/**
+ * The one target `affected` selects for.
+ *
+ * @param written - The targets as the command line names them, one per `--target` or `-t`
+ * @returns The single name among them, without the equals sign that joined it to `-t`
+ * @throws {Error} A refusal when no target is named, or more than one
+ */
+function oneTarget(written: readonly string[] | undefined): string {
+  if (written === undefined) throw refusal('affected needs --target <target>')
+  // why: the parser reads the equals sign of -t=<target> as the start of the value, where --target=<target> loses it.
+  const targets = written.flatMap((target) => (target.startsWith('=') ? target.slice(1) : target).split(','))
+  // why: a list would be read as the name of one target that no project has, and select nothing without saying so.
+  if (targets.length > 1) throw refusal(`affected takes one target, got ${targets.join(',')}`)
+  return targets[0] as string
 }
 
 /**
@@ -260,8 +276,8 @@ export function runGraph(argv: readonly string[], root: string, output: GraphOut
       for (const [name, digest] of entries(status.digests ?? {})) say(`  ${name} ${digest}`)
     }
   } else if (command === 'affected') {
-    if (values.target === undefined) throw refusal('affected needs --target <target>')
-    const set = affected(root, build(root, values.force, note), values.target, revisions)
+    const target = oneTarget(values.target)
+    const set = affected(root, build(root, values.force, note), target, revisions)
     if (values.json) say(stringify(set, null, 2))
     else for (const line of formatAffected(set, values.explain ? 'explain' : 'tasks')) say(line)
   } else {
