@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0](https://github.com/AndrewRedican/hyperfrontend/compare/0ef83980279c5e4c2f7853543e9d363639ce7e5f...3a106d8af48cceca65faa884e1eeae5954565d3c) - 2026-11-22
+
+### Features
+
+- write hf-release.json into every built shell
+
+### Dependency Updates
+
+- **lib-server:** export the service contract, the runner and the two entries
+- **lib-server:** add the service runner
+- **lib-server:** add the asynchronous service contract
+- **lib-server:** add the release manifest entry
+- **lib-server:** add the environment entry
+- **lib-server:** judge static paths as stored and clear failed answers
+- **lib-server:** skip rule headers that break framing or cache a failure
+
 ## [0.13.0](https://github.com/AndrewRedican/hyperfrontend/compare/92d4d378897da6165a87f5ae6334a0e60e9bc229...bf9080f73e8b9dcf9b13c90999ffe05eb16ad5fc) - 2026-11-22
 
 ### Features

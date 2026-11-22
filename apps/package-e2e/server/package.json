@@ -4,6 +4,6 @@
   "private": true,
   "description": "E2E tests for @hyperfrontend/server package outputs",
   "dependencies": {
-    "@hyperfrontend/server": "file:../../../tmp/e2e-packs/hyperfrontend-server-0.1.0.tgz"
+    "@hyperfrontend/server": "file:../../../tmp/e2e-packs/hyperfrontend-server-0.2.0.tgz"
   }
 }

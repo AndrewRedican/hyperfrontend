@@ -243,7 +243,7 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.7.4` |
 | `@hyperfrontend/cryptography` | `1.1.5` |
 | `@hyperfrontend/data-utils` | `1.0.4` |
-| `@hyperfrontend/features` | `0.13.0` |
+| `@hyperfrontend/features` | `0.14.0` |
 | `@hyperfrontend/function-utils` | `1.0.4` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.6` |
 | `@hyperfrontend/json-utils` | `1.1.5` |
@@ -255,7 +255,7 @@ flowchart TB
 | `@hyperfrontend/project-scope` | `0.6.1` |
 | `@hyperfrontend/questions` | `0.3.4` |
 | `@hyperfrontend/random-generator-utils` | `0.2.4` |
-| `@hyperfrontend/server` | `0.1.0` |
+| `@hyperfrontend/server` | `0.2.0` |
 | `@hyperfrontend/state-machine` | `0.2.4` |
 | `@hyperfrontend/string-utils` | `1.0.5` |
 | `@hyperfrontend/testing` | `0.5.3` |
