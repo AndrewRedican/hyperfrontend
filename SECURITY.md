@@ -88,7 +88,9 @@ ends — is on by default and is not something you should be re-implementing by 
 1. **Restrict who may embed the feature.** Send
    `Content-Security-Policy: frame-ancestors <hosts>` on the response that serves the feature
    document. Origin pinning keeps a conversation consistent; only `frame-ancestors` decides whether
-   a page was ever allowed to frame you.
+   a page was ever allowed to frame you. A feature hosted by `hf serve` declares those hosts in the
+   `embedders` field of its `hf-serve.config.*`, and the server sends the header on every response;
+   on any other server, send it yourself.
 2. **Authorise on the server.** A message that crossed the boundary is not an authorised operation.
    Protected work needs credentials the feature's own backend validates.
 3. **Choose the envelope deliberately.** `v2` with a pre-shared key is the confidentiality control;
