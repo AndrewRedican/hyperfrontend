@@ -59,7 +59,17 @@ HF_DEPLOY_SERVICE=clock RAILWAY_TOKEN=<project token> node tools/pipeline/script
 HF_DEPLOY_SERVICE=clock HF_DEPLOY_COMMIT=<sha> HF_DEPLOY_TIMEOUT=45 node tools/pipeline/scripts/railway-deploy.mjs
 ```
 
-`HF_DEPLOY_SERVICE` is the service as the demo's `metadata.deploy.service` names it; `RAILWAY_TOKEN` is a project token of the production environment (the `RAILWAY_TOKEN` repository secret on CI); the commit defaults to `GITHUB_SHA`, then the checked-out head; the wait defaults to 30 minutes. The script reads the deployment's status every 15 seconds and exits non-zero when it ends as anything but `SUCCESS`, so the task's outcome means the demo is serving the commit. The `railway-redeploy` workflow (`.github/workflows/railway-redeploy.yml`) runs the same script by hand, for any set of services or all of them, when a demo has to be rebuilt without a change to its service; a variable added in the dashboard to force a rebuild is drift the provision refuses on the next push to `main`.
+`HF_DEPLOY_SERVICE` is the service as the demo's `metadata.deploy.service` names it; `RAILWAY_TOKEN` is a project token of the production environment (the `RAILWAY_TOKEN` repository secret on CI); the commit defaults to `GITHUB_SHA`, then the checked-out head; the wait defaults to 30 minutes. The script reads the deployment's status every 15 seconds and exits non-zero when it ends as anything but `SUCCESS`, so the task's outcome means the demo is serving the commit. When the deployment ends `FAILED` the script first prints the last 40 lines of its build log (`railway logs <deployment> --service <service> --build --lines 40`), because Railway keeps that log for days only; when the log cannot be read it says so, and the failure it reports is the same either way. The `railway-redeploy` workflow (`.github/workflows/railway-redeploy.yml`) runs the same script by hand, for any set of services or all of them, when a demo has to be rebuilt without a change to its service; a variable added in the dashboard to force a rebuild is drift the provision refuses on the next push to `main`.
+
+A failed deploy leaves the demo serving its previous deployment, and no later run repairs it: a deploy is planned only for a push that alters the demo's build, so a later push deploys the demo again only when it alters that build. Read the printed build log first. When it shows a cause outside the repository, such as a download that timed out during the build, dispatch `railway-redeploy` with the failed services and the run's commit:
+
+```bash
+gh workflow run railway-redeploy.yml \
+  -f services="clock heartbeat" \
+  -f commit=<sha>
+```
+
+Rerunning the failed jobs of the run deploys again too, but it runs the whole Linux environment job a second time. A cause in the repository is fixed by a push.
 
 ## Railway provision
 
