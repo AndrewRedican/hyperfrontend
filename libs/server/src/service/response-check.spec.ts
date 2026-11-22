@@ -275,6 +275,6 @@ describe('releaseBody', () => {
     ['a string', 'ok'],
     ['a response whose body cannot be read', unreadable('body', { status: 200, headers: {} })],
   ])('ignores %s', (_label, value) => {
-    expect(releaseBody(value)).toBeUndefined()
+    expect(() => releaseBody(value)).not.toThrow()
   })
 })

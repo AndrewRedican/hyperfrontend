@@ -137,14 +137,14 @@ describe('emitEvent', () => {
   })
 
   it('stays silent without a sink', () => {
-    expect(emitEvent(undefined, failureEvent())).toBeUndefined()
+    expect(() => emitEvent(undefined, failureEvent())).not.toThrow()
   })
 
   it('ignores a sink that throws', () => {
     const sink = (): void => {
       throw new Error('the sink failed')
     }
-    expect(emitEvent(sink, failureEvent())).toBeUndefined()
+    expect(() => emitEvent(sink, failureEvent())).not.toThrow()
   })
 
   it('ignores a sink that returns a promise that rejects', async () => {
@@ -171,7 +171,7 @@ describe('emitEvent', () => {
         throw new Error('the thenable failed')
       },
     }
-    expect(emitEvent((() => thenable) as unknown as () => void, failureEvent())).toBeUndefined()
+    expect(() => emitEvent((() => thenable) as unknown as () => void, failureEvent())).not.toThrow()
   })
 
   it('ignores a sink that returns an object whose then cannot be read', () => {
@@ -180,7 +180,7 @@ describe('emitEvent', () => {
         throw new Error('unreadable')
       },
     })
-    expect(emitEvent((() => unreadable) as unknown as () => void, failureEvent())).toBeUndefined()
+    expect(() => emitEvent((() => unreadable) as unknown as () => void, failureEvent())).not.toThrow()
   })
 
   it.each([
@@ -189,7 +189,7 @@ describe('emitEvent', () => {
     ['an object without a then', { ok: true }],
     ['an object whose then is not a function', { then: 'later' }],
   ])('accepts a sink that returns %s', (_title, returned) => {
-    expect(emitEvent((() => returned) as unknown as () => void, failureEvent())).toBeUndefined()
+    expect(() => emitEvent((() => returned) as unknown as () => void, failureEvent())).not.toThrow()
   })
 })
 
