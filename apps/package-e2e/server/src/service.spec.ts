@@ -128,7 +128,7 @@ function helloProgram(kind: ModuleKind): string {
     '            health(),',
     '            readiness({ checks: { listening: () => listening } }),',
     '            router({',
-    "              hello: route('GET', '/hello/:name', (request) => jsonResponse(200, { message: `${values.hello.HELLO_GREETING}, ${request.params.name}` })),",
+    "              hello: route('GET', '/hello/:name', (request) => jsonResponse(200, { message: values.hello.HELLO_GREETING + ', ' + request.params.name })),",
     // why: the line is the service's own, written when the handler runs, so the suite stops the service on something it saw and not after a guessed delay.
     `              wait: route('GET', '/wait', async () => (process.stdout.write('${IN_FLIGHT_LINE}\\n'), await pause(500), jsonResponse(200, { waited: true }))),`,
     "              fault: route('POST', '/fault', () => (void Promise.reject(new Error('fault-marker\\n    at fault-marker (evil:1:1)')), jsonResponse(202, { accepted: true }))),",
