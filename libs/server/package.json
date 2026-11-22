@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/server",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules.",
   "license": "MIT",
   "type": "module",

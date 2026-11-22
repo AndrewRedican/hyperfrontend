@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0](https://github.com/AndrewRedican/hyperfrontend/compare/92d4d378897da6165a87f5ae6334a0e60e9bc229...bf9080f73e8b9dcf9b13c90999ffe05eb16ad5fc) - 2026-11-22
+
+### Features
+
+- serve through the server kernel and its header policy
+
+### Dependency Updates
+
+- **lib-server:** add the server kernel package
+
 ## [0.12.2](https://github.com/AndrewRedican/hyperfrontend/compare/bdd9c9c1a4f231b20b7c26d83c01824a620b88cb...344550374035f097ad1bdbac4075c46c756e235d) - 2026-11-16
 
 ### Dependency Updates
