@@ -209,6 +209,15 @@ const coreLibraries: NavItem[] = [
     children: [{ slug: 'architecture', href: '/docs/libraries/nexus/architecture' }],
   },
   {
+    slug: 'server',
+    packageName: '@hyperfrontend/server',
+    href: '/docs/libraries/server',
+    children: [
+      { slug: 'architecture', href: '/docs/libraries/server/architecture' },
+      { slug: 'policy', href: '/docs/libraries/server/policy' },
+    ],
+  },
+  {
     slug: 'testing',
     packageName: '@hyperfrontend/testing',
     href: '/docs/libraries/testing',
@@ -434,11 +443,13 @@ const supportingLibraries: NavItem[] = [
         slug: 'generators',
         href: '/docs/libraries/workspace/generators',
         children: [
+          { slug: 'application', href: '/docs/libraries/workspace/generators/application' },
           { slug: 'hooks', href: '/docs/libraries/workspace/generators/hooks' },
           { slug: 'library', href: '/docs/libraries/workspace/generators/library' },
           { slug: 'make-publishable', href: '/docs/libraries/workspace/generators/make-publishable' },
           { slug: 'move', href: '/docs/libraries/workspace/generators/move' },
           { slug: 'rename', href: '/docs/libraries/workspace/generators/rename' },
+          { slug: 'service', href: '/docs/libraries/workspace/generators/service' },
           { slug: 'workspace', href: '/docs/libraries/workspace/generators/workspace' },
         ],
       },
