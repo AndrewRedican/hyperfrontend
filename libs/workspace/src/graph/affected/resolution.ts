@@ -6,10 +6,10 @@
  * @module graph/affected/resolution
  */
 
-import type { InputDefinition, WorkspaceFile } from '../inputs'
+import type { WorkspaceFile } from '../inputs'
 import type { ProjectRecord } from '../model'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { expandWith, IMPLICIT_INPUTS, isCompatibleTarget } from '../inputs'
+import { expandWith, IMPLICIT_INPUTS, inputList, isCompatibleTarget } from '../inputs'
 
 /** One input of a task, expanded: the patterns of its own files, of its dependencies' files, or of the files of the projects it names. */
 interface ExpandedInput {
@@ -42,7 +42,7 @@ export function targetResolution(file: WorkspaceFile, project: ProjectRecord, ta
   const applicable = defaults !== undefined && isCompatibleTarget(own, defaults) ? defaults : null
   // why: the runner reads the entry keyed by the executor the project names before the entry keyed by the target's name, so a change to either is a change to the task
   const byExecutor = own?.executor === undefined ? null : (file.targetDefaults?.[own.executor] ?? null)
-  const inputs = (own?.inputs as readonly InputDefinition[] | undefined) ?? applicable?.inputs ?? IMPLICIT_INPUTS
+  const inputs = inputList(own?.inputs ?? applicable?.inputs ?? IMPLICIT_INPUTS, `the input list of ${project.name}:${target}`)
   const expanded: ExpandedInput[] = inputs.map((input) => {
     if (typeof input === 'string')
       return input.startsWith('^')

@@ -10,7 +10,11 @@
 
 import type { ProjectRecord, TargetOptions, TargetRecord } from './model'
 import { join } from 'node:path'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { readJson } from './json'
 import { RUN_COMMANDS } from './model'
@@ -96,6 +100,9 @@ export interface Configured<Value> {
   readonly from: SettingSource
 }
 
+/** The workspace file's name, under the root. */
+const WORKSPACE_FILE = 'hf.json'
+
 /** The `hf.json` of each root read so far. */
 const configurations = createMap<string, WorkspaceFile>()
 
@@ -120,7 +127,7 @@ const configurations = createMap<string, WorkspaceFile>()
 export function readWorkspaceFile(root: string): WorkspaceFile {
   let file = configurations.get(root)
   if (file === undefined) {
-    file = readJson<WorkspaceFile>(join(root, 'hf.json')) ?? {}
+    file = readJson<WorkspaceFile>(join(root, WORKSPACE_FILE)) ?? {}
     configurations.set(root, file)
   }
   return file
@@ -134,6 +141,7 @@ export function readWorkspaceFile(root: string): WorkspaceFile {
  * @param project - The project whose target is read
  * @param target - The target's name
  * @returns The inputs and where they come from
+ * @throws {Error} When the inputs are not a list, or hold an entry that is not an input
  *
  * @example A target configured without inputs falls back to Nx's implicit pair
  * ```typescript
@@ -150,10 +158,11 @@ export function readWorkspaceFile(root: string): WorkspaceFile {
  * ```
  */
 export function targetInputs(root: string, project: ProjectRecord, target: string): Configured<readonly InputDefinition[]> {
-  const own = project.configuration?.targets?.[target]?.inputs as readonly InputDefinition[] | undefined
-  if (own !== undefined) return { value: own, from: 'project' }
+  const subject = `the input list of ${project.name}:${target}`
+  const own = project.configuration?.targets?.[target]?.inputs
+  if (own !== undefined) return { value: inputList(own, subject), from: 'project' }
   const defaults = targetDefaultsFor(root, project, target)?.inputs
-  return defaults === undefined ? { value: IMPLICIT_INPUTS, from: 'implicit' } : { value: defaults, from: 'defaults' }
+  return defaults === undefined ? { value: IMPLICIT_INPUTS, from: 'implicit' } : { value: inputList(defaults, subject), from: 'defaults' }
 }
 
 /**
@@ -285,6 +294,76 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
   return expandInputs(root, project, own)
 }
 
+/** A named input as a file writes it, with what defines it. */
+interface NamedInput {
+  /** The workspace file, or the name of the project whose configuration defines it. */
+  readonly by: string
+  /** Its value as written: a list of inputs when well formed. */
+  readonly inputs: unknown
+}
+
+/**
+ * The named inputs one file defines.
+ *
+ * @param namedInputs - The file's `namedInputs`, or undefined when it has none
+ * @param by - What defines them: the workspace file, or a project's name
+ * @returns Each name with its definition, own keys alone
+ */
+function definitionsOf(namedInputs: Readonly<Record<string, unknown>> | undefined, by: string): [string, NamedInput][] {
+  return entries(namedInputs ?? {}).map(([name, inputs]) => [name, { by, inputs }])
+}
+
+/** The two fields of an input written as an object, before either is known to be a string. */
+interface WrittenInput {
+  /** A glob of files, when the input reads files by pattern. */
+  readonly fileset?: unknown
+  /** The name of another input, when the input stands for one. */
+  readonly input?: unknown
+}
+
+/**
+ * Whether a value is an input as a file writes one: a string, or an object whose `fileset`, or
+ * else whose `input`, is a string. An object naming neither is an input this module reads no file from.
+ *
+ * @param entry - One element of a list of inputs
+ * @returns False for null, a number, a boolean, a list, and an object whose field read is not a string
+ */
+function isInput(entry: unknown): entry is InputDefinition {
+  if (typeof entry === 'string') return true
+  if (typeof entry !== 'object' || entry === null || isArray(entry)) return false
+  const { fileset, input } = entry as WrittenInput
+  return fileset === undefined ? input === undefined || typeof input === 'string' : typeof fileset === 'string'
+}
+
+/**
+ * A list of inputs as a file writes it, refused by name where it is malformed, so a file written
+ * by hand neither reads as fewer files than it means nor stops the graph with an unnamed error.
+ *
+ * @param value - What a file writes where a list of inputs belongs
+ * @param subject - What the list belongs to, as the refusal names it
+ * @returns The value, known to hold inputs only
+ * @throws {Error} When the value is not a list, or holds an entry that is not an input
+ *
+ * @example A list holding something other than an input is refused
+ * ```typescript
+ * inputList(['default', { fileset: '{workspaceRoot}/hf.json' }, { env: 'CI' }], 'the input list of lib-a:build') // => the same list
+ * inputList(['default', null], 'the input list of lib-a:build')
+ * // throws: the input list of lib-a:build holds null, which is not an input: a string, or an object whose fileset or input is a string
+ * inputList('default', 'named input "production" of hf.json')
+ * // throws: named input "production" of hf.json is "default", which is not a list of inputs
+ * ```
+ */
+export function inputList(value: unknown, subject: string): readonly InputDefinition[] {
+  if (!isArray(value)) throw createError(`${subject} is ${stringify(value)}, which is not a list of inputs`)
+  for (const entry of value) {
+    if (!isInput(entry))
+      throw createError(
+        `${subject} holds ${stringify(entry)}, which is not an input: a string, or an object whose fileset or input is a string`
+      )
+  }
+  return value
+}
+
 /**
  * The file patterns a list of inputs stands for, named inputs expanded through the workspace's
  * and the project's definitions.
@@ -293,6 +372,7 @@ export function selfInputs(root: string, project: ProjectRecord, target: string)
  * @param project - The project whose named inputs apply
  * @param inputs - The inputs to expand
  * @returns The patterns, `{projectRoot}` still unreplaced
+ * @throws {Error} When a named input on the way is not a list, or a list holds an entry that is not an input
  *
  * @example A name no definition knows is kept as a pattern
  * ```typescript
@@ -319,6 +399,7 @@ export function expandInputs(root: string, project: ProjectRecord, inputs: reado
  * @param project - The project whose named inputs apply
  * @param inputs - The inputs to expand
  * @returns The patterns, `{projectRoot}` still unreplaced
+ * @throws {Error} When a named input on the way is not a list, or a list holds an entry that is not an input
  *
  * @example The same inputs under two revisions of the file
  * ```typescript
@@ -326,27 +407,38 @@ export function expandInputs(root: string, project: ProjectRecord, inputs: reado
  * // => ['{projectRoot}/**\/*', '!{projectRoot}/**\/*.spec.ts']
  * expandWith({}, project, ['production']) // => ['production'], a name no definition knows
  * ```
+ *
+ * @example A malformed named input is refused by name rather than read as fewer files
+ * ```typescript
+ * // hf.json: { namedInputs: { watchers: ['{projectRoot}/src/**', null] } }
+ * expandWith(readWorkspaceFile(root), project, ['watchers'])
+ * // throws: named input "watchers" of hf.json holds null, which is not an input: a string, or an object whose fileset or input is a string
+ * expandWith(readWorkspaceFile(root), project, ['default']) // => ['{projectRoot}/**\/*'], nothing reads the malformed one
+ * ```
  */
 export function expandWith(file: WorkspaceFile, project: ProjectRecord, inputs: readonly InputDefinition[]): string[] {
-  const named: Readonly<Record<string, readonly InputDefinition[]>> = {
-    default: ['{projectRoot}/**/*'],
-    ...file.namedInputs,
-    ...(project.configuration?.namedInputs as Readonly<Record<string, readonly InputDefinition[]>> | undefined),
-  }
+  // why: a map answers only for the names the files define, never for one every object inherits, such as constructor.
+  const named = createMap<string, NamedInput>([
+    ['default', { by: WORKSPACE_FILE, inputs: ['{projectRoot}/**/*'] }],
+    ...definitionsOf(file.namedInputs, WORKSPACE_FILE),
+    ...definitionsOf(project.configuration?.namedInputs, project.name),
+  ])
   const patterns: string[] = []
   const expand = (inputs: readonly InputDefinition[], expanding: ReadonlySet<string>): void => {
-    // why: a named input that names itself, directly or through another, would otherwise expand without end.
     const follow = (name: string): void => {
-      if (!expanding.has(name)) expand(named[name] ?? [], createSet([...expanding, name]))
+      const definition = named.get(name)
+      // why: a named input that names itself, directly or through another, would otherwise expand without end.
+      if (definition !== undefined && !expanding.has(name))
+        expand(inputList(definition.inputs, `named input ${stringify(name)} of ${definition.by}`), createSet([...expanding, name]))
     }
     for (const input of inputs) {
       if (typeof input === 'string') {
-        if (named[input] === undefined) patterns.push(input)
-        else follow(input)
+        if (named.has(input)) follow(input)
+        else patterns.push(input)
       } else if (input.fileset !== undefined) patterns.push(input.fileset)
       else if (input.input !== undefined) follow(input.input)
     }
   }
-  expand(inputs, createSet())
+  expand(inputList(inputs, `the input list expanded for ${project.name}`), createSet())
   return patterns
 }

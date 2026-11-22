@@ -162,6 +162,18 @@ describe('previousWorkspaceFile', () => {
       })
     ).toEqual({})
   })
+
+  it('reads a base saved with a byte order mark', () => {
+    const fixture = plantFixture({
+      name: 'marked-workspace-file',
+      description: 'hf.json saved with a byte order mark at the base',
+      base: { 'hf.json': '\uFEFF{ "namedInputs": { "kept": [] } }' },
+      head: { 'hf.json': '{}' },
+      expectedChanges: ['M\thf.json'],
+    })
+    planted.push(fixture)
+    expect(previousWorkspaceFile(fixture.root, changeSet(fixture.root, fixture.base, fixture.head))).toEqual({ namedInputs: { kept: [] } })
+  })
 })
 
 describe('previousBaseTsconfigFile', () => {

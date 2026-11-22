@@ -15,11 +15,11 @@ import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { BASE_TSCONFIG } from './affected/aliases'
 import { buildGraph } from './build'
 import { CACHE_FILE } from './imports'
 import { readWorkspaceFile } from './inputs'
+import { parseJsonText } from './json'
 
 /** The directory under `node_modules` the checkout keeps to itself. */
 const CACHE_DIRECTORY = '.cache'
@@ -142,9 +142,9 @@ const WORKSPACE_FILE = 'hf.json'
 function jsonAtBase<Value>(root: string, changes: ChangeSet | null, path: string): Value | null | undefined {
   if (changes === null || !changes.changes.some((change) => change.path === path || change.previousPath === path)) return undefined
   try {
-    return parse(
+    return parseJsonText<Value>(
       execFileSync('git', ['show', `${changes.base}:${path}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-    ) as Value
+    )
   } catch {
     return null
   }
