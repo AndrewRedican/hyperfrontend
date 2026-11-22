@@ -7,6 +7,8 @@ description: Write, review, audit and revise README.md files in hyperfrontend, f
 
 A README says **what this is, why you would want it and how to start**, then links to the rest. The goal is placement, not brevity: every fact has a home, and for most facts it is not the README.
 
+Write for an experienced developer who has never seen the package and is deciding whether it deserves five more minutes. They leave knowing five things: what it is, why it exists and when they would want it, what makes it worth considering, how to start, and where to learn more. Everything else must justify its presence. Optimise for the understanding gained per minute of reading, not for how much the README holds.
+
 Enforced rules, layout, section jobs, API link forms, banner commands: [REFERENCE.md](REFERENCE.md).
 
 | Role              | Path                                                               |
@@ -23,8 +25,9 @@ Enforced rules, layout, section jobs, API link forms, banner commands: [REFERENC
 
 1. Lint the project without `--fix` and read two siblings before changing anything.
 2. **A README that passes lint, the tracking check and the placement test is finished. Leave it.**
-3. Remove no heading the README already has; add only what lint requires, and `## Part of hyperfrontend`, which every package README carries.
+3. Remove no heading of the standard layout that the README already has; add only what lint requires, and `## Part of hyperfrontend`, which every package README carries. A heading that exists to hold relocatable material goes with the material.
 4. Make the smallest edit that fixes the finding. Rewrite a section only when its order is the fault.
+5. The exception to 4 is a README that has outgrown its job: it passes lint, and a first-time reader still wades through reference material to learn what the package is. Curate that one again from the reader's side, section by section, instead of trimming sentences. Do not keep a structure because it exists, and do not rewrite a section that already works.
 
 ---
 
@@ -50,6 +53,24 @@ Sort each fact, then act on the verdict.
 | Signatures, options, every member               | JSDoc, which generates the API reference (`jsdoc-examples`)      |
 
 Check the home already says it before moving text; usually it does and the README copy is just deleted. Where the home exists but lacks it, move the text there. A package with no `ARCHITECTURE.md` keeps its contracts in API Overview: that is their home, not a restatement. Create a document only when no home exists and the material is worth keeping: a new markdown file in a published library also needs a docs page (`docs-site-library-docs`).
+
+A task walkthrough cut from a README goes to a guide, never to the architecture document. Look first for a guide that already covers the task (`apps/docs-site/content/guides/`, compiled to `apps/docs-site/public/docs/guides/`, and filtered by package on the page the README's guides link opens): extend it, or write one with the `how-to-guides` skill when the package has none for that task. Where writing it is outside the work in hand, tell whoever asked, naming the guide that is missing and what it would hold. A README whose guides link opens an empty list is such a gap.
+
+---
+
+## Proportion
+
+- **A README does not grow with the package.** When a feature lands, place its facts (JSDoc, the entry's README, the architecture document, a guide) and touch the README only where the answer to what, why or how to start changed. A specification's list of what the documentation must state names facts to place, not README sections.
+- **Lead with what is distinctive.** The purpose, the practical value and the capabilities a reader would not assume get the prominent treatment and come first.
+- **Ordinary capability gets a clause.** What every package of its kind does is acknowledged in a feature bullet, not explained.
+- **Order by distinctiveness.** Key Features and Limitations are ordered by what would change a reader's decision, not by layer or subsystem. A scan reads the first three bullets.
+- **Why Use names the alternative.** Its lead says what the reader uses today, what this package does that the alternative leaves to them, what it leaves out in turn, and what it does not replace.
+- **A headline claims no more than its body.** A bold label or a heading that the section's own text, or Limitations, then qualifies is an overclaim: narrow the headline.
+- **The reader's word first.** A house term (step, contract, plan, spec) is tied at first use to the word the reader already knows, and keeps one meaning for the whole file.
+- **Output comes with its command.** A Quick Start that shows what a program prints shows the command that printed it.
+- **Broad strokes.** Say what a capability lets the reader do, not its mechanism, its edge cases or every permutation of its options. A README can be accurate without listing every exception; what may not be cut is the never-cut list above.
+- **It survives a 30-second scan.** The headings, the first sentence under each, the Key Features labels and the first example carry the package on their own. A reader who gives it five minutes finds nothing they had to study.
+- **Budget: 150 to 250 source lines** for a package README, badges and compatibility tables included; the calibration cases are under 200. A section that grows a tree of sub-headings of its own is a guide or an architecture section in the wrong file. Past the budget, run the placement test again before anything else.
 
 ---
 
@@ -108,21 +129,25 @@ Evidence, strongest first:
 
 1 to 5 are facts: report them as violations. 6 and 7 are judgment: report them as editorial findings, apart from the violations. Classify every README before editing any.
 
-| Class          | Meaning                                                               | Action           |
-| -------------- | --------------------------------------------------------------------- | ---------------- |
-| Gold           | No violations, every fact in its place                                | Preserve         |
-| Adequate       | Sound, with sentences misplaced, repeated or inaccurate               | Minimal edits    |
-| Needs revision | A violation, or the reader wades through mechanism to reach the start | Focused revision |
+| Class          | Meaning                                                                | Action           |
+| -------------- | ---------------------------------------------------------------------- | ---------------- |
+| Gold           | No violations, every fact in its place                                 | Preserve         |
+| Adequate       | Sound, with sentences misplaced, repeated or inaccurate                | Minimal edits    |
+| Needs revision | A violation, or the reader wades through mechanism to reach the start  | Focused revision |
+| Outgrown       | Lint-clean, and it reads as a reference manual: it grew with a feature | Curate it again  |
 
-No quota per class, and length decides nothing.
+No quota per class. Length is a reason to run the placement test, never a verdict by itself: a README inside the budget can still be misplaced, and one past it can be right for a protocol.
 
 ---
 
 ## Checklist
 
 - [ ] Linted without `--fix` before, and clean after
-- [ ] No established section removed; none invented
+- [ ] No section of the standard layout removed; none invented
 - [ ] Each fact kept, relocated with one link, or omitted; nothing from the never-cut list lost
+- [ ] The five questions are answered by a 30-second scan, the most valuable first
+- [ ] Inside the length budget, or every section past it justified
+- [ ] Nothing was added only because the implementation has it
 - [ ] No name lint reports; links written by the fixer and read afterwards
 - [ ] Examples parse and typecheck; no claim exceeds the code
 - [ ] `TAGLINES` entry updated when the description's idea changed
