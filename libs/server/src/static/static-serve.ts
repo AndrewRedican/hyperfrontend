@@ -13,9 +13,9 @@ import { requestPath } from './static-handler'
 export interface StaticServeDeps extends ServeStepDeps {
   /** Creates an HTTP server from a request handler. */
   readonly createServer?: (handler: (req: IncomingMessage, res: ServerResponse) => void) => Server
-  /** Sink for one access-log line per request. */
+  /** Sink for one access-log line per request, written only when the config's `log` is `true`, and for one line per failure. Without a sink nothing is written, whatever the config says. */
   readonly log?: (line: string) => void
-  /** Custom steps prepended to the built-in pipeline; the first step sees every request first. */
+  /** Custom steps prepended to the built-in pipeline; the first step sees every request first and every response last. What a custom step answers by itself carries no header rule, since the built-in steps apply them. */
   readonly steps?: readonly ServeStep[]
 }
 
@@ -23,7 +23,7 @@ export interface StaticServeDeps extends ServeStepDeps {
 export interface StaticServerHandle {
   /** The port the server is actually listening on. */
   readonly port: number
-  /** An origin URL the site is reachable at: the bound interface, or `localhost` for a wildcard bind. */
+  /** The URL of the site's root, which ends in a slash, such as `http://localhost:8080/`: the bound interface, or `localhost` for a wildcard bind. A path is resolved against it, as in `new URL('/app.js', handle.url)`. */
   readonly url: string
   /** Stops the server and resolves once it has closed. */
   close(): Promise<void>
@@ -50,11 +50,24 @@ function writeResponse(method: string, response: StaticResponse, res: ServerResp
 }
 
 /**
+ * Removes what a refused response left on the Node response: every header it
+ * had set, and the reason phrase Node took from its status when the refusal
+ * came while the head was being written.
+ *
+ * @param res - The HTTP response a write was refused on.
+ */
+function clearRefused(res: ServerResponse): void {
+  res.getHeaderNames().forEach((name) => res.removeHeader(name))
+  // why: Node keeps a phrase that is already set and names the status line from the status code only when there is none.
+  res.statusMessage = ''
+}
+
+/**
  * Answers 500 on a response Node refused to write. Whatever the refused
  * response had already set is removed first, so the failure never goes out
- * under the length or the entity tag of a file. The failure carries the
- * plan's header rules; when those are what Node refuses, it is sent again
- * with no header at all.
+ * under the length, the entity tag or the reason phrase of a file. The
+ * failure carries the plan's header rules; when those are what Node refuses,
+ * it is sent again with no header at all.
  *
  * @param method - The request method.
  * @param failure - The failure answer carrying the plan's header rules.
@@ -62,11 +75,11 @@ function writeResponse(method: string, response: StaticResponse, res: ServerResp
  */
 function writeFailure(method: string, failure: StaticResponse, res: ServerResponse): void {
   try {
-    res.getHeaderNames().forEach((name) => res.removeHeader(name))
+    clearRefused(res)
     writeResponse(method, failure, res)
   } catch {
     try {
-      res.getHeaderNames().forEach((name) => res.removeHeader(name))
+      clearRefused(res)
       res.statusCode = 500
       res.end('Internal Server Error')
     } catch {

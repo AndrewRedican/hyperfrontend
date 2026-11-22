@@ -164,6 +164,70 @@ describe('resolveBuildConfig', () => {
     )
   })
 
+  it('refuses an invalid semver version when the contract announces none', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow(
+      'Invalid config: "version" must be a valid semver version (e.g. "1.2.0"), but got "1.0".'
+    )
+  })
+
+  it('refuses a version whose numeric prerelease identifier has a leading zero', async () => {
+    writeConfig('{ "name": "clock", "version": "1.2.3-01", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow(
+      'Invalid config: "version" "1.2.3-01" is not a version a release manifest can hold: a numeric prerelease identifier takes no leading zero ("1.2.3-1", not "1.2.3-01").'
+    )
+  })
+
+  it('refuses a leading zero in a later prerelease identifier of a version written with a leading v', async () => {
+    writeConfig('{ "name": "clock", "version": "v1.2.3-rc.00+build", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow('Invalid config: "version" "v1.2.3-rc.00+build"')
+  })
+
+  it('still resolves a prerelease version written with a leading v', async () => {
+    writeConfig('{ "name": "clock", "version": "v1.2.3-rc.10", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.objectContaining({ version: 'v1.2.3-rc.10' }) })
+    )
+  })
+
+  it('refuses a feature name holding a space, naming the config field', async () => {
+    writeConfig('{ "name": "wall clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow(
+      'Invalid config: "name" must hold no whitespace, control character or U+FFFD: the shell package is named after it.'
+    )
+  })
+
+  it.each([
+    ['a no-break space', 'clock\\u00a0x'],
+    ['a control character', 'clock\\u0007'],
+    ['a lone surrogate', 'clock\\ud800'],
+    ['U+FFFD', 'clock\\ufffd'],
+  ])('refuses a feature name holding %s', async (_label, name) => {
+    writeConfig(`{ "name": "${name}", "version": "1.0.0", "contract": "./clock.contract.json" }`)
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow('Invalid config: "name" must hold no whitespace')
+  })
+
+  it('refuses a flag-supplied feature name the same way', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: { ...baseFlags, name: 'wall clock' } })).rejects.toThrow(
+      'Invalid config: "name" must hold no whitespace'
+    )
+  })
+
+  it('never repeats a refused feature name in the message', async () => {
+    writeConfig('{ "name": "clock\\u001b[2J", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).rejects.toThrow(
+      expect.objectContaining({ message: expect.not.stringContaining('\u001b') })
+    )
+  })
+
+  it('still resolves a scoped feature name', async () => {
+    writeConfig('{ "name": "@acme/clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.objectContaining({ name: '@acme/clock' }) })
+    )
+  })
+
   it('reads the declared permissions from the config file', async () => {
     writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": ["fullscreen", "camera"] }')
     await expect(resolveBuildConfig({ cwd: tmp.path, flags: baseFlags })).resolves.toEqual(

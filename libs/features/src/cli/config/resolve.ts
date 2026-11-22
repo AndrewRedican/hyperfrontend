@@ -3,7 +3,9 @@ import type { CliFlags } from '../args'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { checkReleaseManifest } from '@hyperfrontend/server/manifest'
 import { canonicalVersion } from '../../generators/shared/canonical-version'
+import { shellPackageName } from '../../generators/shared/shell-package-name'
 import { validateContract, validateDisplayConfig, validateFeatureConfig, validateIsolationConfig } from '../../shared/contract'
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 import { loadModuleFile } from './load-module'
@@ -72,7 +74,7 @@ function parsePermissions(value: unknown): FeaturePermission[] | undefined {
 }
 
 /**
- * Canonicalizes the config's `version` for the contract-coherence check.
+ * Canonicalizes the config's `version`, naming the config field when it is not semver.
  *
  * @param version - The config's authored version string.
  * @returns The canonical semver string.
@@ -87,13 +89,37 @@ function canonicalConfigVersion(version: string): string {
 }
 
 /**
+ * Refuses a feature whose built shell no release manifest could name, by the manifest's own check, so a preview and a real build turn the same config away before any work starts.
+ *
+ * @param name - The config's feature name, which the shell package is named after.
+ * @param version - The config's authored version string.
+ * @returns The canonical semver string the build stamps into the shell.
+ * @throws {Error} When the version is not valid semver, or the manifest check refuses the shell package's name or the canonical version.
+ */
+function releasableVersion(name: string, version: string): string {
+  const canonical = canonicalConfigVersion(version)
+  // why: The build ends by writing a release manifest under these two values, and asking the check that guards that file is what keeps this refusal and that one from ever disagreeing.
+  const codes = checkReleaseManifest({ schema: 1, name: shellPackageName(name), version: canonical, files: [] }).map((issue) => issue.code)
+  if (codes.includes('name-invalid')) {
+    // note: The message leaves the refused name out, since it may hold a character that rewrites the terminal it is printed on.
+    throw createError('Invalid config: "name" must hold no whitespace, control character or U+FFFD: the shell package is named after it.')
+  }
+  if (codes.includes('version-invalid')) {
+    throw createError(
+      `Invalid config: "version" "${version}" is not a version a release manifest can hold: a numeric prerelease identifier takes no leading zero ("1.2.3-1", not "1.2.3-01").`
+    )
+  }
+  return canonical
+}
+
+/**
  * Resolves the effective `feature.config.*` into a `ResolvedFeatureConfig` and its
  * contract, applying `defaults < config file < flags` precedence where a flag
  * replaces its whole top-level key (no deep merge).
  *
  * @param options - The working directory and parsed flags.
  * @returns The resolved config, loaded contract, protocol (with its explicitness), and source path.
- * @throws {Error} When the config or contract is missing required keys or malformed.
+ * @throws {Error} When the config or contract is missing required keys or malformed, or when the feature's name or version is one the built shell's release manifest could not hold.
  *
  * @example Resolving from a discovered config plus a flag override
  * ```typescript
@@ -114,6 +140,7 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
     contract: flags.contract ?? loaded['contract'],
   }
   const config = validateFeatureConfig(merged)
+  const version = releasableVersion(config.name, config.version)
 
   // why: An explicitly chosen protocol (flag or config) is distinguished from the fallback so the build gate can require a deliberate acknowledgment for an open build instead of ever defaulting into one.
   const chosenProtocol = flags.protocol ?? loaded['protocol']
@@ -125,7 +152,7 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
   const baseDir = sourcePath ? dirname(sourcePath) : cwd
   const contract = validateContract(await loadModuleFile(toAbsolute(baseDir, config.contract)))
   // why: The build stamps the canonicalized config version into the shell, so a contract authoring a different version would announce a cut the build did not produce; the mismatch fails fast naming both values.
-  if (contract.version !== undefined && canonicalVersion(contract.version) !== canonicalConfigVersion(config.version)) {
+  if (contract.version !== undefined && canonicalVersion(contract.version) !== version) {
     throw createError(
       `Contract version "${contract.version}" does not match the feature version "${config.version}". Align the contract's "version" with the config, or remove it to inherit the config version.`
     )

@@ -1,6 +1,6 @@
 import type { HeaderPolicy, ServeHeaderRule } from './serve-types'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { applyHeaderRules, expandHeaderPolicy } from './expand'
+import { applyErrorHeaderRules, applyFailureHeaderRules, applyHeaderRules, expandHeaderPolicy } from './expand'
 
 const DROPPED =
   'replaces the policy "embedders" declares and has no frame-ancestors directive, so the paths it matches could be framed by any origin: add the directive to that value or remove "embedders".'
@@ -260,8 +260,22 @@ describe('applyHeaderRules', () => {
     ])
   })
 
-  it.each([['Content-Length'], ['content-encoding'], ['ETag']])('never lets a rule set %s', (name: string) => {
-    expect(applyHeaderRules([{ headers: { [name]: 'forged', 'X-Rule': 'on' } }], '/index.html')).toEqual({ 'X-Rule': 'on' })
+  it.each([['Content-Length'], ['content-encoding'], ['ETag'], ['Transfer-Encoding'], ['transfer-encoding'], ['Trailer'], ['TRAILER']])(
+    'never lets a rule set %s',
+    (name: string) => {
+      expect(applyHeaderRules([{ headers: { [name]: 'forged', 'X-Rule': 'on' } }], '/index.html')).toEqual({ 'X-Rule': 'on' })
+    }
+  )
+
+  it.each([['Connection'], ['connection'], ['Keep-Alive'], ['keep-alive'], ['Upgrade'], ['UPGRADE'], ['TE'], ['te']])(
+    'never lets a rule set %s, which belongs to the connection',
+    (name: string) => {
+      expect(applyHeaderRules([{ headers: { [name]: 'close', 'X-Rule': 'on' } }], '/index.html')).toEqual({ 'X-Rule': 'on' })
+    }
+  )
+
+  it.each([['Connection'], ['Keep-Alive'], ['Upgrade'], ['TE']])('leaves the %s a response already carried as it was', (name: string) => {
+    expect(applyHeaderRules([{ headers: { [name]: 'close' } }], '/index.html', { [name]: 'kept' })).toEqual({ [name]: 'kept' })
   })
 
   it('folds the rules over the headers it is given', () => {
@@ -277,5 +291,164 @@ describe('applyHeaderRules', () => {
     const given = { 'Content-Type': 'text/plain' }
     applyHeaderRules([{ headers: { 'Content-Type': 'application/json' } }], '/data', given)
     expect(given).toEqual({ 'Content-Type': 'text/plain' })
+  })
+})
+
+describe('applyFailureHeaderRules', () => {
+  // note: A year, the lifetime an asset rule writes for a file whose name carries a hash of its bytes.
+  const YEAR = 'max-age=31536000'
+  const OWN = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }
+  const lines = (rules: readonly ServeHeaderRule[], path: string, headers: Record<string, string> = OWN): string[] =>
+    Object.entries(applyFailureHeaderRules(rules, path, headers)).map(([name, value]) => `${name}: ${value}`)
+
+  it('keeps the failure unstored whatever a matching rule wrote for the path', () => {
+    expect(lines([{ headers: { 'Cache-Control': `public, ${YEAR}, immutable` } }], '/assets/app.js')).toEqual([
+      'Content-Type: text/plain; charset=utf-8',
+      'Cache-Control: no-store',
+    ])
+  })
+
+  it('marks a failure that named no cache header as never stored', () => {
+    expect(lines([], '/app.js', { 'Content-Type': 'text/plain; charset=utf-8' })).toEqual([
+      'Content-Type: text/plain; charset=utf-8',
+      'Cache-Control: no-store',
+    ])
+  })
+
+  it('writes the mark under one spelling when the failure carried another', () => {
+    expect(lines([], '/app.js', { 'cache-control': 'no-store' })).toEqual(['Cache-Control: no-store'])
+  })
+
+  it.each([
+    ['Expires'],
+    ['expires'],
+    ['Surrogate-Control'],
+    ['X-Accel-Expires'],
+    ['CDN-Cache-Control'],
+    ['cdn-cache-control'],
+    ['Cloudflare-CDN-Cache-Control'],
+  ])('takes no %s from a matching rule', (name: string) => {
+    expect(lines([{ headers: { [name]: YEAR, 'X-Frame-Options': 'DENY' } }], '/app.js')).toEqual([
+      'Content-Type: text/plain; charset=utf-8',
+      'Cache-Control: no-store',
+      'X-Frame-Options: DENY',
+    ])
+  })
+
+  it.each([['Clear-Site-Data'], ['Cache-Status'], ['X-Cache-Control-Policy'], ['Vary'], ['Content-Security-Policy']])(
+    'takes a %s header, which sets no lifetime',
+    (name: string) => {
+      expect(applyFailureHeaderRules([{ headers: { [name]: 'kept' } }], '/app.js', OWN)[name]).toBe('kept')
+    }
+  )
+
+  it('leaves a lifetime the failure itself carried, since no rule wrote it', () => {
+    expect(lines([{ headers: { 'CDN-Cache-Control': YEAR } }], '/app.js', { ...OWN, 'CDN-Cache-Control': 'max-age=5' })).toEqual([
+      'Content-Type: text/plain; charset=utf-8',
+      'Cache-Control: no-store',
+      'CDN-Cache-Control: max-age=5',
+    ])
+  })
+
+  it.each([
+    ['Content-Length'],
+    ['content-encoding'],
+    ['ETag'],
+    ['Transfer-Encoding'],
+    ['Trailer'],
+    ['Connection'],
+    ['keep-alive'],
+    ['Upgrade'],
+    ['TE'],
+  ])('never lets a rule set %s on a failure either', (name: string) => {
+    expect(lines([{ headers: { [name]: 'forged' } }], '/app.js', {})).toEqual(['Cache-Control: no-store'])
+  })
+
+  it('reads no header of a rule that does not match the path', () => {
+    expect(lines([{ prefix: '/assets/', headers: { 'X-Frame-Options': 'DENY' } }], '/index.html')).toEqual([
+      'Content-Type: text/plain; charset=utf-8',
+      'Cache-Control: no-store',
+    ])
+  })
+
+  it('lets a later rule override an earlier one per header, as on any response', () => {
+    const rules = [{ headers: { 'X-Frame-Options': 'DENY' } }, { suffix: '.js', headers: { 'X-Frame-Options': 'SAMEORIGIN' } }]
+    expect(applyFailureHeaderRules(rules, '/app.js', OWN)['X-Frame-Options']).toBe('SAMEORIGIN')
+  })
+
+  it('leaves the headers it is given untouched', () => {
+    const given = { 'cache-control': 'no-store' }
+    applyFailureHeaderRules([{ headers: { 'X-Frame-Options': 'DENY' } }], '/app.js', given)
+    expect(given).toEqual({ 'cache-control': 'no-store' })
+  })
+})
+
+describe('applyErrorHeaderRules', () => {
+  // note: A year, the lifetime an asset rule writes for a file whose name carries a hash of its bytes.
+  const YEAR = 'max-age=31536000'
+  const OWN = { 'Content-Type': 'text/plain; charset=utf-8' }
+
+  it.each([
+    ['Cache-Control'],
+    ['cache-control'],
+    ['Expires'],
+    ['Surrogate-Control'],
+    ['X-Accel-Expires'],
+    ['CDN-Cache-Control'],
+    ['Cloudflare-CDN-Cache-Control'],
+  ])('answers no-store in place of the %s of a matching rule', (name: string) => {
+    expect(applyErrorHeaderRules([{ headers: { [name]: YEAR, 'X-Frame-Options': 'DENY' } }], '/assets/app.js', OWN)).toEqual({
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Frame-Options': 'DENY',
+      'Cache-Control': 'no-store',
+    })
+  })
+
+  it.each([['no-store'], ['private, no-cache'], ['no-cache']])('answers no-store under a rule that says %s', (value: string) => {
+    expect(applyErrorHeaderRules([{ headers: { 'Cache-Control': value } }], '/app.js', OWN)).toEqual({
+      ...OWN,
+      'Cache-Control': 'no-store',
+    })
+  })
+
+  it('writes no-store in the place the header first took', () => {
+    const rules = [{ headers: { 'Cache-Control': YEAR, 'X-Frame-Options': 'DENY' } }]
+    expect(Object.keys(applyErrorHeaderRules(rules, '/app.js', OWN))).toEqual(['Content-Type', 'Cache-Control', 'X-Frame-Options'])
+  })
+
+  it('adds no cache header of its own', () => {
+    expect(applyErrorHeaderRules([], '/app.js', OWN)).toEqual(OWN)
+  })
+
+  it('adds no cache header under rules that name none', () => {
+    expect(applyErrorHeaderRules([{ headers: { 'X-Frame-Options': 'DENY' } }], '/app.js', OWN)).toEqual({
+      ...OWN,
+      'X-Frame-Options': 'DENY',
+    })
+  })
+
+  it('adds no cache header when the rule that names one does not match the path', () => {
+    expect(applyErrorHeaderRules([{ prefix: '/assets/', headers: { 'Cache-Control': YEAR } }], '/index.html', OWN)).toEqual(OWN)
+  })
+
+  it('replaces a cache header the answer carried once a matching rule names one', () => {
+    expect(applyErrorHeaderRules([{ headers: { 'Cache-Control': YEAR } }], '/app.js', { 'Cache-Control': 'no-cache' })).toEqual({
+      'Cache-Control': 'no-store',
+    })
+  })
+
+  it('leaves a cache header the answer carried as it was under rules that name none', () => {
+    expect(applyErrorHeaderRules([{ headers: { 'X-Frame-Options': 'DENY' } }], '/app.js', { 'Cache-Control': 'no-cache' })).toEqual({
+      'Cache-Control': 'no-cache',
+      'X-Frame-Options': 'DENY',
+    })
+  })
+
+  it('reads no header of a rule that does not match the path', () => {
+    expect(applyErrorHeaderRules([{ prefix: '/assets/', headers: { 'X-Frame-Options': 'DENY' } }], '/index.html', OWN)).toEqual(OWN)
+  })
+
+  it('keeps a rule from setting a header the server owns', () => {
+    expect(applyErrorHeaderRules([{ headers: { 'Content-Length': '9999' } }], '/app.js', OWN)).toEqual(OWN)
   })
 })

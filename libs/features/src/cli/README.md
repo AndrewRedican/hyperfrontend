@@ -45,6 +45,8 @@ A TypeScript config or contract relies on the runtime stripping its types, so it
 build wrote. The project directory, its ancestors, and any directory holding other files are refused before the
 build starts, so a stray flag can never empty a source tree.
 
+Every build also writes `hf-release.json` into the package: a release manifest that lists each of the shell's other files by size and SHA-256 under the package's name and version, so an installed copy can be checked byte for byte against what was packed. A manifest cannot hold a feature name with whitespace or a control character in it, or a version whose numeric prerelease identifier starts with a zero (`1.2.3-01`), so the build refuses such a config as it reads it, under `--dry-run` too.
+
 [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) selects its config in its own order: `--config` names the file explicitly; otherwise, when `--root`
 is given, an `hf-serve.config.json` carried inside the served artifact (`<root>/hf-serve.config.json`: JSON
 is the one artifact-carried format) wins over a file beside the invocation, so the deploy policy travels

@@ -5,6 +5,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { generateMetadata } from '../metadata/generate-metadata'
 import { canonicalVersion } from '../shared/canonical-version'
 import { resolveDeclaredModes } from '../shared/declared-modes'
+import { shellPackageName } from '../shared/shell-package-name'
 import { buildShellTypes } from './shell-types'
 import { toSourceLiteral } from './source-literal'
 
@@ -103,7 +104,7 @@ export function createFeatureShell(options: FeatureShellOptions): FeatureShellHa
 function buildShellPackageJson(config: ResolvedFeatureConfig): string {
   // why: No top-level `type` is declared: the builder spreads this manifest into the published one, where `type: 'module'` would make Node parse the CommonJS `require` entry as ESM and hand the consumer an empty namespace.
   const manifest = {
-    name: `${config.name}-shell`,
+    name: shellPackageName(config.name),
     version: config.version,
     sideEffects: false,
     // why: The builder reads a source manifest's exports as source entries and maps each onto what it emitted for that module, omitting any key whose path is not a `./src/…/index` module; declaring the staged entry here is what gives the published shell its root export.
@@ -243,12 +244,12 @@ function buildReadmeContainer(config: ResolvedFeatureConfig, modes: DisplayMode[
  * @returns The README contents as a string.
  */
 function buildShellReadme(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
-  return `# ${config.name}-shell
+  return `# ${shellPackageName(config.name)}
 
 Generated shell for the **${config.name}** feature. Self-contained — install it and embed the feature with one call. \`send\` and \`on\` are typed from the feature's contract.
 
 ${buildReadmeWarning(config)}\`\`\`typescript
-import { createFeatureShell } from '${config.name}-shell'
+import { createFeatureShell } from '${shellPackageName(config.name)}'
 
 const shell = createFeatureShell({${buildReadmeContainer(config, modes)}${buildReadmeOptions(config)}
 })

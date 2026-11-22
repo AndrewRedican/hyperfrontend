@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/server",
-  "version": "0.1.0",
-  "description": "HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules.",
+  "version": "0.2.0",
+  "description": "A small HTTP kernel for Node.js: a service is a list of steps that return responses, run as a process with fixed exit codes, one started line and a graceful stop.",
   "license": "MIT",
   "type": "module",
   "dependencies": {
@@ -10,6 +10,8 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./environment": "./src/environment/index.js",
+    "./manifest": "./src/manifest/index.js",
     "./policy": "./src/policy/index.js",
     "./package.json": "./package.json"
   },
@@ -21,6 +23,13 @@
   "keywords": [
     "http",
     "http-server",
+    "router",
+    "middleware",
+    "service",
+    "streaming",
+    "health-check",
+    "readiness",
+    "cors",
     "static-server",
     "static-files",
     "nodejs",
@@ -33,6 +42,11 @@
     "cross-origin-isolation",
     "pipeline",
     "graceful-shutdown",
+    "exit-codes",
+    "environment-variables",
+    "configuration",
+    "release-manifest",
+    "sha256",
     "zero-dependencies",
     "typescript",
     "hyperfrontend"

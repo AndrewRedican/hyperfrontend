@@ -13,7 +13,7 @@ export default function ServerPage() {
       packageName="@hyperfrontend/server"
       slug="server"
       category="core"
-      fallbackDescription="HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules."
+      fallbackDescription="A small HTTP kernel for Node.js: a service is a list of steps that return responses, run as a process with fixed exit codes, one started line and a graceful stop."
     />
   )
 }

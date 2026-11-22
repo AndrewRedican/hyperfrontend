@@ -2,12 +2,13 @@
  * CJS (CommonJS) E2E tests for `@hyperfrontend/server`.
  *
  * The packed tarball is installed into a consumer outside the workspace and every test runs under plain Node
- * with no loader hooks: both entries load the way a consumer's `require` sees them, and the installed package
+ * with no loader hooks: every entry loads the way a consumer's `require` sees it, and the installed package
  * starts its static server on a port the operating system picks and serves a file from the consumer's directory.
  */
 
 'use strict'
 
+const { createHash } = require('node:crypto')
 const { join } = require('node:path')
 const { before } = require('node:test')
 const { describe, it, expect } = require('@hyperfrontend/testing')
@@ -19,9 +20,38 @@ const SCRIPT = `module.exports = [\n${"  'a row the compressor folds into the on
 /** The site the installed server serves. */
 const SITE = { 'site/app.js': SCRIPT }
 
+/**
+ * Hashes a text the way a release manifest records a file, independently of the package under test.
+ *
+ * @param content - The text of a file.
+ * @returns The SHA-256 of its UTF-8 bytes, in lowercase hexadecimal.
+ */
+const sha256 = (content) => createHash('sha256').update(content).digest('hex')
+
+/** A release directory the installed manifest entry indexes, and a second copy for the case that changes a file after indexing it. */
+const RELEASES = {
+  'release/index.mjs': 'abc',
+  'release/assets/app.css': 'body{}',
+  'tampered/index.mjs': 'abc',
+  'tampered/assets/app.css': 'body{}',
+}
+
+/** The manifest of either copy as it was written. */
+const MANIFEST = {
+  schema: 1,
+  name: '@acme/clock-shell',
+  version: '1.4.0',
+  files: [
+    { path: 'assets/app.css', size: 6, sha256: sha256('body{}') },
+    { path: 'index.mjs', size: 3, sha256: sha256('abc') },
+  ],
+}
+
 const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 before(() => consumer.writeTree(SITE))
+
+before(() => consumer.writeTree(RELEASES))
 
 describe('@hyperfrontend/server CJS', () => {
   it('requires every export entry', () => {
@@ -42,23 +72,53 @@ describe('@hyperfrontend/server CJS', () => {
       'addressPort',
       'buildCompressionStep',
       'buildServeSteps',
+      'chain',
       'closeServer',
       'confineDecodedPath',
       'contentTypeFor',
+      'cors',
       'createServeListener',
       'createStaticHandler',
       'decodeRequestPath',
+      'defineService',
       'directoryLocation',
+      'formatEvent',
+      'guard',
+      'headerRules',
       'headerValue',
+      'health',
+      'httpError',
+      'isHttpError',
+      'jsonResponse',
       'listen',
       'negotiateEncoding',
       'plainResponse',
+      'readiness',
       'requestPath',
+      'route',
+      'router',
+      'runService',
       'runSteps',
+      'sealServiceBuild',
       'serveFile',
+      'startService',
       'startStaticServer',
+      'staticFiles',
       'waitForShutdown',
     ])
+  })
+
+  it('exports the environment functions from the environment entry', () => {
+    const names = consumer.run(
+      () => {
+        const entry = require('@hyperfrontend/server/environment')
+        return Object.keys(entry)
+          .filter((name) => typeof entry[name] === 'function')
+          .sort()
+      },
+      { kind: 'require' }
+    )
+    expect(names).toEqual(['asDuration', 'asOrigin', 'asPort', 'asSecret', 'asText', 'asUrl', 'defineEnvironment', 'optional', 'required'])
   })
 
   it('exports the policy functions from the policy entry', () => {
@@ -193,5 +253,44 @@ describe('@hyperfrontend/server CJS', () => {
       contentEncoding: 'gzip',
       text: SCRIPT,
     })
+  })
+
+  it('creates, serializes, parses and verifies a release from the packed entry', () => {
+    const release = consumer.run(
+      (root) => {
+        const { writeFileSync } = require('node:fs')
+        const { join } = require('node:path')
+        const {
+          RELEASE_MANIFEST_FILENAME,
+          createReleaseManifest,
+          parseReleaseManifest,
+          releaseManifestDigest,
+          serializeReleaseManifest,
+          verifyRelease,
+        } = require('@hyperfrontend/server/manifest')
+        const source = join(root, RELEASE_MANIFEST_FILENAME)
+        const text = serializeReleaseManifest(createReleaseManifest({ root, name: '@acme/clock-shell', version: '1.4.0' }))
+        writeFileSync(source, text)
+        const manifest = parseReleaseManifest(text, source)
+        return { manifest, digest: releaseManifestDigest(text), issues: verifyRelease(root, manifest) }
+      },
+      { kind: 'require', args: join(consumer.path, 'release') }
+    )
+    expect(release).toEqual({ manifest: MANIFEST, digest: sha256(`${JSON.stringify(MANIFEST, null, 2)}\n`), issues: [] })
+  })
+
+  it('reports a tampered file', () => {
+    const issues = consumer.run(
+      (root) => {
+        const { writeFileSync } = require('node:fs')
+        const { join } = require('node:path')
+        const { createReleaseManifest, verifyRelease } = require('@hyperfrontend/server/manifest')
+        const manifest = createReleaseManifest({ root, name: '@acme/clock-shell', version: '1.4.0' })
+        writeFileSync(join(root, 'index.mjs'), 'abd')
+        return verifyRelease(root, manifest)
+      },
+      { kind: 'require', args: join(consumer.path, 'tampered') }
+    )
+    expect(issues).toEqual([{ code: 'file-sha256-mismatch', path: 'index.mjs', message: 'index.mjs does not have the listed SHA-256.' }])
   })
 })

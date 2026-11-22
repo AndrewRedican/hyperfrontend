@@ -1,6 +1,6 @@
 {
   "name": "lib-server",
-  "description": "HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules.",
+  "description": "A small HTTP kernel for Node.js: a service is a list of steps that return responses, run as a process with fixed exit codes, one started line and a graceful stop.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:util", "scope:public"],
@@ -16,7 +16,7 @@
         "macos": "full",
         "windows": "full"
       },
-      "note": "Support is per entry point: the root entry is the HTTP kernel and is Node-only, and `/policy` imports no Node.js built-in, so it also runs in a browser or a web worker once a bundler includes it. The package publishes no browser bundle of its own."
+      "note": "Support is per entry point, of which there are four: the root entry (both request contracts and the service runner) and `/manifest` are Node-only, while `/policy` and `/environment` import no Node.js built-in, so they also run in a browser or a web worker once a bundler includes them. The package publishes no browser bundle of its own."
     }
   },
   "targets": {

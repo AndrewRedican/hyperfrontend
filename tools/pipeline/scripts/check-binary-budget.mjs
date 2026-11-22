@@ -4,14 +4,27 @@
  *
  * Every committed byte stays in the history each clone downloads, and the
  * hosting service keeps it even after a history rewrite, so the cheap moment to
- * stop a large file is before it lands. Two limits apply to the objects a
+ * stop a large file is before it lands. Three limits apply to the objects a
  * change adds on top of its base. They are walked across every commit, not the
  * net diff, so a file added and deleted again on the branch still counts.
  *
  * - No single file may exceed `MAX_FILE_BYTES`, whatever its type.
- * - Binary files together may add at most `BUDGET_BYTES`. `--allow-over-budget`
- *   turns an overrun into a warning; in a pull request, the
- *   `binary-budget-approved` label does that.
+ * - Binary files together may be charged at most `BUDGET_BYTES`. What a file is
+ *   charged depends on what it does to the repository:
+ *   - A new file is charged its size.
+ *   - A file that takes the place of one the base holds is charged only what it
+ *     adds over that file: a recording made again, a vendored archive packed
+ *     again. The file it replaces is the one at the same path, or one the
+ *     change removes from the same directory whose name differs only in its
+ *     version number (`shell-0.3.0.tgz` giving way to `shell-0.4.0.tgz`).
+ *   - A file the change added and no longer holds, an earlier take of a
+ *     recording, is charged its size: no checkout uses it.
+ * - Binary files together, replacements at their full size, may add at most
+ *   `HISTORY_CEILING_BYTES`: a replacement is still downloaded by every clone,
+ *   so replacing is cheap but not free without end.
+ *
+ * `--allow-over-budget` turns an overrun of the budget or the ceiling into a
+ * warning; in a pull request, the `binary-budget-approved` label does that.
  *
  * Anything reachable from the base costs nothing, so moving, renaming or
  * restoring a file is free, and so is merging the base in. Written as plain
@@ -31,18 +44,22 @@
  * one are not blocked by it; the branch check still is, until the branch
  * history drops the file.
  *
- * Exits 0 within both limits, 1 over a limit, and 2 on bad arguments, an
+ * Exits 0 within every limit, 1 over a limit, and 2 on bad arguments, an
  * explicit base that is not a commit, or a failing git command.
  */
 import { execFileSync } from 'node:child_process'
 import { appendFileSync } from 'node:fs'
+import { posix } from 'node:path'
 import { parseArgs } from 'node:util'
 
 /** The most one file may add, in bytes, whatever its type: the media recorder's own ceiling for a GIF. */
 const MAX_FILE_BYTES = 2_000_000
 
-/** The most bytes of binary files one change may add before it needs approval. */
+/** The most bytes of binary files one change may be charged before it needs approval. */
 const BUDGET_BYTES = 2 * 1024 * 1024
+
+/** The most bytes of binary files one change may add to the history before it needs approval, replacements counted at their full size. */
+const HISTORY_CEILING_BYTES = 4 * BUDGET_BYTES
 
 /** File types counted toward the budget: images, video, audio, archives, documents, fonts and WebAssembly. */
 const BINARY_FILE =
@@ -112,20 +129,88 @@ const resolveBase = (requested) => {
 /** Commits the staged changes as a child of HEAD that no ref points at, leaving the branch and the index as they were, and returns its id. */
 const commitStaged = () => git(['commit-tree', git(['write-tree']).trim(), '-p', 'HEAD', '-m', 'staged changes']).trim()
 
-/** Every blob reachable from `revision` and from nowhere in the history of `excluded`, with its size and the first path it was found at. */
+/** Every blob reachable from `revision` and from nowhere in the history of `excluded`, with its id, its size and the first path it was found at. */
 const newBlobs = (revision, excluded) => {
   // why: `--not` alone only subtracts the trees where the walk stops, so a blob the excluded history held earlier, restored or merged back in, would look new
   const known = new Set(git(['rev-list', '--objects', '--no-object-names', ...excluded, '--']).split(/\r?\n/))
   const candidates = git(['rev-list', '--objects', revision, '--not', ...excluded, '--'])
     .split(/\r?\n/)
     .filter((line) => line !== '' && !known.has(line.split(' ', 1)[0]))
-  return git(['cat-file', '--batch-check=%(objecttype) %(objectsize) %(rest)'], candidates.join('\n'))
+  return git(['cat-file', '--batch-check=%(objecttype) %(objectname) %(objectsize) %(rest)'], candidates.join('\n'))
     .split(/\r?\n/)
     .filter((line) => line.startsWith('blob '))
     .map((line) => {
-      const sizeEnd = line.indexOf(' ', 'blob '.length)
-      return { bytes: Number(line.slice('blob '.length, sizeEnd)), path: line.slice(sizeEnd + 1) }
+      const idEnd = line.indexOf(' ', 'blob '.length)
+      const sizeEnd = line.indexOf(' ', idEnd + 1)
+      return { id: line.slice('blob '.length, idEnd), bytes: Number(line.slice(idEnd + 1, sizeEnd)), path: line.slice(sizeEnd + 1) }
     })
+}
+
+/** The binary files of a revision's tree: the size of each by path, and the paths holding each blob. */
+const binaryTree = (revision) => {
+  const sizes = new Map()
+  const paths = new Map()
+  for (const entry of git(['ls-tree', '-r', '-l', '-z', revision]).split('\0')) {
+    const tab = entry.indexOf('\t')
+    const path = entry.slice(tab + 1)
+    if (tab === -1 || !BINARY_FILE.test(path)) continue
+    const [, type, id, size] = entry.slice(0, tab).split(/ +/)
+    if (type !== 'blob') continue
+    sizes.set(path, Number(size))
+    paths.set(id, [...(paths.get(id) ?? []), path])
+  }
+  return { sizes, paths }
+}
+
+/** A path with the version number in its file name blanked, so two releases of one archive share a key. */
+const versionless = (path) => {
+  const extension = BINARY_FILE.exec(path)[0]
+  // why: Git names a path with forward slashes on every platform
+  const stem = posix.basename(path, extension).replace(/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]*)?/g, '*')
+  return posix.join(posix.dirname(path), stem + extension)
+}
+
+/** For each binary path only the head holds, the path it takes over from: one only the base holds, in the same directory, under the same name but for its version number. */
+const successions = (baseTree, headTree) => {
+  const vacated = new Map()
+  for (const path of [...baseTree.sizes.keys()].sort()) {
+    if (!headTree.sizes.has(path)) vacated.set(versionless(path), [...(vacated.get(versionless(path)) ?? []), path])
+  }
+  const replaced = new Map()
+  for (const path of [...headTree.sizes.keys()].sort()) {
+    if (baseTree.sizes.has(path)) continue
+    // why: each vacated path is taken once, so two new files cannot both be measured against one removed file
+    const predecessor = vacated.get(versionless(path))?.shift()
+    if (predecessor !== undefined) replaced.set(path, predecessor)
+  }
+  return replaced
+}
+
+/**
+ * What each new binary blob is charged against the budget, largest first.
+ * A blob the head holds is measured at the path that charges it least, since Git stores identical copies once.
+ */
+const chargeBinaries = (added, baseTree, headTree) => {
+  const replaced = successions(baseTree, headTree)
+  const atPath = (blob, path) => {
+    const predecessor = baseTree.sizes.has(path) ? path : replaced.get(path)
+    if (predecessor === undefined) return { ...blob, path, kind: 'new', charged: blob.bytes }
+    return { ...blob, path, kind: 'replaces', charged: Math.max(0, blob.bytes - baseTree.sizes.get(predecessor)), predecessor }
+  }
+  return added
+    .flatMap((blob) => {
+      const held = headTree.paths.get(blob.id)
+      if (held !== undefined) return [held.map((path) => atPath(blob, path)).sort((a, b) => a.charged - b.charged)[0]]
+      return BINARY_FILE.test(blob.path) ? [{ ...blob, kind: 'superseded', charged: blob.bytes }] : []
+    })
+    .sort((a, b) => b.charged - a.charged || b.bytes - a.bytes)
+}
+
+/** How a charged file reads in the report: what it replaces when that is another path, or that the change no longer holds it. */
+const describe = (binary) => {
+  if (binary.kind === 'superseded') return `${binary.path} (no longer in the change)`
+  if (binary.kind === 'replaces' && binary.predecessor !== binary.path) return `${binary.path} (replaces ${binary.predecessor})`
+  return binary.path
 }
 
 const mib = (count) => `${(count / (1024 * 1024)).toFixed(2)} MiB`
@@ -139,13 +224,23 @@ const check = () => {
   const head = options.staged ? commitStaged() : 'HEAD'
   const added = newBlobs(head, [base])
   const oversized = (options.staged ? newBlobs(head, ['HEAD', base]) : added).filter((blob) => blob.bytes > MAX_FILE_BYTES)
-  const binaries = added.filter((blob) => BINARY_FILE.test(blob.path)).sort((a, b) => b.bytes - a.bytes)
-  const binaryBytes = binaries.reduce((total, blob) => total + blob.bytes, 0)
-  const overBudget = binaryBytes > BUDGET_BYTES
+  const binaries = chargeBinaries(added, binaryTree(base), binaryTree(head))
+  const chargedBytes = binaries.reduce((total, binary) => total + binary.charged, 0)
+  const addedBytes = binaries.reduce((total, binary) => total + binary.bytes, 0)
+  const overBudget = chargedBytes > BUDGET_BYTES
+  const overCeiling = addedBytes > HISTORY_CEILING_BYTES
+  const remedy = approved
+    ? 'a pull request carrying it needs the binary-budget-approved label.'
+    : 'If that is intended, label the pull request binary-budget-approved and re-run the check, or pass --allow-over-budget.'
 
-  process.stdout.write(`binary budget against ${base}: ${mib(binaryBytes)} of ${mib(BUDGET_BYTES)}, new binary files: ${binaries.length}\n`)
-  for (const blob of binaries) {
-    process.stdout.write(`${mib(blob.bytes).padStart(12)}  ${blob.path}\n`)
+  process.stdout.write(
+    `binary budget against ${base}: ${mib(chargedBytes)} of ${mib(BUDGET_BYTES)} charged, ${mib(addedBytes)} of ${mib(HISTORY_CEILING_BYTES)} added to the history, new binary files: ${binaries.length}\n`
+  )
+  if (binaries.length > 0) process.stdout.write(`${'charged'.padStart(12)}${'size'.padStart(12)}\n`)
+  for (const binary of binaries) {
+    process.stdout.write(
+      `${mib(binary.charged).padStart(12)}${mib(binary.bytes).padStart(12)}  ${binary.kind.padEnd(10)}  ${describe(binary)}\n`
+    )
   }
 
   for (const blob of oversized) {
@@ -156,9 +251,13 @@ const check = () => {
 
   if (overBudget) {
     process.stderr.write(
-      approved
-        ? `warning: this change adds ${exact(binaryBytes)} of binary files, over the budget of ${exact(BUDGET_BYTES)}; a pull request carrying it needs the binary-budget-approved label.\n`
-        : `error: this change adds ${exact(binaryBytes)} of binary files, over the budget of ${exact(BUDGET_BYTES)}. If that is intended, label the pull request binary-budget-approved and re-run the check, or pass --allow-over-budget.\n`
+      `${approved ? 'warning' : 'error'}: this change is charged ${exact(chargedBytes)} of binary files, over the budget of ${exact(BUDGET_BYTES)}; ${approved ? remedy : `a file that replaces another is charged only its growth. ${remedy}`}\n`
+    )
+  }
+
+  if (overCeiling) {
+    process.stderr.write(
+      `${approved ? 'warning' : 'error'}: this change adds ${exact(addedBytes)} of binary files to the history, replacements included, over the ceiling of ${exact(HISTORY_CEILING_BYTES)}${approved ? '; ' : '. '}${remedy}\n`
     )
   }
 
@@ -168,17 +267,17 @@ const check = () => {
       [
         '### Binary budget',
         '',
-        `${mib(binaryBytes)} of ${mib(BUDGET_BYTES)} in ${binaries.length} new binary files. No file may exceed ${MAX_FILE_BYTES.toLocaleString('en-US')} bytes.`,
+        `${mib(chargedBytes)} of ${mib(BUDGET_BYTES)} charged and ${mib(addedBytes)} of ${mib(HISTORY_CEILING_BYTES)} added to the history, in ${binaries.length} new binary files. A file that replaces another is charged only its growth. No file may exceed ${MAX_FILE_BYTES.toLocaleString('en-US')} bytes.`,
         '',
-        '| Size | File |',
-        '| ---: | --- |',
-        ...binaries.map((blob) => `| ${mib(blob.bytes)} | \`${blob.path}\` |`),
+        '| Charged | Size | Kind | File |',
+        '| ---: | ---: | --- | --- |',
+        ...binaries.map((binary) => `| ${mib(binary.charged)} | ${mib(binary.bytes)} | ${binary.kind} | \`${describe(binary)}\` |`),
         '',
       ].join('\n')
     )
   }
 
-  process.exitCode = oversized.length > 0 || (overBudget && !approved) ? 1 : 0
+  process.exitCode = oversized.length > 0 || ((overBudget || overCeiling) && !approved) ? 1 : 0
 }
 
 try {

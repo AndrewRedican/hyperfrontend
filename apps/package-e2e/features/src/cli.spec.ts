@@ -12,12 +12,13 @@ import type { ChildExit } from '@hyperfrontend/testing/process'
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
-import { dirname, join } from 'node:path'
-import { before as beforeAll, after as afterAll } from 'node:test'
+import { dirname, join, posix, sep } from 'node:path'
+import { before as beforeAll, after as afterAll, it as nodeIt } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, it, expect } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
@@ -198,6 +199,31 @@ function listFilesRecursively(dir: string): string[] {
     .map((entry) => join(entry.parentPath.slice(dir.length + 1) || '', entry.name))
 }
 
+/** One file of a release manifest, as `hf build` writes it. */
+interface WrittenReleaseFile {
+  /** Path below the package root, "/" separated. */
+  readonly path: string
+  /** Length in bytes. */
+  readonly size: number
+  /** SHA-256 of the bytes, in lowercase hexadecimal. */
+  readonly sha256: string
+}
+
+/** The release manifest `hf build` writes, read as plain JSON and measured with `node:crypto` so nothing of the code that wrote it judges it. */
+interface WrittenRelease {
+  /** The schema number. */
+  readonly schema: number
+  /** The shell package's name. */
+  readonly name: string
+  /** The shell package's version. */
+  readonly version: string
+  /** Every file of the package but the manifest. */
+  readonly files: readonly WrittenReleaseFile[]
+}
+
+/** File name of the release manifest at the root of a built shell. */
+const RELEASE_MANIFEST = 'hf-release.json'
+
 describe('@hyperfrontend/features hf CLI', () => {
   const hfBin = resolveHfBin()
 
@@ -282,6 +308,8 @@ describe('@hyperfrontend/features hf CLI', () => {
     let outDir: string
     let result: { status: number | null; stderr: string; stdout: string } | undefined
     let outFiles: string[] = []
+    let release: WrittenRelease | undefined
+    let rebuiltRelease = ''
 
     beforeAll(
       () => {
@@ -312,15 +340,22 @@ export default contract
 `
         )
 
-        const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v3', '--out', outDir], {
-          cwd: scratch.path,
-          encoding: 'utf8',
-          timeout: BUILD_SUITE_TIMEOUT - 30000,
-          env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
-        })
+        const buildInto = (out: string) =>
+          spawnSync('node', [hfBin, 'build', '--protocol', 'v3', '--out', out], {
+            cwd: scratch.path,
+            encoding: 'utf8',
+            // why: The hook runs two builds, so each may take half of what the hook allows less its slack.
+            timeout: (BUILD_SUITE_TIMEOUT - 30000) / 2,
+            env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
+          })
+        const spawned = buildInto(outDir)
         result = { status: spawned.status, stderr: spawned.stderr ?? '', stdout: spawned.stdout ?? '' }
         if (spawned.status === 0) {
           outFiles = listFilesRecursively(outDir)
+          release = JSON.parse(readFileSync(join(outDir, RELEASE_MANIFEST), 'utf8')) as WrittenRelease
+          // why: A second build of the untouched feature stages under another process id, so equal manifest bytes show that nothing of one run reaches the package.
+          const again = buildInto(join(scratch.path, 'out-again'))
+          rebuiltRelease = again.status === 0 ? readFileSync(join(scratch.path, 'out-again', RELEASE_MANIFEST), 'utf8') : again.stderr
         }
       },
       { timeout: BUILD_SUITE_TIMEOUT }
@@ -367,8 +402,37 @@ export default contract
       expect(declarations).toEqual([expect.stringContaining("export type FeatureDisplayMode = 'embedded' | 'dialog'")])
     })
 
+    it('writes a release manifest into the out directory', () => {
+      expect(outFiles).toEqual(expect.arrayContaining([RELEASE_MANIFEST]))
+    })
+
+    it('names the shell package and version', () => {
+      expect(release).toEqual(expect.objectContaining({ schema: 1, name: 'e2e-widget-shell', version: '0.0.1' }))
+    })
+
+    it('stores the manifest in canonical form', () => {
+      // how: Rebuilding the value member by member in schema order makes a stray member or another order show up as different text.
+      const files = (release?.files ?? []).map((file) => ({ path: file.path, size: file.size, sha256: file.sha256 }))
+      const canonical = { schema: release?.schema, name: release?.name, version: release?.version, files }
+      expect(readFileSync(join(outDir, RELEASE_MANIFEST), 'utf8')).toBe(`${JSON.stringify(canonical, null, 2)}\n`)
+    })
+
+    it('rebuilds the unchanged feature to the same release manifest bytes', () => {
+      expect(rebuiltRelease).toBe(readFileSync(join(outDir, RELEASE_MANIFEST), 'utf8'))
+    })
+
+    nodeIt('reports the release manifest digest in the diagnostic output', (t) => {
+      const bytes = readFileSync(join(outDir, RELEASE_MANIFEST))
+      const digest = createHash('sha256').update(bytes).digest('hex')
+      // why: The digest of each platform's run is printed so the three can be compared by eye, and the files beneath it say which one differs when they do not agree.
+      t.diagnostic(`${RELEASE_MANIFEST} sha256 on ${process.platform}: ${digest}`)
+      release?.files.forEach((file) => t.diagnostic(`  ${file.sha256}  ${file.path}`))
+      expect(digest).toMatch(/^[0-9a-f]{64}$/)
+    })
+
     describe('installed into an isolated consumer', () => {
       let consumer: TempDir
+      let installed = ''
 
       beforeAll(
         () => {
@@ -381,6 +445,7 @@ export default contract
           // why: The consumer gets the packed tarball and nothing else, no SDK and no linked node_modules, so every import below resolves through the shell's own published exports map the way it does for an external install.
           const npm = shimCommand('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)])
           execFileSync(npm.file, npm.args, { cwd: consumer.path, stdio: 'pipe', shell: npm.shell })
+          installed = join(consumer.path, 'node_modules', 'e2e-widget-shell')
           writeFileSync(
             join(consumer.path, 'consumer.ts'),
             `import { createFeatureShell } from 'e2e-widget-shell'
@@ -442,6 +507,23 @@ export { mode }
           { cwd: consumer.path, encoding: 'utf8' }
         )
         expect({ status: checked.status, output: checked.stdout }).toEqual({ status: 0, output: '' })
+      })
+
+      it('ships the release manifest in the tarball', () => {
+        expect(readFileSync(join(installed, RELEASE_MANIFEST), 'utf8')).toBe(readFileSync(join(outDir, RELEASE_MANIFEST), 'utf8'))
+      })
+
+      it('lists every installed file but the manifest', () => {
+        const present = listFilesRecursively(installed).map((file) => file.split(sep).join(posix.sep))
+        expect(release?.files.map((file) => file.path)).toEqual(present.filter((file) => file !== RELEASE_MANIFEST).sort())
+      })
+
+      it('records the SHA-256 of every installed file', () => {
+        const measured = (release?.files ?? []).map((file) => {
+          const bytes = readFileSync(join(installed, file.path))
+          return { path: file.path, size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') }
+        })
+        expect(release?.files).toEqual(measured)
       })
     })
   })

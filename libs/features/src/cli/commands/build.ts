@@ -1,4 +1,5 @@
 import type { BuildConfig } from '@hyperfrontend/builder/models'
+import type { ResolvedFeatureConfig } from '../../shared/types'
 import type { CliFlags } from '../args'
 import { execFileSync } from 'node:child_process'
 import { cpSync } from 'node:fs'
@@ -20,6 +21,9 @@ import {
 import { isWithinRoot } from '@hyperfrontend/project-scope/core/path'
 import { shimCommand } from '@hyperfrontend/project-scope/core/process'
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
+import { createReleaseManifest, RELEASE_MANIFEST_FILENAME, serializeReleaseManifest } from '@hyperfrontend/server/manifest'
+import { canonicalVersion } from '../../generators/shared/canonical-version'
+import { shellPackageName } from '../../generators/shared/shell-package-name'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
 import { reconcileServeIsolation, reconcileServePermissions } from '../config/serve-reconciliation'
@@ -105,16 +109,16 @@ function defaultPackTarball(packageDir: string): string {
 
 /**
  * Builds the shell: resolve config → generate the shell package into a
- * hidden staging dir inside the project → bundle via the builder → pack a
- * tarball → replace `--out` with the result. `--out` (default
- * `dist/<name>-shell`) may sit anywhere, a shared `dist/` beside the project
- * included, but the build must be able to own it: a directory that does not
- * exist, is empty, or holds a shell this CLI built earlier. The project
- * directory, its ancestors, and any directory holding other files are refused
- * before the build starts. A `v3`/`v4` security protocol is required for
- * production output; an explicit `--protocol none` builds only when paired with
- * `--allow-open`, acknowledging the open channel. The staging dir is always
- * removed.
+ * hidden staging dir inside the project → bundle via the builder → write the
+ * release manifest `hf-release.json` → pack a tarball → replace `--out` with
+ * the result. `--out` (default `dist/<name>-shell`) may sit anywhere, a shared
+ * `dist/` beside the project included, but the build must be able to own it: a
+ * directory that does not exist, is empty, or holds a shell this CLI built
+ * earlier. The project directory, its ancestors, and any directory holding
+ * other files are refused before the build starts. A `v3`/`v4` security
+ * protocol is required for production output; an explicit `--protocol none`
+ * builds only when paired with `--allow-open`, acknowledging the open channel.
+ * The staging dir is always removed.
  *
  * @param options - Flags, working directory, output sinks, and injectable deps.
  * @returns The process exit code.
@@ -179,6 +183,7 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
     // why: The staging dir name embeds the PID, so the emitted declaration maps are rewritten to stable feature-derived paths — repacking an unchanged feature stays byte-identical.
     normalizeDeclarationMaps(staged, config.name, (message) => stderr.write(message))
     publishSidecars(tempDir, staged)
+    writeReleaseManifest(staged, config)
     const tarball = packTarball(staged)
     deliverShell(staged, out, cwd)
     stdout.write(`Built "${config.name}" → ${out}\n${tarball ? `Packed ${tarball}\n` : ''}`)
@@ -244,8 +249,9 @@ function deliverShell(staged: string, out: string, cwd: string): void {
 
 /**
  * Copies the staged consumer-facing sidecars (`README.md`, `metadata.json`)
- * into the built package and lists the metadata file in the manifest's `files`
- * array so `npm pack` ships them with the shell.
+ * into the built package and lists the metadata file and the release manifest
+ * in the package manifest's `files` array, in one write, so `npm pack` ships
+ * both with the shell.
  *
  * @param tempDir - The staging directory holding the generated sidecars.
  * @param out - The built package directory the tarball is packed from.
@@ -256,8 +262,28 @@ function publishSidecars(tempDir: string, out: string): void {
   const manifestPath = join(out, 'package.json')
   const manifest = readJsonFileIfExists<Record<string, unknown>>(manifestPath)
   if (manifest !== null && isArray(manifest['files'])) {
-    writeJsonFile(manifestPath, { ...manifest, files: [...(manifest['files'] as unknown[]), 'metadata.json'] })
+    writeJsonFile(manifestPath, { ...manifest, files: [...(manifest['files'] as unknown[]), 'metadata.json', RELEASE_MANIFEST_FILENAME] })
   }
+}
+
+/**
+ * Writes the release manifest of the built package: every file about to be
+ * packed, by size and SHA-256, under the shell package's own name and the
+ * canonical version. It runs once the package holds its final bytes, the
+ * package manifest included, so what it records is what the tarball carries.
+ *
+ * @param staged - The built package directory the tarball is packed from.
+ * @param config - The resolved feature config naming the feature and its version.
+ * @throws {Error} When the package holds anything but regular files, or the feature's name is one a release manifest cannot hold.
+ */
+function writeReleaseManifest(staged: string, config: ResolvedFeatureConfig): void {
+  const manifest = createReleaseManifest({
+    root: staged,
+    name: shellPackageName(config.name),
+    version: canonicalVersion(config.version),
+  })
+  // why: The serialisation is the file byte for byte: a reader refuses any other spelling of the same content, so nothing reformats it on the way to disk.
+  writeFileContent(join(staged, RELEASE_MANIFEST_FILENAME), serializeReleaseManifest(manifest))
 }
 
 /**

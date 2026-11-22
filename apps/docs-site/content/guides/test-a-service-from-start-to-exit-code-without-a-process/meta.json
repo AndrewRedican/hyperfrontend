@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to test a service from start to exit code without a process",
+  "problem": "I want specs for how my service boots, stops and exits, but the only way I know to test that is to spawn it, wait for its port, send it a signal and read its exit code, which is slow and depends on timing, and a service I run inside the test process instead ends the test runner when it exits.",
+  "outcome": "Specs that run the service definition over a fake process and assert its lines and its exit code for a refused environment, a start, a stop that was asked for, a failed start, a fault and a timeout, and specs that call its steps as functions, all in milliseconds with no port bound and no signal sent, in a run that exits by itself.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/server"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/server@0.2.0",
+    "verifiedOn": "2026-11-22"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/server", "symbol": "runService" },
+    { "package": "@hyperfrontend/server", "symbol": "RunDeps" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceProcess" },
+    { "package": "@hyperfrontend/server", "symbol": "ProcessOutput" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceClock" },
+    { "package": "@hyperfrontend/server", "symbol": "ClockDeps" },
+    { "package": "@hyperfrontend/server", "symbol": "defineService" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceDefinition" },
+    { "package": "@hyperfrontend/server", "symbol": "StartedService" },
+    { "package": "@hyperfrontend/server", "symbol": "startService" },
+    { "package": "@hyperfrontend/server", "symbol": "Step" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceRequest" },
+    { "package": "@hyperfrontend/server", "symbol": "StepContext" },
+    { "package": "@hyperfrontend/server", "symbol": "Next" },
+    { "package": "@hyperfrontend/server", "symbol": "HttpError" },
+    { "package": "@hyperfrontend/server", "symbol": "chain" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A service on @hyperfrontend/server that is defined with defineService and run through runService",
+      "A test runner; the examples use node:test and node:assert, which ship with Node.js",
+      "TypeScript on Node.js 18 or later"
+    ]
+  },
+  "related": {
+    "guides": [
+      "run-typescript-tests-on-node-test",
+      "run-a-node-service-under-a-supervisor-and-a-proxy",
+      "put-routes-behind-an-identity-check"
+    ],
+    "reference": ["/docs/libraries/server", "/docs/libraries/server/environment"],
+    "explanation": ["/docs/libraries/server/architecture"]
+  },
+  "keywords": [
+    "testing",
+    "unit test",
+    "integration test",
+    "node:test",
+    "node:assert",
+    "exit code",
+    "process.exit",
+    "SIGTERM",
+    "SIGINT",
+    "graceful shutdown",
+    "startup failure",
+    "environment variables",
+    "unhandled rejection",
+    "uncaught exception",
+    "fake process",
+    "fake clock",
+    "fake timers",
+    "dependency injection",
+    "EADDRINUSE",
+    "timeout",
+    "middleware test",
+    "request handler",
+    "without a port",
+    "supertest"
+  ]
+}
