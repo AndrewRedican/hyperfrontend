@@ -532,12 +532,11 @@ local builds skip the step and render the committed history.
 A merge to `main` therefore deploys current statistics on its own. Between merges, the
 [downloads workflow](../../.github/workflows/downloads-freshness.yml) runs once a day: it reads
 `/docs/downloads/snapshot.json`, the frontier the published site was built with, compares it
-with the newest day npm reports for a published package, and when npm is ahead posts to a
-Vercel deploy hook so a production build fetches the missing days. When the two agree it does
-nothing, so no build or deployment happens merely because the schedule fired. The hook URL
-lives in the repository secret `VERCEL_DEPLOY_HOOK_URL` (Vercel project settings, Git, Deploy
-Hooks, for the production branch); without it the workflow fails with that instruction on the
-day it first finds the site stale. Run the same comparison locally with
+with the newest day npm reports for a published package, and reports how far the site lags.
+When the two agree it does nothing. When npm is ahead it posts to a deploy hook, if the
+repository secret `VERCEL_DEPLOY_HOOK_URL` holds one, so a production build fetches the missing
+days; no hook is configured today, so the workflow states the lag in a notice and passes, and
+the statistics catch up with the next merge. Run the same comparison locally with
 `node scripts/check-downloads-freshness.mjs`.
 
 The committed dataset is the durable record and the base every build starts from; extend it
