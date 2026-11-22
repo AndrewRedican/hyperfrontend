@@ -306,7 +306,7 @@ A plain `git push` still works whenever no bump is due. When one is due, the pre
 - Just write conventional commit messages (`feat:`, `fix:`, `security:`, `docs:`, etc.)
 - Push with `npx hf push`; versioning happens as part of it
 - Your PR will include the version bump already applied
-- A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the modules of the builder that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor releases every library. That named input is a hand-kept list: a new builder module that changes what lands in a tarball is added to it in the same change
+- A push can bump libraries your branch did not edit: one that ships a copy of code you changed is released by a patch, and a releasable change to the modules of the builder that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor releases every library. That named input is a hand-kept list, and the root lint (`npx hf run hyperfrontend:lint`) holds it to the builder's sources: it fails until a new builder module is either listed in the input, when it changes what lands in a tarball, or named outside it in the root `lint.config.ts`
 
 **If you need to bypass the hook (not recommended):**
 
