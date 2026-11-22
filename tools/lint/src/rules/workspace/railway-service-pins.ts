@@ -6,18 +6,16 @@
  */
 
 import type { Node } from '@hyperfrontend/linter'
-import { readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
 import { readProjectFile } from '@hyperfrontend/workspace/lint'
+import { installedRelease } from './shared/installed-release.ts'
 import { sweep } from './shared/sweep.ts'
 
 const PACKAGE = '@hyperfrontend/features'
 const PINNED = `${PACKAGE}@`
-const REGISTRY = 'https://registry.npmjs.org/'
 const EXACT = /^\d+\.\d+\.\d+$/
 
 /** A project that deploys to a Railway service. */
@@ -34,20 +32,6 @@ interface DeployMetadata {
   readonly provider?: unknown
   /** The service. */
   readonly service?: unknown
-}
-
-/** One installed package of a lock. */
-interface LockEntry {
-  /** The installed version. */
-  readonly version?: unknown
-  /** Where it was installed from. */
-  readonly resolved?: unknown
-}
-
-/** The lock entries the rule reads. */
-interface LockFile {
-  /** The installed packages by path. */
-  readonly packages?: Readonly<Record<string, LockEntry>>
 }
 
 /**
@@ -68,24 +52,6 @@ function railwayProjects(root: string): Map<string, DeployingProject> {
     return true
   })
   return projects
-}
-
-/**
- * The `@hyperfrontend/features` release a project's lock installs from the registry.
- *
- * @param directory - The project's directory
- * @returns The version, or null when the lock is missing, lacks the package or resolves it elsewhere
- */
-function installedRelease(directory: string): string | null {
-  try {
-    const lock = parse(readFileSync(join(directory, 'package-lock.json'), 'utf8')) as LockFile
-    const entry = lock.packages?.[`node_modules/${PACKAGE}`]
-    return typeof entry?.version === 'string' && typeof entry.resolved === 'string' && entry.resolved.startsWith(REGISTRY)
-      ? entry.version
-      : null
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -136,7 +102,7 @@ export default defineRule<undefined, Node>({
         context.report({ ...span, message })
         return
       }
-      const installed = installedRelease(project.directory)
+      const installed = installedRelease(project.directory, PACKAGE)
       if (installed === null) {
         const message = `Service '${service}' serves ${PINNED}${pin} but ${project.name} installs no ${PACKAGE} from the registry, so the pin cannot be checked.`
         context.report({ ...span, message })
