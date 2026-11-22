@@ -1,0 +1,388 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { join, resolve, sep } from 'node:path'
+import { beforeEach } from 'node:test'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { useTempDir } from '@hyperfrontend/testing/fs'
+import { confineDecodedPath, createStaticHandler, decodeRequestPath, passesThroughLink, requestPath, serveFile } from './static-handler'
+
+interface FakeResponse {
+  statusCode: number
+  headers: Record<string, string>
+  body: string
+  res: ServerResponse
+}
+
+const fakeRes = (): FakeResponse => {
+  const state: FakeResponse = { statusCode: 0, headers: {}, body: '', res: {} as ServerResponse }
+  state.res = {
+    set statusCode(value: number) {
+      state.statusCode = value
+    },
+    get statusCode() {
+      return state.statusCode
+    },
+    setHeader: (key: string, value: string) => {
+      state.headers[key] = value
+    },
+    end: (chunk?: Buffer | string) => {
+      state.body = chunk === undefined ? '' : chunk.toString()
+    },
+  } as unknown as ServerResponse
+  return state
+}
+
+// why: Resolve gives the fixture root the drive Windows prefixes onto every path the handler builds, so the served-path expectations below compare like for like.
+const ROOT = resolve('/srv')
+
+// how: The handler returns native paths, so an expected file path is joined the way the handler joins it.
+const at = (...segments: string[]): string => join(ROOT, ...segments)
+
+const deps = (exists: (path: string) => boolean) => ({ isFile: exists, readFile: (path: string) => Buffer.from(`bytes:${path}`) })
+
+// note: Stands in for a directory on disk: the directory path itself is not a file, the index inside it is.
+const hasIndexOnly = (path: string) => path.endsWith('index.html')
+
+describe('serveFile', () => {
+  it('serves the index for the root path', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, type: out.headers['Content-Type'], body: out.body }).toEqual({
+      status: 200,
+      type: 'text/html; charset=utf-8',
+      body: `bytes:${at('index.html')}`,
+    })
+  })
+
+  it('maps a known extension to its content type', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/app.js',
+      out.res,
+      deps(() => true)
+    )
+    expect(out.headers['Content-Type']).toBe('text/javascript; charset=utf-8')
+  })
+
+  it('falls back to octet-stream for an unknown extension', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/data.xyz',
+      out.res,
+      deps(() => true)
+    )
+    expect(out.headers['Content-Type']).toBe('application/octet-stream')
+  })
+
+  it('strips the query string before resolving', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/app.js?v=2',
+      out.res,
+      deps(() => true)
+    )
+    expect(out.body).toBe(`bytes:${at('app.js')}`)
+  })
+
+  it('allows a path that resolves to the root itself', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '//',
+      out.res,
+      deps(() => true)
+    )
+    expect(out.statusCode).toBe(200)
+  })
+
+  it('returns 404 when the file is missing', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/missing.js',
+      out.res,
+      deps(() => false)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
+  })
+
+  it('serves the directory index for a nested directory url', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/host/',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, type: out.headers['Content-Type'], body: out.body }).toEqual({
+      status: 200,
+      type: 'text/html; charset=utf-8',
+      body: `bytes:${at('host', 'index.html')}`,
+    })
+  })
+
+  it('redirects an unslashed directory url to its slashed form', () => {
+    const out = fakeRes()
+    serveFile(ROOT, '/host', out.res, deps(hasIndexOnly))
+    expect({ status: out.statusCode, location: out.headers['Location'], body: out.body }).toEqual({
+      status: 301,
+      location: '/host/',
+      body: '',
+    })
+  })
+
+  it('keeps the query string on the directory redirect', () => {
+    const out = fakeRes()
+    serveFile(ROOT, '/host?debug=1', out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe('/host/?debug=1')
+  })
+
+  it('redirects to the resolved directory, never to an authority the request smuggled in', () => {
+    const out = fakeRes()
+    serveFile(ROOT, '//evil.example/../host', out.res, deps(hasIndexOnly))
+    expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
+  })
+
+  it.each([
+    ['//host', '/host/'],
+    ['///host', '/host/'],
+    ['/\\evil.example/../host', '/host/'],
+    ['//evil.example/../host?debug=1', '/host/?debug=1'],
+  ])('resolves %s to a root-relative redirect', (urlPath, expected) => {
+    const out = fakeRes()
+    serveFile(ROOT, urlPath, out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe(expected)
+  })
+
+  it('never emits a protocol-relative location a browser would read as another origin', () => {
+    for (const urlPath of ['//evil.example/../host', '//host', '///host', '/host/../host', '']) {
+      const out = fakeRes()
+      serveFile(ROOT, urlPath, out.res, deps(hasIndexOnly))
+      const location = out.headers['Location']
+      if (location === undefined) {
+        continue
+      }
+      // why: A location starting with two slashes (or an absolute URL) carries its own authority, so the browser leaves the origin it was served from.
+      expect(new URL(location, 'http://localhost:4280/').origin).toBe('http://localhost:4280')
+    }
+  })
+
+  it('percent-encodes a resolved segment rather than reflecting the raw request', () => {
+    const out = fakeRes()
+    serveFile(ROOT, '/a b', out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe('/a%20b/')
+  })
+
+  it('returns 404 for a directory url with no index', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/host/',
+      out.res,
+      deps(() => false)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
+  })
+
+  it('returns 404 rather than redirecting when the directory has no index', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/host',
+      out.res,
+      deps(() => false)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
+  })
+
+  it('returns 403 on a traversal attempt', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/../secret',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 403, body: 'Forbidden' })
+  })
+
+  it('returns 403 for a malformed percent-encoding', () => {
+    const out = fakeRes()
+    serveFile(
+      ROOT,
+      '/%',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 403, body: 'Forbidden' })
+  })
+})
+
+describe('requestPath', () => {
+  it('defaults a missing url to the root', () => {
+    expect(requestPath(undefined)).toBe('/')
+  })
+
+  it('returns a query-less path unchanged', () => {
+    expect(requestPath('/app.js')).toBe('/app.js')
+  })
+
+  it('drops the query string', () => {
+    expect(requestPath('/app.js?v=2')).toBe('/app.js')
+  })
+})
+
+describe('createStaticHandler', () => {
+  it('serves the requested url', () => {
+    const out = fakeRes()
+    createStaticHandler(
+      ROOT,
+      deps(() => true)
+    )({ url: '/app.js' } as IncomingMessage, out.res)
+    expect(out.body).toBe(`bytes:${at('app.js')}`)
+  })
+
+  it('defaults a missing url to the index', () => {
+    const out = fakeRes()
+    createStaticHandler(
+      ROOT,
+      deps(() => true)
+    )({} as IncomingMessage, out.res)
+    expect(out.body).toBe(`bytes:${at('index.html')}`)
+  })
+})
+
+describe('default file system', () => {
+  const tmp = useTempDir({ prefix: 'hf-static-' })
+
+  beforeEach(() => {
+    tmp.write('index.html', 'DISK')
+  })
+
+  it('serves a file from disk when no overrides are given', () => {
+    const out = fakeRes()
+    serveFile(tmp.path, '/', out.res)
+    expect(out.body).toBe('DISK')
+  })
+
+  it('serves a nested directory index from disk when no overrides are given', () => {
+    tmp.write('host/index.html', 'HOST')
+    const out = fakeRes()
+    createStaticHandler(tmp.path)({ url: '/host/' } as IncomingMessage, out.res)
+    expect(out.body).toBe('HOST')
+  })
+
+  it('redirects an unslashed directory from disk when no overrides are given', () => {
+    tmp.write('host/index.html', 'HOST')
+    const out = fakeRes()
+    createStaticHandler(tmp.path)({ url: '/host' } as IncomingMessage, out.res)
+    expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
+  })
+
+  it('reports a missing file from disk when no overrides are given', () => {
+    const out = fakeRes()
+    createStaticHandler(tmp.path)({ url: '/missing.js' } as IncomingMessage, out.res)
+    expect(out.statusCode).toBe(404)
+  })
+})
+
+describe('decodeRequestPath', () => {
+  it('percent-decodes an encoded path', () => {
+    expect(decodeRequestPath('/a%20b')).toBe('/a b')
+  })
+
+  it('returns null for a malformed encoding', () => {
+    expect(decodeRequestPath('/%')).toBeNull()
+  })
+})
+
+describe('confineDecodedPath', () => {
+  it('confines a path inside the root', () => {
+    expect(confineDecodedPath(ROOT, '/app.js')).toBe(at('app.js'))
+  })
+
+  it('rejects a path that escapes the root', () => {
+    expect(confineDecodedPath(ROOT, '/../secret')).toBeNull()
+  })
+
+  it('allows the root itself', () => {
+    expect(confineDecodedPath(ROOT, '/')).toBe(ROOT)
+  })
+
+  it('confines against a root spelled with a trailing slash', () => {
+    // why: A root such as `--root /abs/site/` must serve the same files as its canonical spelling instead of refusing every request.
+    expect(confineDecodedPath(`${ROOT}${sep}`, '/app.js')).toBe(at('app.js'))
+  })
+
+  it('confines against a root spelled with forward slashes', () => {
+    expect(confineDecodedPath(normalizePath(ROOT), '/app.js')).toBe(at('app.js'))
+  })
+
+  it('resolves a leading backslash relative to the root', () => {
+    // why: Windows reads a leading backslash as a drive-rooted path, which would escape the root; stripping it keeps the request confined on every platform.
+    expect(confineDecodedPath(ROOT, '\\app.js')).toBe(at('app.js'))
+  })
+})
+
+describe('passesThroughLink', () => {
+  // how: Reports the listed paths as links and records every path it was asked about, in order.
+  const linkTest = (links: readonly string[], asked: string[] = []) => ({
+    asked,
+    isSymlink: (path: string): boolean => {
+      asked.push(path)
+      return links.includes(path)
+    },
+  })
+
+  it('reports no link for a path whose segments are all real', () => {
+    expect(passesThroughLink(ROOT, at('host', 'app.js'), linkTest([]).isSymlink)).toBe(false)
+  })
+
+  it('reports a link when the path itself is one', () => {
+    expect(passesThroughLink(ROOT, at('host', 'app.js'), linkTest([at('host', 'app.js')]).isSymlink)).toBe(true)
+  })
+
+  it('reports a link when a directory above the path is one', () => {
+    expect(passesThroughLink(ROOT, at('host', 'panel', 'app.js'), linkTest([at('host')]).isSymlink)).toBe(true)
+  })
+
+  it('reports no link when only the root is one', () => {
+    expect(passesThroughLink(ROOT, at('host', 'app.js'), linkTest([ROOT]).isSymlink)).toBe(false)
+  })
+
+  it('reports no link when only a directory above the root is one', () => {
+    expect(passesThroughLink(at('host'), at('host', 'app.js'), linkTest([ROOT]).isSymlink)).toBe(false)
+  })
+
+  it('tests the path and each directory up to the root, deepest first', () => {
+    const probe = linkTest([])
+    passesThroughLink(ROOT, at('host', 'panel', 'app.js'), probe.isSymlink)
+    expect(probe.asked).toEqual([at('host', 'panel', 'app.js'), at('host', 'panel'), at('host')])
+  })
+
+  it('tests nothing for the root itself', () => {
+    const probe = linkTest([ROOT])
+    passesThroughLink(ROOT, ROOT, probe.isSymlink)
+    expect(probe.asked).toEqual([])
+  })
+
+  it('stops at the first link it meets', () => {
+    const probe = linkTest([at('host', 'panel')])
+    passesThroughLink(ROOT, at('host', 'panel', 'app.js'), probe.isSymlink)
+    expect(probe.asked).toEqual([at('host', 'panel', 'app.js'), at('host', 'panel')])
+  })
+
+  it('never tests a root spelled with a trailing separator', () => {
+    const probe = linkTest([])
+    passesThroughLink(`${ROOT}${sep}`, at('host', 'app.js'), probe.isSymlink)
+    expect(probe.asked).toEqual([at('host', 'app.js'), at('host')])
+  })
+})

@@ -1,0 +1,44 @@
+{
+  "name": "@hyperfrontend/server",
+  "version": "0.0.0",
+  "description": "HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules.",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "1.0.6",
+    "@hyperfrontend/project-scope": "0.6.1"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./policy": "./src/policy/index.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "http",
+    "http-server",
+    "static-server",
+    "static-files",
+    "nodejs",
+    "compression",
+    "brotli",
+    "gzip",
+    "etag",
+    "conditional-requests",
+    "response-headers",
+    "cross-origin-isolation",
+    "pipeline",
+    "graceful-shutdown",
+    "zero-dependencies",
+    "typescript",
+    "hyperfrontend"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}
