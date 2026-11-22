@@ -1,7 +1,7 @@
 import type { FileStats } from '@hyperfrontend/project-scope/core/fs'
 import type { ResolvedServeConfig } from '../policy/serve-config'
 import type { ServeHeaderRule } from '../policy/serve-types'
-import type { StaticRequest, StaticResponse } from './serve-pipeline'
+import type { ServeStep, StaticRequest, StaticResponse } from './serve-pipeline'
 import type { ServeStepDeps } from './serve-steps'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -113,16 +113,14 @@ describe('header rules over a volume that folds spellings', () => {
     expect(volume.lookups).toEqual([ROOT, at('HOST', 'index.html')])
   })
 
-  it('asks for no stored spelling when every rule matches every path', () => {
+  it('asks for the stored spelling once when a bounded rule reads what the file step was told', () => {
     const volume = foldingVolume()
-    serve([SITE_RULE, { prefix: '/', suffix: '', headers: { 'X-Open': 'yes' } }], volume, get('/HOST/index.html'))
-    expect(volume.lookups).toEqual([])
+    serve([HOST_RULE, PAGE_RULE], volume, get('/HOST/index.html'))
+    expect(volume.lookups).toEqual([ROOT, at('HOST', 'index.html')])
   })
 
-  it('asks for no stored spelling when the plan has no rule', () => {
-    const volume = foldingVolume()
-    serve([], volume, get('/HOST/index.html'))
-    expect(volume.lookups).toEqual([])
+  it('sends a file reached by a request target with no leading slash the rule written for every path below the root', () => {
+    expect(serve([{ prefix: '/', headers: { 'X-Area': 'site' } }], foldingVolume(), get('index.html')).headers['X-Area']).toBe('site')
   })
 
   it('asks for no stored spelling of a path that answers 404', () => {
@@ -131,10 +129,10 @@ describe('header rules over a volume that folds spellings', () => {
     expect(volume.lookups).toEqual([])
   })
 
-  it('asks for no stored spelling of a directory it redirects to', () => {
+  it('asks for the stored spelling of the index of a directory it redirects to, and of nothing for the rules', () => {
     const volume = foldingVolume()
     serve([HOST_RULE], volume, get('/host'))
-    expect(volume.lookups).toEqual([])
+    expect(volume.lookups).toEqual([ROOT, at('host', 'index.html')])
   })
 
   it('matches a redirect against the path as requested', () => {
@@ -173,6 +171,36 @@ describe('header rules over a volume that folds spellings', () => {
   it('does not take a sibling whose name starts like the stored root for a path below it', () => {
     const volume = foldingVolume((path) => (path === ROOT ? ROOT : `${ROOT}-old${join('/', 'host', 'index.html')}`))
     expect(serve([SITE_RULE, HOST_RULE], volume, get('/index.html')).headers['X-Area']).toBe('site')
+  })
+})
+
+describe('the header rules step above a file step of the caller', () => {
+  // how: Stands in for a file step the caller wrote, which records the file it resolved and asks nothing of the volume.
+  const terminal: ServeStep = (_request, context) => {
+    context.filePath = at('HOST', 'index.html')
+    return { status: 200, headers: {}, body: null }
+  }
+
+  // note: The header rules step is the third of the built-ins, inside the method guard and compression.
+  const above = (headers: readonly ServeHeaderRule[], volume: Volume): StaticResponse => {
+    const config = plan(headers)
+    return runSteps([buildServeSteps(config, volume.deps)[2] as ServeStep, terminal], get('/HOST/index.html'), { config })
+  }
+
+  it('looks up where the file is stored for a bounded rule', () => {
+    expect(above([SITE_RULE, HOST_RULE], foldingVolume()).headers['X-Area']).toBe('host')
+  })
+
+  it('asks for the stored spelling of the root and then of the file', () => {
+    const volume = foldingVolume()
+    above([HOST_RULE], volume)
+    expect(volume.lookups).toEqual([ROOT, at('HOST', 'index.html')])
+  })
+
+  it('asks for no stored spelling when the plan has no rule', () => {
+    const volume = foldingVolume()
+    above([], volume)
+    expect(volume.lookups).toEqual([])
   })
 })
 

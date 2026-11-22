@@ -3,7 +3,7 @@ import type { FileStats } from '@hyperfrontend/project-scope/core/fs'
 import type { ResolvedServeConfig } from '../policy/serve-config'
 import type { ServeStep } from './serve-pipeline'
 import type { StaticServeDeps, StaticServerHandle } from './static-serve'
-import { createServer, get } from 'node:http'
+import { createServer, get, STATUS_CODES } from 'node:http'
 import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { gunzipSync } from 'node:zlib'
@@ -323,6 +323,23 @@ describe('createServeListener', () => {
     })
   })
 
+  it('clears the reason phrase of a response it could not finish writing', () => {
+    const out = fakeRes()
+    let refused = false
+    // why: Node names the status line when the head is written, which is inside end, and keeps a phrase that is already set; the first end here fails after that point, as a refused trailer does.
+    const original = out.res.end.bind(out.res)
+    out.res.end = ((chunk?: Buffer | string) => {
+      out.res.statusMessage = out.res.statusMessage || (STATUS_CODES[out.res.statusCode] as string)
+      if (!refused) {
+        refused = true
+        throw new TypeError('Trailers are invalid with this transfer encoding')
+      }
+      return original(chunk)
+    }) as ServerResponse['end']
+    createServeListener(config(), fsDeps())(fakeReq({ method: 'GET', url: '/app.js' }), out.res)
+    expect(`${out.statusCode} ${out.res.statusMessage}`).toBe('500 Internal Server Error')
+  })
+
   it('survives a socket that rejects even the fallback write', () => {
     const out = fakeRes()
     out.res.setHeader = (() => {
@@ -368,6 +385,27 @@ describe('startStaticServer', () => {
       }).on('error', reject)
     })
 
+  // how: Reads the status line and the framing headers a client is sent, which is where a refused or forged framing shows.
+  const fetchFraming = async (
+    url: string
+  ): Promise<{ line: string; length: string | undefined; framing: string | undefined; trailer: string | undefined }> =>
+    new Promise((resolve, reject) => {
+      get(url, (res) => {
+        res.resume()
+        res.on('end', () =>
+          resolve({
+            line: `${res.statusCode} ${res.statusMessage}`,
+            length: res.headers['content-length'],
+            framing: res.headers['transfer-encoding'],
+            trailer: res.headers['trailer'],
+          })
+        )
+      }).on('error', reject)
+    })
+
+  // how: Answers with a length and a trailer together, which Node accepts header by header and refuses when it writes the head.
+  const unframeable: ServeStep = () => ({ status: 200, headers: { 'Content-Length': '2', Trailer: 'X-Checksum' }, body: Buffer.from('ok') })
+
   beforeEach(() => {
     tmp.write('index.html', 'DISK')
     tmp.write('big.js', bigAsset)
@@ -412,6 +450,33 @@ describe('startStaticServer', () => {
       vary: response.headers['vary'],
       body: gunzipSync(response.body).toString(),
     }).toEqual({ status: 200, encoding: 'gzip', vary: 'Accept-Encoding', body: bigAsset })
+  })
+
+  it.each([
+    ['a trailer', { Trailer: 'X-Checksum' }],
+    ['a chunked transfer encoding', { 'Transfer-Encoding': 'chunked' }],
+    ['a transfer coding that was never applied', { 'transfer-encoding': 'gzip' }],
+  ])('serves a file under its own length when a rule names %s', async (_label: string, headers: Record<string, string>) => {
+    handle = await startStaticServer(config({ root: tmp.path, headers: [{ headers }] }))
+    await expect(fetchFraming(`${handle.url}index.html`)).resolves.toEqual({
+      line: '200 OK',
+      length: '4',
+      framing: undefined,
+      trailer: undefined,
+    })
+  })
+
+  it('names the failure in the status line of a response Node refused while writing its head', async () => {
+    handle = await startStaticServer(config({ root: tmp.path }), { steps: [unframeable] })
+    await expect(fetchFraming(handle.url)).resolves.toEqual(expect.objectContaining({ line: '500 Internal Server Error' }))
+  })
+
+  it('names the failure in the status line of the bare answer too', async () => {
+    // why: A plan built by hand can carry a header value no validator saw, which Node refuses on the failure answer as well.
+    handle = await startStaticServer(config({ root: tmp.path, headers: [{ headers: { 'X-Broken': 'caf\u0113' } }] }), {
+      steps: [unframeable],
+    })
+    await expect(fetchFraming(handle.url)).resolves.toEqual(expect.objectContaining({ line: '500 Internal Server Error' }))
   })
 
   it('uses an injected server factory', async () => {

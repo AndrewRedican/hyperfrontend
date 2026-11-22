@@ -3,6 +3,7 @@ import type { ResolvedServeConfig } from '../policy/serve-config'
 import type { ServeStep, StaticResponse } from './serve-pipeline'
 import type { ServeStepDeps } from './serve-steps'
 import { join, resolve } from 'node:path'
+import { brotliDecompressSync } from 'node:zlib'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { buildCompressionStep } from './serve-compression'
 import { runSteps } from './serve-pipeline'
@@ -96,15 +97,7 @@ describe('the compression cache over a volume that folds spellings', () => {
     expect(get('/assets/app.js').body).toBe(replaced.body)
   })
 
-  it('asks for the stored spelling once for a path spelled as stored', () => {
-    const volume = foldingVolume()
-    const get = pipeline(volume.deps)
-    get('/assets/app.js')
-    get('/assets/app.js')
-    expect(volume.lookups).toEqual([ROOT, STORED])
-  })
-
-  it('asks for the stored spelling of a respelled path on each request', () => {
+  it('asks where the file is stored once for each request, a cached one included', () => {
     const volume = foldingVolume()
     const get = pipeline(volume.deps)
     get('/assets/app.js')
@@ -112,11 +105,63 @@ describe('the compression cache over a volume that folds spellings', () => {
     get('/ASSETS/app.js')
     expect(volume.lookups).toEqual([ROOT, STORED, ROOT, join(ROOT, 'ASSETS', 'app.js'), ROOT, join(ROOT, 'ASSETS', 'app.js')])
   })
+})
 
-  it('asks for no stored spelling when the client accepts no encoding', () => {
-    const volume = foldingVolume()
-    pipeline(volume.deps)('/assets/app.js', 'identity')
-    expect(volume.lookups).toEqual([])
+interface Releases {
+  deps: ServeStepDeps
+  point: (release: string) => void
+}
+
+// how: A served root that is a link to one of two releases, whose pages differ in their bytes and in nothing a file's stats report.
+const linkedRoot = (): Releases => {
+  let current = 'a'
+  const page = join(ROOT, 'index.html')
+  return {
+    point: (release) => {
+      current = release
+    },
+    deps: {
+      isFile: (path) => path === page,
+      stat: (path) => (path === page ? statsAt(4096) : null),
+      readFile: () => Buffer.from(`<script src="/app.${current}.js"></script>`.padEnd(4096)),
+      realPath: (path) => (path === ROOT ? resolve('/releases', current) : join(resolve('/releases', current), 'index.html')),
+    },
+  }
+}
+
+const decoded = (response: StaticResponse): string =>
+  brotliDecompressSync(response.body as Buffer)
+    .toString()
+    .trimEnd()
+
+describe('the compression cache below a root that is a link', () => {
+  it('answers with the bytes of the release the link now leads to, although the entity tag did not change', () => {
+    const releases = linkedRoot()
+    const get = pipeline(releases.deps)
+    const before = get('/index.html')
+    releases.point('b')
+    const after = get('/index.html')
+    expect({ before: decoded(before), after: decoded(after), sameTag: before.headers['ETag'] === after.headers['ETag'] }).toEqual({
+      before: '<script src="/app.a.js"></script>',
+      after: '<script src="/app.b.js"></script>',
+      sameTag: true,
+    })
+  })
+
+  it('reuses the bytes while the link stays where it is', () => {
+    const get = pipeline(linkedRoot().deps)
+    const first = get('/index.html')
+    expect(get('/index.html').body).toBe(first.body)
+  })
+
+  it('keeps one entry for a path, replaced when the link moves', () => {
+    const releases = linkedRoot()
+    const get = pipeline(releases.deps)
+    const first = get('/index.html')
+    releases.point('b')
+    get('/index.html')
+    releases.point('a')
+    expect(get('/index.html').body).not.toBe(first.body)
   })
 })
 
@@ -126,6 +171,36 @@ describe('the compression cache over a site injected as values', () => {
     const get = pipeline({ isFile, stat, readFile })
     const first = get('/assets/app.js')
     expect(get('/assets/app.js').body).toBe(first.body)
+  })
+})
+
+describe('one compression step handed two roots', () => {
+  // how: A terminal step that answers the same path, entity tag and size from whichever root the request's plan names.
+  const terminal: ServeStep = (_request, context) => {
+    context.filePath = join(context.config.root, 'index.html')
+    return {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8', ETag: 'W/"1000-1000"' },
+      body: Buffer.from(`PAGE OF ${context.config.root}`.padEnd(4096)),
+    }
+  }
+
+  const roots = [resolve('/sites/one'), resolve('/sites/two')] as const
+
+  const served = (steps: readonly ServeStep[], root: string): StaticResponse =>
+    runSteps(steps, { method: 'GET', url: '/index.html', headers: { 'accept-encoding': 'br' } }, { config: { ...CONFIG, root } })
+
+  it('answers each root with its own bytes', () => {
+    const steps = [buildCompressionStep(), terminal]
+    served(steps, roots[0])
+    expect(decoded(served(steps, roots[1]))).toBe(`PAGE OF ${roots[1]}`)
+  })
+
+  it('keeps the bytes of one root while it answers the other', () => {
+    const steps = [buildCompressionStep(), terminal]
+    const first = served(steps, roots[0])
+    served(steps, roots[1])
+    expect(served(steps, roots[0]).body).toBe(first.body)
   })
 })
 

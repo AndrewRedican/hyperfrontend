@@ -1,10 +1,10 @@
-import type { ServeStep } from './serve-pipeline'
+import type { ServeStep, ServeStepContext } from './serve-pipeline'
 import type { RealPathLookup } from './served-path'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { headerValue } from './serve-pipeline'
-import { realPathOnDisk, servedPath } from './served-path'
+import { realPathOnDisk, storedFile } from './served-path'
 import { contentTypeFor } from './static-handler'
 
 // note: Bodies below this size gain nothing from compression; matches the compression default the `serve` package shipped with.
@@ -13,13 +13,15 @@ const COMPRESSION_THRESHOLD = 1024
 // note: Brotli quality 4 trades ~q11 ratios for request-path speed; the same setting the `serve` package used.
 const BROTLI_QUALITY = 4
 
-// note: A lookup that knows no stored spelling, which reads a file's path exactly as it was resolved from the request.
-const AS_RESOLVED: RealPathLookup = () => null
+/** A content coding the step can apply. */
+type Encoding = 'br' | 'gzip'
 
-/** One cached compression result, validated against the file's ETag before reuse. */
+/** One cached compression result, reused only for the file and the ETag it was compressed under. */
 interface CompressedEntry {
   /** The ETag of the identity body the bytes were compressed from. */
   readonly etag: string
+  /** The absolute path the file the bytes were compressed from is stored under. */
+  readonly file: string
   /** The compressed bytes. */
   readonly bytes: Buffer
 }
@@ -135,13 +137,19 @@ export function buildCompressionStep(): ServeStep {
 /**
  * Builds the compression step over a given lookup of stored paths.
  *
- * The cache holds one entry per file and encoding, keyed by the file's path
- * below the root as the file system stores it. A path that misses under the
- * spelling it was resolved by is looked up again under its stored spelling, so
- * the many spellings a volume that ignores letter case accepts for one file
- * share one entry instead of each adding its own.
+ * The cache holds one entry per served root, path below it and encoding. The
+ * path is read as the file system stores it, so the many spellings a volume
+ * that ignores letter case accepts for one file share one entry instead of
+ * each adding its own.
  *
- * @param realPath - Looks up the stored path of the root and of a file whose bytes are about to be compressed.
+ * An entry is reused only while the file is stored where it was and carries
+ * the entity tag it had. A served root that is a link pointed at another
+ * directory therefore has its bytes compressed again, in place of the entry
+ * they replace. The tag is the file's size and modification time, so a file
+ * replaced where it is stored by one that matches in both is the one change
+ * the cache cannot see.
+ *
+ * @param realPath - Looks up the stored path of the root and of a file whose bytes are about to be compressed, unless the request was already told.
  * @returns A step that encodes eligible response bodies.
  *
  * @example Building the step over an in-memory site
@@ -151,10 +159,24 @@ export function buildCompressionStep(): ServeStep {
  */
 export function compressionStep(realPath: RealPathLookup): ServeStep {
   const cache = createMap<string, CompressedEntry>()
-  // why: A file is stored under the spelling its directory lists, so only a miss costs a lookup, and a respelled path finds the entry of the file it reached.
-  const keyOf = (root: string, filePath: string, encoding: string): string => {
-    const resolvedKey = `${servedPath(root, filePath, AS_RESOLVED)}|${encoding}`
-    return cache.has(resolvedKey) ? resolvedKey : `${servedPath(root, filePath, realPath)}|${encoding}`
+  const compress = (body: Buffer, encoding: Encoding): Buffer =>
+    encoding === 'br' ? brotliCompressSync(body, { params: { [constants.BROTLI_PARAM_QUALITY]: BROTLI_QUALITY } }) : gzipSync(body)
+  const encode = (context: ServeStepContext, etag: string | undefined, body: Buffer, encoding: Encoding): Buffer => {
+    // why: An entry is reused only for the file and the ETag it was compressed under, so a response without both is compressed fresh and never cached.
+    if (context.filePath === undefined || etag === undefined) {
+      return compress(body, encoding)
+    }
+    const stored = storedFile(context, context.filePath, realPath)
+    // why: The key holds the stored path below the root, so every spelling of a file shares one entry and a root pointed elsewhere replaces its entries instead of adding to them.
+    const cacheKey = `${context.config.root}|${stored.path}|${encoding}`
+    const cached = cache.get(cacheKey)
+    // why: The ETag is a size and a modification time, which two releases can share, so the place the file is stored must match as well.
+    if (cached !== undefined && cached.etag === etag && cached.file === stored.file) {
+      return cached.bytes
+    }
+    const bytes = compress(body, encoding)
+    cache.set(cacheKey, { etag, file: stored.file, bytes })
+    return bytes
   }
   return (request, context, next) => {
     const response = next()
@@ -183,20 +205,7 @@ export function compressionStep(realPath: RealPathLookup): ServeStep {
     if (encoding === null) {
       return { ...response, headers: withVary(response.headers) }
     }
-    const etag = headerValue(response.headers, 'ETag')
-    // why: The cache is keyed by file and validated by ETag, so a response without both is compressed fresh; a changed file can never serve stale bytes.
-    const cacheKey = context.filePath === undefined || etag === undefined ? null : keyOf(context.config.root, context.filePath, encoding)
-    const cached = cacheKey === null ? undefined : cache.get(cacheKey)
-    const bytes =
-      cached !== undefined && cached.etag === etag
-        ? cached.bytes
-        : encoding === 'br'
-          ? brotliCompressSync(response.body, { params: { [constants.BROTLI_PARAM_QUALITY]: BROTLI_QUALITY } })
-          : gzipSync(response.body)
-    if (cacheKey !== null && (cached === undefined || cached.etag !== etag)) {
-      // why: A non-null cache key is only ever built from a defined etag, so the assertion restates what the key construction guarantees.
-      cache.set(cacheKey, { etag: etag as string, bytes })
-    }
+    const bytes = encode(context, headerValue(response.headers, 'ETag'), response.body, encoding)
     const headers: Record<string, string> = { ...withVary(response.headers), 'Content-Encoding': encoding }
     const lengthKey = keys(headers).find((key) => key.toLowerCase() === 'content-length')
     if (lengthKey !== undefined) {

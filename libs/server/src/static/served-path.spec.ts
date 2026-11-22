@@ -8,7 +8,7 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir, useTempDir } from '@hyperfrontend/testing/fs'
 import { runSteps } from './serve-pipeline'
 import { buildServeSteps } from './serve-steps'
-import { realPathOnDisk, servedPath } from './served-path'
+import { realPathOnDisk, servedPath, storedFile } from './served-path'
 
 // why: A volume that tells letter cases apart never reaches a file under another spelling, so the respelled cases can only run where the volume ignores case.
 const volumeIgnoresCase = ((): boolean => {
@@ -79,6 +79,77 @@ describe('servedPath', () => {
 
   it('answers the path as resolved when nothing is known of the stored one', () => {
     expect(servedPath(root, join(root, 'HOST', 'index.html'), () => null)).toBe('/HOST/index.html')
+  })
+})
+
+describe('storedFile', () => {
+  const root = resolve('/abs/dist')
+
+  const asked = join(root, 'HOST', 'INDEX.HTML')
+
+  const kept = join(root, 'host', 'index.html')
+
+  const context = (): { config: ResolvedServeConfig } => ({ config: { root, port: 4284, headers: [], log: false } })
+
+  // how: Answers the stored spelling of the root and of the one file, and records each path it was asked about.
+  const recording = (): { lookups: string[]; realPath: (path: string) => string | null } => {
+    const lookups: string[] = []
+    return {
+      lookups,
+      realPath: (path) => {
+        lookups.push(path)
+        return path === root ? root : path === asked ? kept : null
+      },
+    }
+  }
+
+  it('answers the path below the root and the whole path, both as stored', () => {
+    expect(storedFile(context(), asked, recording().realPath)).toEqual({ path: '/host/index.html', file: kept })
+  })
+
+  it('answers both as resolved when nothing is known of the stored root', () => {
+    expect(storedFile(context(), asked, () => null)).toEqual({ path: '/HOST/INDEX.HTML', file: asked })
+  })
+
+  it('answers both as resolved when nothing is known of the stored file', () => {
+    expect(storedFile(context(), asked, (path) => (path === root ? root : null))).toEqual({ path: '/HOST/INDEX.HTML', file: asked })
+  })
+
+  it('keeps the stored whole path of a file that is not stored below the root', () => {
+    const elsewhere = resolve('/elsewhere/index.html')
+    expect(storedFile(context(), asked, (path) => (path === root ? root : elsewhere))).toEqual({
+      path: '/HOST/INDEX.HTML',
+      file: elsewhere,
+    })
+  })
+
+  it('asks about the root and the file once for one request, however many steps read the answer', () => {
+    const volume = recording()
+    const request = context()
+    storedFile(request, asked, volume.realPath)
+    storedFile(request, asked, volume.realPath)
+    expect(volume.lookups).toEqual([root, asked])
+  })
+
+  it('answers a second reading with what the first was told', () => {
+    const request = context()
+    const first = storedFile(request, asked, recording().realPath)
+    expect(storedFile(request, asked, () => null)).toBe(first)
+  })
+
+  it('asks again for the next request', () => {
+    const volume = recording()
+    storedFile(context(), asked, volume.realPath)
+    storedFile(context(), asked, volume.realPath)
+    expect(volume.lookups).toEqual([root, asked, root, asked])
+  })
+
+  it('asks again when one request is read for another file', () => {
+    const volume = recording()
+    const request = context()
+    storedFile(request, asked, volume.realPath)
+    storedFile(request, kept, volume.realPath)
+    expect(volume.lookups).toEqual([root, asked, root, kept])
   })
 })
 
