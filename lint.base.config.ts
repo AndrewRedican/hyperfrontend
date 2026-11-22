@@ -50,7 +50,7 @@ export default [
       ...on(`
         workspace/lib-pkg-no-main workspace/lib-pkg-description workspace/lib-pkg-fields workspace/lib-pkg-package-json-export
         workspace/lib-pkg-exports-js-only workspace/lib-pkg-exports-exist workspace/lib-pkg-exports-entry-shape workspace/lib-pkg-bundle-entry
-        workspace/lib-pkg-secondary-entry-readme
+        workspace/lib-pkg-secondary-entry-readme workspace/lib-pkg-inherited-fields
       `),
     },
   },
