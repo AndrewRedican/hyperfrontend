@@ -1,0 +1,9 @@
+{
+  "name": "@hyperfrontend/e2e-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for @hyperfrontend/server package outputs",
+  "dependencies": {
+    "@hyperfrontend/server": "file:../../../tmp/e2e-packs/hyperfrontend-server-0.0.0.tgz"
+  }
+}
