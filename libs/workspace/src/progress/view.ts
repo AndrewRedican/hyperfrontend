@@ -86,6 +86,45 @@ const THRESHOLD_MS = 3000
 const INTERVAL_MS = 30_000
 
 /**
+ * A count of things, in words, as every line about a run words it.
+ *
+ * @param count - How many there are
+ * @param noun - What one of them is called
+ * @returns The count and the noun, plural unless the count is one
+ *
+ * @example One and several
+ * ```typescript
+ * counted(1, 'task') // => '1 task'
+ * counted(0, 'changed file') // => '0 changed files'
+ * ```
+ */
+export function counted(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
+/**
+ * The line that names the stage a run stopped at, as every report of a run words it.
+ *
+ * @param stopped - The stage that did not succeed, counted from 0
+ * @param targets - The targets of that stage, as the report names them
+ * @param notRun - How many tasks the stage kept from running
+ * @param stages - How many stages the run has
+ * @returns The line, or null for the only stage of a run that kept no task from running
+ *
+ * @example A stage that kept tasks from running, the last stage, and the only one
+ * ```typescript
+ * stoppedLine(0, 'typecheck, lint', 3, 3) // => 'stage 1 (typecheck, lint) did not succeed: 3 tasks not run'
+ * stoppedLine(2, 'build', 0, 3) // => 'stage 3 (build) did not succeed'
+ * stoppedLine(0, 'test', 0, 1) // => null: the only stage of the run, and it kept no task from running
+ * ```
+ */
+export function stoppedLine(stopped: number, targets: string, notRun: number, stages: number): string | null {
+  if (notRun === 0 && stages === 1) return null
+  const line = `stage ${stopped + 1} (${targets}) did not succeed`
+  return notRun === 0 ? line : `${line}: ${counted(notRun, 'task')} not run`
+}
+
+/**
  * The view of a run: call it as stages start and tasks start and end, and once at the end.
  *
  * @param options - The tasks, the stages, where to write and the clock
@@ -137,14 +176,13 @@ export function createProgressView(options: ViewOptions): ProgressView {
   const endings = createMap<string, Ending>()
   const running = createMap<string, Running>()
   const failed: TaskEnd[] = []
-  const counted = (count: number): string => `${count} ${count === 1 ? 'task' : 'tasks'}`
   const membersOf = (stage: number): ViewTask[] => tasks.filter((task) => task.stage === stage)
   const targetsOf = (stage: number): string => [...createSet(membersOf(stage).map((task) => task.target))].join(', ')
   return {
     stage: (stage) => {
       if (stages === 1) return
       terminal.line(
-        terminal.paint(`stage ${stage + 1} of ${stages}: ${targetsOf(stage)} (${counted(membersOf(stage).length)})`, Style.Bold)
+        terminal.paint(`stage ${stage + 1} of ${stages}: ${targetsOf(stage)} (${counted(membersOf(stage).length, 'task')})`, Style.Bold)
       )
     },
     started: (id) => void running.set(id, { startedAt: now(), due: interval }),
@@ -173,10 +211,8 @@ export function createProgressView(options: ViewOptions): ProgressView {
     finish: (stopped) => {
       const notRun = tasks.filter((task) => !endings.has(task.id))
       for (const task of notRun) endings.set(task.id, Ending.NotRun)
-      if (stopped !== null)
-        terminal.line(
-          terminal.paint(`stage ${stopped + 1} (${targetsOf(stopped)}) did not succeed: ${counted(notRun.length)} not run`, Style.Red)
-        )
+      const stoppedAt = stopped === null ? null : stoppedLine(stopped, targetsOf(stopped), notRun.length, stages)
+      if (stoppedAt !== null) terminal.line(terminal.paint(stoppedAt, Style.Red))
       terminal.line('')
       const ended = tasks.map((task) => ({ ...task, ending: endings.get(task.id) as Ending }))
       for (const line of matrixLines(ended, terminal.paint)) terminal.line(line)
@@ -184,7 +220,7 @@ export function createProgressView(options: ViewOptions): ProgressView {
       const totals = ENDINGS.map((ending) => [ending, ended.filter((task) => task.ending === ending).length] as const)
         .filter(([, count]) => count > 0)
         .map(([ending, count]) => `${count} ${ending.replace('-', ' ')}`)
-      terminal.line(`${counted(tasks.length)} in ${formatDuration(now() - began)}: ${totals.join(', ')}`)
+      terminal.line(`${counted(tasks.length, 'task')} in ${formatDuration(now() - began)}: ${totals.join(', ')}`)
       for (const end of failed) terminal.line(`${markOf(Ending.Failed, terminal.paint)} ${end.id}${end.log === null ? '' : `  ${end.log}`}`)
     },
   }

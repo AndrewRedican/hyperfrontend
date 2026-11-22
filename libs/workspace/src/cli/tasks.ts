@@ -20,7 +20,7 @@ import { failureExcerpt, taskLogPath } from '../progress/log'
 import { Ending } from '../progress/matrix'
 import { assignStages, runStages } from '../progress/stages'
 import { createTerminal } from '../progress/terminal'
-import { createProgressView } from '../progress/view'
+import { createProgressView, stoppedLine } from '../progress/view'
 import { manySummary, runPlanned } from '../runner/many'
 import { selfCommand } from '../runner/self'
 
@@ -143,7 +143,8 @@ function streamReporter(run: TaskRun, session: TaskSession): Reporter {
     },
     finish: (stopped, notRun, outcomes) => {
       for (const line of manySummary(outcomes)) session.note(line)
-      if (stopped !== null) session.note(`stage ${stopped + 1} (${targetsOf(stopped)}) did not succeed: ${notRun} tasks not run`)
+      const stoppedAt = stopped === null ? null : stoppedLine(stopped, targetsOf(stopped), notRun, run.stages.length)
+      if (stoppedAt !== null) session.note(stoppedAt)
     },
   }
 }
