@@ -42,13 +42,13 @@ const RULE_FIELDS: readonly string[] = ['prefix', 'suffix', 'headers']
 export interface ResolvedServeConfig {
   /** Absolute directory served as the site root. */
   readonly root: string
-  /** Port the server listens on. */
+  /** Port the server listens on; 0 lets the operating system choose one, which the server's handle reports. */
   readonly port: number
   /** Interface the server binds; every interface when `undefined`. */
   readonly host?: string
   /** Ordered header rules, later rules overriding earlier ones per header. */
   readonly headers: readonly ServeHeaderRule[]
-  /** Whether each request is access-logged. */
+  /** Whether each request is access-logged. A line is written only when the server was also given a log sink. */
   readonly log: boolean
   /** Absolute path of the config file that was loaded, absent when serving with pure defaults. */
   readonly sourcePath?: string
