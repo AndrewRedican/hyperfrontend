@@ -30,8 +30,8 @@ export interface ProjectConfiguration {
   root: string
   /** The source root. */
   sourceRoot?: string
-  /** `application` or `library`. */
-  projectType?: 'application' | 'library'
+  /** `application`, `service` or `library`. */
+  projectType?: 'application' | 'library' | 'service'
   /** The tags. */
   tags?: string[]
   /** The projects this one depends on without importing them. */
