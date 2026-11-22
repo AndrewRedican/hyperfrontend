@@ -214,6 +214,8 @@ const coreLibraries: NavItem[] = [
     href: '/docs/libraries/server',
     children: [
       { slug: 'architecture', href: '/docs/libraries/server/architecture' },
+      { slug: 'environment', href: '/docs/libraries/server/environment' },
+      { slug: 'manifest', href: '/docs/libraries/server/manifest' },
       { slug: 'policy', href: '/docs/libraries/server/policy' },
     ],
   },

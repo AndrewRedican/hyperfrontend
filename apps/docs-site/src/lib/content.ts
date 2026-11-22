@@ -267,7 +267,12 @@ export const LIBRARIES: LibraryInfo[] = [
     slug: 'server',
     readmePath: 'libs/server/README.md',
     architecturePath: 'libs/server/ARCHITECTURE.md',
-    entryPoints: ['libs/server/src/index.ts', 'libs/server/src/policy/index.ts'],
+    entryPoints: [
+      'libs/server/src/index.ts',
+      'libs/server/src/environment/index.ts',
+      'libs/server/src/manifest/index.ts',
+      'libs/server/src/policy/index.ts',
+    ],
     category: 'core',
   },
 ]
