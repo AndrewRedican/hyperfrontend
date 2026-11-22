@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to put routes behind an identity check",
+  "problem": "My service has a router and some of its routes must answer only a verified caller, but an identity check placed by guesswork also refuses the platform's probes and the browser's preflights, hands the caller to handlers untyped, and writes the path of every refused request into the log.",
+  "outcome": "A step that verifies the caller and adds it to the context under a type, standing in front of a whole router or inside single routes by choice, with probes and preflights answered ahead of it, a 401 that carries WWW-Authenticate, and refusals logged by route name wherever the path must stay out of the log.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/server"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/server@0.2.0",
+    "verifiedOn": "2026-11-22"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/server", "symbol": "Step" },
+    { "package": "@hyperfrontend/server", "symbol": "NoContext" },
+    { "package": "@hyperfrontend/server", "symbol": "Next" },
+    { "package": "@hyperfrontend/server", "symbol": "httpError" },
+    { "package": "@hyperfrontend/server", "symbol": "HttpError" },
+    { "package": "@hyperfrontend/server", "symbol": "chain" },
+    { "package": "@hyperfrontend/server", "symbol": "guard" },
+    { "package": "@hyperfrontend/server", "symbol": "router" },
+    { "package": "@hyperfrontend/server", "symbol": "route" },
+    { "package": "@hyperfrontend/server", "symbol": "health" },
+    { "package": "@hyperfrontend/server", "symbol": "readiness" },
+    { "package": "@hyperfrontend/server", "symbol": "cors" },
+    { "package": "@hyperfrontend/server", "symbol": "startService" },
+    { "package": "@hyperfrontend/server", "symbol": "defineService" },
+    { "package": "@hyperfrontend/server", "symbol": "RequestEvent" },
+    { "package": "@hyperfrontend/server", "symbol": "asSecret" },
+    { "package": "@hyperfrontend/server", "symbol": "Secret" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A service on @hyperfrontend/server whose routes sit in a router and which runs through runService",
+      "A way to tell a caller apart: a shared token, a signed token or a session lookup",
+      "TypeScript on Node.js 18 or later"
+    ]
+  },
+  "related": {
+    "guides": ["run-a-node-service-under-a-supervisor-and-a-proxy", "test-a-service-from-start-to-exit-code-without-a-process"],
+    "reference": ["/docs/libraries/server", "/docs/libraries/server/environment"],
+    "explanation": ["/docs/libraries/server/architecture"]
+  },
+  "keywords": [
+    "authentication",
+    "authorization",
+    "bearer token",
+    "401",
+    "WWW-Authenticate",
+    "middleware",
+    "guard",
+    "protected routes",
+    "request context",
+    "typed context",
+    "API key",
+    "secret",
+    "constant time",
+    "timingSafeEqual",
+    "CORS preflight",
+    "health check",
+    "access log",
+    "strictFunctionTypes"
+  ]
+}

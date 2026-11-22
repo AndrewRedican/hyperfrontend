@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to serve a built site with security headers",
+  "problem": "My bundler writes a dist directory, and the static server I put in front of it sends none of the headers a production site needs unless I spell each one by hand, where a typo in a policy is silently ignored by the browser and a year-long cache lifetime can land on the wrong answer.",
+  "outcome": "A Node.js process that serves the build with compression and entity tags, sends a framing policy, a permissions policy and cross-origin isolation declared as fields and refused at startup when malformed, caches hashed files for a year and makes pages revalidate, answers a missing file under the cached prefix with no-store in place of that lifetime, logs each request, answers a health probe and exits with code 0 on a terminate signal.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/server"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/server@0.2.0",
+    "verifiedOn": "2026-11-22"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/server", "symbol": "startStaticServer" },
+    { "package": "@hyperfrontend/server", "symbol": "ResolvedServeConfig" },
+    { "package": "@hyperfrontend/server", "symbol": "StaticServerHandle" },
+    { "package": "@hyperfrontend/server", "symbol": "StaticServeDeps" },
+    { "package": "@hyperfrontend/server", "symbol": "ServeStep" },
+    { "package": "@hyperfrontend/server", "symbol": "plainResponse" },
+    { "package": "@hyperfrontend/server", "symbol": "waitForShutdown" },
+    { "package": "@hyperfrontend/server", "symbol": "expandHeaderPolicy" },
+    { "package": "@hyperfrontend/server", "symbol": "ServeConfig" },
+    { "package": "@hyperfrontend/server", "symbol": "ServeHeaderRule" },
+    { "package": "@hyperfrontend/server", "symbol": "immutableAssets" },
+    { "package": "@hyperfrontend/server", "symbol": "nosniff" },
+    { "package": "@hyperfrontend/server", "symbol": "referrerPolicy" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A directory of built static files, such as the dist directory a bundler writes",
+      "Node.js 18 or later on the machine that serves it",
+      "A proxy or platform in front of the process that terminates TLS, since the server speaks plain HTTP"
+    ]
+  },
+  "related": {
+    "guides": ["run-a-node-service-under-a-supervisor-and-a-proxy"],
+    "reference": ["/docs/libraries/server", "/docs/libraries/server/policy"],
+    "explanation": ["/docs/libraries/server/architecture"]
+  },
+  "keywords": [
+    "static server",
+    "static files",
+    "dist",
+    "Vite",
+    "security headers",
+    "Content-Security-Policy",
+    "frame-ancestors",
+    "X-Frame-Options",
+    "clickjacking",
+    "Permissions-Policy",
+    "cross-origin isolation",
+    "COOP",
+    "COEP",
+    "SharedArrayBuffer",
+    "Cache-Control",
+    "immutable",
+    "ETag",
+    "304",
+    "brotli",
+    "gzip",
+    "nosniff",
+    "Referrer-Policy",
+    "access log",
+    "health check",
+    "graceful shutdown",
+    "SIGTERM"
+  ]
+}

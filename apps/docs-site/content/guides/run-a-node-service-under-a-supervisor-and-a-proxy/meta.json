@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to run a Node.js service under a supervisor and a proxy",
+  "problem": "My service runs fine from a terminal, but in production something else starts and stops it: a deploy cuts requests in flight, a missing variable turns into a restart loop, the load balancer answers a 502 now and then, and neither the exit code nor the log tells the platform or me which of those happened.",
+  "outcome": "A service whose start command lets the terminate signal through, whose started line and two probes tell the platform when it is up and when to send traffic, whose three exit codes drive the restart policy, whose stop finishes requests in flight inside the supervisor's wait and exits with code 0, and whose idle timeout and forwarded address agree with the proxy in front.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/server"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/server@0.2.0",
+    "verifiedOn": "2026-11-22"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    { "package": "@hyperfrontend/server", "symbol": "runService" },
+    { "package": "@hyperfrontend/server", "symbol": "defineService" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceDefinition" },
+    { "package": "@hyperfrontend/server", "symbol": "startService" },
+    { "package": "@hyperfrontend/server", "symbol": "ServiceOptions" },
+    { "package": "@hyperfrontend/server", "symbol": "health" },
+    { "package": "@hyperfrontend/server", "symbol": "readiness" },
+    { "package": "@hyperfrontend/server", "symbol": "ReadinessOptions" },
+    { "package": "@hyperfrontend/server", "symbol": "RequestOutcome" },
+    { "package": "@hyperfrontend/server", "symbol": "ClientInfo" },
+    { "package": "@hyperfrontend/server", "symbol": "asPort" },
+    { "package": "@hyperfrontend/server", "symbol": "asUrl" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A service on @hyperfrontend/server that runs through runService, such as the one in the package's Quick Start",
+      "A supervisor that starts and stops the process: a container platform, systemd or a process manager",
+      "A proxy or load balancer in front of the service that terminates TLS",
+      "Node.js 18 or later on the machine that runs it"
+    ]
+  },
+  "related": {
+    "guides": [
+      "put-routes-behind-an-identity-check",
+      "test-a-service-from-start-to-exit-code-without-a-process",
+      "serve-a-built-site-with-security-headers"
+    ],
+    "reference": ["/docs/libraries/server", "/docs/libraries/server/environment"],
+    "explanation": ["/docs/libraries/server/architecture"]
+  },
+  "keywords": [
+    "deploy",
+    "production",
+    "supervisor",
+    "process manager",
+    "systemd",
+    "Docker",
+    "Kubernetes",
+    "container",
+    "PID 1",
+    "npm start",
+    "SIGTERM",
+    "SIGKILL",
+    "graceful shutdown",
+    "drain",
+    "exit code",
+    "78",
+    "137",
+    "143",
+    "restart policy",
+    "restart loop",
+    "CrashLoopBackOff",
+    "liveness probe",
+    "readiness probe",
+    "health check",
+    "terminationGracePeriodSeconds",
+    "reverse proxy",
+    "load balancer",
+    "keep-alive",
+    "idle timeout",
+    "502",
+    "X-Forwarded-For",
+    "Windows",
+    "IPC"
+  ]
+}
