@@ -3,7 +3,8 @@
  *
  * An empty repository outside this one is made a workspace by the installed `hf`, and every step a consumer takes from
  * there runs through it: libraries generated, built, tested, linted and selected by a change, one made publishable and
- * tested as a package, then renamed and moved. Nothing a generator writes may name this repository.
+ * tested as a package, then renamed and moved, and an application and a service generated and checked as written.
+ * Nothing a generator writes may name this repository.
  */
 
 import type { ConsumerRun } from '@hyperfrontend/testing/consumer'
@@ -97,9 +98,17 @@ function withoutPackageNames(text: string): string {
   return text.replace(/@hyperfrontend\/[a-z0-9-]+/g, '')
 }
 
+/** The repository the consumer's root manifest states, which a build writes into each package with the library's directory. */
+const REPOSITORY = { type: 'git', url: 'git+https://example.com/acme/monorepo.git' }
+
 before(() => {
   // why: npm wrote the consumer's manifest for the install; the scope the generators read comes from the name the repository gives itself
-  consumer.write('package.json', { ...readJson<Record<string, unknown>>('package.json'), name: '@acme/monorepo', license: 'MIT' })
+  consumer.write('package.json', {
+    ...readJson<Record<string, unknown>>('package.json'),
+    name: '@acme/monorepo',
+    license: 'MIT',
+    repository: REPOSITORY,
+  })
   git('init', '-q')
 })
 
@@ -120,7 +129,8 @@ describe('hf generate workspace', () => {
 
 describe('hf generate library', () => {
   it('writes a library under the repository scope', () => {
-    hf(['generate', 'library', 'alpha', '--description=Alpha.'])
+    // why: a description formatting rewrites, so the README a later step must recognise is not the text the generator wrote
+    hf(['generate', 'library', 'alpha', '--description=Reads *.ts files.'])
     expect(readJson('libs/alpha/package.json')).toEqual(expect.objectContaining({ name: '@acme/alpha', private: true, license: 'MIT' }))
   })
 
@@ -225,6 +235,10 @@ describe('hf generate make-publishable', () => {
     })
   })
 
+  it('replaces the README the library was created with, which formatting had rewritten, by one that says how to install the package', () => {
+    expect(read('libs/alpha/README.md')).toContain('npm install @acme/alpha')
+  })
+
   it('names this repository nowhere in what the generators wrote', () => {
     const files = [
       'hf.json',
@@ -240,6 +254,13 @@ describe('hf generate make-publishable', () => {
   it('builds the package in every format', () => {
     const run = hf(['run', 'alpha:build'])
     expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({ status: 0, output: expect.any(String) })
+  })
+
+  it("states the root manifest's repository in the built manifest, with the library's directory, though the library states none", () => {
+    expect({
+      stated: readJson<{ repository?: unknown }>('libs/alpha/package.json').repository,
+      built: readJson<{ repository?: unknown }>('dist/libs/alpha/package.json').repository,
+    }).toEqual({ stated: undefined, built: { ...REPOSITORY, directory: 'libs/alpha' } })
   })
 
   it('packs the build, installs it into the e2e project and runs its suites', () => {
@@ -283,5 +304,62 @@ describe('hf generate rename and move', () => {
       edge: hf(['graph', 'explain', 'beta']).stdout.includes('→ project:gamma'),
       typechecks: hf(['run', 'beta:typecheck']).status,
     }).toEqual({ moved: true, alias: ['packages/gamma/src/index.ts'], edge: true, typechecks: 0 })
+  })
+})
+
+describe('the renames and moves hf generate refuses', () => {
+  it('refuses a package name another library holds, renaming nothing', () => {
+    const run = hf(['generate', 'rename', 'beta', 'delta', '--packageName=@acme/gamma'])
+    expect({ refusal: run.stderr, name: readJson<{ name: string }>('libs/beta/project.json').name }).toEqual({
+      refusal: expect.stringContaining("Package name already in use: '@acme/gamma' is the package at packages/gamma"),
+      name: 'beta',
+    })
+  })
+
+  it("refuses a move into the library's own directory, leaving the library where it is", () => {
+    const run = hf(['generate', 'move', 'gamma', 'packages/gamma', '--newName=inner'])
+    expect({ refusal: run.stderr, kept: existsSync(join(consumer.path, 'packages', 'gamma', 'project.json')) }).toEqual({
+      refusal: expect.stringContaining('Destination lies inside the project: packages/gamma/inner'),
+      kept: true,
+    })
+  })
+})
+
+describe('hf generate application and service', () => {
+  it('writes an application that states its kind, with the typecheck and test targets', () => {
+    hf(['generate', 'application', 'web', '--description=The site.'])
+    expect(readJson('apps/web/project.json')).toEqual(
+      expect.objectContaining({ name: 'web', projectType: 'application', targets: { typecheck: {}, test: {} } })
+    )
+  })
+
+  it('writes a service outside the applications directory, with a configuration its type check covers', () => {
+    hf(['generate', 'service', 'api', '--directory=services'])
+    expect({
+      project: readJson('services/api/project.json'),
+      include: readJson<{ include: string[] }>('services/api/tsconfig.lib.json').include,
+      configured: existsSync(join(consumer.path, 'services', 'api', 'service.config.ts')),
+    }).toEqual({
+      project: expect.objectContaining({ name: 'api', projectType: 'service', targets: { typecheck: {}, test: {} } }),
+      include: ['src/**/*.ts', 'service.config.ts'],
+      configured: true,
+    })
+  })
+
+  it('reads the service as an application, though it sits outside the applications directory', () => {
+    expect(hf(['graph', 'explain', 'api']).stdout).toContain('api (app, services/api)')
+  })
+
+  it.each(['web:typecheck', 'web:test', 'web:lint', 'api:typecheck', 'api:test', 'api:lint'])(
+    'runs %s as generated and exits 0',
+    (task) => {
+      const run = hf(['run', task])
+      expect({ status: run.status, output: run.stdout + run.stderr }).toEqual({ status: 0, output: expect.any(String) })
+    }
+  )
+
+  it('names this repository nowhere in what the two generators wrote', () => {
+    const files = [...filesUnder('apps/web'), ...filesUnder('services/api')]
+    expect(files.filter((file) => /hyperfrontend/i.test(withoutPackageNames(read(file))))).toEqual([])
   })
 })

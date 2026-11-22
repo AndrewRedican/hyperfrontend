@@ -13,7 +13,6 @@ import { join } from 'node:path'
 import { before } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { usePackedConsumer } from '@hyperfrontend/testing/consumer'
-import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The executor the workspace provides for itself: it imports a sibling without its extension and is typed against the package. */
 const HELLO = [
@@ -433,6 +432,12 @@ describe('hf alone', () => {
     expect(hf(['--help'])).toEqual(expect.objectContaining({ status: 0, stdout: expect.stringContaining('Usage: hf <command> [options]') }))
   })
 
+  it('prints the usage of run for --help where the task is named, and exits 0', () => {
+    expect(hf(['run', '--help'])).toEqual(
+      expect.objectContaining({ status: 0, stdout: 'usage: hf run <project>:<target> [--name=value ...]\n' })
+    )
+  })
+
   it('reports a command it does not own while no other package provides hf', () => {
     expect(hf(['frobnicate'])).toEqual(
       expect.objectContaining({ status: 1, stderr: expect.stringContaining('hf: unknown command frobnicate') })
@@ -480,72 +485,16 @@ describe('the contract types', () => {
   })
 })
 
-/** The features command line as the stub provides it: it reports what it was asked and whether the call was handed over. */
-const FEATURES_CLI = [
-  'exports.runFeaturesCli = (invocation) => {',
-  "  invocation.stdout.write(`features ran ${invocation.argv.join(' ')} handedOver=${invocation.handedOver}\\n`)",
-  '  return Promise.resolve(0)',
-  '}',
-  '',
-].join('\n')
-
-/**
- * The features executable as the stub provides it: the decision the published one makes, written out. A first word
- * that is no flag and none of its own commands goes to the workspace command line resolved from the directory the
- * command ran in; everything else runs here.
- */
-const FEATURES_BIN = [
-  '#!/usr/bin/env node',
-  "'use strict'",
-  "const { createRequire } = require('node:module')",
-  "const { join } = require('node:path')",
-  "const { pathToFileURL } = require('node:url')",
-  "const { runFeaturesCli } = require('../cli.cjs')",
-  '',
-  'const argv = process.argv.slice(2)',
-  "const own = ['init', 'build', 'dev', 'serve']",
-  'const invocation = { argv, cwd: process.cwd(), stdout: process.stdout, stderr: process.stderr }',
-  '',
-  'async function main() {',
-  '  const first = argv[0]',
-  "  if (first !== undefined && !first.startsWith('-') && !own.includes(first)) {",
-  '    let file = null',
-  '    try {',
-  "      file = createRequire(join(process.cwd(), 'package.json')).resolve('@hyperfrontend/workspace/cli')",
-  '    } catch {}',
-  '    if (file !== null) {',
-  '      const { runWorkspaceCli } = await import(pathToFileURL(file).href)',
-  '      return runWorkspaceCli({ ...invocation, handedOver: true })',
-  '    }',
-  '  }',
-  '  return runFeaturesCli(invocation)',
-  '}',
-  '',
-  'main().then((code) => {',
-  '  process.exitCode = code',
-  '})',
-  '',
-].join('\n')
+// why: the released features package is what a consumer installs beside a new workspace, and an exact version keeps a later publish from changing what the suite runs
+const FEATURES = '@hyperfrontend/features@0.12.2'
 
 describe('hf linked beside a features package', () => {
-  // why: no published @hyperfrontend/features carries the handover yet, so a package standing in for it is installed beside the tarball; it declares the same bin and makes the same decision, so npm links one of the two and the test asks both commands of whichever that was
-  const features = createTempDir({
-    prefix: 'hf-features-stub-',
-    tree: {
-      'package.json': {
-        name: '@hyperfrontend/features',
-        version: '0.0.0',
-        bin: { hf: './bin/hf.cjs' },
-        exports: { './cli': './cli.cjs' },
-      },
-      'cli.cjs': FEATURES_CLI,
-      'bin/hf.cjs': FEATURES_BIN,
-    },
-  })
-  const linked = usePackedConsumer({ tarball: process.env['HF_E2E_TARBALL'], peers: [features.path] })
+  const linked = usePackedConsumer({ tarball: process.env['HF_E2E_TARBALL'], peers: [FEATURES] })
 
   before(() => {
     linked.writeTree({
+      // why: without it the installed packages are discovered as projects of the workspace
+      '.gitignore': 'node_modules\n',
       'hf.json': {},
       'libs/alpha/project.json': { name: 'alpha', targets: { echo: { command: 'node -e 0' } } },
     })
@@ -565,18 +514,74 @@ describe('hf linked beside a features package', () => {
     return join(bin, target[1] as string)
   }
 
+  /**
+   * The bin file of the features package, which a run names by its path whichever package npm linked.
+   *
+   * @returns The absolute path of the file
+   */
+  function featuresBin(): string {
+    return join(linked.path, 'node_modules', '@hyperfrontend', 'features', 'bin', 'hf.js')
+  }
+
+  /**
+   * The bin file of the workspace package, which a run names by its path whichever package npm linked.
+   *
+   * @returns The absolute path of the file
+   */
+  function workspaceBin(): string {
+    return join(linked.path, 'node_modules', '@hyperfrontend', 'workspace', 'bin', 'hf.mjs')
+  }
+
+  /**
+   * The packages whose usage a run printed, in the order it printed them; each usage opens with a line that starts with the name of its package.
+   *
+   * @param run - What the run reported
+   * @returns `features` or `workspace` for each usage on stdout
+   */
+  function usages(run: ConsumerRun): string[] {
+    return lines(run.stdout).flatMap((line) => /^@hyperfrontend\/(features|workspace)\b/.exec(line)?.[1] ?? [])
+  }
+
+  /** Every way the consumer reaches `hf`: the bin npm linked, and the bin of each package by its path. */
+  const BINS: ReadonlyArray<readonly [string, () => string]> = [
+    ['the bin npm linked', linkedBin],
+    ['the features bin', featuresBin],
+    ['the workspace bin', workspaceBin],
+  ]
+
   it('links one hf for the two packages', () => {
     expect(linkedBin()).toMatch(/@hyperfrontend[\\/](features|workspace)[\\/]/)
   })
 
-  it('reaches the features command line for a features command', () => {
-    expect(linked.node([linkedBin(), 'build', '--help'])).toEqual(
-      expect.objectContaining({ status: 0, stdout: 'features ran build --help handedOver=true\n' })
+  it.each(BINS)('reaches the workspace command line for a workspace command through %s', (_name: string, bin: () => string) => {
+    const run = linked.node([bin(), 'show', 'projects'])
+    expect({ status: run.status, projects: lines(run.stdout) }).toEqual({ status: 0, projects: ['alpha', 'consumer'] })
+  })
+
+  it.each(BINS)('reaches the features command line for a features command through %s', (_name: string, bin: () => string) => {
+    const run = linked.node([bin(), 'build', '--help'])
+    expect({ status: run.status, usages: usages(run) }).toEqual({ status: 0, usages: ['features'] })
+  })
+
+  it('follows the features usage with the workspace usage through the features bin', () => {
+    const run = linked.node([featuresBin(), '--help'])
+    expect({ status: run.status, usages: usages(run) }).toEqual({ status: 0, usages: ['features', 'workspace'] })
+  })
+
+  it('follows the workspace usage with the features usage through the workspace bin', () => {
+    const run = linked.node([workspaceBin(), '--help'])
+    expect({ status: run.status, usages: usages(run) }).toEqual({ status: 0, usages: ['workspace', 'features'] })
+  })
+
+  it('leaves a command neither package owns to the workspace command line, which the features bin passed it to', () => {
+    expect(linked.node([featuresBin(), 'frobnicate'])).toEqual(
+      expect.objectContaining({ status: 1, stderr: expect.stringContaining('hf: unknown command frobnicate') })
     )
   })
 
-  it('reaches the workspace command line for a workspace command', () => {
-    const run = linked.node([linkedBin(), 'show', 'projects'])
-    expect({ status: run.status, projects: lines(run.stdout) }).toEqual({ status: 0, projects: expect.arrayContaining(['alpha']) })
+  it('leaves a command neither package owns to the features command line, which the workspace bin passed it to', () => {
+    expect(linked.node([workspaceBin(), 'frobnicate'])).toEqual(
+      expect.objectContaining({ status: 1, stderr: expect.stringContaining('Unknown command: frobnicate') })
+    )
   })
 })
