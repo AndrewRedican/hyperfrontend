@@ -162,6 +162,8 @@
       "@hyperfrontend/questions": ["libs/questions/src/index.ts"],
       "@hyperfrontend/random-generator-utils": ["libs/utils/random-generator/src/index.ts"],
       "@hyperfrontend/server": ["libs/server/src/index.ts"],
+      "@hyperfrontend/server/environment": ["libs/server/src/environment/index.ts"],
+      "@hyperfrontend/server/manifest": ["libs/server/src/manifest/index.ts"],
       "@hyperfrontend/server/policy": ["libs/server/src/policy/index.ts"],
       "@hyperfrontend/state-machine": ["libs/state-machine/src/index.ts"],
       "@hyperfrontend/state-machine/actions": ["libs/state-machine/src/actions/index.ts"],
