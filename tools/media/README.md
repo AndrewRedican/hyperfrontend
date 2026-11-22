@@ -249,6 +249,7 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 | `levelsStage`      | `src/levels/stage`      | A level knob filtering a fixed stream of log lines                              |
 | `galtonStage`      | `src/galton/stage`      | Grains falling into columns until two distributions show their shape            |
 | `bridgeStage`      | `src/bridge/stage`      | A Jest-style spec wired, call by call, to the Node primitives it runs on        |
+| `hairpinStage`     | `src/hairpin/stage`     | Requests in through a service's steps and values back out, then a clean stop    |
 | `composeStage`     | `src/compose/stage`     | Apps on different stacks, each at its own origin, seating into one host page    |
 | `anatomyStage`     | `src/anatomy/stage`     | The host and hostee seam, and a cross-section of the channel between them       |
 | `clocksStage`      | `src/clocks/stage`      | Timescales of different lengths converging on one point, as an article figure   |
