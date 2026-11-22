@@ -1,6 +1,7 @@
 /**
  * This repository's `library` generator: the packaged one with this repository's conventions,
- * the stricter lint template, and the local `make-publishable` for a publishable library.
+ * the stricter lint template, a spec tsconfig that allows the `.ts` import extensions the testing
+ * library's sources use, and the local `make-publishable` for a publishable library.
  *
  * @module generators/library/generator
  */
@@ -19,13 +20,20 @@ interface ProjectTargets {
   targets?: Record<string, unknown>
 }
 
+/** A tsconfig as far as its compiler options go. */
+interface OptionsTsConfig {
+  /** The compiler options, by name */
+  compilerOptions?: Record<string, unknown>
+}
+
 /** The generator's templates, relative to the workspace root. */
 const TEMPLATES = 'tools/package/src/generators/library/files'
 
 /**
  * Creates a library of this repository: the packaged generator with the `@hyperfrontend` scope,
  * the `lib-<name>` project name and the `type:`/`scope:` tags, then the lint configuration that
- * turns on the workspace rules, then the local `make-publishable` when asked.
+ * turns on the workspace rules and the spec tsconfig that lets the specs type-check against the
+ * testing library's sources, then the local `make-publishable` when asked.
  *
  * @param tree - The virtual file system tree
  * @param options - Configuration options for the library
@@ -64,6 +72,11 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   // why: an internal library of this repository is never built; make-publishable adds the build target with the formats when the library is published
   updateJson<ProjectTargets>(tree, join(plan.projectRoot, 'project.json'), (json) => {
     delete json.targets?.['build']
+    return json
+  })
+  // why: the specs of this repository reach the sources of the testing library through its alias, and those sources import each other with .ts extensions
+  updateJson<OptionsTsConfig>(tree, join(plan.projectRoot, 'tsconfig.spec.json'), (json) => {
+    json.compilerOptions = { ...json.compilerOptions, allowImportingTsExtensions: true }
     return json
   })
   if (options.publishable === true) {
