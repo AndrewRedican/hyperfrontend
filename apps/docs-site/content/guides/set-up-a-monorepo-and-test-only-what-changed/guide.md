@@ -177,7 +177,7 @@ npx hf affected -t test --base=HEAD
 ```
 
 ```text
-hf affected: 2 tasks selected from 1 changed files
+hf affected: 2 tasks selected from 1 changed file
 ✓ format:test  1.9s  [1/2]
 ✓ report:test  1.7s  [2/2]
 
