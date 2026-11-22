@@ -2,7 +2,9 @@
  * The `build` executor: builds a library into a publishable package with
  * `@hyperfrontend/builder`. The packages the workspace's own projects carry are first-party: they
  * are bundled where a format asks for it and left out of the published dependencies. The
- * repository fields come from the workspace's root manifest.
+ * repository, bugs, homepage and author of the package come from the workspace's root manifest
+ * wherever the root states them, whatever the package's own manifest states, and the repository
+ * gains the package's directory.
  *
  * @module executors/build/executor
  */
@@ -13,6 +15,7 @@ import { build } from '@hyperfrontend/builder'
 import { byNames } from '@hyperfrontend/builder/presets'
 import { join } from '@hyperfrontend/project-scope/core'
 import { logger } from '../shared/logger'
+import { inheritedFrom } from './inherited-fields'
 import { rootAssetSpecs } from './root-assets'
 import { workspacePackages } from './workspace-packages'
 
@@ -54,9 +57,6 @@ export interface BuildExecutorOptions {
   /** Empty the output directory before emitting. Defaults to enabled; only an empty directory or a previous build of this package is removed. */
   clean?: boolean
 }
-
-/** The fields a package takes from the workspace's root manifest. */
-const INHERITED_FIELDS: readonly string[] = ['repository', 'bugs', 'homepage', 'author']
 
 /** The files of a project copied into its package. */
 const PROJECT_ASSETS: readonly string[] = ['README.md', 'CHANGELOG.md']
@@ -113,7 +113,6 @@ export const buildExecutor: Executor<BuildExecutorOptions> = async (options, con
     tsConfig: options.tsConfig ? join(workspaceRoot, options.tsConfig) : undefined,
     isWorkspacePackage: byNames(workspacePackages(workspaceRoot, context.projects)),
     filterWorkspaceDepsFromOutput: true,
-    inheritFieldsFrom: { from: join(workspaceRoot, 'package.json'), fields: [...INHERITED_FIELDS] },
     assets: [
       { from: projectRoot, files: [...PROJECT_ASSETS] },
       ...rootAssetSpecs(workspaceRoot, options.rootAssets ?? []),
@@ -135,7 +134,8 @@ export const buildExecutor: Executor<BuildExecutorOptions> = async (options, con
   }
 
   try {
-    await build(config)
+    // why: the source of the inherited fields may be a file written under the workspace's state directory, and a workspace that cannot be written to fails this build like any other error
+    await build({ ...config, inheritFieldsFrom: inheritedFrom(workspaceRoot, projectConfig.root) })
     return { success: true }
   } catch (error) {
     logger.error(`Failed to build ${projectName}`)

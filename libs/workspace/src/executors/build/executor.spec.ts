@@ -23,7 +23,12 @@ const workspace = useTempDir({
   prefix: 'build-executor-',
   tree: {
     LICENSE: 'MIT\n',
+    'package.json': { name: 'fixture', repository: { type: 'git', url: 'git+https://example.test/fixture.git' } },
     'libs/a/package.json': { name: '@fixture/a' },
+    'libs/stated/package.json': {
+      name: '@fixture/stated',
+      repository: { type: 'git', url: 'git+https://example.test/fork.git', directory: 'libs/elsewhere' },
+    },
     'libs/b/package.json': { name: '@fixture/b' },
     'libs/nameless/keep.txt': '',
   },
@@ -89,11 +94,36 @@ describe('buildExecutor', () => {
         projectRoot: join(workspace.path, 'libs/a'),
         workspaceRoot: workspace.path,
         filterWorkspaceDepsFromOutput: true,
-        inheritFieldsFrom: { from: join(workspace.path, 'package.json'), fields: ['repository', 'bugs', 'homepage', 'author'] },
+        inheritFieldsFrom: {
+          from: join(workspace.path, '.hf', 'build', 'libs', 'a', 'inherited.json'),
+          fields: ['repository', 'bugs', 'homepage', 'author'],
+        },
         thirdPartyLicenses: true,
         memoryMonitor: { warningMB: 512, criticalMB: 768, growthMB: 50 },
       })
     )
+  })
+
+  it("has the builder inherit the root manifest's repository with the project's directory", async () => {
+    await buildExecutor({}, context())
+    expect(workspace.readJson(join('.hf', 'build', 'libs', 'a', 'inherited.json'))).toEqual({
+      repository: { type: 'git', url: 'git+https://example.test/fixture.git', directory: 'libs/a' },
+    })
+  })
+
+  it("has the builder inherit the root manifest's repository for a package that states another", async () => {
+    await buildExecutor({}, { ...context(), projectName: 'lib-stated', projects: { 'lib-stated': { root: 'libs/stated' } } })
+    expect(workspace.readJson(join('.hf', 'build', 'libs', 'stated', 'inherited.json'))).toEqual({
+      repository: { type: 'git', url: 'git+https://example.test/fixture.git', directory: 'libs/stated' },
+    })
+  })
+
+  it('has the builder inherit from the root manifest itself for a project at the workspace root', async () => {
+    await buildExecutor({}, { ...context(), projectName: 'root', projects: { root: { root: '.' } } })
+    expect(builtWith().inheritFieldsFrom).toEqual({
+      from: join(workspace.path, 'package.json'),
+      fields: ['repository', 'bugs', 'homepage', 'author'],
+    })
   })
 
   it('leaves the output path and the tsconfig to the builder unless the options name them', async () => {
@@ -191,6 +221,16 @@ describe('buildExecutor', () => {
       result: { success: false },
       errors: ['Failed to build lib-a', 'Error: no stack'],
       debug: [],
+    })
+  })
+
+  it('reports a workspace whose state directory cannot be written to as a failed build, with nothing built', async () => {
+    workspace.write('.hf', 'a file where the state directory goes')
+    const result = await buildExecutor({}, context())
+    expect({ result, errors: lines(mockError).slice(0, 1), builds: mockBuild.mock.calls.length }).toEqual({
+      result: { success: false },
+      errors: ['Failed to build lib-a'],
+      builds: 0,
     })
   })
 
