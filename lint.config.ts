@@ -180,6 +180,31 @@ export default [
     },
   },
   {
+    // context: a releasable change to a file the toolchain input reads releases every library, so each builder source file is either read by it or named here with the reason it shapes no tarball
+    files: ['hf.json'],
+    rules: {
+      'workspace/named-input-coverage': [
+        'error',
+        {
+          input: 'toolchain',
+          projectRoot: 'libs/builder',
+          outside: [
+            // why: the package barrel holds re-exports alone, so whatever a build emits is decided in the modules it names
+            'src/index.ts',
+            // why: the bundle barrel holds re-exports alone, of the phase runner and of one type
+            'src/bundle/index.ts',
+            // why: it refuses an output path over the build's inputs and removes a previous build of the same package, and the manifest it stamps is overwritten whole by the package phase; a release builds into an empty directory, where it removes nothing
+            'src/clean-output.ts',
+            // why: it finds the worker script beside the running module and the loader that starts it; what a worker emits is the worker's own code, which the input reads
+            'src/bundle/worker-locator.ts',
+            // why: the monitor reads the memory of the process and logs it, and recover yields one tick and collects garbage between phases; neither reads or writes a file of a build
+            'src/memory/**',
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: ['docs/', 'dist/', 'coverage/', 'tmp/'],
   },
 ]
