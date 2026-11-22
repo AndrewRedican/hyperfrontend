@@ -6,8 +6,9 @@
  * runs prettier; `generate <generator> [...] [--dry-run]` runs a generator over the workspace;
  * `show projects [--with-target=<target>] [--json]` lists the projects; `graph <command>` prints
  * and persists the graph; `hooks run <hook>` runs the steps of a Git hook; `push` runs the steps
- * that come before a push, then pushes. The dispatch answers `run` itself and reads this table
- * for every other word, so a command added here changes nothing a task passes through.
+ * that come before a push, then pushes. Each answers `--help` or `-h` with its usage and runs
+ * nothing. The dispatch answers `run` itself and reads this table for every other word, so a
+ * command added here changes nothing a task passes through.
  *
  * @module cli/catalogue
  */
@@ -30,10 +31,12 @@ import { changeSet } from '../graph/changes'
 import { baseRecords } from '../graph/revision'
 import { buildState } from '../graph/store/state'
 import { discoverProjects, listFiles } from '../graph/workspace'
+import { counted } from '../progress/view'
 import { changedFiles, FORMAT_USAGE, parseFormatArgs, prettierRuns } from '../runner/format'
 import { GENERATE_USAGE, parseGenerateArgs } from '../runner/generate'
 import { locateGenerator } from '../runner/generators'
 import { AFFECTED_USAGE, MANY_USAGE, parseAffectedArgs, parseManyArgs, planMany, planTasks } from '../runner/many'
+import { asksForHelp } from '../runner/overrides'
 import { refusal } from '../runner/refusal'
 import { SHOW_USAGE, showProjects } from '../runner/show'
 import { GRAPH_USAGE, runGraph, verifiedBase } from './graph'
@@ -84,7 +87,7 @@ function affected(argv: readonly string[], session: CommandSession): Promise<num
   const tasks = request.targets.flatMap((target) =>
     (sets.get(target) as AffectedSet).selected.map((decision) => ({ project: decision.task.slice(0, -(target.length + 1)), target }))
   )
-  session.note(`hf affected: ${tasks.length} tasks selected from ${changes.changes.length} changed files`)
+  session.note(`hf affected: ${counted(tasks.length, 'task')} selected from ${counted(changes.changes.length, 'changed file')}`)
   return runTasks({ ...request, tasks: planTasks(graph, tasks) }, session)
 }
 
@@ -161,16 +164,34 @@ function prettierEntry(root: string): string {
   }
 }
 
+/**
+ * A command that answers a help word with its usage and runs nothing, and its usage.
+ *
+ * @param handler - What the command does with any other arguments
+ * @param usage - What the command expects
+ * @param within - How many leading arguments are read for a help word; all of them unless given
+ * @returns The command and its usage, as the table holds them
+ */
+function answeringHelp(handler: Command, usage: string, within?: number): readonly [Command, string] {
+  const command: Command = (argv, session) => {
+    if (!asksForHelp(argv, within)) return handler(argv, session)
+    session.say(usage)
+    return 0
+  }
+  return [command, usage]
+}
+
 /** The commands by name, each with its usage; `run` is not among them, since the dispatch answers it itself. */
 export const COMMANDS: Readonly<Record<string, readonly [Command, string]>> = {
-  'run-many': [runMany, MANY_USAGE],
-  affected: [affected, AFFECTED_USAGE],
-  format: [format, FORMAT_USAGE],
-  generate: [generate, GENERATE_USAGE],
-  show: [show, SHOW_USAGE],
-  graph: [(argv, session) => runGraph(argv, session.root, session), GRAPH_USAGE],
-  hooks: [runHooksCommand, HOOKS_USAGE],
-  push: [runPushCommand, PUSH_USAGE],
+  'run-many': answeringHelp(runMany, MANY_USAGE),
+  affected: answeringHelp(affected, AFFECTED_USAGE),
+  format: answeringHelp(format, FORMAT_USAGE),
+  generate: answeringHelp(generate, GENERATE_USAGE),
+  show: answeringHelp(show, SHOW_USAGE),
+  graph: answeringHelp((argv, session) => runGraph(argv, session.root, session), GRAPH_USAGE),
+  // why: Git's own arguments follow the hook's name, and a help word read among them would skip the hook and exit cleanly
+  hooks: answeringHelp(runHooksCommand, HOOKS_USAGE, 2),
+  push: answeringHelp(runPushCommand, PUSH_USAGE),
 }
 
 /** What the command line prints about itself. */

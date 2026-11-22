@@ -14,7 +14,7 @@ import type { SkipSources } from './skips'
 import { spawn } from 'node:child_process'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createTerminal } from '../progress/terminal'
-import { readFlag } from '../runner/overrides'
+import { asksForHelp, readFlag } from '../runner/overrides'
 import { refusal } from '../runner/refusal'
 import { GIT_HOOKS, PUSH_STEPS } from './config'
 import { loadHooks } from './load'
@@ -59,9 +59,6 @@ interface RunRequest {
 
 /** The hooks the command line runs by name. */
 const RUNNABLE: readonly string[] = [...GIT_HOOKS, PUSH_STEPS]
-
-/** The arguments of `push` that ask what it takes, which no step runs for. */
-const HELP = ['--help', '-h']
 
 /** The flags `hooks run` takes. */
 const RUN_FLAGS = ['only', 'skip']
@@ -185,7 +182,7 @@ export function runHooksCommand(argv: readonly string[], session: HooksSession):
  * ```
  */
 export async function runPushCommand(argv: readonly string[], session: HooksSession): Promise<number> {
-  if (argv.some((arg) => HELP.includes(arg))) {
+  if (asksForHelp(argv)) {
     session.sink.write(`${PUSH_USAGE}\n`)
     return 0
   }

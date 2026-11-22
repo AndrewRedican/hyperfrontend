@@ -265,6 +265,16 @@ describe('runWorkspaceCli run', () => {
   it('reports a call that names no task', async () => {
     expect(await hf(['run'])).toEqual({ code: 1, stdout: '', stderr: `${RUN_USAGE}\n` })
   })
+
+  it.each(['--help', '-h'])('answers %s where the task is named with its usage, starting nothing', async (word) => {
+    const run = await hf(['run', word])
+    expect({ run, started: mockSpawn.mock.calls.length }).toEqual({ run: { code: 0, stdout: `${RUN_USAGE}\n`, stderr: '' }, started: 0 })
+  })
+
+  it('passes a help word after the task on to the task, as any other of its arguments', async () => {
+    await hf(['run', 'lib-alpha:audit', '--help'])
+    expect(mockSpawn.mock.calls).toEqual([['npm audit --help', expect.objectContaining({ cwd: join(workspace.path, 'libs/alpha') })]])
+  })
 })
 
 describe('runWorkspaceCli run-many', () => {
@@ -309,6 +319,11 @@ describe('runWorkspaceCli run-many', () => {
     })
   })
 
+  it('answers a help word among its arguments with its usage, starting no task', async () => {
+    const run = await hf(['run-many', '-t', 'build', '--all', '--help'])
+    expect({ run, started: mockSpawn.mock.calls.length }).toEqual({ run: { code: 0, stdout: `${MANY_USAGE}\n`, stderr: '' }, started: 0 })
+  })
+
   it('counts a child that could not start as failed', async () => {
     childEnds((child) => child.fail(createError('spawn ENOENT')))
     expect((await hf(['run-many', '-t', 'build', '-p', 'lib-alpha'])).code).toBe(1)
@@ -330,7 +345,7 @@ describe('runWorkspaceCli affected', () => {
   it('reports how many tasks the changed files selected', async () => {
     writeFileSync(join(workspace.path, 'libs/alpha/src/index.ts'), 'export const alpha = 2\n')
     const { stderr } = await hf(['affected', '-t', 'build', '--base=HEAD'])
-    expect(stderr).toContain('hf affected: 1 tasks selected from 1 changed files\n')
+    expect(stderr).toContain('hf affected: 1 task selected from 1 changed file\n')
   })
 
   it('selects nothing for a working tree that matches the base', async () => {
@@ -468,6 +483,10 @@ describe('runWorkspaceCli graph', () => {
       code: 0,
       alpha: true,
     })
+  })
+
+  it('answers --help with its usage on standard output', async () => {
+    expect(await hf(['graph', '--help'])).toEqual({ code: 0, stdout: `${GRAPH_USAGE}\n`, stderr: '' })
   })
 
   it('reports a call it cannot read with its usage', async () => {

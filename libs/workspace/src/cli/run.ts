@@ -2,8 +2,9 @@
  * The dispatch of the workspace's command line, as a function. From anywhere inside the
  * workspace, `run <project>:<target> [--name=value ...]` runs that one task, nothing it depends on
  * first and nothing cached: the dispatch answers that word itself, and this is the code every task
- * of a pipeline starts through. Every other word it owns it looks up in the catalogue of commands,
- * and a word it does not own goes to the features command line, where that is installed.
+ * of a pipeline starts through. `--help` or `-h` where the task is named prints the usage and runs
+ * nothing. Every other word it owns it looks up in the catalogue of commands, and a word it does
+ * not own goes to the features command line, where that is installed.
  *
  * @module cli/run
  */
@@ -17,8 +18,9 @@ import { pathToFileURL } from 'node:url'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { installAliases } from '../hooks/index'
 import { pathKey, searchPath } from '../runner/environment'
+import { asksForHelp } from '../runner/overrides'
 import { describeError } from '../runner/refusal'
-import { main } from '../runner/run'
+import { main, USAGE as RUN_USAGE } from '../runner/run'
 import { COMMANDS, isOwnCommand, USAGE } from './catalogue'
 import { handOver, processHost } from './handover'
 
@@ -30,9 +32,6 @@ export type WorkspaceCliOptions = Invocation
 
 /** The command that runs one task, which the dispatch answers without the catalogue. */
 const RUN = 'run'
-
-/** The words that ask for the usage. */
-const HELP = ['--help', '-h']
 
 /**
  * Runs the workspace's command line. The `hf` name is shared with `@hyperfrontend/features`:
@@ -67,7 +66,7 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
   const note = (line: string): void => void options.stderr.write(`${line}\n`)
   const say = (line: string): void => void options.stdout.write(`${line}\n`)
   const [command, ...rest] = argv
-  if (command === undefined || HELP.includes(command)) {
+  if (command === undefined || asksForHelp([command])) {
     options.stdout.write(USAGE)
     if (options.handedOver !== true) await handOver({ ...options, argv: ['--help'] }, host)
     return command === undefined ? 1 : 0
@@ -92,6 +91,11 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
   const key = pathKey(process.env, process.platform)
   // why: the tasks and the processes their executors start find the workspace's own binaries first, as they did when npx started them
   process.env[key] = searchPath(root, process.env[key], process.execPath, process.platform)
+  // why: a help word where the task is named asks for the usage; one after the task is the task's own argument
+  if (command === RUN && asksForHelp(rest, 1)) {
+    say(RUN_USAGE)
+    return 0
+  }
   if (command === RUN)
     return main(argv, {
       root,

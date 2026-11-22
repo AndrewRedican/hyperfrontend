@@ -29,6 +29,8 @@ const code = await runWorkspaceCli({
 
 Every command finds the workspace root from any directory below it; generate also runs where no `hf.json` exists yet, taking the working directory as the root. A task's option is given after it as `--name=value`, read as the type the executor's schema declares, or `--name` alone for true; after a shell target the arguments reach the command. The command line's own messages go to standard error, and the exit code is 0 when the command succeeded and 1 otherwise.
 
+Every command of the table answers `--help` or `-h` with its usage on standard output and runs nothing, wherever the word stands among its arguments. Two commands read it only where their own arguments stand: the command that runs one task where the task is named, since what follows the task is passed to the task, and `hooks run` before the hook's name, since what follows the name belongs to Git.
+
 ## Stages and the progress view
 
 The two commands that run many tasks take `-t` more than once, and each one names a stage:

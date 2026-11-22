@@ -2,7 +2,8 @@
 /**
  * The options a command line passes after the task: `--name=value` sets an option and a bare
  * `--name` sets it to true. A kebab-case name becomes camelCase, and a value is read as the type
- * the executor's schema declares for the option.
+ * the executor's schema declares for the option. The words that ask a command for its usage are
+ * read here too, since the dispatch every task starts through reads them.
  *
  * @module runner/overrides
  */
@@ -26,6 +27,28 @@ export interface Overrides {
   readonly options: Readonly<Record<string, string | true>>
   /** The arguments as written, in order. */
   readonly args: readonly string[]
+}
+
+/** The words that ask a command what it takes. */
+const HELP: readonly string[] = ['--help', '-h']
+
+/**
+ * Whether the arguments of a command ask what it takes, which a command answers with its usage
+ * and runs nothing for.
+ *
+ * @param argv - The arguments after the command
+ * @param within - How many leading arguments are read for a help word; all of them unless given
+ * @returns True when `--help` or `-h` stands among the arguments read
+ *
+ * @example A help word counts only among the arguments a command reads as its own
+ * ```typescript
+ * asksForHelp(['-t', 'build', '--help']) // => true
+ * asksForHelp(['run', 'pre-push', '--help'], 2) // => false, the word follows the hook's name and belongs to Git
+ * asksForHelp(['--help=true']) // => false, a word carrying a value is an option
+ * ```
+ */
+export function asksForHelp(argv: readonly string[], within?: number): boolean {
+  return argv.slice(0, within).some((arg) => HELP.includes(arg))
 }
 
 /**
