@@ -23,6 +23,8 @@ Format: `type(scope): subject` — one line, lowercase subject, no period, imper
 
 Version impact (computed by `npx hf push` through the root `version:all` target, never by hand; pre-push only checks it): `feat` → minor · `fix`/`security`/`perf`/`revert` → patch · `!` or `BREAKING CHANGE:` footer → major (minor while the package major is 0). Other types never bump. A releasable commit also patch-bumps every library that ships a copy of the code it changes, and one to the builder modules that shape a tarball (the `toolchain` named input in `hf.json`) or to the package build executor patch-bumps every library.
 
+**Unreleased code**: a correction to code that no release has shipped is never `fix`, since no consumer met the bug: type it `refactor`, `chore` or whatever else fits (`test`, `docs`, `ci`); the subject may still say it fixes something.
+
 **`security`**: a dependency change made for a security reason is `security(<project>)`, whatever the size of the bump; it is listed under "Security" in the changelog. It carries `!` when it breaks public API, and a change that adds public API is a `feat`. A fix made only in the root manifest or lock is `security(hyperfrontend)`, which releases nothing, like every root-scoped commit.
 
 ## Scopes
