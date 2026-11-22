@@ -44,7 +44,7 @@ const TAGLINES: Record<string, string> = {
   [`${SCOPE}nexus`]: 'Contract-validated messaging between windows, frames and workers, over a real handshake.',
   [`${SCOPE}project-scope`]: 'Reads a repository it has never seen, scores what it finds, and stages writes until you commit them.',
   [`${SCOPE}questions`]: 'Terminal prompts that return a value, never an exception: text, select, confirm, multiselect.',
-  [`${SCOPE}server`]: 'An HTTP kernel for Node.js: steps that return responses, static files with compression, headers as ordered rules.',
+  [`${SCOPE}server`]: 'An HTTP kernel for Node.js: steps that return responses, run as a process with fixed exit codes and a graceful stop.',
   [`${SCOPE}state-machine`]: 'The lifecycle of an async operation as a store, with the states a lone isLoading cannot tell apart.',
   [`${SCOPE}testing`]: 'A lightweight Jest-like testing library built on native Node capabilities.',
   [`${SCOPE}versioning`]: 'From conventional commits to the bump, the version and the changelog entry, with nobody choosing.',
