@@ -191,8 +191,11 @@
     "testExecutor": ["executorShared", "{projectRoot}/src/executors/test/**/*"],
     "e2eExecutor": ["executorShared", "{projectRoot}/src/executors/e2e/**/*"],
     "toolchain": [
+      "{projectRoot}/src/build.ts",
       "{projectRoot}/src/models/**/*",
       "{projectRoot}/src/presets/**/*",
+      "{projectRoot}/src/bundle/run-bundle-phase.ts",
+      "{projectRoot}/src/bundle/fs/**/*",
       "{projectRoot}/src/bundle/entries/**/*",
       "{projectRoot}/src/bundle/externals/**/*",
       "{projectRoot}/src/bundle/dependencies/**/*",
