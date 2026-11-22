@@ -5,6 +5,7 @@ import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/pa
 import { parseChangelog, isEntryContentEqual, hasVersion, getEntryByVersion } from '@hyperfrontend/versioning/changelog'
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
+import { changelogRepository } from './changelog-repository'
 
 /**
  * Type of discrepancy discovered during validation.
@@ -89,7 +90,7 @@ export interface ValidateVersionStateOptions {
   readonly scopeFiltering?: FlowConfig['scopeFiltering']
   /** Upper bound on the commit window the flow analyzes */
   readonly maxCommitFallback?: FlowConfig['maxCommitFallback']
-  /** Repository configuration */
+  /** Repository configuration; the root manifest's repository when unset, and where it states none, the one inferred from the project's manifest or the remote */
   readonly repository?: FlowConfig['repository']
 }
 
@@ -138,7 +139,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     skipGit: true,
     skipTag: true,
     skipChangelog: false,
-    repository: repository ?? 'inferred',
+    repository: repository ?? changelogRepository(workspaceRoot),
     scopeFiltering,
     maxCommitFallback,
   }

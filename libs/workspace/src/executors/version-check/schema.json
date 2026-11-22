@@ -20,7 +20,7 @@
       "default": true
     },
     "repository": {
-      "description": "Repository resolution for changelog compare URLs. Options: 'disabled' (no URLs), 'inferred' (auto-detect from package.json or git remote), or an object with mode and options.",
+      "description": "Repository resolution for changelog compare URLs. Options: 'disabled' (no URLs), 'inferred' (auto-detect from the project's package.json or git remote), or an object with mode and options. When unset, the repository the workspace's root manifest states is used, and where it states none the repository is inferred.",
       "oneOf": [
         {
           "type": "string",

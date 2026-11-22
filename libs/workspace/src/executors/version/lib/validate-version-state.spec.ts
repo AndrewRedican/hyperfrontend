@@ -94,6 +94,20 @@ describe('validateVersionState flow', () => {
     ])
   })
 
+  it('hands the flow the repository the root manifest states where the task names none', async () => {
+    workspace.write('package.json', JSON.stringify({ name: 'acme', repository: 'github:acme/monorepo' }))
+    mockFlow.mockResolvedValue({ status: 'skipped', steps: [], state: {}, duration: 1, summary: 'nothing' })
+    await validate()
+    expect(mockFlow.mock.calls[0]).toEqual([
+      expect.objectContaining({
+        config: expect.objectContaining({ repository: expect.objectContaining({ baseUrl: 'https://github.com/acme/monorepo' }) }),
+      }),
+      'lib-core',
+      workspace.path,
+      expect.anything(),
+    ])
+  })
+
   it('hands the flow the attribution, window, repository and verbosity of the task', async () => {
     mockFlow.mockResolvedValue({ status: 'skipped', steps: [], state: {}, duration: 1, summary: 'nothing' })
     const scopeFiltering = { strategy: 'hybrid', excludeScopes: ['ci'] } as ValidateVersionStateOptions['scopeFiltering']

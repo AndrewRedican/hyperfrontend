@@ -25,8 +25,11 @@ export interface VersionCheckExecutorOptions {
    * Repository resolution for changelog compare URLs.
    *
    * - `'disabled'`: No compare URLs generated
-   * - `'inferred'`: Auto-detect from package.json or git remote (default)
+   * - `'inferred'`: Auto-detect from the project's package.json or git remote
    * - Object: Fine-grained control with mode and options
+   *
+   * When unset, the repository the workspace's root manifest states is used, and where it
+   * states none the repository is inferred.
    */
   repository?: FlowConfig['repository']
 }

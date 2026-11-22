@@ -8,6 +8,7 @@ import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/pa
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
 import { stage, amendCommitNoEdit } from '@hyperfrontend/versioning/git/operations'
+import { changelogRepository } from './changelog-repository'
 import { isInUnstableGitState } from './is-in-unstable-git-state'
 import { isVersionCommit } from './is-version-commit'
 import { getLogger } from './logger'
@@ -118,6 +119,7 @@ function implicitDependents(projects: Readonly<Record<string, ProjectConfigurati
  * - Uses npm registry as source of truth (not git tags)
  * - Performs safety checks (version commit detection, unstable git state)
  * - Executes the versioning flow via `@hyperfrontend/versioning`
+ * - Links the changelog to the repository the root manifest states, before the project's own manifest and the remote
  * - Updates dependent package versions
  * - Tracks all modified files
  *
@@ -226,7 +228,7 @@ export async function runVersion(options: RunVersionOptions): Promise<RunVersion
     skipChangelog: false,
     tagFormat: `${tagPrefix}\${version}`,
     releaseAs,
-    repository: 'inferred',
+    repository: changelogRepository(workspaceRoot),
     scopeFiltering,
     maxCommitFallback,
   }
