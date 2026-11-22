@@ -42,7 +42,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 - `@hyperfrontend/immutable-api-utils`: `built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there.
 - `@hyperfrontend/linter`: Needs Node.js 24 or later: configurations are TypeScript modules loaded through Node's own type stripping.
 - `@hyperfrontend/project-scope`: `/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0.
-- `@hyperfrontend/server`: Support is per entry point: the root entry is the HTTP kernel and is Node-only, and `/policy` imports no Node.js built-in, so it also runs in a browser or a web worker once a bundler includes it. The package publishes no browser bundle of its own.
+- `@hyperfrontend/server`: Support is per entry point, of which there are four: the root entry (both request contracts and the service runner) and `/manifest` are Node-only, while `/policy` and `/environment` import no Node.js built-in, so they also run in a browser or a web worker once a bundler includes them. The package publishes no browser bundle of its own.
 - `@hyperfrontend/testing`: Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide.
 - `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
 
