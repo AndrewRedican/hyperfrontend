@@ -9,7 +9,11 @@
       "executor": "@hyperfrontend/workspace:e2e",
       "dependsOn": ["^build"],
       "options": {
-        "formats": ["cjs", "esm"]
+        "formats": [
+          "cjs",
+          "esm",
+          { "name": "service", "specs": ["src/service.spec.ts", "src/service.sealed.spec.ts"], "timeoutMs": 120000 }
+        ]
       }
     },
     "audit": {}
