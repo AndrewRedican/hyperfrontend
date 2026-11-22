@@ -10,6 +10,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { posix } from 'node:path'
+import { after } from 'node:test'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createTempDir } from '@hyperfrontend/testing/fs'
@@ -124,12 +125,15 @@ const FILES: Readonly<Record<string, string>> = {
 }
 
 /**
- * Creates the workspace in a temporary directory and commits nothing.
+ * Creates the workspace in a temporary directory and commits nothing. The directory is removed
+ * when the spec file, the suite or the test the call sits in ends.
  *
  * @returns The absolute root
  */
 export function createConsumerWorkspace(): string {
-  const root = createTempDir({ prefix: 'lint-graph-consumer-', tree: FILES }).path
-  execFileSync('git', ['init', '-q'], { cwd: root })
-  return root
+  const directory = createTempDir({ prefix: 'lint-graph-consumer-', tree: FILES })
+  // why: a caller that keeps no handle on the directory still leaves nothing behind, since node:test runs the hook when the file, the suite or the test the call sits in ends
+  after(() => directory.remove())
+  execFileSync('git', ['init', '-q'], { cwd: directory.path })
+  return directory.path
 }

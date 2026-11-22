@@ -10,6 +10,7 @@
 
 import type { BaseTsconfig } from '../affected/aliases'
 import { execFileSync } from 'node:child_process'
+import { after } from 'node:test'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createTempDir } from '@hyperfrontend/testing/fs'
@@ -81,13 +82,16 @@ const FILES: Readonly<Record<string, string>> = {
 }
 
 /**
- * Creates the workspace in a temporary directory and commits nothing.
+ * Creates the workspace in a temporary directory and commits nothing. The directory is removed
+ * when the spec file, the suite or the test the call sits in ends.
  *
  * @param baseTsconfig - The text of its `tsconfig.base.json`, the fixture's own by default
  * @returns The absolute root
  */
 export function createAliasWorkspace(baseTsconfig: string = stringify(ALIAS_TSCONFIG)): string {
-  const root = createTempDir({ prefix: 'lint-graph-alias-', tree: { ...FILES, 'tsconfig.base.json': baseTsconfig } }).path
-  execFileSync('git', ['init', '-q'], { cwd: root })
-  return root
+  const directory = createTempDir({ prefix: 'lint-graph-alias-', tree: { ...FILES, 'tsconfig.base.json': baseTsconfig } })
+  // why: a caller that keeps no handle on the directory still leaves nothing behind, since node:test runs the hook when the file, the suite or the test the call sits in ends
+  after(() => directory.remove())
+  execFileSync('git', ['init', '-q'], { cwd: directory.path })
+  return directory.path
 }

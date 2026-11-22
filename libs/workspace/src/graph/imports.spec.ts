@@ -135,7 +135,11 @@ describe('readerVersion', () => {
       prefix: 'reader-installed-',
       tree: { 'node_modules/@hyperfrontend/linter/package.json': '{ "version": "1.2.3" }' },
     })
-    expect(readerVersion(installed.path)).toBe(`3:${installedEngineVersion()}`)
+    try {
+      expect(readerVersion(installed.path)).toBe(`3:${installedEngineVersion()}`)
+    } finally {
+      installed.remove()
+    }
   })
 
   it('hashes the aliased parser sources, specs left out', () => {
@@ -150,7 +154,11 @@ describe('readerVersion', () => {
       },
     })
     const hash = createHash('sha1').update('export const a = 1\n').update('export const b = 1\n').digest('hex')
-    expect(readerVersion(aliased.path)).toBe(`3:${hash}`)
+    try {
+      expect(readerVersion(aliased.path)).toBe(`3:${hash}`)
+    } finally {
+      aliased.remove()
+    }
   })
 
   it('names the installed engine version for an alias naming no sources', () => {
@@ -158,7 +166,11 @@ describe('readerVersion', () => {
       prefix: 'reader-empty-',
       tree: { 'tsconfig.base.json': '{ "compilerOptions": { "paths": { "@hyperfrontend/linter": ["libs/linter/src/index.ts"] } } }' },
     })
-    expect(readerVersion(empty.path)).toBe(`3:${installedEngineVersion()}`)
+    try {
+      expect(readerVersion(empty.path)).toBe(`3:${installedEngineVersion()}`)
+    } finally {
+      empty.remove()
+    }
   })
 
   it('computes the version once per root', () => {

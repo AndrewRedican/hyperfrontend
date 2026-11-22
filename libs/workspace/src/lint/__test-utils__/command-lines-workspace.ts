@@ -8,6 +8,7 @@
  */
 
 import { join } from 'node:path'
+import { after } from 'node:test'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 
@@ -39,11 +40,15 @@ export interface CommandLinesWorkspace {
 }
 
 /**
- * Creates the projects in a temporary directory.
+ * Creates the projects in a temporary directory, which is removed when the spec file, the suite
+ * or the test the call sits in ends.
  *
  * @returns Their roots
  */
 export function createCommandLinesWorkspace(): CommandLinesWorkspace {
-  const root = createTempDir({ prefix: 'lint-command-lines-', tree: FILES }).path
+  const directory = createTempDir({ prefix: 'lint-command-lines-', tree: FILES })
+  // why: a caller that keeps no handle on the directory still leaves nothing behind, since node:test runs the hook when the file, the suite or the test the call sits in ends
+  after(() => directory.remove())
+  const root = directory.path
   return { root, node: join(root, 'node'), unpublished: join(root, 'unpublished'), tool: join(root, 'tool') }
 }

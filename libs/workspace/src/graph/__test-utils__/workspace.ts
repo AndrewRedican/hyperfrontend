@@ -8,6 +8,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
+import { after } from 'node:test'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 
 /** The files of the fixture workspace, by workspace-relative path. */
@@ -89,12 +90,15 @@ const FILES: Readonly<Record<string, string>> = {
 
 /**
  * Creates the fixture workspace in a temporary directory and commits nothing: `git ls-files`
- * with untracked files included lists every file.
+ * with untracked files included lists every file. The directory is removed when the spec file,
+ * the suite or the test the call sits in ends.
  *
  * @returns The absolute root
  */
 export function createGraphWorkspace(): string {
-  const root = createTempDir({ prefix: 'lint-graph-', tree: FILES }).path
-  execFileSync('git', ['init', '-q'], { cwd: root })
-  return root
+  const directory = createTempDir({ prefix: 'lint-graph-', tree: FILES })
+  // why: a caller that keeps no handle on the directory still leaves nothing behind, since node:test runs the hook when the file, the suite or the test the call sits in ends
+  after(() => directory.remove())
+  execFileSync('git', ['init', '-q'], { cwd: directory.path })
+  return directory.path
 }
