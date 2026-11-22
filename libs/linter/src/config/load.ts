@@ -61,7 +61,7 @@ export function findConfigFile(directory: string): string | null {
 export async function loadConfig(file: string): Promise<readonly ConfigBlock[]> {
   let module: ConfigModule
   try {
-    module = (await import(pathToFileURL(file).href)) as ConfigModule
+    module = (await import(/* hf-graph: opaque */ pathToFileURL(file).href)) as ConfigModule
   } catch (error) {
     throw createError(`Cannot load the configuration ${file}: ${errorText(error)}`)
   }
