@@ -419,6 +419,34 @@ describe('runGraph affected', () => {
     )
   })
 
+  it('takes the target after -t as it does after --target', () => {
+    run(['affected', '-t', 'build'])
+    expect(mockSelect.mock.calls).toEqual([[expect.objectContaining({ targets: ['build'] })]])
+  })
+
+  it('takes the target joined to -t with an equals sign', () => {
+    run(['affected', '-t=build'])
+    expect(mockSelect.mock.calls).toEqual([[expect.objectContaining({ targets: ['build'] })]])
+  })
+
+  it.each([
+    ['a list of targets', ['affected', '-t', 'build,test']],
+    ['a list of targets joined to -t', ['affected', '-t=build,test']],
+    ['a target named twice', ['affected', '-t', 'build', '--target', 'test']],
+  ])('refuses %s', (_, argv) => {
+    expect(() => run(argv)).toThrow('affected takes one target, got build,test')
+  })
+
+  it('refuses such a call before it builds any graph state', () => {
+    let message = ''
+    try {
+      run(['affected', '-t', 'build,test'])
+    } catch (error) {
+      message = (error as Error).message
+    }
+    expect({ message, built: mockBuild.mock.calls }).toEqual({ message: 'affected takes one target, got build,test', built: [] })
+  })
+
   it('prints the affected set under --json', () => {
     expect(parse(run(['affected', '--target', 'test', '--json']).said.join('\n'))).toEqual(selected())
   })

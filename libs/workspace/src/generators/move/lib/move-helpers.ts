@@ -18,7 +18,7 @@ import { joinPathFragments, offsetFromRoot } from '../../shared/paths'
 import { updateProjectReferences as updateProjectRefsShared } from '../../shared/project-references'
 import { readProjectConfiguration } from '../../shared/projects'
 import { globalNameOf, scopeOf, scopedName } from '../../shared/scope'
-import { updateJson } from '../../shared/tree'
+import { amendJson } from '../../shared/tree'
 import { moveTsConfigPaths } from '../../shared/tsconfig-paths'
 import { visitNotIgnoredFiles } from '../../shared/walk'
 
@@ -117,6 +117,23 @@ export function copyDirectory(tree: Tree, source: string, destination: string): 
 }
 
 /**
+ * The files of the moved project that the move changed nothing in: those under the new root that
+ * still hold what the file they were copied from holds. Read before the old directory is deleted.
+ *
+ * @param tree - The tree both directories live in
+ * @param plan - The settled move
+ * @returns The paths under the new root, relative to the tree's root
+ */
+export function carriedOver(tree: Tree, plan: MovePlan): string[] {
+  const carried: string[] = []
+  visitNotIgnoredFiles(tree, plan.currentProjectRoot, (filePath) => {
+    const moved = joinPathFragments(plan.newProjectRoot, filePath.slice(plan.currentProjectRoot.length))
+    if (tree.read(moved, 'utf-8') === tree.read(filePath, 'utf-8')) carried.push(moved)
+  })
+  return carried
+}
+
+/**
  * Deletes every file git would not ignore under a directory.
  *
  * @param tree - The tree the files live in
@@ -128,14 +145,15 @@ export function deleteDirectory(tree: Tree, directory: string): void {
 
 /**
  * Rewrites the moved `project.json`: its name, the package name its description mentions, and
- * the global its browser bundles register under, when the names follow the move.
+ * the global its browser bundles register under, when the names follow the move. A file the move
+ * changes nothing in is left as it is written.
  *
  * @param tree - The tree the file lives in
  * @param plan - The settled move
  */
 export function updateProjectJson(tree: Tree, plan: MovePlan): void {
   if (!plan.updateName) return
-  updateJson<MovedProjectJson>(tree, joinPathFragments(plan.newProjectRoot, 'project.json'), (json) => {
+  amendJson<MovedProjectJson>(tree, joinPathFragments(plan.newProjectRoot, 'project.json'), (json) => {
     json.name = plan.newProjectName
     if (plan.currentPackageName !== undefined && plan.newPackageName !== undefined) {
       replaceDescriptionPackageName(json, plan.currentPackageName, plan.newPackageName)
@@ -149,7 +167,7 @@ export function updateProjectJson(tree: Tree, plan: MovePlan): void {
 
 /**
  * Rewrites the moved `package.json`: its name and the package name its description mentions,
- * when the names follow the move.
+ * when the names follow the move. A file the move changes nothing in is left as it is written.
  *
  * @param tree - The tree the file lives in
  * @param plan - The settled move
@@ -157,7 +175,7 @@ export function updateProjectJson(tree: Tree, plan: MovePlan): void {
 export function updatePackageJson(tree: Tree, plan: MovePlan): void {
   if (!plan.updateName || plan.currentPackageName === undefined || plan.newPackageName === undefined) return
   const { currentPackageName, newPackageName } = plan
-  updateJson<NamedJson>(tree, joinPathFragments(plan.newProjectRoot, 'package.json'), (json) => {
+  amendJson<NamedJson>(tree, joinPathFragments(plan.newProjectRoot, 'package.json'), (json) => {
     json.name = newPackageName
     replaceDescriptionPackageName(json, currentPackageName, newPackageName)
     return json
@@ -185,17 +203,19 @@ export function updateTsConfigPaths(tree: Tree, plan: MovePlan): void {
 }
 
 /**
- * Renames the project in every other project's configuration, when the names follow the move.
+ * Renames the project in every configuration that refers to it, the moved project's own and the
+ * workspace file's included, when the names follow the move.
  *
  * @param tree - The tree the configurations live in
  * @param plan - The settled move
  */
 export function updateProjectReferences(tree: Tree, plan: MovePlan): void {
   if (!plan.updateName) return
+  // why: the directory the project leaves is about to be deleted, while the copy under the new root names its own tasks like any other project
   updateProjectRefsShared(tree, {
     currentProjectName: plan.projectName,
     newProjectName: plan.newProjectName,
-    excludeRoots: [plan.currentProjectRoot, plan.newProjectRoot],
+    excludeRoots: [plan.currentProjectRoot],
   })
 }
 

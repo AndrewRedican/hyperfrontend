@@ -135,7 +135,12 @@ export default function SecurityModelPage() {
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li>
             • <strong className="text-slate-900 dark:text-white">Who may embed the feature</strong>: the <code>frame-ancestors</code>{' '}
-            directive on the response that serves the feature document.
+            directive on the response that serves the feature document. A feature hosted by <code>hf serve</code> lists its allowed origins
+            in the <code>embedders</code> field of <code>hf-serve.config.*</code>, and the server sends the directive on every response; the{' '}
+            <Link href="/docs/libraries/features/server" className="text-primary-600 hover:underline dark:text-primary-400">
+              server docs
+            </Link>{' '}
+            describe the field. On any other server, you send the header yourself.
           </li>
           <li>
             • <strong className="text-slate-900 dark:text-white">What an authenticated caller may do</strong>: credentials and authorisation
@@ -322,7 +327,10 @@ export default function SecurityModelPage() {
                   <code>frame-ancestors</code>
                 </td>
                 <td className="py-2 pr-4">Operator-supplied</td>
-                <td className="py-2">The only thing that decides who may embed the feature at all. The SDK cannot do this for you.</td>
+                <td className="py-2">
+                  The only thing that decides who may embed the feature at all. The SDK cannot choose the hosts for you;{' '}
+                  <code>hf serve</code> sends the directive for the origins its config lists under <code>embedders</code>.
+                </td>
               </tr>
               <tr>
                 <td className="py-2 pr-4">Backend authorisation</td>

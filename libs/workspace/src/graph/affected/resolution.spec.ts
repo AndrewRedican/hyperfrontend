@@ -123,4 +123,10 @@ describe('targetResolution', () => {
       '"inputs":[{"patterns":["{projectRoot}/**/*"],"of":"self"},{"patterns":["{projectRoot}/**/*"],"of":"dependencies"}]'
     )
   })
+
+  it('refuses inputs that hold an entry that is not an input, naming the task', () => {
+    expect(() => targetResolution({ targetDefaults: { build: { inputs: ['production', null] } } } as never, library, 'build')).toThrow(
+      'the input list of lib-a:build holds null, which is not an input: a string, or an object whose fileset or input is a string'
+    )
+  })
 })

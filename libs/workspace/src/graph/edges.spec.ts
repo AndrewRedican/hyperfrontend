@@ -153,12 +153,16 @@ describe('the shell executor', () => {
         'app/project.json':
           '{ "name": "app", "targets": { "serve": { "executor": "@hyperfrontend/workspace:run-commands" }, "report": { "executor": "@hyperfrontend/workspace:report" } } }',
       },
-    }).path
-    execFileSync('git', ['init', '-q'], { cwd: engine })
-    expect([...workspaceGraph(engine).nodes.values()].filter((node) => node.kind === 'tool')).toEqual([
-      { kind: 'tool', id: '@hyperfrontend/workspace:run-commands', project: null, entry: null },
-      { kind: 'tool', id: '@hyperfrontend/workspace:report', project: '@hyperfrontend/workspace', entry: null },
-    ])
+    })
+    execFileSync('git', ['init', '-q'], { cwd: engine.path })
+    try {
+      expect([...workspaceGraph(engine.path).nodes.values()].filter((node) => node.kind === 'tool')).toEqual([
+        { kind: 'tool', id: '@hyperfrontend/workspace:run-commands', project: null, entry: null },
+        { kind: 'tool', id: '@hyperfrontend/workspace:report', project: '@hyperfrontend/workspace', entry: null },
+      ])
+    } finally {
+      engine.remove()
+    }
   })
 })
 
@@ -174,14 +178,18 @@ describe('a tool of a source project', () => {
         'engine/src/executors/report/index.ts': 'export default (): { success: boolean } => ({ success: true })\n',
         'app/project.json': '{ "name": "app", "targets": { "report": { "executor": "@fixture/engine:report" } } }',
       },
-    }).path
-    execFileSync('git', ['init', '-q'], { cwd: engine })
-    expect(workspaceGraph(engine).nodes.get('tool:@fixture/engine:report')).toEqual({
-      kind: 'tool',
-      id: '@fixture/engine:report',
-      project: 'engine',
-      entry: 'engine/src/executors/report/index.ts',
     })
+    execFileSync('git', ['init', '-q'], { cwd: engine.path })
+    try {
+      expect(workspaceGraph(engine.path).nodes.get('tool:@fixture/engine:report')).toEqual({
+        kind: 'tool',
+        id: '@fixture/engine:report',
+        project: 'engine',
+        entry: 'engine/src/executors/report/index.ts',
+      })
+    } finally {
+      engine.remove()
+    }
   })
 })
 
@@ -209,9 +217,13 @@ describe('a package name two manifests carry', () => {
         'engine/src/executors/report.ts': 'export default (): { success: boolean } => ({ success: true })\n',
         'app/project.json': '{ "name": "app", "targets": { "report": { "executor": "@fixture/engine:report" } } }',
       },
-    }).path
-    execFileSync('git', ['init', '-q'], { cwd: engine })
-    return workspaceGraph(engine).nodes.get('tool:@fixture/engine:report')
+    })
+    execFileSync('git', ['init', '-q'], { cwd: engine.path })
+    try {
+      return workspaceGraph(engine.path).nodes.get('tool:@fixture/engine:report')
+    } finally {
+      engine.remove()
+    }
   }
 
   it.each([[['bin']], [['zz']], [['aa', 'ab']]])(

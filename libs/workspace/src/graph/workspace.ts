@@ -197,12 +197,13 @@ export function discoverProjects(root: string, files: readonly string[]): Map<st
     if (name === undefined) continue
     const projectType = configuration?.projectType
     // why: a project that names no type is an application when it is the workspace itself or sits under the applications directory, and a library elsewhere.
+    // why: a service is run and deployed, never imported, so it stands with the applications wherever the two kinds are told apart.
     const type =
       projectType === undefined
         ? directory === '.' || directory.startsWith(`apps${posix.sep}`)
           ? 'app'
           : 'lib'
-        : projectType === 'application'
+        : projectType === 'application' || projectType === 'service'
           ? 'app'
           : 'lib'
     projects.set(name, {

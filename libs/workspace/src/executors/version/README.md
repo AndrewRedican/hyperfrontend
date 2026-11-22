@@ -28,5 +28,6 @@ Versions a project from its conventional commits with [`@hyperfrontend/versionin
 - A library is due a release when a commit touches code it ships, or when the graph selects its build for a change to a project its build target names as an input. A releasable commit to any file such an input names releases every library built with it, so these inputs should name the code that shapes the output. The input names engine and executorShared are reserved for the engine's own code in the workspace that develops it, and the flow leaves them out.
 - A package still below 1.0.0 takes a minor bump for a breaking change.
 - A run whose head commit is already the project's version commit does nothing, so the task is safe to repeat.
+- The compare links of a changelog entry point at the repository the workspace's root manifest states, the one a build writes into the published manifest. Where the root manifest states none, the project's own manifest is read, and after it the remote named origin.
 
 An executor that wraps this one passes follow-ups through [`runVersion`](https://www.hyperfrontend.dev/docs/libraries/workspace/executors/version/#api-runVersion): functions called after the bump and before the commit, each answering the files the commit must also carry. No configuration can set them.

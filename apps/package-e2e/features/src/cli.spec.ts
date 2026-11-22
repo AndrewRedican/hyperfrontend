@@ -504,7 +504,15 @@ describe('hf serve', () => {
       // why: The config sits at the SITE root (not the cwd) to pin artifact-carried discovery: `--root` alone must find and apply it.
       writeFileSync(
         join(siteDir, 'hf-serve.config.json'),
-        `${JSON.stringify({ headers: [{ headers: { 'X-Frame-Test': 'e2e' } }] }, null, 2)}\n`
+        `${JSON.stringify(
+          {
+            embedders: ["'self'", 'https://host.example'],
+            permissionsPolicy: { camera: [], geolocation: ['self'] },
+            headers: [{ headers: { 'X-Frame-Test': 'e2e' } }],
+          },
+          null,
+          2
+        )}\n`
       )
       // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
       const started = await startOnFreePorts(
@@ -568,6 +576,14 @@ describe('hf serve', () => {
 
   it('applies the artifact-carried header rule to the root response', () => {
     expect(rootHeaders).toEqual(expect.objectContaining({ 'x-frame-test': 'e2e' }))
+  })
+
+  it('sends the frame-ancestors policy the carried embedders declare', () => {
+    expect(rootHeaders).toEqual(expect.objectContaining({ 'content-security-policy': "frame-ancestors 'self' https://host.example" }))
+  })
+
+  it('sends the permissions policy the carried config declares', () => {
+    expect(rootHeaders).toEqual(expect.objectContaining({ 'permissions-policy': 'camera=(), geolocation=(self)' }))
   })
 
   it('gzip-compresses the large script for a client that accepts gzip', () => {

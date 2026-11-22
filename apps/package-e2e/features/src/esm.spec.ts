@@ -25,6 +25,44 @@ const SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features/nx/executors/serve', 'default'],
 ]
 
+/** Every function `/server` re-exports from the HTTP kernel and its policy entry, which a consumer reaches without installing the kernel. */
+const SERVER_REEXPORTS: readonly string[] = [
+  'applyHeaderRules',
+  'buildCompressionStep',
+  'buildServeSteps',
+  'checkEmbedders',
+  'checkPermissionsPolicy',
+  'checkServeConfig',
+  'confineDecodedPath',
+  'contentSecurityPolicy',
+  'contentTypeFor',
+  'createServeListener',
+  'createStaticHandler',
+  'crossOriginIsolation',
+  'decodeRequestPath',
+  'directoryLocation',
+  'embedders',
+  'expandHeaderPolicy',
+  'frameAncestors',
+  'frameAncestorsOf',
+  'headerValue',
+  'immutableAssets',
+  'matchesEveryPath',
+  'negotiateEncoding',
+  'nosniff',
+  'permissionsPolicy',
+  'permitsEveryOrigin',
+  'plainResponse',
+  'referrerPolicy',
+  'requestPath',
+  'runSteps',
+  'serveFile',
+  'startStaticServer',
+  'strictTransportSecurity',
+  'validateHeaderRule',
+  'validateServeConfig',
+]
+
 /** The specifier and symbol one subpath probe loads. */
 interface SubpathProbe {
   /** The exports subpath as a consumer writes it. */
@@ -57,6 +95,7 @@ describe('@hyperfrontend/features ESM', () => {
       expect.objectContaining({
         defineConfig: 'function',
         defineDevConfig: 'function',
+        defineServeConfig: 'function',
         validateContract: 'function',
         validateFeatureConfig: 'function',
         validatePayload: 'function',
@@ -77,6 +116,37 @@ describe('@hyperfrontend/features ESM', () => {
       )
       expect(kind).toBe('function')
     })
+  })
+
+  it('re-exports every kernel and policy function from the server entry', () => {
+    const missing = consumer.run(
+      async (probe: { names: readonly string[] }) => {
+        const entry = (await import('@hyperfrontend/features/server')) as Record<string, unknown>
+        return probe.names.filter((name) => typeof entry[name] !== 'function')
+      },
+      { args: { names: SERVER_REEXPORTS } }
+    )
+    expect(missing).toEqual([])
+  })
+
+  it('folds an expanded header policy through the server entry', () => {
+    const headers = consumer.run(async () => {
+      const { applyHeaderRules, expandHeaderPolicy } = await import('@hyperfrontend/features/server')
+      return applyHeaderRules(expandHeaderPolicy({ embedders: ["'self'"], permissionsPolicy: { camera: [] } }), '/index.html')
+    })
+    expect(headers).toEqual({
+      'Content-Security-Policy': "frame-ancestors 'self'",
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Permissions-Policy': 'camera=()',
+    })
+  })
+
+  it('returns a serve config unchanged through defineServeConfig on the main entry', () => {
+    const config = consumer.run(async () => {
+      const { defineServeConfig } = await import('@hyperfrontend/features')
+      return defineServeConfig({ embedders: ['https://host.example'], permissionsPolicy: { camera: [] } })
+    })
+    expect(config).toEqual({ embedders: ['https://host.example'], permissionsPolicy: { camera: [] } })
   })
 
   it('returns a feature config unchanged through defineConfig', () => {

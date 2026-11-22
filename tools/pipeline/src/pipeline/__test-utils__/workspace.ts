@@ -4,7 +4,7 @@
  * consumer smoke, and one whose spec imports the private library), an e2e project naming no
  * library, two demos the lint plugin excludes (each with an install its other targets depend
  * on, the first deploying to a Railway service, the second building after the first one's
- * verify), an application and the root project.
+ * verify), an application, a service outside the applications directory and the root project.
  * Written as code so no test material rests in the tree.
  *
  * @module pipeline/__test-utils__/workspace
@@ -153,6 +153,8 @@ export const PIPELINE_WORKSPACE: FileTree = freeze({
   'apps/demos/two/src/main.ts': 'export const demo = 2\n',
   'apps/site/project.json': json({ name: 'app-site', projectType: 'application', targets: { build: {}, typecheck: {}, lint: {} } }),
   'apps/site/src/main.ts': "import { beta } from '@fixture/beta'\nexport const site = beta\n",
+  'services/api/project.json': json({ name: 'service-api', projectType: 'service', targets: { build: {}, typecheck: {}, test: {} } }),
+  'services/api/src/main.ts': 'export const service = 1\n',
 })
 
 /**

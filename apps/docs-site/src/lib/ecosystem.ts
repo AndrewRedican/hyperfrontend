@@ -114,8 +114,9 @@ export const ECOSYSTEM_TIERS: readonly EcosystemTier[] = [
     emphasis: 'soft',
     columns: 3,
     topicLimit: 2,
-    // why: libraries the SDK does not use and does not need, each solving a problem an application has whether or not it is a micro-frontend, ordered by how many readers arrive already having that problem.
-    packages: ['@hyperfrontend/state-machine', '@hyperfrontend/logging', '@hyperfrontend/cryptography'],
+    // why: libraries that each solve a problem an application has whether or not it is a micro-frontend, ordered by how many readers arrive already having that problem; the SDK does not use and does not need the first three.
+    // why: server closes the level although the SDK's static serving is built on it, because what it offers a reader is an HTTP kernel for any Node.js service rather than a part of the micro-frontend runtime.
+    packages: ['@hyperfrontend/state-machine', '@hyperfrontend/logging', '@hyperfrontend/cryptography', '@hyperfrontend/server'],
   },
   {
     id: 'utilities',

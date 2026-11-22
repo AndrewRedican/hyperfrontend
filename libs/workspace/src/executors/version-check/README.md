@@ -13,7 +13,7 @@ Compares a project's manifest and changelog with what its commits call for, with
 | Option                  | What it does                                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------------------ |
 | `--skipIfVersionCommit` | Passes when the head commit is the project's own version commit; defaults to true                      |
-| `--repository`          | How changelog compare links are resolved: inferred from the manifest or the remote, disabled, or given |
+| `--repository`          | How compare links are resolved: inferred, disabled or given; the root manifest's repository when unset |
 | `--maxCommitFallback`   | How many commits the flow reads at most; defaults to 500                                               |
 | `--scopeFiltering`      | Which commit scopes count for the project                                                              |
 | `--verbose, --quiet`    | More or less output                                                                                    |

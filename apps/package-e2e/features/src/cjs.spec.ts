@@ -31,6 +31,44 @@ const DEFAULT_EXPORT_SUBPATHS = [
   ['@hyperfrontend/features/nx/executors/serve', 'serveExecutor'],
 ]
 
+/** Every function `/server` re-exports from the HTTP kernel and its policy entry, which a consumer reaches without installing the kernel. */
+const SERVER_REEXPORTS = [
+  'applyHeaderRules',
+  'buildCompressionStep',
+  'buildServeSteps',
+  'checkEmbedders',
+  'checkPermissionsPolicy',
+  'checkServeConfig',
+  'confineDecodedPath',
+  'contentSecurityPolicy',
+  'contentTypeFor',
+  'createServeListener',
+  'createStaticHandler',
+  'crossOriginIsolation',
+  'decodeRequestPath',
+  'directoryLocation',
+  'embedders',
+  'expandHeaderPolicy',
+  'frameAncestors',
+  'frameAncestorsOf',
+  'headerValue',
+  'immutableAssets',
+  'matchesEveryPath',
+  'negotiateEncoding',
+  'nosniff',
+  'permissionsPolicy',
+  'permitsEveryOrigin',
+  'plainResponse',
+  'referrerPolicy',
+  'requestPath',
+  'runSteps',
+  'serveFile',
+  'startStaticServer',
+  'strictTransportSecurity',
+  'validateHeaderRule',
+  'validateServeConfig',
+]
+
 const consumer = usePackedConsumer({ tarball: process.env.HF_E2E_TARBALL })
 
 describe('@hyperfrontend/features CJS', () => {
@@ -61,6 +99,7 @@ describe('@hyperfrontend/features CJS', () => {
       expect.objectContaining({
         defineConfig: 'function',
         defineDevConfig: 'function',
+        defineServeConfig: 'function',
         validateContract: 'function',
         validateFeatureConfig: 'function',
         validatePayload: 'function',
@@ -86,6 +125,43 @@ describe('@hyperfrontend/features CJS', () => {
       )
       expect(aliased).toBe(true)
     })
+  })
+
+  it('re-exports every kernel and policy function from the server entry', () => {
+    const missing = consumer.run(
+      (probe) => {
+        const entry = require('@hyperfrontend/features/server')
+        return probe.names.filter((name) => typeof entry[name] !== 'function')
+      },
+      { kind: 'require', args: { names: SERVER_REEXPORTS } }
+    )
+    expect(missing).toEqual([])
+  })
+
+  it('folds an expanded header policy through the server entry', () => {
+    const headers = consumer.run(
+      () => {
+        const { applyHeaderRules, expandHeaderPolicy } = require('@hyperfrontend/features/server')
+        return applyHeaderRules(expandHeaderPolicy({ embedders: ["'self'"], permissionsPolicy: { camera: [] } }), '/index.html')
+      },
+      { kind: 'require' }
+    )
+    expect(headers).toEqual({
+      'Content-Security-Policy': "frame-ancestors 'self'",
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Permissions-Policy': 'camera=()',
+    })
+  })
+
+  it('returns a serve config unchanged through defineServeConfig on the main entry', () => {
+    const config = consumer.run(
+      () => {
+        const { defineServeConfig } = require('@hyperfrontend/features')
+        return defineServeConfig({ embedders: ['https://host.example'], permissionsPolicy: { camera: [] } })
+      },
+      { kind: 'require' }
+    )
+    expect(config).toEqual({ embedders: ['https://host.example'], permissionsPolicy: { camera: [] } })
   })
 
   it('validates a well-formed contract and returns it', () => {

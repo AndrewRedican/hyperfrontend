@@ -1,4 +1,5 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
@@ -36,6 +37,8 @@ const workspace = createTempDir({
   },
 })
 const ROOT = workspace.path
+
+afterAll(() => workspace.remove())
 
 describe('isNodeProject', () => {
   it('finds a node: import in a runtime source at any depth', () => {

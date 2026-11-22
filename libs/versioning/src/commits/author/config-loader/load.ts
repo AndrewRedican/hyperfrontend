@@ -125,7 +125,7 @@ function isBoundary(directory: string): boolean {
  */
 async function importConfigModule(absolutePath: string): Promise<PartialSessionConfig> {
   const url = pathToFileURL(absolutePath).href
-  const imported = (await import(url)) as ImportedConfigModule
+  const imported = (await import(/* hf-graph: opaque */ url)) as ImportedConfigModule
   const exported = imported.default ?? imported
   if (exported === null || typeof exported !== 'object') {
     throw createError(`Config at ${absolutePath} must export an object`)

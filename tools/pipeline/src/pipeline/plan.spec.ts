@@ -53,6 +53,7 @@ describe('createPlan', () => {
       'linux e2e-orphan: lint e2e',
       'linux demo-one: install typecheck build verify',
       'linux demo-two: install build',
+      'linux service-api: typecheck lint test build',
       'linux workspace: lint',
     ])
   })

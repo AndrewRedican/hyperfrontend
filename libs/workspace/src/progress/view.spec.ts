@@ -3,7 +3,7 @@ import type { ProgressView, TaskEnd, ViewOptions, ViewTask } from './view'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { Ending } from './matrix'
 import { createTerminal } from './terminal'
-import { createProgressView } from './view'
+import { counted, createProgressView, stoppedLine } from './view'
 
 /** A view over output that is kept, with a clock the case moves. */
 interface Fixture {
@@ -199,5 +199,43 @@ describe('createProgressView', () => {
       '✗ lib-core:lint  .hf/logs/lib-core__lint.log',
       '✗ lib-util:lint',
     ])
+  })
+
+  it('names the last stage as the one that ended the run without counting tasks it kept from running', () => {
+    const { view, lines } = fixture(false)
+    for (const id of ['lib-core:lint', 'lib-util:lint']) view.ended(end(id, Ending.Passed))
+    view.ended(end('lib-core:test', Ending.Failed))
+    view.finish(1)
+    expect(lines().slice(3, 5)).toEqual(['stage 2 (test) did not succeed', ''])
+  })
+
+  it('names no stage when the only one of the run failed', () => {
+    const tasks = TASKS.map((task) => ({ ...task, stage: 0 }))
+    const { view, lines } = fixture(false, { tasks, stages: 1 })
+    for (const task of tasks) view.ended(end(task.id, Ending.Failed))
+    view.finish(0)
+    expect(lines().slice(3, 5)).toEqual(['', '          lint  test'])
+  })
+})
+
+describe('counted', () => {
+  it.each([
+    [0, 'task', '0 tasks'],
+    [1, 'task', '1 task'],
+    [2, 'changed file', '2 changed files'],
+  ] as const)('words %d of a %s', (count, noun, words) => {
+    expect(counted(count, noun)).toBe(words)
+  })
+})
+
+describe('stoppedLine', () => {
+  it.each([
+    ['a stage that kept one task from running', [0, 'lint', 1, 2], 'stage 1 (lint) did not succeed: 1 task not run'],
+    ['a stage that kept several from running', [0, 'typecheck, lint', 3, 3], 'stage 1 (typecheck, lint) did not succeed: 3 tasks not run'],
+    ['the last stage of several', [1, 'test', 0, 2], 'stage 2 (test) did not succeed'],
+    ['the only stage, with tasks that never ended', [0, 'test', 2, 1], 'stage 1 (test) did not succeed: 2 tasks not run'],
+    ['the only stage, with every task ended', [0, 'test', 0, 1], null],
+  ] as const)('answers for %s', (_, [stopped, targets, notRun, stages], line) => {
+    expect(stoppedLine(stopped, targets, notRun, stages)).toBe(line)
   })
 })

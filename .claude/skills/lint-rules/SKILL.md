@@ -99,6 +99,7 @@ Each is computed once per file or process and shared by every rule.
 | `tools/lint/src/rules/workspace/shared/aliases.ts`       | `pathAliases` (the `tsconfig.base.json` paths)                                                                                                  |
 | `tools/lint/src/rules/workspace/shared/exports-index.ts` | `parsedModule`, `resolveModule`, `moduleExports`                                                                                                |
 | `tools/lint/src/rules/workspace/shared/readme.ts`        | `badgeBlock`, `shortDescription`                                                                                                                |
+| `tools/lint/src/rules/workspace/shared/last-property.ts` | `lastPropertyOf`: a property of a JSON object by name as `JSON.parse` reads it, the last where a key is written twice                           |
 
 ### File I/O and strings
 

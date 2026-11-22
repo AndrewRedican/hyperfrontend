@@ -43,6 +43,24 @@ describe('readJson', () => {
   it('answers null for a file that does not parse', () => {
     expect(readJson(join(root, 'apps/app/README.md'))).toBe(null)
   })
+
+  it('reads a file saved with a byte order mark', () => {
+    const marked = createTempDir({ prefix: 'json-marked-', tree: { 'marked.json': '\uFEFF{ "name": "marked" }' } })
+    try {
+      expect(readJson(marked.resolve('marked.json'))).toEqual({ name: 'marked' })
+    } finally {
+      marked.remove()
+    }
+  })
+
+  it('answers null for a mark anywhere but at the start', () => {
+    const marked = createTempDir({ prefix: 'json-marked-', tree: { 'marked.json': '{ "name": \uFEFF"marked" }' } })
+    try {
+      expect(readJson(marked.resolve('marked.json'))).toBe(null)
+    } finally {
+      marked.remove()
+    }
+  })
 })
 
 describe('discoverProjects', () => {
@@ -90,8 +108,12 @@ describe('discoverProjects', () => {
         'apps/site/project.json': '{ "name": "site", "targets": { "install": { "executor": "@hyperfrontend/app:install" } } }',
       },
     })
-    const projects = discoverProjects(installing.path, ['lint.config.ts', 'apps/site/project.json'])
-    expect(projects.get('site')?.configuration?.targets?.['lint']?.dependsOn).toEqual(['install'])
+    try {
+      const projects = discoverProjects(installing.path, ['lint.config.ts', 'apps/site/project.json'])
+      expect(projects.get('site')?.configuration?.targets?.['lint']?.dependsOn).toEqual(['install'])
+    } finally {
+      installing.remove()
+    }
   })
 
   it('leaves a declared lint target as it is', () => {
@@ -112,11 +134,20 @@ describe('discoverProjects', () => {
         'libs/two/package.json': '{ "name": "@fixture/two" }',
       },
     })
-    const projects = discoverProjects(excluded.path, ['hf.json', 'lint.config.ts', 'apps/demos/one/project.json', 'libs/two/package.json'])
-    expect([
-      hasTarget(projects.get('demo-one') as ProjectRecord, 'lint'),
-      hasTarget(projects.get('@fixture/two') as ProjectRecord, 'lint'),
-    ]).toEqual([false, true])
+    try {
+      const projects = discoverProjects(excluded.path, [
+        'hf.json',
+        'lint.config.ts',
+        'apps/demos/one/project.json',
+        'libs/two/package.json',
+      ])
+      expect([
+        hasTarget(projects.get('demo-one') as ProjectRecord, 'lint'),
+        hasTarget(projects.get('@fixture/two') as ProjectRecord, 'lint'),
+      ]).toEqual([false, true])
+    } finally {
+      excluded.remove()
+    }
   })
 
   it('infers no lint target for a project the linter would find no lint.config.ts for, while one below a config keeps it', () => {
@@ -128,11 +159,55 @@ describe('discoverProjects', () => {
         'tools/local/project.json': '{ "name": "tool-local" }',
       },
     })
-    const projects = discoverProjects(partial.path, ['libs/lint.config.ts', 'libs/one/package.json', 'tools/local/project.json'])
-    expect({
-      one: hasTarget(projects.get('@fixture/one') as ProjectRecord, 'lint'),
-      local: hasTarget(projects.get('tool-local') as ProjectRecord, 'lint'),
-    }).toEqual({ one: true, local: false })
+    try {
+      const projects = discoverProjects(partial.path, ['libs/lint.config.ts', 'libs/one/package.json', 'tools/local/project.json'])
+      expect({
+        one: hasTarget(projects.get('@fixture/one') as ProjectRecord, 'lint'),
+        local: hasTarget(projects.get('tool-local') as ProjectRecord, 'lint'),
+      }).toEqual({ one: true, local: false })
+    } finally {
+      partial.remove()
+    }
+  })
+
+  it('reads a declared service as an application, under the applications directory and outside it', () => {
+    const services = createTempDir({
+      prefix: 'kinds-',
+      tree: {
+        'apps/api/project.json': '{ "name": "api", "projectType": "service" }',
+        'services/jobs/project.json': '{ "name": "jobs", "projectType": "service" }',
+      },
+    })
+    try {
+      const projects = discoverProjects(services.path, ['apps/api/project.json', 'services/jobs/project.json'])
+      expect({ api: projects.get('api')?.type, jobs: projects.get('jobs')?.type }).toEqual({ api: 'app', jobs: 'app' })
+    } finally {
+      services.remove()
+    }
+  })
+
+  it('reads a declared library as a library, even under the applications directory', () => {
+    const declared = createTempDir({
+      prefix: 'kinds-',
+      tree: { 'apps/shared/project.json': '{ "name": "shared", "projectType": "library" }' },
+    })
+    try {
+      expect(discoverProjects(declared.path, ['apps/shared/project.json']).get('shared')?.type).toBe('lib')
+    } finally {
+      declared.remove()
+    }
+  })
+
+  it('reads a declared application as an application, outside the applications directory', () => {
+    const declared = createTempDir({
+      prefix: 'kinds-',
+      tree: { 'sites/web/project.json': '{ "name": "web", "projectType": "application" }' },
+    })
+    try {
+      expect(discoverProjects(declared.path, ['sites/web/project.json']).get('web')?.type).toBe('app')
+    } finally {
+      declared.remove()
+    }
   })
 
   it('gives the root project the files no other owns', () => {

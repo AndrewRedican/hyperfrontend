@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
+import { after } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
@@ -34,6 +35,11 @@ const other = createTempDir({
 
 /** A directory with no workspace above it, and a workspace with no base tsconfig. */
 const bare = createTempDir({ prefix: 'hooks-bare-', tree: { 'plain/keep.txt': '', 'workspace/hf.json': '{}' } })
+
+after(() => {
+  other.remove()
+  bare.remove()
+})
 
 describe('workspaceRootFrom', () => {
   it('finds the nearest directory above that holds the workspace file', () => {

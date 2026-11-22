@@ -1,7 +1,8 @@
 /* lint-disable workspace/lib-require-jsdoc-example */
 /**
  * The paths a moved project's configuration files write back to the root: the base lint
- * configuration, the base tsconfig, and the output directories.
+ * configuration, the base tsconfig, and the output directories. A file whose paths the move
+ * leaves as they are, as when the depth stays, is not rewritten.
  *
  * @module generators/move/lib/config-updaters
  */
@@ -9,7 +10,7 @@
 import type { Tree } from '../../../runner/contract'
 import type { MovePlan } from './move-helpers'
 import { joinPathFragments } from '../../shared/paths'
-import { updateJson } from '../../shared/tree'
+import { amendJson } from '../../shared/tree'
 
 /** A tsconfig as far as its base goes. */
 interface ExtendingTsConfig {
@@ -54,7 +55,7 @@ export function updateLintConfig(tree: Tree, plan: MovePlan): void {
 export function updateTsConfigJson(tree: Tree, plan: MovePlan): void {
   const tsconfigPath = joinPathFragments(plan.newProjectRoot, 'tsconfig.json')
   if (!tree.exists(tsconfigPath)) return
-  updateJson<ExtendingTsConfig>(tree, tsconfigPath, (json) => {
+  amendJson<ExtendingTsConfig>(tree, tsconfigPath, (json) => {
     if (typeof json.extends === 'string') json.extends = `${plan.newOffsetFromRoot}tsconfig.base.json`
     return json
   })
@@ -69,7 +70,7 @@ export function updateTsConfigJson(tree: Tree, plan: MovePlan): void {
  */
 function updateTsConfigOutDir(tree: Tree, configPath: string, newOffsetFromRoot: string): void {
   if (!tree.exists(configPath)) return
-  updateJson<OutDirTsConfig>(tree, configPath, (json) => {
+  amendJson<OutDirTsConfig>(tree, configPath, (json) => {
     if (json.compilerOptions?.outDir !== undefined) json.compilerOptions.outDir = `${newOffsetFromRoot}dist/out-tsc`
     return json
   })

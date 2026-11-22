@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
+import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
 import { amendCommitNoEdit, stage } from '@hyperfrontend/versioning/git/operations'
 import { isInUnstableGitState } from './is-in-unstable-git-state'
@@ -21,6 +22,7 @@ jest.mock('./update-dependent-versions', () => ({ updateDependentVersions: jest.
 jest.mock('./update-e2e-dependencies', () => ({ updateE2eDependencies: jest.fn(() => []) }))
 
 const mockFlow = executeFlow as Mock
+const mockCreateFlow = createVersionFlow as Mock
 const mockStage = stage as Mock
 const mockAmend = amendCommitNoEdit as Mock
 const mockUnstable = isInUnstableGitState as Mock
@@ -67,6 +69,7 @@ function run(overrides: Partial<Parameters<typeof runVersion>[0]> = {}): ReturnT
 
 beforeEach(() => {
   mockFlow.mockReset()
+  mockCreateFlow.mockClear()
   mockStage.mockReset()
   mockAmend.mockReset()
   mockDependents.mockReset().mockReturnValue([])
@@ -128,6 +131,24 @@ describe('runVersion', () => {
       workspace.path,
       expect.objectContaining({ projectRoot: 'libs/core', dryRun: false })
     )
+  })
+
+  it('links the changelog to the repository the root manifest states, ahead of the manifest of the project and the remote', async () => {
+    workspace.write(
+      'package.json',
+      JSON.stringify({ name: 'acme', repository: { type: 'git', url: 'git+https://github.com/acme/monorepo.git' } })
+    )
+    mockFlow.mockResolvedValue(flowResult('skipped'))
+    await run()
+    expect(mockCreateFlow.mock.calls).toEqual([
+      ['conventional', expect.objectContaining({ repository: expect.objectContaining({ baseUrl: 'https://github.com/acme/monorepo' }) })],
+    ])
+  })
+
+  it('leaves the repository of the changelog to be inferred where the root manifest states none', async () => {
+    mockFlow.mockResolvedValue(flowResult('skipped'))
+    await run()
+    expect(mockCreateFlow.mock.calls).toEqual([['conventional', expect.objectContaining({ repository: 'inferred' })]])
   })
 
   it('reports the files the flow changed, workspace-relative, and the pins its dependents took', async () => {

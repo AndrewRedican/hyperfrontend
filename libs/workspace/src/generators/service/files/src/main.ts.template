@@ -1,0 +1,14 @@
+/**
+ * <%= comment.description %>
+ *
+ * @module <%= projectName %>
+ */
+
+/**
+ * What the service reports once it has started.
+ *
+ * @returns The line that names the service
+ */
+export function main(): string {
+  return '<%= projectName %> is running'
+}

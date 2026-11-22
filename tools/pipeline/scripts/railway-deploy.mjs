@@ -36,6 +36,9 @@ const ENDED = {
   SKIPPED: false,
 }
 
+/** How many lines of a failed deployment's build log the task prints. */
+const TAIL_LINES = 40
+
 /** How long between two reads of the deployment's status. */
 const POLL_MS = 15 * 1000
 
@@ -119,6 +122,57 @@ const waitFor = async (service, id, deadline) => {
   }
 }
 
+/**
+ * Write to standard output and wait until the text has been handed over.
+ *
+ * @param text - What to print.
+ * @returns A promise settled once the write has ended, whether or not it succeeded.
+ */
+const flushed = (text) =>
+  new Promise((resolve) => {
+    // why: a reader that went away fails the write, and the task still has the deployment's end to report
+    process.stdout.once('error', () => resolve())
+    process.stdout.write(text, () => resolve())
+  })
+
+/**
+ * What to print of the build log of a deployment that ended as failed: its last lines, or that it could not be read.
+ *
+ * @param service - The service.
+ * @param id - The deployment.
+ * @returns The text to print.
+ * @throws {Error} When the CLI cannot even be started with these arguments.
+ */
+const buildLogOf = async (service, id) => {
+  // why: called without the JSON helper, since the log is plain text; --lines is what stops the CLI from streaming forever
+  const result = await run('npx', ['-y', CLI, 'logs', id, '--service', service, '--build', '--lines', String(TAIL_LINES)])
+  const tail = result.stdout.trimEnd()
+  if (result.code === 0 && tail !== '') return `the build log of deployment ${id} ends:\n${tail}\n`
+  const reason = result.stderr.trim()
+  return `the build log of deployment ${id} could not be read${reason === '' ? '' : `: ${reason}`}\n`
+}
+
+/**
+ * Print the end of the build log of a deployment that ended as failed, the only place its reason is written.
+ *
+ * Railway keeps a build log for days, far less than the run's own log is kept, so the task prints it while it
+ * can still be read. A log that cannot be read is reported as such and nothing more. The promise this returns
+ * never rejects, whatever reading or printing the log does, so the deployment's end stays the failure the task
+ * reports.
+ *
+ * @param service - The service.
+ * @param id - The deployment.
+ * @returns A promise settled once the log, or the reason it could not be read, has been printed or has failed to print.
+ */
+const printBuildLog = (service, id) =>
+  buildLogOf(service, id)
+    // why: a refused argument makes the spawn throw before any process exists, which is one more way the log cannot be read
+    .catch((error) => `the build log of deployment ${id} could not be read: ${error instanceof Error ? error.message : String(error)}\n`)
+    // why: the task exits as soon as the failure is thrown, and a piped output holds about 64 KB, so a longer tail would lose its end
+    .then(flushed)
+    // why: nothing the log does may take the place of the deployment's end as the failure the task reports
+    .catch(() => undefined)
+
 const main = async () => {
   const service = process.env.HF_DEPLOY_SERVICE
   if (service === undefined || service === '') throw new Error('HF_DEPLOY_SERVICE names no service')
@@ -132,6 +186,7 @@ const main = async () => {
   if (typeof id !== 'string') throw new Error(`the redeploy answered no deployment id:\n${JSON.stringify(started)}`)
   process.stdout.write(`deployment ${id}\n`)
   const status = await waitFor(service, id, Date.now() + minutes * 60 * 1000)
+  if (status === 'FAILED') await printBuildLog(service, id)
   if (!ENDED[status]) throw new Error(`deployment ${id} ended ${status}`)
   process.stdout.write(`deployed ${commit} to ${service}\n`)
 }

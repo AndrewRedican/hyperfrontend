@@ -15,6 +15,16 @@
       "schema": "./generators/library/schema.json",
       "description": "Create a TypeScript library of the workspace, publishable on request."
     },
+    "application": {
+      "factory": "./generators/application/index",
+      "schema": "./generators/application/schema.json",
+      "description": "Create an application of the workspace: a project that is run, not imported, with its configurations and a first spec."
+    },
+    "service": {
+      "factory": "./generators/service/index",
+      "schema": "./generators/service/schema.json",
+      "description": "Create a service of the workspace: a project that is run and deployed, with its configurations, a service configuration and a first spec."
+    },
     "make-publishable": {
       "factory": "./generators/make-publishable/index",
       "schema": "./generators/make-publishable/schema.json",

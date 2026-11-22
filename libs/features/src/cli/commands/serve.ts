@@ -1,9 +1,8 @@
-import type { StaticServerHandle } from '../../server/static-serve'
+import type { StaticServerHandle } from '@hyperfrontend/server'
 import type { CliFlags } from '../args'
 import { resolve } from 'node:path'
+import { startStaticServer, waitForShutdown } from '@hyperfrontend/server'
 import { resolveServeConfig } from '../../server/serve-config'
-import { startStaticServer } from '../../server/static-serve'
-import { waitForShutdown } from '../../shared/shutdown'
 import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 
 /** Injectable boundaries for `runServe`, defaulted for production and overridden in tests. */

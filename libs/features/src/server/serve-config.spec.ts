@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-import { resolveServeConfig, validateHeaderRule, validateServeConfig } from './serve-config'
+import { resolveServeConfig } from './serve-config'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
 
@@ -17,105 +17,6 @@ const opts = (over: Partial<ResolveServeConfigOptions>): ResolveServeConfigOptio
   // why: Hermetic by default — a PORT in the developer's real environment must not leak into these fixtures.
   env: {},
   ...over,
-})
-
-describe('validateHeaderRule', () => {
-  it('rejects a non-object rule', () => {
-    expect(() => validateHeaderRule(5, 0, '/p')).toThrow('headers[0] must be an object')
-  })
-
-  it('rejects a non-string prefix', () => {
-    expect(() => validateHeaderRule({ prefix: 5, headers: {} }, 1, '/p')).toThrow('headers[1].prefix must be a string')
-  })
-
-  it('rejects a non-string suffix', () => {
-    expect(() => validateHeaderRule({ suffix: 5, headers: {} }, 0, '/p')).toThrow('headers[0].suffix must be a string')
-  })
-
-  it('rejects a rule with no headers record', () => {
-    expect(() => validateHeaderRule({ prefix: '/a' }, 0, '/p')).toThrow('headers[0].headers must be an object')
-  })
-
-  it('rejects a non-string header value', () => {
-    expect(() => validateHeaderRule({ headers: { 'X-Test': 5 } }, 0, '/p')).toThrow('headers[0].headers["X-Test"] must be a string')
-  })
-
-  it('rejects a header name that is not an HTTP token', () => {
-    expect(() => validateHeaderRule({ headers: { 'X Bad Name': 'on' } }, 0, '/p')).toThrow(
-      'headers[0].headers["X Bad Name"] is not a valid header name'
-    )
-  })
-
-  it('rejects a header value carrying a newline', () => {
-    // why: Node's setHeader throws on control bytes at request time, so a pasted multi-line value must fail at config load instead of crashing the first request.
-    expect(() => validateHeaderRule({ headers: { 'X-Policy': 'line1\nline2' } }, 0, '/p')).toThrow(
-      'headers[0].headers["X-Policy"] must not contain control characters'
-    )
-  })
-
-  it('rejects a header value carrying a carriage return', () => {
-    expect(() => validateHeaderRule({ headers: { 'X-Policy': 'a\rb' } }, 0, '/p')).toThrow('must not contain control characters')
-  })
-
-  it('returns a minimal rule unchanged', () => {
-    expect(validateHeaderRule({ headers: { 'X-Test': 'on' } }, 0, '/p')).toEqual({ headers: { 'X-Test': 'on' } })
-  })
-
-  it('returns a full rule unchanged', () => {
-    const rule = { prefix: '/fish-', suffix: '.html', headers: { 'Cache-Control': 'no-cache' } }
-    expect(validateHeaderRule(rule, 0, '/p')).toEqual(rule)
-  })
-})
-
-describe('validateServeConfig', () => {
-  it('rejects a non-object config', () => {
-    expect(() => validateServeConfig(5, '/p')).toThrow('serve config must be an object')
-  })
-
-  it('rejects a null config', () => {
-    expect(() => validateServeConfig(null, '/p')).toThrow('serve config must be an object')
-  })
-
-  it('rejects an array config', () => {
-    expect(() => validateServeConfig([], '/p')).toThrow('serve config must be an object')
-  })
-
-  it('rejects an empty-string root', () => {
-    expect(() => validateServeConfig({ root: '' }, '/p')).toThrow('"root" must be a non-empty string')
-  })
-
-  it('rejects a non-string root', () => {
-    expect(() => validateServeConfig({ root: 5 }, '/p')).toThrow('"root" must be a non-empty string')
-  })
-
-  it.each([0, 70000, 80.5, '8080'])('rejects the port %p', (port) => {
-    expect(() => validateServeConfig({ port }, '/p')).toThrow('"port" must be an integer between 1 and 65535')
-  })
-
-  it.each([5, ''])('rejects the host %p', (host) => {
-    expect(() => validateServeConfig({ host }, '/p')).toThrow('"host" must be a non-empty string')
-  })
-
-  it('rejects a non-boolean log', () => {
-    expect(() => validateServeConfig({ log: 'yes' }, '/p')).toThrow('"log" must be a boolean')
-  })
-
-  it('rejects a non-array headers value', () => {
-    expect(() => validateServeConfig({ headers: {} }, '/p')).toThrow('"headers" must be an array')
-  })
-
-  it('validates each header rule in the array', () => {
-    expect(() => validateServeConfig({ headers: [{ headers: {} }, 5] }, '/p')).toThrow('headers[1] must be an object')
-  })
-
-  it('returns an empty config unchanged', () => {
-    expect(validateServeConfig({}, '/p')).toEqual({})
-  })
-
-  it('returns a full valid config unchanged', () => {
-    const config = { root: 'dist', port: 8080, host: '127.0.0.1', log: false, headers: [{ prefix: '/a', headers: { 'X-Test': 'on' } }] }
-    expect(validateServeConfig(config, '/p')).toEqual(config)
-  })
 })
 
 describe('resolveServeConfig', () => {
@@ -282,20 +183,6 @@ describe('default file system', () => {
 })
 
 describe('serve config isolation', () => {
-  it('rejects an unknown isolation value', () => {
-    expect(() => validateServeConfig({ isolation: 'require-cors' }, '/p')).toThrow(
-      '"isolation" must be one of require-corp, credentialless'
-    )
-  })
-
-  it('rejects a non-string isolation value', () => {
-    expect(() => validateServeConfig({ isolation: true }, '/p')).toThrow('"isolation" must be one of require-corp, credentialless')
-  })
-
-  it('accepts a declared isolation value', () => {
-    expect(validateServeConfig({ isolation: 'credentialless' }, '/p')).toEqual({ isolation: 'credentialless' })
-  })
-
   it('expands a declared isolation into the three headers that produce it', async () => {
     const resolved = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ isolation: 'require-corp' }) }))
     expect(resolved.headers).toEqual([
@@ -325,5 +212,67 @@ describe('serve config isolation', () => {
   it('leaves the header rules untouched when no isolation is declared', async () => {
     const resolved = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ headers: [{ headers: { 'X-Test': 'on' } }] }) }))
     expect(resolved.headers).toEqual([{ headers: { 'X-Test': 'on' } }])
+  })
+})
+
+describe('serve config header policy', () => {
+  it('places embedders ahead of the permissions policy, isolation and the authored rules', async () => {
+    const resolved = await resolveServeConfig(
+      opts({
+        loadConfig: () =>
+          Promise.resolve({
+            headers: [{ suffix: '.html', headers: { 'Cache-Control': 'no-cache' } }],
+            isolation: 'credentialless',
+            permissionsPolicy: { camera: [], geolocation: ['self'] },
+            embedders: ["'self'"],
+          }),
+      })
+    )
+    expect(resolved.headers).toEqual([
+      { headers: { 'Content-Security-Policy': "frame-ancestors 'self'", 'X-Frame-Options': 'SAMEORIGIN' } },
+      { headers: { 'Permissions-Policy': 'camera=(), geolocation=(self)' } },
+      {
+        headers: {
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'credentialless',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+        },
+      },
+      { suffix: '.html', headers: { 'Cache-Control': 'no-cache' } },
+    ])
+  })
+
+  it('resolves the same rules for a config rewritten to embedders', async () => {
+    const cache = { prefix: '/assets/', headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
+    const written = { headers: [{ headers: { 'Content-Security-Policy': "frame-ancestors 'self' https://host.example" } }, cache] }
+    const rewritten = { embedders: ["'self'", 'https://host.example'], headers: [cache] }
+    const before = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve(written) }))
+    const after = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve(rewritten) }))
+    expect(after.headers).toEqual(before.headers)
+  })
+
+  it('sends no rule for an empty permissions policy', async () => {
+    const resolved = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ permissionsPolicy: {} }) }))
+    expect(resolved.headers).toEqual([])
+  })
+
+  it('rejects refused embedders with the source path on every line', async () => {
+    const lines = await resolveServeConfig(
+      opts({ loadConfig: () => Promise.resolve({ embedders: ['*', 'https://host.example/app'] }) })
+    ).then(
+      () => [],
+      (error: Error) => error.message.split(/\r?\n/)
+    )
+    expect(lines).toEqual([
+      expect.stringMatching(/^\/project\/hf-serve\.config\.json: embedders\[0\] permits every origin/),
+      expect.stringMatching(/^\/project\/hf-serve\.config\.json: embedders\[1\] must end at the host or port/),
+    ])
+  })
+
+  it('rejects an authored policy that drops the declared embedders', async () => {
+    const config = { embedders: ["'self'"], headers: [{ suffix: '.html', headers: { 'Content-Security-Policy': "default-src 'self'" } }] }
+    await expect(resolveServeConfig(opts({ loadConfig: () => Promise.resolve(config) }))).rejects.toThrow(
+      /^\/project\/hf-serve\.config\.json: headers\[0\]\.headers\["Content-Security-Policy"\] replaces the policy "embedders" declares/
+    )
   })
 })

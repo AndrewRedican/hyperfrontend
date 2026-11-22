@@ -39,7 +39,7 @@ Reports an import that:
 
 - reaches another project by a relative or absolute path instead of its alias, with a fix that rewrites it to the alias when the imported names can be traced through the project's entry points;
 - names its own project's alias, with a fix that rewrites it to a relative path;
-- closes a cycle between projects, or imports an application;
+- closes a cycle between projects, or imports an application or a service;
 - statically imports a library the project loads lazily elsewhere;
 - from a buildable library, names a library without a build target ([`enforceBuildableLibDependency`](https://www.hyperfrontend.dev/docs/libraries/workspace/lint/#api-ModuleBoundariesOptions-prop-enforceBuildableLibDependency));
 - reaches a project whose tags the [`depConstraints`](https://www.hyperfrontend.dev/docs/libraries/workspace/lint/#api-ModuleBoundariesOptions-prop-depConstraints) do not allow ([`sourceTag`](https://www.hyperfrontend.dev/docs/libraries/workspace/lint/#api-DependencyConstraint-prop-sourceTag) with [`onlyDependOnLibsWithTags`](https://www.hyperfrontend.dev/docs/libraries/workspace/lint/#api-DependencyConstraint-prop-onlyDependOnLibsWithTags)).

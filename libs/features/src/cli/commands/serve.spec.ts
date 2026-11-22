@@ -1,14 +1,14 @@
-import type { ResolvedServeConfig } from '../../server/serve-config'
-import type { StaticServeDeps, StaticServerHandle } from '../../server/static-serve'
+import type { StaticServeDeps, StaticServerHandle } from '@hyperfrontend/server'
+import type { ResolvedServeConfig } from '@hyperfrontend/server/policy'
 import type { CliFlags } from '../args'
 import type { RunServeOptions } from './serve'
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import { afterEach } from 'node:test'
+import { closeServer, listen } from '@hyperfrontend/server'
 import { createDeferred, describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createCapturedOutput } from '@hyperfrontend/testing/process'
-import { closeServer, listen } from '../../server/listen'
 import { runServe } from './serve'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })

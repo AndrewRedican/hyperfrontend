@@ -133,6 +133,67 @@ describe('runBuild', () => {
     expect(err.text()).toEqual(expect.stringContaining('Warning: building an open shell'))
   })
 
+  const withServeConfig = (permissions: readonly string[], serve: unknown): Promise<ResolvedBuildBundle> => {
+    tmp.write(join('public', 'hf-serve.config.json'), JSON.stringify(serve))
+    const resolved = bundle('v4')
+    return Promise.resolve({
+      ...resolved,
+      config: { ...resolved.config, permissions: [...permissions] },
+      sourcePath: tmp.resolve('feature.config.json'),
+    })
+  }
+
+  it('warns on stderr when the serve config isolates an origin the feature opens windows onto', async () => {
+    const err = createCapturedOutput()
+    await runBuild(deps({ resolveConfig: () => withServeConfig([], { isolation: 'require-corp' }), stderr: err }))
+    expect(err.text()).toEqual(expect.stringContaining('Warning: this feature composes "popup" and "standalone"'))
+  })
+
+  it('warns on stderr when the serve config disables a permission the feature declares', async () => {
+    const err = createCapturedOutput()
+    await runBuild(deps({ resolveConfig: () => withServeConfig(['camera'], { permissionsPolicy: { camera: [] } }), stderr: err }))
+    expect(err.text()).toEqual(expect.stringContaining('Warning: this feature declares the "camera" permission'))
+  })
+
+  it('prints both serve config warnings when the two disagreements meet', async () => {
+    const err = createCapturedOutput()
+    const serve = { isolation: 'require-corp', permissionsPolicy: { camera: [] } }
+    await runBuild(deps({ resolveConfig: () => withServeConfig(['camera'], serve), stderr: err }))
+    expect(err.text().match(/^Warning: this feature (composes|declares)/gm)).toEqual([
+      'Warning: this feature composes',
+      'Warning: this feature declares',
+    ])
+  })
+
+  it.each([
+    ['headers that are no array', { headers: { 'X-Test': 'on' } }],
+    ['a rule that is no object', { headers: [null] }],
+    ['a rule without a headers record', { headers: [{}] }],
+  ])('builds a feature that declares isolation beside a serve config with %s', async (_label: string, serve: unknown) => {
+    const err = createCapturedOutput()
+    const resolveConfig = async (): Promise<ResolvedBuildBundle> => {
+      const resolved = await withServeConfig(['camera'], serve)
+      return { ...resolved, config: { ...resolved.config, isolation: 'require-corp' } }
+    }
+    const code = await runBuild(deps({ resolveConfig, stderr: err }))
+    expect({ code, stderr: err.text() }).toEqual({ code: 0, stderr: '' })
+  })
+
+  it.each([
+    ['headers that are no array', { headers: { 'Cross-Origin-Opener-Policy': 'same-origin' } }],
+    ['a rule that is no object', { headers: [null] }],
+    ['a rule without a headers record', { headers: [{}] }],
+  ])('builds a feature that declares no isolation beside a serve config with %s', async (_label: string, serve: unknown) => {
+    const err = createCapturedOutput()
+    const code = await runBuild(deps({ resolveConfig: () => withServeConfig([], serve), stderr: err }))
+    expect({ code, stderr: err.text() }).toEqual({ code: 0, stderr: '' })
+  })
+
+  it('still builds when the serve config earns a warning', async () => {
+    const code = await runBuild(deps({ resolveConfig: () => withServeConfig(['camera'], { permissionsPolicy: { camera: [] } }) }))
+    expect(code).toBe(0)
+  })
+
   it('stages the shell in a hidden dir inside the working directory', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))

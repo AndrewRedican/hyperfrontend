@@ -77,7 +77,7 @@ export interface TargetOptions {
 export interface ProjectConfiguration {
   /** The project's name. */
   readonly name?: string
-  /** `application` or `library`. */
+  /** `application`, `service` or `library`; a service is an application to the graph. */
   readonly projectType?: string
   /** The tags. */
   readonly tags?: readonly string[]

@@ -18,6 +18,7 @@ Generators create compliant configs (the `library` generator writes `package.jso
 | `lib-project-bundle-config`   | IIFE/UMD have both `entry` + `globalName`                                                                               |
 | `lib-project-compatibility`   | Publishable libs declare metadata.compatibility with legal environments and operating systems the pipeline runs them on |
 | `lib-pkg-fields`              | name, description, license, sideEffects, engines, keywords                                                              |
+| `lib-pkg-inherited-fields`    | No `repository`, `bugs`, `homepage` or `author`: the build writes them from the root manifest, adding `directory`       |
 | `lib-pkg-no-main`             | No `main` field — use `exports`                                                                                         |
 | `lib-pkg-exports-js-only`     | Export paths use `.js` not `.ts`                                                                                        |
 | `lib-pkg-exports-exist`       | Export paths point to existing files                                                                                    |

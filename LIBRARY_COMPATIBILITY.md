@@ -21,6 +21,7 @@
 | `@hyperfrontend/project-scope` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 | `@hyperfrontend/questions` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 | `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/server` | ✅ | ⚠️ | ⚠️ | ✅ | ✅ | ✅ | ❌ |
 | `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
@@ -41,6 +42,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 - `@hyperfrontend/immutable-api-utils`: `built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there.
 - `@hyperfrontend/linter`: Needs Node.js 24 or later: configurations are TypeScript modules loaded through Node's own type stripping.
 - `@hyperfrontend/project-scope`: `/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0.
+- `@hyperfrontend/server`: Support is per entry point: the root entry is the HTTP kernel and is Node-only, and `/policy` imports no Node.js built-in, so it also runs in a browser or a web worker once a bundler includes it. The package publishes no browser bundle of its own.
 - `@hyperfrontend/testing`: Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide.
 - `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
 
@@ -63,6 +65,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/project-scope` | ✅ | ✅ | ❌ | ❌ | - |
 | `@hyperfrontend/questions` | ✅ | ✅ | ❌ | ❌ | - |
 | `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendRandomGenerator` |
+| `@hyperfrontend/server` | ✅ | ✅ | ❌ | ❌ | - |
 | `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendStateMachine` |
 | `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendStringUtils` |
 | `@hyperfrontend/testing` | ✅ | ✅ | ❌ | ❌ | - |
@@ -90,6 +93,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/project-scope` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/questions` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/server` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/state-machine` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/string-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/testing` | `>=22.18.0` | `>=8.0.0` |
@@ -105,7 +109,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/builder` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/versioning` |
 | `@hyperfrontend/cryptography` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils` |
 | `@hyperfrontend/data-utils` | `@hyperfrontend/immutable-api-utils` |
-| `@hyperfrontend/features` | `@hyperfrontend/builder`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/network-protocol`, `@hyperfrontend/nexus`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions`, `@hyperfrontend/ui-utils`, `@hyperfrontend/versioning` |
+| `@hyperfrontend/features` | `@hyperfrontend/builder`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/network-protocol`, `@hyperfrontend/nexus`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions`, `@hyperfrontend/server`, `@hyperfrontend/ui-utils`, `@hyperfrontend/versioning` |
 | `@hyperfrontend/function-utils` | - |
 | `@hyperfrontend/immutable-api-utils` | - |
 | `@hyperfrontend/json-utils` | `@hyperfrontend/immutable-api-utils` |
@@ -117,6 +121,7 @@ Every library runs on Linux, macOS and Windows, and is typechecked, linted, test
 | `@hyperfrontend/project-scope` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/logging` |
 | `@hyperfrontend/questions` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/random-generator-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
+| `@hyperfrontend/server` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/project-scope` |
 | `@hyperfrontend/state-machine` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/string-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/testing` | - |
@@ -150,6 +155,7 @@ flowchart TB
     project_scope["project-scope"]
     questions["questions"]
     random_generator_utils["random-generator-utils"]
+    server["server"]
     state_machine["state-machine"]
     string_utils["string-utils"]
     testing["testing"]
@@ -174,6 +180,7 @@ flowchart TB
     features --> nexus
     features --> project_scope
     features --> questions
+    features --> server
     features --> ui_utils
     features --> versioning
     json_utils --> immutable_api_utils
@@ -202,6 +209,8 @@ flowchart TB
     questions --> immutable_api_utils
     random_generator_utils --> data_utils
     random_generator_utils --> immutable_api_utils
+    server --> immutable_api_utils
+    server --> project_scope
     state_machine --> data_utils
     state_machine --> immutable_api_utils
     string_utils --> immutable_api_utils
@@ -234,7 +243,7 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.7.4` |
 | `@hyperfrontend/cryptography` | `1.1.5` |
 | `@hyperfrontend/data-utils` | `1.0.4` |
-| `@hyperfrontend/features` | `0.12.2` |
+| `@hyperfrontend/features` | `0.13.0` |
 | `@hyperfrontend/function-utils` | `1.0.4` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.6` |
 | `@hyperfrontend/json-utils` | `1.1.5` |
@@ -246,10 +255,11 @@ flowchart TB
 | `@hyperfrontend/project-scope` | `0.6.1` |
 | `@hyperfrontend/questions` | `0.3.4` |
 | `@hyperfrontend/random-generator-utils` | `0.2.4` |
+| `@hyperfrontend/server` | `0.1.0` |
 | `@hyperfrontend/state-machine` | `0.2.4` |
 | `@hyperfrontend/string-utils` | `1.0.5` |
 | `@hyperfrontend/testing` | `0.5.3` |
 | `@hyperfrontend/time-utils` | `1.0.4` |
 | `@hyperfrontend/ui-utils` | `0.0.12` |
 | `@hyperfrontend/versioning` | `0.11.0` |
-| `@hyperfrontend/workspace` | `0.6.0` |
+| `@hyperfrontend/workspace` | `0.7.0` |

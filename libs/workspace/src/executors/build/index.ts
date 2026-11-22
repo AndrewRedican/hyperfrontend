@@ -6,4 +6,5 @@
 
 export type { BuildExecutorOptions } from './executor'
 export { buildExecutor, buildExecutor as default } from './executor'
+export { INHERITED_FIELDS, packageRepository } from './inherited-fields'
 export { FUNDING_ASSET, rootAssetSpecs } from './root-assets'

@@ -142,6 +142,25 @@ describe('runTasks', () => {
     })
   })
 
+  it('goes from the last task straight to the matrix when the only stage of the run failed', async () => {
+    const { lines } = await ran({ 'lib-a:lint': { code: 1 } }, { stages: [['lint', 'build']] })
+    expect(lines).toEqual([
+      expect.stringMatching(/^✗ lib-a:lint {2}\S+ {2}\[1\/3\]$/),
+      `    log: ${LOG_DIRECTORY}/lib-a__lint.log`,
+      expect.stringMatching(/^✓ lib-a:build {2}\S+ {2}\[2\/3\]$/),
+      expect.stringMatching(/^✓ app:build {2}\S+ {2}\[3\/3\]$/),
+      '',
+      '       lint  build',
+      'app          ✓',
+      'lib-a  ✗     ✓',
+      '✓ passed  ✗ failed  - skipped  · not run',
+      '',
+      expect.stringMatching(/^3 tasks in \S+: 2 passed, 1 failed$/),
+      `✗ lib-a:lint  ${LOG_DIRECTORY}/lib-a__lint.log`,
+      '',
+    ])
+  })
+
   it('shows what a failed task left in its log, and where the log is', async () => {
     const { lines } = await ran({ 'lib-a:lint': { code: 1, log: 'src/a.ts:1 error\n' } })
     expect(lines.slice(2, 4)).toEqual(['    src/a.ts:1 error', `    log: ${LOG_DIRECTORY}/lib-a__lint.log`])
@@ -186,6 +205,21 @@ describe('runTasks, streaming', () => {
   it('ends on the list of the tasks that ran', async () => {
     const { code, notes } = await ran({}, { stream: true })
     expect({ code, last: notes.at(-1) }).toEqual({ code: 0, last: '3 succeeded, 0 failed, 0 skipped' })
+  })
+
+  it('ends on the summary alone when the only stage of the run failed', async () => {
+    const { code, notes } = await ran({ 'lib-a:lint': { code: 1 } }, { stream: true, stages: [['lint', 'build']] })
+    expect({ code, last: notes.at(-1) }).toEqual({ code: 1, last: '2 succeeded, 1 failed, 0 skipped' })
+  })
+
+  it('names the last stage as the one that stopped the run without counting tasks it kept from running', async () => {
+    const { notes } = await ran({ 'lib-a:build': { code: 1 } }, { stream: true })
+    expect(notes.at(-1)).toBe('stage 2 (build) did not succeed')
+  })
+
+  it('counts one task kept from running in the singular', async () => {
+    const { notes } = await ran({ 'lib-a:lint': { code: 1 } }, { stream: true, tasks: TASKS.slice(0, 2) })
+    expect(notes.at(-1)).toBe('stage 1 (lint) did not succeed: 1 task not run')
   })
 
   it('ends on the stage that stopped the run and how many tasks it kept from running', async () => {

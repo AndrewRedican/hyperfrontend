@@ -14,7 +14,7 @@ import { packageIdentity } from './lib/identity'
  * is `Built "<name>" → <out>` followed by `Packed <tarball>` when `npm pack`
  * ran, and the tarball is named by the generated package, `<name>-shell`.
  * And against `libs/features/src/cli/commands/serve.ts` and
- * `libs/features/src/server/static-serve.ts`: one static server on one root,
+ * `libs/server/src/static/static-serve.ts`: one static server on one root,
  * port 4284 by default, announced as `<root> → <url>` with a trailing slash,
  * and one access-log line per request shaped `<method> <path> <status>`,
  * logging on by default.

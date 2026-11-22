@@ -101,7 +101,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 1. Reads `/docs/downloads/snapshot.json` from the published site, which states the newest npm day the site was built with
 2. Asks npm which day it has most recently counted
-3. When npm is ahead, posts to the Vercel deploy hook in the `VERCEL_DEPLOY_HOOK_URL` secret; the production build fetches the missing days itself (`apps/docs-site/README.md`, Deployment)
+3. When npm is ahead and the `VERCEL_DEPLOY_HOOK_URL` secret holds a deploy hook, posts to it; the production build fetches the missing days itself (`apps/docs-site/README.md`, Deployment). Without the secret it reports the lag as a notice and passes: the next merge to `main` builds with current statistics
 4. When the two agree, ends without building or deploying anything
 
 **Features**:

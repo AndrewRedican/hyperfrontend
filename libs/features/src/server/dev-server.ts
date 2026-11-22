@@ -1,15 +1,14 @@
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
+import type { StaticHandlerDeps } from '@hyperfrontend/server'
 import type { ResolvedDevConfig, ResolvedDevDebug } from './config'
-import type { StaticHandlerDeps } from './static-handler'
 import { createServer as createHttpServer } from 'node:http'
 import { dirname, join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
-import { closeServer, listen } from './listen'
+import { closeServer, createStaticHandler, listen, requestPath, serveFile } from '@hyperfrontend/server'
 import { currentModuleDir } from './module-dir'
-import { createStaticHandler, requestPath, serveFile } from './static-handler'
 
 // note: Path prefix the control server serves the compiled debug-UI assets under; the page loads `/__debug/index.iife.min.js`.
 const DEBUG_PREFIX = '/__debug'

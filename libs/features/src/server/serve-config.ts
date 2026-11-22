@@ -1,11 +1,10 @@
+import type { ResolvedServeConfig, ServeConfig } from '@hyperfrontend/server/policy'
 import type { CliFlags } from '../cli/args'
-import type { ServeConfig, ServeHeaderRule } from '../shared/serve-types'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
-import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { expandHeaderPolicy, validateServeConfig } from '@hyperfrontend/server/policy'
 import { discoverConfigFile, SERVE_CONFIG_BASENAME } from '../cli/config/discover'
 import { loadModuleFile } from '../cli/config/load-module'
 
@@ -14,31 +13,6 @@ const DEFAULT_SERVE_PORT = 4284
 
 // note: The only artifact-carried config format; TS/JS configs need the loader's import machinery and belong beside the project instead.
 const ARTIFACT_CONFIG_FILENAME = `${SERVE_CONFIG_BASENAME}.json`
-
-// note: The COEP values that, paired with COOP same-origin, make a document cross-origin isolated.
-const ISOLATION_VALUES: readonly string[] = ['require-corp', 'credentialless']
-
-// note: RFC 7230 token characters — the only bytes legal in a header field name.
-const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
-
-// note: Bytes Node's setHeader rejects at request time; catching them here turns a config typo into a load error instead of a per-request crash.
-const HEADER_VALUE_FORBIDDEN = /[\r\n\0]/
-
-/** A fully-resolved `hf-serve.config.*`: concrete root, listen address, and header rules. */
-export interface ResolvedServeConfig {
-  /** Absolute directory served as the site root. */
-  readonly root: string
-  /** Port the server listens on. */
-  readonly port: number
-  /** Interface the server binds; every interface when `undefined`. */
-  readonly host?: string
-  /** Ordered header rules, later rules overriding earlier ones per header. */
-  readonly headers: readonly ServeHeaderRule[]
-  /** Whether each request is access-logged. */
-  readonly log: boolean
-  /** Absolute path of the config file that was loaded, absent when serving with pure defaults. */
-  readonly sourcePath?: string
-}
 
 /** Injectable boundaries for {@link resolveServeConfig}, defaulted for production. */
 export interface ResolveServeConfigDeps {
@@ -58,16 +32,6 @@ export interface ResolveServeConfigOptions extends ResolveServeConfigDeps {
   readonly cwd: string
   /** Parsed CLI flags, applied with the highest precedence. */
   readonly flags: CliFlags
-}
-
-/**
- * Narrows an unknown value to a plain record.
- *
- * @param value - The value to test.
- * @returns `true` when the value is a non-null, non-array object.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !isArray(value)
 }
 
 /**
@@ -124,122 +88,6 @@ function toAbsolute(base: string, path: string): string {
 }
 
 /**
- * Validates one header rule, asserting optional `prefix`/`suffix` strings and a
- * string-valued `headers` record.
- *
- * @param value - The candidate header rule.
- * @param index - The rule's index, used to locate problems in the error message.
- * @param sourcePath - The file the rule came from, used in the error message.
- * @returns The validated header rule.
- * @throws {Error} When a field is mistyped.
- *
- * @example Validating a single header rule
- * ```typescript
- * const rule = validateHeaderRule({ suffix: '.html', headers: { 'Cache-Control': 'no-cache' } }, 0, '/p/hf-serve.config.json')
- * ```
- */
-export function validateHeaderRule(value: unknown, index: number, sourcePath: string): ServeHeaderRule {
-  if (!isRecord(value)) {
-    throw createError(`${sourcePath}: headers[${index}] must be an object.`)
-  }
-  if (value['prefix'] !== undefined && typeof value['prefix'] !== 'string') {
-    throw createError(`${sourcePath}: headers[${index}].prefix must be a string.`)
-  }
-  if (value['suffix'] !== undefined && typeof value['suffix'] !== 'string') {
-    throw createError(`${sourcePath}: headers[${index}].suffix must be a string.`)
-  }
-  const headers = value['headers']
-  if (!isRecord(headers)) {
-    throw createError(`${sourcePath}: headers[${index}].headers must be an object.`)
-  }
-  for (const name of keys(headers)) {
-    if (!HEADER_NAME_PATTERN.test(name)) {
-      throw createError(`${sourcePath}: headers[${index}].headers["${name}"] is not a valid header name.`)
-    }
-    if (typeof headers[name] !== 'string') {
-      throw createError(`${sourcePath}: headers[${index}].headers["${name}"] must be a string.`)
-    }
-    if (HEADER_VALUE_FORBIDDEN.test(headers[name] as string)) {
-      throw createError(`${sourcePath}: headers[${index}].headers["${name}"] must not contain control characters.`)
-    }
-  }
-  return value as unknown as ServeHeaderRule
-}
-
-/**
- * Validates an unknown value as a {@link ServeConfig}.
- *
- * @param value - The loaded config value.
- * @param sourcePath - The config path, used in error messages.
- * @returns The validated config.
- * @throws {Error} When the config or any header rule is malformed.
- *
- * @example Validating a loaded serve config
- * ```typescript
- * const config = validateServeConfig({ root: 'dist/site' }, '/p/hf-serve.config.json')
- * ```
- */
-export function validateServeConfig(value: unknown, sourcePath: string): ServeConfig {
-  if (!isRecord(value)) {
-    throw createError(`${sourcePath}: serve config must be an object.`)
-  }
-  if (value['root'] !== undefined && (typeof value['root'] !== 'string' || value['root'].length === 0)) {
-    throw createError(`${sourcePath}: "root" must be a non-empty string.`)
-  }
-  if (value['port'] !== undefined && !isPort(value['port'])) {
-    throw createError(`${sourcePath}: "port" must be an integer between 1 and 65535.`)
-  }
-  if (value['host'] !== undefined && (typeof value['host'] !== 'string' || value['host'].length === 0)) {
-    throw createError(`${sourcePath}: "host" must be a non-empty string.`)
-  }
-  if (value['log'] !== undefined && typeof value['log'] !== 'boolean') {
-    throw createError(`${sourcePath}: "log" must be a boolean.`)
-  }
-  if (value['isolation'] !== undefined && (typeof value['isolation'] !== 'string' || !ISOLATION_VALUES.includes(value['isolation']))) {
-    throw createError(`${sourcePath}: "isolation" must be one of ${ISOLATION_VALUES.join(', ')}.`)
-  }
-  const headers = value['headers']
-  if (headers !== undefined && !isArray(headers)) {
-    throw createError(`${sourcePath}: "headers" must be an array.`)
-  }
-  if (isArray(headers)) {
-    headers.forEach((rule, index) => validateHeaderRule(rule, index, sourcePath))
-  }
-  return value as unknown as ServeConfig
-}
-
-/**
- * Expands a declared isolation into the header rule that produces it.
- *
- * `Cross-Origin-Opener-Policy: same-origin` and the chosen
- * `Cross-Origin-Embedder-Policy` are what make the document cross-origin
- * isolated; `Cross-Origin-Resource-Policy: cross-origin` keeps the origin
- * embeddable by hosts elsewhere, which is what a feature is for.
- *
- * @param isolation - The declared COEP value, or `undefined` when none was declared.
- * @returns A single-element rule list applied to every path, or an empty list.
- *
- * @example Expanding a declared isolation
- * ```typescript
- * isolationRules('require-corp')
- * ```
- */
-function isolationRules(isolation: ServeConfig['isolation']): readonly ServeHeaderRule[] {
-  if (isolation === undefined) {
-    return []
-  }
-  return [
-    {
-      headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': isolation,
-        'Cross-Origin-Resource-Policy': 'cross-origin',
-      },
-    },
-  ]
-}
-
-/**
  * Selects the config file to load: `--config` first, then the served root's
  * own artifact-carried `hf-serve.config.json` when `--root` names one, then
  * discovery in the working directory.
@@ -279,6 +127,10 @@ function selectConfigPath(
  * the platform injects one. Unlike the dev server, serving is valid with no config at
  * all: the working directory is served with defaults.
  *
+ * The config's `embedders`, `permissionsPolicy` and `isolation` fields each
+ * become one header rule for every path, placed in that order ahead of the
+ * authored `headers` rules.
+ *
  * @param options - The working directory, parsed flags, and injectable deps.
  * @returns The resolved root, listen address, header rules, and source path.
  * @throws {Error} When the selected config is malformed or the root does not exist.
@@ -311,8 +163,8 @@ export async function resolveServeConfig(options: ResolveServeConfigOptions): Pr
     root,
     port: flags.port !== undefined ? parsePort(flags.port, '--port') : (envPort(env) ?? config.port ?? DEFAULT_SERVE_PORT),
     ...(host !== undefined && { host }),
-    // why: The expansion leads so a hand-written rule for any of the three still wins — declaring the intent must not take the escape hatch away.
-    headers: [...isolationRules(config.isolation), ...(config.headers ?? [])],
+    // why: The declared fields expand ahead of the authored rules, so a hand-written rule still overrides any header they set.
+    headers: expandHeaderPolicy(config),
     log: config.log ?? true,
     ...(sourcePath !== null && { sourcePath }),
   }

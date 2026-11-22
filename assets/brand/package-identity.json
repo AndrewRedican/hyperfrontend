@@ -1015,6 +1015,59 @@
           "solid": true
         }
       ]
+    },
+    "@hyperfrontend/server": {
+      "note": "The rack: two machines holding a port open, the lit one answering and the line its response leaves on.",
+      "hue": 346,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4.5,
+            "y": 5.5,
+            "width": 23,
+            "height": 9,
+            "rx": 2.5
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4.5,
+            "y": 17.5,
+            "width": 23,
+            "height": 9,
+            "rx": 2.5
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 9.5,
+            "cy": 10,
+            "r": 1.6
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M14.5 10h8.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M9 22h5.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M18 22h5"
+          }
+        }
+      ]
     }
   }
 }

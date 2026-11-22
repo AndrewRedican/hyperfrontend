@@ -399,6 +399,12 @@ describe('linuxTasks', () => {
     ])
   })
 
+  it('weighs the build of a service light, as an application build is', () => {
+    expect(linuxTasks(graph, selection('service-api:build', 'service-api:test'), false).map((task) => `${task.id} ${task.weight}`)).toEqual(
+      ['service-api:build light', 'service-api:test light']
+    )
+  })
+
   it('ignores a task of a project the graph does not know', () => {
     expect(linuxTasks(graph, selection('lib-nobody:build'), false)).toEqual([])
   })
@@ -432,6 +438,15 @@ describe('siblingTasks', () => {
       'lib-alpha:smoke-floor windows',
       'lib-alpha:smoke-major windows',
     ])
+  })
+
+  it('copies no task of a service to Windows or macOS', () => {
+    const linux = linuxTasks(graph, selection('service-api:typecheck', 'service-api:test', 'service-api:build', 'tool-ling:test'), false)
+    expect(
+      ['windows' as const, 'macos' as const].flatMap((environment) =>
+        siblingTasks(graph, linux, environment).map((task) => `${task.id} ${task.environment}`)
+      )
+    ).toEqual(['tool-ling:test windows', 'tool-ling:test macos'])
   })
 
   it('adds the tasks the copied tasks need first', () => {

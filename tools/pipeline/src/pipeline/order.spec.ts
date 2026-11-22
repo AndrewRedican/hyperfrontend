@@ -64,6 +64,16 @@ describe('rankChains', () => {
     ])
   })
 
+  it('ranks a service with the applications, after every library and tool, whatever it builds', () => {
+    const ranked = rankChains(workspace.graph, [
+      chain('service-api', ['build', 'test']),
+      chain('app-site', ['build']),
+      chain('tool-ling', ['test']),
+      chain('lib-testing', ['test']),
+    ])
+    expect(ranked.map((item) => item.project)).toEqual(['lib-testing', 'tool-ling', 'app-site', 'service-api'])
+  })
+
   it('ranks a chain of a project the graph does not know with the applications', () => {
     expect(rankChains(workspace.graph, [chain('lib-nobody', ['build']), chain('tool-ling', ['test'])]).map((item) => item.project)).toEqual(
       ['tool-ling', 'lib-nobody']

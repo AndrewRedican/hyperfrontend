@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/a92f716d9038eb02226ecae1e611c4f60df494d9...bf9080f73e8b9dcf9b13c90999ffe05eb16ad5fc) - 2026-11-22
+
+### Features
+
+- add the application and service generators
+- accept the service project kind
+
+### Bug Fixes
+
+- read the changelog repository from the root manifest
+- stop generators corrupting or overwriting projects
+- tolerate a byte order mark and name malformed inputs
+- accept -t for the target of graph affected
+- answer --help on every command
+- name no unrun tasks when a failed stage left none
+
 ## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/a4177536ceb498d803d2dd3039ee691ed342cdea...07659cde52fac26784a4a945672637887d7e63ff) - 2026-11-21
 
 ### Features

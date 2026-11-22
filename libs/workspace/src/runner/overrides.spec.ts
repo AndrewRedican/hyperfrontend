@@ -1,6 +1,19 @@
 import type { ExecutorSchema } from './executors'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { camelCase, parseOverrides, readFlag, typedOverrides } from './overrides'
+import { asksForHelp, camelCase, parseOverrides, readFlag, typedOverrides } from './overrides'
+
+describe('asksForHelp', () => {
+  it.each([
+    ['a long help word among the arguments', [['-t', 'build', '--help']], true],
+    ['a short help word among the arguments', [['origin', '-h']], true],
+    ['a help word past the arguments read', [['run', 'pre-push', '--help'], 2], false],
+    ['a help word within the arguments read', [['run', '-h', 'pre-push'], 2], true],
+    ['a help word carrying a value', [['--help=true']], false],
+    ['no argument', [[]], false],
+  ] as const)('reads %s', (_, args, expected) => {
+    expect(asksForHelp(...(args as readonly [readonly string[], number?]))).toBe(expected)
+  })
+})
 
 describe('camelCase', () => {
   it('folds the dashes of a kebab-case name into capitals', () => {

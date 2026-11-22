@@ -4,6 +4,7 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempDir } from '@hyperfrontend/testing/fs'
 import { createGraphWorkspace } from './__test-utils__/workspace'
 import {
+  expandWith,
   isCompatibleTarget,
   readWorkspaceFile,
   selfInputs,
@@ -49,6 +50,26 @@ describe('targetInputs', () => {
       'defaults',
       { value: ['default', '^default'], from: 'implicit' },
     ])
+  })
+
+  it('refuses inputs of the project that hold an entry that is not an input, naming the task', () => {
+    expect(() => targetInputs(root, withInputs(['default', null]), 'build')).toThrow(
+      'the input list of lib-a:build holds null, which is not an input: a string, or an object whose fileset or input is a string'
+    )
+  })
+
+  it('refuses inputs of the defaults that are not a list, naming the task that reads them', () => {
+    const malformed = createTempDir({
+      prefix: 'inputs-malformed-',
+      tree: { 'hf.json': '{ "targetDefaults": { "build": { "inputs": "production" } } }' },
+    })
+    try {
+      expect(() => targetInputs(malformed.path, withInputs(undefined), 'build')).toThrow(
+        'the input list of lib-a:build is "production", which is not a list of inputs'
+      )
+    } finally {
+      malformed.remove()
+    }
   })
 })
 
@@ -142,7 +163,85 @@ describe('selfInputs', () => {
 
   it('falls back to the default input without hf.json', () => {
     const bare = createTempDir({ prefix: 'inputs-bare-', tree: {} })
-    expect(selfInputs(bare.path, withInputs(undefined), 'build')).toEqual(['{projectRoot}/**/*'])
+    try {
+      expect(selfInputs(bare.path, withInputs(undefined), 'build')).toEqual(['{projectRoot}/**/*'])
+    } finally {
+      bare.remove()
+    }
+  })
+})
+
+describe('expandWith', () => {
+  /**
+   * The patterns of a named input called `watchers`, defined by the workspace file as given.
+   *
+   * @param watchers - The value the workspace file gives the named input
+   * @returns The patterns the named input stands for
+   */
+  function expandWatchers(watchers: unknown): string[] {
+    return expandWith({ namedInputs: { watchers } } as never, lib, ['watchers'])
+  }
+
+  it('keeps a name every object inherits as a pattern, and expands nothing for an input that names one', () => {
+    expect(expandWatchers(['constructor', { input: 'toString' }, '__proto__', '{projectRoot}/x'])).toEqual([
+      'constructor',
+      '__proto__',
+      '{projectRoot}/x',
+    ])
+  })
+
+  it('expands a named input whose own name is one every object inherits', () => {
+    expect(expandWith({ namedInputs: { constructor: ['{projectRoot}/c/**'] } }, lib, ['constructor', { input: 'constructor' }])).toEqual([
+      '{projectRoot}/c/**',
+      '{projectRoot}/c/**',
+    ])
+  })
+
+  it.each([
+    ['null', null, 'null'],
+    ['a number', 5, '5'],
+    ['a boolean', true, 'true'],
+    ['a list', ['{projectRoot}/x'], '["{projectRoot}/x"]'],
+    ['an object whose fileset is not a string', { fileset: 5, input: 'default' }, '{"fileset":5,"input":"default"}'],
+    ['an object whose input is not a string', { input: 5 }, '{"input":5}'],
+  ])('refuses %s among the entries of a named input, naming the input', (_, entry, written) => {
+    expect(() => expandWatchers(['{projectRoot}/x', entry])).toThrow(
+      `named input "watchers" of hf.json holds ${written}, which is not an input: a string, or an object whose fileset or input is a string`
+    )
+  })
+
+  it.each([
+    ['null', null, 'null'],
+    ['a number', 5, '5'],
+    ['a string', '{projectRoot}/x', '"{projectRoot}/x"'],
+    ['an object', { fileset: '{projectRoot}/x' }, '{"fileset":"{projectRoot}/x"}'],
+  ])('refuses a named input written as %s rather than as a list', (_, watchers, written) => {
+    expect(() => expandWatchers(watchers)).toThrow(`named input "watchers" of hf.json is ${written}, which is not a list of inputs`)
+  })
+
+  it('names the project whose own named input is malformed', () => {
+    expect(() => expandWith({ namedInputs: { own: [] } }, withInputs(undefined, { own: [null] }), [{ input: 'own' }])).toThrow(
+      'named input "own" of lib-a holds null'
+    )
+  })
+
+  it('refuses an entry of the list it is handed that is not an input, naming the project', () => {
+    expect(() => expandWith({}, lib, [5 as never])).toThrow('the input list expanded for lib-a holds 5, which is not an input')
+  })
+
+  it('leaves a malformed named input alone where nothing reads it', () => {
+    expect(expandWith({ namedInputs: { watchers: [null] } as never }, lib, ['default'])).toEqual(['{projectRoot}/**/*'])
+  })
+})
+
+describe('readWorkspaceFile', () => {
+  it('reads an hf.json saved with a byte order mark', () => {
+    const marked = createTempDir({ prefix: 'inputs-marked-', tree: { 'hf.json': '\uFEFF{ "namedInputs": { "kept": [] } }' } })
+    try {
+      expect(readWorkspaceFile(marked.path)).toEqual({ namedInputs: { kept: [] } })
+    } finally {
+      marked.remove()
+    }
   })
 })
 

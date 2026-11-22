@@ -3,11 +3,11 @@
  *
  * @module @hyperfrontend/features
  */
+export type { EmbedderSource, ServeConfig, ServeHeaderRule } from '@hyperfrontend/server/policy'
 export type { AsyncIteratorExecutor, GeneratorCallback, PromiseExecutor, Tree } from './nx/model'
 export type { EventHandler } from './shared/event-emitter'
 export type { PresentPayload, ViewportPayload } from './shared/presentation'
 export type { RequestHandler, RequestOptions } from './shared/request'
-export type { ServeConfig, ServeHeaderRule } from './shared/serve-types'
 export type {
   ActionDescription,
   AuthoredDisplayConfig,
@@ -43,8 +43,8 @@ export type {
   UnresponsivePolicy,
   WindowedDisplayMode,
 } from './shared/types'
+export { defineServeConfig } from '@hyperfrontend/server/policy'
 export { validateContract, validateFeatureConfig, validatePayload } from './shared/contract'
 export { defineConfig, defineDevConfig } from './shared/define-config'
 export { sdkInfo } from './shared/sdk-info'
-export { defineServeConfig } from './shared/serve-types'
 export { DisplayMode } from './shared/types'

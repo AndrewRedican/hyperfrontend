@@ -53,3 +53,4 @@ If you have a different set of required fields or use a publication workflow tha
 
 - [lib-pkg-no-main](./lib-pkg-no-main.md)
 - [lib-pkg-package-json-export](./lib-pkg-package-json-export.md)
+- [lib-pkg-inherited-fields](./lib-pkg-inherited-fields.md)

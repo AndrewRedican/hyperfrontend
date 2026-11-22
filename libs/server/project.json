@@ -1,0 +1,42 @@
+{
+  "name": "lib-server",
+  "description": "HTTP kernel for Node.js services: a listener with graceful shutdown, a step pipeline, static file serving with compression and conditional requests, and ordered header rules.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "partial",
+        "webWorker": "partial"
+      },
+      "operatingSystems": {
+        "linux": "full",
+        "macos": "full",
+        "windows": "full"
+      },
+      "note": "Support is per entry point: the root entry is the HTTP kernel and is Node-only, and `/policy` imports no Node.js built-in, so it also runs in a browser or a web worker once a bundler includes it. The package publishes no browser bundle of its own."
+    }
+  },
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
+        }
+      }
+    },
+    "publish": {},
+    "typecheck": {},
+    "test": {}
+  }
+}

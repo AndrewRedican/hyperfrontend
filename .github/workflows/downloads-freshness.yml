@@ -44,8 +44,10 @@ jobs:
           SERVED: ${{ steps.compare.outputs.served }}
         run: |
           if [ -z "$DEPLOY_HOOK_URL" ]; then
-            echo "::error::npm has counted through $COUNTED but the site is counted through $SERVED, and VERCEL_DEPLOY_HOOK_URL is not set. Create a deploy hook for the production branch in the Vercel project settings and store its URL as that repository secret."
-            exit 1
+            # No hook is configured, so there is nothing to trigger. The lag is reported and the
+            # check passes: the next production build fetches the missing days by itself.
+            echo "::notice::npm has counted through $COUNTED and the site is counted through $SERVED. No deploy hook is configured, so no build was triggered; the next production build catches up."
+            exit 0
           fi
           # The hook builds the production branch as it is; the build fetches the
           # missing days itself, and Vercel's Git integration is not involved, so
