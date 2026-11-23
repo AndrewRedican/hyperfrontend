@@ -1,0 +1,33 @@
+import { defineService, health, jsonResponse, route, router, startService } from '@hyperfrontend/server'
+import { asPort, asText, defineEnvironment, optional } from '@hyperfrontend/server/environment'
+import config from '../service.config'
+
+/** The environment the service reads: the port and the interface it listens on. */
+export const environment = defineEnvironment({
+  http: {
+    // why: port 0 is allowed so that a spec can let the operating system pick a free port
+    PORT: optional(asPort({ allowZero: true }), 8080),
+    HOST: optional(asText(), '0.0.0.0'),
+  },
+})
+
+/** The service as the runner runs it: what it reads, the immutable section it is built with, and how it starts. */
+export const service = defineService({
+  environment,
+  // why: a built service refuses to boot unless the section it runs with is the one it was built with, so the section of the configuration is handed over whole
+  immutable: config.immutable,
+  start: (values, context) =>
+    startService(
+      {
+        port: values.http.PORT,
+        host: values.http.HOST,
+        steps: [
+          health(),
+          router({
+            hello: route('GET', '/hello/:name', (request) => jsonResponse(200, { message: `Hello, ${request.params.name}` })),
+          }),
+        ],
+      },
+      { report: context.report }
+    ),
+})

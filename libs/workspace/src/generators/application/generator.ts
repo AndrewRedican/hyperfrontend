@@ -49,7 +49,7 @@ const TEMPLATES = join(typeof __dirname === 'string' ? __dirname : import.meta.d
  * ```
  */
 export async function applicationGenerator(tree: Tree, options: ApplicationGeneratorOptions): Promise<void> {
-  writeRunnableProject(tree, TEMPLATES, planRunnableProject(tree, options, 'application'))
+  writeRunnableProject(tree, TEMPLATES, planRunnableProject(tree, options, 'application'), { typecheck: {}, test: {} })
   if (!options.skipFormat) await formatFiles(tree)
 }
 

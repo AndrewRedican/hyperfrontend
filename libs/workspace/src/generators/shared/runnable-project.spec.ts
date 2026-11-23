@@ -6,6 +6,9 @@ import { readJson } from './tree'
 
 const ROOT_FILES = { 'package.json': '{ "name": "@acme/monorepo" }' }
 
+/** The targets the workspace's defaults configure whole. */
+const TARGETS = { typecheck: {}, test: {} }
+
 const templates = useTempDir({
   scope: 'all',
   prefix: 'runnable-',
@@ -65,7 +68,7 @@ describe('planRunnableProject', () => {
 describe('writeRunnableProject', () => {
   it('writes the templates under the project with the plan substituted', () => {
     const tree = createMemoryTree(ROOT_FILES)
-    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'))
+    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'), TARGETS)
     expect(tree.read('apps/api/src/main.ts', 'utf-8')).toBe(
       "export const kind = 'service'\nexport const base = '../../tsconfig.base.json'\n"
     )
@@ -73,7 +76,7 @@ describe('writeRunnableProject', () => {
 
   it('writes a private ES module manifest', () => {
     const tree = createMemoryTree(ROOT_FILES)
-    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api', description: 'The API.' }, 'service'))
+    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api', description: 'The API.' }, 'service'), TARGETS)
     expect(readJson(tree, 'apps/api/package.json')).toEqual({
       name: '@acme/api',
       version: '0.0.0',
@@ -83,9 +86,9 @@ describe('writeRunnableProject', () => {
     })
   })
 
-  it('writes the project with its kind, its tags and the typecheck and test targets', () => {
+  it('writes the project with its kind, its tags and its targets', () => {
     const tree = createMemoryTree(ROOT_FILES)
-    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api', tags: ['scope:internal'] }, 'service'))
+    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api', tags: ['scope:internal'] }, 'service'), TARGETS)
     expect(readJson(tree, 'apps/api/project.json')).toEqual({
       name: 'api',
       description: 'Api service.',
@@ -96,9 +99,34 @@ describe('writeRunnableProject', () => {
     })
   })
 
+  it('writes the targets it is given', () => {
+    const tree = createMemoryTree(ROOT_FILES)
+    writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'), {
+      build: { executor: '@acme/tools:bundle', options: { minify: true } },
+      dev: { command: 'node {projectRoot}/src/main.ts' },
+      test: {},
+    })
+    expect(tree.read('apps/api/project.json', 'utf-8')).toContain(
+      [
+        '  "targets": {',
+        '    "build": {',
+        '      "executor": "@acme/tools:bundle",',
+        '      "options": {',
+        '        "minify": true',
+        '      }',
+        '    },',
+        '    "dev": {',
+        '      "command": "node {projectRoot}/src/main.ts"',
+        '    },',
+        '    "test": {}',
+        '  }',
+      ].join('\n')
+    )
+  })
+
   it('refuses a directory that is already there', () => {
     const tree = createMemoryTree({ ...ROOT_FILES, 'apps/api/src/main.ts': 'export const kept = true\n' })
-    expect(() => writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'))).toThrow(
+    expect(() => writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'), TARGETS)).toThrow(
       'Destination already exists: apps/api'
     )
   })
@@ -106,7 +134,7 @@ describe('writeRunnableProject', () => {
   it('writes nothing over the files of a directory it refuses', () => {
     const tree = createMemoryTree({ ...ROOT_FILES, 'apps/api/src/main.ts': 'export const kept = true\n' })
     try {
-      writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'))
+      writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'), TARGETS)
     } catch {
       // note: the refusal is asserted by the case before; this one reads what it left behind
     }
@@ -115,7 +143,7 @@ describe('writeRunnableProject', () => {
 
   it('refuses a project name another project already holds', () => {
     const tree = createMemoryTree({ ...ROOT_FILES, 'libs/api/project.json': '{ "name": "api" }' })
-    expect(() => writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'))).toThrow(
+    expect(() => writeRunnableProject(tree, templates.path, planRunnableProject(tree, { name: 'api' }, 'service'), TARGETS)).toThrow(
       "Project name already in use: 'api' is the project at libs/api"
     )
   })

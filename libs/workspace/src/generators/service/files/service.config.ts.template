@@ -1,2 +1,2 @@
-/** The configuration the <%= projectName %> service runs with. */
-export default {}
+/** The configuration the <%= projectName %> service is built with: the immutable section holds the structural settings that are fixed when the service is built. */
+export default { immutable: {} }

@@ -13,7 +13,7 @@ import { amendJson, readJson, updateJson } from './tree'
 /**
  * Compiler options as far as the path mappings go.
  */
-interface PathsCompilerOptions {
+export interface PathsCompilerOptions {
   /** The path aliases, by specifier */
   paths?: Record<string, string[]>
 }
@@ -21,7 +21,7 @@ interface PathsCompilerOptions {
 /**
  * The base tsconfig as far as its path mappings go.
  */
-interface PathsTsConfig {
+export interface PathsTsConfig {
   /** The compiler options */
   compilerOptions?: PathsCompilerOptions
 }
@@ -63,7 +63,7 @@ export interface MovePathOptions {
 }
 
 /** The file that holds the workspace's path aliases. */
-const BASE_TSCONFIG = 'tsconfig.base.json'
+export const BASE_TSCONFIG = 'tsconfig.base.json'
 
 /** The lead of an alias path written from the current directory; a tsconfig separates with a forward slash on every platform. */
 const FROM_HERE = `.${posix.sep}`
