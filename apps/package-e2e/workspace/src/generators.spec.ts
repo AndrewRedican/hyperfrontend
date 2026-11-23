@@ -24,6 +24,7 @@ const consumer = usePackedConsumer({
     '@hyperfrontend/linter@0.3.1',
     'prettier@3.8.0',
     'jsdom@26.1.0',
+    '@hyperfrontend/server@0.2.0',
   ],
 })
 
@@ -340,7 +341,16 @@ describe('hf generate application and service', () => {
       include: readJson<{ include: string[] }>('services/api/tsconfig.lib.json').include,
       configured: existsSync(join(consumer.path, 'services', 'api', 'service.config.ts')),
     }).toEqual({
-      project: expect.objectContaining({ name: 'api', projectType: 'service', targets: { typecheck: {}, test: {} } }),
+      project: expect.objectContaining({
+        name: 'api',
+        projectType: 'service',
+        targets: {
+          build: { executor: '@hyperfrontend/workspace:service' },
+          dev: { command: 'node --import @hyperfrontend/workspace/hooks "{projectRoot}/src/main.ts"' },
+          typecheck: {},
+          test: {},
+        },
+      }),
       include: ['src/**/*.ts', 'service.config.ts'],
       configured: true,
     })

@@ -15,7 +15,8 @@
           { "name": "consumer", "specs": ["src/consumer.spec.ts"], "timeoutMs": 300000 },
           { "name": "shells", "specs": ["src/shells.spec.ts"], "timeoutMs": 300000 },
           { "name": "generators", "specs": ["src/generators.spec.ts"], "timeoutMs": 900000 },
-          { "name": "hooks", "specs": ["src/hooks.spec.ts"], "timeoutMs": 300000 }
+          { "name": "hooks", "specs": ["src/hooks.spec.ts"], "timeoutMs": 300000 },
+          { "name": "service", "specs": ["src/service.spec.ts"], "timeoutMs": 300000 }
         ]
       }
     },
