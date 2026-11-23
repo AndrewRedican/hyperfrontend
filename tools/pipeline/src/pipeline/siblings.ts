@@ -83,6 +83,8 @@ export interface GitHubEnvironment {
   readonly GITHUB_API_URL?: string
   /** The run id. */
   readonly GITHUB_RUN_ID?: string
+  /** Which attempt of the run this is, counted from 1. */
+  readonly GITHUB_RUN_ATTEMPT?: string
   /** The web root, `https://github.com` unless the server is GitHub Enterprise. */
   readonly GITHUB_SERVER_URL?: string
 }
