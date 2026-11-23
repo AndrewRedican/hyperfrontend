@@ -1,12 +1,13 @@
 'use client'
 
+import type { RunEstimate } from '@/lib/ci/estimate'
 import type { Execution, StateCounts, TaskState } from '@/lib/ci/execution'
 import type { ProjectGroup } from '@/lib/ci/projects'
 import type { TaskRef } from './task-detail'
 import { formatDuration } from '@/lib/ci/pipeline-view'
 import { groupProjects } from '@/lib/ci/projects'
 import { CHAIN_STATUS_LABEL, ENVIRONMENT_LABEL, STATE_COLOUR, STATE_LABEL } from '@/lib/ci/vocabulary'
-import { useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { InlineIcon } from '../node-icon'
 import { ChainGraph } from './chain-graph'
@@ -20,6 +21,12 @@ export interface ProjectViewProps {
   selected: TaskRef | null
   /** Selects a task */
   onSelect: (ref: TaskRef) => void
+  /** The run's estimate */
+  estimate: RunEstimate
+  /** The current time, held still for a run that has ended */
+  now: number
+  /** Whether the outlines of running tasks hold still between reads, for a reader who asked for less motion */
+  still: boolean
 }
 
 /** The states a progress strip shows, ended ones first. */
@@ -86,6 +93,10 @@ interface ProjectRowProps {
   selected: TaskRef | null
   /** Selects a task */
   onSelect: (ref: TaskRef) => void
+  /** The run's estimate, or null for a recorded run */
+  estimate: RunEstimate | null
+  /** The time the outlines of running tasks are drawn for */
+  now: number
 }
 
 /**
@@ -96,9 +107,11 @@ interface ProjectRowProps {
  * @param props.onToggle
  * @param props.selected
  * @param props.onSelect
+ * @param props.estimate
+ * @param props.now
  * @returns The row
  */
-function ProjectRow({ group, open, onToggle, selected, onSelect }: ProjectRowProps) {
+function ProjectRow({ group, open, onToggle, selected, onSelect, estimate, now }: ProjectRowProps) {
   const ended = group.counts.success + group.counts.failure + group.counts.skipped + group.counts.cancelled
   const span = group.startedAt !== null && group.endedAt !== null ? group.endedAt - group.startedAt : null
   return (
@@ -151,7 +164,7 @@ function ProjectRow({ group, open, onToggle, selected, onSelect }: ProjectRowPro
                 <ChainMark status={lane.chain.status} of={`${group.project} on ${ENVIRONMENT_LABEL[lane.environment]}`} size={12} />
               </span>
               <div className="overflow-x-auto">
-                <ChainGraph graph={lane.graph} selected={selected} onSelect={onSelect} />
+                <ChainGraph graph={lane.graph} selected={selected} onSelect={onSelect} estimate={estimate} now={now} />
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 {lane.chain.startedAt !== null && lane.chain.endedAt !== null
@@ -179,9 +192,12 @@ function ProjectRow({ group, open, onToggle, selected, onSelect }: ProjectRowPro
  * @param props.execution
  * @param props.selected
  * @param props.onSelect
+ * @param props.estimate
+ * @param props.now
+ * @param props.still
  * @returns The view
  */
-export function ProjectView({ execution, selected, onSelect }: ProjectViewProps) {
+export const ProjectView = memo(function ProjectView({ execution, selected, onSelect, estimate, now, still }: ProjectViewProps) {
   const groups = useMemo(() => groupProjects(execution), [execution])
   const [opened, setOpened] = useState<ReadonlySet<string>>(createSet())
   const [attentionOnly, setAttentionOnly] = useState(false)
@@ -219,9 +235,11 @@ export function ProjectView({ execution, selected, onSelect }: ProjectViewProps)
             onToggle={() => toggle(group.project)}
             selected={selected}
             onSelect={onSelect}
+            estimate={execution.source === 'live' ? estimate : null}
+            now={still ? estimate.asOf : now}
           />
         ))}
       </ul>
     </div>
   )
-}
+})

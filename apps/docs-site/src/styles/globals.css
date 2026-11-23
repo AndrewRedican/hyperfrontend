@@ -4602,9 +4602,44 @@
     animation: ci-placeholder-pulse 1.6s ease-in-out infinite;
   }
 
+  /* A running task's progress outline: drawn from twelve o'clock as far as its usual duration has passed, an estimate, never the whole way round. */
+  .ci-ring {
+    fill: none;
+    stroke: var(--ci-good);
+    stroke-width: 2;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    pointer-events: none;
+    /* A task that stops without succeeding lets its outline fade where it stands, and only then empties it. */
+    transition:
+      opacity 0.3s ease-out,
+      stroke-dashoffset 0s linear 0.3s;
+  }
+
+  .ci-ring[data-ring='running'] {
+    opacity: 1;
+    transition:
+      opacity 0.2s ease-out,
+      stroke-dashoffset 1s linear;
+  }
+
+  /* The run reported the task succeeded: the outline closes from wherever it stood, then goes, leaving the node as it draws an ended task. */
+  .ci-ring[data-ring='done'] {
+    stroke-dashoffset: 0;
+    transition:
+      stroke-dashoffset 0.4s ease-out,
+      opacity 0.3s ease-in 0.4s;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .ci-pulse {
       animation: none;
+    }
+
+    .ci-ring,
+    .ci-ring[data-ring] {
+      transition: none;
     }
   }
 }
