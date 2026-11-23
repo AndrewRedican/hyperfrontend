@@ -189,6 +189,7 @@ export function PipelineExplorer() {
                   selected={selectedTask}
                   onSelect={setSelectedTask}
                   estimate={estimate}
+                  history={past.state}
                   now={clock}
                   still={still}
                 />

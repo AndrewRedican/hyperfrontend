@@ -4,6 +4,7 @@ import type { RunEstimate } from '@/lib/ci/estimate'
 import type { Execution, StateCounts, TaskState } from '@/lib/ci/execution'
 import type { ProjectGroup } from '@/lib/ci/projects'
 import type { TaskRef } from './task-detail'
+import type { HistoryState } from './use-history'
 import { formatDuration } from '@/lib/ci/pipeline-view'
 import { groupProjects } from '@/lib/ci/projects'
 import { CHAIN_STATUS_LABEL, ENVIRONMENT_LABEL, STATE_COLOUR, STATE_LABEL } from '@/lib/ci/vocabulary'
@@ -12,6 +13,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { InlineIcon } from '../node-icon'
 import { ChainGraph } from './chain-graph'
 import { ChainMark, ExternalLink, OsIcon } from './marks'
+import { RunProgress } from './run-progress'
 
 /** Props for {@link ProjectView}. */
 export interface ProjectViewProps {
@@ -23,6 +25,8 @@ export interface ProjectViewProps {
   onSelect: (ref: TaskRef) => void
   /** The run's estimate */
   estimate: RunEstimate
+  /** Where the history behind the estimate stands */
+  history: HistoryState
   /** The current time, held still for a run that has ended */
   now: number
   /** Whether the outlines of running tasks hold still between reads, for a reader who asked for less motion */
@@ -186,18 +190,20 @@ function ProjectRow({ group, open, onToggle, selected, onSelect, estimate, now }
 }
 
 /**
- * The run by project: each project once, with its state across every runner and its tasks
- * ended so far, opening into one small graph of its chain per runner.
+ * The run by project: its progress and, while it runs, its estimated end, then each project
+ * once, with its state across every runner and its tasks ended so far, opening into one small
+ * graph of its chain per runner.
  * @param props - See {@link ProjectViewProps}.
  * @param props.execution
  * @param props.selected
  * @param props.onSelect
  * @param props.estimate
+ * @param props.history
  * @param props.now
  * @param props.still
  * @returns The view
  */
-export const ProjectView = memo(function ProjectView({ execution, selected, onSelect, estimate, now, still }: ProjectViewProps) {
+export const ProjectView = memo(function ProjectView({ execution, selected, onSelect, estimate, history, now, still }: ProjectViewProps) {
   const groups = useMemo(() => groupProjects(execution), [execution])
   const [opened, setOpened] = useState<ReadonlySet<string>>(createSet())
   const [attentionOnly, setAttentionOnly] = useState(false)
@@ -211,7 +217,8 @@ export const ProjectView = memo(function ProjectView({ execution, selected, onSe
     })
   return (
     <div className="ci-explorer mt-3">
-      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <RunProgress execution={execution} estimate={estimate} history={history} now={now} />
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
         <span>{groups.length} projects · in the order the scheduler serves them</span>
         <label className="inline-flex items-center gap-1.5">
           <input type="checkbox" checked={attentionOnly} onChange={(event) => setAttentionOnly(event.target.checked)} />
