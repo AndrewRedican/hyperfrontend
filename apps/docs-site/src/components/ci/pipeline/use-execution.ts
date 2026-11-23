@@ -15,8 +15,8 @@ import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/pro
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { describeFailure, pendingOf } from '../placeholder'
 
-/** How old a completed run's check runs may be: they never change, so a copy lasts the visit. */
-const COMPLETED_MAX_AGE_MS = 86_400_000
+/** How old a completed run's check runs or its record may be: they never change, so a copy lasts the visit. */
+export const COMPLETED_MAX_AGE_MS = 86_400_000
 
 /** How old a listing of the followed run may be before a poll reads it again: always, the pace decides. */
 const FOLLOWED_MAX_AGE_MS = 0
@@ -40,7 +40,7 @@ export interface FollowedExecution {
  * @param id - The run id
  * @returns The address on the records branch
  */
-function recordUrl(id: number): string {
+export function recordUrl(id: number): string {
   return `${RECORDS_URL}/runs/${id}.json`
 }
 
