@@ -1,15 +1,26 @@
 'use client'
 
 import type { Execution, ExecutionTask } from '@/lib/ci/execution'
-import type { TimeWindow, TimelineBar, TimelineLane, TimelineRow } from '@/lib/ci/timeline'
+import type { PinchPoint, TimeWindow, TimelineBar, TimelineLane, TimelineRow } from '@/lib/ci/timeline'
 import type { Category } from '@/lib/ci/vocabulary'
 import type { TaskRef } from './task-detail'
 import type { CategoryCount } from './timeline-controls'
 import { presentProject } from '@/lib/ci/labels'
 import { formatClock, formatDuration, formatTick } from '@/lib/ci/pipeline-view'
-import { fitWindow, panWindow, tickStep, tickTimes, timeToX, timelineLanes, xToTime, zoomOf, zoomWindow } from '@/lib/ci/timeline'
+import {
+  fitWindow,
+  panWindow,
+  pinchWindow,
+  tickStep,
+  tickTimes,
+  timeToX,
+  timelineLanes,
+  xToTime,
+  zoomOf,
+  zoomWindow,
+} from '@/lib/ci/timeline'
 import { CATEGORIES, ENVIRONMENT_LABEL, STATE_COLOUR, STATE_LABEL, categoryOf } from '@/lib/ci/vocabulary'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { abs, exp, hypot, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseFloat } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
@@ -76,7 +87,7 @@ interface Pressed {
   lane: string | null
 }
 
-/** A press that may become a drag. */
+/** A press that may become a drag: a mouse or a pen drags the window along, a finger drags the moment. */
 interface Drag {
   /** Where the press started, relative to the plot */
   x: number
@@ -86,14 +97,28 @@ interface Drag {
   window: TimeWindow
   /** What the press landed on */
   pressed: Pressed
+  /** Whether a finger made it */
+  touch: boolean
+  /** The moment pinned when the press started, put back when the browser takes the gesture for a scroll */
+  pinned: number | null
 }
 
 /** Two fingers on the plot. */
 interface Pinch {
-  /** The distance between them when they landed */
-  distance: number
+  /** The fingers when they landed */
+  from: PinchPoint
   /** The window when they landed */
   window: TimeWindow
+}
+
+/**
+ * How far apart two pointers are and where their middle is.
+ * @param pointers - The pointers on the plot, two of them
+ * @returns The distance and the middle
+ */
+function pinchPoint(pointers: ReadonlyMap<number, Pointer>): PinchPoint {
+  const [first, second] = [...pointers.values()] as [Pointer, Pointer]
+  return { distance: max(1, hypot(first.x - second.x, first.y - second.y)), middle: (first.x + second.x) / 2 }
 }
 
 /** One row as it is placed. */
@@ -176,14 +201,15 @@ function laneSummary(lane: TimelineLane, execution: Execution): string {
  * The run as a timeline on one clock: a lane per runner, each folded into its slots in use or
  * opened into one row per chain, every task that ran drawn where it ran, zoomable, pannable,
  * with a cursor naming what every runner was doing at a moment and the categories of target
- * lit up on demand.
+ * lit up on demand. A finger scrolls the page up and down as anywhere else, drags the moment
+ * sideways and taps to pin it; two fingers zoom and move the window.
  * @param props - See {@link TimelineViewProps}.
  * @param props.execution
  * @param props.selected
  * @param props.onSelect
  * @returns The view
  */
-export function TimelineView({ execution, selected, onSelect }: TimelineViewProps) {
+export const TimelineView = memo(function TimelineView({ execution, selected, onSelect }: TimelineViewProps) {
   const wrapper = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
   const [window, setWindow] = useState<TimeWindow | null>(null)
@@ -263,6 +289,17 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
     return () => element.removeEventListener('wheel', onWheel)
   }, [labelW, plotW, view.end, view.start, zoomAt, panBy])
 
+  useEffect(() => {
+    const element = wrapper.current
+    if (element === null) return
+    // why: one finger moving up or down is left to the browser, which scrolls the page; two fingers are the chart's, so the page must neither scroll nor zoom under them
+    const onTouchMove = (event: TouchEvent): void => {
+      if (event.touches.length > 1 && event.cancelable) event.preventDefault()
+    }
+    element.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => element.removeEventListener('touchmove', onTouchMove)
+  }, [])
+
   const toggleLane = (environment: string) =>
     setExpanded((current) => {
       const next = createSet(current)
@@ -280,8 +317,9 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
     // why: the chart captures the pointer so a drag keeps panning outside it, which sends the click to the chart; what was pressed is read here instead
     event.currentTarget.setPointerCapture(event.pointerId)
     if (pointers.current.size === 2) {
-      const [first, second] = [...pointers.current.values()] as [Pointer, Pointer]
-      pinch.current = { distance: max(1, hypot(first.x - second.x, first.y - second.y)), window: view }
+      // why: a second finger turns a drag of the moment into a pinch, so the moment goes back to where the drag found it
+      if (drag.current?.touch === true && drag.current.moved) setPinned(drag.current.pinned)
+      pinch.current = { from: pinchPoint(pointers.current), window: view }
       drag.current = null
       return
     }
@@ -300,24 +338,25 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
             : null,
         lane: laneHeader?.getAttribute('data-lane') ?? null,
       },
+      touch: event.pointerType === 'touch',
+      pinned,
     }
   }
   const onPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     const point = plotPoint(event)
     if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, point)
     if (pinch.current !== null && pointers.current.size === 2) {
-      const [first, second] = [...pointers.current.values()] as [Pointer, Pointer]
-      const distance = max(1, hypot(first.x - second.x, first.y - second.y))
-      const middle = (first.x + second.x) / 2
-      setWindow(zoomWindow(pinch.current.window, clock, distance / pinch.current.distance, min(1, max(0, middle / plotW))))
+      setWindow(pinchWindow(pinch.current.window, clock, pinch.current.from, pinchPoint(pointers.current), plotW))
       return
     }
     if (drag.current !== null) {
       const dx = point.x - drag.current.x
       if (!drag.current.moved && abs(dx) < DRAG_THRESHOLD) return
       drag.current.moved = true
-      setWindow(panWindow(drag.current.window, clock, (-dx / plotW) * (drag.current.window.end - drag.current.window.start)))
       setHoveredBar(null)
+      // why: a finger has no hover, so dragging it sideways moves the moment the way a mouse's cursor does; two fingers move the window
+      if (drag.current.touch) setPinned(timeAt(point.x))
+      else setWindow(panWindow(drag.current.window, clock, (-dx / plotW) * (drag.current.window.end - drag.current.window.start)))
       return
     }
     if (event.pointerType === 'mouse' && point.x >= 0 && point.x <= plotW) setHover(timeAt(point.x))
@@ -342,6 +381,13 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
     // why: a tap or click on the plot pins the moment, a second one at the same place lets it go
     const time = timeAt(point.x)
     setPinned((current) => (current !== null && abs(x(current) - x(time)) < DRAG_THRESHOLD ? null : time))
+  }
+  const onPointerCancel = (event: React.PointerEvent<SVGSVGElement>) => {
+    pointers.current.delete(event.pointerId)
+    if (pointers.current.size < 2) pinch.current = null
+    // why: the browser cancels a touch it takes for a scroll, which is neither a tap nor a finished drag, so nothing is selected and the moment goes back
+    if (drag.current?.touch === true && drag.current.moved) setPinned(drag.current.pinned)
+    drag.current = null
   }
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const span = view.end - view.start
@@ -405,7 +451,7 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
           role="group"
           aria-label={`Timeline of run #${execution.run.number}: ${lanes.length} runners, ${tasks.length} tasks. Plus and minus zoom, the arrows pan, zero fits, Escape clears.`}
           onKeyDown={onKeyDown}
-          className="relative touch-none select-none overflow-hidden rounded-lg border border-slate-200 bg-white outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-slate-700 dark:bg-slate-900"
+          className="relative touch-pan-y select-none overflow-hidden rounded-lg border border-slate-200 bg-white outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-slate-700 dark:bg-slate-900"
         >
           <svg
             width={width}
@@ -414,7 +460,7 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
+            onPointerCancel={onPointerCancel}
             onPointerLeave={() => {
               setHover(null)
               setHoveredBar(null)
@@ -551,6 +597,8 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
                           data-task={bar.task.id}
                           data-environment={bar.task.environment}
                           onPointerEnter={(event) => {
+                            // why: a finger has no hover, and a tooltip under it would only flash while it taps
+                            if (event.pointerType === 'touch') return
                             const rect = (event.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect()
                             setHoveredBar({ bar, x: event.clientX - rect.left, y: y + h })
                           }}
@@ -645,14 +693,17 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
             className="w-full"
           />
         </label>
-        <span className="hidden sm:inline">
+        {/* why: what a gesture does depends on the pointer and not on the width, so a wide touch screen reads the touch hint */}
+        <span className="pointer-coarse:hidden">
           Ctrl + scroll or pinch to zoom · drag to pan · click to pin a moment · click a task to open it
         </span>
-        <span className="sm:hidden">Pinch to zoom · drag to pan · tap to pin a moment</span>
+        <span className="hidden pointer-coarse:inline">
+          Swipe up or down to scroll · drag sideways to move the moment · tap a task to open it · two fingers zoom and pan
+        </span>
       </div>
     </div>
   )
-}
+})
 
 /** Props for {@link OsGlyph}. */
 interface OsGlyphProps {

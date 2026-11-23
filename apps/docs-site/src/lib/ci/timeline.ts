@@ -166,6 +166,30 @@ export function panWindow(window: TimeWindow, clock: ExecutionClock, deltaMs: nu
   return clampWindow({ start: window.start + deltaMs, end: window.end + deltaMs }, clock)
 }
 
+/** Two fingers on a plot. */
+export interface PinchPoint {
+  /** How far apart they are, in pixels */
+  distance: number
+  /** Where their middle is, in pixels from the plot's left edge */
+  middle: number
+}
+
+/**
+ * A window after two fingers moved: zoomed by how much they spread, around the time that was
+ * under their middle, and moved so that time stays under it as the middle travels.
+ *
+ * @param window - The window when the fingers landed
+ * @param clock - The clock it must stay inside
+ * @param from - The fingers when they landed
+ * @param to - The fingers now
+ * @param width - The plot's width, in pixels
+ * @returns The window, inside the clock and no narrower than {@link MIN_WINDOW_MS}
+ */
+export function pinchWindow(window: TimeWindow, clock: ExecutionClock, from: PinchPoint, to: PinchPoint, width: number): TimeWindow {
+  const zoomed = zoomWindow(window, clock, to.distance / max(1, from.distance), min(1, max(0, from.middle / max(1, width))))
+  return panWindow(zoomed, clock, ((from.middle - to.middle) / max(1, width)) * (zoomed.end - zoomed.start))
+}
+
 /**
  * How far a window is zoomed.
  *

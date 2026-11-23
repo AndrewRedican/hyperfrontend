@@ -63,6 +63,16 @@ export function formatClock(epochMs: number): string {
 }
 
 /**
+ * A time of day to the minute, for a time that is only estimated.
+ *
+ * @param epochMs - The time
+ * @returns The time in the reader's locale, without seconds
+ */
+export function formatClockShort(epochMs: number): string {
+  return new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(epochMs)
+}
+
+/**
  * How long ago, or how far ahead, a time is.
  *
  * @param epochMs - The time
@@ -91,4 +101,31 @@ export function formatCountdown(epochMs: number, now: number): string {
   if (seconds <= 0) return '0:00'
   const minutes = trunc(seconds / 60)
   return `${minutes}:${`${seconds - minutes * 60}`.padStart(2, '0')}`
+}
+
+/**
+ * A duration no finer than an estimate deserves.
+ *
+ * @param ms - Milliseconds
+ * @returns `a few seconds`, `35s`, `7m` or `1h 25m`: to five seconds under a minute, to the minute under an hour, to five minutes beyond
+ */
+export function formatRough(ms: number): string {
+  const seconds = ms / 1000
+  if (seconds < 10) return 'a few seconds'
+  if (seconds < 57.5) return `${round(seconds / 5) * 5}s`
+  const minutes = round(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  const fives = round(minutes / 5) * 5
+  return fives % 60 === 0 ? `${fives / 60}h` : `${trunc(fives / 60)}h ${fives % 60}m`
+}
+
+/**
+ * A range of durations no finer than an estimate deserves.
+ *
+ * @param low - The low end, in milliseconds
+ * @param high - The high end
+ * @returns `4m to 9m`, or one value when both ends read the same
+ */
+export function formatRoughRange(low: number, high: number): string {
+  return formatRough(low) === formatRough(high) ? formatRough(high) : `${formatRough(low)} to ${formatRough(high)}`
 }

@@ -1,9 +1,12 @@
 'use client'
 
+import type { RunEstimate } from '@/lib/ci/estimate'
 import type { Execution, ExecutionChain, ExecutionTask } from '@/lib/ci/execution'
+import type { HistoryState } from './use-history'
 import { formatClock, formatDuration } from '@/lib/ci/pipeline-view'
 import { CATEGORY_LABEL, ENVIRONMENT_LABEL, STATE_LABEL, categoryOf } from '@/lib/ci/vocabulary'
 import { ExternalLink, OsIcon, StateMark, TargetIcon } from './marks'
+import { TaskEstimateRows } from './task-estimate'
 
 /** A task named by its id and environment, which together are unique in a run. */
 export interface TaskRef {
@@ -45,18 +48,28 @@ export interface TaskDetailProps {
   selected: TaskRef | null
   /** Selects a task, or none */
   onSelect: (ref: TaskRef | null) => void
+  /** The run's estimate */
+  estimate: RunEstimate
+  /** Where the history behind the estimate stands */
+  history: HistoryState
+  /** The current time */
+  now: number
 }
 
 /**
- * Everything known about the selected task: what it is, where it stands, when it ran, what it
- * needed first, why it was in the plan, and where its check run is.
+ * Everything known about the selected task: what it is, where it stands, when it ran, how long
+ * it usually takes and, while it has not ended, when it is expected to, what it needed first,
+ * why it was in the plan, and where its check run is.
  * @param props - See {@link TaskDetailProps}.
  * @param props.execution
  * @param props.selected
  * @param props.onSelect
+ * @param props.estimate
+ * @param props.history
+ * @param props.now
  * @returns The panel, or a hint when nothing is selected
  */
-export function TaskDetail({ execution, selected, onSelect }: TaskDetailProps) {
+export function TaskDetail({ execution, selected, onSelect, estimate, history, now }: TaskDetailProps) {
   const found = findTask(execution, selected)
   if (found === null) {
     return (
@@ -108,6 +121,7 @@ export function TaskDetail({ execution, selected, onSelect }: TaskDetailProps) {
             </dd>
           </>
         ) : null}
+        <TaskEstimateRows task={task} execution={execution} estimate={estimate} history={history} now={now} />
         <dt className="text-slate-500 dark:text-slate-400">Slot</dt>
         <dd>{task.weight === 'heavy' ? 'heavy: one of the two build slots' : 'light: one of the CPU-count slots'}</dd>
         <dt className="text-slate-500 dark:text-slate-400">After</dt>

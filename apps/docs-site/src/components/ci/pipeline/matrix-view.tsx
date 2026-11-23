@@ -7,7 +7,7 @@ import { countStates } from '@/lib/ci/execution'
 import { formatDuration } from '@/lib/ci/pipeline-view'
 import { timelineLanes } from '@/lib/ci/timeline'
 import { CATEGORIES, CATEGORY_LABEL, ENVIRONMENT_LABEL, STATE_GLYPH, STATE_LABEL, categoryOf } from '@/lib/ci/vocabulary'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { OsIcon, StateMark, TargetIcon, stateOfRun } from './marks'
 
@@ -123,7 +123,7 @@ function LaneCard({ lane, chains, tasks, peak, start }: LaneCardProps) {
  * @param props.execution
  * @returns The view
  */
-export function MatrixView({ execution }: MatrixViewProps) {
+export const MatrixView = memo(function MatrixView({ execution }: MatrixViewProps) {
   const tasks = useMemo(() => execution.chains.flatMap((chain) => [...chain.tasks]), [execution])
   const lanes = useMemo(() => timelineLanes(execution), [execution])
   const environments = execution.lanes.map((lane) => lane.environment)
@@ -248,4 +248,4 @@ export function MatrixView({ execution }: MatrixViewProps) {
       </div>
     </div>
   )
-}
+})

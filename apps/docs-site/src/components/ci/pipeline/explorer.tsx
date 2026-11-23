@@ -3,8 +3,9 @@
 import type { Execution } from '@/lib/ci/execution'
 import type { BrowserQuery } from '@/lib/ci/run-browser'
 import type { TaskRef } from './task-detail'
+import { estimateRun } from '@/lib/ci/estimate'
 import { DEFAULT_QUERY, newestRun } from '@/lib/ci/run-browser'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -17,6 +18,8 @@ import { RunHeader } from './run-header'
 import { TaskDetail } from './task-detail'
 import { TimelineView } from './timeline-view'
 import { useExecution } from './use-execution'
+import { useHistory } from './use-history'
+import { useReducedMotion } from './use-reduced-motion'
 import { useRunList } from './use-run-list'
 import { useVisible } from './use-visible'
 
@@ -58,6 +61,7 @@ function runFromHash(): number | null {
  * The pipeline explorer: every run the records branch and GitHub know in one browser, the
  * selected one, the newest by default, read from its record or followed through its check runs
  * and drawn as a timeline, by project, or as the matrix that spread its work over the runners.
+ * A run under way is estimated from the recorded runs before it, anew at each read.
  * @returns The explorer
  */
 export function PipelineExplorer() {
@@ -103,6 +107,13 @@ export function PipelineExplorer() {
     window.history.replaceState(null, '', `${HASH_PREFIX}${id}`)
   }
   const execution = followed.execution
+  const running = execution !== null && execution.status !== 'completed'
+  // why: the records behind an estimate are read only when one is on show: for a run under way, or for the usual duration of a task someone selected
+  const past = useHistory(list.runs, summary, running || (execution !== null && selectedTask !== null))
+  const estimate = useMemo(() => (execution === null ? null : estimateRun(execution, past.history)), [execution, past.history])
+  const still = useReducedMotion()
+  // why: nothing about a run that has ended moves with the clock, so its views are spared the tick
+  const clock = running ? now : (execution?.readAt ?? now)
   const missing = chosen !== null && list.runs.length > 0 && summary === null && list.listPending === null && list.indexPending === null
   return (
     <div className="ci-explorer">
@@ -164,7 +175,7 @@ export function PipelineExplorer() {
                   </button>
                 ))}
               </div>
-              {execution.chains.length === 0 ? (
+              {execution.chains.length === 0 || estimate === null ? (
                 <Placeholder
                   state={execution.status === 'completed' ? 'empty' : 'loading'}
                   motif="pipeline"
@@ -173,11 +184,28 @@ export function PipelineExplorer() {
               ) : view === 'timeline' ? (
                 <TimelineView execution={execution} selected={selectedTask} onSelect={setSelectedTask} />
               ) : view === 'projects' ? (
-                <ProjectView execution={execution} selected={selectedTask} onSelect={setSelectedTask} />
+                <ProjectView
+                  execution={execution}
+                  selected={selectedTask}
+                  onSelect={setSelectedTask}
+                  estimate={estimate}
+                  history={past.state}
+                  now={clock}
+                  still={still}
+                />
               ) : (
                 <MatrixView execution={execution} />
               )}
-              {view === 'matrix' ? null : <TaskDetail execution={execution} selected={selectedTask} onSelect={setSelectedTask} />}
+              {view === 'matrix' || estimate === null ? null : (
+                <TaskDetail
+                  execution={execution}
+                  selected={selectedTask}
+                  onSelect={setSelectedTask}
+                  estimate={estimate}
+                  history={past.state}
+                  now={clock}
+                />
+              )}
             </>
           )}
           <RefreshStatus

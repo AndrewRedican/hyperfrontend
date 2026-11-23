@@ -1,9 +1,11 @@
 'use client'
 
+import type { RunEstimate, TaskEstimate } from '@/lib/ci/estimate'
 import type { ExecutionTask } from '@/lib/ci/execution'
 import type { TaskGraph } from '@/lib/ci/projects'
 import type { TaskRef } from './task-detail'
-import { formatDuration } from '@/lib/ci/pipeline-view'
+import { ringFraction, taskKey } from '@/lib/ci/estimate'
+import { formatDuration, formatRough } from '@/lib/ci/pipeline-view'
 import { STATE_COLOUR, STATE_LABEL, categoryOf } from '@/lib/ci/vocabulary'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
@@ -17,6 +19,10 @@ export interface ChainGraphProps {
   selected: TaskRef | null
   /** Selects a task */
   onSelect: (ref: TaskRef) => void
+  /** The run's estimate, or null for a recorded run, where nothing is under way to outline */
+  estimate: RunEstimate | null
+  /** The time the outlines are drawn for */
+  now: number
 }
 
 /** The distance between two columns. */
@@ -28,6 +34,9 @@ const ROW_H = 30
 /** The radius of a node. */
 const RADIUS = 10
 
+/** The radius of the progress outline's centre line: a two-pixel stroke just clear of the node's own. */
+const RING_RADIUS = RADIUS + 2.5
+
 /** The left margin, with room for the stub of an external need. */
 const LEFT = 18
 
@@ -38,11 +47,15 @@ const FILLED: readonly ExecutionTask['state'][] = ['success', 'failure', 'ready'
  * One line about a task of the graph.
  * @param task - The task
  * @param external - The needs on other chains
+ * @param estimate - What is estimated of it, or null
+ * @param now - The current time
  * @returns The text
  */
-function describe(task: ExecutionTask, external: readonly string[]): string {
+function describe(task: ExecutionTask, external: readonly string[], estimate: TaskEstimate | null, now: number): string {
   const parts = [`${task.id}: ${STATE_LABEL[task.state]}`]
   if (task.durationMs !== null) parts.push(formatDuration(task.durationMs))
+  if (estimate?.phase === 'running' && estimate.end !== null)
+    parts.push(estimate.end.mid > now ? `ETA about ${formatRough(estimate.end.mid - now)}, estimated` : 'past its usual duration')
   if (task.needs.length > 0) parts.push(`after ${task.needs.join(', ')}`)
   if (external.length > 0) parts.push(`(${external.length} on other chains)`)
   if (task.detail !== null) parts.push(task.detail)
@@ -52,13 +65,17 @@ function describe(task: ExecutionTask, external: readonly string[]): string {
 /**
  * A chain as a small graph: one node per task, left to right along its needs, each a ring
  * carrying its target's icon and its state, with a stub on the left for a need on another chain.
+ * A task under way in a run being followed gains an outline that goes round from twelve o'clock
+ * as its usual duration passes, closes when the run reports it succeeded, and then goes.
  * @param props - See {@link ChainGraphProps}.
  * @param props.graph
  * @param props.selected
  * @param props.onSelect
+ * @param props.estimate
+ * @param props.now
  * @returns The drawing
  */
-export function ChainGraph({ graph, selected, onSelect }: ChainGraphProps) {
+export function ChainGraph({ graph, selected, onSelect, estimate, now }: ChainGraphProps) {
   const width = LEFT + max(1, graph.columns) * COLUMN_W
   const height = max(1, graph.rows) * ROW_H
   const centre = (column: number, row: number) => ({ cx: LEFT + column * COLUMN_W + RADIUS + 4, cy: row * ROW_H + ROW_H / 2 })
@@ -88,12 +105,14 @@ export function ChainGraph({ graph, selected, onSelect }: ChainGraphProps) {
         const colour = STATE_COLOUR[task.state]
         const filled = FILLED.includes(task.state)
         const isSelected = selected?.id === task.id && selected.environment === task.environment
+        const estimated = estimate?.tasks.get(taskKey(task.environment, task.id)) ?? null
+        const fraction = ringFraction(estimated, now)
         return (
           <g
             key={task.id}
             role="listitem"
             tabIndex={0}
-            aria-label={describe(task, node.externalNeeds)}
+            aria-label={describe(task, node.externalNeeds, estimated, now)}
             onClick={() => onSelect({ id: task.id, environment: task.environment })}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
@@ -101,9 +120,9 @@ export function ChainGraph({ graph, selected, onSelect }: ChainGraphProps) {
                 onSelect({ id: task.id, environment: task.environment })
               }
             }}
-            className={`cursor-pointer outline-none focus-visible:[&>circle]:stroke-[var(--ci-ink)] ${task.state === 'ready' ? 'ci-pulse' : ''}`}
+            className={`cursor-pointer outline-none focus-visible:[&>circle:not(.ci-ring)]:stroke-[var(--ci-ink)] ${task.state === 'ready' && fraction === null ? 'ci-pulse' : ''}`}
           >
-            <title>{describe(task, node.externalNeeds)}</title>
+            <title>{describe(task, node.externalNeeds, estimated, now)}</title>
             {node.externalNeeds.length === 0 ? null : (
               <line
                 x1={cx - RADIUS - 12}
@@ -124,6 +143,18 @@ export function ChainGraph({ graph, selected, onSelect }: ChainGraphProps) {
               strokeWidth={isSelected ? 2.5 : 1.5}
               strokeDasharray={task.state === 'queued' ? '1.5 2' : task.state === 'blocked' ? '3 2' : undefined}
             />
+            {estimate === null ? null : (
+              <circle
+                className="ci-ring"
+                data-ring={fraction !== null ? 'running' : task.state === 'success' ? 'done' : 'idle'}
+                cx={cx}
+                cy={cy}
+                r={RING_RADIUS}
+                pathLength={100}
+                transform={`rotate(-90 ${cx} ${cy})`}
+                style={fraction === null ? undefined : { strokeDashoffset: 100 - fraction * 100 }}
+              />
+            )}
             <g transform={`translate(${cx - 6} ${cy - 6}) scale(0.5)`}>
               <path
                 d={categoryPath(categoryOf(task.target))}
