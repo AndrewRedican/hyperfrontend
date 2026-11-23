@@ -230,10 +230,11 @@ export function chainTable(chain: Chain, results: readonly TaskResult[]): string
  *
  * @param results - The run
  * @param plan - The plan the run executed
- * @returns The lines, fenced
+ * @returns The lines, fenced, or none when no task ran
  */
 export function timelineLines(results: RunResults, plan: Plan): string[] {
-  const lines = ['```mermaid', 'gantt', `  title ${results.environment}`, '  dateFormat x', '  axisFormat %H:%M:%S']
+  const header = ['```mermaid', 'gantt', `  title ${results.environment}`, '  dateFormat x', '  axisFormat %H:%M:%S']
+  const lines: string[] = []
   for (const chain of plan.chains) {
     if (chain.environment !== results.environment) continue
     const ran = results.tasks.filter((task) => task.project === chain.project && task.startedAt !== null)
@@ -242,7 +243,8 @@ export function timelineLines(results: RunResults, plan: Plan): string[] {
     for (const task of ran)
       lines.push(`  ${task.target} (${formatDuration(task.durationMs)}) :${TAGS[task.outcome]}, ${task.startedAt}, ${task.endedAt}`)
   }
-  return [...lines, '```']
+  // why: a diagram with no bar says nothing, and a run cancelled before its first task starts none
+  return lines.length === 0 ? [] : [...header, ...lines, '```']
 }
 
 /**
