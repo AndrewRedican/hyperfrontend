@@ -108,8 +108,8 @@ export function PipelineExplorer() {
   }
   const execution = followed.execution
   const running = execution !== null && execution.status !== 'completed'
-  // why: the records behind an estimate are read only when one is on show, which is while a run is under way
-  const past = useHistory(list.runs, summary, running)
+  // why: the records behind an estimate are read only when one is on show: for a run under way, or for the usual duration of a task someone selected
+  const past = useHistory(list.runs, summary, running || (execution !== null && selectedTask !== null))
   const estimate = useMemo(() => (execution === null ? null : estimateRun(execution, past.history)), [execution, past.history])
   const still = useReducedMotion()
   // why: nothing about a run that has ended moves with the clock, so its views are spared the tick
@@ -196,7 +196,16 @@ export function PipelineExplorer() {
               ) : (
                 <MatrixView execution={execution} />
               )}
-              {view === 'matrix' ? null : <TaskDetail execution={execution} selected={selectedTask} onSelect={setSelectedTask} />}
+              {view === 'matrix' || estimate === null ? null : (
+                <TaskDetail
+                  execution={execution}
+                  selected={selectedTask}
+                  onSelect={setSelectedTask}
+                  estimate={estimate}
+                  history={past.state}
+                  now={clock}
+                />
+              )}
             </>
           )}
           <RefreshStatus
