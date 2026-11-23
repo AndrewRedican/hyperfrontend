@@ -231,6 +231,8 @@ describe('a change to the environment jobs', () => {
   const withHf = createPipelineWorkspace({
     ...PIPELINE_WORKSPACE,
     'libs/workspace/project.json': '{ "name": "lib-workspace", "targets": { "typecheck": {} } }\n',
+    'libs/workspace/src/bin/hf.ts': 'export {}\n',
+    'libs/workspace/bin/package.json': '{ "name": "@fixture/hf-link", "private": true }\n',
     'libs/workspace/bin/hf.mjs': '',
   })
   const rootless = createPipelineWorkspace({

@@ -32,6 +32,9 @@ export const ALIAS_HOOK = './libs/workspace/src/hooks/index.ts'
 /** The workspace's own command line, workspace-relative. */
 export const HF_ENTRY = 'libs/workspace/bin/hf.mjs'
 
+/** The source that command line starts, workspace-relative: a file of the project that implements hf, where the launcher beside it is a project of its own. */
+export const HF_SOURCE = 'libs/workspace/src/bin/hf.ts'
+
 /** The floor probe, workspace-relative. */
 export const PROBE_SCRIPT = 'tools/pipeline/scripts/probe-node-floor.mjs'
 
