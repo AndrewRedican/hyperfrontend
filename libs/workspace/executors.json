@@ -15,6 +15,11 @@
       "schema": "./executors/publish/schema.json",
       "description": "Publish a library's build output to the npm registry, skipping a version already there."
     },
+    "service": {
+      "implementation": "./executors/service/index",
+      "schema": "./executors/service/schema.json",
+      "description": "Build a service into one CommonJS main with its manifests and assets."
+    },
     "test": {
       "implementation": "./executors/test/index",
       "schema": "./executors/test/schema.json",

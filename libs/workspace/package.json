@@ -64,6 +64,7 @@
     "./executors/build": "./src/executors/build/index.js",
     "./executors/e2e": "./src/executors/e2e/index.js",
     "./executors/publish": "./src/executors/publish/index.js",
+    "./executors/service": "./src/executors/service/index.js",
     "./executors/test": "./src/executors/test/index.js",
     "./executors/typecheck": "./src/executors/typecheck/index.js",
     "./executors/version": "./src/executors/version/index.js",
@@ -104,6 +105,7 @@
     "affected",
     "generators",
     "executors",
+    "services",
     "typescript",
     "nodejs"
   ],
