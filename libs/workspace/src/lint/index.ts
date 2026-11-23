@@ -23,6 +23,7 @@ export { checkedProject, isNodeProject } from './shared/checked-project'
 export { moduleDeclarations, moduleExports, parsedModule, resolveModule } from './shared/exports-index'
 export { projectRootOf, workspaceRootOf } from './shared/locate'
 export { isPublishableLibrary, isPublishableProject, readPackageFile, readProjectFile } from './shared/project-file'
+export { readResolvedTarget } from './shared/resolved-target'
 
 /**
  * The rules of the family by name, registered under the prefix `projects` in a configuration:

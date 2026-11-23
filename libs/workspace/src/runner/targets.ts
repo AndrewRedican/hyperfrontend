@@ -21,6 +21,9 @@ import { refusal } from './refusal'
 /** The options of a target. */
 export type Options = Record<string, unknown>
 
+/** What of a project the tokens of a target are replaced with: its name and its root, which a `project.json` and its directory give without the graph. */
+export type TokenProject = Pick<ProjectRecord, 'name' | 'root'>
+
 /** A target as `project.json` or `hf.json` writes it. */
 export interface Target extends TargetConfiguration<Options> {
   /** A configuration run by default, which the runner refuses. */
@@ -170,7 +173,7 @@ export function mergeTarget(own: Target, defaults: Target | undefined): Target {
  * @returns The value, tokens replaced
  * @throws {Error} When `{workspaceRoot}` appears anywhere but at the start
  */
-function replaceTokens(text: string, project: ProjectRecord, where: string): string {
+function replaceTokens(text: string, project: TokenProject, where: string): string {
   const relative = text.replace(/^\{workspaceRoot\}\/?/, '')
   if (relative.includes('{workspaceRoot}')) throw refusal(`${where} uses {workspaceRoot} after its start, where the token is not read`)
   return relative.replaceAll('{projectRoot}', project.root).replaceAll('{projectName}', project.name)
@@ -190,7 +193,7 @@ function replaceTokens(text: string, project: ProjectRecord, where: string): str
  * // => { outputPath: 'dist/libs/core', assets: ['libs/core/README.md'] }
  * ```
  */
-export function interpolate(value: unknown, project: ProjectRecord, where: string): unknown {
+export function interpolate(value: unknown, project: TokenProject, where: string): unknown {
   if (typeof value === 'string') return replaceTokens(value, project, where)
   if (isArray(value)) return value.map((item) => interpolate(item, project, where))
   if (typeof value !== 'object' || value === null) return value
@@ -215,12 +218,7 @@ export function interpolate(value: unknown, project: ProjectRecord, where: strin
  * // => { executor: '@hyperfrontend/workspace:build', inputs: ['production', '^production'], dependsOn: ['^build'], options: { outputPath: 'dist/libs/core', esm: {} } }
  * ```
  */
-export function resolveTarget(
-  configuration: WorkspaceConfiguration,
-  project: ProjectRecord,
-  name: string,
-  written: Target
-): ResolvedTarget {
+export function resolveTarget(configuration: WorkspaceConfiguration, project: TokenProject, name: string, written: Target): ResolvedTarget {
   const where = `${project.name}:${name}`
   const own = desugar(written, where)
   const merged = mergeTarget(own, defaultsFor(configuration, name, own.executor))
