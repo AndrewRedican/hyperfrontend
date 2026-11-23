@@ -218,7 +218,7 @@ describe('timelineLines', () => {
         { ...(PLAN.chains[1] as Chain), project: 'lib-z' },
       ],
     }
-    expect(timelineLines(RUN, other)).toEqual(['```mermaid', 'gantt', '  title linux', '  dateFormat x', '  axisFormat %H:%M:%S', '```'])
+    expect(timelineLines(RUN, other)).toEqual([])
   })
 })
 

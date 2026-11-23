@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/0ef83980279c5e4c2f7853543e9d363639ce7e5f...60672c613415304211bef6785da3e406cd23d079) - 2026-11-23
+
+### Bug Fixes
+
+- count a file renamed into an ignored path as deleted
+
 ## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/a92f716d9038eb02226ecae1e611c4f60df494d9...bf9080f73e8b9dcf9b13c90999ffe05eb16ad5fc) - 2026-11-22
 
 ### Features

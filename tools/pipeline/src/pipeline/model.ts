@@ -92,6 +92,48 @@ export const Outcome = freeze({
 /** One of the outcomes. */
 export type Outcome = (typeof Outcome)[keyof typeof Outcome]
 
+/** What the tasks of a plan or a run stood on. */
+export interface Tested {
+  /** The id of the tree the tasks ran on: the working tree as a git tree, untracked files included. */
+  readonly tree: string
+  /** The head commit of the pull request, or null when the run is not a pull request's. */
+  readonly head: string | null
+  /** The commit of the base branch the head was merged into, or null when the run is not a pull request's. */
+  readonly base: string | null
+  /** GitHub's merge of the head into the base, or null when the run is not a pull request's. */
+  readonly merge: string | null
+}
+
+/** The workflow run that wrote a results file. */
+export interface RunIdentity {
+  /** The run id. */
+  readonly id: number
+  /** Which attempt of the run. */
+  readonly attempt: number
+  /** The head commit the run was for. */
+  readonly sha: string
+  /** The run's page, or null when the environment does not say. */
+  readonly url: string | null
+}
+
+/** Where and when an inherited task really ran. */
+export interface Origin {
+  /** The id of the workflow run, or null for a run on this machine. */
+  readonly run: number | null
+  /** Which attempt of that run, or null for a run on this machine. */
+  readonly attempt: number | null
+  /** The head commit of that run, or null for a run on this machine. */
+  readonly sha: string | null
+  /** That run's page, or null when there is none. */
+  readonly url: string | null
+  /** The id of the tree the task ran on. */
+  readonly tree: string
+  /** The Node.js release the task ran on, as `process.version` names it. */
+  readonly node: string
+  /** When the task ended, epoch milliseconds. */
+  readonly endedAt: number
+}
+
 /** A task of a requested target the plan leaves out. */
 export interface SkippedTask {
   /** The task id. */
@@ -120,6 +162,8 @@ export interface PlanTask {
   readonly command: readonly string[]
   /** Environment entries set on top of the process environment. */
   readonly env: Readonly<Record<string, string>>
+  /** Where the task really ran, when it keeps the outcome of an earlier run in place of running. */
+  readonly inherited?: Origin
 }
 
 /** One project on one environment. */
@@ -157,6 +201,8 @@ export interface Plan {
   readonly skipped: readonly SkippedTask[]
   /** The environments with at least one chain. */
   readonly environments: readonly Environment[]
+  /** What the plan was made on; absent from a plan written before plans recorded it. */
+  readonly tested?: Tested
 }
 
 /** What one task's run ended as. */
@@ -187,6 +233,8 @@ export interface TaskResult {
   readonly log: string | null
   /** What a failed task printed that explains the failure, when it printed anything. */
   readonly excerpt?: string
+  /** Where the task really ran, when the outcome is an earlier run's and the task did not run here. */
+  readonly inherited?: Origin
 }
 
 /** The results of one environment's run. */
@@ -209,6 +257,14 @@ export interface RunResults {
   readonly complete: boolean
   /** Every task of the environment, in chain order; while the run is incomplete, the tasks that ended. */
   readonly tasks: readonly TaskResult[]
+  /** What the tasks ran on; absent from a file written before runs recorded it, which then offers no proof. */
+  readonly tested?: Tested
+  /** The workflow run that wrote the file, or null for a run on this machine. */
+  readonly run?: RunIdentity | null
+  /** The Node.js release the tasks ran on, as `process.version` names it. */
+  readonly node?: string
+  /** True when the run planned the working tree itself and ran it at once, as the hook does: only then is the tested tree surely the tree the tasks ran on outside a workflow. */
+  readonly local?: boolean
 }
 
 /**

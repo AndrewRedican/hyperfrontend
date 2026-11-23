@@ -247,8 +247,12 @@ npx hf hooks run pre-push --only=pipeline
 The pipeline is the one the pre-push hook and CI run, from the merge base with `origin/main` to your working tree. It can also be started and planned on its own:
 
 ```bash
-# Typecheck, lint, test, build and e2e of what your change reaches, in three stages, with a reason per task
+# Typecheck, lint, test, build and e2e of what your change reaches, in three stages, with a reason per task;
+# a task the last run here proved, and whose inputs have not changed since, is counted as inherited and not started
 node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --local
+
+# The same, running every task again whatever the last run proved
+node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts run --local --no-inherit
 
 # Only plan: which chains and tasks a change reaches, and why every other task is skipped
 node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --base origin/main
@@ -412,6 +416,7 @@ When you open a pull request:
 
 - **Fast Checks**: Only affected projects are validated (format, lint, build, test)
 - **Version Check**: Validates that the version bumps your commits call for were applied by `npx hf push`
+- **Inherited outcomes**: A later push runs only the tasks its change since the previous run reaches. The others keep that run's success and show as `inherited`. The label `pipeline-run-all` (from the next push) or "Re-run all jobs" (at once) proves everything the pull request reaches again
 - **Typical Duration**: < 10 minutes
 - **Status Check**: "status" must pass to merge
 
@@ -591,6 +596,8 @@ The Git hooks are the workspace's own. Their steps are in [`hooks.config.ts`](ht
 Each hook runs its steps in order, stops at the first that fails, and ends on a list of the steps with how each ended. `npx hf hooks run <hook>` runs a hook by hand; `--only` and `--skip` select steps by name.
 
 **The pipeline step is on for every clone.** It runs the same typecheck, lint, test, build and e2e tasks CI plans for your change, in three stages, so a pull request that would fail is known before it is raised. It covers your operating system only; the pull request still runs Linux, Windows and macOS.
+
+**A second push does not repeat the first.** The step remembers what its last run on your machine proved and on which files (`.hf/pipeline/results-<os>.json`). A task whose inputs have not changed since keeps that success: the run counts it on one line as inherited and starts only the tasks your newer changes reach, plus any task that did not succeed last time. Nothing is restored from a cache; an inherited task simply does not run. A success older than seven days, or one from another Node.js release, is not inherited. To run everything your branch reaches again, push with `HF_PIPELINE_INHERIT=0 git push`, or start the pipeline by hand with `--no-inherit`.
 
 A clone opts out of a step in an untracked `hooks.local.config.ts` beside the configuration:
 

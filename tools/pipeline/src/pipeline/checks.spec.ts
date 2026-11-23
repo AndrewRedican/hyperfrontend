@@ -164,7 +164,7 @@ describe('chainChecks', () => {
    * @param failing - Whether every call fails
    * @returns The API and the calls
    */
-  function recording(failing = false): { api: Omit<CheckApi, 'publish'>; calls: unknown[] } {
+  function recording(failing = false): { api: CheckApi; calls: unknown[] } {
     const calls: unknown[] = []
     return {
       calls,
@@ -180,6 +180,7 @@ describe('chainChecks', () => {
         complete: async (id, conclusion, output) => {
           calls.push(['complete', id, conclusion, output.title])
         },
+        publish: async () => undefined,
       },
     }
   }
@@ -267,11 +268,7 @@ describe('chainChecks', () => {
 
   it('describes a failure that is not an error, costing only its chain', async () => {
     const notices: string[] = []
-    const hooks = chainChecks(
-      { create: async () => Promise.reject('nope'), update: async () => undefined, complete: async () => undefined },
-      'abc',
-      (message) => notices.push(message)
-    )
+    const hooks = chainChecks({ ...recording().api, create: async () => Promise.reject('nope') }, 'abc', (message) => notices.push(message))
     await hooks.onStart(CHAIN)
     await hooks.onEnd(CHAIN, [result('success')])
     expect(notices).toEqual(['the check run of lib-a (linux) missed a request: nope'])
@@ -323,7 +320,7 @@ describe('chainChecks', () => {
   /** An API that answers each request only when the test lets it. */
   interface Holding {
     /** The API. */
-    readonly api: Omit<CheckApi, 'publish'>
+    readonly api: CheckApi
     /** What was sent, in order; check runs are numbered from 1 as they are created. */
     readonly sent: unknown[][]
     /** What was sent and answered, in order. */
@@ -363,6 +360,7 @@ describe('chainChecks', () => {
         },
         update: (id, output) => hold(['update', id, output.title], undefined),
         complete: (id, conclusion, output) => hold(['complete', id, conclusion, output.title], undefined),
+        publish: async () => undefined,
       },
     }
   }

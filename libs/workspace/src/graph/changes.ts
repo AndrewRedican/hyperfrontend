@@ -115,8 +115,25 @@ export function parseNameStatus(output: string): FileChange[] {
 }
 
 /**
+ * A change as the selection may see it, given which paths `.hfignore` leaves out. A rename with
+ * one side left out is not dropped whole: the side that counts stays, as the deletion of the old
+ * path or the addition of the new one, since a task that read the old path must still hear it is
+ * gone.
+ *
+ * @param change - One change git listed
+ * @param ignored - Whether a path is left out
+ * @returns The change, the half of a rename that counts, or nothing
+ */
+function visibleChange(change: FileChange, ignored: (path: string) => boolean): FileChange[] {
+  const { path, previousPath } = change
+  if (previousPath === null || ignored(previousPath) === ignored(path)) return ignored(path) ? [] : [change]
+  return ignored(path) ? [{ status: 'deleted', path: previousPath, previousPath: null }] : [{ status: 'added', path, previousPath: null }]
+}
+
+/**
  * The files that changed from the merge base of two revisions to the head, or to the working
- * tree when the head is null, less what `.hfignore` leaves out.
+ * tree when the head is null, less what `.hfignore` leaves out. A file renamed into what is left
+ * out counts as deleted, and one renamed out of it as added.
  *
  * @param root - The workspace root, absolute
  * @param base - The base revision
@@ -151,7 +168,7 @@ export function changeSet(root: string, base: string, head: string | null): Chan
     base: mergeBase,
     head,
     changes: [...changes.values()]
-      .filter((change) => !matchesAny(ignores, change.path))
+      .flatMap((change) => visibleChange(change, (path) => matchesAny(ignores, path)))
       .sort((left, right) => compareText(left.path, right.path)),
   }
 }

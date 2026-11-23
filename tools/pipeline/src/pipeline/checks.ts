@@ -9,7 +9,9 @@
  * are created and completed, so a run that is killed can still settle them. A check run whose
  * outcome is known the moment it exists, such as the plan, is created complete in one request, so
  * no cancel or lost answer between a create and its completion can leave it in progress; that
- * request is retried like an update, since a duplicate completed check run costs nothing.
+ * request is retried like an update, since a duplicate completed check run costs nothing. The
+ * check run of a chain every task of which keeps an earlier outcome is created the same way,
+ * those of all such chains one after another.
  *
  * @module pipeline/checks
  */
@@ -21,8 +23,9 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createPromise, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { inheritedFrom } from './inherit'
 import { chainState, clip } from './live'
 import { Outcome } from './model'
 import { chainTable, failureLines } from './report'
@@ -40,6 +43,9 @@ export interface CheckOutput {
 
 /** How many times an update or completion is sent before it is given up. */
 export const CHECK_ATTEMPTS = 3
+
+/** How long the queue of wholly inherited chains rests after each check run it creates: GitHub asks for a second between requests that create content. */
+export const INHERITED_GAP_MS = 1000
 
 /** A check-run request GitHub answered with a refusal, which no retry changes. */
 export class CheckRefusal extends Error {
@@ -102,6 +108,8 @@ export interface ChainChecks {
   onTask(chain: Chain, results: readonly TaskResult[]): Promise<void>
   /** Called when every task of a chain has a result. */
   onEnd(chain: Chain, results: readonly TaskResult[]): Promise<void>
+  /** Called once for a chain every task of which keeps an earlier outcome, with those results; no other hook is called for it. */
+  onInherited(chain: Chain, results: readonly TaskResult[]): Promise<void>
 }
 
 /** The requests of one chain's check run, sent one after another. */
@@ -234,24 +242,29 @@ export function chainOutput(chain: Chain, results: readonly TaskResult[], title:
  * them, starting with the create: a hook called before the create has answered waits for it,
  * in-progress updates waiting behind a request collapse into the latest state, and an update
  * still waiting when the completion is queued is dropped, so the completion is the chain's last
- * request. Every hook answers once its request (or the request it collapsed into) is done.
+ * request. Every hook answers once its request (or the request it collapsed into) is done. The
+ * check runs of wholly inherited chains share one queue of their own, one request in flight and a
+ * rest after each, since a plan can hold over a hundred of them and each is a single request.
  *
  * @param api - The check-run API
  * @param headSha - The commit the check runs are attached to
  * @param notice - Where the one notice goes when the API refuses
  * @param onRecords - Told the check runs by name whenever one is created or completed
  * @param runUrl - The workflow run's page, which the check run of a chain that did not succeed links to retry from
+ * @param wait - Waits between the check runs of wholly inherited chains
  * @returns The hooks; after a refusal they do nothing
  */
 export function chainChecks(
-  api: Omit<CheckApi, 'publish'>,
+  api: CheckApi,
   headSha: string,
   notice: (message: string) => void,
   onRecords: (records: CheckRecords) => void = () => undefined,
-  runUrl: string | null = null
+  runUrl: string | null = null,
+  wait: (ms: number) => Promise<void> = pause
 ): ChainChecks {
   const records = createMap<string, CheckRecord>()
   const queues = createMap<string, ChainQueue>()
+  let inheritedTail: Promise<void> = promiseResolve()
   let enabled = true
   const publish = (): void => onRecords(fromEntries(records))
   const report = (error: unknown, name: string): void => {
@@ -329,6 +342,22 @@ export function chainChecks(
         records.set(checkName(chain), { id, completed: true })
         publish()
       })
+    },
+    onInherited: (chain, results) => {
+      const origins = results.flatMap((result) => (result.inherited === undefined ? [] : [result.inherited]))
+      const title = `${results.length} tasks inherited from ${inheritedFrom(origins)}`
+      // why: created complete, the check run leaves nothing to record or settle; a refusal on one switches the rest off like any other
+      inheritedTail = inheritedTail.then(async () => {
+        if (!enabled) return
+        try {
+          await api.publish(checkName(chain), headSha, chainConclusion(results), chainOutput(chain, results, title, runUrl))
+        } catch (error) {
+          report(error, checkName(chain))
+        }
+        // why: a plan can hold over a hundred such chains on three environments at once, and a burst of creates is what the API refuses
+        await wait(INHERITED_GAP_MS)
+      })
+      return inheritedTail
     },
   }
 }

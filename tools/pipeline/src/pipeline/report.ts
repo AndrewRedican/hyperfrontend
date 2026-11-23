@@ -6,14 +6,22 @@
  * @module pipeline/report
  */
 
-import type { Chain, Outcome as OutcomeKind, Plan, PlanReason, PlanTask, RunResults, SkippedTask, TaskResult } from './model'
+import type { Chain, Origin, Outcome as OutcomeKind, Plan, PlanReason, PlanTask, RunResults, SkippedTask, TaskResult } from './model'
 import type { ScheduleResult } from './schedule'
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { failureExcerpt, formatDuration } from '@hyperfrontend/workspace/progress'
+import { inheritanceLine, originName } from './inherit'
 import { Outcome } from './model'
 
 /** The mark of each outcome in a table. */
 const MARKS: Readonly<Record<OutcomeKind, string>> = { success: '✅', failure: '❌', skipped: '⏭️', cancelled: '🚫' }
+
+/** What an inherited task is counted and shown as, apart from the tasks that ran. */
+const INHERITED = 'inherited'
+
+/** The mark of an inherited task in a table. */
+const INHERITED_MARK = '↩️'
 
 /** The Mermaid tag of each outcome; a skipped task never ran, so it never draws a bar. */
 const TAGS: Readonly<Record<OutcomeKind, string>> = { success: 'done', failure: 'crit', cancelled: 'active', skipped: 'done' }
@@ -32,6 +40,50 @@ export function taskResult(task: PlanTask, result: ScheduleResult, readLog: (pat
   const ended: TaskResult = { id, project, target, environment, reasons, outcome, exitCode, detail, startedAt, endedAt, durationMs, log }
   const excerpt = outcome === Outcome.Failure && log !== null ? failureExcerpt(readLog(log)) : null
   return excerpt === null ? ended : { ...ended, excerpt }
+}
+
+/**
+ * Why an inherited task did not run, as its result and the plan summary say it.
+ *
+ * @param origin - Where the task really ran
+ * @returns The run and its head commit, or for a run on this machine the tree and when the task ended
+ */
+function inheritedDetail(origin: Origin): string {
+  const where = origin.sha === null ? `that ended ${createDate(origin.endedAt).toISOString()}` : `(${origin.sha.slice(0, 7)})`
+  return `${INHERITED} from ${originName(origin)} ${where}: nothing it reads changed since`
+}
+
+/**
+ * The results of the tasks that keep an earlier outcome: each a success that did not run here,
+ * with no exit code, no log and no times, naming the run it comes from.
+ *
+ * @param tasks - Planned tasks, marked or not
+ * @returns One result per marked task, in the order given
+ */
+export function inheritedResults(tasks: readonly PlanTask[]): TaskResult[] {
+  return tasks.flatMap((task) => {
+    const { id, project, target, environment, reasons, inherited } = task
+    if (inherited === undefined) return []
+    const detail = inheritedDetail(inherited)
+    const outcome = Outcome.Success
+    return [
+      {
+        id,
+        project,
+        target,
+        environment,
+        reasons,
+        outcome,
+        exitCode: null,
+        detail,
+        startedAt: null,
+        endedAt: null,
+        durationMs: 0,
+        log: null,
+        inherited,
+      },
+    ]
+  })
 }
 
 /**
@@ -146,19 +198,25 @@ export function planLine(plan: Plan): string {
  */
 export function planSummary(plan: Plan): string[] {
   const lines = ['## Pipeline plan', '', planLine(plan)]
+  const inheritance = inheritanceLine(plan)
+  if (inheritance !== null) lines.push('', `${inheritance}. A task marked ${INHERITED_MARK} keeps the outcome of that earlier run.`)
   if (plan.drift.length > 0) lines.push('', `Registry drift: ${plan.drift.join(', ')}.`)
   if (plan.chains.length === 0) return [...lines, '', 'Nothing to run.']
   lines.push('', '| # | chain | environment | tasks |', '| --- | --- | --- | --- |')
-  for (const chain of plan.chains)
-    lines.push(
-      `| ${chain.order} | ${chain.project} | ${chain.environment} | ${chain.tasks.map((task) => `\`${task.target}\``).join(' ')} |`
-    )
+  for (const chain of plan.chains) {
+    const targets = chain.tasks.map((task) => `\`${task.target}\`${task.inherited === undefined ? '' : INHERITED_MARK}`)
+    lines.push(`| ${chain.order} | ${chain.project} | ${chain.environment} | ${targets.join(' ')} |`)
+  }
   lines.push('', '<details><summary>Why each task runs</summary>', '')
   for (const chain of plan.chains) {
     lines.push(`- **${chain.project} (${chain.environment})**`)
     for (const task of chain.tasks) {
       const needs = task.needs.length === 0 ? '' : ` after ${task.needs.join(', ')}`
-      lines.push(`  - \`${task.id}\`${needs}`, ...task.reasons.map((reason) => `    - ${describePlanReason(reason)}`))
+      lines.push(
+        `  - \`${task.id}\`${needs}`,
+        ...(task.inherited === undefined ? [] : [`    - ${inheritedDetail(task.inherited)}`]),
+        ...task.reasons.map((reason) => `    - ${describePlanReason(reason)}`)
+      )
     }
   }
   lines.push('', '</details>')
@@ -175,16 +233,19 @@ export function planSummary(plan: Plan): string[] {
 }
 
 /**
- * The totals of a run.
+ * The totals of a run, the tasks that kept an earlier outcome counted apart from the ones that ran.
  *
  * @param results - The run
  * @returns One sentence
  */
 export function totalsLine(results: RunResults): string {
   const by = createMap<string, number>()
-  for (const task of results.tasks) by.set(task.outcome, (by.get(task.outcome) ?? 0) + 1)
+  for (const task of results.tasks) {
+    const kind = task.inherited === undefined ? task.outcome : INHERITED
+    by.set(kind, (by.get(kind) ?? 0) + 1)
+  }
   const busy = results.tasks.reduce((sum, task) => sum + task.durationMs, 0)
-  const parts = [Outcome.Success, Outcome.Failure, Outcome.Skipped, Outcome.Cancelled]
+  const parts = [Outcome.Success, Outcome.Failure, Outcome.Skipped, Outcome.Cancelled, INHERITED]
     .filter((outcome) => by.has(outcome))
     .map((outcome) => `${by.get(outcome)} ${outcome}`)
   return `${results.tasks.length} tasks (${parts.join(', ')}), wall-clock ${formatDuration(results.durationMs)}, runner time ${formatDuration(busy)}.`
@@ -200,7 +261,7 @@ export function totalsLine(results: RunResults): string {
 function taskRows(results: readonly TaskResult[], withChain: boolean): string[] {
   return results.map((task) => {
     const columns = [
-      `${MARKS[task.outcome]} ${task.outcome}`,
+      task.inherited === undefined ? `${MARKS[task.outcome]} ${task.outcome}` : `${INHERITED_MARK} ${INHERITED}`,
       task.startedAt === null ? '' : formatDuration(task.durationMs),
       cell(task.detail ?? ''),
     ]
@@ -230,10 +291,11 @@ export function chainTable(chain: Chain, results: readonly TaskResult[]): string
  *
  * @param results - The run
  * @param plan - The plan the run executed
- * @returns The lines, fenced
+ * @returns The lines, fenced, or none when no task ran
  */
 export function timelineLines(results: RunResults, plan: Plan): string[] {
-  const lines = ['```mermaid', 'gantt', `  title ${results.environment}`, '  dateFormat x', '  axisFormat %H:%M:%S']
+  const header = ['```mermaid', 'gantt', `  title ${results.environment}`, '  dateFormat x', '  axisFormat %H:%M:%S']
+  const lines: string[] = []
   for (const chain of plan.chains) {
     if (chain.environment !== results.environment) continue
     const ran = results.tasks.filter((task) => task.project === chain.project && task.startedAt !== null)
@@ -242,7 +304,8 @@ export function timelineLines(results: RunResults, plan: Plan): string[] {
     for (const task of ran)
       lines.push(`  ${task.target} (${formatDuration(task.durationMs)}) :${TAGS[task.outcome]}, ${task.startedAt}, ${task.endedAt}`)
   }
-  return [...lines, '```']
+  // why: a diagram with no bar says nothing, and a run whose tasks all kept an earlier outcome starts none
+  return lines.length === 0 ? [] : [...header, ...lines, '```']
 }
 
 /**

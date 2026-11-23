@@ -7,9 +7,10 @@
  */
 
 import type { CheckOutput } from './checks'
-import type { Chain, Environment, Plan, PlanMode, TaskResult, Weight } from './model'
+import type { Chain, Environment, Origin, Plan, PlanMode, PlanTask, TaskResult, Weight } from './model'
 import { createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { planSummary } from './report'
 
@@ -22,6 +23,9 @@ export const CHECK_TEXT_LIMIT = 65535
 /** The name of the check run carrying the plan. */
 export const PLAN_CHECK_NAME = 'pipeline plan'
 
+/** A run inherited tasks come from, as the compact plan lists it: an origin without the end of any one task. */
+export type CompactOrigin = Omit<Origin, 'endedAt'>
+
 /** A task of the compact plan. */
 export interface CompactTask {
   /** The task id. */
@@ -32,6 +36,8 @@ export interface CompactTask {
   readonly weight: Weight
   /** The tasks that must succeed first; empty when the plan was truncated. */
   readonly needs: readonly string[]
+  /** The position, in the plan's origins, of the run the task inherits its outcome from; absent from a task that runs. */
+  readonly from?: number
 }
 
 /** A chain of the compact plan. */
@@ -66,6 +72,8 @@ export interface CompactPlan {
   readonly skipped: number
   /** Whether the needs were dropped to fit the text limit. */
   readonly truncated: boolean
+  /** The runs the inherited tasks come from, each listed once; absent when no task inherits. */
+  readonly origins?: readonly CompactOrigin[]
 }
 
 /** One ended task as the chain's check run carries it. */
@@ -82,6 +90,8 @@ export interface ChainTaskState {
   readonly startedAt: number | null
   /** When it ended, or null. */
   readonly endedAt: number | null
+  /** The workflow run the outcome is inherited from, or null for a run on this machine; absent from a task that ran. */
+  readonly inherited?: number | null
 }
 
 /** A chain's state as its check run carries it. */
@@ -122,6 +132,20 @@ export function clip(text: string, limit: number = CHECK_TEXT_LIMIT): string {
  * @returns The compact plan; the needs are dropped when the JSON would not fit
  */
 export function compactPlan(plan: Plan, limit: number = CHECK_TEXT_LIMIT): CompactPlan {
+  const origins: CompactOrigin[] = []
+  const positions = createMap<PlanTask, number>()
+  // why: a run id on each of several hundred inherited tasks would cost the text limit, so each run is listed once and a task names it by position
+  for (const task of plan.chains.flatMap((chain) => chain.tasks)) {
+    if (task.inherited === undefined) continue
+    const { run, attempt, sha, url, tree, node } = task.inherited
+    const origin: CompactOrigin = { run, attempt, sha, url, tree, node }
+    const known = origins.findIndex((listed) => stringify(listed) === stringify(origin))
+    positions.set(task, known === -1 ? origins.push(origin) - 1 : known)
+  }
+  const compactTask = (task: PlanTask, withNeeds: boolean): CompactTask => {
+    const compact = { id: task.id, target: task.target, weight: task.weight, needs: withNeeds ? task.needs : [] }
+    return positions.has(task) ? { ...compact, from: positions.get(task) } : compact
+  }
   const shape = (withNeeds: boolean): CompactPlan => ({
     schema: LIVE_SCHEMA,
     base: plan.base,
@@ -133,10 +157,11 @@ export function compactPlan(plan: Plan, limit: number = CHECK_TEXT_LIMIT): Compa
       project: chain.project,
       environment: chain.environment,
       order: chain.order,
-      tasks: chain.tasks.map((task) => ({ id: task.id, target: task.target, weight: task.weight, needs: withNeeds ? task.needs : [] })),
+      tasks: chain.tasks.map((task) => compactTask(task, withNeeds)),
     })),
     skipped: plan.skipped.length,
     truncated: !withNeeds,
+    ...(origins.length === 0 ? {} : { origins }),
   })
   const full = shape(true)
   return stringify(full).length <= limit ? full : shape(false)
@@ -170,7 +195,15 @@ export function chainState(chain: Chain, results: readonly TaskResult[]): string
     project: chain.project,
     environment: chain.environment,
     total: chain.tasks.length,
-    tasks: results.map(({ id, outcome, exitCode, detail, startedAt, endedAt }) => ({ id, outcome, exitCode, detail, startedAt, endedAt })),
+    tasks: results.map(({ id, outcome, exitCode, detail, startedAt, endedAt, inherited }) => ({
+      id,
+      outcome,
+      exitCode,
+      detail,
+      startedAt,
+      endedAt,
+      ...(inherited === undefined ? {} : { inherited: inherited.run }),
+    })),
   }
   return stringify(state)
 }

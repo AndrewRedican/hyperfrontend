@@ -17,17 +17,37 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 4. Every chain is a check run on the pull request (`lib-features (linux)`), and each environment's summary carries a task table and a Mermaid timeline; `pipeline-results-<os>` holds the results and the per-task logs.
 5. `status` aggregates `binary-budget`, `plan`, `version-check` and the environments, and passes when the plan finds nothing to run.
 
+**Inherited outcomes**:
+
+A later push to a pull request does not prove again what an earlier run of the same pull request proved. Before it plans, the `plan` job lists the newest runs of this workflow on the head branch, keeps five, downloads for each environment the `pipeline-results-<os>` of the newest one that holds it (of a run that was re-run, the newest attempt's), and hands them to `pipeline plan --inherit-from`. The plan stays the plan of the whole pull request. A task keeps the earlier `success` when the selection, asked what changed between the tree that run stood on and the tree of this one, leaves the task out. It is marked ↩️ in the plan summary, ends at once as `inherited` without running, and names the run it comes from in the task tables and in its chain's check run. A chain inherited whole still gets its check run, created already completed.
+
+An inherited task restores nothing: it leaves no log, no `dist/` and no coverage, so `coverage-reports-pr` and `dist-pr` hold only what ran. Whatever a running task needs on disk runs again with it.
+
+Nothing is inherited in the cases below, and a line of the `plan` job (or of the environment's job, for the last one) says which applies:
+
+- The pull request comes from a fork.
+- The pull request carries the label `pipeline-run-all`. The label is read from the event that started the run, so it counts from the next push, for every push while it stays.
+- The run was started with "Re-run all jobs", which is a second or later attempt. "Re-run failed jobs" does not plan again and keeps the marks of the first attempt.
+- No earlier run left results for the environment, or the tree they stand on can neither be found in the clone, fetched, nor rebuilt from the recorded head and base.
+- The change since the earlier run touches a file that decides what a task runs or what a recorded success means: `tools/pipeline/bin/pipeline.ts`, `tools/pipeline/src/pipeline/`, `tools/pipeline/scripts/probe-node-floor.mjs`, `libs/workspace/bin/hf.mjs` or `libs/workspace/src/bin/` (specs and test utilities aside).
+- The change since the earlier run touches a file that decides how an environment is checked out, installed and started: this workflow, anything under `.github/actions/`, `.npmrc`, `.nvmrc` or `.gitattributes`. No task reads these as an input, so the selection cannot say what such a change reaches.
+- The environment's job runs another Node.js release than its inherited tasks ran on. That job then runs its whole share of the plan.
+
+A success whose task ended more than seven days ago, counted from the run it really ran in however many pushes passed it along, is no proof either: that task runs, with no line of its own.
+
+The main run after the merge never inherits. It plans from the last planned main commit and proves the merged tree before anything publishes.
+
 **Features**:
 
 - Cancels in-progress runs when new commits are pushed
-- Read-only permissions by default; the environments add `checks: write` for the chain check runs
+- Read-only permissions by default; the environments add `checks: write` for the chain check runs, and `plan` adds `checks: write` for the plan check run and `actions: read` for the earlier runs' results
 - The `run` step gets `GITHUB_TOKEN`, which the chain check runs and, on main, the wait for the Windows and macOS jobs read; GitHub sets no token in the environment by itself
-- An `always()` step runs `pipeline finalize` after the run: a job killed by its time limit or a cancel still leaves `results-<os>.json` (rewritten after every task) and no check run in progress
+- An `always()` step runs `pipeline finalize` after the run: a job killed by its time limit or a cancel still leaves `results-<os>.json` (rewritten after every task) and no check run in progress. Check runs are best-effort: one the API will not complete is a notice, never a failed job
 - Uploads build artifacts and coverage for reuse
 
 **Jobs**:
 
-- `plan`: Graph state, format check, the plan and the matrix
+- `plan`: Graph state, format check, the earlier runs' results, the plan and the matrix
 - `binary-budget`: The binary budget of the pull request, whether or not any task runs
 - `version-check`: Validates version bumps were applied locally
 - `linux`, `windows`, `macos`: Run the plan

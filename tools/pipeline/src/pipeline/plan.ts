@@ -21,7 +21,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { compareText, ENGINE_INPUT, EXECUTOR_SHARED_INPUT, hasTarget, projectOfFile, selectAffected } from '@hyperfrontend/workspace/graph'
-import { ENVIRONMENT_JOB_FILES, HF_ENTRY, RAILWAY_CONFIG } from './commands'
+import { ENVIRONMENT_JOB_FILES, HF_ENTRY, HF_SOURCE, RAILWAY_CONFIG } from './commands'
 import { buildChains, e2eProjectsOf, isPublishable, linuxTasks, siblingTasks, withNeeds } from './fold'
 import { Environment as Environments, PipelineRule, planReason } from './model'
 import { rankChains } from './order'
@@ -188,7 +188,8 @@ function isEnvironmentJobFile(path: string): boolean {
  */
 function selectEnvironmentJobs(graph: WorkspaceGraph, selection: Selection, changes: ChangeSet | null): void {
   const changed = (changes?.changes ?? []).find((change) => isEnvironmentJobFile(change.path))
-  const owner = projectOfFile(graph.projects, HF_ENTRY)
+  // why: the launcher is the one file of a project that only links it, so the project type checked is the one holding the source it starts
+  const owner = projectOfFile(graph.projects, HF_SOURCE)
   if (changed === undefined || owner === null || !hasTarget(owner, 'typecheck')) return
   select(selection, `${owner.name}:typecheck`, {
     ...planReason(PipelineRule.EnvironmentJobs, `${changed.path} defines the environment jobs, which start ${HF_ENTRY} on every leg`),
