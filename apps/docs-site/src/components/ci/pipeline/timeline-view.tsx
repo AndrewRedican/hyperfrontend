@@ -20,7 +20,7 @@ import {
   zoomWindow,
 } from '@/lib/ci/timeline'
 import { CATEGORIES, ENVIRONMENT_LABEL, STATE_COLOUR, STATE_LABEL, categoryOf } from '@/lib/ci/vocabulary'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { abs, exp, hypot, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseFloat } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
@@ -209,7 +209,7 @@ function laneSummary(lane: TimelineLane, execution: Execution): string {
  * @param props.onSelect
  * @returns The view
  */
-export function TimelineView({ execution, selected, onSelect }: TimelineViewProps) {
+export const TimelineView = memo(function TimelineView({ execution, selected, onSelect }: TimelineViewProps) {
   const wrapper = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
   const [window, setWindow] = useState<TimeWindow | null>(null)
@@ -703,7 +703,7 @@ export function TimelineView({ execution, selected, onSelect }: TimelineViewProp
       </div>
     </div>
   )
-}
+})
 
 /** Props for {@link OsGlyph}. */
 interface OsGlyphProps {
