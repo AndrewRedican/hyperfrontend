@@ -1,22 +1,24 @@
 /**
  * The local run of a plan: three stages (the type checks and lints, the tests, then everything
  * else), each run by the scheduler to its end, a stage that did not succeed whole ending the run,
- * and the progress view in place of each task's replayed log.
+ * and the progress view in place of each task's replayed log. The tasks that keep an earlier
+ * outcome are counted on one line and take no part in the stages.
  *
  * @module pipeline/local
  */
 
 import type { ProgressView, TaskEnd, Terminal } from '@hyperfrontend/workspace/progress'
 import type { RunOutcome } from './execute'
-import type { Environment, Outcome as OutcomeKind, Plan, PlanTask, RunResults } from './model'
+import type { Environment, Outcome as OutcomeKind, Plan, PlanTask, RunResults, TaskResult } from './model'
 import type { ScheduleResult, ScheduleTask } from './schedule'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { assignStages, createProgressView, Ending, failureExcerpt, runStages } from '@hyperfrontend/workspace/progress'
+import { inheritedFrom, scheduledNeeds } from './inherit'
 import { Outcome, PipelineRule } from './model'
-import { planLine, taskResult } from './report'
+import { inheritedResults, planLine, taskResult } from './report'
 import { runSchedule } from './schedule'
 
 /** The targets of each stage of a local run; the last names none, and takes every target the others leave. */
@@ -54,6 +56,8 @@ export interface LocalPlanOptions extends Omit<LocalRunOptions<LocalTask>, 'task
   readonly plan: Plan
   /** Which environment's chains run. */
   readonly environment: Environment
+  /** The Node.js release the tasks run on, as `process.version` names it. */
+  readonly node: string
 }
 
 /** The ending the view shows for each outcome. */
@@ -155,10 +159,11 @@ export async function runLocal<Task extends LocalTask>(options: LocalRunOptions<
 }
 
 /**
- * Runs the chains a plan holds for one environment locally, under the sentence describing the plan.
+ * Runs the chains a plan holds for one environment locally, under the sentence describing the
+ * plan and, when tasks keep an earlier outcome, one line counting them.
  *
  * @param options - The plan, the environment, the budgets, the runner, where to write and the clock
- * @returns The results of the run, as a run file records them
+ * @returns The results of the run, as a run file records them: every task of the environment in chain order, the inherited ones as successes that did not run
  */
 export async function runLocalPlan(options: LocalPlanOptions): Promise<RunResults> {
   const { plan, environment, now, readLog } = options
@@ -166,8 +171,14 @@ export async function runLocalPlan(options: LocalPlanOptions): Promise<RunResult
   const tasks: LocalTask[] = plan.chains
     .filter((chain) => chain.environment === environment)
     .flatMap((chain) => chain.tasks.map((task) => ({ ...task, order: chain.order })))
+  const kept = createMap<string, TaskResult>(inheritedResults(tasks).map((result) => [result.id, result]))
+  if (kept.size > 0) {
+    const origins = tasks.flatMap((task) => (task.inherited === undefined ? [] : [task.inherited]))
+    const [tasksInherited, read] = kept.size === 1 ? ['task', 'it reads'] : ['tasks', 'they read']
+    options.terminal.line(`${kept.size} ${tasksInherited} inherited from ${inheritedFrom(origins)}: nothing ${read} changed since`)
+  }
   const startedAt = now()
-  const results = await runLocal({ ...options, tasks })
+  const results = await runLocal({ ...options, tasks: scheduledNeeds(tasks) })
   const endedAt = now()
   return {
     environment,
@@ -178,6 +189,10 @@ export async function runLocalPlan(options: LocalPlanOptions): Promise<RunResult
     endedAt,
     durationMs: endedAt - startedAt,
     complete: true,
-    tasks: tasks.map((task) => taskResult(task, results.get(task.id) as ScheduleResult, readLog)),
+    tasks: tasks.map((task) => kept.get(task.id) ?? taskResult(task, results.get(task.id) as ScheduleResult, readLog)),
+    tested: plan.tested,
+    run: null,
+    node: options.node,
+    local: true,
   }
 }

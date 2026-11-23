@@ -2,8 +2,8 @@
  * Plans and runs the pipeline. Usage, from the workspace root:
  * `node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts <command>`, or
  * `npx hf run tool-pipeline:pipeline <command>`, where the command is
- * `plan [--base <ref> | --planned-base] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
- * `run [--plan <file>] [--environment linux|windows|macos] [--parallel <n>] [--heavy <n>] [--local] [--results <file>] [--summary] [--checks] [--wait-for <job>[,<job>]] [--head-sha <sha>]`,
+ * `plan [--base <ref> | --planned-base] [--head <ref>] [--all] [--fallback-all] [--main] [--catch-up] [--inherit-from <dir>] [--no-inherit] [--out <file>] [--summary] [--github-output] [--checks] [--head-sha <sha>] [--force]`,
+ * `run [--plan <file>] [--environment linux|windows|macos] [--parallel <n>] [--heavy <n>] [--local] [--no-inherit] [--results <file>] [--summary] [--checks] [--wait-for <job>[,<job>]] [--head-sha <sha>]`,
  * `finalize [--environment linux|windows|macos] [--summary]`,
  * `record --out <dir> --run-id <id> --run-number <n> --attempt <n> --sha <sha> --ref <ref> --event <event> --url <url>`,
  * `affected --target <target> [--base <ref>] [--head <ref>] [--json|--explain|--projects]` or
@@ -14,11 +14,9 @@
 
 import type { ChangeSet, Envelope, GraphBody, WorkspaceGraph } from '@hyperfrontend/workspace/graph'
 import type { CheckRecords, ChainChecks } from '../src/pipeline/checks'
-import type { RunOutcome } from '../src/pipeline/execute'
-import type { LocalTask } from '../src/pipeline/local'
-import type { Chain, Environment, Plan, RunResults, TaskResult } from '../src/pipeline/model'
+import type { Environment, Plan, RunResults } from '../src/pipeline/model'
+import type { PreviousSource } from '../src/pipeline/previous'
 import type { RunIndex } from '../src/pipeline/records'
-import type { ScheduleResult } from '../src/pipeline/schedule'
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { availableParallelism, totalmem } from 'node:os'
@@ -27,28 +25,28 @@ import { parseArgs } from 'node:util'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core'
 import { baseRecords, buildState, changeSet, formatAffected, selectAffected } from '@hyperfrontend/workspace/graph'
 import { createTerminal } from '@hyperfrontend/workspace/progress'
 import { chainChecks, githubChecks, runUrlOf } from '../src/pipeline/checks'
-import { executeTask, replayLines, runCommand } from '../src/pipeline/execute'
+import { runEnvironmentPlan } from '../src/pipeline/environment'
+import { executeTask, runCommand } from '../src/pipeline/execute'
 import { explorerDocument } from '../src/pipeline/explorer'
 import { settleChecks } from '../src/pipeline/finalize'
+import { acceptInheritance } from '../src/pipeline/inherit'
 import { PLAN_CHECK_NAME, planCheckOutput } from '../src/pipeline/live'
 import { runLocalPlan } from '../src/pipeline/local'
 import { environmentOf, Outcome } from '../src/pipeline/model'
 import { createPlan } from '../src/pipeline/plan'
 import { resolvePlannedBase } from '../src/pipeline/planned-base'
+import { inheritFrom, previousSources, sourceAt } from '../src/pipeline/previous'
 import { writeRunRecord } from '../src/pipeline/records'
 import { npmProbe, registryDrift } from '../src/pipeline/registry'
-import { errorAnnotation, planSummary, runSummary, taskResult } from '../src/pipeline/report'
-import { runSchedule } from '../src/pipeline/schedule'
+import { planSummary, runSummary } from '../src/pipeline/report'
 import { githubJobs, siblingGate } from '../src/pipeline/siblings'
+import { runIdentity, testedOrNull } from '../src/pipeline/tested'
 
 /** The usage line. */
 const USAGE = 'expected plan, run, finalize, record, affected or summary, with the flags the header of this file lists'
@@ -65,6 +63,9 @@ const SIBLING_TIMEOUT_MS = 120 * 60 * 1000
 /** How long between two polls of the sibling job. */
 const SIBLING_INTERVAL_MS = 30 * 1000
 
+/** The value of `HF_PIPELINE_INHERIT` that makes a local run prove everything the branch reaches again. */
+const INHERIT_OFF = '0'
+
 /** Below this much memory only one heavy task runs at a time. */
 const HEAVY_MEMORY_BYTES = 12 * 1024 * 1024 * 1024
 
@@ -77,6 +78,8 @@ const { values, positionals } = parseArgs({
     'fallback-all': { type: 'boolean', default: false },
     main: { type: 'boolean', default: false },
     'catch-up': { type: 'boolean', default: false },
+    'inherit-from': { type: 'string' },
+    'no-inherit': { type: 'boolean', default: false },
     out: { type: 'string' },
     summary: { type: 'boolean', default: false },
     'github-output': { type: 'boolean', default: false },
@@ -196,19 +199,73 @@ function graphOf(): WorkspaceGraph {
 }
 
 /**
- * Plans the change of the command line.
+ * The environment the command line names, else the one this machine is.
+ *
+ * @returns Linux, Windows or macOS
+ */
+function environmentOfRun(): Environment {
+  return (values.environment as Environment | undefined) ?? environmentOf(process.platform)
+}
+
+/**
+ * Where the results of an environment are written, workspace-relative.
+ *
+ * @param environment - Linux, Windows or macOS
+ * @returns The `--results` of the command line, else the file under the pipeline directory
+ */
+function resultsPathOf(environment: Environment): string {
+  return values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`
+}
+
+/**
+ * Whether the command line or the environment asks for every task to run.
+ *
+ * @returns True under `--no-inherit` or `HF_PIPELINE_INHERIT=0`
+ */
+function inheritOff(): boolean {
+  return values['no-inherit'] || process.env['HF_PIPELINE_INHERIT'] === INHERIT_OFF
+}
+
+/**
+ * The earlier results the plan may inherit from: for the hook, what the last run on this machine
+ * left; for a workflow, the directory `--inherit-from` names.
+ *
+ * @param local - Whether the plan is the hook's
+ * @returns The sources, or null when the command line asks for no inheritance
+ */
+function previousOf(local: boolean): PreviousSource[] | null {
+  if (inheritOff()) return null
+  if (!local) return values['inherit-from'] === undefined ? null : previousSources(resolvePath(values['inherit-from']), dateNow())
+  if (values.all || values.main) return null
+  const source = sourceAt(resolvePath(resultsPathOf(environmentOfRun())), environmentOfRun(), dateNow())
+  // why: a plain run of an older or edited plan file writes the same path, and its tested tree is the plan's, not surely the tree its tasks ran on
+  return source === null || !source.local ? [] : [source]
+}
+
+/**
+ * Plans the change of the command line, and marks the tasks that keep the outcome of an earlier
+ * run when the command line allows it.
  *
  * @param local - Whether the plan is the hook's
  * @returns The chains and skips of the change
  */
 async function plan(local: boolean): Promise<Plan> {
+  if (values['inherit-from'] !== undefined && (values.main || values.all))
+    throw createError('--inherit-from cannot be combined with --main or --all: a plan that publishes or runs everything inherits nothing')
   const graph = graphOf()
   const changes = await changesOf(local)
   const drift =
     values.main && values['catch-up']
       ? await registryDrift(graph.projects.values(), npmProbe({ cwd: root as string, run: runCommand }))
       : []
-  return createPlan({ graph, changes, main: values.main, drift, ...baseRecords(root as string, changes) })
+  const created = createPlan({ graph, changes, main: values.main, drift, ...baseRecords(root as string, changes) })
+  const tested = testedOrNull(root as string, process.env['GITHUB_EVENT_NAME'] === 'pull_request', say)
+  const previous = previousOf(local)
+  if (tested === null) return created
+  if (previous === null) return { ...created, tested }
+  // why: a local run executes one environment, so only that one has anything to inherit
+  const environments = local ? [environmentOfRun()] : undefined
+  return inheritFrom({ root: root as string, graph, plan: { ...created, tested }, previous, environments, report: say })
 }
 
 /**
@@ -315,13 +372,14 @@ function checksOf(environment: Environment): ChainChecks | null {
 }
 
 /**
- * Runs the chains of one environment.
+ * Runs the chains of one environment: the publishes behind the sibling environments' gates, a
+ * signal to the process cancelling what has not started.
  *
  * @param planned - The plan
  * @param environment - Which environment's chains run
  * @param parallel - The light budget
  * @param heavy - The heavy budget
- * @param resultsPath - Where the results are written, after every task that ends and at the end
+ * @param resultsPath - Where the results are written, before anything runs when tasks inherit and after every task that ends
  * @returns The results
  */
 async function runEnvironment(
@@ -331,10 +389,6 @@ async function runEnvironment(
   heavy: number,
   resultsPath: string
 ): Promise<RunResults> {
-  const chains = planned.chains.filter((chain) => chain.environment === environment)
-  const tasks: LocalTask[] = chains.flatMap((chain) => chain.tasks.map((task) => ({ ...task, order: chain.order })))
-  const readLog = (path: string): string => readFileSync(join(root as string, path), 'utf8')
-  const chainOf = createMap<string, Chain>(tasks.map((task) => [task.id, chains.find((chain) => chain.project === task.project) as Chain]))
   const controller = new AbortController()
   const stop = (): void => controller.abort()
   process.once('SIGINT', stop)
@@ -347,83 +401,36 @@ async function runEnvironment(
       siblingGate({ name, fetchJobs: githubJobs(process.env, fetch), timeoutMs: SIBLING_TIMEOUT_MS, intervalMs: SIBLING_INTERVAL_MS })
     )
   const gate = async (): Promise<string | null> => (await promiseAll(gates.map((open) => open()))).find((closed) => closed !== null) ?? null
-  const checks = checksOf(environment)
-  const settled = createMap<string, TaskResult>()
-  const startedChains = createSet<string>()
-  const hooks: Promise<void>[] = []
-  const open = (chain: Chain): void => {
-    if (checks === null || startedChains.has(chain.project)) return
-    startedChains.add(chain.project)
-    hooks.push(checks.onStart(chain))
-  }
-  const started = dateNow()
-  const snapshot = (complete: boolean, members: readonly TaskResult[]): RunResults => {
-    const ended = dateNow()
-    return {
-      environment,
-      base: planned.base,
-      head: planned.head,
-      mode: planned.mode,
-      startedAt: started,
-      endedAt: ended,
-      durationMs: ended - started,
-      complete,
-      tasks: members,
-    }
-  }
-  const run = async (task: LocalTask): Promise<RunOutcome> => {
-    if (task.target === 'publish') {
-      const closed = await gate()
-      if (closed !== null) return { outcome: Outcome.Skipped, exitCode: null, log: null, detail: closed }
-    }
-    return executeTask(task, {
-      root: root as string,
-      logDirectory: `${PIPELINE_DIRECTORY}/logs`,
-      env: { CI: '1' },
-      signal: controller.signal,
-    })
-  }
-  const results = await runSchedule({
-    tasks,
+  const results = await runEnvironmentPlan({
+    plan: planned,
+    environment,
     parallel,
     heavy,
-    run,
+    run: async (task) => {
+      if (task.target === 'publish') {
+        const closed = await gate()
+        if (closed !== null) return { outcome: Outcome.Skipped, exitCode: null, log: null, detail: closed }
+      }
+      return executeTask(task, {
+        root: root as string,
+        logDirectory: `${PIPELINE_DIRECTORY}/logs`,
+        env: { CI: '1' },
+        signal: controller.signal,
+      })
+    },
+    readLog: (path) => readFileSync(join(root as string, path), 'utf8'),
+    checks: checksOf(environment),
+    say,
+    write: (snapshot) => writeJson(resultsPath, snapshot),
+    grouped,
+    identity: runIdentity(process.env, headShaOf()),
+    node: process.version,
+    now: dateNow,
     signal: controller.signal,
-    onStart: (task) => {
-      say(`▶ ${task.id}`)
-      open(chainOf.get(task.id) as Chain)
-    },
-    onEnd: (task, result) => {
-      const finished = taskResult(task, result, readLog)
-      settled.set(task.id, finished)
-      const text = result.log === null ? '' : readFileSync(join(root as string, result.log), 'utf8')
-      const heading = `${task.id} (${result.outcome}${result.detail === null ? '' : `, ${result.detail}`}, ${round(result.durationMs / 1000)}s)`
-      for (const line of replayLines(heading, text, grouped)) say(line)
-      // why: the replayed log is folded among hundreds of others, so a failure also raises an annotation the run page lists with its excerpt
-      if (grouped && finished.excerpt !== undefined) say(errorAnnotation(task.id, finished.excerpt))
-      const chain = chainOf.get(task.id) as Chain
-      // why: the file is rewritten after every task, so a job killed by its time limit still leaves what had ended
-      writeJson(
-        resultsPath,
-        snapshot(
-          false,
-          tasks.filter((member) => settled.has(member.id)).map((member) => settled.get(member.id) as TaskResult)
-        )
-      )
-      if (checks === null) return
-      // why: a chain whose tasks all end unstarted (skipped or cancelled) never saw onStart, and every planned chain ends with a concluded check run
-      open(chain)
-      const ended = chain.tasks.filter((member) => settled.has(member.id)).map((member) => settled.get(member.id) as TaskResult)
-      hooks.push(ended.length === chain.tasks.length ? checks.onEnd(chain, ended) : checks.onTask(chain, ended))
-    },
   })
-  await promiseAll(hooks)
   process.off('SIGINT', stop)
   process.off('SIGTERM', stop)
-  return snapshot(
-    true,
-    tasks.map((task) => taskResult(task, results.get(task.id) as ScheduleResult, readLog))
-  )
+  return results
 }
 
 /**
@@ -431,10 +438,11 @@ async function runEnvironment(
  * run in stages behind the progress view, one task at a time unless the command line affords more.
  */
 async function run(): Promise<void> {
-  const environment = (values.environment as Environment | undefined) ?? environmentOf(process.platform)
-  const resultsPath = values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`
+  const environment = environmentOfRun()
+  const resultsPath = resultsPathOf(environment)
   const heavy = totalmem() < HEAVY_MEMORY_BYTES ? 1 : Number(values.heavy ?? (values.local ? 1 : 2))
-  const planned = values.local ? await plan(true) : readJsonFile<Plan>(values.plan ?? `${PIPELINE_DIRECTORY}/plan.json`)
+  const read = values.local ? await plan(true) : readJsonFile<Plan>(values.plan ?? `${PIPELINE_DIRECTORY}/plan.json`)
+  const planned = acceptInheritance(read, environment, { node: process.version, off: inheritOff() }, say)
   const controller = new AbortController()
   if (values.local) for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, () => controller.abort())
   const results = values.local
@@ -454,6 +462,7 @@ async function run(): Promise<void> {
         terminal: createTerminal(process.stdout, process.env),
         now: dateNow,
         signal: controller.signal,
+        node: process.version,
       })
     : await runEnvironment(planned, environment, Number(values.parallel ?? availableParallelism()), heavy, resultsPath)
   writeJson(resultsPath, results)
@@ -468,8 +477,8 @@ async function run(): Promise<void> {
  * completed, and, when the run did not end, the summary of the tasks that had ended.
  */
 async function finalize(): Promise<void> {
-  const environment = (values.environment as Environment | undefined) ?? environmentOf(process.platform)
-  const resultsPath = values.results ?? `${PIPELINE_DIRECTORY}/results-${environment}.json`
+  const environment = environmentOfRun()
+  const resultsPath = resultsPathOf(environment)
   const results = readJsonIfPresent<RunResults>(resultsPath)
   const planned = readJsonIfPresent<Plan>(values.plan ?? `${PIPELINE_DIRECTORY}/plan.json`)
   const records = readJsonIfPresent<CheckRecords>(checksPath(environment)) ?? {}

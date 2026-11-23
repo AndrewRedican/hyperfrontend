@@ -1,42 +1,8 @@
-import type { FileTree } from '@hyperfrontend/testing/fs'
-import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { useTempDir } from '@hyperfrontend/testing/fs'
-
-/** The workspace these sources belong to. */
-const WORKSPACE_ROOT = resolve(import.meta.dirname, '..', '..', '..', '..')
-
-/** The hook the command line loads workspace sources through, as `--import` takes it. */
-const ALIASES = pathToFileURL(resolve(WORKSPACE_ROOT, 'libs', 'workspace', 'src', 'hooks', 'index.ts')).href
-
-/** The pipeline's command line. */
-const PIPELINE = resolve(WORKSPACE_ROOT, 'tools', 'pipeline', 'bin', 'pipeline.ts')
-
-/** What stands in for the workspace's command line: it says which task it ran and fails the one the environment names. */
-const STUB = [
-  'const id = process.argv[3]',
-  'process.stdout.write(`ran ${id}\\n`)',
-  "process.exit(id === process.env['FIXTURE_FAILS'] ? 1 : 0)",
-  '',
-].join('\n')
-
-/** Two libraries with a lint and a build each, one of them tested, and the entries every task of a plan starts. */
-const TREE: FileTree = {
-  'hf.json': {},
-  'package.json': { name: '@fixture/workspace', private: true, type: 'module' },
-  '.gitignore': '.hf\n',
-  'libs/workspace/src/hooks/index.ts': 'export {}\n',
-  'libs/workspace/bin/hf.mjs': STUB,
-  'libs/a/project.json': { name: 'lib-a', projectType: 'library', sourceRoot: 'libs/a/src', targets: { lint: {}, test: {}, build: {} } },
-  'libs/a/package.json': { name: '@fixture/a', version: '0.0.0', private: true },
-  'libs/a/src/index.ts': 'export const a = 1\n',
-  'libs/b/project.json': { name: 'lib-b', projectType: 'library', sourceRoot: 'libs/b/src', targets: { lint: {}, build: {} } },
-  'libs/b/package.json': { name: '@fixture/b', version: '0.0.0', private: true },
-  'libs/b/src/index.ts': 'export const b = 1\n',
-}
+import { gitIn, LIBRARIES, runPipeline } from './__test-utils__/command-line'
 
 /** What a local run answered and left behind. */
 interface LocalRun {
@@ -48,7 +14,7 @@ interface LocalRun {
   readonly tested: boolean
 }
 
-const fixture = useTempDir({ prefix: 'pipeline-local-', tree: TREE })
+const fixture = useTempDir({ prefix: 'pipeline-local-', tree: LIBRARIES })
 
 /**
  * Runs the whole plan of the fixture locally.
@@ -57,12 +23,8 @@ const fixture = useTempDir({ prefix: 'pipeline-local-', tree: TREE })
  * @returns The exit code, what was printed, and whether the test started
  */
 function runLocal(fails: string): LocalRun {
-  execFileSync('git', ['init', '-q'], { cwd: fixture.path })
-  const run = spawnSync(process.execPath, ['--import', ALIASES, PIPELINE, 'run', '--local', '--all', '--environment', 'linux'], {
-    cwd: fixture.path,
-    encoding: 'utf8',
-    env: { ...process.env, FIXTURE_FAILS: fails },
-  })
+  gitIn(fixture.path, 'init', '-q')
+  const run = runPipeline(fixture.path, ['run', '--local', '--all', '--environment', 'linux'], { FIXTURE_FAILS: fails })
   return {
     status: run.status,
     lines: run.stdout

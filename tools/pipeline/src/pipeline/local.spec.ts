@@ -1,6 +1,6 @@
 import type { RunOutcome } from './execute'
 import type { LocalRunOptions, LocalTask } from './local'
-import type { Plan } from './model'
+import type { Origin, Plan, RunResults } from './model'
 import type { ScheduleResult } from './schedule'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -236,6 +236,7 @@ describe('runLocalPlan', () => {
       readLog: () => 'a finding\n',
       terminal: createTerminal({ write: (text) => written.push(text) }, {}),
       now: () => (at += 1000),
+      node: 'v24.18.0',
     })
     return { results, first: written[0] }
   }
@@ -259,8 +260,98 @@ describe('runLocalPlan', () => {
           durationMs: expect.any(Number),
           complete: true,
           tasks: [expect.objectContaining({ id: 'lib:lint', outcome: 'failure', excerpt: 'a finding' })],
+          tested: undefined,
+          run: null,
+          node: 'v24.18.0',
+          local: true,
         },
       })
     )
+  })
+})
+
+describe('runLocalPlan with inherited tasks', () => {
+  const origin: Origin = { run: null, attempt: null, sha: null, url: null, tree: '0123456789abcdef', node: 'v24.18.0', endedAt: 1000 }
+  const tested = { tree: 'fedcba9876543210', head: null, base: null, merge: null }
+  const plan: Plan = {
+    base: 'abc',
+    head: null,
+    mode: 'affected',
+    main: false,
+    targets: ['typecheck', 'build'],
+    drift: [],
+    chains: [
+      {
+        project: 'lib',
+        environment: 'linux',
+        order: 0,
+        tasks: [
+          { ...task('lib:typecheck'), inherited: origin },
+          task('lib:build', 'lib:typecheck'),
+          { ...task('lib:lint'), inherited: origin },
+        ],
+      },
+    ],
+    skipped: [],
+    environments: ['linux'],
+    tested,
+  }
+
+  /**
+   * Runs a plan on Linux, every task that runs succeeding.
+   *
+   * @param planned - The plan run
+   * @returns The results, the lines written and the ids of the tasks that ran
+   */
+  async function ranInherited(planned: Plan): Promise<{ results: RunResults; lines: string[]; started: string[] }> {
+    const written: string[] = []
+    const started: string[] = []
+    const results = await runLocalPlan({
+      plan: planned,
+      environment: 'linux',
+      parallel: 1,
+      heavy: 1,
+      run: async (item) => {
+        started.push(item.id)
+        return { outcome: 'success', exitCode: 0, log: null, detail: null }
+      },
+      readLog: () => '',
+      terminal: createTerminal({ write: (text) => written.push(text) }, {}),
+      now: () => 0,
+      node: 'v24.18.0',
+    })
+    return { results, lines: written.join('').split(/\r?\n/), started }
+  }
+
+  it('runs the tasks without a mark alone, a need on an inherited task set aside', async () => {
+    expect((await ranInherited(plan)).started).toEqual(['lib:build'])
+  })
+
+  it('counts the inherited tasks on one line under the plan, and shows only what runs', async () => {
+    expect((await ranInherited(plan)).lines.slice(1, 4)).toEqual([
+      '2 tasks inherited from a local run on tree 0123456: nothing they read changed since',
+      'stage 3 of 3: build (1 task)',
+      '✓ lib:build  0s  [1/1]',
+    ])
+  })
+
+  it('records every task in chain order, the inherited ones with their origin, on the tree the plan was made on', async () => {
+    const { results } = await ranInherited(plan)
+    expect({ tested: results.tested, tasks: results.tasks.map((item) => [item.id, item.outcome, item.inherited ?? null]) }).toEqual({
+      tested,
+      tasks: [
+        ['lib:typecheck', 'success', origin],
+        ['lib:build', 'success', null],
+        ['lib:lint', 'success', origin],
+      ],
+    })
+  })
+
+  it('says nothing is left to run when every task is inherited', async () => {
+    const whole = { ...plan, chains: plan.chains.map((chain) => ({ ...chain, tasks: chain.tasks.slice(0, 1) })) }
+    expect((await ranInherited(whole)).lines.slice(1, 3)).toEqual([
+      '1 task inherited from a local run on tree 0123456: nothing it reads changed since',
+      'Nothing to run.',
+    ])
   })
 })
