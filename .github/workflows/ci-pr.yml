@@ -20,6 +20,7 @@ jobs:
     permissions:
       contents: read
       checks: write # why: the plan is published as the `pipeline plan` check run, which a page reads without a token
+      actions: read # why: the results of the earlier runs of this pull request are listed and downloaded, for the outcomes the plan inherits
     outputs:
       environments: ${{ steps.plan.outputs.environments }}
       has-work: ${{ steps.plan.outputs.has-work }}
@@ -45,12 +46,69 @@ jobs:
       - name: Format
         run: npx hf format --check --all
 
+      - name: Earlier results
+        # why: a stalled download must hold the plan for minutes, not for the job's whole limit, and a step that fails or runs out of time leaves the plan to run everything
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # why: a branch name is its author's text, so it reaches the script through the environment and never as script text
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          RUN_ALL: ${{ contains(github.event.pull_request.labels.*.name, 'pipeline-run-all') }}
+        # why: a task the change since an earlier run of this pull request leaves out keeps that run's outcome. However this step ends, the plan can still run everything, so nothing here fails the job
+        run: |
+          if [ "$GITHUB_RUN_ATTEMPT" != "1" ]; then
+            echo "nothing is inherited: attempt $GITHUB_RUN_ATTEMPT proves again everything the pull request reaches"
+            exit 0
+          fi
+          if [ "$HEAD_REPOSITORY" != "$GITHUB_REPOSITORY" ]; then
+            echo "nothing is inherited: the pull request comes from a fork"
+            exit 0
+          fi
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "nothing is inherited: the pull request carries the label pipeline-run-all"
+            exit 0
+          fi
+          # The newest runs of this workflow on the head branch, this run and the runs of another repository left out
+          if ! listed=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci-pr.yml/runs" \
+            -f branch="$HEAD_BRANCH" -f event=pull_request -F per_page=30 \
+            --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID and .head_repository.full_name == \"$GITHUB_REPOSITORY\") | .id"); then
+            echo "::notice::nothing is inherited: the earlier runs of this pull request could not be listed"
+            exit 0
+          fi
+          runs=$(head -n 5 <<< "$listed")
+          mkdir -p .hf/pipeline/previous
+          # Each environment takes the newest of those runs that left its results with the tree they stand on:
+          # a run cancelled before an environment uploaded has no artifact for it, and that environment looks one run further back
+          zip="$RUNNER_TEMP/earlier-results.zip"
+          for os in linux windows macos; do
+            for run in $runs; do
+              directory=".hf/pipeline/previous/$os"
+              rm -rf "$directory"
+              # why: a run that was re-run holds one artifact of this name per attempt, and a task that passed in an earlier attempt may have failed in a later one, so the newest attempt's is taken by its creation time and never whichever is listed first
+              if id=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" -f name="pipeline-results-$os" \
+                --jq '[.artifacts[] | select(.expired | not)] | max_by(.created_at) | .id // empty' 2> /dev/null) \
+                && [ -n "$id" ] \
+                && gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "$zip" 2> /dev/null \
+                && unzip -q -o "$zip" "results-$os.json" -d "$directory" 2> /dev/null \
+                && jq -e '.tested.tree' "$directory/results-$os.json" > /dev/null 2>&1; then
+                echo "$os may inherit from run $run"
+                continue 2
+              fi
+            done
+            rm -rf ".hf/pipeline/previous/$os"
+          done
+          rm -f "$zip"
+
       - name: Plan
         id: plan
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
+          INHERIT=()
+          if [ -d .hf/pipeline/previous ]; then INHERIT=(--inherit-from .hf/pipeline/previous); fi
+          node --import ./libs/workspace/src/hooks/index.ts tools/pipeline/bin/pipeline.ts plan --base "origin/${{ github.base_ref }}" "${INHERIT[@]}" --summary --github-output --checks --head-sha ${{ github.event.pull_request.head.sha }}
           cp .hf/graph/graph.json .hf/pipeline/graph.json
 
       - name: Upload plan
