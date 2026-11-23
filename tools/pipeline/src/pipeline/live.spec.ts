@@ -1,8 +1,8 @@
-import type { Chain, Plan, PlanTask } from './model'
+import type { Chain, Origin, Plan, PlanTask, TaskResult } from './model'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { taskCommand } from './commands'
-import { CHECK_TEXT_LIMIT, clip, compactPlan, planCheckOutput } from './live'
+import { chainState, CHECK_TEXT_LIMIT, clip, compactPlan, planCheckOutput } from './live'
 
 /**
  * A task.
@@ -92,6 +92,88 @@ describe('compactPlan', () => {
       truncated: true,
       needs: [],
     })
+  })
+})
+
+describe('compactPlan of a plan with inherited tasks', () => {
+  /**
+   * Where an inherited task ran.
+   *
+   * @param run - The workflow run
+   * @param endedAt - When the task ended
+   * @returns A first attempt of that run on Node.js 24.18.0
+   */
+  function origin(run: number, endedAt: number): Origin {
+    return { run, attempt: 1, sha: 'abcdef0123456789', url: null, tree: '0123456789abcdef', node: 'v24.18.0', endedAt }
+  }
+
+  const inheriting: Plan = {
+    ...PLAN,
+    chains: [
+      {
+        project: 'lib-a',
+        environment: 'linux',
+        order: 0,
+        tasks: [
+          { ...task('lib-a', 'typecheck'), inherited: origin(7, 100) },
+          { ...task('lib-a', 'lint'), inherited: origin(8, 200) },
+          { ...task('lib-a', 'test'), inherited: origin(7, 300) },
+          task('lib-a', 'build', ['lib-a:typecheck']),
+        ],
+      },
+    ],
+  }
+
+  it('lists each run the inherited tasks come from once, without the end of any one task', () => {
+    expect(compactPlan(inheriting).origins).toEqual([
+      { run: 7, attempt: 1, sha: 'abcdef0123456789', url: null, tree: '0123456789abcdef', node: 'v24.18.0' },
+      { run: 8, attempt: 1, sha: 'abcdef0123456789', url: null, tree: '0123456789abcdef', node: 'v24.18.0' },
+    ])
+  })
+
+  it('names the run of an inherited task by its position, and gives a task that runs none', () => {
+    expect(compactPlan(inheriting).chains.flatMap((chain) => chain.tasks.map((item) => [item.target, item.from ?? null]))).toEqual([
+      ['typecheck', 0],
+      ['lint', 1],
+      ['test', 0],
+      ['build', null],
+    ])
+  })
+
+  it('lists no origins for a plan no task of which inherits', () => {
+    expect('origins' in compactPlan(PLAN)).toBe(false)
+  })
+})
+
+describe('chainState', () => {
+  const ended: TaskResult = {
+    id: 'lib-a:typecheck',
+    project: 'lib-a',
+    target: 'typecheck',
+    environment: 'linux',
+    reasons: [],
+    outcome: 'success',
+    exitCode: null,
+    detail: 'inherited from run 7 (abcdef0): nothing it reads changed since',
+    startedAt: null,
+    endedAt: null,
+    durationMs: 0,
+    log: null,
+    inherited: { run: 7, attempt: 1, sha: 'abcdef0123456789', url: null, tree: '0123456789abcdef', node: 'v24.18.0', endedAt: 100 },
+  }
+
+  it('carries the run an inherited task comes from', () => {
+    expect(parse(chainState(PLAN.chains[0] as Chain, [ended])).tasks).toEqual([
+      {
+        id: 'lib-a:typecheck',
+        outcome: 'success',
+        exitCode: null,
+        detail: 'inherited from run 7 (abcdef0): nothing it reads changed since',
+        startedAt: null,
+        endedAt: null,
+        inherited: 7,
+      },
+    ])
   })
 })
 
