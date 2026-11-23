@@ -434,6 +434,7 @@ const supportingLibraries: NavItem[] = [
           { slug: 'build', href: '/docs/libraries/workspace/executors/build' },
           { slug: 'e2e', href: '/docs/libraries/workspace/executors/e2e' },
           { slug: 'publish', href: '/docs/libraries/workspace/executors/publish' },
+          { slug: 'service', href: '/docs/libraries/workspace/executors/service' },
           { slug: 'test', href: '/docs/libraries/workspace/executors/test' },
           { slug: 'typecheck', href: '/docs/libraries/workspace/executors/typecheck' },
           { slug: 'version', href: '/docs/libraries/workspace/executors/version' },
