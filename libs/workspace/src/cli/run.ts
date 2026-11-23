@@ -21,6 +21,7 @@ import { pathKey, searchPath } from '../runner/environment'
 import { asksForHelp } from '../runner/overrides'
 import { describeError } from '../runner/refusal'
 import { main, USAGE as RUN_USAGE } from '../runner/run'
+import { processStops } from '../runner/stops'
 import { COMMANDS, isOwnCommand, USAGE } from './catalogue'
 import { handOver, processHost } from './handover'
 
@@ -105,6 +106,7 @@ export async function runWorkspaceCli(options: WorkspaceCliOptions, host: Handov
       execPath: process.execPath,
       spawn: (line, spawnOptions) => spawn(line, spawnOptions),
       write: note,
+      stops: processStops(),
       importModule: (file) => import(/* hf-graph: opaque */ pathToFileURL(file).href),
     })
   // why: a word that is neither `run` nor the catalogue's was passed on or refused above
