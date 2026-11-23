@@ -101,4 +101,28 @@ describe('changeSet', () => {
     execFileSync('git', ['add', '.hfignore'], { cwd: root })
     expect(changeSet(root, base, null).changes).toEqual([])
   })
+
+  it('counts a file renamed into what .hfignore names as deleted, so what read the old path still hears of it', () => {
+    const { root, base, head } = plant('renamed-module')
+    writeFileSync(join(root, '.hfignore'), '**/extra-work.ts\n')
+    expect(changeSet(root, base, head).changes).toEqual([
+      { status: 'deleted', path: 'libs/alpha/src/extra/extra-impl.ts', previousPath: null },
+      { status: 'modified', path: 'libs/alpha/src/extra/index.ts', previousPath: null },
+    ])
+  })
+
+  it('counts a file renamed out of what .hfignore names as added', () => {
+    const { root, base, head } = plant('renamed-module')
+    writeFileSync(join(root, '.hfignore'), '**/extra-impl.ts\n')
+    expect(changeSet(root, base, head).changes).toEqual([
+      { status: 'added', path: 'libs/alpha/src/extra/extra-work.ts', previousPath: null },
+      { status: 'modified', path: 'libs/alpha/src/extra/index.ts', previousPath: null },
+    ])
+  })
+
+  it('leaves out a rename both sides of which .hfignore names', () => {
+    const { root, base, head } = plant('renamed-module')
+    writeFileSync(join(root, '.hfignore'), '**/extra-*.ts\n')
+    expect(changeSet(root, base, head).changes).toEqual([{ status: 'modified', path: 'libs/alpha/src/extra/index.ts', previousPath: null }])
+  })
 })
