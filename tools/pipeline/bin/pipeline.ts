@@ -464,8 +464,8 @@ async function run(): Promise<void> {
 }
 
 /**
- * Settles what a run of this environment that did not end left behind: the check runs it
- * created and never completed, and the summary of the tasks that had ended.
+ * Settles what a run of this environment left behind: the check runs it created and never
+ * completed, and, when the run did not end, the summary of the tasks that had ended.
  */
 async function finalize(): Promise<void> {
   const environment = (values.environment as Environment | undefined) ?? environmentOf(process.platform)
@@ -495,7 +495,9 @@ async function finalize(): Promise<void> {
   }
   const settlement = await settleChecks({ records, plan: planned, results, api })
   writeJson(checksPath(environment), settlement.records)
-  for (const name of settlement.settled) say(`settled ${name} as cancelled`)
+  for (const { name, conclusion } of settlement.settled) say(`settled ${name} as ${conclusion}`)
+  // why: check runs are best-effort, so one the API will not complete is said and never fails the job, whose result is its tasks'
+  if (settlement.unsettled.length > 0) say(`::notice::${settlement.unsettled.length} check runs stay in progress: ${settlement.reason}`)
 }
 
 /**
