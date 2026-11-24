@@ -1,6 +1,6 @@
 /**
  * The documentation site lists every publishable library: the `LIBRARIES` array of the site's
- * content, navigation and documentation generator names each by package, and the content's
+ * content and documentation generator names each by package, and the content's
  * array also has each one placed on a level of the ecosystem hierarchy.
  *
  * @module rules/workspace/docs-site-libraries
@@ -20,7 +20,6 @@ const ECOSYSTEM = 'apps/docs-site/src/lib/ecosystem.ts'
 /** The files whose `LIBRARIES` array is checked, by where they sit in the site. */
 const LISTING_FILES: Readonly<Record<string, string>> = {
   'content.ts': 'apps/docs-site/src/lib',
-  'navigation.ts': 'apps/docs-site/src/lib',
   'generate-docs.ts': 'apps/docs-site/scripts',
 }
 
