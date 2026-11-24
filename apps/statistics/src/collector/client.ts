@@ -1,8 +1,6 @@
 import type { Day } from './dates'
 import type { DailyDownloads } from './model'
 import type { RangeRequest } from './validate'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import {
   DOWNLOADS_API,
   MAX_RETRIES,
@@ -14,26 +12,24 @@ import {
 } from './model'
 import { validateCreatedResponse, validateLastDayResponse, validateRangeResponse } from './validate'
 
-/** The subset of `fetch` the client needs, so a test can hand it canned responses. */
+/** The subset of `fetch` the client needs: the service hands it one that stops with the service, a test one that answers from a table. */
 export type FetchLike = (url: string) => Promise<Response>
 
-/** How the client waits, so a test can skip the waiting. */
+/** How the client waits: the service hands it a wait that a stop cuts short, a test one that does not wait. */
 export type SleepLike = (ms: number) => Promise<void>
 
 /** What the client is built from. */
 export interface NpmClientOptions {
-  /** The transport; defaults to the global `fetch` */
-  fetch?: FetchLike
-  /** The clock to wait on; defaults to a timer */
-  sleep?: SleepLike
+  /** The transport */
+  fetch: FetchLike
+  /** The clock to wait on */
+  sleep: SleepLike
   /** Least milliseconds between one request completing and the next starting; defaults to {@link MIN_REQUEST_GAP_MS} */
   minGapMs?: number
   /** Milliseconds the first retry of a rate-limited request waits, doubling after; defaults to {@link RATE_LIMIT_PAUSE_MS} */
   rateLimitPauseMs?: number
   /** Times a transient failure is retried; defaults to {@link MAX_RETRIES} */
   maxRetries?: number
-  /** Called with a line of progress for whoever is watching the run */
-  onProgress?: (message: string) => void
 }
 
 /** The three things the collector asks npm. */
@@ -61,18 +57,6 @@ export interface NpmClient {
   fetchCreated(packageName: string): Promise<Day>
   /** How many requests reached the network, retries included */
   readonly requestCount: number
-}
-
-/**
- * Wait for a number of milliseconds.
- *
- * @param ms - How long
- * @returns A promise that resolves once the time has passed
- */
-function sleepFor(ms: number): Promise<void> {
-  return createPromise((resolve) => {
-    setTimeout(resolve, ms)
-  })
 }
 
 /**
@@ -125,22 +109,21 @@ function classifyStatus(status: number, packageName: string, url: string): NpmSt
  * Every response is validated before it is returned, so a caller only ever
  * sees data that matches what it asked for.
  *
- * @param options - Transport, clock, and pacing; all optional
+ * @param options - The transport, the clock, and the pacing
  * @returns A client that paces, retries and validates every request
  *
  * @example Reading a week of counts
  * ```typescript
- * const client = createNpmClient()
+ * const client = createNpmClient({ fetch: (url) => fetch(url), sleep: (ms) => pause(ms, signal) })
  * const week = await client.fetchRange({ package: '@hyperfrontend/features', start: '2026-09-01', end: '2026-09-07' })
  * ```
  */
-export function createNpmClient(options: NpmClientOptions = {}): NpmClient {
-  const transport = options.fetch ?? ((url: string) => fetch(url))
-  const sleep = options.sleep ?? sleepFor
+export function createNpmClient(options: NpmClientOptions): NpmClient {
+  const transport = options.fetch
+  const sleep = options.sleep
   const minGapMs = options.minGapMs ?? MIN_REQUEST_GAP_MS
   const rateLimitPauseMs = options.rateLimitPauseMs ?? RATE_LIMIT_PAUSE_MS
   const maxRetries = options.maxRetries ?? MAX_RETRIES
-  const onProgress = options.onProgress ?? (() => undefined)
   let requestCount = 0
   let paced = false
 
@@ -154,10 +137,7 @@ export function createNpmClient(options: NpmClientOptions = {}): NpmClient {
     try {
       response = await transport(url)
     } catch (error) {
-      throw new NpmStatsError(
-        'unavailable',
-        `npm could not be reached for ${packageName}: ${error instanceof Error ? error.message : String(error)} (${url})`
-      )
+      throw new NpmStatsError('unavailable', `npm could not be reached for ${packageName}: ${String(error)} (${url})`)
     }
     if (!response.ok) throw classifyStatus(response.status, packageName, url)
 
@@ -171,40 +151,31 @@ export function createNpmClient(options: NpmClientOptions = {}): NpmClient {
     try {
       return await response.json()
     } catch (error) {
-      throw new NpmStatsError(
-        'malformed-json',
-        `npm answered ${packageName} with unreadable JSON: ${error instanceof Error ? error.message : String(error)} (${url})`
-      )
+      throw new NpmStatsError('malformed-json', `npm answered ${packageName} with unreadable JSON: ${String(error)} (${url})`)
     }
   }
 
-  const withRetries = async (url: string, packageName: string): Promise<unknown> => {
-    for (let attempt = 0; ; attempt += 1) {
-      try {
-        return await requestJson(url, packageName)
-      } catch (error) {
-        if (!(error instanceof NpmStatsError) || !TRANSIENT_FAILURES.includes(error.kind) || attempt >= maxRetries) throw error
-        const backoff = error.kind === 'rate-limited' ? rateLimitPauseMs * 2 ** attempt : minGapMs * 2 ** (attempt + 1)
-        onProgress(`  ↻ ${error.message}; retrying in ${backoff}ms (${attempt + 1}/${maxRetries})`)
-        await sleep(backoff)
-      }
+  const withRetries = async (url: string, packageName: string, attempt = 0): Promise<unknown> => {
+    try {
+      return await requestJson(url, packageName)
+    } catch (error) {
+      if (!(error instanceof NpmStatsError) || !TRANSIENT_FAILURES.includes(error.kind) || attempt >= maxRetries) throw error
+      await sleep(error.kind === 'rate-limited' ? rateLimitPauseMs * 2 ** attempt : minGapMs * 2 ** (attempt + 1))
+      return withRetries(url, packageName, attempt + 1)
     }
   }
 
   return {
     async fetchRange(request) {
       const url = `${DOWNLOADS_API}/range/${request.start}:${request.end}/${encodePackage(request.package)}`
-      onProgress(`  → ${request.package} ${request.start}:${request.end}`)
       return validateRangeResponse(await withRetries(url, request.package), request)
     },
     async fetchLastDay(packageName) {
       const url = `${DOWNLOADS_API}/point/last-day/${encodePackage(packageName)}`
-      onProgress(`  → newest counted day, via ${packageName}`)
       return validateLastDayResponse(await withRetries(url, packageName), packageName)
     },
     async fetchCreated(packageName) {
       const url = `${REGISTRY_API}/${encodePackage(packageName)}`
-      onProgress(`  → first published day of ${packageName}`)
       return validateCreatedResponse(await withRetries(url, packageName), packageName)
     },
     get requestCount() {

@@ -1,6 +1,6 @@
 /**
  * The documentation site lists every publishable library: the `LIBRARIES` array of the site's
- * content, navigation and documentation generator names each by package, and the content's
+ * content and documentation generator names each by package, and the content's
  * array also has each one placed on a level of the ecosystem hierarchy.
  *
  * @module rules/workspace/docs-site-libraries
@@ -11,16 +11,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, posix, sep } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { defineRule } from '@hyperfrontend/linter'
-import { readPackageFile, workspaceRootOf } from '@hyperfrontend/workspace/lint'
-import { publishableLibraries } from './shared/libraries.ts'
-
-/** A publishable library and its package name. */
-interface NamedLibrary {
-  /** The package name. */
-  readonly packageName: string
-  /** The library's root, workspace-relative. */
-  readonly path: string
-}
+import { workspaceRootOf } from '@hyperfrontend/workspace/lint'
+import { namedLibraries } from './shared/libraries.ts'
 
 /** The file placing libraries on the ecosystem hierarchy, workspace-relative. */
 const ECOSYSTEM = 'apps/docs-site/src/lib/ecosystem.ts'
@@ -28,7 +20,6 @@ const ECOSYSTEM = 'apps/docs-site/src/lib/ecosystem.ts'
 /** The files whose `LIBRARIES` array is checked, by where they sit in the site. */
 const LISTING_FILES: Readonly<Record<string, string>> = {
   'content.ts': 'apps/docs-site/src/lib',
-  'navigation.ts': 'apps/docs-site/src/lib',
   'generate-docs.ts': 'apps/docs-site/scripts',
 }
 
@@ -74,13 +65,9 @@ export default defineRule<undefined, Node>({
           const ecosystemFile = join(root, ECOSYSTEM)
           // context: only the content drives the index page, so only it answers for a library missing from the hierarchy.
           const ecosystem = content && existsSync(ecosystemFile) ? readFileSync(ecosystemFile, 'utf8') : null
-          const libraries: NamedLibrary[] = []
-          for (const library of publishableLibraries(root)) {
-            const packageName = readPackageFile(library.directory)?.name
-            if (typeof packageName === 'string') libraries.push({ packageName, path: library.path })
-          }
-          libraries.sort((a, b) => a.packageName.localeCompare(b.packageName))
-          for (const { packageName, path: libraryPath } of libraries) {
+          for (const { packageName, path: libraryPath } of namedLibraries(root).sort((a, b) =>
+            a.packageName.localeCompare(b.packageName)
+          )) {
             const report = (message: string): void => context.report({ start: declarator.start, end: declarator.end, message })
             if (!listed.has(packageName))
               report(`Publishable library '${packageName}' (${libraryPath}) is not listed in the LIBRARIES array`)

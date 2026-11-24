@@ -1,14 +1,12 @@
 import { Breadcrumb } from '@/components/breadcrumb'
-import { DownloadsDashboard } from '@/components/downloads/downloads-dashboard'
+import { LiveDownloads } from '@/components/downloads/live-downloads'
 import { H1 } from '@/components/heading-with-anchor'
-import { formatArticleDate } from '@/lib/article-format'
 import { getDownloadsSnapshot } from '@/lib/downloads'
-import { DOWNLOADS_ROUTE, formatExactCount } from '@/lib/downloads-route'
+import { DOWNLOADS_ROUTE } from '@/lib/downloads-route'
 import { getPageMetadata } from '@/lib/metadata'
 import { REVALIDATION_DAYS } from '@/lib/npm-downloads/model'
 import { REPO_URL } from '@/lib/site'
 import Link from 'next/link'
-import { Suspense } from 'react'
 
 export const metadata = getPageMetadata({
   title: 'Downloads',
@@ -21,7 +19,7 @@ export const metadata = getPageMetadata({
 const DATASET_URL = `${REPO_URL}/tree/main/apps/docs-site/data/npm-downloads`
 
 /** @see {@link DATASET_URL} */
-const COLLECTOR_URL = `${REPO_URL}/tree/main/apps/docs-site/src/lib/npm-downloads`
+const COLLECTOR_URL = `${REPO_URL}/tree/main/apps/statistics/src/collector`
 
 /** The write-up this approach owes most of its pitfalls to. */
 const TANSTACK_ARTICLE_URL = 'https://tanstack.com/blog/npm-stats-the-right-way'
@@ -36,24 +34,10 @@ export default function DownloadsPage() {
       <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Downloads</H1>
       {snapshot === null ? (
         <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-          No download history has been collected for this build yet. Run the collector and rebuild to see it here.
+          No download history has been collected for this build yet. Run the refresh and rebuild to see it here.
         </p>
       ) : (
-        <>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-            <strong className="font-semibold text-slate-900 dark:text-white">{formatExactCount(snapshot.total)}</strong> npm downloads
-            across {snapshot.packages.length} published packages, counted through {formatArticleDate(snapshot.frontier)}.
-          </p>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Raw package downloads as npm counts them, summed from daily records; a package that depends on another in the ecosystem is
-            counted for both, so this is not a number of users or installations.
-          </p>
-
-          {/* why: the focused package lives in the query string, and useSearchParams needs a boundary to stream past during the static build */}
-          <Suspense fallback={<p className="mt-8 text-slate-600 dark:text-slate-400">Loading charts…</p>}>
-            <DownloadsDashboard snapshot={snapshot} />
-          </Suspense>
-        </>
+        <LiveDownloads snapshot={snapshot} />
       )}
 
       <details className="methodology mt-12">
@@ -67,12 +51,15 @@ export default function DownloadsPage() {
             is kept.
           </p>
           <p>
-            The daily records are committed to the repository, one file per package, and the site is built from those files rather than read
-            live. A refresh appends the days npm has counted since the last one, and re-reads the most recent {REVALIDATION_DAYS} days
-            because npm&apos;s latest counts can still settle; older days are never requested again. The production build runs that same
-            refresh first, so the published page extends the committed records with the days counted since they were committed, and a daily
-            check rebuilds it only when npm has counted a day it does not yet show. So a total is reproducible from the committed records
-            plus npm&apos;s own counts for the days after them, and anyone can audit both the{' '}
+            The daily records are committed to the repository, one file per package, and the site is built from those files. A small service
+            collects npm&apos;s counts on a schedule and holds the full history. It reads every history again, whole, whenever npm counts a
+            new day, because npm reports a day it has not processed yet as zero and fills it in later, sometimes more than a week later.
+            When this page opens it asks that service for the days counted since the page was built, and for the most recent{' '}
+            {REVALIDATION_DAYS} days because the latest counts are the ones that settle most often. The service states each package&apos;s
+            total with its answer, and when a package here still adds up to something else, an older day has been corrected and the page
+            asks for the whole history once. When the service cannot be reached, the page shows the figures it was built with. The
+            production build takes the whole history from the same service before it renders. So a total is reproducible from npm&apos;s own
+            counts, and anyone can audit both the{' '}
             <a href={DATASET_URL} target="_blank" rel="noopener noreferrer">
               data
             </a>{' '}

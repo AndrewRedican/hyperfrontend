@@ -98,6 +98,10 @@ describe('railwayService', () => {
     expect(railwayService(project('demo-one'))).toBe('one')
   })
 
+  it('names the service of a project deployed as a built service, whose kind it does not read', () => {
+    expect(railwayService(withDeploy({ provider: 'railway', service: 'statistics', kind: 'service' }))).toBe('statistics')
+  })
+
   it.each([
     ['no metadata', project('demo-two')],
     ['no configuration', { ...project('demo-two'), configuration: null }],

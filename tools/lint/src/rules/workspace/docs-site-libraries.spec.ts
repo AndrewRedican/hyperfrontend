@@ -105,7 +105,12 @@ testRule(rule, {
       ]),
     },
     {
-      ...site('a navigation file missing a library', PLACED.path, 'apps/docs-site/src/lib/navigation.ts', 'const LIBRARIES = []'),
+      ...site(
+        'a documentation generator missing a library',
+        PLACED.path,
+        'apps/docs-site/scripts/generate-docs.ts',
+        'const LIBRARIES = []'
+      ),
       errors: onDeclarator('const LIBRARIES = []', [
         missing('@hyperfrontend/json-utils', 'libs/utils/json'),
         missing('@hyperfrontend/logging', 'libs/logging'),

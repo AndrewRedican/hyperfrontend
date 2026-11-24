@@ -1,7 +1,7 @@
 /**
  * The plan of a change: the owned selection of every pipeline target, the tasks the pipeline adds
  * (every task a planned task needs first, the probes and smokes after the builds, and on `main`
- * the deploys of the demos whose build the change can alter and the provision they wait on), the
+ * the deploys of the demos and services whose build the change can alter and the provision they wait on), the
  * registry drift of `main`, and the chains the two environments run, ranked for the scheduler.
  *
  * @module pipeline/plan

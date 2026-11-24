@@ -1,66 +1,17 @@
 import type { Day } from './dates'
 
 /**
- * Longest span, in days, one range request asks npm for.
- *
- * npm's range endpoint answers at most eighteen months per request and says
- * nothing when it gives less: a request for three years comes back as the
- * most recent 550 days with the `start` quietly moved. Five hundred days is
- * comfortably inside that cap, and the response is checked against the
- * request anyway, so a cap that tightens is caught rather than trusted.
- */
-export const CHUNK_DAYS = 500
-
-/**
  * How many days behind the newest published day are still treated as open
- * to revision and fetched again on every refresh.
+ * to revision and asked for again on every read of the statistics service.
  *
  * npm processes a day's logs once, soon after the UTC midnight that ends it,
  * and pads a range request with zeros for every day it has not processed
  * yet. A day is therefore not final the moment it appears. A week is a
  * conservative window: it costs no extra requests, because the same request
- * that fetches the newest days covers it, and it lets a late correction land
+ * that asks for the newest days covers it, and it lets a late correction land
  * without anyone noticing it had to.
  */
 export const REVALIDATION_DAYS = 7
-
-/**
- * Least time, in milliseconds, between the end of one request and the start
- * of the next.
- *
- * The ecosystem is small enough that a refresh is tens of requests, not
- * thousands, so it is run one request at a time with a pause after each.
- * This is a courtesy to a public API rather than a rate the API demands.
- */
-export const MIN_REQUEST_GAP_MS = 1_000
-
-/**
- * Time, in milliseconds, the first retry of a rate-limited request waits; each
- * further retry doubles it.
- *
- * A rate limit is a closed window, not a moment of trouble, so it gets a wait
- * of its own rather than the short backoff a failing server gets. Measured on
- * 2026-11-17: the range endpoint answered twenty requests paced a second
- * apart, refused the twenty-first, and went on refusing it for between
- * twenty-five and thirty seconds, with a `retry-after` of zero throughout.
- * The short backoff's three retries were all spent inside that window, and a
- * refresh of more than twenty packages could no longer finish at all. One
- * wait of this length outlasts the window, and the run carries on from the
- * request it stopped at.
- */
-export const RATE_LIMIT_PAUSE_MS = 30_000
-
-/** Times a request that failed for a reason worth retrying is tried again. */
-export const MAX_RETRIES = 3
-
-/** The earliest day npm holds download counts for at all. */
-export const EARLIEST_DAY: Day = '2015-01-10'
-
-/** Where npm serves download counts from. */
-export const DOWNLOADS_API = 'https://api.npmjs.org/downloads'
-
-/** Where npm serves package metadata from. */
-export const REGISTRY_API = 'https://registry.npmjs.org'
 
 /** Version of the on-disk layout, bumped when a file written before it can no longer be read. */
 export const DATASET_VERSION = 1
@@ -79,7 +30,7 @@ export interface DailyDownloads {
 
 /** What is remembered about a package between refreshes. */
 export interface PackageRecord {
-  /** The day the package was first published, so no request asks about days before it existed */
+  /** The day the package was first published, as the statistics service reports it */
   created: Day
 }
 
@@ -110,22 +61,14 @@ export interface Dataset {
 }
 
 /**
- * Why a request against npm could not be turned into data.
+ * Why download statistics could not be read.
  *
  * Each kind answers a different question for whoever reads the failure:
- * whether to retry, whether the package list is wrong, or whether the API
- * changed shape underneath the collector.
+ * whether to ask the statistics service again later, whether its answer
+ * changed shape underneath the site, or whether the committed dataset needs
+ * repair.
  */
-export type NpmStatsFailure =
-  | 'unavailable'
-  | 'rate-limited'
-  | 'package-not-found'
-  | 'request-rejected'
-  | 'malformed-json'
-  | 'schema-drift'
-  | 'truncated-range'
-  | 'incomplete-range'
-  | 'dataset-corrupt'
+export type NpmStatsFailure = 'unavailable' | 'schema-drift' | 'dataset-corrupt'
 
 /**
  * A failure with a classification, so a caller can act on the kind rather
@@ -147,6 +90,3 @@ export class NpmStatsError extends Error {
     this.kind = kind
   }
 }
-
-/** Failures worth a retry: the request may well succeed a moment later. */
-export const TRANSIENT_FAILURES: readonly NpmStatsFailure[] = ['unavailable', 'rate-limited']

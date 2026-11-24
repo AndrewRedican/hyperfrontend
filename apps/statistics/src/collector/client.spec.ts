@@ -1,5 +1,5 @@
 import type { FetchLike } from './client'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createNpmClient } from './client'
 import { NpmStatsError } from './model'
 
@@ -193,11 +193,21 @@ describe('createNpmClient', () => {
     expect(transport.urls).toEqual(['https://registry.npmjs.org/@hyperfrontend%2Ffeatures'])
   })
 
-  it('narrates retries to whoever is watching', async () => {
-    const transport = queue([reply('down', 503, 'text/plain'), reply(GOOD_RANGE)])
-    const lines: string[] = []
-    const client = createNpmClient({ fetch: transport.fetch, sleep: recordedSleep().sleep, onProgress: (line) => lines.push(line) })
+  it('rejects an answer that names no content type as schema drift', async () => {
+    const transport = queue([new Response(null, { status: 200 })])
+    const client = createNpmClient({ fetch: transport.fetch, sleep: recordedSleep().sleep })
+    await expect(client.fetchRange(RANGE)).rejects.toThrow('no content type rather than JSON')
+  })
+
+  it('does not retry a failure that is not one of npm', async () => {
+    const transport = queue([reply(GOOD_RANGE), reply(GOOD_RANGE)])
+    const client = createNpmClient({
+      fetch: transport.fetch,
+      sleep: () => {
+        throw new Error('the clock stopped')
+      },
+    })
     await client.fetchRange(RANGE)
-    expect(lines).toEqual([expect.stringContaining('2026-09-01:2026-09-02'), expect.stringContaining('retrying in 2000ms (1/3)')])
+    await expect(kindOf(client.fetchRange(RANGE))).resolves.toBe('unexpected')
   })
 })

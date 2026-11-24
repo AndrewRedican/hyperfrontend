@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { NpmStatsError } from './model'
 import { validateCreatedResponse, validateLastDayResponse, validateRangeResponse } from './validate'
 
@@ -151,6 +151,10 @@ describe('validateLastDayResponse', () => {
     ).toBe('schema-drift')
   })
 
+  it('rejects an end day that is no calendar day', () => {
+    expect(kindOf(() => validateLastDayResponse({ downloads: 11, end: '2026-02-30', package: PACKAGE }, PACKAGE))).toBe('schema-drift')
+  })
+
   it('rejects a body without an end day', () => {
     expect(kindOf(() => validateLastDayResponse({ downloads: 11, package: PACKAGE }, PACKAGE))).toBe('schema-drift')
   })
@@ -159,6 +163,16 @@ describe('validateLastDayResponse', () => {
 describe('validateCreatedResponse', () => {
   it('reads the creation day off the registry document', () => {
     expect(validateCreatedResponse({ name: PACKAGE, time: { created: '2026-06-28T13:22:06.094Z' } }, PACKAGE)).toBe('2026-06-28')
+  })
+
+  it('rejects a document that describes another package', () => {
+    expect(
+      kindOf(() => validateCreatedResponse({ name: '@hyperfrontend/nexus', time: { created: '2026-06-28T13:22:06.094Z' } }, PACKAGE))
+    ).toBe('schema-drift')
+  })
+
+  it('says where a document departs from the documented shape', () => {
+    expect(() => validateCreatedResponse({ name: PACKAGE, time: {} }, PACKAGE)).toThrow('is not the documented shape at /time')
   })
 
   it('rejects a document without a time map', () => {

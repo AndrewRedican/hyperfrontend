@@ -48,9 +48,8 @@ apps/docs-site/
 ├── data/
 │   └── npm-downloads/       # Committed daily npm download history (NDJSON per package)
 ├── scripts/
-│   ├── check-downloads-freshness.mjs  # Compares the published downloads frontier with npm's
 │   ├── generate-docs.ts     # Content generation pipeline
-│   ├── refresh-npm-downloads.ts  # Refreshes data/npm-downloads from npm, on demand or in a production build
+│   ├── refresh-npm-downloads.ts  # Extends data/npm-downloads from the statistics service, on demand or in a production build
 │   └── validate-links.ts    # Build-time link validation
 ├── src/
 │   ├── app/                 # Next.js App Router pages
@@ -263,26 +262,35 @@ a release has been published that this build does not describe yet.
 `/docs/downloads`, the download pills on package pages, and the ecosystem badge on the landing
 page read a committed dataset under `data/npm-downloads/`: one newline-delimited JSON file per
 published package, one line per UTC day, plus a `manifest.json` recording the newest day npm
-had counted and when the dataset was last refreshed. A local or CI build never asks npm; it is
-a function of the committed files. A Vercel production build is the one exception, described
-under [Deployment](#deployment): it first extends the committed history with the days npm has
-counted since, so the published page is current without a commit for every day.
+had counted and when the dataset was last refreshed. A local or CI build never reaches the
+network; it is a function of the committed files. A Vercel production build is the one
+exception, described under [Deployment](#deployment): it first extends the committed history
+with the days counted since, so the published pages start from a current history without a
+commit for every day.
 
-The committed dataset is refreshed on purpose, not as part of a build:
+The site never asks npm for download counts itself. The statistics service
+(`apps/statistics`) collects npm's counts on a schedule, holds the whole history and answers
+`GET /v1/downloads`. The site reads it in two places. In the browser, the downloads page asks
+for the days counted since the page was built, and for the most recent seven days because npm
+may still revise them, and lays them over the built figures
+(`src/components/downloads/live-downloads.tsx`). The answer states each package's total; when a
+package on the page still adds up to something else, an older day has been corrected, and the
+page asks once for the whole history. When the service cannot be reached the page keeps the
+figures it was built with. On the command line, the refresh extends the committed
+dataset from the same answer:
 
 ```bash
 npm run refresh-downloads            # or, from the root: npx hf run docs-site:refresh-downloads
-npm run refresh-downloads -- --force # run even when already refreshed today
 ```
 
-The collector (`src/lib/npm-downloads/`) asks npm for daily counts in bounded chunks of at
-most 500 days, because a longer span is silently cut to the most recent eighteen months;
-validates every answer against the request before anything is written; runs one request at
-a time with at least a second between them; re-reads the most recent seven days on every
-refresh, since npm counts a day once, soon after the UTC midnight that ends it; and commits
-the whole run transactionally or not at all. A refresh made earlier the same UTC day is
-skipped unless forced, because npm has nothing new to say until the next day is counted.
-Commit the changed files under `data/npm-downloads/` with the refresh.
+The refresh (`src/lib/npm-downloads/extend.ts`) makes one request, for the whole history and
+not only for the days since the stored frontier: npm reports a day it has not processed yet as
+zero and fills it in later, sometimes more than a week later, so an old day can change too. It
+validates the whole answer before anything is written; lays each published package's answered
+days over its stored ones, refusing a result that would leave a hole; and commits the run
+transactionally or not at all. Commit the changed files under `data/npm-downloads/` with the refresh. The service's
+origin is `STATISTICS_ORIGIN` in `src/lib/site.ts`; set `NEXT_PUBLIC_STATISTICS_ORIGIN` to
+point a local site, or a local refresh, at a service running somewhere else.
 
 `public/llms.txt` follows the [llms.txt convention](https://llmstxt.org): an H1, a summary,
 and link sections pointing at the `.md` files. Secondary entry points are left out of it on
@@ -521,23 +529,17 @@ Static export to `out/` directory for Vercel deployment.
 ### Download statistics on production
 
 The `build` script starts with `refresh-downloads --deployment`, which does nothing unless
-`VERCEL_ENV` is `production`. In a production build it asks npm for the days it has counted
-since the committed dataset's frontier (the same bounded, validated requests the collector
-always makes, forced so a same-day skip cannot leave a deploy stale), and the build then reads
-the extended history. A refresh that fails leaves the committed files as they are and lets the
-build continue with a warning, so npm being unreachable costs freshness, never the deploy, and
-the page still states exactly the day it is counted through. Preview builds, CI builds and
-local builds skip the step and render the committed history.
+`VERCEL_ENV` is `production`. In a production build it asks the statistics service for the whole
+history, and the build then reads the committed files brought up to it.
+A refresh that fails leaves the committed files as they are and lets the build continue with a
+warning, so the service being unreachable costs freshness, never the deploy, and the page still
+states exactly the day it is counted through. Preview builds, CI builds and local builds skip
+the step and render the committed history.
 
-A merge to `main` therefore deploys current statistics on its own. Between merges, the
-[downloads workflow](../../.github/workflows/downloads-freshness.yml) runs once a day: it reads
-`/docs/downloads/snapshot.json`, the frontier the published site was built with, compares it
-with the newest day npm reports for a published package, and reports how far the site lags.
-When the two agree it does nothing. When npm is ahead it posts to a deploy hook, if the
-repository secret `VERCEL_DEPLOY_HOOK_URL` holds one, so a production build fetches the missing
-days; no hook is configured today, so the workflow states the lag in a notice and passes, and
-the statistics catch up with the next merge. Run the same comparison locally with
-`node scripts/check-downloads-freshness.mjs`.
+A merge to `main` therefore deploys current statistics on its own. Between merges nothing
+rebuilds the site: the downloads page asks the statistics service when it opens and shows the
+days counted since the build, while the download pills and the landing page's ecosystem total
+stay as built until the next production build.
 
 The committed dataset is the durable record and the base every build starts from; extend it
 with `npm run refresh-downloads` and commit the result whenever the tail of days a production
@@ -556,6 +558,7 @@ Analytics lives in [src/lib/analytics.ts](src/lib/analytics.ts) and the `<Analyt
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`        | GA4 measurement ID (`G-…`). Setting it enables analytics.             |
 | `NEXT_PUBLIC_GOOGLE_ADS_ID`            | Optional Google Ads account ID (`AW-…`) enabling conversion tracking. |
 | `NEXT_PUBLIC_SITE_URL`                 | Canonical origin override; defaults to `https://hyperfrontend.dev`.   |
+| `NEXT_PUBLIC_STATISTICS_ORIGIN`        | Statistics service origin override; defaults to the deployed service. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Optional Google Search Console verification token.                    |
 
 ### Consent Mode v2, basic mode

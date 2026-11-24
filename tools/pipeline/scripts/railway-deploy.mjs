@@ -2,8 +2,8 @@
 /**
  * Deploy one commit to one Railway service and wait for the deployment to end.
  *
- * The pipeline runs this as the `deploy` task of a demo on `main`, after the demo's own tasks
- * have passed, so Railway builds the exact commit the run checked rather than whatever the
+ * The pipeline runs this as the `deploy` task of a demo or a service on `main`, after the project's
+ * own tasks have passed, so Railway builds the exact commit the run checked rather than whatever the
  * branch head is by the time it asks. The deploy goes through the Railway CLI's
  * `redeploy --commit`, which builds the commit from the service's connected repository once
  * without pinning it, so the service's configured branch stays what the IaC says.

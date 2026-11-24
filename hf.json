@@ -190,6 +190,7 @@
     "typecheckExecutor": ["executorShared", "{projectRoot}/src/executors/typecheck/**/*"],
     "testExecutor": ["executorShared", "{projectRoot}/src/executors/test/**/*"],
     "e2eExecutor": ["executorShared", "{projectRoot}/src/executors/e2e/**/*"],
+    "serviceExecutor": ["executorShared", "{projectRoot}/src/executors/service/**/*"],
     "toolchain": [
       "{projectRoot}/src/build.ts",
       "{projectRoot}/src/models/**/*",
