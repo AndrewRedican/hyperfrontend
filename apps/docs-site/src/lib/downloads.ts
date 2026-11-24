@@ -31,27 +31,12 @@ export interface PackageDownloads {
 
 /** Everything the downloads page and the pills draw from. */
 export interface DownloadsSnapshot {
-  /** The newest day npm had finished counting when the dataset was refreshed */
+  /** The newest day npm had finished counting when the figures were last refreshed */
   frontier: Day
-  /** When the dataset was last refreshed, as an ISO timestamp */
+  /** When the figures were last refreshed, as an ISO timestamp: the dataset's refresh, or the statistics service's collection once its days are laid over */
   refreshedAt: string
   /** Every tracked package, most downloaded first */
   packages: PackageDownloads[]
-  /** Raw npm downloads summed across every tracked package */
-  total: number
-}
-
-/**
- * What the published site says about the history it was built from, for the
- * scheduled freshness check to read.
- */
-export interface DownloadsFreshness {
-  /** The newest day npm had finished counting when the history was refreshed, or null before any history exists */
-  frontier: Day | null
-  /** When the history was refreshed, as an ISO timestamp, or null before any history exists */
-  refreshedAt: string | null
-  /** How many packages the history covers */
-  packages: number
   /** Raw npm downloads summed across every tracked package */
   total: number
 }
@@ -116,24 +101,4 @@ export function getDownloadsSnapshot(): DownloadsSnapshot | null {
  */
 export function getPackageDownloads(packageName: string): PackageDownloads | null {
   return getDownloadsSnapshot()?.packages.find((entry) => entry.package === packageName) ?? null
-}
-
-/**
- * The freshness of the history this build was made from.
- *
- * Served as JSON beside the downloads page, so a check running outside the
- * site can tell which day the published pages are counted through without
- * parsing them.
- *
- * @returns The frontier, the refresh time, and the totals behind them
- *
- * @example
- * ```typescript
- * getDownloadsFreshness().frontier // '2026-09-18'
- * ```
- */
-export function getDownloadsFreshness(): DownloadsFreshness {
-  const snapshot = getDownloadsSnapshot()
-  if (snapshot === null) return { frontier: null, refreshedAt: null, packages: 0, total: 0 }
-  return { frontier: snapshot.frontier, refreshedAt: snapshot.refreshedAt, packages: snapshot.packages.length, total: snapshot.total }
 }
