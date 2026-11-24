@@ -169,7 +169,23 @@ export default defineRailway(() => {
     replicas: { 'europe-west4-drams3a': 1 },
   })
 
+  const statistics = service('statistics', {
+    source: hyperfrontend,
+    build: {
+      buildCommand: 'npm i && npx hf run-many -t build -p service-statistics',
+      buildEnvironment: 'V3',
+      builder: 'RAILPACK',
+      watchPatterns: pipelineOwned,
+    },
+    // why: a built service is started by node itself, so the platform's terminate signal reaches the process and it drains before it exits
+    start: 'node dist/apps/statistics/main.cjs',
+    // why: the liveness probe answers from the first moment, while the first collection from npm takes a minute or two; a probe of readiness would hold every deploy for that long and fail one whenever npm is slow
+    healthcheck: '/healthz',
+    env: { STATISTICS_ALLOWED_ORIGINS: 'https://www.hyperfrontend.dev' },
+    deploy: { limitOverride: { containers: { cpu: 0.5, memoryBytes: 500000000 } } },
+    replicas: { 'europe-west4-drams3a': 1 },
+  })
   return project('hyperfrontend', {
-    resources: [koiVue, koiPond, heartbeat, koiAngular, koiSolid, koiLit, koiPreact, clock, koiSvelte, koiReact, koiVanilla],
+    resources: [koiVue, koiPond, heartbeat, koiAngular, koiSolid, koiLit, koiPreact, clock, koiSvelte, koiReact, koiVanilla, statistics],
   })
 })
