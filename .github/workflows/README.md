@@ -108,32 +108,6 @@ The main run after the merge never inherits. It plans from the last planned main
 
 - `check-status`: Downloads `pipeline-results-linux` from the newest completed `ci` runs on `main` and reports the project's chain outcome, walking back while the project had no chain
 
-### Downloads Freshness ([downloads-freshness.yml](./downloads-freshness.yml))
-
-**Trigger**:
-
-- Daily schedule (13:20 UTC)
-- Manual dispatch
-
-**Purpose**: Keep the documentation site's npm download statistics current without committing data
-
-**How it works**:
-
-1. Reads `/docs/downloads/snapshot.json` from the published site, which states the newest npm day the site was built with
-2. Asks npm which day it has most recently counted
-3. When npm is ahead and the `VERCEL_DEPLOY_HOOK_URL` secret holds a deploy hook, posts to it; the production build fetches the missing days itself (`apps/docs-site/README.md`, Deployment). Without the secret it reports the lag as a notice and passes: the next merge to `main` builds with current statistics
-4. When the two agree, ends without building or deploying anything
-
-**Features**:
-
-- No install: a dependency-free Node script makes the two requests
-- Read-only repository permissions; no commits, so no workflow or deployment loop
-- Fails loudly when the site or npm cannot be reached, or when the hook secret is missing on the day it is needed
-
-**Jobs**:
-
-- `freshness`: Compares the published frontier with npm's and triggers a production build only when they differ
-
 ### Full Run ([full-run.yml](./full-run.yml))
 
 **Trigger**:
