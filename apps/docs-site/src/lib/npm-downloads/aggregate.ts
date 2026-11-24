@@ -67,15 +67,15 @@ export function summarize(packageName: string, records: readonly DailyDownloads[
  * Ties, which happen between fresh packages with a handful of downloads each,
  * fall back to name order so the ranking is stable between builds.
  *
- * @param totals - The packages to rank
- * @returns A new array, highest total first
+ * @param totals - The packages to rank, each carrying whatever else its caller keeps beside the total
+ * @returns A new array of the same entries, highest total first
  *
  * @example
  * ```typescript
  * rankPackages([{ package: 'b', total: 1, ... }, { package: 'a', total: 9, ... }]).map((p) => p.package) // ['a', 'b']
  * ```
  */
-export function rankPackages(totals: readonly PackageTotal[]): PackageTotal[] {
+export function rankPackages<T extends PackageTotal>(totals: readonly T[]): T[] {
   return [...totals].sort((a, b) => b.total - a.total || (a.package < b.package ? -1 : a.package > b.package ? 1 : 0))
 }
 

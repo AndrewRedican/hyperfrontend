@@ -13,6 +13,17 @@
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.hyperfrontend.dev'
 
 /**
+ * Origin of the statistics service that collects npm's download counts,
+ * without a trailing slash. The downloads page asks it in the browser and the
+ * refresh script asks it at build time, so both read this one constant.
+ * Overridable via `NEXT_PUBLIC_STATISTICS_ORIGIN`, which points a local site at
+ * a local service; an empty value counts as unset, hence `||`.
+ *
+ * Read with dot access for the same reason as {@link SITE_URL}.
+ */
+export const STATISTICS_ORIGIN = process.env.NEXT_PUBLIC_STATISTICS_ORIGIN || 'https://hyperfrontend-statistics-production.up.railway.app'
+
+/**
  * Canonical GitHub repository URL, without a trailing slash. Issue, discussion,
  * and source links compose onto it so the coordinates live in one place.
  */

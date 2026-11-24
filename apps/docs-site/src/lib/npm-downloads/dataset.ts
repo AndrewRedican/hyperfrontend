@@ -79,7 +79,7 @@ function parseManifest(text: string): DatasetManifest {
   if (manifest['version'] !== DATASET_VERSION) {
     throw new NpmStatsError(
       'dataset-corrupt',
-      `${MANIFEST_FILE} is layout version ${String(manifest['version'])}, this collector reads ${DATASET_VERSION}`
+      `${MANIFEST_FILE} is layout version ${String(manifest['version'])}, this site reads ${DATASET_VERSION}`
     )
   }
   const frontier = manifest['frontier']
@@ -157,7 +157,7 @@ export function readDataset(dir: string): Dataset {
  *
  * @param packageName - The package both lists belong to
  * @param stored - What was on disk
- * @param fetched - What npm just answered
+ * @param fetched - What the statistics service just answered
  * @returns The merged records, sorted by day
  *
  * @example A corrected day replaces its stored count
