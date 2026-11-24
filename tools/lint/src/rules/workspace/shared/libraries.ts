@@ -1,18 +1,27 @@
 /**
- * The publishable libraries of the workspace, found by walking `libs/` and `plugins/`.
+ * The publishable libraries of the workspace, found by walking `libs/` and `plugins/`, and the
+ * package name each one publishes under.
  *
  * @module rules/workspace/shared/libraries
  */
 
 import { existsSync, readdirSync } from 'node:fs'
 import { join, posix, relative, sep } from 'node:path'
-import { isPublishableLibrary } from '@hyperfrontend/workspace/lint'
+import { isPublishableLibrary, readPackageFile } from '@hyperfrontend/workspace/lint'
 
 /** A publishable library. */
 export interface Library {
   /** Its absolute directory. */
   readonly directory: string
   /** Its workspace-relative path, with forward slashes. */
+  readonly path: string
+}
+
+/** A publishable library and its package name. */
+export interface NamedLibrary {
+  /** The package name. */
+  readonly packageName: string
+  /** The library's root, workspace-relative. */
   readonly path: string
 }
 
@@ -48,4 +57,19 @@ export function publishableLibraries(workspaceRoot: string): Library[] {
     if (existsSync(directory)) collect(directory, workspaceRoot, found)
   }
   return found
+}
+
+/**
+ * The publishable libraries of a workspace whose manifest states a package name.
+ *
+ * @param workspaceRoot - The directory the paths are relative to
+ * @returns Each library with its package name, in the order `publishableLibraries` finds them
+ */
+export function namedLibraries(workspaceRoot: string): NamedLibrary[] {
+  const named: NamedLibrary[] = []
+  for (const library of publishableLibraries(workspaceRoot)) {
+    const packageName = readPackageFile(library.directory)?.name
+    if (typeof packageName === 'string') named.push({ packageName, path: library.path })
+  }
+  return named
 }
