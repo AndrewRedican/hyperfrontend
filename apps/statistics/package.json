@@ -1,0 +1,14 @@
+{
+  "name": "@hyperfrontend/statistics",
+  "version": "0.0.0",
+  "description": "Serves the npm download history of the published packages, collected from npm on a schedule.",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "1.0.6",
+    "@hyperfrontend/json-utils": "1.1.5",
+    "@hyperfrontend/logging": "1.0.4",
+    "@hyperfrontend/server": "0.2.0",
+    "@hyperfrontend/time-utils": "1.0.4"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "service-statistics",
+  "description": "Serves the npm download history of the published packages, collected from npm on a schedule.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "service",
+  "tags": ["type:app", "scope:internal"],
+  "namedInputs": {
+    "documented": [
+      "{workspaceRoot}/libs/**/package.json",
+      "{workspaceRoot}/libs/**/project.json",
+      "{workspaceRoot}/plugins/**/package.json",
+      "{workspaceRoot}/plugins/**/project.json"
+    ]
+  },
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "statistics",
+      "origin": "https://hyperfrontend-statistics-production.up.railway.app",
+      "boundary": "cross-site",
+      "kind": "service"
+    }
+  },
+  "targets": {
+    "build": {
+      "executor": "@hyperfrontend/workspace:service",
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "projects": "lib-workspace",
+          "input": "serviceExecutor"
+        },
+        {
+          "projects": "lib-workspace",
+          "input": "engine"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchain"
+        },
+        {
+          "projects": "lib-builder",
+          "input": "toolchainManifest"
+        }
+      ]
+    },
+    "dev": {
+      "command": "node --import ./libs/workspace/src/hooks/index.ts \"{projectRoot}/src/main.ts\""
+    },
+    "typecheck": {},
+    "test": {}
+  }
+}
