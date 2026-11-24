@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/AndrewRedican/hyperfrontend/compare/7680be7fdccad89129d581f2fa7c9e2265de01dc...b6ace1795c714dd4c53ea9398837b701153853af) - 2026-11-23
+
+### Features
+
+- generate a service that builds and runs on the kernel
+- add the service executor
+- read a project's target as the runner resolves it
+
+### Bug Fixes
+
+- pass a terminate signal on to the commands a run started
+
 ## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/0ef83980279c5e4c2f7853543e9d363639ce7e5f...60672c613415304211bef6785da3e406cd23d079) - 2026-11-23
 
 ### Bug Fixes

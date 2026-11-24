@@ -246,6 +246,7 @@
       "@hyperfrontend/workspace/executors/build": ["libs/workspace/src/executors/build/index.ts"],
       "@hyperfrontend/workspace/executors/e2e": ["libs/workspace/src/executors/e2e/index.ts"],
       "@hyperfrontend/workspace/executors/publish": ["libs/workspace/src/executors/publish/index.ts"],
+      "@hyperfrontend/workspace/executors/service": ["libs/workspace/src/executors/service/index.ts"],
       "@hyperfrontend/workspace/executors/test": ["libs/workspace/src/executors/test/index.ts"],
       "@hyperfrontend/workspace/executors/typecheck": ["libs/workspace/src/executors/typecheck/index.ts"],
       "@hyperfrontend/workspace/executors/version": ["libs/workspace/src/executors/version/index.ts"],

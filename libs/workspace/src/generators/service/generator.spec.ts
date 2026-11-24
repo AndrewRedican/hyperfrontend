@@ -8,9 +8,29 @@ import { serviceGenerator } from './generator'
 /** This repository's root, where prettier resolves from. */
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 
-const ROOT_FILES = {
-  'package.json': '{ "name": "@acme/monorepo" }',
+/** Where an installed kernel states its version. */
+const INSTALLED_KERNEL = 'node_modules/@hyperfrontend/server/package.json'
+
+/** A workspace with nothing in it that provides the kernel. */
+const BARE_FILES = {
+  'package.json': '{ "name": "@acme/monorepo", "version": "9.9.9" }',
   'tsconfig.base.json': '{ "compilerOptions": { "paths": {} } }',
+}
+
+const ROOT_FILES = { ...BARE_FILES, [INSTALLED_KERNEL]: '{ "name": "@hyperfrontend/server", "version": "0.2.0" }' }
+
+/** What a workspace that provides no usable kernel is told. */
+const NO_KERNEL =
+  'a service is written on @hyperfrontend/server 0.2.0 or later, which this workspace does not provide: npm install @hyperfrontend/server'
+
+/**
+ * A base tsconfig whose alias for the kernel names a module.
+ *
+ * @param entry - The module, as the alias writes it
+ * @returns The text of the file
+ */
+function aliasing(entry: string): string {
+  return `{ "compilerOptions": { "paths": { "@hyperfrontend/server": ["${entry}"] } } }`
 }
 
 /**
@@ -38,8 +58,9 @@ describe('serviceGenerator', () => {
       'apps/api/package.json',
       'apps/api/project.json',
       'apps/api/service.config.ts',
-      'apps/api/src/main.spec.ts',
       'apps/api/src/main.ts',
+      'apps/api/src/service.spec.ts',
+      'apps/api/src/service.ts',
       'apps/api/test.config.ts',
       'apps/api/tsconfig.json',
       'apps/api/tsconfig.lib.json',
@@ -47,7 +68,7 @@ describe('serviceGenerator', () => {
     ])
   })
 
-  it('states the kind in the project, with the typecheck and test targets the workspace defaults configure', async () => {
+  it('states the kind in the project, with its description and its tags', async () => {
     const tree = createMemoryTree(ROOT_FILES)
     await serviceGenerator(tree, { name: 'api', tags: ['type:service'], skipFormat: true })
     expect(readJson(tree, 'apps/api/project.json')).toEqual({
@@ -56,8 +77,27 @@ describe('serviceGenerator', () => {
       sourceRoot: '{projectRoot}/src',
       projectType: 'service',
       tags: ['type:service'],
-      targets: { typecheck: {}, test: {} },
+      targets: expect.any(Object),
     })
+  })
+
+  it('writes the build and dev targets', async () => {
+    const tree = createMemoryTree(ROOT_FILES)
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(tree.read('apps/api/project.json', 'utf-8')).toContain(
+      [
+        '  "targets": {',
+        '    "build": {',
+        '      "executor": "@hyperfrontend/workspace:service"',
+        '    },',
+        '    "dev": {',
+        '      "command": "node --import @hyperfrontend/workspace/hooks \\"{projectRoot}/src/main.ts\\""',
+        '    },',
+        '    "typecheck": {},',
+        '    "test": {}',
+        '  }',
+      ].join('\n')
+    )
   })
 
   it('states the kind where the directory is not the applications one', async () => {
@@ -66,7 +106,7 @@ describe('serviceGenerator', () => {
     expect(readJson(tree, 'services/jobs/project.json')).toEqual(expect.objectContaining({ name: 'service-jobs', projectType: 'service' }))
   })
 
-  it('writes a private ES module manifest under the scope of the root manifest', async () => {
+  it('writes a private ES module manifest under the scope of the root manifest, with the kernel as its one dependency', async () => {
     const tree = createMemoryTree(ROOT_FILES)
     await serviceGenerator(tree, { name: 'api', description: 'The API.', skipFormat: true })
     expect(readJson(tree, 'apps/api/package.json')).toEqual({
@@ -75,14 +115,102 @@ describe('serviceGenerator', () => {
       description: 'The API.',
       type: 'module',
       private: true,
+      dependencies: { '@hyperfrontend/server': '0.2.0' },
     })
   })
 
-  it('writes a configuration that exports one plain object and imports nothing', async () => {
+  it('depends on the kernel at the version the workspace installs', async () => {
+    const tree = createMemoryTree({ ...BARE_FILES, [INSTALLED_KERNEL]: '{ "name": "@hyperfrontend/server", "version": "1.4.2" }' })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '1.4.2' })
+  })
+
+  it('takes the version from the project behind an alias', async () => {
+    const tree = createMemoryTree({
+      ...ROOT_FILES,
+      'tsconfig.base.json': aliasing('./libs/server/src/index.ts'),
+      'libs/server/package.json': '{ "name": "@hyperfrontend/server", "version": "0.3.0-beta.1" }',
+    })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({
+      '@hyperfrontend/server': '0.3.0-beta.1',
+    })
+  })
+
+  it('takes the installed version where no project is behind the alias, the manifest of the workspace not being one', async () => {
+    const tree = createMemoryTree({ ...ROOT_FILES, 'tsconfig.base.json': aliasing('vendor/server/index.ts') })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '0.2.0' })
+  })
+
+  it('takes the installed version where the alias is absolute, the manifest of the workspace not being the project behind it', async () => {
+    const tree = createMemoryTree({
+      ...ROOT_FILES,
+      'package.json': '{ "name": "@hyperfrontend/server", "version": "9.9.9" }',
+      'tsconfig.base.json': aliasing('/elsewhere/kernel/libs/server/src/index.ts'),
+    })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '0.2.0' })
+  })
+
+  it('takes the installed version where the alias climbs out of the workspace, reading nothing out there', async () => {
+    const tree = createMemoryTree({ ...ROOT_FILES, 'tsconfig.base.json': aliasing('../kernel/libs/server/src/index.ts') })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '0.2.0' })
+  })
+
+  it('passes over a manifest above the aliased module that names another package', async () => {
+    const tree = createMemoryTree({
+      ...ROOT_FILES,
+      'tsconfig.base.json': aliasing('libs/server/src/index.ts'),
+      'libs/package.json': '{ "name": "@acme/libraries", "version": "9.9.9" }',
+    })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '0.2.0' })
+  })
+
+  it('takes the installed version where the workspace has no base tsconfig', async () => {
+    const tree = createMemoryTree({ 'package.json': BARE_FILES['package.json'], [INSTALLED_KERNEL]: ROOT_FILES[INSTALLED_KERNEL] })
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(readJson<{ dependencies: object }>(tree, 'apps/api/package.json').dependencies).toEqual({ '@hyperfrontend/server': '0.2.0' })
+  })
+
+  it('refuses a workspace without the kernel', async () => {
+    const tree = createMemoryTree(BARE_FILES)
+    const refusal = await serviceGenerator(tree, { name: 'api', skipFormat: true }).catch((error: Error) => error.message)
+    expect({ refusal, changes: tree.listChanges() }).toEqual({ refusal: NO_KERNEL, changes: [] })
+  })
+
+  it.each([
+    ['the release before the runner', '0.1.9'],
+    ['a prerelease of the first release with the runner', '0.2.0-rc.1'],
+  ])('refuses a kernel below 0.2.0: %s', async (_what, version) => {
+    const tree = createMemoryTree({ ...BARE_FILES, [INSTALLED_KERNEL]: `{ "name": "@hyperfrontend/server", "version": "${version}" }` })
+    const refusal = await serviceGenerator(tree, { name: 'api', skipFormat: true }).catch((error: Error) => error.message)
+    expect({ refusal, changes: tree.listChanges() }).toEqual({ refusal: NO_KERNEL, changes: [] })
+  })
+
+  it('refuses a kernel whose manifest states no version', async () => {
+    const tree = createMemoryTree({ ...BARE_FILES, [INSTALLED_KERNEL]: '{ "name": "@hyperfrontend/server" }' })
+    await expect(serviceGenerator(tree, { name: 'api', skipFormat: true })).rejects.toThrow(NO_KERNEL)
+  })
+
+  it('refuses a kernel below 0.2.0 behind an alias, whatever is installed', async () => {
+    const tree = createMemoryTree({
+      ...ROOT_FILES,
+      'tsconfig.base.json': aliasing('libs/server/src/index.ts'),
+      'libs/server/package.json': '{ "name": "@hyperfrontend/server", "version": "0.1.0" }',
+    })
+    await expect(serviceGenerator(tree, { name: 'api', skipFormat: true })).rejects.toThrow(
+      "a service is written on @hyperfrontend/server 0.2.0 or later, and libs/server/package.json, which the workspace's alias for it names, states an earlier version or none"
+    )
+  })
+
+  it('writes a configuration with an empty immutable section', async () => {
     const tree = createMemoryTree(ROOT_FILES)
     await serviceGenerator(tree, { name: 'api', skipFormat: true })
     expect(tree.read('apps/api/service.config.ts', 'utf-8')).toBe(
-      '/** The configuration the api service runs with. */\nexport default {}\n'
+      '/** The configuration the api service is built with: the immutable section holds the structural settings that are fixed when the service is built. */\nexport default { immutable: {} }\n'
     )
   })
 
@@ -98,12 +226,47 @@ describe('serviceGenerator', () => {
     })
   })
 
-  it('writes a spec that passes on the entry module as written, so the full-coverage gate measures every source', async () => {
+  it('writes a main that only runs the service', async () => {
     const tree = createMemoryTree(ROOT_FILES)
     await serviceGenerator(tree, { name: 'api', projectName: 'service-api', skipFormat: true })
-    expect({ entry: tree.read('apps/api/src/main.ts', 'utf-8'), spec: tree.read('apps/api/src/main.spec.ts', 'utf-8') }).toEqual({
-      entry: expect.stringContaining("return 'service-api is running'"),
-      spec: expect.stringMatching(/import \{ main \} from '\.\/main'[\s\S]*expect\(main\(\)\)\.toBe\('service-api is running'\)/),
+    expect(tree.read('apps/api/src/main.ts', 'utf-8')).toBe(
+      [
+        '/**',
+        ' * Api service.',
+        ' *',
+        ' * @module service-api',
+        ' */',
+        '',
+        "import { runService } from '@hyperfrontend/server'",
+        "import { service } from './service'",
+        '',
+        'void runService(service)',
+        '',
+      ].join('\n')
+    )
+  })
+
+  it('excludes the main from coverage', async () => {
+    const tree = createMemoryTree(ROOT_FILES)
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(tree.read('apps/api/test.config.ts', 'utf-8')).toMatch(/\n {2}\/\/ why: [^\n]+\n {2}coverageExclude: \['src\/main\.ts'\],\n/)
+  })
+
+  it('writes a service that hands the immutable section of its configuration to the runner', async () => {
+    const tree = createMemoryTree(ROOT_FILES)
+    await serviceGenerator(tree, { name: 'api', skipFormat: true })
+    expect(tree.read('apps/api/src/service.ts', 'utf-8')).toMatch(
+      /import config from '\.\.\/service\.config'[\s\S]*export const service = defineService\(\{[\s\S]*\n {2}immutable: config\.immutable,\n/
+    )
+  })
+
+  it('writes sources and a spec that parse, the spec named after the project', async () => {
+    const tree = createMemoryTree(ROOT_FILES)
+    await serviceGenerator(tree, { name: 'api', projectName: 'service-api', skipFormat: true })
+    const spec = tree.read('apps/api/src/service.spec.ts', 'utf-8') as string
+    expect({ errors: [spec, tree.read('apps/api/src/service.ts', 'utf-8') as string].flatMap(syntaxErrors), spec }).toEqual({
+      errors: [],
+      spec: expect.stringContaining("describe('service-api', () => {"),
     })
   })
 

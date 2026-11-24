@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Service executor schema",
+  "description": "Builds a service into one CommonJS main with its manifests and assets.",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "Output directory, relative to the workspace root. Defaults to dist/<project root>."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to tsconfig, relative to the workspace root. Defaults to <project root>/tsconfig.lib.json."
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Globs relative to the entry module's directory; each match is copied to the same relative path beside the main."
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable verbose/debug logging."
+    }
+  },
+  "required": []
+}

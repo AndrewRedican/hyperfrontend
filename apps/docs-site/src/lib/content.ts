@@ -238,6 +238,7 @@ export const LIBRARIES: LibraryInfo[] = [
       'libs/workspace/src/executors/build/index.ts',
       'libs/workspace/src/executors/e2e/index.ts',
       'libs/workspace/src/executors/publish/index.ts',
+      'libs/workspace/src/executors/service/index.ts',
       'libs/workspace/src/executors/test/index.ts',
       'libs/workspace/src/executors/typecheck/index.ts',
       'libs/workspace/src/executors/version/index.ts',

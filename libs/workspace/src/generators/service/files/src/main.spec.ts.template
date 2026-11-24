@@ -1,8 +1,0 @@
-import { describe, expect, it } from '@hyperfrontend/testing'
-import { main } from './main'
-
-describe('main', () => {
-  it('names the service', () => {
-    expect(main()).toBe('<%= projectName %> is running')
-  })
-})

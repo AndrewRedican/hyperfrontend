@@ -1,0 +1,73 @@
+import { EventEmitter } from 'node:events'
+import { after, before } from 'node:test'
+import { runService } from '@hyperfrontend/server'
+import { describe, expect, it, waitUntil } from '@hyperfrontend/testing'
+import { service } from './service'
+
+/** Everything the service wrote to its standard streams, one entry per write. */
+const written: string[] = []
+
+/** A stream that keeps what is written to it. */
+const output = {
+  write: (text: string, done?: () => void): void => {
+    written.push(text)
+    done?.()
+  },
+}
+
+/** A process the runner drives in place of the one the spec runs in: its signals are emitted by hand, and its exit ends nothing. */
+const fake = Object.assign(new EventEmitter(), {
+  // why: port 0 lets the operating system pick a free port, and the loopback interface keeps the listener off the network
+  env: { PORT: '0', HOST: '127.0.0.1' },
+  platform: process.platform,
+  stdout: output,
+  stderr: output,
+  exit: () => undefined,
+})
+
+/** The exit code of the run, settled once the service has stopped. */
+let exitCode: Promise<number>
+
+/** The address the running service answers on. */
+let origin: string
+
+before(async () => {
+  // why: a null build says the service runs from its sources, so no release is looked for beside the spec
+  exitCode = runService(service, { process: fake, build: null })
+  let ended: number | undefined
+  void exitCode.then((code) => {
+    ended = code
+  })
+  const started = await waitUntil(
+    () => {
+      // why: a service that refuses to boot has said why on its streams, and that is the failure worth reading
+      if (ended !== undefined) throw new Error(`the service exited with code ${ended} before it started:\n${written.join('')}`)
+      return written.find((line) => line.startsWith('started port='))
+    },
+    { timeout: 10000 }
+  )
+  origin = `http://127.0.0.1:${started.slice('started port='.length).trim()}`
+})
+
+after(async () => {
+  // why: the runner holds the process until the service is stopped, so a run that never reached the last test would not end; once the service has stopped nothing listens for the signal
+  fake.emit('SIGTERM')
+  await exitCode
+})
+
+describe('<%= projectName %>', () => {
+  it('greets the name in the path', async () => {
+    const response = await fetch(new URL('/hello/world', origin))
+    expect({ status: response.status, body: await response.json() }).toEqual({ status: 200, body: { message: 'Hello, world' } })
+  })
+
+  it('answers the health probe', async () => {
+    const response = await fetch(new URL('/healthz', origin))
+    expect(await response.text()).toBe('ok')
+  })
+
+  it('exits with code 0 once it is asked to stop', async () => {
+    fake.emit('SIGTERM')
+    expect(await exitCode).toBe(0)
+  })
+})

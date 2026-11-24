@@ -17,7 +17,7 @@ flowchart LR
     Cli --> Graph["graph/<br/><i>projects, files, entries, packages; qualified edges</i>"]
     Graph --> Affected["graph/affected/<br/><i>closure, rules, selection, reasons</i>"]
     Graph --> Store["graph/store/<br/><i>.hf/graph/ envelopes, lock, incremental update</i>"]
-    Runner --> Executors["executors/<br/><i>build, typecheck, test, e2e, publish, version*</i>"]
+    Runner --> Executors["executors/<br/><i>build, service, typecheck, test, e2e, publish, version*</i>"]
     Runner --> Generators["generators/<br/><i>workspace, library, application, service, make-publishable, rename, move</i>"]
     Hooks["hooks/<br/><i>aliases and extensionless imports from source</i>"] -.-> Runner
     Lint["lint/<br/><i>projects rule family and the shared readers</i>"] --> Graph
@@ -89,7 +89,7 @@ The bin installs the resolution hook and calls the command line. The command lin
 | `src/graph/affected/` | The closure of a task, the rules that select it, the selection and its explanation                                                          |
 | `src/graph/store/`    | The persisted state: files, imports, graph, entries, meta; the lock; the incremental update plan; verification                              |
 | `src/hooks/`          | The resolution hook: aliases from `tsconfig.base.json`, extensionless relative imports, installed on import                                 |
-| `src/executors/`      | Build, typecheck, test, e2e, publish, version, version-batch and version-check, each an entry with its schema                               |
+| `src/executors/`      | Build, service, typecheck, test, e2e, publish, version, version-batch and version-check, each an entry with its schema                      |
 | `src/generators/`     | The eight generators, each an entry with its schema and templates, and the tree helpers a local generator composes                          |
 | `src/lint/`           | The projects rule family and the readers a workspace's own rules share with it                                                              |
 

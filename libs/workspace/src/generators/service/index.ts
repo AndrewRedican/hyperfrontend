@@ -1,5 +1,5 @@
 /**
- * The `service` generator: creates a project of the workspace that is run and deployed as a service, with its configurations, an entry module and a first spec.
+ * The `service` generator: creates a project that is built, run and deployed as a service on `@hyperfrontend/server`, with its configurations, the service, its main and a first spec.
  *
  * @module @hyperfrontend/workspace/generators/service
  */

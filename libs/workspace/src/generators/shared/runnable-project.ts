@@ -5,6 +5,7 @@
  * @module generators/shared/runnable-project
  */
 
+import type { TargetConfiguration } from '../../runner/contract'
 import type { Tree } from './tree'
 import { assertWritableName, names } from './names'
 import { readRootManifest } from './package-json'
@@ -97,25 +98,31 @@ export function planRunnableProject(tree: Tree, options: RunnableProjectOptions,
 
 /**
  * Writes a runnable project: the files of its templates, a private ES module `package.json`, and
- * a `project.json` that states its kind and carries the `typecheck` and `test` targets the
- * workspace's defaults configure. It adds no alias, since nothing imports a project that is run.
- * It writes nothing where the project's directory is already there or another project holds its name.
+ * a `project.json` that states its kind and carries the targets it is given, in the order they
+ * are given. It adds no alias, since nothing imports a project that is run. It writes nothing
+ * where the project's directory is already there or another project holds its name.
  *
  * @param tree - The tree written to
  * @param templates - The template directory, absolute
  * @param plan - The settled options
+ * @param targets - The targets of the project, by name; an empty target takes everything from the workspace's defaults
  * @throws {Error} When the directory already exists, or a project already has the name
  *
- * @example A service written from a generator's own templates
+ * @example A service written from a generator's own templates, with the two targets the workspace's defaults configure
  * ```typescript
  * import { join } from 'node:path'
  *
- * writeRunnableProject(tree, join(import.meta.dirname, 'files'), planRunnableProject(tree, { name: 'api' }, 'service'))
+ * writeRunnableProject(tree, join(import.meta.dirname, 'files'), planRunnableProject(tree, { name: 'api' }, 'service'), { typecheck: {}, test: {} })
  * readJson(tree, 'apps/api/project.json')
  * // => { name: 'api', description: 'Api service.', sourceRoot: '{projectRoot}/src', projectType: 'service', tags: [], targets: { typecheck: {}, test: {} } }
  * ```
  */
-export function writeRunnableProject(tree: Tree, templates: string, plan: RunnableProjectPlan): void {
+export function writeRunnableProject(
+  tree: Tree,
+  templates: string,
+  plan: RunnableProjectPlan,
+  targets: Readonly<Record<string, TargetConfiguration>>
+): void {
   assertNewProject(tree, plan.projectRoot, plan.projectName)
   generateFiles(tree, templates, plan.projectRoot, { ...plan, comment: { description: commentText(plan.description) } })
   writeJson(tree, joinPathFragments(plan.projectRoot, 'package.json'), {
@@ -133,6 +140,6 @@ export function writeRunnableProject(tree: Tree, templates: string, plan: Runnab
     // why: the kind is always stated, so the project is read the same under any directory
     projectType: plan.kind,
     tags: plan.tags,
-    targets: { typecheck: {}, test: {} },
+    targets,
   })
 }

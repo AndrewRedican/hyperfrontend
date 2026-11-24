@@ -5,7 +5,8 @@
  * from the target's `cwd` taken relative to it, with the `node_modules/.bin` directories of that
  * directory and every directory above it first on the search path and the target's `env` on top
  * of the environment. The arguments after the task are appended to every command, or fill its
- * `{args}` and `{args.<name>}` placeholders instead.
+ * `{args}` and `{args.<name>}` placeholders instead. Where the host says how, a request to end
+ * the process is passed on to the commands running, and no further command starts after it.
  *
  * @module runner/commands
  */
@@ -13,6 +14,7 @@
 import type { ChildProcess, SpawnOptions } from 'node:child_process'
 import type { Environment } from './environment'
 import type { ExecutorSchema } from './executors'
+import type { CommandStops, StopWatch } from './stops'
 import { isAbsolute, join } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -20,6 +22,7 @@ import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/bu
 import { pathKey, withSearchPath } from './environment'
 import { camelCase, readFlag, typedOverrides } from './overrides'
 import { refusal } from './refusal'
+import { watchStops } from './stops'
 
 /** One command of a `commands` list written as an object. */
 export interface CommandEntry {
@@ -48,6 +51,8 @@ export interface CommandsHost {
   readonly spawn: ShellSpawn
   /** Writes a line of the runner's own: the command about to run, or why one failed. */
   readonly write: (line: string) => void
+  /** How the commands are told that the process was asked to end; where it is left out, nothing is forwarded. */
+  readonly stops?: CommandStops
 }
 
 /** The commands of a target and how they run. */
@@ -256,11 +261,13 @@ function commandEnvironment(host: CommandsHost, cwd: string, env: unknown): Reco
  * @param cwd - The directory it runs in
  * @param env - The environment it runs with
  * @param host - Starts the command and takes the runner's own lines
+ * @param watch - Passes a request to end the process on to the command while it runs
  * @returns The process and whether it succeeded, once it ends
  */
-function start(line: string, cwd: string, env: Record<string, string | undefined>, host: CommandsHost): Started {
+function start(line: string, cwd: string, env: Record<string, string | undefined>, host: CommandsHost, watch: StopWatch): Started {
   host.write(`> ${line}`)
   const child = host.spawn(line, { cwd, env, shell: true, stdio: 'inherit', windowsHide: true })
+  watch.track(child)
   const ended = createPromise<boolean>((resolve) => {
     let unstarted = false
     child.once('error', (error: Error) => {
@@ -278,46 +285,59 @@ function start(line: string, cwd: string, env: Record<string, string | undefined
 }
 
 /**
- * Runs commands one after another, stopping at the first that fails.
+ * Runs commands one after another, stopping at the first that fails, or before the next one
+ * once the process was asked to end, saying which command that kept from starting.
  *
  * @param lines - The command lines
  * @param cwd - The directory they run in
  * @param env - The environment they run with
  * @param host - Starts the commands and takes the runner's own lines
- * @returns True when every command succeeded
+ * @param watch - Tells whether the process was asked to end, and the commands when it is
+ * @returns True when every command ran and succeeded
  */
 async function runInSequence(
   lines: readonly string[],
   cwd: string,
   env: Record<string, string | undefined>,
-  host: CommandsHost
+  host: CommandsHost,
+  watch: StopWatch
 ): Promise<boolean> {
-  for (const line of lines) if (!(await start(line, cwd, env, host).ended)) return false
+  for (const line of lines) {
+    if (watch.stopped()) {
+      host.write(`not started after SIGTERM: ${line}`)
+      return false
+    }
+    if (!(await start(line, cwd, env, host, watch).ended)) return false
+  }
   return true
 }
 
 /**
- * Runs commands side by side; the first to fail ends the others.
+ * Runs commands side by side; the first to fail ends the others, unless the process was asked to end.
  *
  * @param lines - The command lines
  * @param cwd - The directory they run in
  * @param env - The environment they run with
  * @param host - Starts the commands and takes the runner's own lines
+ * @param watch - Tells the commands when the process is asked to end, and ends the ones a failure leaves running
  * @returns True when every command succeeded
  */
 async function runSideBySide(
   lines: readonly string[],
   cwd: string,
   env: Record<string, string | undefined>,
-  host: CommandsHost
+  host: CommandsHost,
+  watch: StopWatch
 ): Promise<boolean> {
-  const started = lines.map((line) => start(line, cwd, env, host))
+  const started = lines.map((line) => start(line, cwd, env, host, watch))
   let failed = false
   await promiseAll(
     started.map(async (own) => {
       if ((await own.ended) || failed) return
       failed = true
-      for (const other of started) if (other !== own) other.child.kill('SIGTERM')
+      // why: commands asked to stop were signalled already and are ending by themselves
+      if (watch.stopped()) return
+      for (const other of started) if (other !== own) watch.end(other.child)
     })
   )
   return !failed
@@ -364,5 +384,10 @@ export async function runCommands(
   const env = commandEnvironment(host, cwd, settings['env'])
   const forwardAll = settings['forwardAllArgs'] !== false
   const lines = entries.map((entry) => withArguments(entry.command, forwarded, values, entry.forwardAllArgs ?? forwardAll))
-  return parallel ? runSideBySide(lines, cwd, env, host) : runInSequence(lines, cwd, env, host)
+  const watch = watchStops(host.stops)
+  try {
+    return await (parallel ? runSideBySide(lines, cwd, env, host, watch) : runInSequence(lines, cwd, env, host, watch))
+  } finally {
+    watch.release()
+  }
 }

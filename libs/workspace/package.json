@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/workspace",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Runs the tasks of a TypeScript monorepo and releases its packages from a graph of what reaches what.",
   "license": "MIT",
   "type": "module",
@@ -64,6 +64,7 @@
     "./executors/build": "./src/executors/build/index.js",
     "./executors/e2e": "./src/executors/e2e/index.js",
     "./executors/publish": "./src/executors/publish/index.js",
+    "./executors/service": "./src/executors/service/index.js",
     "./executors/test": "./src/executors/test/index.js",
     "./executors/typecheck": "./src/executors/typecheck/index.js",
     "./executors/version": "./src/executors/version/index.js",
@@ -104,6 +105,7 @@
     "affected",
     "generators",
     "executors",
+    "services",
     "typescript",
     "nodejs"
   ],

@@ -23,7 +23,7 @@
     "service": {
       "factory": "./generators/service/index",
       "schema": "./generators/service/schema.json",
-      "description": "Create a service of the workspace: a project that is run and deployed, with its configurations, a service configuration and a first spec."
+      "description": "Create a service of the workspace on @hyperfrontend/server: a project that is built, run and deployed, with its configurations, a service configuration and a first spec."
     },
     "make-publishable": {
       "factory": "./generators/make-publishable/index",
