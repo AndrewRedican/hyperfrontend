@@ -26,7 +26,7 @@ The engine and every generally useful rule are the publishable package `@hyperfr
 
 **Before creating a rule:** read `libs/linter/docs/rules/` and `tools/lint/docs/rules/` to check for an existing rule. Do not duplicate.
 
-A workspace rule needs no registration: `tools/lint/config/families.ts` registers every file in its family's directory, and the id names the file (`workspace/lib-pkg-fields` is `src/rules/workspace/lib-pkg-fields.ts`). A workspace rule imports only `@hyperfrontend/linter`, `/helpers` and `/testing`, never the package's source files. A rule runs once a config block switches it on.
+A workspace rule needs no registration: `tools/lint/config/families.ts` registers every file in its family's directory, and the id names the file (`workspace/lib-pkg-fields` is `src/rules/workspace/lib-pkg-fields.ts`). A workspace rule imports `@hyperfrontend/linter`, `/helpers` and `/testing`, and the workspace's own lint helpers from `@hyperfrontend/workspace/lint`, never the linter package's source files. A rule runs once a config block switches it on.
 
 ---
 
@@ -87,19 +87,16 @@ Each is computed once per file or process and shared by every rule.
 
 ### Shared helpers: MUST REUSE
 
-| Module                                                   | Gives                                                                                                                                           |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@hyperfrontend/linter/helpers`                          | JSON (`propertyOf`, `rootObject`, `isString`, `stringsUnder`, `wholeDocument`, `indentationAt`), tokens, scopes, `mergeEdits`, globs, positions |
-| `libs/linter/src/rules/conventions/shared/`              | `sources.ts`, `comments.ts`, `tests.ts`, `ordering.ts`, `star-height.ts` (packaged rules)                                                       |
-| `tools/lint/src/rules/workspace/shared/locate.ts`        | `workspaceRootOf`, `projectRootOf`, `isInPublishableProject`, `isAtWorkspaceRoot`                                                               |
-| `tools/lint/src/rules/workspace/shared/project-file.ts`  | `readProjectFile`, `readPackageFile`, `isPublishableLibrary`                                                                                    |
-| `tools/lint/src/rules/workspace/shared/manifest-rule.ts` | `manifestRule`: the frame of every publishable-library manifest rule                                                                            |
-| `tools/lint/src/rules/workspace/shared/libraries.ts`     | `publishableLibraries`                                                                                                                          |
-| `tools/lint/src/rules/workspace/shared/sources.ts`       | The ordering helpers with the workspace's scope, for `cross-platform` and the barrel rules                                                      |
-| `tools/lint/src/rules/workspace/shared/aliases.ts`       | `pathAliases` (the `tsconfig.base.json` paths)                                                                                                  |
-| `tools/lint/src/rules/workspace/shared/exports-index.ts` | `parsedModule`, `resolveModule`, `moduleExports`                                                                                                |
-| `tools/lint/src/rules/workspace/shared/readme.ts`        | `badgeBlock`, `shortDescription`                                                                                                                |
-| `tools/lint/src/rules/workspace/shared/last-property.ts` | `lastPropertyOf`: a property of a JSON object by name as `JSON.parse` reads it, the last where a key is written twice                           |
+| Module                                                   | Gives                                                                                                                                                                                                           |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/linter/helpers`                          | JSON (`propertyOf`, `rootObject`, `isString`, `stringsUnder`, `wholeDocument`, `indentationAt`), tokens, scopes, `mergeEdits`, globs, positions                                                                 |
+| `libs/linter/src/rules/conventions/shared/`              | `sources.ts`, `comments.ts`, `tests.ts`, `ordering.ts`, `star-height.ts` (packaged rules)                                                                                                                       |
+| `@hyperfrontend/workspace/lint`                          | `workspaceRootOf`, `projectRootOf`, `readProjectFile`, `readPackageFile`, `isPublishableLibrary`, `isPublishableProject`, `pathAliases`, `parsedModule`, `resolveModule`, `moduleExports`, `readResolvedTarget` |
+| `tools/lint/src/rules/workspace/shared/manifest-rule.ts` | `manifestRule`: the frame of every publishable-library manifest rule                                                                                                                                            |
+| `tools/lint/src/rules/workspace/shared/libraries.ts`     | `publishableLibraries`, `namedLibraries` (each with its package name)                                                                                                                                           |
+| `tools/lint/src/rules/workspace/shared/sources.ts`       | The ordering helpers with the workspace's scope, for `cross-platform` and the barrel rules                                                                                                                      |
+| `tools/lint/src/rules/workspace/shared/readme.ts`        | `badgeBlock`, `shortDescription`                                                                                                                                                                                |
+| `tools/lint/src/rules/workspace/shared/last-property.ts` | `lastPropertyOf`: a property of a JSON object by name as `JSON.parse` reads it, the last where a key is written twice                                                                                           |
 
 ### File I/O and strings
 
