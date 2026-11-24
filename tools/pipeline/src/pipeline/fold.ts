@@ -3,8 +3,8 @@
  * gains the tasks it needs first as tasks of its own (what its `dependsOn` names, the build of
  * the library an e2e task tests, the build a publish publishes), each planned once however many
  * tasks need it, a built publishable library gains its floor probe and, when its e2e project
- * ships a consumer smoke, its smokes, a built demo that declares a Railway service gains its
- * deploy on `main`, the workspace gains the provision those deploys wait on, the Windows and
+ * ships a consumer smoke, its smokes, a built demo or service that declares a Railway service gains
+ * its deploy on `main`, the workspace gains the provision those deploys wait on, the Windows and
  * macOS environments each take the typecheck, lint, test, build and e2e of the libraries and tools,
  * and every task learns what it needs.
  *
@@ -208,8 +208,10 @@ function afterBuild(graph: WorkspaceGraph, library: ProjectRecord, environment: 
 }
 
 /**
- * The deploy after a demo's build: the commit the run is of goes to the Railway service the demo
- * declares, once the chain's other tasks have passed. A deploy is a demo's release, so it follows
+ * The deploy after the build of a demo or a service: the commit the run is of goes to the Railway
+ * service the project declares, once the chain's other tasks have passed. Railway builds that commit
+ * with the build command its configuration states, so a demo served as files and a service started
+ * from its built main deploy through the same task. A deploy is the project's release, so it follows
  * a build the change can alter and never a build selected only to check the engine that runs it.
  *
  * @param project - The built project
@@ -331,7 +333,7 @@ function addPrerequisites(graph: WorkspaceGraph, tasks: Map<string, PlanTask>, e
 /**
  * The Linux tasks of a selection: one per selected task, e2e tasks folded into their library's
  * chain, then every task they need first, then the probes and smokes after the library builds
- * and, on `main`, the deploy after the build of a demo that declares a Railway service and whose
+ * and, on `main`, the deploy after the build of a demo or a service that declares a Railway service and whose
  * build the change can alter, and the provision, whenever a deploy is planned or the Railway
  * configuration changed.
  *
@@ -339,7 +341,7 @@ function addPrerequisites(graph: WorkspaceGraph, tasks: Map<string, PlanTask>, e
  * @param selected - The selected task ids with their reasons
  * @param main - Whether publish, provision and deploy tasks are kept
  * @param railwayChanged - Whether the change reaches the Railway configuration
- * @param shipped - The builds whose output the change can alter, by task id; a demo deploys only after one of them
+ * @param shipped - The builds whose output the change can alter, by task id; a project deploys only after one of them
  * @returns The tasks, without needs
  */
 export function linuxTasks(

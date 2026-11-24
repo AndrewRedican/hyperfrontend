@@ -3,7 +3,7 @@
  * Apply `.railway/railway.ts` to the production environment when it differs from what Railway holds.
  *
  * The pipeline runs this as the `provision` task of the workspace on `main`, before any deploy of
- * the run, so every demo deploys with the settings the commit declares. It plans the file against
+ * the run, so every project deploys with the settings the commit declares. It plans the file against
  * the environment, and when the plan shows changes it applies that pinned plan. A destructive
  * change (a service or volume the file no longer declares) is refused, which fails the task and
  * leaves the deploys behind it unrun; applying one stays a decision made by hand.

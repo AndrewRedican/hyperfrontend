@@ -2,7 +2,7 @@
  * The commands a plan task runs: a target of a project through the workspace's own command line,
  * which runs that one task and none of the tasks it needs (the plan lists those as tasks of their
  * own), and the pipeline's own tasks: the floor probe and the consumer smoke through the Node.js
- * release they are meant for, the Railway provision of the workspace and the Railway deploy of a demo.
+ * release they are meant for, the Railway provision of the workspace and the Railway deploy of a demo or a service.
  *
  * @module pipeline/commands
  */
@@ -19,7 +19,7 @@ export const PipelineTarget = freeze({
   SmokeMajor: 'smoke-major',
   /** Applies the Railway configuration the workspace declares to the production environment. */
   Provision: 'provision',
-  /** Deploys the commit to the Railway service a demo declares. */
+  /** Deploys the commit to the Railway service a demo or a service declares. */
   Deploy: 'deploy',
 } as const)
 
