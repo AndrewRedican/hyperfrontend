@@ -182,7 +182,8 @@ export default defineRailway(() => {
     // why: the liveness probe answers from the first moment, while the first collection from npm takes a minute or two; a probe of readiness would hold every deploy for that long and fail one whenever npm is slow
     healthcheck: '/healthz',
     env: { STATISTICS_ALLOWED_ORIGINS: 'https://www.hyperfrontend.dev' },
-    deploy: { limitOverride: { containers: { cpu: 0.5, memoryBytes: 500000000 } } },
+    // why: left unset, Railway kills the process 10 seconds after the terminate signal, and the runner's stop may take 15 with 2 more to flush its output; 20 leaves that room
+    deploy: { drainingSeconds: 20, limitOverride: { containers: { cpu: 0.5, memoryBytes: 500000000 } } },
     replicas: { 'europe-west4-drams3a': 1 },
   })
   return project('hyperfrontend', {
