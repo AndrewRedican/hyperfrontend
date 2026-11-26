@@ -159,6 +159,7 @@ The [defaults](/docs/libraries/server/architecture#bounds) are 10 and 15 seconds
 | Docker     | 10 seconds       | `docker stop -t`, or `stop_grace_period` in a Compose file |
 | Kubernetes | 30 seconds       | `terminationGracePeriodSeconds` in the pod's spec          |
 | systemd    | 90 seconds       | `TimeoutStopSec=` in the unit                              |
+| Railway    | 10 seconds       | `drainingSeconds` in the service's deploy settings         |
 
 Then raise the supervisor's wait, or lower the two bounds to fit under it. For a wait of 10 seconds:
 
@@ -184,7 +185,7 @@ Choose `graceMs` as the longest request you are willing to wait for on a deploy.
 
 - **A request outlasts `graceMs`:** it is cut, and its request line reads `status=0 outcome=shutdown`. The exit code is still 0, so search the log for that [outcome](/docs/libraries/server#api-RequestOutcome) to learn that the grace is too short.
 - **`stopTimeoutMs` is not above `graceMs`:** the runner gives up first. Standard error reads `fatal cause=stop-timeout`, no `stopped` line is written and the exit code is 1.
-- **The supervisor's wait is the shortest:** the log ends at the `stopping` line and the exit code is 137.
+- **The supervisor's wait is the shortest:** the log ends at the `stopping` line and the exit code is 137. A supervisor that ends its wait by repeating the signal, as Railway does once `drainingSeconds` is set, gets `fatal cause=forced` and exit code 1 instead.
 
 ## 7. Take the instance out of rotation before the signal
 
@@ -199,7 +200,7 @@ graceMs: 5000,
 keepAliveTimeoutMs: 65000,
 ```
 
-The other way round, the proxy sends a request down a connection the service is closing, and the client gets a 502 now and then. The default is 5 seconds and a load balancer commonly keeps a connection for 60, so the default is the wrong way round for most of them. Every response says what is in effect: with the option above, `curl -si` shows `Keep-Alive: timeout=65`.
+The other way round, the proxy sends a request down a connection the service is closing, and the client gets a 502 now and then. The default is 5 seconds and a load balancer commonly keeps a connection for 60, so the default is the wrong way round for most of them. Railway's edge retires an idle connection after 4 seconds, so there the default stands. Every response says what is in effect: with the option above, `curl -si` shows `Keep-Alive: timeout=65`.
 
 ## 9. Count the proxies that write the forwarded address
 
@@ -210,7 +211,7 @@ keepAliveTimeoutMs: 65000,
 trustedProxyHops: 1,
 ```
 
-The option decides what a step reads as the caller's [`address`](/docs/libraries/server#api-ClientInfo-prop-address): with the default of 0 that is the socket's peer, which behind a proxy is the proxy; with 1 it is the last entry of the header, the one your proxy wrote. A request that arrives with `X-Forwarded-For: 198.51.100.1, 203.0.113.7` then reads as `203.0.113.7`, whatever the client put in front. Count exactly: one hop too many believes an entry the client wrote.
+The option decides what a step reads as the caller's [`address`](/docs/libraries/server#api-ClientInfo-prop-address): with the default of 0 that is the socket's peer, which behind a proxy is the proxy; with 1 it is the last entry of the header, the one your proxy wrote. A request that arrives with `X-Forwarded-For: 198.51.100.1, 203.0.113.7` then reads as `203.0.113.7`, whatever the client put in front. Count exactly: one hop too many believes an entry the client wrote. Count the entries the proxy writes, which can be more than one: Railway's edge replaces the header with the client's address followed by its own, so a service there sets 2.
 
 ## 10. On Windows, stop it through its console or an IPC channel
 
